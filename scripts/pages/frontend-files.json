@@ -47,7 +47,6 @@
     "js/domain/accountSyncMigration.js",
     "js/domain/accountSyncProduct.js",
     "js/domain/trainerPreferences.js",
-    "js/domain/trainerPreferenceSync.js",
     "js/domain/authenticationReadiness.js",
     "js/domain/authProviderRegistry.js",
     "js/domain/providerContinuationState.js",
@@ -78,25 +77,21 @@
     "js/data/subscriptionManager.js",
     "js/data/listenerLifecycle.js",
     "js/data/sessionCacheBoundary.js",
-    "js/data/firebaseReadRegistry.js",
     "js/data/currentUserRepository.js",
     "js/data/ownedDataCoordinator.js",
     "js/data/publicShareRepository.js",
     "js/data/trainerHistoryStore.js",
     "js/data/favoriteShareSessionCache.js",
-    "js/data/trainerPreferencesRepository.js",
-    "js/data/trainerPreferenceSyncQueue.js",
     "js/data/accountSyncJournal.js",
     "js/data/accountSyncRepository.js",
     "js/data/accountSyncController.js",
     "js/data/accountSyncRuntime.js",
     "js/domain/cacheAdapters.js",
-    "js/ui/trainerTagPanel.js",
-    "js/app/publicShareApp.js",
     "js/app/application.js"
   ],
   "lazyScriptFiles": [
-    "js/domain/specialTradeBoardExport.js"
+    "js/domain/specialTradeBoardExport.js",
+    "js/app/publicShareApp.js"
   ],
   "developmentOnlyScriptFiles": [
     "js/domain/authProviderRegistry.js",
@@ -576,5 +571,12 @@
     "assets/sprites/go/wormadam-trash.png",
     "assets/sprites/go/wurmple-party-hat.png",
     "assets/sprites/go/zigzagoon-galarian-meloetta-hat.png"
+  ],
+  "hostedOnlyScriptFiles": [
+    "js/data/firebaseReadRegistry.js",
+    "js/domain/trainerPreferenceSync.js",
+    "js/data/trainerPreferencesRepository.js",
+    "js/data/trainerPreferenceSyncQueue.js",
+    "js/ui/trainerTagPanel.js"
   ]
 }

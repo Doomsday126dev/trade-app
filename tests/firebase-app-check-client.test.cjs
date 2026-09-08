@@ -69,7 +69,15 @@ test('App Check starts after paint and activates the RTDB client only after succ
   assert.match(html,/const FIREBASE_APP_CHECK_SITE_KEY="6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz";/);
   assert.match(html,/state\.sdkPromise=Promise\.all\(\[import\(base\+'\/firebase-app\.js'\),import\(base\+'\/firebase-auth\.js'\)\]\)/);
   assert.match(html,/firebaseSdkPromise=Promise\.all\(\[[\s\S]+startPogoEarlyAuth\(\)[\s\S]+firebase-database\.js[\s\S]+\]\)/);
-  assert.doesNotMatch(html,/getFunctions\(|httpsCallable\(|readE1AccountFoundation\(|reserveE1TrainerHandle\(/);
+  // The approved owner PIN reset uses a callable after explicit interaction.
+  // Its existence is not evidence of a Functions dependency in startup.
+  const application=readFileSync(path.join(root,'js/app/application.js'),'utf8');
+  const functions=require('acorn').parse(application,{ecmaVersion:'latest'}).body.filter(node=>node.type==='FunctionDeclaration');
+  for(const name of ['loadFirebaseSdk','loadFirebaseAppCheckSdk','startFirebaseAppCheck','ensureFirebaseDataProtection','startFirebaseStartup']){
+    const node=functions.find(node=>node.id.name===name);assert.ok(node,name);
+    assert.doesNotMatch(application.slice(node.start,node.end),/getFunctions\(|httpsCallable\(|readE1AccountFoundation\(|reserveE1TrainerHandle\(/);
+  }
+  assert.doesNotMatch(html,/readE1AccountFoundation\(|reserveE1TrainerHandle\(/);
   assert.doesNotMatch(html,/FIREBASE_APPCHECK_DEBUG_TOKEN|ReCaptchaV3Provider|CustomProvider/);
 });
 

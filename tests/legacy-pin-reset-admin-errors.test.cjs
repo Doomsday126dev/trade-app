@@ -35,35 +35,48 @@ test('owner diagnostics never echo unknown SDK details, identifiers, credentials
   }
 });
 
-function legacyV3Fixture({missingIndex=false,duplicateSlot=false}={}){
+function legacyV3Fixture({missingIndex=false,duplicateSlot=false,fences={}}={}){
   const now=1800000000000,uid='legacy-v3-target';
   const evidence={users:{Doomsday126:{authUid:'owner-uid',isAdmin:true},Trainer:{authUid:uid,authVersion:3,authEmail:'trainer_v3@pogotrades.nyc'}},
     admins:{'owner-uid':true},loginDirectory:{Trainer:{authReady:true,authVersion:3}},
     authIndex:{'owner-uid':{username:'Doomsday126'},...(missingIndex?{}:{[uid]:{username:'Trainer',authVersion:3}})}};
-  let legacyReads=0,mutations=0,journalReads=0;
+  let legacyReads=0,mutations=0,journalReads=0;const fenceReads=[];
   const service=createResetService({ownerUid:'owner-uid',hmacKey:'test-only'.repeat(8),now:()=>now,
     journal:{get:async()=>{journalReads++;throw Error('inspect must not read receipts');}},
-    adapter:{readEvidence:async()=>structuredClone(evidence),legacyOnly:async()=>{legacyReads++;return true;},
+    adapter:{readIdentityFence:async id=>{fenceReads.push(id);return structuredClone(fences[id]??null);},
+      readEvidence:async()=>structuredClone(evidence),legacyOnly:async()=>{legacyReads++;return true;},
       getAuthUser:async id=>id==='owner-uid'?{uid:id,disabled:false}:{uid,email:'trainer_v3@pogotrades.nyc',disabled:false,metadata:{creationTime:'2026-05-26T12:48:15.135Z'},providerData:[{providerId:'password',uid:'trainer_v3@pogotrades.nyc'}]},
-      listAuthIdentities:async()=>[{uid,email:'trainer_v3@pogotrades.nyc'},...(duplicateSlot?[{uid:'older-v2-target',email:'trainer_v2@pogotrades.nyc'}]:[])],
+      listAuthIdentities:async()=>[{uid,email:'trainer_v3@pogotrades.nyc',disabled:false},...(duplicateSlot?[{uid:'older-v2-target',email:'trainer_v2@pogotrades.nyc',disabled:false}]:[])],
       updatePassword:async()=>{mutations++;throw Error('No credential mutation permitted');}}});
-  return{service,evidence,context:{uid:'owner-uid',authTime:now/1000,appVerified:true},counts:()=>({legacyReads,mutations,journalReads})};
+  return{service,evidence,fenceReads,context:{uid:'owner-uid',authTime:now/1000,appVerified:true},counts:()=>({legacyReads,mutations,journalReads})};
 }
 
 test('Login ready v3 with absent reciprocal index fails before Firestore eligibility and never repairs identity',async()=>{
   const f=legacyV3Fixture({missingIndex:true,duplicateSlot:true}),before=structuredClone(f.evidence);
   await assert.rejects(f.service.run(f.context,{action:'inspect',username:'Trainer'}),{code:'reset/identity-conflict'});
+  assert.deepEqual(f.fenceReads,['owner-uid','legacy-v3-target']);
   assert.deepEqual(f.counts(),{legacyReads:0,mutations:0,journalReads:0});assert.deepEqual(f.evidence,before);
 });
 
 test('a second enabled legacy Auth slot still fails when v3 reciprocity is present',async()=>{
   const f=legacyV3Fixture({duplicateSlot:true});
   await assert.rejects(f.service.run(f.context,{action:'inspect',username:'Trainer'}),{code:'reset/identity-conflict'});
+  assert.deepEqual(f.fenceReads,['owner-uid','legacy-v3-target']);
   assert.deepEqual(f.counts(),{legacyReads:1,mutations:0,journalReads:0});
 });
 
 test('consistent existing v3 identity remains inspectable with recent owner auth',async()=>{
   const f=legacyV3Fixture(),result=await f.service.run(f.context,{action:'inspect',username:'Trainer'});
   assert.equal(result.targetUid,'legacy-v3-target');assert.equal(result.username,'Trainer');
+  assert.deepEqual(f.fenceReads,['owner-uid','legacy-v3-target']);
   assert.deepEqual(f.counts(),{legacyReads:1,mutations:0,journalReads:0});
 });
+
+for(const [uid,code] of [['owner-uid','reset/owner-required'],['legacy-v3-target','reset/identity-conflict']]){
+  test(`v3 inspection rejects a fenced ${uid} before eligibility or credential mutation`,async()=>{
+    const f=legacyV3Fixture({fences:{[uid]:{state:'retired'}}});
+    await assert.rejects(f.service.run(f.context,{action:'inspect',username:'Trainer'}),{code});
+    assert.equal(f.fenceReads.at(-1),uid);
+    assert.deepEqual(f.counts(),{legacyReads:0,mutations:0,journalReads:0});
+  });
+}

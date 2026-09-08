@@ -177,7 +177,7 @@ test('production activation routes cannot reach preference sync while disabled',
   const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root),sw=readFileSync(path.join(root,'sw.js'),'utf8'),visibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
   assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.match(visibility,/SHARE_VISIBILITY_MODEL_ENABLED:false/);
-  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+  assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
   assert.doesNotMatch(html,/createTrainerPreferenceSyncQueue\s*\(/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:read|subscribe|mutate|transaction|write)/);
   for(const route of ["addEventListener('online'","onAuthStateChanged(auth","visibilitychange","setInterval(checkForUpdate","serviceWorker.register"]){

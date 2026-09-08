@@ -185,8 +185,6 @@ const listenerLifecycleData=window.PogoData?.listenerLifecycle;
 if(!listenerLifecycleData)throw new Error('Listener lifecycle failed to load');
 const sessionCacheBoundaryData=window.PogoData?.sessionCacheBoundary;
 if(!sessionCacheBoundaryData)throw new Error('Session cache boundary failed to load');
-const firebaseReadRegistryData=window.PogoData?.firebaseReadRegistry;
-if(!firebaseReadRegistryData)throw new Error('Firebase read registry failed to load');
 const currentUserRepositoryData=window.PogoData?.currentUserRepository;
 if(!currentUserRepositoryData)throw new Error('Current-user repository failed to load');
 const ownedDataCoordinatorData=window.PogoData?.ownedDataCoordinator;
@@ -219,8 +217,6 @@ const providerPublicProjectionDomain=window.PogoDomain?.providerPublicProjection
 const providerPublicShareGatewayService=window.PogoServices?.providerPublicShareGateway;
 const trainerPreferencesDomain=window.PogoDomain?.trainerPreferences;
 if(!trainerPreferencesDomain||trainerPreferencesDomain.SYNCED_TRAINER_PREFERENCES_ENABLED!==false)throw new Error('Disabled trainer-preference helpers failed to load safely');
-const trainerPreferenceSyncDomain=window.PogoDomain?.trainerPreferenceSync;
-if(!trainerPreferenceSyncDomain||trainerPreferenceSyncDomain.preferenceSyncPresentation({state:'synced'}).state!=='local-only')throw new Error('Disabled trainer-preference sync contract failed to load safely');
 const authenticationReadinessDomain=window.PogoDomain?.authenticationReadiness;
 if(!authenticationReadinessDomain||authenticationReadinessDomain.DURABLE_AUTH_PROVIDERS_ENABLED!==false)throw new Error('Disabled authentication readiness contract failed to load safely');
 const legacyProvisioningFreezeDomain=window.PogoDomain?.legacyProvisioningFreeze;
@@ -246,12 +242,6 @@ const providerLinkingRegistry=PROVIDER_MODULES_ENABLED?authProviderRegistryDomai
   developmentEnabled:true,
   configuredProviders:['google']
 }):null;
-const trainerPreferencesRepositoryData=window.PogoData?.trainerPreferencesRepository;
-if(!trainerPreferencesRepositoryData)throw new Error('Trainer-preference repository failed to load');
-const trainerPreferenceSyncQueueData=window.PogoData?.trainerPreferenceSyncQueue;
-if(!trainerPreferenceSyncQueueData)throw new Error('Trainer-preference sync queue contract failed to load');
-const trainerTagPanelUi=window.PogoUI?.trainerTagPanel;
-if(!trainerTagPanelUi)throw new Error('Trainer-tag UI helpers failed to load');
 const loginDirectoryDomain=window.PogoDomain?.loginDirectory;
 if(!loginDirectoryDomain)throw new Error('Login-directory helpers failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
@@ -289,7 +279,6 @@ let accountSyncRecoveryCoordinatorRuntimeGeneration=-1;
 let accountSyncRecoveryStateBinding='';
 let accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});
 const managedPublicSharePublication=publicSharePublicationDomain.createPublicSharePublicationGate();
-const managedTrainerPreferencesRepository=trainerPreferencesRepositoryData.createTrainerPreferencesRepository({enabled:false});
 const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
@@ -3535,13 +3524,22 @@ async function ensureAccountSyncRuntime(){
   if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
   if(!eligible){
     if(managedAccountSyncRuntime)await stopAccountSyncRuntime();
+    if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
     accountSyncUiState=Object.freeze({state:'local-only',eligible:false,active:false,pendingCount:0,blockedCount:0,conflictCount:0});refreshSyncUi();
     return Object.freeze({ok:true,status:'disabled'});
   }
   if(!firebaseDataProtectionReady||!db||!uid||!username)return Object.freeze({ok:false,status:'not-ready'});
   if(managedAccountSyncRuntime?.ownerUid===uid){
-    try{accountSyncUiState=await managedAccountSyncRuntime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}
-    catch(error){accountSyncMarkMutationBlocked(error,'runtime');return Object.freeze({ok:false,status:'runtime-unhealthy'});}
+    const runtime=managedAccountSyncRuntime,generation=accountSyncRuntimeGeneration;
+    const currentRuntime=()=>bindingCurrent()&&generation===accountSyncRuntimeGeneration&&runtime===managedAccountSyncRuntime;
+    try{
+      const state=await runtime.snapshot();
+      if(!currentRuntime())return Object.freeze({ok:false,status:'session-changed'});
+      accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+    }catch(error){
+      if(!currentRuntime())return Object.freeze({ok:false,status:'session-changed'});
+      accountSyncMarkMutationBlocked(error,'runtime');return Object.freeze({ok:false,status:'runtime-unhealthy'});
+    }
     return accountSyncProjectionReady()?Object.freeze({ok:true,status:'active'}):Object.freeze({ok:false,status:'runtime-unhealthy'});
   }
   const binding=`${uid}\n${username}`;
@@ -3571,13 +3569,17 @@ async function ensureAccountSyncRuntime(){
     try{
       const result=await runtime.start();
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
+      const state=await runtime.snapshot();
+      if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
       accountSyncInitialProviderProfile={};
-      accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+      accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
       if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
     }catch(error){
+      if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
       if(currentSession()){
         let failedState={};try{failedState=await runtime.snapshot();}catch{}
+        if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
         const safeCode=accountSyncRuntimeData.diagnosticCode(error,failedState.lastError||'account-sync/migration-failed');
         accountSyncUiState=Object.freeze({
           ...failedState,state:'sync-error',eligible:true,active:failedState.active===true,

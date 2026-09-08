@@ -148,3 +148,11 @@ test('backend helper edits and deletions select their declared consumer suites',
   }
   assert.ok(select(['functions/test/helpers/new.cjs'],{exists:()=>true}).errors.some(error=>error.includes('declared consumers')));
 });
+
+test('boot entrypoints and release inventories retain runtime absence and offline route proofs',()=>{
+  for(const file of ['index.html','sw.js','js/app/application.js','scripts/pages/frontend-files.json']){
+    const plan=select([file]);
+    assert.ok(plan.node.includes('tests/signed-in-boot-dependencies.test.cjs'),file);
+    assert.ok(plan.browser.includes('tests/signed-in-boot-dependencies.spec.js'),file);
+  }
+});

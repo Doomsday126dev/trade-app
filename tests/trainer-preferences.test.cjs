@@ -110,8 +110,13 @@ test('Favorites rendering is read-only and history advances only through an expl
   assert.doesNotMatch(render,/rememberOpened|lastSeenShareVersion|writeDataPath|queueSync/);const opened=html.slice(html.indexOf('function rememberTrainerOpened'),html.indexOf('function publicShareSnapshotFromRuntime'));assert.match(opened,/rememberOpened/);
 });
 
-test('production page loads the preference candidate but keeps repository and UI inactive',()=>{
-  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);assert.match(html,/js\/domain\/trainerPreferenceSync\.js\?v=/);assert.match(html,/js\/data\/trainerPreferenceSyncQueue\.js\?v=/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe|mutate|finalize|merge)/);
+test('production keeps active preference helpers but does not load disabled preference sync infrastructure',()=>{
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
+  assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);
+  assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
+  assert.match(html,/trainerPreferencesDomain\.normalizeTagLabel/);
+  assert.doesNotMatch(html,/js\/(?:domain\/trainerPreferenceSync|data\/trainerPreferencesRepository|data\/trainerPreferenceSyncQueue|ui\/trainerTagPanel)\.js\?v=/);
+  assert.doesNotMatch(html,/managedTrainerPreferencesRepository|createTrainerPreferencesRepository/);
 });
 
 test('repository never exposes direct Favorite writes and gates remaining exact writes',async()=>{
@@ -145,7 +150,7 @@ test('private organizer data is absent from public-share publication code',()=>{
   const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const publication=html.slice(html.indexOf('function publicShareSnapshotForUser'),html.indexOf('function applyPublicShareSnapshot'));
   assert.doesNotMatch(publication,/trainerHistoryStore|tagIds|privateNote|\.note\b/);
-  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+  assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
 });
 
 test('local organizer storage has no network, logging, URL, clipboard, or export capability',()=>{

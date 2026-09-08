@@ -268,6 +268,7 @@ test('all Pokemon render surfaces route displayed labels through the resolver',(
     /renderBrowse[\s\S]*pokemonDisplayName/,
     /renderShareView[\s\S]*pokemonDisplayName/,
     /function productShareImageDetails[\s\S]*entry\.dn\|\|entry\.name/,
+    /function productDeclarations[\s\S]*pokemonDisplayName/,
     /function addPokemonEntryAliases[\s\S]*pokemonDisplayName\(entry\)/
   ])assert.match(html,pattern);
 });
@@ -286,7 +287,12 @@ test('catalog asset remains bounded and offline-precacheable',()=>{
 });
 
 test('generated Pokemon GO strings preserve canonical data while localizing only final command syntax',()=>{
-  const strings=html.slice(html.indexOf('function buildStrings'),html.indexOf('async function copyText'));
+  // .99 removed the old Have renderer and renderMyStrings sentinel. Read the
+  // actual function boundary so unrelated later UI code cannot enter this check.
+  const application=source('js/app/application.js');
+  const node=require('acorn').parse(application,{ecmaVersion:'latest'}).body.find(node=>node.type==='FunctionDeclaration'&&node.id.name==='buildStrings');
+  assert.ok(node,'the current Copy Search builder exists');
+  const strings=application.slice(node.start,node.end);
   assert.doesNotMatch(strings,/pokemonDisplayName|pokemonNamesI18n|PogoLocales/);
   assert.match(strings,/const options=\{locale:pokemonGoSearchLocale\(\)\}/);
   for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js','js/domain/pokemonGoSearchSyntax.js']){
@@ -300,5 +306,5 @@ test('trainer organizer v3 remains locale-independent and strips former note fie
   assert.doesNotMatch(store,/pokemonNames|eventLabels/);
   assert.match(html,/tag\.label/);
   assert.doesNotMatch(store,/MAX_NOTE_LENGTH|setFavoriteNote|item\.note/);
-  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+  assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
 });
