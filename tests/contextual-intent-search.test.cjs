@@ -14,7 +14,7 @@ const json=value=>JSON.parse(JSON.stringify(value));
 test('compact panels hide normal details but count each exact or unresolved declaration once',()=>{
   const w=load(),t=(key,params={})=>w.PogoLocales.en[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
   const html=entries=>w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan(entries),{t,title:'Scope',compact:true});
-  for(const entry of [{name:'Pikachu',no:25,p:'H'},{name:'Dragonite',no:149},{name:'NidoranF',no:29},{no:25}]){
+  for(const entry of [{name:'Pikachu',no:25,p:'H'},{name:'Dragonite',no:149},{name:'Pikachu',no:25,backgroundId:'retired',backgroundLabel:'Retired background'},{name:'NidoranF',no:29},{no:25}]){
     const rendered=html([entry]);assert.match(rendered,/data-manual-check-count="0" hidden/);
     assert.match(rendered,/data-contextual-copy=/);assert.doesNotMatch(rendered,/contextual-manual-review/);
   }

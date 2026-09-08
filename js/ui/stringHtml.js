@@ -27,7 +27,7 @@
   let panelSequence=0;
   function requiresManualCheck(entry){
     if(entry.unresolved||['shiny','lucky','xxl','xxs'].some(flag=>entry[flag]))return true;
-    if(['mod','variant','gender','maxType','note','backgroundId','backgroundLabel'].some(key=>String(entry[key]||'').trim()))return true;
+    if(['mod','variant','gender','maxType','note'].some(key=>String(entry[key]||'').trim()))return true;
     if([entry.category,entry.type].some(value=>value&&value!=='wishlist'))return true;
     const name=String(entry.name||'').trim();
     if(!name)return false; // A numeric-only species scope has no exact qualifier.
