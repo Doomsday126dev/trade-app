@@ -28,11 +28,12 @@ test('section searches keep whole-priority scope while precision selection persi
   await expect(high.locator('textarea')).toHaveValue('!traded&25,26');
   await expect(medium.locator('textarea')).toHaveValue('!traded&872');
   await expect(low).toContainText('Unmapped Fixture');
-  await expect(low).toContainText('Manual checks needed: 1.');
+  await expect(low).toContainText('1 not included');
   await expect(low.locator('[data-wants-copy]')).toHaveCount(0);
   await expect(page.locator('#combined-list')).not.toContainText('Chicago');
   await expect(page.locator('#wants-search-scope')).toHaveCount(0);
   await expect(selection).toBeHidden();
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('Pikachu');
   await expect(high.locator('.wants-row')).toHaveCount(1);
   await expect(high.locator('textarea')).toHaveValue('!traded&25,26');
@@ -41,11 +42,13 @@ test('section searches keep whole-priority scope while precision selection persi
   await page.locator('#wants-select-toggle').click();
   await high.locator('input.wants-select').check();
   await expect(selection.locator('textarea')).toHaveValue('!traded&25');
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('Snom');
   await expect(medium.locator('textarea')).toHaveValue('!traded&872');
   await expect(selection.locator('textarea')).toHaveValue('!traded&25');
   await selection.locator('[data-wants-copy]').click();
   expect(await page.evaluate(()=>__copied)).toBe('!traded&25');
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('');
   await expect(high.locator('[data-name="Pikachu"] input')).toBeChecked();
   await expect(high.locator('textarea')).toHaveValue('!traded&25,26');
@@ -58,6 +61,7 @@ test('wants search localizes game terms and unmatched filters retain complete se
     await expect(page.locator('#combined-list > [data-wants-section="H"] textarea')).toHaveValue(`${term}&25,26`);
     await expect(page.locator('#combined-list > [data-wants-section="M"] textarea')).toHaveValue(`${term}&872`);
   }
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('No matching entry');
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(0);
   await expect(page.locator('#combined-list [data-wants-copy]')).toHaveCount(2);

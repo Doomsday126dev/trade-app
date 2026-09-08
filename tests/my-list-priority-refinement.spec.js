@@ -40,37 +40,7 @@ test('Share selected localizes at desktop and mobile; only existing owner legacy
   }
 });
 
-test('manual exceptions are counted once and hydrated only on demand, with bounded detail paging',async({page})=>{
-  await installPriorityReviewFixture(page);
-  const high=section(page,'H'),combo=section(page,'LUCKY+XXL');
-  await expect(high.locator('.contextual-details > summary')).toHaveText('2 manual checks');
-  await expect(combo.locator('.contextual-details > summary')).toHaveText('1 manual check');
-  await expect(page.locator('.contextual-manual-review li')).toHaveCount(0);
-  await combo.locator('.contextual-details > summary').click();
-  await expect(combo.locator('.contextual-manual-review li')).toHaveCount(1);
-  await expect(combo.locator('.contextual-manual-review')).toContainText('Wailmer');
-  await expect(combo.locator('.contextual-manual-review')).toContainText('Lucky');
-  await expect(combo.locator('.contextual-manual-review')).toContainText(await page.evaluate(()=>i18nCore.t('share.flagXxl')));
-  await combo.locator('.contextual-details > summary').click();
-  await expect(combo.locator('.contextual-manual-review li')).toHaveCount(0);
-  await page.evaluate(()=>{
-    const host=document.querySelector('[data-wants-section="H"] .wants-section-search');
-    host.innerHTML=contextualIntentSearchHtml(Array.from({length:123},(_,index)=>({name:'Pikachu',no:25,note:`Exact note ${index}`})),'Large manual scope',{compact:true});
-  });
-  await expect(high.locator('.contextual-manual-review li')).toHaveCount(0);
-  await high.locator('.contextual-details > summary').click();
-  await expect(high.locator('.contextual-manual-review li')).toHaveCount(50);
-  await high.locator('[data-contextual-more-checks]').click();
-  await expect(high.locator('.contextual-manual-review li')).toHaveCount(100);
-  await high.locator('[data-contextual-more-checks]').click();
-  await expect(high.locator('.contextual-manual-review li')).toHaveCount(123);
-  await expect(high.locator('[data-contextual-more-checks]')).toHaveCount(0);
-  await expect(high.locator('.contextual-details > summary')).toBeFocused();
-  await high.locator('.contextual-details > summary').click();
-  await expect(high.locator('.contextual-manual-review li')).toHaveCount(0);
-});
-
-test('clean section, selected and Advanced scopes hide details; clipboard failure still exposes exact copied bytes',async({page})=>{
+test('clean section, selected and Combine searches scopes hide details; clipboard failure still exposes exact copied bytes',async({page})=>{
   await installPriorityReviewFixture(page);
   await page.evaluate(()=>{
     allData=normalizeData({users:{Avery:{}},wishlist:{Avery:{Pikachu:'H',Eevee:'M'}}});renderMyList();
@@ -81,7 +51,7 @@ test('clean section, selected and Advanced scopes hide details; clipboard failur
   await page.locator('#wants-select-toggle').click();
   await high.locator('input').check();
   await expect(page.locator('#combined-search .contextual-details')).toBeHidden();
-  await page.locator('#legacy-list-tools > summary').click();
+  await page.locator('#wants-combine > summary').click();
   await page.locator('[data-wants-scope="H"]').click();
   await page.locator('[data-wants-scope="M"]').click();
   await expect(page.locator('.wants-custom-result .contextual-details')).toBeHidden();

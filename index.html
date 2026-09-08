@@ -436,9 +436,21 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       </div>
     </form>
     <div class="wants-list-toolbar">
-      <div class="mylist-search app-search-shell search-filter"><input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterPlaceholder" aria-label="Filter my wants" oninput="scheduleMyListFilter(this.value)"></div>
       <button type="button" class="btn btn-secondary" onclick="openProductShare()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
       <button type="button" id="wants-select-toggle" class="btn btn-secondary" onclick="startWantsSelection()" data-i18n="workflow.select">Select</button>
+      <details id="wants-list-tools" class="wants-list-tools" ontoggle="resetWantsToolsDisclosure(this)" onkeydown="if(event.key==='Escape'){event.stopPropagation();closeWantsListTools(true)}">
+        <summary class="btn btn-secondary"><span data-i18n="workflow.listTools">List tools</span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-down"></use></svg></summary>
+        <div class="wants-list-menu">
+          <button type="button" class="btn btn-ghost" onclick="setWantsFindOpen(true)" data-i18n="workflow.findInList">Find in list</button>
+          <button type="button" class="btn btn-ghost" onclick="closeWantsListTools(true);openImport()" data-i18n="myList.importAction">Import string</button>
+          <button type="button" class="btn btn-ghost" id="wants-about-searches-toggle" aria-expanded="false" aria-controls="wants-about-searches" onclick="toggleWantsSearchHelp()" data-i18n="workflow.aboutSearches">About searches</button>
+          <p id="wants-about-searches" hidden data-i18n="workflow.searchHelp">Searches find candidate Pokémon by species. Check exact forms and requirements in Pokémon GO.</p>
+        </div>
+      </details>
+    </div>
+    <div id="wants-find" class="wants-find" hidden>
+      <input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="workflow.findInList" data-i18n-aria-label="workflow.findInList" aria-label="Find in list" oninput="scheduleMyListFilter(this.value)" onkeydown="if(event.key==='Escape'){event.stopPropagation();setWantsFindOpen(false)}">
+      <button type="button" class="btn btn-secondary" onclick="setWantsFindOpen(false)" data-i18n="common.close" data-i18n-aria-label="workflow.closeFind" aria-label="Close find in list">Close</button>
     </div>
     <div id="wants-selection-tools" class="wants-selection-context" hidden>
       <span id="combined-selected-count" aria-live="polite"></span><div id="combined-search" hidden></div>
@@ -449,9 +461,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div id="intent-review" class="intent-review" hidden></div>
     <div class="owner-share-notice" id="owner-share-notice" role="status" aria-live="polite"></div>
-    <details id="legacy-list-tools" ontoggle="refreshCombinedSearch()"><summary data-i18n="phase2.legacyTools">Advanced list tools</summary>
+    <details id="wants-combine" ontoggle="refreshCombinedSearch()"><summary data-i18n="workflow.combineSearches">Combine searches</summary>
       <div id="wants-custom-search"></div>
-      <button type="button" class="btn btn-secondary" onclick="openImport()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-upload"></use></svg><span data-i18n="myList.importAction">Import string</span></button>
     </details>
   </div>
 

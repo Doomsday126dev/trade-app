@@ -538,20 +538,44 @@ function refreshCombinedSearch(model=productDeclarations()){
   const selectedHost=document.getElementById('combined-search');selectedHost.hidden=!selected.length;
   if(selected.length)updateWantsSearch(selectedHost,selected,i18nCore.t('phase2.selection'));else selectedHost.replaceChildren();
   const advanced=document.getElementById('wants-custom-search');
-  if(!document.getElementById('legacy-list-tools')?.open){advanced.replaceChildren();return;}
+  if(!document.getElementById('wants-combine')?.open){advanced.replaceChildren();return;}
   const allSections=window.PogoDomain.priorityValues.wantSections(model.entries);
   const scopes=['H','M','L','LUCKY','SHINY','XXL','XXS'].filter(key=>allSections.some(section=>section.key===key||(!section.priority&&section.flags.includes(key.toLowerCase()))));
   for(const key of wantsCustomScopes)if(!scopes.includes(key))wantsCustomScopes.delete(key);
-  const signature=JSON.stringify([i18nCore.getLocale(),scopes,[...wantsCustomScopes]]);
+  const signature=JSON.stringify([i18nCore.getLocale(),scopes]);
   if(advanced._scopeSignature!==signature||!advanced.childElementCount){
     advanced._scopeSignature=signature;
-    advanced.innerHTML=`<h4>${escHtml(i18nCore.t('workflow.customSearch'))}</h4><div class="wants-custom-toggles">${scopes.map(key=>{const section={key,priority:['H','M','L'].includes(key)?key:'',flags:[key.toLowerCase()]};return`<button type="button" class="btn btn-secondary" data-wants-scope="${key}" aria-pressed="${wantsCustomScopes.has(key)}" onclick="toggleWantsCustomScope(this.dataset.wantsScope)">${escHtml(wantSectionLabel(section))}</button>`;}).join('')}</div><div class="wants-custom-result"></div>`;
+    advanced.innerHTML=`<div class="wants-custom-toggles" role="group" aria-label="${escAttr(i18nCore.t('workflow.combineSearches'))}">${scopes.map(key=>{const section={key,priority:['H','M','L'].includes(key)?key:'',flags:[key.toLowerCase()]};return`<button type="button" class="btn btn-secondary" data-wants-scope="${key}" aria-pressed="${wantsCustomScopes.has(key)}" onclick="toggleWantsCustomScope(this.dataset.wantsScope)">${escHtml(wantSectionLabel(section))}</button>`;}).join('')}</div><div class="wants-custom-result"></div>`;
   }
+  advanced.querySelectorAll('[data-wants-scope]').forEach(button=>button.setAttribute('aria-pressed',String(wantsCustomScopes.has(button.dataset.wantsScope))));
   const entries=model.entries.filter(entry=>['H','M','L'].includes(entry.p)?wantsCustomScopes.has(entry.p):['lucky','shiny','xxl','xxs'].some(flag=>entry[flag]&&wantsCustomScopes.has(flag.toUpperCase())));
   const result=advanced.querySelector('.wants-custom-result');
-  if(entries.length)updateWantsSearch(result,entries,i18nCore.t('workflow.customSearch'));
+  if(entries.length)updateWantsSearch(result,entries,i18nCore.t('workflow.combineSearches'));
   else result.innerHTML=`<p class="type-meta">${escHtml(i18nCore.t('workflow.chooseScopes'))}</p>`;
 }
+function closeWantsListTools(returnFocus=false){
+  const tools=document.getElementById('wants-list-tools');tools.open=false;resetWantsToolsDisclosure(tools);
+  if(returnFocus)tools.querySelector('summary').focus();
+}
+function resetWantsToolsDisclosure(tools){
+  if(tools.open)return;
+  document.getElementById('wants-about-searches').hidden=true;
+  document.getElementById('wants-about-searches-toggle').setAttribute('aria-expanded','false');
+}
+function toggleWantsSearchHelp(){
+  const help=document.getElementById('wants-about-searches');help.hidden=!help.hidden;
+  document.getElementById('wants-about-searches-toggle').setAttribute('aria-expanded',String(!help.hidden));
+}
+function setWantsFindOpen(open){
+  closeWantsListTools();
+  document.getElementById('wants-find').hidden=!open;
+  if(open){const input=document.getElementById('combined-filter');input.focus();input.select();}
+  else{renderMyList('');document.querySelector('#wants-list-tools > summary').focus();}
+}
+document.addEventListener('click',event=>{
+  const tools=document.getElementById('wants-list-tools');
+  if(tools?.open&&!tools.contains(event.target))closeWantsListTools();
+});
 function toggleWantsCustomScope(key){if(wantsCustomScopes.has(key))wantsCustomScopes.delete(key);else wantsCustomScopes.add(key);refreshCombinedSearch();}
 function startWantsSelection(){wantsSelectionMode=true;refreshCombinedSearch();}
 function clearWantsSelection(){combinedSelection.clear();wantsSelectionMode=false;renderMyList();}
@@ -1961,6 +1985,7 @@ function sessionTransientCallback(callback){
 function resetSessionTransientUi(reason='session_boundary'){
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
+  document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
@@ -6735,7 +6760,7 @@ function hideUndo({restoreFocus=false}={}){
   toastEl?.classList.remove('show');
   toastEl?.setAttribute('aria-hidden','true');
   if(toastEl)toastEl.hidden=true;
-  const fallback=undoReturnFocus?.isConnected&&!undoReturnFocus.disabled?undoReturnFocus:document.getElementById('combined-filter')||document.getElementById('wants-add-name');
+  const fallback=undoReturnFocus?.isConnected&&!undoReturnFocus.disabled&&undoReturnFocus.getClientRects().length?undoReturnFocus:document.querySelector('#wants-list-tools > summary')||document.getElementById('wants-add-name');
   undoReturnFocus=null;
   if(restoreFocus&&focusWasInside)requestAnimationFrame(()=>fallback?.focus({preventScroll:true}));
 }
@@ -13947,6 +13972,7 @@ function _focusActiveTabSearch(){
   const map={find:'find-trainer-input',mylist:'combined-filter',have:'have-filter',schedule:''};
   // Detect active tab
   const active=document.querySelector('.tab.active')?.dataset.tab;
+  if(active==='mylist'){setWantsFindOpen(true);return;}
   // Special case: have tab has subtab-specific filters
   if(active==='have'){
     const haveQ=document.getElementById('have-q')||document.getElementById('have-browse-q');

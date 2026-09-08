@@ -112,7 +112,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('[data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
     await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
     await expect(page.locator('[data-want-section="L"] .contextual-details')).toBeHidden();
-    await expect(page.locator('[data-want-section="LUCKY"] .contextual-details > summary')).toHaveText('1 manual check');
+    await expect(page.locator('[data-want-section="LUCKY"] .contextual-details')).toBeHidden();
     for(const [key,no] of [['H',25],['M',854],['L',1],['LUCKY',25],['XXL',143],['XXS',595],['SHINY',94],['LUCKY+SHINY',280],['NEEDS_PRIORITY',150]]){
       const section=page.locator(`[data-want-section="${key}"]`);
       await expect(section.locator('.share-pcard')).toHaveCount(1);
@@ -315,7 +315,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{'Unmapped Event Form':{p:'H'}}}}});
     await page.goto('./?view=PublicTrainer&list=wishlist');
     await expect(page.locator('[data-contextual-copy]')).toHaveCount(0);
-    await expect(page.locator('.contextual-search')).toContainText('Manual checks needed: 1.');
+    await expect(page.locator('.contextual-search')).toContainText('1 not included');
     await page.goto('./?view=PublicTrainer&list=gmax');
     await expect(page.locator('.public-share-empty')).toBeVisible();
     await expect(page.locator('[data-contextual-copy]')).toHaveCount(0);
