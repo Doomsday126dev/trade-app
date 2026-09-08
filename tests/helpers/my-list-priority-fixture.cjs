@@ -24,6 +24,10 @@ async function installPriorityReviewFixture(page,{theme='dark',large=false}={}){
     db=null;fbOn=false;managedFirebaseClient=null;managedAccountSyncRuntime=null;accountSyncUiState=null;
     localStorage.clear();sessionStorage.clear();
     cur='Avery';auth={currentUser:{uid:'synthetic-priority-review-avery'}};
+    // The synthetic want must have the same canonical source metadata as an
+    // admitted catalog entry. This base species is absent from the seed list.
+    if(!DB.wishlist.some(entry=>entry.name==='Dragonite'))DB.wishlist.push({name:'Dragonite',displayName:'Dragonite',no:PogoI18n.pokemonNames.speciesIdByEnglishName('Dragonite'),users:{}});
+    accountSyncCatalogIndex=null;myListSourceMapCache.clear();spriteIndex=null;
     const wishlist={Pikachu:'H',Rayquaza:'H[shiny]',Dragonite:'H',Eevee:'M(F)',Sinistea:'M(Antique)',Gardevoir:'M[shiny]',
       Snorlax:'L',Lapras:'L[lucky]',Bulbasaur:'[lucky]',Charmander:'[xxl]',Squirtle:'[xxs]',Gengar:'[shiny]',Wailmer:'[lucky][xxl]',Psyduck:''};
     if(large){

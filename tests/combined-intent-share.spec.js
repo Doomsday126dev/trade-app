@@ -59,6 +59,9 @@ test('signed-in recipient sections preserve special wants and copy only that tra
   await expect(page.locator('#share-list-out .share-pcard')).toHaveCount(9);
   await expect(page.locator('#share-list-out > .contextual-search')).toHaveCount(0);
   await expect(page.locator('#share-list-out')).not.toContainText(/Snom|Charmander|Other entries/);
+  await expect(page.locator('#share-list-out [data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
+  await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
+  await expect(page.locator('#share-list-out [data-want-section="L"] .contextual-details')).toBeHidden();
   for(const [key,numbers] of [['H',[25,94]],['M',[133]],['L',[1]],['LUCKY',[25]],['XXL',[143]],['XXS',[595]],['LUCKY+SHINY',[280]],['NEEDS_PRIORITY',[150]]]){
     const section=page.locator(`#share-list-out [data-want-section="${key}"]`);
     await expect(section.locator('.share-pcard')).toHaveCount(numbers.length);

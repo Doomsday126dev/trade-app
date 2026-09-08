@@ -2121,6 +2121,9 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .wants-compact-search>.contextual-details>summary{min-height:32px;display:flex;align-items:center;cursor:pointer;color:var(--muted);font-size:11px;padding:3px 0;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 .wants-compact-search .contextual-search-body{position:absolute;right:0;top:100%;z-index:70;width:min(320px,calc(100vw - 40px));padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high);box-sizing:border-box}
 .wants-compact-search .contextual-search-body p{margin:0 0 8px;font-size:12px;line-height:1.5}
+.wants-compact-search .contextual-search-body{max-height:min(420px,70vh);overflow:auto}
+.contextual-manual-review ul{margin:0 0 10px;padding-left:18px;font-size:12px;line-height:1.5}
+.contextual-manual-review li+li{margin-top:6px}
 .wants-compact-search .strbox{width:100%;box-sizing:border-box;min-height:48px}
 .wants-compact-search .contextual-copy-status:empty{display:none}
 .wants-compact-search .contextual-copy-status,.wants-compact-search .contextual-unresolved{flex-basis:100%;margin:0;max-width:220px}

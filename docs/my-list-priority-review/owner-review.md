@@ -1,5 +1,7 @@
 # My List priority workflow — candidate report
 
+This report documents the original `6ca8568` candidate. The subsequent focused owner-review pass is documented in the [refinement report](refinement/report.md) with [new AFTER evidence](refinement/index.html).
+
 Implemented in the isolated `ui/my-list-priority-workflow` worktree, based on `1d8f41529bffc38471ca404157acd71960757234` (main with .99 UI consolidation and verification-routing repair). Ready for owner visual approval. No merge, deployment, production mutation, schema migration, or identity/security/provider change was performed. PR #63 and the separate supplemental auth-transition branch were not modified; the candidate contains no commits from that branch.
 
 Start with the [matched visual review](index.html). Supporting evidence: [historical and semantic audit](history-and-semantics.md), [performance qualification](performance.md), and [raw performance measurements](performance.json).

@@ -86,9 +86,9 @@
     const rank=section=>section.priority?['H','M','L'].indexOf(section.priority):section.key==='NEEDS_PRIORITY'?100:3+WANT_FLAGS.indexOf(section.flags[0]);
     return [...groups.values()].sort((a,b)=>rank(a)-rank(b)||a.flags.length-b.flags.length||a.key.localeCompare(b.key));
   }
-  function wantSectionLabel(section,t){
+  function wantSectionLabel(section,t,{recipient=false}={}){
     if(section.priority)return t({H:'priority.high',M:'priority.medium',L:'priority.low'}[section.priority]);
-    if(section.key==='NEEDS_PRIORITY')return t('workflow.needsPriority');
+    if(section.key==='NEEDS_PRIORITY')return t(recipient?'workflow.priorityNotSet':'workflow.needsPriority');
     return section.flags.map(flag=>({xxl:'XXL',xxs:'XXS'}[flag]||t(flag==='lucky'?'myList.lucky':'workflow.shiny'))).join(' · ');
   }
 

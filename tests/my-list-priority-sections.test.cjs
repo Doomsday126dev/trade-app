@@ -9,6 +9,17 @@ for(const file of ['priorityValues','tradeListComparison','pokemonGoSearchSyntax
 const {priorityValues:priority,tradeListComparison:declarations,searchStrings:search}=window.PogoDomain;
 const plain=value=>JSON.parse(JSON.stringify(value));
 
+test('unclassified owner and recipient labels differ without creating a priority or changing special labels',()=>{
+  const t=key=>key,legacy=priority.wantSections([{name:'Psyduck',p:''}])[0];
+  assert.equal(priority.wantSectionLabel(legacy,t),'workflow.needsPriority');
+  assert.equal(priority.wantSectionLabel(legacy,t,{recipient:true}),'workflow.priorityNotSet');
+  assert.equal(legacy.priority,'');
+  for(const entry of [{lucky:true},{shiny:true},{xxl:true},{xxs:true},{lucky:true,xxl:true}]){
+    const section=priority.wantSections([{name:'Want',p:'',...entry}])[0];
+    assert.equal(priority.wantSectionLabel(section,t),priority.wantSectionLabel(section,t,{recipient:true}));
+  }
+});
+
 test('stored H/M/L and each priority-free special want have distinct presentation without coercion',()=>{
   const entries=['H','M','L','[lucky]','[shiny]','[xxl]','[xxs]','[lucky][xxl]','', '(F)','(Antique)'].map((value,index)=>({name:'Want '+index,value,...priority.parsePri(value)}));
   const original=JSON.stringify(entries),sections=priority.wantSections(entries);

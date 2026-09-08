@@ -73,7 +73,7 @@ test('share renderer routes dynamic chrome through i18n without changing priorit
     'share.flagFemale','share.flagMale','share.flagLucky','share.flagShiny','share.flagXxl','share.flagXxs'
   ])assert.ok(render.includes(key),key);
   assert.match(render,/publicShareUpdatedLabel\(ud\.lastUpdated\)/);
-  assert.match(render,/wantSections\(list\)/);assert.match(render,/wantSectionLabel\(section\)/);
+  assert.match(render,/wantSections\(list\)/);assert.match(render,/wantSectionLabel\(section,\{recipient:true\}\)/);
   assert.match(render,/contextualIntentSearchHtml\(entries,label,\{compact:true/);
   assert.doesNotMatch(render,/grouped=\{H:\[\],M:\[\],L:\[\],U:\[\]\}/);
   assert.doesNotMatch(render,/strLevelsHtml\(strs/);

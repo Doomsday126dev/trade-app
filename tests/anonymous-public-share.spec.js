@@ -109,6 +109,10 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out > .contextual-search')).toHaveCount(0);
     await expect(page.locator('#share-list-out select')).toHaveCount(0);
     await expect(page.locator('#share-list-out')).not.toContainText('Other entries');
+    await expect(page.locator('[data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
+    await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
+    await expect(page.locator('[data-want-section="L"] .contextual-details')).toBeHidden();
+    await expect(page.locator('[data-want-section="LUCKY"] .contextual-details > summary')).toHaveText('1 manual check');
     for(const [key,no] of [['H',25],['M',854],['L',1],['LUCKY',25],['XXL',143],['XXS',595],['SHINY',94],['LUCKY+SHINY',280],['NEEDS_PRIORITY',150]]){
       const section=page.locator(`[data-want-section="${key}"]`);
       await expect(section.locator('.share-pcard')).toHaveCount(1);
@@ -136,7 +140,7 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
       for(const button of await page.locator('[data-contextual-copy]').all())expect((await button.boundingBox()).height).toBeGreaterThanOrEqual(44);
-      if(process.env.WANT_WORKFLOW_SCREENSHOT_DIR){
+      if(process.env.WANT_WORKFLOW_SCREENSHOT_DIR&&(!process.env.WANT_WORKFLOW_CAPTURE_ONLY_390||width===390&&theme==='dark')){
         const folder=path.join(process.env.WANT_WORKFLOW_SCREENSHOT_DIR,'after');
         fs.mkdirSync(folder,{recursive:true});
         await page.locator('#share-list-out img').evaluateAll(images=>images.forEach(image=>image.loading='eager'));

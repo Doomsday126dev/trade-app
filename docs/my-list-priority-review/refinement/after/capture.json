@@ -1,0 +1,398 @@
+{
+  "phase": "after",
+  "baseCommit": "6ca8568",
+  "synthetic": true,
+  "records": [
+    {
+      "name": "my-list-1440-dark",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 59,
+      "declarations": 18
+    },
+    {
+      "name": "my-list-390-dark",
+      "width": 390,
+      "scrollWidth": 390,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 54,
+      "declarations": 18
+    },
+    {
+      "name": "priority-and-special-sections",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 59,
+      "declarations": 18,
+      "viewportHeight": 2400
+    },
+    {
+      "name": "selection-active",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 59,
+      "declarations": 18
+    },
+    {
+      "name": "selection-active-390",
+      "width": 390,
+      "scrollWidth": 390,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 54,
+      "declarations": 18
+    },
+    {
+      "name": "manual-check-section",
+      "width": 390,
+      "scrollWidth": 390,
+      "rows": 18,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High4 Pokémon"
+        },
+        {
+          "key": "M",
+          "title": "Medium5 Pokémon"
+        },
+        {
+          "key": "L",
+          "title": "Low2 Pokémon"
+        },
+        {
+          "key": "LUCKY",
+          "title": "Lucky2 Pokémon"
+        },
+        {
+          "key": "LUCKY+XXL",
+          "title": "Lucky · XXL1 Pokémon"
+        },
+        {
+          "key": "SHINY",
+          "title": "Shiny1 Pokémon"
+        },
+        {
+          "key": "XXL",
+          "title": "XXL1 Pokémon"
+        },
+        {
+          "key": "XXS",
+          "title": "XXS1 Pokémon"
+        },
+        {
+          "key": "NEEDS_PRIORITY",
+          "title": "Needs priority1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 54,
+      "declarations": 18
+    },
+    {
+      "name": "clean-section",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "rows": 1,
+      "sections": [
+        {
+          "key": "H",
+          "title": "High1 Pokémon"
+        }
+      ],
+      "brokenImages": [],
+      "rowHeight": 58,
+      "declarations": 1
+    }
+  ],
+  "exportDrawn": [
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/25.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/384.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/149.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "http://127.0.0.1:4176/assets/sprites/go/pikachu-world-champs-2025.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/female/133.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/854.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/282.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "http://127.0.0.1:4176/assets/sprites/go/unown-em.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/143.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/131.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/25.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/1.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/320.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/94.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/7.png",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/54.png",
+      "width": 512,
+      "height": 512
+    }
+  ],
+  "errors": []
+}

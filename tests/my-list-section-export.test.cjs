@@ -23,7 +23,7 @@ function imageHarness(locale='en'){
     loadCanvasImageWithFallback:async entry=>entry.noArt?null:entry,
     drawImageContain(_ctx,entry,x,y){drawn.push({image:entry.name,x,y});},
     drawFittedText(_ctx,text,x,y){drawn.push({text:String(text),x,y,fitted:true});},
-    wantSectionLabel:section=>window.PogoDomain.priorityValues.wantSectionLabel(section,t)
+    wantSectionLabel:(section,options)=>window.PogoDomain.priorityValues.wantSectionLabel(section,t,options)
   });
   const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
   const start=source.indexOf('function productShareImageDetails('),end=source.indexOf('\nfunction refreshAll()',start);
@@ -53,7 +53,7 @@ test('active export uses ordered priority and exact special sections without los
   assert.equal(JSON.stringify(entries),before);
   assert.equal(canvas.width,1800);
   const text=drawn.filter(item=>'text' in item);
-  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Shiny','Lucky · XXL','Needs priority']){
+  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Shiny','Lucky · XXL','Priority not set']){
     const headers=text.filter(item=>item.text===label&&item.fitted);
     assert.equal(headers.length,1,label);
   }
@@ -74,7 +74,7 @@ test('active export uses ordered priority and exact special sections without los
   assert.ok(text.some(item=>item.text.includes('♂')));
   assert.ok(artRequests.some(item=>item.catalogId==='raichu-alolan'&&item.gender==='m'));
   assert.ok(text.every(item=>item.y<canvas.height/2),'all exact details fit within the exported image');
-  assert.ok(!text.some(item=>item.text==='Other'||/Top want/.test(item.text)));
+  assert.ok(!text.some(item=>item.text==='Other'||item.text==='Needs priority'||/Top want/.test(item.text)));
 });
 
 test('image details suppress only flags already supplied by the special section',()=>{
@@ -92,7 +92,7 @@ test('image details suppress only flags already supplied by the special section'
 for(const locale of ['en','ja','es','de'])test(`export and workflow terminology follow ${locale} without changing stored priorities`,async()=>{
   const {context,drawn,t}=imageHarness(locale);
   await context.renderProductShareImage(fixture(), 'Fixture');
-  for(const key of ['priority.high','priority.medium','priority.low','workflow.needsPriority']){
+  for(const key of ['priority.high','priority.medium','priority.low','workflow.priorityNotSet']){
     assert.equal(drawn.filter(item=>item.text===t(key)&&item.fitted).length,1,key);
   }
   assert.equal(t('phase2.top'),t('priority.high'));

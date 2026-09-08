@@ -435,7 +435,7 @@ let myListIntent='lf';
 let combinedSelection=new Set(),combinedOwner='',combinedEditor=null,combinedLimit=120;
 let wantsSelectionMode=false;
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
-function wantSectionLabel(section){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t);}
+function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
 function combinedGroups(model=productDeclarations()){
   const groups=new Map();
@@ -6438,7 +6438,7 @@ async function renderProductShareImage(entries,owner){
     const left=padding+sectionIndex*cellWidth*rowColumns,sectionWidth=cellWidth*rowColumns;
     const color=({H:'#ff9c94',M:'#e7c76d',L:'#75d5b0'})[section.priority]||(section.flags.length?'#bca7e8':'#a9b1b7');
     ctx.fillStyle='#2e383e';ctx.fillRect(left,y,sectionWidth-12,1);
-    drawFittedText(ctx,wantSectionLabel(section),left,y+26,sectionWidth-130,{max:18,min:14,color});
+    drawFittedText(ctx,wantSectionLabel(section,{recipient:true}),left,y+26,sectionWidth-130,{max:18,min:14,color});
     ctx.textAlign='right';
     drawFittedText(ctx,i18nCore.t('myList.priorityPokemonCount',{count:section.entries.length}),left+sectionWidth-12,y+26,110,{max:12,min:10,weight:500,color:'#a9b1b7'});
     ctx.textAlign='left';
@@ -12019,7 +12019,7 @@ function publicShareListLabel(type){
   return i18nCore.t(PUBLIC_SHARE_LIST_KEYS[type]||'list.others');
 }
 function publicSharePriorityLabel(priority){
-  return i18nCore.t(PUBLIC_SHARE_PRIORITY_KEYS[priority]||'workflow.needsPriority');
+  return i18nCore.t(PUBLIC_SHARE_PRIORITY_KEYS[priority]||'workflow.priorityNotSet');
 }
 function publicSharePriorityBadge(priority){
   const emoji=priority==='H'?'🔴':priority==='M'?'🟡':priority==='L'?'🟢':'';
@@ -12082,7 +12082,7 @@ function renderShareView(username,type,intent){
   const sectionState=out._recipientWants;
   let html='';
   window.PogoDomain.priorityValues.wantSections(list).forEach(section=>{
-    const {key,priority,entries}=section,label=wantSectionLabel(section);
+    const {key,priority,entries}=section,label=wantSectionLabel(section,{recipient:true});
     const collapsed=sectionState.collapsed.has(key),limit=sectionState.limits.get(key)||80;
     const id=`recipient-wants-${key.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`;
     // Cluster by family (Vivillon, Unown, Furfrou variants stay together)
