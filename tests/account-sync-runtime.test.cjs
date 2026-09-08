@@ -738,9 +738,13 @@ test('normal enrollment preserves all 66 reviewed stale records inactive across 
   assert.equal(JSON.stringify(repositoryState.recoveryCandidates),preserved);assert.equal(JSON.stringify(h.server.snapshot()),canonical);assert.equal(h.server.attempts.length,attempts);assert.equal(repositoryState.calls.updateMeta,1);await second.stop();
 });
 
-test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emulator login and runtime reopen',{skip:!process.env.FIREBASE_AUTH_EMULATOR_HOST},async t=>{
+test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emulator login and runtime reopen',{
+  skip:!process.env.FIREBASE_AUTH_EMULATOR_HOST&&!process.env.FIREBASE_DATABASE_EMULATOR_HOST&&
+    'Requires firebase.legacy-identity-fences.emulator.json: demo Auth at 127.0.0.1:9499 and RTDB at 127.0.0.1:9500; never use production credentials or services.'
+},async t=>{
   const host=process.env.FIREBASE_AUTH_EMULATOR_HOST,projectId='demo-legacy-pin-reset';
-  assert.match(host||'',/^127\.0\.0\.1:9499$/,'Run only through the dedicated Auth emulator configuration');
+  assert.equal(host,'127.0.0.1:9499','Run only through firebase.legacy-identity-fences.emulator.json with both Auth and RTDB');
+  assert.equal(process.env.FIREBASE_DATABASE_EMULATOR_HOST,'127.0.0.1:9500','Retired-UID fencing requires the paired RTDB emulator');
   const resetRequire=require('node:module').createRequire(path.join(root,'functions/legacy-pin-reset/package.json'));
   const {initializeApp,deleteApp}=resetRequire('firebase-admin/app');
   const {getAuth}=resetRequire('firebase-admin/auth');

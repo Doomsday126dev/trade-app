@@ -3473,13 +3473,22 @@ async function ensureAccountSyncRuntime(){
   if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
   if(!eligible){
     if(managedAccountSyncRuntime)await stopAccountSyncRuntime();
+    if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
     accountSyncUiState=Object.freeze({state:'local-only',eligible:false,active:false,pendingCount:0,blockedCount:0,conflictCount:0});refreshSyncUi();
     return Object.freeze({ok:true,status:'disabled'});
   }
   if(!firebaseDataProtectionReady||!db||!uid||!username)return Object.freeze({ok:false,status:'not-ready'});
   if(managedAccountSyncRuntime?.ownerUid===uid){
-    try{accountSyncUiState=await managedAccountSyncRuntime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}
-    catch(error){accountSyncMarkMutationBlocked(error,'runtime');return Object.freeze({ok:false,status:'runtime-unhealthy'});}
+    const runtime=managedAccountSyncRuntime,generation=accountSyncRuntimeGeneration;
+    const currentRuntime=()=>bindingCurrent()&&generation===accountSyncRuntimeGeneration&&runtime===managedAccountSyncRuntime;
+    try{
+      const state=await runtime.snapshot();
+      if(!currentRuntime())return Object.freeze({ok:false,status:'session-changed'});
+      accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+    }catch(error){
+      if(!currentRuntime())return Object.freeze({ok:false,status:'session-changed'});
+      accountSyncMarkMutationBlocked(error,'runtime');return Object.freeze({ok:false,status:'runtime-unhealthy'});
+    }
     return accountSyncProjectionReady()?Object.freeze({ok:true,status:'active'}):Object.freeze({ok:false,status:'runtime-unhealthy'});
   }
   const binding=`${uid}\n${username}`;
@@ -3509,13 +3518,17 @@ async function ensureAccountSyncRuntime(){
     try{
       const result=await runtime.start();
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
+      const state=await runtime.snapshot();
+      if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
       accountSyncInitialProviderProfile={};
-      accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+      accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
       if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
     }catch(error){
+      if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
       if(currentSession()){
         let failedState={};try{failedState=await runtime.snapshot();}catch{}
+        if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
         const safeCode=accountSyncRuntimeData.diagnosticCode(error,failedState.lastError||'account-sync/migration-failed');
         accountSyncUiState=Object.freeze({
           ...failedState,state:'sync-error',eligible:true,active:failedState.active===true,
