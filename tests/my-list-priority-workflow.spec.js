@@ -35,7 +35,8 @@ test('per-section Copy Search stays full-section across filtering, collapse and 
     await page.evaluate(locale=>{i18nCore.setLocale(locale);renderMyList();},locale);
     const high=section(page,'H');
     const query=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(entry=>entry.p==='H'),{locale:pokemonGoSearchLocale()}).parts[0]);
-    await page.locator('#combined-filter').fill('Pikachu');
+    await page.evaluate(()=>setWantsFindOpen(true));
+  await page.locator('#combined-filter').fill('Pikachu');
     await expect(high.locator('.myrow')).toHaveCount(2);
     const medium=section(page,'M');
     await expect(medium.locator('.myrow')).toHaveCount(0);
@@ -49,15 +50,16 @@ test('per-section Copy Search stays full-section across filtering, collapse and 
     await high.locator('[data-contextual-copy]').click();
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(query);
     await high.locator('.mylist-priority-toggle').click();
-    await page.locator('#combined-filter').fill('');
+    await page.evaluate(()=>setWantsFindOpen(true));
+  await page.locator('#combined-filter').fill('');
     await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
   }
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__priorityReviewData));
 });
 
-test('Advanced combinations are explicit independent scopes, with manual exact-check guidance',async({page})=>{
+test('Combine searches combinations are explicit independent scopes, without repetitive variant guidance',async({page})=>{
   await fixture(page);
-  await page.locator('#legacy-list-tools > summary').click();
+  await page.locator('#wants-combine > summary').click();
   await page.locator('[data-wants-scope="H"]').click();
   await page.locator('[data-wants-scope="M"]').click();
   const result=page.locator('.wants-custom-result');
@@ -69,8 +71,7 @@ test('Advanced combinations are explicit independent scopes, with manual exact-c
   await assertScope(['H','M']);
   await page.locator('[data-wants-scope="LUCKY"]').click();
   await assertScope(['H','M','LUCKY']);
-  await result.locator('summary').click();
-  await expect(result.locator('.contextual-search-body')).toContainText(/species/i);
+  await expect(result.locator('.contextual-details')).toBeHidden();
   await expect(page.locator('#wants-search-scope')).toHaveCount(0);
   await expect(page.locator('[data-wants-scope="H"]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('[data-wants-scope="LUCKY"]')).toHaveAttribute('aria-pressed','true');
@@ -82,6 +83,7 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await section(page,'H').locator('[data-name="Pikachu"] input').check();
   await section(page,'LUCKY').locator('[data-name="Pikachu"] input').check();
   await expect(page.locator('#combined-selected-count')).toHaveText('2 selected');
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('Eevee');
   await expect(page.locator('#combined-list .myrow')).toHaveCount(1);
   await expect(page.locator('#combined-selected-count')).toHaveText('2 selected');
@@ -96,6 +98,7 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await page.locator('#wants-selection-tools button[onclick="clearWantsSelection()"] ').click();
   await expect(page.locator('#wants-selection-tools')).toBeHidden();
   await expect(page.locator('#wants-select-toggle')).toBeVisible();
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('');
   expect(await page.evaluate(()=>combinedSelection.size)).toBe(0);
 });
@@ -175,7 +178,7 @@ test('remove icon retains confirmation and clipboard failure opens only that sec
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__priorityReviewData));
 });
 
-test('responsive rows, selection and Advanced tools fit 1440, 390 and 320 in both themes',async({page})=>{
+test('responsive rows, selection and Combine searches tools fit 1440, 390 and 320 in both themes',async({page})=>{
   await fixture(page);
   for(const theme of ['dark','light'])for(const width of [1440,390,320]){
     await page.setViewportSize({width,height:900});await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
@@ -188,10 +191,10 @@ test('responsive rows, selection and Advanced tools fit 1440, 390 and 320 in bot
     expect(geometry.every(row=>row.hits.every(hit=>hit.height>=44&&hit.width>=(width<601?44:40))),JSON.stringify({theme,width,geometry})).toBe(true);
     await page.evaluate(()=>startWantsSelection());
     await section(page,'H').locator('input').first().check();
-    await page.locator('#legacy-list-tools > summary').click();
+    await page.locator('#wants-combine > summary').click();
     await page.locator('[data-wants-scope="H"]').click();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    await page.evaluate(()=>{clearWantsSelection();document.getElementById('legacy-list-tools').open=false;});
+    await page.evaluate(()=>{clearWantsSelection();document.getElementById('wants-combine').open=false;});
   }
 });
 
@@ -231,7 +234,7 @@ test('unresolved-only wants cannot imply an empty list or a match-all query',asy
   await fixture(page);
   await page.evaluate(()=>{allData=normalizeData({users:{Avery:{}},wishlist:{Avery:{'Unresolved exact Pokémon':'[xxs]'}}});renderMyList();});
   await expect(section(page,'XXS')).toContainText('Unresolved exact Pokémon');
-  await expect(section(page,'XXS')).toContainText('Search unavailable');
+  await expect(section(page,'XXS')).toContainText('No species could be included');
   await expect(section(page,'XXS').locator('[data-contextual-copy]')).toHaveCount(0);
   await expect(section(page,'XXS')).not.toContainText('No entries in this scope');
 });

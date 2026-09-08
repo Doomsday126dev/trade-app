@@ -63,7 +63,7 @@ for(const engine of ['chromium','webkit']){
         await installReviewFixture(page);
         for(const theme of ['dark','light']){
           await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
-          for(const surface of ['my-list','favorites','group','who-wants','events','more','settings-language','share','editor','admin']){
+          for(const surface of ['my-list','advanced','favorites','group','who-wants','events','more','settings-language','share','editor','admin']){
             await showReviewSurface(page,surface);
             await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
             const controls=await page.evaluate(()=>[...document.querySelectorAll('select')].filter(node=>node.getClientRects().length).map(node=>{
@@ -85,10 +85,10 @@ for(const engine of ['chromium','webkit']){
         }
         await showReviewSurface(page,'my-list');
         await expect(page.locator('#mylist-out,#intent-entries,.mylist-type-tabs,#ac-input')).toHaveCount(0);
-        await page.locator('#legacy-list-tools > summary').click();
-        await expect(page.locator('#legacy-list-tools > button')).toHaveCount(1);
-        await expect(page.locator('#legacy-list-tools')).not.toContainText('Build your trade list');
-        await page.locator('#legacy-list-tools > button').click();
+        await page.locator('#wants-list-tools > summary').click();
+        await expect(page.locator('#wants-list-tools .wants-list-menu > button')).toHaveCount(3);
+        await expect(page.locator('#wants-list-tools')).not.toContainText('Build your trade list');
+        await page.locator('#wants-list-tools button[onclick*="openImport"] ').click();
         await expect(page.locator('#import-category')).toBeVisible();
         const beforeImport=await page.evaluate(()=>JSON.stringify(allData));
         await page.locator('#import-category').selectOption('dynamax');

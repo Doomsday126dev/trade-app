@@ -104,7 +104,7 @@ async function showReviewSurface(page,surface){
     if(_modalActiveId)closeModal(_modalActiveId,{route:false});
     if(surface==='my-list'||surface==='advanced'){
       switchTab('mylist');await waitForMyListRender();
-      if(surface==='advanced')document.getElementById('legacy-list-tools').open=true;
+      if(surface==='advanced')document.getElementById('wants-combine').open=true;
     }else if(['trainers','favorites','group','who-wants'].includes(surface)){
       switchTab('find');setTrainerDiscoveryMode(surface==='trainers'?'trainers':surface==='who-wants'?'pokemon':'favorites');
       await renderTrainerQuickLists();
@@ -128,7 +128,7 @@ async function showReviewSurface(page,surface){
     await page.locator('#favorite-browse-input').press('Enter');
     await expect(page.locator('.favorite-browse-row').first()).toBeVisible();
   }
-  if(surface==='advanced')await page.locator('#legacy-list-tools').evaluate(node=>window.scrollTo(0,node.getBoundingClientRect().top+scrollY-130));
+  if(surface==='advanced')await page.locator('#wants-combine').evaluate(node=>window.scrollTo(0,node.getBoundingClientRect().top+scrollY-130));
 }
 
 async function settleReview(page){

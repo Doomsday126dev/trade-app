@@ -61,15 +61,15 @@ test('matched My List priority visual review',async({page})=>{
   if(!refinement){
   await page.evaluate(baseline=>{
     if(baseline){combinedSelection.clear();renderCombinedList();}else clearWantsSelection();
-    const advanced=document.getElementById('legacy-list-tools');advanced.open=true;
+    const advanced=document.getElementById('wants-combine');advanced.open=true;
     window.scrollTo(0,advanced.getBoundingClientRect().top+scrollY-130);
   },baseline);
   if(!baseline){
     await page.locator('[data-wants-scope="H"]').click();
     await page.locator('[data-wants-scope="M"]').click();
   }
-  await save('advanced-custom-search');
-  await page.evaluate(()=>{document.getElementById('legacy-list-tools').open=false;window.scrollTo(0,0);});
+  await save('combine-searches');
+  await page.evaluate(()=>{document.getElementById('wants-combine').open=false;window.scrollTo(0,0);});
   for(const width of [1440,390]){
     await page.setViewportSize({width,height:width===1440?900:844});
     await page.evaluate(()=>document.documentElement.dataset.theme='light');
@@ -92,12 +92,10 @@ test('matched My List priority visual review',async({page})=>{
     expect(image.drawn.some(image=>/\/other\/home\/149\.png$/.test(image.src))).toBe(true);
     expect(image.drawn).toHaveLength(18);
     await page.setViewportSize({width:390,height:844});
-    const manual=page.locator('#combined-list > [data-wants-section="LUCKY+XXL"]');
-    await manual.evaluate(node=>window.scrollTo(0,node.getBoundingClientRect().top+scrollY-130));
-    await manual.locator('.contextual-details > summary').click();
-    await expect(manual.locator('.contextual-manual-review li')).toHaveCount(1);
-    await save('manual-check-section');
-    await manual.locator('.contextual-details > summary').click();
+    const special=page.locator('#combined-list > [data-wants-section="LUCKY+XXL"]');
+    await special.evaluate(node=>window.scrollTo(0,node.getBoundingClientRect().top+scrollY-130));
+    await expect(special.locator('.contextual-details')).toBeHidden();
+    await save('special-section');
     await page.setViewportSize({width:1440,height:900});
     await page.evaluate(()=>{
       allData=normalizeData({users:{Avery:{}},wishlist:{Avery:{Pikachu:'H'}}});renderMyList();window.scrollTo(0,0);

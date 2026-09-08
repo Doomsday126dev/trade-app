@@ -11,46 +11,35 @@ function load(){
   return window;
 }
 const json=value=>JSON.parse(JSON.stringify(value));
-test('compact panels hide normal details but count each exact or unresolved declaration once',()=>{
+test('known species and exact variants never render a manual-check interface',()=>{
   const w=load(),t=(key,params={})=>w.PogoLocales.en[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
-  const html=entries=>w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan(entries),{t,title:'Scope',compact:true});
-  for(const entry of [{name:'Pikachu',no:25,p:'H'},{name:'Dragonite',no:149},{name:'Pikachu',no:25,backgroundId:'retired',backgroundLabel:'Retired background'},{name:'NidoranF',no:29},{no:25}]){
-    const rendered=html([entry]);assert.match(rendered,/data-manual-check-count="0" hidden/);
-    assert.match(rendered,/data-contextual-copy=/);assert.doesNotMatch(rendered,/contextual-manual-review/);
+  for(const entry of [{name:'Pikachu',no:25},{name:'Eevee',no:133,gender:'f'},
+    {name:'Sinistea',no:854,mod:'Antique'},{name:'Pikachu (Worlds 2025)',no:25,lucky:true,shiny:true,note:'Exact requirement'}]){
+    const html=w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan([entry]),{t,title:'Scope',compact:true});
+    assert.match(html,/data-contextual-copy=/);assert.match(html,/<details[^>]* hidden>/);
+    assert.doesNotMatch(html,/manual-check|contextual-manual|not included|Exact requirement/);
   }
-  const exceptions=[{name:'Unknown',no:null},{name:'Pikachu',no:25,shiny:true,lucky:true},
-    {name:'Eevee',no:133,gender:'f'},{name:'Snorlax',no:143,xxl:true},{name:'Joltik',no:595,xxs:true},
-    {name:'Sinistea',no:854,mod:'Antique'},{name:'Unown (!)',no:201},
-    {name:'Charmander',no:4,category:'dynamax'},{name:'Charizard',no:6,maxType:'gmax'},
-    {name:'Pikachu (Worlds 2025)',no:25},{name:'Pikachu',no:25,note:'Check eligibility'},
-    {name:'A-Raichu',no:26},{name:'Fancy',no:666},{name:'Pikachu',no:133}];
-  for(const entry of exceptions)assert.match(html([entry]),/data-manual-check-count="1"><summary>1 manual check/);
-  const combined=html([{name:'Pikachu',no:25},...exceptions]);
-  assert.match(combined,new RegExp(`data-manual-check-count="${exceptions.length}"><summary>${exceptions.length} manual checks`));
-  assert.doesNotMatch(combined,/<li>/,'compact exception rows are hydrated only when opened');
 });
-test('clean split searches retain split guidance and compact exception labels localize',()=>{
+test('split and unresolved guidance localize without known-variant checklists',()=>{
   const w=load();
   for(const locale of ['en','ja','es','de']){
     const t=(key,params={})=>w.PogoLocales[locale][key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
-    const plan=w.PogoDomain.searchStrings.contextualSearchPlan(Array.from({length:30},(_,index)=>({no:index+1})),{limit:32,locale});
-    const rendered=w.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:'Scope',compact:true});
-    assert.match(rendered,/data-manual-check-count="0"><summary>/);assert.ok(rendered.includes(t('workflow.splitSearch')));
-    const special=w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan([{name:'Pikachu',no:25,lucky:true}]),{t,title:'Lucky',compact:true});
-    assert.ok(special.includes(t('workflow.manualCheck',{count:1})));
+    const render=entries=>w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan(entries,{limit:32,locale}),{t,title:'Scope',compact:true});
+    assert.ok(render(Array.from({length:30},(_,i)=>({no:i+1}))).includes(t('workflow.splitSearch')));
+    const partial=render([{no:25,name:'Pikachu',lucky:true},{name:'Unmapped',no:null}]);
+    assert.ok(partial.includes(t('workflow.notIncluded',{count:1})));assert.ok(partial.includes('Unmapped'));
+    assert.ok(partial.includes(t('workflow.omittedHelp')));assert.doesNotMatch(partial,/contextual-manual/);
   }
 });
-test('lightweight public shell distinguishes every admitted ordinary species from exact variants without loading private data',()=>{
-  const w=load(),names=w.PogoI18n.pokemonNames;
+test('lightweight public shell accepts every catalog species and variant without checklists',()=>{
+  const w=load();
   for(const file of ['publicPokemonDex','spriteSlugs'])vm.runInNewContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),{window:w});
   delete w.PogoI18n.pokemonNames;
   const rows=JSON.parse(fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8').match(/const rows=(.*);/)[1]);
-  const normalize=value=>String(value||'').normalize('NFKD').toLowerCase().replace(/\p{M}/gu,'').replace(/[.'’]/g,'').replaceAll('_',' ').replace(/\s+/g,' ').trim();
   const t=(key,params={})=>w.PogoLocales.en[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
   for(const [name,no]of rows){
-    const ordinary=normalize(name)===normalize(names.speciesName({no},'en'))||no===29&&/^Nidoran[- ]?F$/i.test(name)||no===32&&/^Nidoran[- ]?M$/i.test(name);
     const html=w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan([{name,no}]),{t,title:name,compact:true});
-    assert.match(html,new RegExp(`data-manual-check-count="${ordinary?0:1}"${ordinary?' hidden':''}`),name);
+    assert.match(html,/<details[^>]* hidden>/,name);assert.doesNotMatch(html,/contextual-manual|data-manual-check/,name);
   }
 });
 test('empty and unknown scopes never emit a match-all prefilter',()=>{
@@ -87,11 +76,11 @@ test('receive and give are distinct intersections of declared offers, never inve
   assert.equal(d.searchStrings.contextualSearchPlan(result.iOffer).parts[0],'!traded&133');
   assert.equal(d.searchStrings.contextualSearchPlan(result.theyOffer).parts[0],'!traded&25');
 });
-test('localized panels expose all manual checks, escape content and use identical displayed/copied bytes',()=>{
+test('localized panels expose unresolved omissions, escape content and use identical displayed/copied bytes',()=>{
   const w=load();
   for(const locale of ['en','ja','es','de']){
     const t=(key,params={})=>w.PogoLocales[locale][key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
-    const plan=w.PogoDomain.searchStrings.contextualSearchPlan([{name:'<img onerror=bad>',no:25,shiny:true},{name:'Unmapped',no:null}],{locale});
+    const plan=w.PogoDomain.searchStrings.contextualSearchPlan([{name:'Pikachu',no:25},{name:'<img onerror=bad>',no:null},{name:'Unmapped',no:null}],{locale});
     const html=w.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:'Scope'});
     assert(html.includes(w.PogoLocales[locale]['contextSearch.species']));
     assert(html.includes('Unmapped'));assert(html.includes('&lt;img onerror=bad&gt;'));assert(!html.includes('<img onerror'));

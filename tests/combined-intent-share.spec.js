@@ -26,7 +26,9 @@ test('share scope controls output, selection persists across filtering and no da
   await expect(page.locator('#wants-selection-tools')).toBeHidden();
   await page.locator('#wants-select-toggle').click();
   await page.locator('#combined-list input').first().check();
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('Snom');
+  await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('');
   await expect(page.locator('#combined-list input').first()).toBeChecked();
   await page.evaluate(()=>openProductShare());

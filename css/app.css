@@ -136,7 +136,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .tab{padding:12px 15px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.2s;background:none;border-top:none;border-left:none;border-right:none}
 .tab.active{color:var(--ac2);border-bottom-color:var(--ac2)}
 .combined-checks,.combined-selection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.combined-editor{width:560px;max-width:calc(100vw - 24px)}.combined-editor label{display:block;margin:10px 0}.combined-editor .field-control{width:100%;min-width:0}.combined-checks label{display:flex;align-items:center;gap:6px;min-height:44px}.combined-editor summary,#legacy-list-tools>summary{min-height:44px;padding:12px 0;cursor:pointer}
+.combined-editor{width:560px;max-width:calc(100vw - 24px)}.combined-editor label{display:block;margin:10px 0}.combined-editor .field-control{width:100%;min-width:0}.combined-checks label{display:flex;align-items:center;gap:6px;min-height:44px}.combined-editor summary,#wants-combine>summary{min-height:44px;padding:12px 0;cursor:pointer}
 .product-share-preview{max-height:320px;overflow:auto;margin:12px 0;border-block:1px solid var(--border)}.product-share-preview ul{padding-left:20px}.product-share-preview li{overflow-wrap:anywhere}.product-share-modal [hidden]{display:none!important}
 @media(max-width:700px){#app>.tabs .desktop-events-tab{display:none}}
 .tab:hover{color:var(--text)}
@@ -2074,8 +2074,6 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 
 /* .89 My List presentation, scoped to the current wants declaration renderer. */
 #tab-mylist .wants-list-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 0}
-#tab-mylist .wants-list-toolbar .mylist-search{flex:1;min-width:180px;margin:0}
-#tab-mylist #combined-filter{width:100%;min-height:48px}
 #combined-list .wants-name{display:block;max-width:100%;padding:0;border:0;border-radius:0;min-height:0;height:auto;background:transparent;color:var(--text);text-align:left;cursor:pointer}
 #combined-list .wants-note{display:block;font-size:11px;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
 #combined-list .wants-select{display:none;flex:0 0 20px;width:20px;height:44px;accent-color:var(--accent)}
@@ -2083,10 +2081,8 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 #combined-list .wants-selected{background:var(--surface-hover)}
 #combined-list .myrow-priority-chip{flex-shrink:0}
 #combined-list .myrow-copy{min-width:0}
-#legacy-list-tools{margin-top:22px;border-top:1px solid var(--border)}
+#wants-combine{margin-top:22px;border-top:1px solid var(--border)}
 @media(max-width:600px){
-  #tab-mylist .wants-list-toolbar .mylist-search{flex-basis:100%}
-  #tab-mylist .wants-list-toolbar>button{margin-right:auto}
   #combined-list .myrow-priority-chip{display:none}
   #combined-list .wants-name{font-size:13px}
   #combined-list .wants-select{flex-basis:18px;width:18px}
@@ -2122,16 +2118,14 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .wants-compact-search .contextual-search-body{position:absolute;right:0;top:100%;z-index:70;width:min(320px,calc(100vw - 40px));padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high);box-sizing:border-box}
 .wants-compact-search .contextual-search-body p{margin:0 0 8px;font-size:12px;line-height:1.5}
 .wants-compact-search .contextual-search-body{max-height:min(420px,70vh);overflow:auto}
-.contextual-manual-review ul{margin:0 0 10px;padding-left:18px;font-size:12px;line-height:1.5}
-.contextual-manual-review li+li{margin-top:6px}
 .wants-compact-search .strbox{width:100%;box-sizing:border-box;min-height:48px}
 .wants-compact-search .contextual-copy-status:empty{display:none}
 .wants-compact-search .contextual-copy-status,.wants-compact-search .contextual-unresolved{flex-basis:100%;margin:0;max-width:220px}
 .wants-section-search .wants-compact-search{justify-content:flex-end}
-.wants-custom-toggles{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}
+.wants-custom-toggles{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.wants-custom-toggles .btn{min-height:44px;min-width:44px;padding:6px 10px;font-size:12px}
 .wants-custom-toggles [aria-pressed="true"]{border-color:var(--accent);background:var(--surface-hover);color:var(--accent)}
-#wants-custom-search{margin-bottom:18px}
-#wants-custom-search h4{margin:4px 0;font-size:13px}
+#wants-custom-search{margin:0 0 12px}
 .wants-custom-result .wants-compact-search{justify-content:flex-start}
 .wants-custom-result .contextual-search-body{left:0;right:auto}
 .wants-priority-help{font-size:12px;color:var(--muted);margin:6px 0 10px}
@@ -2171,3 +2165,16 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
  .wants-section-search .wants-compact-search{display:grid;grid-template-columns:auto auto;justify-content:end}
  .wants-section-search .contextual-unresolved,.wants-section-search .contextual-copy-status{grid-column:1/-1;justify-self:end}
 }
+
+/* Optional My List utilities; no persistent search field or checklist. */
+.wants-list-tools{position:relative;margin-left:auto}
+.wants-list-tools>summary{list-style:none;cursor:pointer;min-height:44px;gap:6px}
+.wants-list-tools>summary::-webkit-details-marker{display:none}
+.wants-list-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:75;width:min(264px,calc(100vw - 40px));padding:6px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high)}
+.wants-list-menu .btn{display:flex;width:100%;justify-content:flex-start;min-height:44px;padding:8px 10px;font-size:13px}
+.wants-list-menu p{margin:4px 10px 8px;color:var(--muted);font-size:12px;line-height:1.5}
+#wants-find{display:flex;gap:8px;align-items:center;margin:-6px 0 18px}
+#wants-find .field-control{flex:1;min-width:0;width:100%;min-height:44px}
+#wants-find>.btn{flex-shrink:0;min-height:44px}
+#wants-combine>summary{font-size:13px;color:var(--muted)}
+.contextual-omitted{margin:0 0 8px;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
