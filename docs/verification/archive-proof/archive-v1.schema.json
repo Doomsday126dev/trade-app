@@ -1,0 +1,4120 @@
+{
+  "$defs": {
+    "accountSyncEntityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "createdAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "deletedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entityId": {
+          "$ref": "#/$defs/id"
+        },
+        "entityType": {
+          "enum": [
+            "tradeEntry",
+            "favorite",
+            "tag"
+          ]
+        },
+        "fieldMutationHashes": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/hash"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/hash"
+                },
+                "maxProperties": 20000,
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "fieldMutations": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/id"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/$defs/id"
+                },
+                "maxProperties": 20000,
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "fieldRevisions": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "additionalProperties": {
+                  "maximum": 9007199254740991,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "maxProperties": 20000,
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "generation": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/tradeIdentity"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "targetUid": {
+                  "$ref": "#/$defs/uid"
+                }
+              },
+              "required": [
+                "targetUid"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "tagId": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "required": [
+                "tagId"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "lifecycleMutation": {
+          "$ref": "#/$defs/id"
+        },
+        "lifecycleMutationHash": {
+          "$ref": "#/$defs/hash"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "revision": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "updatedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "values": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/tradeValues"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "displayName": {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                "tagIds": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "maxProperties": 20000,
+                  "type": "object"
+                }
+              },
+              "required": [
+                "displayName"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "maxLength": 40,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "label"
+              ],
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "ownerUid",
+        "entityType",
+        "entityId",
+        "identity",
+        "generation",
+        "revision",
+        "deleted",
+        "createdAt",
+        "updatedAt",
+        "values",
+        "fieldRevisions",
+        "fieldMutations",
+        "fieldMutationHashes",
+        "lifecycleMutation",
+        "lifecycleMutationHash"
+      ],
+      "type": "object"
+    },
+    "accountSyncOperationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "baseFieldRevisions": {
+          "additionalProperties": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "baseGeneration": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "clientAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entityId": {
+          "$ref": "#/$defs/id"
+        },
+        "entityType": {
+          "enum": [
+            "tradeEntry",
+            "favorite",
+            "tag"
+          ]
+        },
+        "generation": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/tradeIdentity"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "targetUid": {
+                      "$ref": "#/$defs/uid"
+                    }
+                  },
+                  "required": [
+                    "targetUid"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tagId": {
+                      "$ref": "#/$defs/id"
+                    }
+                  },
+                  "required": [
+                    "tagId"
+                  ],
+                  "type": "object"
+                }
+              ]
+            }
+          ]
+        },
+        "inputHash": {
+          "$ref": "#/$defs/hash"
+        },
+        "kind": {
+          "enum": [
+            "add",
+            "patch",
+            "delete"
+          ]
+        },
+        "operationId": {
+          "$ref": "#/$defs/id"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "patch": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "schemaVersion": {
+          "const": 1
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "operationId",
+        "ownerUid",
+        "entityType",
+        "entityId",
+        "kind",
+        "baseGeneration",
+        "generation",
+        "baseFieldRevisions",
+        "patch",
+        "identity",
+        "clientAt",
+        "inputHash"
+      ],
+      "type": "object"
+    },
+    "catalog": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "allowedGenders": {
+                "items": {
+                  "enum": [
+                    "",
+                    "m",
+                    "f"
+                  ]
+                },
+                "maxItems": 20000,
+                "type": "array"
+              },
+              "catalogId": {
+                "$ref": "#/$defs/id"
+              },
+              "costumeId": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "formId": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "maxState": {
+                "enum": [
+                  "",
+                  "dynamax",
+                  "gmax"
+                ]
+              },
+              "name": {
+                "$ref": "#/$defs/id"
+              },
+              "regionalForm": {
+                "maxLength": 16,
+                "type": "string"
+              },
+              "speciesId": {
+                "maximum": 1025,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "catalogId",
+              "speciesId",
+              "name",
+              "formId",
+              "costumeId",
+              "regionalForm",
+              "maxState",
+              "allowedGenders"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "version": {
+          "const": "synthetic-reviewed-v1"
+        }
+      },
+      "required": [
+        "version",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "conflict": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "conflictId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "currentRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entityId": {
+          "$ref": "#/$defs/id"
+        },
+        "entityType": {
+          "enum": [
+            "tradeEntry",
+            "favorite",
+            "tag"
+          ]
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "generation": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operationId": {
+          "$ref": "#/$defs/id"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "resolvedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "conflictId",
+        "code",
+        "operationId",
+        "ownerUid",
+        "entityType",
+        "entityId",
+        "generation",
+        "fields",
+        "currentRevision",
+        "createdAt",
+        "resolved"
+      ],
+      "type": "object"
+    },
+    "device": {
+      "additionalProperties": false,
+      "properties": {
+        "cachedOwnedLists": {
+          "additionalProperties": false,
+          "properties": {
+            "costumes": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "dynamax": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "gmax": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "wishlist": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            }
+          },
+          "required": [
+            "wishlist",
+            "dynamax",
+            "gmax",
+            "costumes"
+          ],
+          "type": "object"
+        },
+        "capturedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "deviceId": {
+          "$ref": "#/$defs/id"
+        },
+        "history": {
+          "$ref": "#/$defs/history"
+        },
+        "journal": {
+          "additionalProperties": false,
+          "properties": {
+            "conflicts": {
+              "items": {
+                "$ref": "#/$defs/conflict"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "entities": {
+              "items": {
+                "$ref": "#/$defs/accountSyncEntityV1"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "meta": {
+              "items": {
+                "$ref": "#/$defs/journalMeta"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "operations": {
+              "items": {
+                "$ref": "#/$defs/queuedOperation"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "recoveryCandidates": {
+              "items": {
+                "$ref": "#/$defs/recoveryCandidate"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            }
+          },
+          "required": [
+            "entities",
+            "operations",
+            "conflicts",
+            "recoveryCandidates",
+            "meta"
+          ],
+          "type": "object"
+        },
+        "legacyQueue": {
+          "additionalProperties": false,
+          "properties": {
+            "entries": {
+              "items": {
+                "$ref": "#/$defs/legacyQueueRecord"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "quarantined": {
+              "items": {
+                "$ref": "#/$defs/legacyQueueRecord"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            }
+          },
+          "required": [
+            "entries",
+            "quarantined"
+          ],
+          "type": "object"
+        },
+        "orders": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "lane": {
+                "enum": [
+                  "wishlist",
+                  "dynamax",
+                  "gmax",
+                  "costumes"
+                ]
+              },
+              "owner": {
+                "additionalProperties": false,
+                "properties": {
+                  "uid": {
+                    "$ref": "#/$defs/uid"
+                  },
+                  "username": {
+                    "$ref": "#/$defs/id"
+                  }
+                },
+                "required": [
+                  "uid",
+                  "username"
+                ],
+                "type": "object"
+              },
+              "priorities": {
+                "additionalProperties": false,
+                "properties": {
+                  "H": {
+                    "items": {
+                      "$ref": "#/$defs/id"
+                    },
+                    "maxItems": 20000,
+                    "type": "array"
+                  },
+                  "L": {
+                    "items": {
+                      "$ref": "#/$defs/id"
+                    },
+                    "maxItems": 20000,
+                    "type": "array"
+                  },
+                  "M": {
+                    "items": {
+                      "$ref": "#/$defs/id"
+                    },
+                    "maxItems": 20000,
+                    "type": "array"
+                  },
+                  "U": {
+                    "items": {
+                      "$ref": "#/$defs/id"
+                    },
+                    "maxItems": 20000,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "H",
+                  "M",
+                  "L",
+                  "U"
+                ],
+                "type": "object"
+              },
+              "version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "lane",
+              "version",
+              "owner",
+              "priorities"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "preferences": {
+          "additionalProperties": false,
+          "properties": {
+            "exportStyle": {
+              "maxLength": 80,
+              "type": "string"
+            },
+            "language": {
+              "enum": [
+                "en",
+                "de",
+                "es",
+                "ja"
+              ]
+            },
+            "safeTransferDefault": {
+              "type": "boolean"
+            },
+            "searchLocale": {
+              "enum": [
+                "en",
+                "de",
+                "es",
+                "ja"
+              ]
+            },
+            "theme": {
+              "enum": [
+                "auto",
+                "dark",
+                "light"
+              ]
+            }
+          },
+          "required": [
+            "language",
+            "theme",
+            "searchLocale",
+            "exportStyle",
+            "safeTransferDefault"
+          ],
+          "type": "object"
+        },
+        "sourceVersions": {
+          "additionalProperties": false,
+          "properties": {
+            "history": {
+              "const": 3
+            },
+            "journal": {
+              "const": 1
+            },
+            "legacyQueue": {
+              "const": 2
+            },
+            "order": {
+              "const": 1
+            },
+            "sessionCache": {
+              "const": 2
+            }
+          },
+          "required": [
+            "journal",
+            "history",
+            "sessionCache",
+            "legacyQueue",
+            "order"
+          ],
+          "type": "object"
+        },
+        "viewedSnapshots": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "keys": {
+                "items": {
+                  "$ref": "#/$defs/id"
+                },
+                "maxItems": 20000,
+                "type": "array"
+              },
+              "lane": {
+                "enum": [
+                  "wishlist",
+                  "dynamax",
+                  "gmax",
+                  "costumes"
+                ]
+              },
+              "savedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "trainerName": {
+                "$ref": "#/$defs/id"
+              },
+              "values": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "maxLength": 512,
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "backgroundId": {
+                          "maxLength": 160,
+                          "type": "string"
+                        },
+                        "lucky": {
+                          "type": "boolean"
+                        },
+                        "mod": {
+                          "maxLength": 160,
+                          "type": "string"
+                        },
+                        "p": {
+                          "enum": [
+                            "",
+                            "H",
+                            "M",
+                            "L"
+                          ]
+                        },
+                        "shiny": {
+                          "type": "boolean"
+                        },
+                        "xxl": {
+                          "type": "boolean"
+                        },
+                        "xxs": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "p",
+                        "mod",
+                        "lucky",
+                        "shiny",
+                        "xxl",
+                        "xxs",
+                        "backgroundId"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "maxProperties": 20000,
+                "type": "object"
+              }
+            },
+            "required": [
+              "lane",
+              "trainerName",
+              "keys",
+              "values",
+              "savedAt"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "deviceId",
+        "ownerUid",
+        "capturedAt",
+        "sourceVersions",
+        "history",
+        "journal",
+        "legacyQueue",
+        "cachedOwnedLists",
+        "orders",
+        "viewedSnapshots",
+        "preferences"
+      ],
+      "type": "object"
+    },
+    "disposition": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "preserved",
+            "inert",
+            "excluded-secret",
+            "derived",
+            "non-restorable"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/id"
+        },
+        "reason": {
+          "maxLength": 512,
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "action",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "historicalRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "const": "inert-only"
+        },
+        "kind": {
+          "enum": [
+            "retired-sync-entity",
+            "inventory",
+            "trade",
+            "background"
+          ]
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "recordId": {
+          "$ref": "#/$defs/id"
+        },
+        "sourcePath": {
+          "$ref": "#/$defs/id"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/accountSyncEntityV1"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "backgroundId": {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                "dontNeedBack": {
+                  "type": "boolean"
+                },
+                "gender": {
+                  "enum": [
+                    "",
+                    "m",
+                    "f"
+                  ]
+                },
+                "giveaway": {
+                  "type": "boolean"
+                },
+                "lucky": {
+                  "type": "boolean"
+                },
+                "mirrorOnly": {
+                  "type": "boolean"
+                },
+                "name": {
+                  "$ref": "#/$defs/id"
+                },
+                "note": {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                "qty": {
+                  "maximum": 999,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "shiny": {
+                  "type": "boolean"
+                },
+                "xxl": {
+                  "type": "boolean"
+                },
+                "xxs": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "gender",
+                "qty",
+                "mirrorOnly",
+                "dontNeedBack",
+                "giveaway",
+                "note",
+                "backgroundId",
+                "shiny",
+                "lucky",
+                "xxl",
+                "xxs"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "note": {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                "partnerHandle": {
+                  "$ref": "#/$defs/id"
+                },
+                "pokemonName": {
+                  "$ref": "#/$defs/id"
+                },
+                "quantity": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "scheduledAt": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "status": {
+                  "enum": [
+                    "planned",
+                    "completed",
+                    "cancelled"
+                  ]
+                },
+                "tradeId": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "required": [
+                "tradeId",
+                "partnerHandle",
+                "pokemonName",
+                "quantity",
+                "status",
+                "note",
+                "scheduledAt"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "backgroundId": {
+                  "$ref": "#/$defs/id"
+                },
+                "name": {
+                  "$ref": "#/$defs/id"
+                },
+                "note": {
+                  "maxLength": 160,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "backgroundId",
+                "note"
+              ],
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "recordId",
+        "ownerUid",
+        "kind",
+        "sourcePath",
+        "disposition",
+        "value"
+      ],
+      "type": "object"
+    },
+    "history": {
+      "additionalProperties": false,
+      "properties": {
+        "favorites": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "createdAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "displayName": {
+                "maxLength": 64,
+                "type": "string"
+              },
+              "key": {
+                "$ref": "#/$defs/id"
+              },
+              "tagIds": {
+                "items": {
+                  "$ref": "#/$defs/id"
+                },
+                "maxItems": 20000,
+                "type": "array"
+              },
+              "targetUid": {
+                "$ref": "#/$defs/uid"
+              },
+              "updatedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "key",
+              "displayName",
+              "tagIds",
+              "createdAt",
+              "updatedAt"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "migration": {
+          "additionalProperties": false,
+          "properties": {
+            "skippedFavorites": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "skippedRecents": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "skippedFavorites",
+            "skippedRecents"
+          ],
+          "type": "object"
+        },
+        "migrationVersion": {
+          "const": 3
+        },
+        "owner": {
+          "additionalProperties": false,
+          "properties": {
+            "uid": {
+              "$ref": "#/$defs/uid"
+            },
+            "username": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "uid",
+            "username"
+          ],
+          "type": "object"
+        },
+        "recent": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "displayName": {
+                "maxLength": 64,
+                "type": "string"
+              },
+              "key": {
+                "$ref": "#/$defs/id"
+              },
+              "openedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "key",
+              "displayName",
+              "openedAt"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "schemaVersion": {
+          "const": 3
+        },
+        "snapshots": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "seenAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "snapshot": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "declarations": {
+                        "items": {
+                          "$ref": "#/$defs/publicDeclaration"
+                        },
+                        "maxItems": 20000,
+                        "type": "array"
+                      },
+                      "lists": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "costumes": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "maxLength": 512,
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "backgroundId": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "lucky": {
+                                      "type": "boolean"
+                                    },
+                                    "mod": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "p": {
+                                      "enum": [
+                                        "",
+                                        "H",
+                                        "M",
+                                        "L"
+                                      ]
+                                    },
+                                    "shiny": {
+                                      "type": "boolean"
+                                    },
+                                    "xxl": {
+                                      "type": "boolean"
+                                    },
+                                    "xxs": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "p",
+                                    "mod",
+                                    "lucky",
+                                    "shiny",
+                                    "xxl",
+                                    "xxs",
+                                    "backgroundId"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            "maxProperties": 20000,
+                            "type": "object"
+                          },
+                          "dynamax": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "maxLength": 512,
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "backgroundId": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "lucky": {
+                                      "type": "boolean"
+                                    },
+                                    "mod": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "p": {
+                                      "enum": [
+                                        "",
+                                        "H",
+                                        "M",
+                                        "L"
+                                      ]
+                                    },
+                                    "shiny": {
+                                      "type": "boolean"
+                                    },
+                                    "xxl": {
+                                      "type": "boolean"
+                                    },
+                                    "xxs": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "p",
+                                    "mod",
+                                    "lucky",
+                                    "shiny",
+                                    "xxl",
+                                    "xxs",
+                                    "backgroundId"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            "maxProperties": 20000,
+                            "type": "object"
+                          },
+                          "gmax": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "maxLength": 512,
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "backgroundId": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "lucky": {
+                                      "type": "boolean"
+                                    },
+                                    "mod": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "p": {
+                                      "enum": [
+                                        "",
+                                        "H",
+                                        "M",
+                                        "L"
+                                      ]
+                                    },
+                                    "shiny": {
+                                      "type": "boolean"
+                                    },
+                                    "xxl": {
+                                      "type": "boolean"
+                                    },
+                                    "xxs": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "p",
+                                    "mod",
+                                    "lucky",
+                                    "shiny",
+                                    "xxl",
+                                    "xxs",
+                                    "backgroundId"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            "maxProperties": 20000,
+                            "type": "object"
+                          },
+                          "wishlist": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "maxLength": 512,
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "backgroundId": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "lucky": {
+                                      "type": "boolean"
+                                    },
+                                    "mod": {
+                                      "maxLength": 160,
+                                      "type": "string"
+                                    },
+                                    "p": {
+                                      "enum": [
+                                        "",
+                                        "H",
+                                        "M",
+                                        "L"
+                                      ]
+                                    },
+                                    "shiny": {
+                                      "type": "boolean"
+                                    },
+                                    "xxl": {
+                                      "type": "boolean"
+                                    },
+                                    "xxs": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "p",
+                                    "mod",
+                                    "lucky",
+                                    "shiny",
+                                    "xxl",
+                                    "xxs",
+                                    "backgroundId"
+                                  ],
+                                  "type": "object"
+                                }
+                              ]
+                            },
+                            "maxProperties": 20000,
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "wishlist",
+                          "dynamax",
+                          "gmax",
+                          "costumes"
+                        ],
+                        "type": "object"
+                      },
+                      "updatedAt": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "lists",
+                      "updatedAt"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/$defs/publicSnapshot"
+                  }
+                ]
+              },
+              "targetUid": {
+                "maxLength": 128,
+                "type": "string"
+              }
+            },
+            "required": [
+              "seenAt",
+              "targetUid",
+              "snapshot"
+            ],
+            "type": "object"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "syncState": {
+          "const": "local-only"
+        },
+        "tags": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "createdAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "label": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "normalizedLabel": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "updatedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "normalizedLabel",
+              "createdAt",
+              "updatedAt"
+            ],
+            "type": "object"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "version": {
+          "const": 3
+        }
+      },
+      "required": [
+        "version",
+        "schemaVersion",
+        "migrationVersion",
+        "owner",
+        "favorites",
+        "recent",
+        "snapshots",
+        "tags",
+        "syncState",
+        "migration"
+      ],
+      "type": "object"
+    },
+    "id": {
+      "maxLength": 700,
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+      "type": "string"
+    },
+    "journalMeta": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "enum": [
+                "provider-profile-pending-v1",
+                "provider-publication-pending-v1",
+                "migration-complete"
+              ]
+            },
+            {
+              "pattern": "^legacy-source:migration_[a-f0-9]{64}$",
+              "type": "string"
+            }
+          ]
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "baseRevision": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "ownerUid": {
+                  "$ref": "#/$defs/uid"
+                },
+                "queuedAt": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "schemaVersion": {
+                  "const": 1
+                },
+                "values": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "avatarPokemon": {
+                      "maxLength": 120,
+                      "type": "string"
+                    },
+                    "bio": {
+                      "maxLength": 120,
+                      "type": "string"
+                    },
+                    "discord": {
+                      "maxLength": 40,
+                      "type": "string"
+                    },
+                    "friendCode": {
+                      "maxLength": 14,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "friendCode",
+                    "bio",
+                    "discord",
+                    "avatarPokemon"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "schemaVersion",
+                "ownerUid",
+                "values",
+                "baseRevision",
+                "queuedAt"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "fingerprint": {
+                  "$ref": "#/$defs/hash"
+                },
+                "ownerUid": {
+                  "$ref": "#/$defs/uid"
+                },
+                "queuedAt": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "rows": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "catalogId": {
+                        "$ref": "#/$defs/id"
+                      },
+                      "entryId": {
+                        "$ref": "#/$defs/id"
+                      },
+                      "gender": {
+                        "enum": [
+                          "",
+                          "m",
+                          "f"
+                        ]
+                      },
+                      "lane": {
+                        "enum": [
+                          "wishlist",
+                          "dynamax",
+                          "gmax",
+                          "costumes",
+                          "looking-for",
+                          "for-trade"
+                        ]
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mirror": {
+                        "type": "boolean"
+                      },
+                      "note": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "priority": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "quantity": {
+                        "maximum": 999,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "sortOrder": {
+                        "maximum": 100000,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "surface": {
+                        "enum": [
+                          "my-list",
+                          "special-board"
+                        ]
+                      },
+                      "variant": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "entryId",
+                      "surface",
+                      "lane",
+                      "catalogId"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 20000,
+                  "type": "array"
+                },
+                "schemaVersion": {
+                  "const": 1
+                }
+              },
+              "required": [
+                "schemaVersion",
+                "ownerUid",
+                "rows",
+                "fingerprint",
+                "queuedAt"
+              ],
+              "type": "object"
+            },
+            {
+              "$ref": "#/$defs/migrationRecord"
+            },
+            {
+              "$ref": "#/$defs/legacySnapshot"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ownerUid",
+        "name",
+        "value"
+      ],
+      "type": "object"
+    },
+    "legacyBoard": {
+      "additionalProperties": false,
+      "properties": {
+        "ft": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "backgroundId": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "catalogId": {
+                "$ref": "#/$defs/id"
+              },
+              "dn": {
+                "maxLength": 256,
+                "type": "string"
+              },
+              "gender": {
+                "enum": [
+                  "",
+                  "m",
+                  "f"
+                ]
+              },
+              "lucky": {
+                "type": "boolean"
+              },
+              "mirror": {
+                "type": "boolean"
+              },
+              "mod": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "name": {
+                "$ref": "#/$defs/id"
+              },
+              "no": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                ]
+              },
+              "note": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "p": {
+                "enum": [
+                  "",
+                  "H",
+                  "M",
+                  "L"
+                ]
+              },
+              "priority": {
+                "enum": [
+                  "",
+                  "H",
+                  "M",
+                  "L"
+                ]
+              },
+              "qty": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "quantity": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "shiny": {
+                "type": "boolean"
+              },
+              "sortOrder": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "variant": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "xxl": {
+                "type": "boolean"
+              },
+              "xxs": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "lf": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "backgroundId": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "catalogId": {
+                "$ref": "#/$defs/id"
+              },
+              "dn": {
+                "maxLength": 256,
+                "type": "string"
+              },
+              "gender": {
+                "enum": [
+                  "",
+                  "m",
+                  "f"
+                ]
+              },
+              "lucky": {
+                "type": "boolean"
+              },
+              "mirror": {
+                "type": "boolean"
+              },
+              "mod": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "name": {
+                "$ref": "#/$defs/id"
+              },
+              "no": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                ]
+              },
+              "note": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "p": {
+                "enum": [
+                  "",
+                  "H",
+                  "M",
+                  "L"
+                ]
+              },
+              "priority": {
+                "enum": [
+                  "",
+                  "H",
+                  "M",
+                  "L"
+                ]
+              },
+              "qty": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "quantity": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "shiny": {
+                "type": "boolean"
+              },
+              "sortOrder": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "variant": {
+                "maxLength": 160,
+                "type": "string"
+              },
+              "xxl": {
+                "type": "boolean"
+              },
+              "xxs": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "lf",
+        "ft"
+      ],
+      "type": "object"
+    },
+    "legacyQueueRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/profileValues"
+                }
+              ]
+            },
+            {
+              "$ref": "#/$defs/legacyBoard"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "my-list-update",
+            "set"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/id"
+        },
+        "ts": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "data",
+        "ts"
+      ],
+      "type": "object"
+    },
+    "legacySnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "capturedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "favorites": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "createdAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "displayName": {
+                "maxLength": 64,
+                "type": "string"
+              },
+              "key": {
+                "$ref": "#/$defs/id"
+              },
+              "tagIds": {
+                "items": {
+                  "$ref": "#/$defs/id"
+                },
+                "maxItems": 20000,
+                "type": "array"
+              },
+              "targetUid": {
+                "$ref": "#/$defs/uid"
+              },
+              "updatedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "key",
+              "displayName",
+              "tagIds",
+              "createdAt",
+              "updatedAt"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "legacyLocalBoard": {
+          "$ref": "#/$defs/legacyBoard"
+        },
+        "legacyLocalLists": {
+          "$ref": "#/$defs/ownedLists"
+        },
+        "legacyQueue": {
+          "additionalProperties": {
+            "$ref": "#/$defs/legacyQueueRecord"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "legacyRemoteBoard": {
+          "$ref": "#/$defs/legacyBoard"
+        },
+        "legacyRemoteLists": {
+          "$ref": "#/$defs/ownedLists"
+        },
+        "orders": {
+          "additionalProperties": {
+            "$ref": "#/$defs/localOrder"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "tags": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "createdAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "label": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "normalizedLabel": {
+                "maxLength": 40,
+                "type": "string"
+              },
+              "updatedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "normalizedLabel",
+              "createdAt",
+              "updatedAt"
+            ],
+            "type": "object"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        }
+      },
+      "required": [
+        "capturedAt",
+        "legacyRemoteLists",
+        "legacyLocalLists",
+        "legacyRemoteBoard",
+        "legacyLocalBoard",
+        "legacyQueue",
+        "orders",
+        "favorites",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "localOrder": {
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "additionalProperties": false,
+          "properties": {
+            "uid": {
+              "$ref": "#/$defs/uid"
+            },
+            "username": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "uid",
+            "username"
+          ],
+          "type": "object"
+        },
+        "priorities": {
+          "additionalProperties": false,
+          "properties": {
+            "H": {
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "L": {
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "M": {
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "U": {
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            }
+          },
+          "required": [
+            "H",
+            "M",
+            "L",
+            "U"
+          ],
+          "type": "object"
+        },
+        "version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "version",
+        "owner",
+        "priorities"
+      ],
+      "type": "object"
+    },
+    "migrationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateCount": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "completedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "createdAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "deviceInstallHash": {
+          "$ref": "#/$defs/hash"
+        },
+        "deviceMigrationId": {
+          "$ref": "#/$defs/id"
+        },
+        "legacyRetained": {
+          "type": "boolean"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "seedCount": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sourceFingerprint": {
+          "$ref": "#/$defs/hash"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "ownerUid",
+        "deviceMigrationId",
+        "sourceFingerprint",
+        "deviceInstallHash",
+        "createdAt",
+        "completedAt",
+        "seedCount",
+        "candidateCount",
+        "verified",
+        "legacyRetained"
+      ],
+      "type": "object"
+    },
+    "ownedLists": {
+      "additionalProperties": false,
+      "properties": {
+        "costumes": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "backgroundId": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "lucky": {
+                    "type": "boolean"
+                  },
+                  "mod": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "p": {
+                    "enum": [
+                      "",
+                      "H",
+                      "M",
+                      "L"
+                    ]
+                  },
+                  "shiny": {
+                    "type": "boolean"
+                  },
+                  "xxl": {
+                    "type": "boolean"
+                  },
+                  "xxs": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "p",
+                  "mod",
+                  "lucky",
+                  "shiny",
+                  "xxl",
+                  "xxs",
+                  "backgroundId"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "dynamax": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "backgroundId": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "lucky": {
+                    "type": "boolean"
+                  },
+                  "mod": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "p": {
+                    "enum": [
+                      "",
+                      "H",
+                      "M",
+                      "L"
+                    ]
+                  },
+                  "shiny": {
+                    "type": "boolean"
+                  },
+                  "xxl": {
+                    "type": "boolean"
+                  },
+                  "xxs": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "p",
+                  "mod",
+                  "lucky",
+                  "shiny",
+                  "xxl",
+                  "xxs",
+                  "backgroundId"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "gmax": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "backgroundId": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "lucky": {
+                    "type": "boolean"
+                  },
+                  "mod": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "p": {
+                    "enum": [
+                      "",
+                      "H",
+                      "M",
+                      "L"
+                    ]
+                  },
+                  "shiny": {
+                    "type": "boolean"
+                  },
+                  "xxl": {
+                    "type": "boolean"
+                  },
+                  "xxs": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "p",
+                  "mod",
+                  "lucky",
+                  "shiny",
+                  "xxl",
+                  "xxs",
+                  "backgroundId"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        },
+        "wishlist": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "backgroundId": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "lucky": {
+                    "type": "boolean"
+                  },
+                  "mod": {
+                    "maxLength": 160,
+                    "type": "string"
+                  },
+                  "p": {
+                    "enum": [
+                      "",
+                      "H",
+                      "M",
+                      "L"
+                    ]
+                  },
+                  "shiny": {
+                    "type": "boolean"
+                  },
+                  "xxl": {
+                    "type": "boolean"
+                  },
+                  "xxs": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "p",
+                  "mod",
+                  "lucky",
+                  "shiny",
+                  "xxl",
+                  "xxs",
+                  "backgroundId"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        }
+      },
+      "required": [
+        "wishlist",
+        "dynamax",
+        "gmax",
+        "costumes"
+      ],
+      "type": "object"
+    },
+    "profileValues": {
+      "additionalProperties": false,
+      "properties": {
+        "avatarPokemon": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "bio": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "discord": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "friendCode": {
+          "maxLength": 32,
+          "type": "string"
+        },
+        "wallpaper": {
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "required": [
+        "friendCode",
+        "bio",
+        "discord",
+        "avatarPokemon",
+        "wallpaper"
+      ],
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "accessMethods": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "credentialEpoch": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "evidenceId": {
+                "$ref": "#/$defs/id"
+              },
+              "kind": {
+                "enum": [
+                  "legacy-pin",
+                  "google"
+                ]
+              },
+              "observedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ownerUid": {
+                "$ref": "#/$defs/uid"
+              },
+              "providerSubjectKey": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/hash"
+                  }
+                ]
+              },
+              "state": {
+                "enum": [
+                  "linked",
+                  "revoked"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "ownerUid",
+              "state",
+              "providerSubjectKey",
+              "credentialEpoch",
+              "observedAt",
+              "evidenceId"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "accountId": {
+          "$ref": "#/$defs/uid"
+        },
+        "aliases": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidenceId": {
+                "$ref": "#/$defs/id"
+              },
+              "handle": {
+                "$ref": "#/$defs/id"
+              },
+              "ownerUid": {
+                "$ref": "#/$defs/uid"
+              },
+              "validFrom": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "validUntil": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "handle",
+              "ownerUid",
+              "validFrom",
+              "validUntil",
+              "evidenceId"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "authority": {
+          "const": "accountSync-v1"
+        },
+        "currentHandle": {
+          "$ref": "#/$defs/id"
+        },
+        "evidence": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidenceId": {
+                "$ref": "#/$defs/id"
+              },
+              "kind": {
+                "enum": [
+                  "canonical-meta",
+                  "auth-index-pair",
+                  "alias-proof",
+                  "access-link",
+                  "retired-uid-fence",
+                  "migration-review"
+                ]
+              },
+              "observedAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ownerUid": {
+                "$ref": "#/$defs/uid"
+              }
+            },
+            "required": [
+              "evidenceId",
+              "ownerUid",
+              "kind",
+              "observedAt"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "retiredUids": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "evidenceId": {
+                "$ref": "#/$defs/id"
+              },
+              "replacementUid": {
+                "$ref": "#/$defs/uid"
+              },
+              "retiredAt": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "uid": {
+                "$ref": "#/$defs/uid"
+              }
+            },
+            "required": [
+              "uid",
+              "replacementUid",
+              "retiredAt",
+              "evidenceId"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "accountId",
+        "ownerUid",
+        "currentHandle",
+        "authority",
+        "evidence",
+        "aliases",
+        "accessMethods",
+        "retiredUids"
+      ],
+      "type": "object"
+    },
+    "publicDeclaration": {
+      "additionalProperties": false,
+      "properties": {
+        "backgroundId": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "wishlist",
+            "dynamax",
+            "gmax",
+            "costumes"
+          ]
+        },
+        "gender": {
+          "enum": [
+            "",
+            "m",
+            "f"
+          ]
+        },
+        "intent": {
+          "enum": [
+            "lf",
+            "ft"
+          ]
+        },
+        "lucky": {
+          "type": "boolean"
+        },
+        "mod": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "type": "string"
+        },
+        "note": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "p": {
+          "enum": [
+            "",
+            "H",
+            "M",
+            "L"
+          ]
+        },
+        "shiny": {
+          "type": "boolean"
+        },
+        "xxl": {
+          "type": "boolean"
+        },
+        "xxs": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "intent",
+        "category",
+        "name",
+        "p",
+        "mod",
+        "gender",
+        "backgroundId",
+        "note",
+        "lucky",
+        "shiny",
+        "xxl",
+        "xxs"
+      ],
+      "type": "object"
+    },
+    "publicSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "declarationCount": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "declarations": {
+          "items": {
+            "$ref": "#/$defs/publicDeclaration"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "lists": {
+          "additionalProperties": false,
+          "properties": {
+            "costumes": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "dynamax": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "gmax": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            },
+            "wishlist": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "backgroundId": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "lucky": {
+                        "type": "boolean"
+                      },
+                      "mod": {
+                        "maxLength": 160,
+                        "type": "string"
+                      },
+                      "p": {
+                        "enum": [
+                          "",
+                          "H",
+                          "M",
+                          "L"
+                        ]
+                      },
+                      "shiny": {
+                        "type": "boolean"
+                      },
+                      "xxl": {
+                        "type": "boolean"
+                      },
+                      "xxs": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "p",
+                      "mod",
+                      "lucky",
+                      "shiny",
+                      "xxl",
+                      "xxs",
+                      "backgroundId"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              "maxProperties": 20000,
+              "type": "object"
+            }
+          },
+          "required": [
+            "wishlist",
+            "dynamax",
+            "gmax",
+            "costumes"
+          ],
+          "type": "object"
+        },
+        "profile": {
+          "additionalProperties": false,
+          "properties": {
+            "avatarPokemon": {
+              "maxLength": 120,
+              "type": "string"
+            },
+            "bio": {
+              "maxLength": 120,
+              "type": "string"
+            },
+            "discord": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "friendCode": {
+              "maxLength": 32,
+              "type": "string"
+            },
+            "lastUpdated": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "friendCode",
+            "bio",
+            "discord",
+            "avatarPokemon",
+            "lastUpdated"
+          ],
+          "type": "object"
+        },
+        "publishedListTypes": {
+          "items": {
+            "enum": [
+              "wishlist",
+              "dynamax",
+              "gmax",
+              "costumes"
+            ]
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "updatedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "username": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "enum": [
+            1,
+            2
+          ]
+        }
+      },
+      "required": [
+        "version",
+        "username",
+        "profile",
+        "lists",
+        "publishedListTypes",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "queuedOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "attempts": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "createdAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lastErrorCode": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "nextAttemptAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operation": {
+          "$ref": "#/$defs/accountSyncOperationV1"
+        },
+        "operationId": {
+          "$ref": "#/$defs/id"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "serverRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "sending",
+            "blocked",
+            "conflict",
+            "resolved",
+            "acknowledged"
+          ]
+        },
+        "updatedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "operationId",
+        "status",
+        "attempts",
+        "nextAttemptAt",
+        "lastErrorCode",
+        "createdAt",
+        "updatedAt",
+        "operation"
+      ],
+      "type": "object"
+    },
+    "recoveryCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entityId": {
+          "$ref": "#/$defs/id"
+        },
+        "entityType": {
+          "enum": [
+            "tradeEntry",
+            "favorite",
+            "tag"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/tradeIdentity"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "targetUid": {
+                      "$ref": "#/$defs/uid"
+                    }
+                  },
+                  "required": [
+                    "targetUid"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tagId": {
+                      "$ref": "#/$defs/id"
+                    }
+                  },
+                  "required": [
+                    "tagId"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "targetUid": {
+                  "const": ""
+                }
+              },
+              "required": [
+                "targetUid"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "catalogIdUnresolved": {
+                  "const": true
+                },
+                "lane": {
+                  "enum": [
+                    "wishlist",
+                    "dynamax",
+                    "gmax",
+                    "costumes",
+                    "looking-for",
+                    "for-trade"
+                  ]
+                },
+                "surface": {
+                  "enum": [
+                    "my-list",
+                    "special-board"
+                  ]
+                }
+              },
+              "required": [
+                "surface",
+                "lane",
+                "catalogIdUnresolved"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "reason": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "resolvedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "source": {
+          "enum": [
+            "legacy-local",
+            "legacy-remote",
+            "legacy-queue",
+            "legacy-local-board",
+            "legacy-remote-board",
+            "legacy-queue-board",
+            "legacy-history",
+            "legacy-favorite",
+            "legacy-tag",
+            "canonical"
+          ]
+        },
+        "values": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/tradeValues"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "displayName": {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                "tagIds": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "maxProperties": 20000,
+                  "type": "object"
+                }
+              },
+              "required": [
+                "displayName"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "maxLength": 40,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "label"
+              ],
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ownerUid",
+        "candidateId",
+        "schemaVersion",
+        "reason",
+        "entityType",
+        "entityId",
+        "identity",
+        "values",
+        "source",
+        "createdAt",
+        "resolved"
+      ],
+      "type": "object"
+    },
+    "recoveryReview": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptedAt": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "candidateCount": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "evidenceFingerprint": {
+          "$ref": "#/$defs/hash"
+        },
+        "kind": {
+          "const": "recovery-review-acceptance"
+        },
+        "ownerUid": {
+          "$ref": "#/$defs/uid"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "trainerUsername": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "ownerUid",
+        "trainerUsername",
+        "evidenceFingerprint",
+        "candidateCount",
+        "acceptedAt"
+      ],
+      "type": "object"
+    },
+    "timestamp": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+      "type": "string"
+    },
+    "tradeIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "catalogId": {
+          "$ref": "#/$defs/id"
+        },
+        "lane": {
+          "enum": [
+            "wishlist",
+            "dynamax",
+            "gmax",
+            "costumes",
+            "looking-for",
+            "for-trade"
+          ]
+        },
+        "surface": {
+          "enum": [
+            "my-list",
+            "special-board"
+          ]
+        }
+      },
+      "required": [
+        "surface",
+        "lane",
+        "catalogId"
+      ],
+      "type": "object"
+    },
+    "tradeValues": {
+      "additionalProperties": false,
+      "properties": {
+        "backgroundId": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "gender": {
+          "enum": [
+            "",
+            "m",
+            "f"
+          ]
+        },
+        "lucky": {
+          "type": "boolean"
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "note": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "priority": {
+          "enum": [
+            "",
+            "H",
+            "M",
+            "L"
+          ]
+        },
+        "quantity": {
+          "maximum": 999,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "shiny": {
+          "type": "boolean"
+        },
+        "sortOrder": {
+          "maximum": 100000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "variant": {
+          "maxLength": 160,
+          "type": "string"
+        },
+        "xxl": {
+          "type": "boolean"
+        },
+        "xxs": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "priority",
+        "variant",
+        "gender",
+        "lucky",
+        "xxl",
+        "xxs",
+        "shiny",
+        "backgroundId",
+        "sortOrder",
+        "quantity",
+        "note",
+        "mirror"
+      ],
+      "type": "object"
+    },
+    "uid": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+    }
+  },
+  "$id": "urn:trade-app:offline-synthetic-archive:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "archiveSchemaVersion": {
+      "const": 1
+    },
+    "canonical": {
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/accountSyncEntityV1"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "meta": {
+          "additionalProperties": false,
+          "properties": {
+            "featureVersion": {
+              "const": 1
+            },
+            "initialized": {
+              "const": true
+            },
+            "initializedAt": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ownerUid": {
+              "$ref": "#/$defs/uid"
+            },
+            "schemaVersion": {
+              "const": 1
+            },
+            "updatedAt": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "ownerUid",
+            "featureVersion",
+            "initialized",
+            "initializedAt",
+            "updatedAt"
+          ],
+          "type": "object"
+        },
+        "profile": {
+          "additionalProperties": false,
+          "properties": {
+            "authority": {
+              "enum": [
+                "legacy-profile",
+                "accountSync-profile"
+              ]
+            },
+            "ownerUid": {
+              "$ref": "#/$defs/uid"
+            },
+            "revision": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ]
+            },
+            "updatedAt": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "values": {
+              "$ref": "#/$defs/profileValues"
+            }
+          },
+          "required": [
+            "ownerUid",
+            "authority",
+            "revision",
+            "values",
+            "updatedAt"
+          ],
+          "type": "object"
+        },
+        "publicShare": {
+          "additionalProperties": false,
+          "properties": {
+            "ownerUid": {
+              "$ref": "#/$defs/uid"
+            },
+            "snapshot": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/publicSnapshot"
+                }
+              ]
+            },
+            "status": {
+              "enum": [
+                "published",
+                "not-published",
+                "revoked"
+              ]
+            }
+          },
+          "required": [
+            "ownerUid",
+            "status",
+            "snapshot"
+          ],
+          "type": "object"
+        },
+        "recoveryEvidence": {
+          "additionalProperties": false,
+          "properties": {
+            "candidates": {
+              "items": {
+                "$ref": "#/$defs/recoveryCandidate"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "migrations": {
+              "items": {
+                "$ref": "#/$defs/migrationRecord"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            },
+            "reviewAcceptances": {
+              "items": {
+                "$ref": "#/$defs/recoveryReview"
+              },
+              "maxItems": 20000,
+              "type": "array"
+            }
+          },
+          "required": [
+            "migrations",
+            "candidates",
+            "reviewAcceptances"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "meta",
+        "entities",
+        "recoveryEvidence",
+        "profile",
+        "publicShare"
+      ],
+      "type": "object"
+    },
+    "capture": {
+      "additionalProperties": false,
+      "properties": {
+        "capturedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "kind": {
+          "const": "offline-synthetic"
+        },
+        "snapshotId": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "kind",
+        "capturedAt",
+        "snapshotId"
+      ],
+      "type": "object"
+    },
+    "catalog": {
+      "$ref": "#/$defs/catalog"
+    },
+    "compatibility": {
+      "additionalProperties": false,
+      "properties": {
+        "authentication": {
+          "const": "reverify-never-recreate"
+        },
+        "historical": {
+          "const": "inert-only"
+        },
+        "minimumReaderVersion": {
+          "const": 1
+        },
+        "pendingWork": {
+          "const": "quarantine-never-replay"
+        },
+        "target": {
+          "const": "isolated-filesystem-v1"
+        }
+      },
+      "required": [
+        "minimumReaderVersion",
+        "target",
+        "authentication",
+        "pendingWork",
+        "historical"
+      ],
+      "type": "object"
+    },
+    "coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "capturedDevices": {
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        },
+        "otherDevices": {
+          "const": "unknown-not-captured"
+        },
+        "server": {
+          "const": "synthetic-snapshot"
+        },
+        "volatileUnsavedEdits": {
+          "const": "not-captured"
+        }
+      },
+      "required": [
+        "server",
+        "capturedDevices",
+        "otherDevices",
+        "volatileUnsavedEdits"
+      ],
+      "type": "object"
+    },
+    "dispositions": {
+      "items": {
+        "$ref": "#/$defs/disposition"
+      },
+      "maxItems": 20000,
+      "type": "array"
+    },
+    "format": {
+      "const": "trade-app-user-archive"
+    },
+    "historical": {
+      "additionalProperties": false,
+      "properties": {
+        "records": {
+          "items": {
+            "$ref": "#/$defs/historicalRecord"
+          },
+          "maxItems": 20000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "records"
+      ],
+      "type": "object"
+    },
+    "integrity": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "canonicalization": {
+          "const": "trade-archive-json-v1"
+        },
+        "payloadHash": {
+          "$ref": "#/$defs/hash"
+        },
+        "sections": {
+          "additionalProperties": {
+            "$ref": "#/$defs/hash"
+          },
+          "maxProperties": 20000,
+          "type": "object"
+        }
+      },
+      "required": [
+        "algorithm",
+        "canonicalization",
+        "sections",
+        "payloadHash"
+      ],
+      "type": "object"
+    },
+    "knownDevices": {
+      "items": {
+        "$ref": "#/$defs/device"
+      },
+      "maxItems": 20000,
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "accountSyncSchema": {
+          "const": 1
+        },
+        "adapterVersion": {
+          "const": 1
+        },
+        "runtimeRelease": {
+          "const": "2026-09-07.100"
+        },
+        "sourceCommit": {
+          "pattern": "^[a-f0-9]{40}$",
+          "type": "string"
+        },
+        "trainerHistorySchema": {
+          "const": 3
+        }
+      },
+      "required": [
+        "runtimeRelease",
+        "sourceCommit",
+        "adapterVersion",
+        "accountSyncSchema",
+        "trainerHistorySchema"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "format",
+    "archiveSchemaVersion",
+    "capture",
+    "source",
+    "provenance",
+    "catalog",
+    "canonical",
+    "knownDevices",
+    "historical",
+    "dispositions",
+    "coverage",
+    "compatibility",
+    "integrity"
+  ],
+  "title": "Trade App offline synthetic archive v1",
+  "type": "object"
+}

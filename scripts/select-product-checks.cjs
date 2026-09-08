@@ -41,6 +41,7 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
     browser.add('tests/legacy-pin-reset.spec.js');
   }
   const product=any(/^(?:index\.html|css\/|js\/)/);
+  if(any(/^(?:scripts\/archive-proof\/|docs\/verification\/archive-proof\/archive-v1\.schema\.json$)/))add(['tests/offline-archive-restore.test.cjs']);
   if(product){add(PRODUCT);browser.add('tests/trusted-readiness.spec.js');browser.add('tests/anonymous-public-share.spec.js');}
   if(any(/^(?:index\.html|sw\.js|js\/app\/application\.js|scripts\/pages\/|tests\/signed-in-boot-dependencies)/)){
     add(['tests/signed-in-boot-dependencies.test.cjs']);

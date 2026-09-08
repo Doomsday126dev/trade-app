@@ -1,0 +1,66 @@
+{
+  "proof": "offline-synthetic-archive-restore-v1",
+  "baseCommit": "c3fd690a2a2c46dab448873b244e496199283694",
+  "runtimeRelease": "2026-09-07.100",
+  "sourceDestroyed": true,
+  "cleanTarget": true,
+  "canonicalStateEqual": true,
+  "fullSourceRecordEvidenceEqual": true,
+  "historicalInert": true,
+  "pendingWorkQuarantined": true,
+  "publicationNotReactivated": true,
+  "credentialsExcluded": true,
+  "historyBaselinesEqual": true,
+  "serverRecoveryEvidenceEqual": true,
+  "publicSnapshotEqual": true,
+  "secondExportByteIdentical": true,
+  "counts": {
+    "activeWants": 10,
+    "favorites": 1,
+    "privateTags": 2,
+    "sourceEntities": 15,
+    "historicalRecords": 5,
+    "capturedDevices": 1,
+    "pendingOperations": 2,
+    "conflicts": 1,
+    "recoveryCandidates": 1
+  },
+  "archiveBytes": 83390,
+  "payloadHash": "b9a3fc564d763ecd8becd5187f9f72c8377f85a1a3daac9036abcd10c51a72b7",
+  "captureReceipt": {
+    "ownerUid": "synthetic_archive_owner",
+    "sourceCommit": "c3fd690a2a2c46dab448873b244e496199283694",
+    "snapshotId": "synthetic-capture-001",
+    "provenanceHash": "21fe29b8ecfdda8c6f50c2ac296ff18aae3018f6d584e1571ef54841a0053816",
+    "catalogHash": "638388f3ac8d32a26dc8bfdf14b19c475805d726846318a2413f44675f83119a",
+    "archiveHash": "b9a3fc564d763ecd8becd5187f9f72c8377f85a1a3daac9036abcd10c51a72b7"
+  },
+  "limitations": [
+    "No real accounts captured or migrated",
+    "No server-only capture can include unseen device work",
+    "Authentication requires independent re-verification",
+    "Current fixture adapter is not a complete production capture adapter"
+  ],
+  "artifacts": {
+    "archive": ".local/archive-proof-review/synthetic.archive.json",
+    "captureReceipt": ".local/archive-proof-review/capture-receipt.json",
+    "schema": "docs/verification/archive-proof/archive-v1.schema.json",
+    "restored": ".local/archive-proof-review/restored"
+  },
+  "qualification": {
+    "selectedTestsPassed": 167,
+    "failed": 0,
+    "skipped": 0,
+    "archiveTestsPassed": 67,
+    "syntax": "passed",
+    "gitDiffCheck": "passed",
+    "hostedFiles": 558,
+    "unchangedRuntimeArtifactDigest": "6f4950e0d505a8fd044db1f73aba0f717658286f2db1d570ceb888a2e548b99b",
+    "browser": false,
+    "functions": false,
+    "rules": false,
+    "networkRequiredForProof": false,
+    "merged": false,
+    "deployed": false
+  }
+}
