@@ -37,6 +37,11 @@ test('per-section Copy Search stays full-section across filtering, collapse and 
     const query=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(entry=>entry.p==='H'),{locale:pokemonGoSearchLocale()}).parts[0]);
     await page.locator('#combined-filter').fill('Pikachu');
     await expect(high.locator('.myrow')).toHaveCount(2);
+    const medium=section(page,'M');
+    await expect(medium.locator('.myrow')).toHaveCount(0);
+    await expect(medium.locator('[data-contextual-copy]')).toBeVisible();
+    await medium.locator('[data-contextual-copy]').click();
+    expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(entry=>entry.p==='M'),{locale:pokemonGoSearchLocale()}).parts[0]));
     await high.locator('[data-contextual-copy]').click();
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(query);
     await high.locator('.mylist-priority-toggle').click();

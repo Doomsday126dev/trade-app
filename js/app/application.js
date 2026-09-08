@@ -449,7 +449,6 @@ function renderCombinedList(model=productDeclarations()){
   for(const [sectionIndex,section] of sections.entries()){
     const label=wantSectionLabel(section),filtered=section.entries.filter(e=>!query||normalizeAcText(e.name+' '+productShareDescription(e)).includes(query));
     total+=filtered.length;
-    if(!filtered.length)continue;
     const limit=Math.max(wantsSectionLimits.get(section.key)||0,limits[sectionIndex]);
     const collapsed=wantsCollapsedSections.has(section.key);
     let element=current.get(section.key);

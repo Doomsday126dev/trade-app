@@ -100,7 +100,7 @@ for(const engine of ['chromium','webkit']){
 
         const high=page.locator('#combined-list > [data-wants-section="H"]');
         const copy=high.locator('[data-contextual-copy]');
-        await copy.focus();await expect(copy).toBeFocused();
+        await page.keyboard.press('Tab');await copy.focus();await expect(copy).toBeFocused();
         expect(await copy.evaluate(node=>getComputedStyle(node).outlineStyle)).not.toBe('none');
         await expect(high.locator('textarea')).toBeHidden();
         await copy.click();

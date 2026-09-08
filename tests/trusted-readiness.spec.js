@@ -217,7 +217,9 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await expect(page.locator('#login-btn')).toBeVisible();
   await installTrustedFixture(page);
 
-  const pikachu=page.locator('.myrow[data-name="Pikachu"]');
+  const pikachu=page.locator('#combined-list [data-wants-section="H"] .myrow[data-name="Pikachu"]');
+  await expect(page.locator('#combined-list .myrow[data-name="Pikachu"]')).toHaveCount(2);
+  await expect(page.locator('#combined-list [data-wants-section="SHINY"] .myrow[data-name="Pikachu"]')).toHaveCount(1);
   await page.locator('#legacy-list-tools > summary').click();
   await expect(pikachu).toBeVisible();
   expect(await pikachu.evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
@@ -232,7 +234,6 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   const addedId=await page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').ref.entityId);
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('L');
   await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
-  if(await page.locator('#combined-editor-modal details').getAttribute('open')===null)await page.locator('#combined-editor-modal details > summary').click();
   await page.locator('#combined-priority').selectOption('M');
   await page.locator('#combined-save').click();
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('M');
@@ -332,8 +333,9 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await page.evaluate(()=>{document.getElementById('share-view').classList.remove('active');document.getElementById('app').style.display='flex';switchTab('mylist',{render:false});renderMyList();});
     await expect(page.locator('#nav-mylist')).toHaveAttribute('aria-selected','true');
     await expect(page.locator('.myrow').first()).toBeVisible();
+    await page.locator('#combined-list .myrow').evaluateAll(rows=>Promise.all(rows.flatMap(row=>row.getAnimations().map(animation=>animation.finished))));
     const removeBox=await page.locator('.myrow-remove').first().boundingBox();
-    expect(removeBox?.width).toBeGreaterThanOrEqual(43.9);expect(removeBox?.height).toBeGreaterThanOrEqual(43.9);
+    expect(removeBox?.width).toBeGreaterThanOrEqual(viewport.width<=600?43.9:39.9);expect(removeBox?.height).toBeGreaterThanOrEqual(43.9);
     expect(await page.locator('.myrow').first().evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
     await expectNoOverflow(page);
     await capture(page,`trusted-my-list-${viewport.width}x${viewport.height}`);

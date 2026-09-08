@@ -96,7 +96,7 @@ test('wants editor saves and prioritizes through the existing canonical runtime'
   const entries=await page.evaluate(()=>productDeclarations().entries.filter(e=>e.name==='Charmander'));
   expect(entries.map(e=>e.intent).sort()).toEqual(['lf']);expect(entries.every(e=>e.shiny)).toBe(true);
   await page.evaluate(()=>openCombinedEditor(combinedGroups().findIndex(g=>g[0].name==='Charmander')));
-  await page.locator('#combined-top').check();await page.locator('#combined-save').click();await settled(page);
+  await page.locator('#combined-priority').selectOption('H');await page.locator('#combined-save').click();await settled(page);
   const updated=await page.evaluate(()=>productDeclarations().entries.filter(e=>e.name==='Charmander'));
   expect(updated.find(e=>e.intent==='lf').p).toBe('H');expect(updated.find(e=>e.intent==='ft')).toBeUndefined();
   expect(await page.evaluate(()=>__normal.remote.users.NormalProduct.specialTradeBoard)).toEqual(await page.evaluate(()=>__normal.original));

@@ -23,3 +23,11 @@ Local integration-sensitive contracts: 215 passed, one existing skip (including 
 Approved evidence remains immutable in `refinement/after`; integration captures are separate. Frontend fixture checks are synthetic and do not establish real-backend two-account verification. No ordinary-user writes or credential resets are permitted for smoke testing. The .101 two-account live check remains pending absent authorized accounts.
 
 Rollback target is immutable `release-2026-09-07.101` at `503c915cb0d36e6b87925cc1b9a73996b43f9a05`, compatible with the same control. Rollback must use the guarded path and exact current expected-live SHA; it has not been executed.
+
+## PR qualification corrections
+
+Automated review found that a section with zero filtered matches lost its full-section Copy Search control. Removing that skip retains each existing section header/search while filtering only rows; four-locale coverage verifies copying Medium even when the filter matches only Pikachu elsewhere. This does not alter any of the nine approved screenshot states. Both unloosened performance budgets passed again after the correction.
+
+The initial broader browser gate passed 58 journeys but found five stale expectations: removed `combined-top`, a species-only selector now matching two distinct wants, old desktop icon width, and programmatic focus without keyboard modality in two engines. Tests now use the priority selector, explicitly assert and target distinct High/Shiny records, preserve the approved 40×44 desktop / 44×44 mobile targets, and establish keyboard modality before checking the focus outline. Canonical mutation, deletion, inert-FT preservation, background retirement and responsive assertions remain.
+
+Archive-proof merged independently as `6372d6fff95c9979c8d1b83424857f9c71695e4f` during qualification. A follow-up merge from main retains that separate reviewed work and its routing selector, with no archive changes in this PR's main-relative diff.
