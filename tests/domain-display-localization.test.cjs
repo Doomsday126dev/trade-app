@@ -267,6 +267,7 @@ test('all Pokemon render surfaces route displayed labels through the resolver',(
     /renderMyList[\s\S]*pokemonDisplayName/,
     /renderBrowse[\s\S]*pokemonDisplayName/,
     /renderShareView[\s\S]*pokemonDisplayName/,
+    /function productShareImageDetails[\s\S]*entry\.dn\|\|entry\.name/,
     /function productDeclarations[\s\S]*pokemonDisplayName/,
     /function addPokemonEntryAliases[\s\S]*pokemonDisplayName\(entry\)/
   ])assert.match(html,pattern);

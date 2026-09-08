@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My List priority workflow — visual approval</title>
+<style>
+  :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#111317;color:#e9ebf1}
+  *{box-sizing:border-box}body{margin:0}main{max-width:1480px;margin:auto;padding:40px 28px 80px}a{color:#bdb0ff;text-underline-offset:3px}h1{font-size:clamp(24px,3vw,36px);letter-spacing:-.025em;margin:0 0 12px}p{max-width:940px;line-height:1.6;color:#b9c0ce}strong{color:#fff}.status{display:inline-flex;padding:6px 10px;border:1px solid #645589;border-radius:20px;color:#d7cfff;font-size:12px;margin-bottom:20px}nav{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 32px}nav a{padding:9px 12px;background:#20242c;border-radius:6px;text-decoration:none;font-size:13px}section{margin-top:34px;padding-top:22px;border-top:1px solid #363b47}h2{margin:0 0 9px;font-size:20px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.09em;margin:0 0 10px;color:#bdc4d0}.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-top:16px}figure{margin:0;min-width:0;border:1px solid #383e49;border-radius:8px;overflow:hidden;background:#1a1e25}figcaption{padding:12px 14px;font-weight:700;font-size:13px;background:#232832}figure a{display:block;overflow:auto;max-height:680px;text-align:center;background:#0d0f13}img{display:block;width:100%;height:auto}.mobile img{width:auto;max-width:100%;margin:auto}.mobile figure a{max-height:900px}.callout{max-width:1100px;margin:22px 0;padding:15px 18px;border-left:3px solid #9580eb;background:#1c2029;line-height:1.6;color:#cbd0dc}.support{display:flex;flex-wrap:wrap;gap:12px;margin-top:15px}.support a{font-size:13px}.caption{font-size:13px;margin-top:8px}footer{margin-top:40px;font-size:13px;color:#b9c0ce}@media(max-width:700px){main{padding:24px 14px 48px}.pair{grid-template-columns:1fr;gap:12px}figure a{max-height:600px}.mobile figure a{max-height:800px}}
+</style>
+<main>
+  <span class="status">Candidate review · owner visual approval required</span>
+  <h1>My List, organized around wants</h1>
+  <p><strong>This page preserves the original 6ca8568 evidence.</strong> <a href="refinement/index.html">Open the current focused owner-review refinements and AFTER screenshots.</a></p>
+  <p>Matched local screenshots compare <strong>.99 / 1d8f415</strong> with the candidate. The editable-list fixture has 18 synthetic declarations: High, Medium, Low; independent Lucky, Shiny, XXL and XXS wants; Lucky + XXL; normal and Lucky Pikachu; exact costume, Unown, gender, Antique and Dynamax; and one preserved entry needing priority. All screens use real artwork.</p>
+  <div class="callout"><strong>Review the behavior as well as the shape.</strong> Section Copy Search always represents that whole section, even while a text filter is active. The older section workflow was filter-sensitive; this is a deliberate change following the owner's preference. Queries retain the existing species-prefilter and manual-check contract. Needs priority is a temporary treatment for existing ambiguous records, never a fourth priority.</div>
+  <nav aria-label="Review sections">
+    <a href="#desktop">Desktop</a><a href="#mobile">390 mobile</a><a href="#narrow">320 narrow</a><a href="#sections">Sections</a><a href="#selection">Selection</a><a href="#advanced">Advanced</a><a href="#image">Generated image</a><a href="#public">Public list</a><a href="#light">Light mode</a>
+  </nav>
+  <p class="caption">Click a screenshot to open it at full resolution. Main views use actual desktop/mobile viewports; the section comparison includes the complete list.</p>
+  <div id="comparisons"></div>
+  <section id="supporting">
+    <h2>Evidence and limitations</h2>
+    <p>Only local synthetic data was used. Public-list pairs use a separate matched recipient fixture and the same admitted public projection boundary. The controlled 1,000-want benchmark passed every existing budget: 35.8 ms initial rendering and 120 initial rows. At 4× CPU throttling, filtering took 20 ms, clearing 14.6 ms and editing 13 ms. This review does not authorize merging or deployment.</p>
+    <div class="support"><a href="owner-review.md">Complete A–M candidate report</a><a href="history-and-semantics.md">Historical and semantic audit</a><a href="performance.md">Performance qualification</a><a href="visual/before/capture.json">Before capture metrics</a><a href="visual/after/capture.json">After capture metrics</a><a href="visual/after/large-list.json">Large-list rendering evidence</a></div>
+  </section>
+  <footer>Prepared for owner visual approval. No production accounts, schemas or identity controls were changed by these captures.</footer>
+</main>
+<script>
+const sections=[
+  ['desktop','My List · 1440 desktop','my-list-1440-dark.png','Priority and special intent lead the page. Section actions replace the global search scope selector.'],
+  ['mobile','My List · 390 mobile','my-list-390-dark.png','Compact add, readable Pokémon rows and comfortable action targets.','mobile'],
+  ['narrow','My List · 320 narrow','my-list-320-dark.png','The same hierarchy fits the narrow viewport without horizontal page scrolling.','mobile'],
+  ['sections','High, Medium, Low and special wants','priority-and-special-sections.png','Priority appears at section level. Special-only records retain their own meaning; compatible combined requirements share one accurately named section.'],
+  ['selection','Selection active','selection-active.png','Normal chrome offers Select. An active selection exposes its count, Copy Search, Share and Clear.'],
+  ['advanced','Advanced custom search','advanced-custom-search.png','High + Medium is shown as a compact combination. Supported special requirements remain independent toggles.'],
+  ['image','Generated wants image','generated-wants.png','Priority is structural instead of repeated beneath every sprite. Exact item details and distinct same-species wants remain visible. This fixture also preserves the existing text fallback for Dragonite: its saved declaration has no admitted Pokédex number, and the exact export artwork proxy is unavailable.'],
+  ['public','Public shared list · 1440','public-1440-dark.png','The recipient sees sections and their direct search actions using admitted public data.'],
+  ['public-mobile','Public shared list · 390','public-390-dark.png','The recipient hierarchy also fits mobile.','mobile'],
+  ['light','Light mode · 1440','my-list-1440-light.png','Representative light-mode contrast and action styling.'],
+  ['light-mobile','Light mode · 390','my-list-390-light.png','Representative mobile light-mode treatment.','mobile']
+];
+const host=document.getElementById('comparisons');
+for(const [id,title,file,description,kind='']of sections){
+  const section=document.createElement('section');section.id=id;
+  const heading=document.createElement('h2');heading.textContent=title;
+  const note=document.createElement('p');note.className='caption';note.textContent=description;
+  const pair=document.createElement('div');pair.className='pair '+kind;
+  for(const [phase,label]of [['before','Before · .99'],['after','After · candidate']]){
+    const figure=document.createElement('figure'),caption=document.createElement('figcaption'),link=document.createElement('a'),image=document.createElement('img');
+    caption.textContent=label;link.href='visual/'+phase+'/'+file;link.target='_blank';link.rel='noopener';image.src=link.href;image.alt=title+' — '+label;image.loading=id==='desktop'?'eager':'lazy';
+    link.append(image);figure.append(caption,link);pair.append(figure);
+  }
+  section.append(heading,note,pair);
+  if(id==='public-mobile'){
+    const support=document.createElement('div');support.className='support';
+    for(const [file,label]of [['public-320-dark.png','Public list · 320 narrow'],['public-390-light.png','Public list · mobile light mode']]){
+      const link=document.createElement('a');link.href='visual/after/'+file;link.textContent=label;support.append(link);
+    }
+    section.append(support);
+  }
+  host.append(section);
+}
+</script>
+</html>

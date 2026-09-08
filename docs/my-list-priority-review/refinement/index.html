@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My List — focused owner-review refinements</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111317;color:#e9ebf1}*{box-sizing:border-box}body{margin:0}main{max-width:1200px;margin:auto;padding:32px 24px 64px}h1{font-size:30px;letter-spacing:-.02em}h2{font-size:19px;margin:0 0 8px}p{line-height:1.6;color:#bac2d0;max-width:960px}a{color:#c5b6ff;text-underline-offset:3px}nav{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0}section{margin:32px 0;padding-top:24px;border-top:1px solid #363b47}figure{margin:12px 0;border:1px solid #373e48;border-radius:8px;overflow:hidden;background:#0d0f13}figure a{display:block}img{display:block;width:100%;height:auto}.mobile img{width:auto;max-width:100%;margin:auto}figcaption{font-size:12px;padding:12px;background:#20252d}.status{font-size:13px;color:#d3c8f8}.support{font-size:13px}@media(max-width:600px){main{padding:20px 14px 48px}h1{font-size:25px}}
+</style>
+<main>
+<p class="status">AFTER evidence · awaiting owner visual approval</p>
+<h1>My List — focused refinement pass</h1>
+<p>The approved priority and special-want hierarchy remains. This pass corrects Dragonite's synthetic catalog metadata, names the selected sharing action, uses neutral recipient wording for unset priority, and shows search details only for exceptions.</p>
+<nav><a href="report.md">Refinement report</a><a href="dragonite-resolution.json">Dragonite proof</a><a href="performance.json">Performance</a><a href="../index.html">Original 6ca8568 review</a></nav>
+<div id="views"></div>
+<p class="support"><a href="after/selection-active-390.png">Supplemental check: selection active at 390</a> · <a href="after/capture.json">Capture metrics and canvas draw evidence</a></p>
+</main>
+<script>
+const views=[
+['My List · 1440 dark','my-list-1440-dark.png','1440 × 900 · normal state'],
+['My List · 390 dark','my-list-390-dark.png','390 × 844 · normal state','mobile'],
+['Selection active','selection-active.png','1440 × 900 · 4 selected'],
+['Full priority and special sections','priority-and-special-sections.png','1440 desktop width · complete element capture'],
+['Generated wants image','generated-wants.png','1800 × 2148 · all 18 Pokémon drawn'],
+['Public shared list · 390 dark','public-390-dark.png','390 mobile · full-page capture','mobile'],
+['One manual-check exception','manual-check-section.png','390 × 844 · Lucky · XXL disclosure open','mobile'],
+['Clean section','clean-section.png','1440 desktop width · one ordinary High Pikachu · no exception affordance']
+];
+const host=document.getElementById('views');
+for(const [title,file,state,kind='']of views){
+ const section=document.createElement('section'),heading=document.createElement('h2'),figure=document.createElement('figure'),link=document.createElement('a'),image=document.createElement('img'),caption=document.createElement('figcaption');
+ heading.textContent=title;figure.className=kind;link.href='after/'+file;link.target='_blank';link.rel='noopener';image.src=link.href;image.alt=title+' — '+state;image.loading='lazy';caption.textContent=state+' · after/'+file;
+ link.append(image);figure.append(link,caption);section.append(heading,figure);host.append(section);
+}
+</script>
+</html>

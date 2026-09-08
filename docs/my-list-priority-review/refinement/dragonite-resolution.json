@@ -1,0 +1,61 @@
+{
+  "baseCommit": "6ca8568",
+  "syntheticOnly": true,
+  "originalFixture": {
+    "name": "Dragonite",
+    "no": null,
+    "catalogEntry": null,
+    "exportUrls": [
+      "https://images.weserv.nl/?url=img.pokemondb.net%2Fsprites%2Fhome%2Fnormal%2Fdragonite.png"
+    ],
+    "artifactResult": "Blank artwork position"
+  },
+  "correctedFixture": {
+    "name": "Dragonite",
+    "no": 149,
+    "metadataSource": "PogoI18n.pokemonNames.speciesIdByEnglishName",
+    "drawnImage": {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/149.png",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "unchangedRuntimeFunctions": [
+    {
+      "name": "entrySpriteUrl",
+      "unchanged": true,
+      "sha256": "a1056231aefaa8d0cb810b4502ec9b6ef60f398ca01650d5a60087e3920c79bb"
+    },
+    {
+      "name": "spriteUrl",
+      "unchanged": true,
+      "sha256": "8ebe2412e8c0b65eb3d9632b358d7d37d48225c8a07beee78794ecf039396f4f"
+    },
+    {
+      "name": "spriteFallbackChain",
+      "unchanged": true,
+      "sha256": "b9b5739836c8b51caec4de299f85c1c8ddccadc72e8d5a27e7b533345f9500f4"
+    },
+    {
+      "name": "exportSpriteFallbackUrls",
+      "unchanged": true,
+      "sha256": "637ef70bb365419d8bb26ccb5281e0689f2a2545310167210b6b910947a2c351"
+    },
+    {
+      "name": "loadCanvasImage",
+      "unchanged": true,
+      "sha256": "cf065ef91a87f6f01404a164e22923ca85fc64f4093b10abc782b3a9fb01df1e"
+    },
+    {
+      "name": "loadCanvasImageWithFallback",
+      "unchanged": true,
+      "sha256": "83231c64badd7fb76cc8c1b043a28d0ccddf771353de3f36fd1ce06edbf50850"
+    },
+    {
+      "name": "canvasImageHasVisiblePixels",
+      "unchanged": true,
+      "sha256": "8a94f1b098f672350bc93d355cd93f22855e86e94647952500109e99b441f119"
+    }
+  ],
+  "drawnExportImages": 18
+}

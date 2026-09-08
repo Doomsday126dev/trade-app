@@ -18,12 +18,13 @@ async function fixture(page){
     window.__before=JSON.stringify(allData);window.__copied='';copyText=async value=>{window.__copied=value;};
   });
 }
-test('scope controls output, selection persists across filtering and no data changes',async({page})=>{
+test('share scope controls output, selection persists across filtering and no data changes',async({page})=>{
   await fixture(page);
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(2);
   await expect(page.locator('#combined-list')).not.toContainText('Eevee');
-  await expect(page.locator('#combined-search [data-wants-copy]').first()).toBeVisible();
-  await page.locator('#wants-selection-tools > summary').click();
+  await expect(page.locator('#combined-list > [data-wants-section="H"] [data-wants-copy]')).toBeVisible();
+  await expect(page.locator('#wants-selection-tools')).toBeHidden();
+  await page.locator('#wants-select-toggle').click();
   await page.locator('#combined-list input').first().check();
   await page.locator('#combined-filter').fill('Snom');
   await page.locator('#combined-filter').fill('');
@@ -46,6 +47,57 @@ test('scope controls output, selection persists across filtering and no data cha
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
+test('signed-in recipient sections preserve special wants and copy only that trainer’s complete section',async({page})=>{
+  await fixture(page);
+  await page.evaluate(()=>{
+    allData.users.RecipientFixture={specialTradeBoard:{lf:[{name:'Pikachu',no:25,p:'',lucky:true,note:'Lucky request'}],ft:[{name:'Charmander',no:4}]}};
+    allData.wishlist.RecipientFixture={Pikachu:'H',Gengar:'H[shiny]',Eevee:'M',Bulbasaur:'L',Snorlax:'[xxl]',Joltik:'[xxs]',Ralts:'[lucky][shiny]',Mewtwo:''};
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__copied=value;}}});
+    document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');
+    window.__recipientBefore=JSON.stringify(allData);renderShareView('RecipientFixture','wishlist');
+  });
+  await expect(page.locator('#share-list-out .share-pcard')).toHaveCount(9);
+  await expect(page.locator('#share-list-out > .contextual-search')).toHaveCount(0);
+  await expect(page.locator('#share-list-out')).not.toContainText(/Snom|Charmander|Other entries/);
+  await expect(page.locator('#share-list-out [data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
+  await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
+  await expect(page.locator('#share-list-out [data-want-section="L"] .contextual-details')).toBeHidden();
+  for(const [key,numbers] of [['H',[25,94]],['M',[133]],['L',[1]],['LUCKY',[25]],['XXL',[143]],['XXS',[595]],['LUCKY+SHINY',[280]],['NEEDS_PRIORITY',[150]]]){
+    const section=page.locator(`#share-list-out [data-want-section="${key}"]`);
+    await expect(section.locator('.share-pcard')).toHaveCount(numbers.length);
+    await section.locator('[data-contextual-copy]').click();
+    const expected=await page.evaluate(numbers=>PogoDomain.searchStrings.contextualSearchPlan(numbers.map(no=>({no})),{locale:'en'}).parts[0],numbers);
+    expect(await page.evaluate(()=>__copied)).toBe(expected);
+  }
+  const high=page.locator('#share-list-out [data-want-section="H"]');
+  await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+  await expect(page.locator('#share-list-out [data-want-section="LUCKY"] .share-pcard-flag.lucky')).toHaveCount(0);
+  await high.locator('[data-recipient-section-action="toggle"]').click();
+  await expect(high.locator('.share-pcard')).toHaveCount(0);
+  await high.locator('[data-contextual-copy]').click();
+  expect(await page.evaluate(()=>__copied)).toBe('!traded&25,94');
+  await expect(page.locator('#share-list-out [data-want-section="LUCKY"]')).toContainText('Lucky request');
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
+});
+
+test('large signed-in recipient sections page cards while preserving the full search',async({page})=>{
+  await fixture(page);
+  await page.evaluate(()=>{
+    allData.users.LargeRecipient={specialTradeBoard:{lf:[],ft:[]}};
+    allData.wishlist.LargeRecipient=Object.fromEntries(Array.from({length:999},(_,index)=>[`Synthetic ${index}`,'H']));
+    allData.wishlist.LargeRecipient.Mewtwo='H';
+    document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');
+    renderShareView('LargeRecipient','wishlist');
+  });
+  const high=page.locator('#share-list-out [data-want-section="H"]');
+  await expect(high.locator('.share-pcard')).toHaveCount(80);
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+  await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
+  await high.locator('[data-recipient-section-action="more"]').click();
+  await expect(high.locator('.share-pcard')).toHaveCount(160);
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+});
+
 test('wants-only add is one canonical batch, failed save retains the draft',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{
@@ -73,12 +125,11 @@ test('unchanged rows retain keyboard focus and an open selection search stays sc
     button.focus();renderMyList();
     const stable=document.querySelector('#combined-list .wants-row')===row&&document.activeElement===button;
     selectCombinedGroup(0,true);
-    document.getElementById('wants-search-scope').value='selected';refreshCombinedSearch();
-    const before=document.getElementById('combined-search').textContent;
+    const before=document.querySelector('#combined-search [data-wants-copy]')?.dataset.wantsCopy;
     selectCombinedGroup(0,false);
-    return{stable,before,after:document.getElementById('combined-search').textContent,empty:i18nCore.t('contextSearch.empty')};
+    return{stable,before,after:document.querySelector('#combined-search [data-wants-copy]')?.dataset.wantsCopy,hidden:document.getElementById('combined-search').hidden};
   });
-  expect(result.stable).toBe(true);expect(result.before).not.toBe(result.after);expect(result.after).toContain(result.empty);
+  expect(result.stable).toBe(true);expect(result.before).toBe('!traded&25');expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
 });
 test('a remotely changed declaration blocks a stale editor without submitting mutations',async({page})=>{
   await fixture(page);

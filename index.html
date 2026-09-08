@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-09-07.101';
+window.__POGO_RELEASE_ID='2026-09-07.102';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:window.__POGO_PROVIDER_CAPABILITIES__?.providerAccountCompatibility===true,
@@ -83,7 +83,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-09-07.101">
+<link rel="stylesheet" href="css/app.css?v=2026-09-07.102">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -427,7 +427,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
           <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
           <input type="hidden" id="wants-add-priority" value="">
-          <button type="button" class="pb" data-wants-add-priority="H" title="Top want" data-i18n-title="phase2.topWant" aria-pressed="false" onclick="setWantsAddPriority('H')">H</button>
+          <button type="button" class="pb" data-wants-add-priority="H" title="High" data-i18n-title="phase2.topWant" aria-pressed="false" onclick="setWantsAddPriority('H')">H</button>
           <button type="button" class="pb" data-wants-add-priority="M" title="Medium" data-i18n-title="priority.medium" aria-pressed="false" onclick="setWantsAddPriority('M')">M</button>
           <button type="button" class="pb" data-wants-add-priority="L" title="Low" data-i18n-title="priority.low" aria-pressed="false" onclick="setWantsAddPriority('L')">L</button>
         </div>
@@ -438,20 +438,19 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <div class="wants-list-toolbar">
       <div class="mylist-search app-search-shell search-filter"><input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterPlaceholder" aria-label="Filter my wants" oninput="scheduleMyListFilter(this.value)"></div>
       <button type="button" class="btn btn-secondary" onclick="openProductShare()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
-      <details id="wants-selection-tools"><summary class="btn btn-secondary"><span data-i18n="phase2.selection">Selection</span> <span id="combined-selected-count" aria-live="polite">0</span></summary><div class="combined-selection-actions">
-        <button type="button" class="btn btn-secondary" onclick="useBoardSelection()" data-i18n="phase2.boardPreset">Use Board selection</button>
-        <button type="button" class="btn btn-secondary" onclick="combinedSelection.clear();renderCombinedList()" data-i18n="phase2.clearSelection">Clear selection</button>
-      </div></details>
+      <button type="button" id="wants-select-toggle" class="btn btn-secondary" onclick="startWantsSelection()" data-i18n="workflow.select">Select</button>
     </div>
-    <div class="wants-search-toolbar">
-    <label class="wants-search-scope"><span class="sr-only" data-i18n="wants.searchScope">Search scope</span><select id="wants-search-scope" class="field-control" onchange="refreshCombinedSearch()"><option value="filtered" data-i18n="wants.filtered">Filtered wants</option><option value="top" data-i18n="phase2.topWant">Top want</option><option value="selected" data-i18n="phase2.selection">Selection</option></select></label>
-    <div id="combined-search"></div>
+    <div id="wants-selection-tools" class="wants-selection-context" hidden>
+      <span id="combined-selected-count" aria-live="polite"></span><div id="combined-search" hidden></div>
+      <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection()" data-i18n="workflow.shareSelected" hidden>Share selected</button>
+      <button type="button" class="btn btn-secondary" onclick="clearWantsSelection()" data-i18n="workflow.clear">Clear</button>
     </div>
     <div id="combined-list" class="mylist-priority-sections"></div>
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div id="intent-review" class="intent-review" hidden></div>
     <div class="owner-share-notice" id="owner-share-notice" role="status" aria-live="polite"></div>
-    <details id="legacy-list-tools"><summary data-i18n="phase2.legacyTools">Advanced list tools</summary>
+    <details id="legacy-list-tools" ontoggle="refreshCombinedSearch()"><summary data-i18n="phase2.legacyTools">Advanced list tools</summary>
+      <div id="wants-custom-search"></div>
       <button type="button" class="btn btn-secondary" onclick="openImport()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-upload"></use></svg><span data-i18n="myList.importAction">Import string</span></button>
     </details>
   </div>
@@ -640,7 +639,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
     <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
       <option value="full" data-i18n="phase2.full">Full list</option>
-      <option value="top" data-i18n="phase2.top">Top wants</option>
+      <option value="top" data-i18n="phase2.top">High</option>
       <option value="selected" data-i18n="phase2.selected">Selected entries</option>
     </select>
     <div id="product-share-preview" class="product-share-preview" aria-live="polite"></div>
@@ -670,15 +669,12 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <h3 id="combined-editor-title" data-i18n="phase2.edit">Trade intent</h3>
     <label><span data-i18n="myList.searchPlaceholder">Pokémon</span><input class="field-control" id="combined-name" list="combined-catalog" required autocomplete="off"></label>
     <datalist id="combined-catalog"></datalist>
-    <div class="combined-checks">
-      <label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label>
-      <label><input type="checkbox" id="combined-top" onchange="document.getElementById('combined-priority').value=this.checked?'H':''"><span data-i18n="phase2.topWant">Top want</span></label>
-    </div>
+    <label><span data-i18n="myList.priority">Priority</span><select class="field-control" id="combined-priority"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select></label>
+    <div class="wants-special-fields"><span class="add-pri-label" data-i18n="workflow.specialRequirement">Special requirement</span><div class="combined-checks"><label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div></div>
     <details><summary data-i18n="myList.flagsAndDetails">Flags &amp; details</summary>
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160"></label>
       <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender"><option value="">—</option><option value="f">♀</option><option value="m">♂</option></select></label>
-      <label><span data-i18n="myList.priority">Priority</span><select class="field-control" id="combined-priority" onchange="document.getElementById('combined-top').checked=this.value==='H'"><option value="">—</option><option value="mixed">H / M / L</option><option value="H">H</option><option value="M">M</option><option value="L">L</option></select></label>
-      <div class="combined-checks"><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div>
+
       <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
     </details>
     <p id="combined-error" role="alert"></p>
@@ -846,85 +842,85 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-09-07.101"></script>
-<script src="js/domain/productLimits.js?v=2026-09-07.101"></script>
-<script src="js/domain/priorities.js?v=2026-09-07.101"></script>
-<script src="js/ui/badges.js?v=2026-09-07.101"></script>
-<script src="js/domain/username.js?v=2026-09-07.101"></script>
-<script src="js/domain/requestAccess.js?v=2026-09-07.101"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-07.101"></script>
-<script src="js/domain/priorityValues.js?v=2026-09-07.101"></script>
-<script src="js/domain/scheduleDates.js?v=2026-09-07.101"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-09-07.101"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-09-07.101"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-07.101"></script>
-<script src="js/domain/searchStrings.js?v=2026-09-07.101"></script>
-<script src="js/ui/stringHtml.js?v=2026-09-07.101"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-09-07.101"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-09-07.101"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-09-07.101"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-09-07.101"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-09-07.101"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-07.101"></script>
-<script src="js/domain/fuzzyText.js?v=2026-09-07.101"></script>
-<script src="js/domain/autocompleteText.js?v=2026-09-07.101"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-09-07.101"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-09-07.101"></script>
-<script src="js/domain/relativeTime.js?v=2026-09-07.101"></script>
-<script src="js/domain/clientRelease.js?v=2026-09-07.101"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-09-07.101"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-07.101"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-09-07.101"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-09-07.101"></script>
-<script src="js/domain/eventPresentation.js?v=2026-09-07.101"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-09-07.101"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-09-07.101" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-09-07.101"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-09-07.101"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-09-07.101"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-09-07.101"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-09-07.101"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-09-07.101"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-09-07.101" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-09-07.101"></script>
-<script src="js/utils/textSafety.js?v=2026-09-07.101"></script>
-<script src="js/ui/stringPanels.js?v=2026-09-07.101"></script>
-<script src="js/ui/emptyState.js?v=2026-09-07.101"></script>
-<script src="js/i18n/locales/en.js?v=2026-09-07.101"></script>
-<script src="js/i18n/locales/ja.js?v=2026-09-07.101"></script>
-<script src="js/i18n/locales/es.js?v=2026-09-07.101"></script>
-<script src="js/i18n/locales/de.js?v=2026-09-07.101"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-07.101"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-09-07.101"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-07.101"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-09-07.101"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-07.101"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-09-07.101"></script>
-<script src="js/i18n/core.js?v=2026-09-07.101"></script>
-<script src="js/services/firebaseClient.js?v=2026-09-07.101"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-09-07.101"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-09-07.101" data-pogo-provider-public-capability></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-07.101"></script>
-<script src="js/data/subscriptionManager.js?v=2026-09-07.101"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-09-07.101"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-09-07.101"></script>
-<script src="js/data/currentUserRepository.js?v=2026-09-07.101"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-09-07.101"></script>
-<script src="js/data/publicShareRepository.js?v=2026-09-07.101"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-09-07.101"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-09-07.101"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-09-07.101"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-09-07.101"></script>
-<script src="js/data/accountSyncController.js?v=2026-09-07.101"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-09-07.101"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-09-07.101"></script>
-<script src="js/app/application.js?v=2026-09-07.101"></script>
+<script src="data.js?v=2026-09-07.102"></script>
+<script src="js/domain/productLimits.js?v=2026-09-07.102"></script>
+<script src="js/domain/priorities.js?v=2026-09-07.102"></script>
+<script src="js/ui/badges.js?v=2026-09-07.102"></script>
+<script src="js/domain/username.js?v=2026-09-07.102"></script>
+<script src="js/domain/requestAccess.js?v=2026-09-07.102"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-07.102"></script>
+<script src="js/domain/priorityValues.js?v=2026-09-07.102"></script>
+<script src="js/domain/scheduleDates.js?v=2026-09-07.102"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-09-07.102"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-09-07.102"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-07.102"></script>
+<script src="js/domain/searchStrings.js?v=2026-09-07.102"></script>
+<script src="js/ui/stringHtml.js?v=2026-09-07.102"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-09-07.102"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-09-07.102"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-09-07.102"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-09-07.102"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-09-07.102"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-07.102"></script>
+<script src="js/domain/fuzzyText.js?v=2026-09-07.102"></script>
+<script src="js/domain/autocompleteText.js?v=2026-09-07.102"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-09-07.102"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-09-07.102"></script>
+<script src="js/domain/relativeTime.js?v=2026-09-07.102"></script>
+<script src="js/domain/clientRelease.js?v=2026-09-07.102"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-09-07.102"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-07.102"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-09-07.102"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-09-07.102"></script>
+<script src="js/domain/eventPresentation.js?v=2026-09-07.102"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-09-07.102"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-09-07.102" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-09-07.102"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-09-07.102"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-09-07.102"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-09-07.102"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-09-07.102"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-09-07.102"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-09-07.102" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-09-07.102"></script>
+<script src="js/utils/textSafety.js?v=2026-09-07.102"></script>
+<script src="js/ui/stringPanels.js?v=2026-09-07.102"></script>
+<script src="js/ui/emptyState.js?v=2026-09-07.102"></script>
+<script src="js/i18n/locales/en.js?v=2026-09-07.102"></script>
+<script src="js/i18n/locales/ja.js?v=2026-09-07.102"></script>
+<script src="js/i18n/locales/es.js?v=2026-09-07.102"></script>
+<script src="js/i18n/locales/de.js?v=2026-09-07.102"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-07.102"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-09-07.102"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-07.102"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-09-07.102"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-07.102"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-09-07.102"></script>
+<script src="js/i18n/core.js?v=2026-09-07.102"></script>
+<script src="js/services/firebaseClient.js?v=2026-09-07.102"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-09-07.102"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-09-07.102" data-pogo-provider-public-capability></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-07.102"></script>
+<script src="js/data/subscriptionManager.js?v=2026-09-07.102"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-09-07.102"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-09-07.102"></script>
+<script src="js/data/currentUserRepository.js?v=2026-09-07.102"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-09-07.102"></script>
+<script src="js/data/publicShareRepository.js?v=2026-09-07.102"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-09-07.102"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-09-07.102"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-09-07.102"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-09-07.102"></script>
+<script src="js/data/accountSyncController.js?v=2026-09-07.102"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-09-07.102"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-09-07.102"></script>
+<script src="js/app/application.js?v=2026-09-07.102"></script>
 
 </template>
 <script>

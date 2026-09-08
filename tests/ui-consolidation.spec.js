@@ -86,9 +86,9 @@ for(const engine of ['chromium','webkit']){
         await showReviewSurface(page,'my-list');
         await expect(page.locator('#mylist-out,#intent-entries,.mylist-type-tabs,#ac-input')).toHaveCount(0);
         await page.locator('#legacy-list-tools > summary').click();
-        await expect(page.locator('#legacy-list-tools button')).toHaveCount(1);
+        await expect(page.locator('#legacy-list-tools > button')).toHaveCount(1);
         await expect(page.locator('#legacy-list-tools')).not.toContainText('Build your trade list');
-        await page.locator('#legacy-list-tools button').click();
+        await page.locator('#legacy-list-tools > button').click();
         await expect(page.locator('#import-category')).toBeVisible();
         const beforeImport=await page.evaluate(()=>JSON.stringify(allData));
         await page.locator('#import-category').selectOption('dynamax');
@@ -98,19 +98,19 @@ for(const engine of ['chromium','webkit']){
         expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(beforeImport);
         await page.evaluate(()=>closeModal('import-modal'));
 
-        const scope=page.locator('#wants-search-scope');
-        await scope.focus();await expect(scope).toBeFocused();
-        expect(await scope.evaluate(node=>getComputedStyle(node).outlineStyle)).not.toBe('none');
-        await scope.selectOption('top');
-        await expect(page.locator('#combined-search textarea')).toBeHidden();
-        await page.locator('#combined-search [data-contextual-copy]').first().click();
-        expect(await page.evaluate(()=>__reviewCopy)).toBe(await page.locator('#combined-search [data-contextual-copy]').first().getAttribute('data-contextual-copy'));
-        await expect(page.locator('#combined-search textarea')).toBeHidden();
+        const high=page.locator('#combined-list > [data-wants-section="H"]');
+        const copy=high.locator('[data-contextual-copy]');
+        await page.keyboard.press('Tab');await copy.focus();await expect(copy).toBeFocused();
+        expect(await copy.evaluate(node=>getComputedStyle(node).outlineStyle)).not.toBe('none');
+        await expect(high.locator('textarea')).toBeHidden();
+        await copy.click();
+        expect(await page.evaluate(()=>__reviewCopy)).toBe(await copy.getAttribute('data-contextual-copy'));
+        await expect(high.locator('textarea')).toBeHidden();
 
         for(const locale of ['de','ja']){
           await page.evaluate(async locale=>{await i18nCore.setLocale(locale);renderMyList();},locale);
           expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-          const button=page.locator('#combined-search [data-contextual-copy]').first();
+          const button=high.locator('[data-contextual-copy]');
           expect(await button.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
         }
         await page.evaluate(async()=>{await i18nCore.setLocale('en');renderMyList();});

@@ -120,7 +120,7 @@ test('search-language override is device-local and regenerates every visible str
   assert.match(block,/checkbox\.checked=override/);
   assert.match(block,/row\.hidden=!override/);
   assert.match(block,/select\.disabled=!override/);
-  assert.match(block,/refreshCombinedSearch\(\)/);
+  assert.match(block,/renderCombinedList\(declarations\)/);
   assert.match(block,/renderTrainerGroupResults\(\)/);
   assert.match(block,/renderStrings\(\)/);
   assert.doesNotMatch(block,/renderMyStrings\(/);
@@ -157,7 +157,7 @@ test('My List ARIA labels use complete locale templates around localized names',
   const start=html.indexOf('function renderCombinedList('),end=html.indexOf('function removeWantsGroup(',start);
   assert.ok(start>=0&&end>start,'current unified list renderer exists');
   const render=html.slice(start,end);
-  for(const key of ['phase2.select','myList.priorityFor','myList.openMoreFor','myList.removeEntry'])assert.ok(render.includes(`i18nCore.t('${key}',{name:e.dn})`),key);
+  for(const key of ['phase2.select','myList.openMoreFor','myList.removeEntry'])assert.ok(render.includes(`i18nCore.t('${key}',{name:e.dn})`),key);
   assert.doesNotMatch(render,/aria-label="Set \$\{|aria-label="Toggle (?:Lucky|Shiny|XXL|XXS)|aria-label="Remove"/);
 });
 
