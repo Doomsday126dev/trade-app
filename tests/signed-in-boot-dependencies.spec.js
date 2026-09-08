@@ -73,9 +73,12 @@ test('fresh Username/PIN login and restored authenticated session use the reduce
   await installLoginTransport(page);
   await page.goto('./?boot-login-qualification');
   await expect(page.locator('#login-user')).toBeEnabled();
+  await page.locator('#login-user').focus();
+  // Focusing warms the feature graph. Initial showLogin clears the PIN field,
+  // so enter credentials after the existing startup/directory state settles.
+  await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null&&typeof managedLoginDirectory!=='undefined'&&firebaseDataProtectionReady&&managedLoginDirectory.snapshot().status==='loaded');
   await page.locator('#login-user').fill(identity.username);
   await page.locator('#login-pin').fill('123456');
-  await page.waitForFunction(()=>typeof managedLoginDirectory!=='undefined'&&firebaseDataProtectionReady&&managedLoginDirectory.snapshot().status==='loaded');
   await page.locator('#login-btn').click();
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>__bootSignIns)).toBe(1);
