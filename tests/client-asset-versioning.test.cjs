@@ -38,7 +38,7 @@ test('every first-party JavaScript URL uses the current release identifier',()=>
   const developmentOnly=new Set(inventory.developmentOnlyScriptFiles);
   const requested=firstPartyScripts.map(src=>new URL(src,'https://example.test/').pathname.slice(1)).filter(file=>!developmentOnly.has(file));
   assert.deepEqual(workerArray('RELEASE_ASSETS').filter(path=>path.endsWith('.js')),requested);
-  assert.deepEqual(workerArray('LAZY_RELEASE_ASSETS'),['js/domain/specialTradeBoardExport.js']);
+  assert.deepEqual(workerArray('LAZY_RELEASE_ASSETS'),['js/domain/specialTradeBoardExport.js','js/app/publicShareApp.js']);
   assert.equal(requested.includes('js/domain/specialTradeBoardExport.js'),false);
   assert.match(html,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
 });

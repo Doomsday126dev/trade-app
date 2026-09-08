@@ -1,0 +1,80 @@
+{
+  "base": "1d8f41529bffc38471ca404157acd71960757234",
+  "method": "UTF-8 bytes; gzip level 9 per asset, summed; five serial Chromium samples per CPU profile, mocked Firebase, service worker blocked for timing.",
+  "before": {
+    "defaultScripts": 73,
+    "templateScripts": 85,
+    "featureBytes": {
+      "raw": 1867171,
+      "gzip": 467296
+    },
+    "htmlBytes": {
+      "raw": 123436,
+      "gzip": 29047
+    },
+    "requiredAssets": 81,
+    "requiredBytes": {
+      "raw": 2585956,
+      "gzip": 636196
+    }
+  },
+  "after": {
+    "defaultScripts": 67,
+    "templateScripts": 79,
+    "featureBytes": {
+      "raw": 1770546,
+      "gzip": 442212
+    },
+    "htmlBytes": {
+      "raw": 123001,
+      "gzip": 29006
+    },
+    "requiredAssets": 76,
+    "requiredBytes": {
+      "raw": 2512179,
+      "gzip": 618181
+    }
+  },
+  "timing": {
+    "before": {
+      "desktop": {
+        "n": 5,
+        "medianMs": 77.5,
+        "minMs": 75.69999998807907,
+        "maxMs": 130.80000001192093
+      },
+      "mobile 390 at 4x CPU": {
+        "n": 5,
+        "medianMs": 199.80000001192093,
+        "minMs": 198.5,
+        "maxMs": 200.19999998807907
+      },
+      "mobile 320 at 6x CPU": {
+        "n": 5,
+        "medianMs": 297.80000001192093,
+        "minMs": 284.89999997615814,
+        "maxMs": 309.60000002384186
+      }
+    },
+    "after": {
+      "desktop": {
+        "n": 5,
+        "medianMs": 80.19999998807907,
+        "minMs": 77.39999997615814,
+        "maxMs": 92.20000004768372
+      },
+      "mobile 390 at 4x CPU": {
+        "n": 5,
+        "medianMs": 192.19999998807907,
+        "minMs": 187.30000001192093,
+        "maxMs": 202.60000002384186
+      },
+      "mobile 320 at 6x CPU": {
+        "n": 5,
+        "medianMs": 289.5,
+        "minMs": 278.9000000357628,
+        "maxMs": 306.4000000357628
+      }
+    }
+  }
+}

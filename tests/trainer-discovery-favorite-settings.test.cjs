@@ -192,7 +192,7 @@ test('Settings keeps language behavior, provider rows inert, and local-only data
   assert.doesNotMatch(security,/linkWithPopup|linkWithRedirect|data-action=/);
   assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);
   assert.match(html,/id="settings-install" onclick="triggerInstall\(\)"/);
-  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+  assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
 });
 
 test('responsive contracts retain 48px targets, wrapping, and no parallel organizer store',()=>{

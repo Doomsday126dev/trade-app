@@ -77,3 +77,12 @@ test('Pages invokes the trusted checker against target bytes, never the historic
   assert.ok(workflow.includes('FIREBASE_READ_SOURCE_DIR=target node control/scripts/check-firebase-reads.js'));
   assert.ok(!workflow.includes('node target/scripts/check-firebase-reads.js'));
 });
+
+test('static read validation uses the trusted registry even when the target never loads it',t=>{
+  const dir=fixture(t);
+  const file=path.join(dir,'index.html');
+  fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/<script src="js\/data\/firebaseReadRegistry\.js\?v=[^"]+"><\/script>\n/g,''));
+  fs.writeFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'throw new Error("target registry must never execute during validation");');
+  const result=check(dir);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,25);
+});

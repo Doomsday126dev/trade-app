@@ -196,7 +196,9 @@ test('workflow permissions remain minimal and deploy/build jobs stay separate',(
 
 test('reviewed frontend allowlist stays exact and excludes control/private trees',()=>{
   const result=validator.validateReleaseCoherence(root,{expectedReleaseId:RELEASE_ID});
-  assert.equal(result.files.length,558);assert.equal(result.scriptCount,85);
+  assert.equal(result.files.length,558);assert.equal(result.scriptCount,79);
+  assert.equal(result.allowlist.hostedOnlyScriptFiles.length,5);
+  assert.ok(result.allowlist.lazyScriptFiles.includes('js/app/publicShareApp.js'));
   for(const file of result.files)assert.doesNotMatch(file,/^(?:functions|tests|docs|\.github|\.local|node_modules|screenshots|logs)\//);
 });
 
@@ -333,7 +335,7 @@ test('current-run matching rejects concurrent, zero, multiple, wrong selector, a
 test('postdeploy requires schema 2 and exact runtime/control provenance',async()=>{
   const files=runtimeFiles(),fetchImpl=pagesFetch(files);
   const result=await verifier.verifyServedDeployment({fetchImpl,siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST});
-  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,85);
+  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,79);
   files.set('deployment-manifest.json',JSON.stringify(legacyManifest()));
   await assert.rejects(verifier.verifyServedDeployment({fetchImpl:pagesFetch(files),siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST}),/not accepted post-deploy/);
 });
@@ -365,4 +367,32 @@ test('package remains validation-only with no local deployment command',()=>{
   const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json')));
   assert.ok(pkg.scripts['check:pages-release']);assert.ok(pkg.scripts['test:pages-release']);
   assert.equal(Object.keys(pkg.scripts).some(name=>/^deploy(?::|$)/.test(name)),false);
+});
+
+test('hosted-only candidates cannot be reintroduced into the signed-in graph without reviewed control',t=>{
+  const fixture=tempDir();t.after(()=>fs.rmSync(fixture,{recursive:true,force:true}));copyRuntime(root,fixture);
+  const index=path.join(fixture,'index.html'),file=runtimeRelease.allowlist.hostedOnlyScriptFiles[0];
+  fs.writeFileSync(index,fs.readFileSync(index,'utf8').replace('</body>',`<script src="${file}?v=${RELEASE_ID}"></script>\n</body>`));
+  assert.throws(()=>validator.validateReleaseCoherence(fixture),/HTML first-party script order differs from trusted-control/);
+});
+
+test('anonymous route removal from the required offline graph fails release validation',t=>{
+  const fixture=tempDir();t.after(()=>fs.rmSync(fixture,{recursive:true,force:true}));copyRuntime(root,fixture);
+  const worker=path.join(fixture,'sw.js');
+  fs.writeFileSync(worker,fs.readFileSync(worker,'utf8').replace("  'js/app/publicShareApp.js'\n",''));
+  assert.throws(()=>validator.validateReleaseCoherence(fixture),/Service-worker lazy release graph differs/);
+});
+
+test('target-provided hosted-only metadata cannot change the immutable artifact inventory',t=>{
+  const fixture=tempDir();t.after(()=>fs.rmSync(fixture,{recursive:true,force:true}));copyRuntime(root,fixture);
+  const file=path.join(fixture,'scripts/pages/frontend-files.json'),metadata=JSON.parse(fs.readFileSync(file,'utf8'));
+  metadata.hostedOnlyScriptFiles.push('js/unreviewed.js');fs.writeFileSync(file,JSON.stringify(metadata));
+  fs.writeFileSync(path.join(fixture,'js/unreviewed.js'),'// unreviewed');
+  assert.ok(!validator.validateReleaseCoherence(fixture).files.includes('js/unreviewed.js'));
+});
+
+test('hosted-only files remain mandatory regular artifact inputs',t=>{
+  const fixture=tempDir();t.after(()=>fs.rmSync(fixture,{recursive:true,force:true}));copyRuntime(root,fixture);
+  fs.unlinkSync(path.join(fixture,runtimeRelease.allowlist.hostedOnlyScriptFiles[0]));
+  assert.throws(()=>validator.validateReleaseCoherence(fixture),/ENOENT/);
 });

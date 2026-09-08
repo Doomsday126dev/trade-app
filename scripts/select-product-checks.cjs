@@ -42,6 +42,10 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
   }
   const product=any(/^(?:index\.html|css\/|js\/)/);
   if(product){add(PRODUCT);browser.add('tests/trusted-readiness.spec.js');browser.add('tests/anonymous-public-share.spec.js');}
+  if(any(/^(?:index\.html|sw\.js|js\/app\/application\.js|scripts\/pages\/|tests\/signed-in-boot-dependencies)/)){
+    add(['tests/signed-in-boot-dependencies.test.cjs']);
+    browser.add('tests/signed-in-boot-dependencies.spec.js');
+  }
   if(any(/^js\/(?:data\/accountSync|domain\/accountSync|app\/application\.js)/)){add(SYNC);browser.add('tests/normal-sync-product.spec.js');}
   if(any(/^(?:js\/domain\/(?:pokemonKeys|publicPokemonDex)\.js|scripts\/generate-public-sprite-dex\.cjs)$/))add(['tests/pokemon-catalog.test.cjs','tests/sprite-resolution.test.cjs']);
   if(any(/^js\/(?:app\/|domain\/publicShare|services\/providerPublic|data\/(?:publicShare|trainerShare))/)){add(PRIVACY);browser.add('tests/anonymous-public-share.spec.js');}
