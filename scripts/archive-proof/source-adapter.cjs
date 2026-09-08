@@ -7,7 +7,7 @@ const PROFILE_FIELDS=['friendCode','bio','discord','avatarPokemon','wallpaper'];
 const USER_KEYS=['authUid','authVersion','authEmail','pin','pinHashed',...PROFILE_FIELDS,'lastUpdated'];
 function reject(message){throw Object.assign(new Error(`archive/source: ${message}`),{code:'archive/source'});}
 function exact(value,keys,label){
-  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!==[...keys].sort().join(','))reject(`${label} contains missing/unknown fields; classify them before capture`);
+  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==keys.length||!keys.every(key=>Object.hasOwn(value,key)))reject(`${label} contains missing/unknown fields; classify them before capture`);
 }
 function adaptSyntheticSource(input){
   const source=clone(input);

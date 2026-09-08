@@ -148,6 +148,16 @@ test('unknown source fields stop capture before any ambiguous data is omitted',(
   const changed=f.clone(source);changed.identity.userRecord.futureUserPreference='must be classified';
   assert.throws(()=>adaptSyntheticSource(changed),{code:'archive/source'});
 });
+test('comma-containing source key cannot replace separate PIN fields',()=>{
+  const changed=f.clone(source),record=changed.identity.userRecord;
+  delete record.pin;delete record.pinHashed;record['pin,pinHashed']='unclassified synthetic value';
+  assert.throws(()=>adaptSyntheticSource(changed),{code:'archive/source'});
+});
+test('comma-containing source key cannot replace browser credential fields',()=>{
+  const changed=f.clone(source);
+  changed.devices[0].browserCredentials={'firebaseAuth,sessionHint':'unclassified synthetic value'};
+  assert.throws(()=>adaptSyntheticSource(changed),{code:'archive/source'});
+});
 test('foreign source auth-index and profile pair fails capture',()=>{
   const changed=f.clone(source);changed.identity.authIndex[fixture.OWNER].username='AnotherTrainer';
   assert.throws(()=>adaptSyntheticSource(changed),{code:'archive/source'});
