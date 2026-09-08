@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "c3fd690a2a2c46dab448873b244e496199283694",
+  "runtimeRelease": "2026-09-07.100",
+  "files": {
+    "js/domain/productLimits.js": "0d1cc5dc4aa0aaec062c29484413890a0b5d7fac51c2de8a5b389123caa1e0df",
+    "js/domain/accountSyncModel.js": "f123155124a4c1de351e2fdbebe813a3d27fc4b9e326fcd4d36d7612d4174a4a",
+    "js/domain/accountSyncMerge.js": "b3c21574d30bf3f58cecbf323b0e0791509d7f1c31eb514dc86588bc5317d028",
+    "js/domain/accountSyncProduct.js": "22afab4162687ad4d7d2d691526b02cc4a6b8df21805cfd0787174043dd0d1e9",
+    "js/domain/accountSyncMigration.js": "8f880eaab66c22db0837e16b43b7f6ad98e2c1c5c46897efe8b509ba5f94214c",
+    "js/domain/pokemonKeys.js": "f2daa3fb7b8711c605313ff61cbb1db33642980796cd0ee8801b54420fe17172",
+    "js/domain/publicSharePublication.js": "6a0699f8f2434e3bc75ed48b28e8d63cff8dc0225ec348f4d03b724408fef01a",
+    "js/data/trainerHistoryStore.js": "6b67ffaa2f5491e7b011280e2ef1ffd6f735fe31bd832ef7e91a4e5dee7b5951"
+  }
+}
