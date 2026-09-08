@@ -28,7 +28,11 @@ function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
   const file=path.join(manifestRoot,'scripts/pages/frontend-files.json');
   const manifest=JSON.parse(fs.readFileSync(file,'utf8'));
   if(manifest.schemaVersion!==1)fail('Unsupported frontend-files manifest schema');
-  const groups=['entryFiles','styleFiles','scriptFiles','lazyScriptFiles','assetFiles'];
+  // Hosted tooling/disabled candidates stay available without becoming HTML
+  // dependencies or service-worker install requirements. Only the immutable
+  // control manifest may declare these paths, never target-supplied metadata.
+  manifest.hostedOnlyScriptFiles??=[];
+  const groups=['entryFiles','styleFiles','scriptFiles','lazyScriptFiles','hostedOnlyScriptFiles','assetFiles'];
   for(const group of groups)if(!Array.isArray(manifest[group]))fail(`Missing ${group}`);
   if(!Array.isArray(manifest.developmentOnlyScriptFiles))fail('Missing developmentOnlyScriptFiles');
   if(unique(manifest.developmentOnlyScriptFiles).length!==manifest.developmentOnlyScriptFiles.length)fail('developmentOnlyScriptFiles contains duplicate paths');

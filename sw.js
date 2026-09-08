@@ -59,7 +59,6 @@ const RELEASE_ASSETS=[
   'js/domain/accountSyncMigration.js',
   'js/domain/accountSyncProduct.js',
   'js/domain/trainerPreferences.js',
-  'js/domain/trainerPreferenceSync.js',
   'js/domain/authenticationReadiness.js',
   'js/domain/loginDirectory.js',
   'js/utils/textSafety.js',
@@ -83,27 +82,23 @@ const RELEASE_ASSETS=[
   'js/data/subscriptionManager.js',
   'js/data/listenerLifecycle.js',
   'js/data/sessionCacheBoundary.js',
-  'js/data/firebaseReadRegistry.js',
   'js/data/currentUserRepository.js',
   'js/data/ownedDataCoordinator.js',
   'js/data/publicShareRepository.js',
   'js/data/trainerHistoryStore.js',
   'js/data/favoriteShareSessionCache.js',
-  'js/data/trainerPreferencesRepository.js',
-  'js/data/trainerPreferenceSyncQueue.js',
   'js/data/accountSyncJournal.js',
   'js/data/accountSyncRepository.js',
   'js/data/accountSyncController.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
-  'js/ui/trainerTagPanel.js',
-  'js/app/publicShareApp.js',
   'js/app/application.js'
 ];
-// Required for complete offline feature support, but intentionally omitted
-// from the startup script graph and loaded only when its feature is used.
+// Required for offline features/routes, but intentionally omitted from the
+// signed-in script graph: optional export feature and independent public route.
 const LAZY_RELEASE_ASSETS=[
-  'js/domain/specialTradeBoardExport.js'
+  'js/domain/specialTradeBoardExport.js',
+  'js/app/publicShareApp.js'
 ];
 const REQUIRED_SHELL_URLS=[
   `./index.html?v=${RELEASE}`,
