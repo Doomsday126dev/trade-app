@@ -51,7 +51,7 @@ test('section searches keep whole-priority scope while precision selection persi
   await expect(high.locator('textarea')).toHaveValue('!traded&25,26');
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
-test('wants search localizes game terms and empty filters offer no misleading copy',async({page})=>{
+test('wants search localizes game terms and unmatched filters retain complete section queries',async({page})=>{
   await fixture(page);
   for(const [locale,term] of [['en','!traded'],['ja','!こうかん'],['es','!intercambiados'],['de','!getauscht']]){
     await page.evaluate(locale=>changePokemonGoSearchLocale(locale),locale);
@@ -59,7 +59,14 @@ test('wants search localizes game terms and empty filters offer no misleading co
     await expect(page.locator('#combined-list > [data-wants-section="M"] textarea')).toHaveValue(`${term}&872`);
   }
   await page.locator('#combined-filter').fill('No matching entry');
-  await expect(page.locator('#combined-list [data-wants-copy]')).toHaveCount(0);
+  await expect(page.locator('#combined-list .wants-row')).toHaveCount(0);
+  await expect(page.locator('#combined-list [data-wants-copy]')).toHaveCount(2);
+  const high=page.locator('#combined-list > [data-wants-section="H"] [data-wants-copy]');
+  const medium=page.locator('#combined-list > [data-wants-section="M"] [data-wants-copy]');
+  await expect(high).toHaveAttribute('data-wants-copy','!getauscht&25,26');
+  await expect(medium).toHaveAttribute('data-wants-copy','!getauscht&872');
+  await medium.click();expect(await page.evaluate(()=>__copied)).toBe('!getauscht&872');
+  await expect(page.locator('#combined-list > [data-wants-section="L"] [data-wants-copy]')).toHaveCount(0);
   await expect(page.locator('#combined-search')).toBeHidden();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
