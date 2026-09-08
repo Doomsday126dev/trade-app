@@ -55,6 +55,11 @@ async function installLoginTransport(page){
     export async function runTransaction({path},updater){const next=updater(clone(read(path)));if(next===undefined)return {committed:false,snapshot:snapshot(path)};__bootWrites.push(path);put(path,next);notify();return {committed:true,snapshot:snapshot(path)}}
     export function serverTimestamp(){return Date.now()}
   `));
+  // Exercise the real readiness boundary instead of relying on local SDK speed.
+  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',async route=>{
+    await new Promise(resolve=>setTimeout(resolve,150));
+    await route.fallback();
+  });
 }
 async function assertReducedRuntime(page,expected){
   const scripts=await page.evaluate(()=>performance.getEntriesByType('resource').filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).map(entry=>entry.name));
@@ -70,6 +75,7 @@ test('fresh Username/PIN login and restored authenticated session use the reduce
   await expect(page.locator('#login-user')).toBeEnabled();
   await page.locator('#login-user').fill(identity.username);
   await page.locator('#login-pin').fill('123456');
+  await page.waitForFunction(()=>typeof managedLoginDirectory!=='undefined'&&firebaseDataProtectionReady&&managedLoginDirectory.snapshot().status==='loaded');
   await page.locator('#login-btn').click();
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>__bootSignIns)).toBe(1);
