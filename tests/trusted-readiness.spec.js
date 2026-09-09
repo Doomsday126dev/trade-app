@@ -37,7 +37,7 @@ async function installTrustedFixture(page){
     managedListenerLifecycle?.clearSelectedTrainer?.('trusted_readiness_fixture');
     managedOwnedDataCoordinator?.reset?.();
     db=null;fbOn=false;managedFirebaseClient=null;
-    cur='TrustedTester';auth={currentUser:{uid:'uid-trusted-tester'}};
+    cur='TrustedTester';auth={currentUser:{uid:'uid-trusted-tester',providerData:[{providerId:'password'}]}};
     accountSyncUiState=null;managedAccountSyncRuntime=null;accountSyncEligibleUid='';
     localStorage.clear();sessionStorage.clear();trainerHistoryStore=null;favoriteShareSessionCache=null;
     const nyc='location-gofestnewyorkcity';
