@@ -389,3 +389,12 @@ test('exact reviewed recovery evidence cannot change during linking even when co
   h.accounts.get('uid-a').migration.recoveryEvidence[0].candidateId='rewritten-with-same-count';h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/account-boundary-changed-recovery-evidence-fingerprint');
 });
+
+
+test('Auth replacement during asynchronous post-link boundary verification cannot report connected',async()=>{
+  const h=createHarness();await h.controller.prepareLinkPopup('google');
+  const snapshot=h.accountBoundary.snapshot;
+  h.accountBoundary.snapshot=async uid=>{const result=await snapshot(uid);h.auth.update({lifecycleId:'replaced'});return result;};
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/auth-lifecycle-changed');
+  assert.notEqual(h.controller.snapshot().status,'connected');
+});

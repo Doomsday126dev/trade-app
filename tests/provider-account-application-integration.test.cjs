@@ -20,7 +20,8 @@ test('Google identity resolution is Firestore first and provider-only accounts b
   const legacy=source.indexOf('authIndex/${expectedUid}');
   assert.ok(canonical>=0&&legacy>canonical);
   assert.match(source,/foundation\.identityKind==='provider_only'\)return Object\.freeze\(\{status:'existing'/);
-  assert.match(source,/provider-link\/legacy-migration-required/);
+  assert.match(source,/status:'existing',uid:expectedUid,username,foundation/);
+  assert.doesNotMatch(source,/provider-link\/legacy-migration-required/);
   assert.doesNotMatch(source,/email|displayName|avatar/);
 });
 

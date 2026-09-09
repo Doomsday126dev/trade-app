@@ -1,5 +1,7 @@
 # Google Provider Configuration and Owner Canary
 
+> Historical .86 record. Use [the current .103 continuation rollout](GOOGLE-EXISTING-ACCOUNT-ROLLOUT.md) for the next approval. The historical snippet below enables creation and must not be used for the existing-account milestone. Basic-identity Google Testing mode does not enforce the historical owner-only assumption.
+
 Status: owner-restricted provider preparation. Production remains the accepted
 `2026-08-31.86` privacy-notice release, and Google remains publicly hidden.
 Google Auth Platform is External/Testing with exactly the owner as its sole test
