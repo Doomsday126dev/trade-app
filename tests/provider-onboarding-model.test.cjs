@@ -142,3 +142,14 @@ test('invalid handles are deterministic',async()=>{
   const h=harness();await beginChoice(h.model);
   await assert.rejects(h.model.chooseHandle('bad/name'),error=>error.code==='provider-onboarding/handle-invalid');
 });
+
+test('same-session ambiguous creation preserves the confirmed optional profile through exact reconciliation',async()=>{
+  const domain=load(),store=storage();let creates=0;
+  const model=domain.createProviderOnboardingModel({storage:store,authoritySnapshot:()=>({uid:'uid-new',lifecycleId:'auth-1'}),
+    checkHandle:async()=>({available:true}),createAccount:async()=>{creates++;throw Object.assign(new Error('lost'),{code:'provider-account/ambiguous-result',state:'ambiguous'});},
+    reconcileAccount:async input=>({status:'account-ready',foundation:foundation(input.handle)})});
+  await beginChoice(model);await model.chooseHandle('TrainerNew');model.confirmProfile({friendCode:'000011112222'});
+  await assert.rejects(model.create());const result=await model.reconcile();
+  assert.equal(result.initialProfile.friendCode,'0000 1111 2222');assert.equal(creates,1);
+  assert.doesNotMatch(JSON.stringify([...store.values]),/friendCode|0000 1111 2222/);
+});
