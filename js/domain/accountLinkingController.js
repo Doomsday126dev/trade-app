@@ -37,6 +37,7 @@
     async function verifyUnchanged(context,result){
       requireCurrent(context,result);
       const after=await accountBoundary.snapshot(context.session.uid);
+      requireCurrent(context,result);
       model.assertBoundaryUnchanged(context.before,after);return after;
     }
     async function withLease(context,work){

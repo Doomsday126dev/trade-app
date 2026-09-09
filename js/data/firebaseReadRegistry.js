@@ -74,10 +74,8 @@
   });
   // Ordered read sites bind each parsed call to its handler, path and reviewed purpose.
   const directReadSites=Object.freeze([
-    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','D','New migrated-foundation branch verifies fresh legacy mapping; exclusive with missing-foundation branch, not a duplicate.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','D','New migrated-foundation branch verifies reverse UID binding; canonical foundation alone does not prove legacy ownership.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','Existing missing-foundation branch distinguishes unlinked account from migration-required legacy account; no cached identity reuse.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Existing missing-foundation branch checks reverse mapping before fail-closed migration-required result.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','One exact reciprocal check serves migrated and unmigrated legacy accounts after an authoritative canonical read; never an error fallback.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Verify the exact reverse UID binding and healthy record before existing-account activation; no identity writes or migration required.'),
     site('writeProviderPublicShareSnapshot','get(target)','trainerShares/{currentUid}','provider_public_readback','providerShare','D','New post-transaction readback distinguishes committed/reconciled content from timeout or conflict; earlier transaction evidence is not equivalent.'),
     site('writeVerifiedLegacyPublicSnapshot','get(target)','publicShares/{currentUsername}','legacy_public_readback','publish','C','New post-write content and hydration-token verification prevents reporting publication or copying a link before the matching projection is confirmed.'),
     site('repairMemberAccount','get(ref(db,`users/${username}`))','users/{username}','admin_verification_reads','admin','A','Verify intentionally retained Admin metadata repair; established UID replacement remains blocked before this path.'),
@@ -105,7 +103,7 @@
     directGetCount:directReadSites.filter(site=>site.operation==='get').length,
     directReadSites,
     readHandlerHashes:Object.freeze({
-      resolveGoogleAccountBinding:'f3e431d7873b3e6e52ab7996ded83d92e7e4c61d4b70ee0e2f0623f8e7f37c7d',
+      resolveGoogleAccountBinding:"89f818b5c45d027385158681964726ae0916176e430dba5781683551dae1df9e",
       writeProviderPublicShareSnapshot:'5835654f0e125a398c6931e97cf905549b5dc741c534fbd16572257bfa1914e6',
       writeVerifiedLegacyPublicSnapshot:'d50329ae64c23791516ca3b0d2d800ecc0c33b903c27f4b26969b049570cb62c',
       repairMemberAccount:'c9fc61723b6999aba4ad01dfa036025c570ecbbd7d3b9414e67f4ca2b0917f0a',
@@ -153,9 +151,9 @@
       })
     ]),
     needles:Object.freeze([
-      Object.freeze({text:'get(ref(db,`users/${username}`))',count:5}),
+      Object.freeze({text:'get(ref(db,`users/${username}`))',count:4}),
       Object.freeze({text:'get(ref(db,`loginDirectory/${username}`))',count:2}),
-      Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:2}),
+      Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:1}),
       Object.freeze({text:'get(target)',count:2}),
       Object.freeze({text:"get(ref(db,'legacyProvisioningFreeze'))",count:1}),
       Object.freeze({text:'get(ref(db,`authIndex/${owner}`))',count:1}),

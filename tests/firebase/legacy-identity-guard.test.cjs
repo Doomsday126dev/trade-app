@@ -68,13 +68,29 @@ test('same-UID repair, ordinary profile updates, review receipts and new unbound
   assert.equal((await db('PUT', 'authIndex/new-uid', { username: 'New' }, 'New')).status, 200);
 });
 test('real Rules reject ownership repair inside the final-read/password-write interval; reset stays same UID', async () => {
+  // Emulator identity assertion only: this is not a Google popup/OAuth pass.
+  const subject = 'synthetic-google-trainer';
+  await auth.updateUser('trainer-uid', { providerToLink: { providerId: 'google.com', uid: subject } });
+  const googleLogin = async () => {
+    const credential = JSON.stringify({ sub: subject, email: 'google-trainer@example.test', email_verified: true });
+    const response = await fetch('http://127.0.0.1:9499/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=emulator', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestUri: 'http://localhost', postBody: new URLSearchParams({ providerId: 'google.com', id_token: credential }).toString(), returnSecureToken: true })
+    });
+    const result = await response.json();assert.equal(response.status, 200);assert.equal(result.localId, 'trainer-uid');
+    tokens.Trainer = result.idToken;
+    assert.equal((await db('GET', 'authIndex/trainer-uid', undefined, 'Trainer')).value.username, 'Trainer');
+    assert.equal((await db('GET', 'users/Trainer/authUid', undefined, 'Trainer')).value, 'trainer-uid');
+  };
+  await googleLogin();
+  const before = await auth.getUser('trainer-uid');
   let ledger = { schemaVersion: 1, records: [] }, generation = 1, writes = 0;
   const journal = createJournal({ read: async () => ({ generation, value: structuredClone(ledger) }), compareAndSwap: async (expected, next) => { assert.equal(expected, generation); ledger = structuredClone(next); generation++; } });
   const update = createPasswordUpdater({ projectId, emulatorHost: '127.0.0.1:9499' });
   const reset = createResetService({ ownerUid: 'owner-uid', hmacKey: 'test-only'.repeat(8), journal, adapter: {
     readEvidence: async () => (await db('GET', '')).value, getAuthUser: uid => auth.getUser(uid),
     readIdentityFence: async uid => (await db('GET', `legacyIdentityFences/${uid}`)).value,
-    listAuthIdentities: async () => (await auth.listUsers()).users, legacyOnly: async () => true,
+    listAuthIdentities: async () => (await auth.listUsers()).users, legacyOnly: async () => true, legacyResetEvidence: async () => 'a'.repeat(64),
     updatePassword: async (uid, pin) => {
       await denied('PATCH', '', { 'users/Trainer/authUid': 'other-uid', 'authIndex/trainer-uid/username': 'Other' });
       await denied('DELETE', 'users/Trainer', undefined, 'Trainer');
@@ -87,5 +103,14 @@ test('real Rules reject ownership repair inside the final-read/password-write in
   assert.equal((await reset.run(context, input)).status, 'completed');
   assert.equal((await reset.run(context, input)).status, 'completed'); assert.equal(writes, 1);
   assert.equal((await db('GET', 'users/Trainer/authUid')).value, 'trainer-uid');
-  assert.equal((await auth.getUser('trainer-uid')).email, 'trainer@pogotrades.nyc');
+  const after = await auth.getUser('trainer-uid');
+  assert.equal(after.email, 'trainer@pogotrades.nyc');
+  assert.deepEqual(after.providerData, before.providerData);
+  await googleLogin();
+  for (const [password, accepted] of [['123456', false], ['654321', true]]) {
+    const response = await fetch('http://127.0.0.1:9499/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: after.email, password, returnSecureToken: true })
+    });
+    assert.equal(response.ok, accepted);if (accepted) assert.equal((await response.json()).localId, 'trainer-uid');
+  }
 });
