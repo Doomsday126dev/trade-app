@@ -33,6 +33,17 @@ test('candidate handler verifies real ordinary Auth and exact bindings without p
  await s.auth.updateUser(f.uid,{disabled:true});assert.equal((await call(s,f,[f.targets[0].handle])).status,401);
  }finally{await s.close();}
 });
+test('real Auth emulator boundary rejects expired and revoked caller tokens',{skip:!enabled},async()=>{
+ const s=await createServer();try{const f=await fixture(1),parts=f.token.split('.'),claims=JSON.parse(Buffer.from(parts[1],'base64url').toString());
+ // Auth emulator tokens are unsigned; change only expiry to exercise the real
+ // Admin SDK expiry check. This is not production signature/attestation proof.
+ claims.exp=Math.floor(Date.now()/1000)-120;parts[1]=Buffer.from(JSON.stringify(claims)).toString('base64url');
+ assert.equal((await call(s,f,[f.targets[0].handle],{token:parts.join('.')})).status,401);
+ assert.equal((await call(s,f,[f.targets[0].handle])).status,200);
+ await new Promise(resolve=>setTimeout(resolve,1100));await s.auth.revokeRefreshTokens(f.uid);
+ assert.equal((await call(s,f,[f.targets[0].handle])).status,401);
+ }finally{await s.close();}
+});
 test('ordinary writes cannot remap a resolved binding, and a maintenance fence rejects addition at commit',{skip:!enabled},async()=>{
  const s=await createServer();try{const f=await fixture(),t=f.targets[0],w=domains();assert.equal((await call(s,f,[t.handle])).status,200);
  assert.equal((await req('users/'+t.handle+'/authUid','PUT','replacement',t.token)).status,401);
