@@ -99,8 +99,8 @@ const RELEASE_ASSETS=[
   'js/data/favoriteRecoveryPreview.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
-  'js/app/application.js',
-  'js/app/favoritePicker.js'
+  'js/app/favoritePicker.js',
+  'js/app/application.js'
 ];
 // Required for offline features/routes, but intentionally omitted from the
 // signed-in script graph: optional export feature and independent public route.
