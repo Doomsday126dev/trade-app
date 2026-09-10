@@ -53,7 +53,9 @@ function loadFirebaseAppCheckSdk(){
     firebaseAppCheckStage='sdk-import-settled';
     return{
       initializeAppCheck:appCheckMod.initializeAppCheck,
-      ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider
+      ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider,
+      getToken:appCheckMod.getToken,
+      getLimitedUseToken:appCheckMod.getLimitedUseToken
     };
   }).catch(error=>{
     firebaseAppCheckStage='failed';
@@ -260,6 +262,7 @@ let favoriteShareSessionCache=null;
 const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
 const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
 let managedAccountSyncRuntime=null;
+let managedFavoriteAdditions=null,favoriteAdditionUiState=null,managedFavoriteRecoveryPreview=null;
 let accountSyncEligibleUid='';
 let accountSyncUiState=null;
 let accountSyncMigrationState='inactive';
@@ -1991,6 +1994,8 @@ function resetSessionTransientUi(reason='session_boundary'){
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
+  if(typeof managedFavoriteAdditions!=='undefined'){managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;}
+  if(typeof closeFavoritePicker==='function')closeFavoritePicker({sessionChanged:true});
   if(typeof closeExistingPinReset==='function')closeExistingPinReset();
   if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
@@ -3421,7 +3426,13 @@ function resolveLegacyFavoriteIdentity(displayName,expectedTargetUid=''){
   if(!targetUid||expectedTargetUid&&targetUid!==expectedTargetUid)return null;
   return Object.freeze({targetUid,canonicalTrainerName});
 }
-async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid=''){
+async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid='',{allowIncidentResolver=true}={}){
+  if(allowIncidentResolver&&window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
+    const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
+    const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation});
+    const row=(await client.resolve([displayName]))[0];
+    return row.status==='resolved'&&(!expectedTargetUid||row.targetUid===expectedTargetUid)?Object.freeze({targetUid:row.targetUid,canonicalTrainerName:row.canonicalHandle}):null;
+  }
   return PROVIDER_CAPABILITIES.providerPublicReadSupport
     ?resolveCanonicalFavoriteIdentity(displayName,expectedTargetUid)
     :resolveLegacyFavoriteIdentity(displayName,expectedTargetUid);
@@ -3435,7 +3446,7 @@ async function accountSyncExactFavoriteUid(displayName,raw={},account={}){
     else if(allData.users?.[displayName]?.authUid===candidate&&allData.authIndex?.[candidate]?.username===displayName)expected=candidate;
   }
   expected||=accountSyncProduct.exactFavoriteTargetUid(displayName,{users:allData.users,authIndex:allData.authIndex})||'';
-  try{return(await resolveFavoriteIdentityForSession(displayName,expected))?.targetUid||null;}
+  try{return(await resolveFavoriteIdentityForSession(displayName,expected,{allowIncidentResolver:false}))?.targetUid||null;}
   catch{return null;}
 }
 async function accountSyncReadLegacySources({account}={}){
@@ -3558,6 +3569,7 @@ function retireProviderOnlyLegacyQueue(username=cur,uid=auth?.currentUser?.uid){
 function stopAccountSyncRuntime(){
   if(accountSyncRuntimeStopPromise)return accountSyncRuntimeStopPromise;
   accountSyncRuntimeGeneration++;
+  managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;
   const runtime=managedAccountSyncRuntime,pending=accountSyncRuntimeStartPromise;
   managedAccountSyncRuntime=null;accountSyncRuntimeStartPromise=null;accountSyncRuntimeStartBinding='';accountSyncEligibleUid='';accountSyncCanonicalEntities=[];accountSyncInitialProviderProfile={};
   const stopping=(async()=>{if(runtime)await runtime.stop();else await pending?.catch(()=>{});})();
@@ -3601,15 +3613,19 @@ async function ensureAccountSyncRuntime(){
   accountSyncEligibleUid=uid;
   const startPromise=(async()=>{
     const journal=accountSyncJournalData.createAccountSyncJournal({ownerUid:uid});
-    const repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
+    let repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
     let runtime=null;
     const currentSession=()=>generation===accountSyncRuntimeGeneration&&managedAccountSyncRuntime===runtime&&bindingCurrent();
+    if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
+      const transport=window.PogoServices.favoriteWriteTransport.createFavoriteWriteTransport({auth,ownerUid:uid,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:currentSession});
+      repository=window.PogoData.favoriteAdditionRepository.createFavoriteAdditionRepository({repository,database:db,ref,get,update:transport.update,serverTimestamp,ownerUid:uid,enabled:true,sessionCurrent:currentSession});
+    }
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
       ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,admitted:true,sessionCurrent:currentSession,
       initializationKind,
       initialProviderProfile:initializationKind==='provider-only'?initialProviderProfile:{},
       readMigrationSources:accountSyncReadLegacySources,
-      onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}},
+      onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();managedFavoriteAdditions?.refresh().catch(()=>{});}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
       onProviderProfile:profile=>currentSession()?applyAccountSyncProviderProfile(profile):false,
       onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
@@ -3624,6 +3640,12 @@ async function ensureAccountSyncRuntime(){
       accountSyncInitialProviderProfile={};
       accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
+      if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true&&initializationKind==='legacy-migration'){
+        const resolver=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:currentSession,enabled:true});
+        managedFavoriteAdditions=window.PogoData.favoriteAdditions.createFavoriteAdditions({ownerUid:uid,journal,controller:runtime.controller,resolver,sessionCurrent:currentSession,onChange:value=>{if(currentSession()){favoriteAdditionUiState=value;refreshFavoriteSavedPrompt();if(typeof renderFavoritePicker==='function')renderFavoritePicker();}}});
+        managedFavoriteRecoveryPreview=window.PogoData.favoriteRecoveryPreview.createFavoriteRecoveryPreview({ownerUid:uid,journal,resolver,sessionCurrent:currentSession});
+        managedFavoriteAdditions.resume().catch(()=>{});
+      }
       if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
     }catch(error){
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
@@ -6025,6 +6047,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
     return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
+  if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
   previewEl.hidden=!previewItems.length;
@@ -6057,7 +6080,38 @@ async function queueFavoriteTags(username,tagIds){
   const result=await authority.controller.patchEntity({entityType:'favorite',entityId:favorite.targetUid,patch});
   return accountSyncAuthorityCurrent(authority)?result:accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
 }
+function favoriteAdditionMessage(row){
+  if(!row)return i18nCore.t('favoriteAdd.waiting');
+  if(row.state==='confirmed'||row.state==='already-present')return i18nCore.t('favoriteAdd.saved');
+  if(row.state==='pending')return i18nCore.t('favoriteAdd.pending');
+  if(row.state==='resolving'||row.state==='ready'||row.state==='selected')return i18nCore.t('favoriteAdd.resolving');
+  if(['favorite/rate-limited','favorite/busy'].includes(row.code))return i18nCore.t('favoriteAdd.rateLimited');
+  if(['favorite/capacity-exceeded','account-sync/favorite-limit'].includes(row.code))return i18nCore.t('favoriteAdd.limit');
+  if(['account-sync/entity-review-required','account-sync/lifecycle-conflict','favorite/removed'].includes(row.code))return i18nCore.t('favoriteAdd.review');
+  if(row.code==='favorite/identity-unavailable')return i18nCore.t('favoriteAdd.identityUnavailable');
+  return i18nCore.t('favoriteAdd.unsuccessful');
+}
+async function ensureTrainerFavorites(handles){
+  const authority=await accountSyncMutationAuthority();
+  if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)||!managedFavoriteAdditions){toast(i18nCore.t('favoriteAdd.waiting'));return null;}
+  const additions=managedFavoriteAdditions;
+  try{
+    const value=await additions.ensure(handles);
+    if(additions!==managedFavoriteAdditions||!accountSyncAuthorityCurrent(authority))return null;
+    if(handles.length===1){
+      const row=[...value.rows].reverse().find(row=>row.handle===handles[0]);toast(favoriteAdditionMessage(row),6000);
+      if(row&&['pending','confirmed','already-present'].includes(row.state)){
+        showFavoriteSavedPrompt(handles[0],{canonical:true});const prompt=document.getElementById('favorite-saved-prompt');if(prompt)prompt.dataset.favoriteHandle=handles[0];refreshFavoriteSavedPrompt();
+      }
+    }
+    renderTrainerQuickLists();if(_activeShareView&&handles.includes(_activeShareView.username))renderShareView(_activeShareView.username,_activeShareView.type);return value;
+  }catch(error){
+    if(additions!==managedFavoriteAdditions)return null;
+    toast(favoriteAdditionMessage({state:'unsuccessful',code:error?.code}),6000);return null;
+  }
+}
 async function toggleTrainerFavorite(username){
+  if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true)return ensureTrainerFavorites([username]);
   const store=ensureTrainerHistoryStore();if(!store)return;
   if(store.isFavorite(username)){await removeTrainerFavorite(username);return;}
   const authority=await accountSyncMutationAuthority();
@@ -6101,11 +6155,14 @@ function favoritePersistenceKey({removed=false}={}){
 }
 function refreshFavoriteSavedPrompt(){
   const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message');
-  if(prompt&&!prompt.hidden&&prompt.dataset.canonical==='true'&&message)message.textContent=i18nCore.t(favoritePersistenceKey());
+  if(prompt&&!prompt.hidden&&prompt.dataset.canonical==='true'&&message){
+    const row=prompt.dataset.favoriteHandle?[...(favoriteAdditionUiState?.rows||[])].reverse().find(row=>row.handle===prompt.dataset.favoriteHandle):null;
+    message.textContent=row?favoriteAdditionMessage(row):i18nCore.t(favoritePersistenceKey());
+  }
 }
 function showFavoriteSavedPrompt(username,{canonical=false}={}){
   const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message'),button=document.getElementById('favorite-saved-organize');if(!prompt||!message||!button)return;
-  clearTimeout(favoriteSavedPromptTimer);prompt.dataset.canonical=String(canonical);message.textContent=i18nCore.t(canonical?favoritePersistenceKey():'organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;announceFeedback(message.textContent);favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
+  clearTimeout(favoriteSavedPromptTimer);delete prompt.dataset.favoriteHandle;prompt.dataset.canonical=String(canonical);message.textContent=i18nCore.t(canonical?favoritePersistenceKey():'organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;announceFeedback(message.textContent);favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
 }
 async function removeTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username)||!confirm(i18nCore.t('organizer.removeConfirm',{trainer:username})))return;
@@ -12117,6 +12174,7 @@ function publicShareAction(event){
   const control=event.target.closest('[data-share-action]');if(!control)return;
   const username=control.dataset.username||_activeShareView?.username||'';
   if(control.dataset.shareAction==='favorite')toggleTrainerFavorite(username);
+  if(control.dataset.shareAction==='favorite-remove')removeTrainerFavorite(username);
   else if(control.dataset.shareAction==='list')renderShareView(username,control.dataset.listType||'wishlist');
   else if(control.dataset.shareAction==='intent')renderShareView(username,_activeShareView?.type||'wishlist',control.dataset.intent);
 }
@@ -12142,7 +12200,7 @@ function renderShareView(username,type,intent){
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
         <span class="meta-item">📅 ${escHtml(publicShareUpdatedLabel(ud.lastUpdated))}</span>
       </div>
-      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" data-share-action="favorite" data-username="${escAttr(username)}" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
+      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" data-share-action="${favorite?'favorite-remove':'favorite'}" data-username="${escAttr(username)}" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
       ${bioHtml}
     </div>`;
   // Tabs
@@ -14295,3 +14353,9 @@ window.__pogoAppReadyPromise=Promise.resolve().then(()=>{
   else bootPogoApp();
   return true;
 });
+
+// Support review only: returns evidence and proposed values; never writes them.
+async function previewPreservedFavorites(candidateIds){
+  if(!managedFavoriteRecoveryPreview)throw new Error('Favorite recovery resolver is not available');
+  return managedFavoriteRecoveryPreview.preview(candidateIds);
+}

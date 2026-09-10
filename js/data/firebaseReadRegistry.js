@@ -2,6 +2,9 @@
   const root=global.PogoData=global.PogoData||{};
   const freezeEntry=entry=>Object.freeze({...entry,consumers:Object.freeze([...entry.consumers])});
   const READ_SURFACES=Object.freeze([
+    {id:'candidate_favorite_addition_capacity',path:'accountSync/{currentUid}/favorites',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
+    {id:'candidate_favorite_addition_proof',path:'accountSync/{currentUid}/favorites/{targetUid}',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
+    {id:'candidate_favorite_slots',path:'favoriteSlots/{currentUid}',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
     {id:'login_directory_live',path:'loginDirectory',method:'onValue',breadth:'broad',ownerScope:'public',audience:'anonymous',consumers:['login'],status:'transitional'},
     {id:'users_live',path:'users',method:'onValue',breadth:'broad',ownerScope:'legacyAdmin',audience:'admin',consumers:['admin_on_demand'],status:'planned_retirement'},
     {id:'auth_index_live',path:'authIndex',method:'onValue',breadth:'broad',ownerScope:'legacyAdmin',audience:'admin',consumers:['admin_on_demand'],status:'planned_retirement'},

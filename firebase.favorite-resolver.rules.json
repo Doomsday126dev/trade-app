@@ -1,0 +1,3 @@
+{
+  "database": { "rules": "tests/firebase/database.rules.favorite-resolver.json" }
+}

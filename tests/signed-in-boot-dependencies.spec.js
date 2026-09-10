@@ -83,12 +83,12 @@ test('fresh Username/PIN login and restored authenticated session use the reduce
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>__bootSignIns)).toBe(1);
   expect(await page.evaluate(()=>({user:cur,uid:auth.currentUser.uid,ready:firebaseDataProtectionReady}))).toEqual({user:identity.username,uid:identity.uid,ready:true});
-  await assertReducedRuntime(page,67);
+  await assertReducedRuntime(page,75);
   await page.reload();
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>cur)).toBe(identity.username);
   expect(await page.evaluate(()=>window.__bootSignIns||0)).toBe(0);
-  await assertReducedRuntime(page,67);
+  await assertReducedRuntime(page,75);
   expect(errors).toEqual([]);
 });
 
@@ -99,7 +99,7 @@ test('non-English feature loading retains translations without disabled modules'
   await page.evaluate(()=>__pogoEnsureFullApp('boot-german-qualification'));
   await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null);
   expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe('de');
-  await assertReducedRuntime(page,68);
+  await assertReducedRuntime(page,76);
 });
 
 test('installed offline shell retains the independent public-route code without private application loading',async({browser,baseURL})=>{

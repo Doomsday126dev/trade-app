@@ -1,0 +1,9 @@
+.gcloudignore
+.git
+.gitignore
+node_modules
+test
+README.md
+.env*
+*-debug.log
+deployment.disabled.yaml

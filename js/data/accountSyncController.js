@@ -295,15 +295,16 @@
       }
       return Object.freeze({ok:true,status:'independent'});
     }
-    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false},{working}){
+    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt,intentExpectedGeneration},{working}){
       const entityKey=key(entityType,entityId),current=working.get(entityKey)||null,paths=Object.keys(patch),base=merge.operationBase(current,paths);
+      if(intentExpectedGeneration!==undefined&&(current?.generation||0)!==intentExpectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
       let baseGeneration=base.baseGeneration,generation=base.generation;
       if(kind==='add'||kind==='delete')generation=baseGeneration+1;
       const operationId=migration===true?`op_${await model.sha256Hex(model.canonicalJson([
         model.SCHEMA_VERSION,'pogo-account-sync-migration-operation',owner,entityType,entityId,kind,
         kind==='add'?identity:null,baseGeneration,generation,base.baseFieldRevisions,patch
-      ]),crypto)}`:undefined;
-      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,clientAt:migration===true?0:Number(clock()),operationId},{crypto});
+      ]),crypto)}`:intentOperationId;
+      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,clientAt:migration===true?0:(intentClientAt??Number(clock())),operationId},{crypto});
       if(!operation.ok)return operation;
       const optimistic=merge.mergeOperation(current,operation.value,{acceptedAt:operation.value.clientAt});
       if(!optimistic.ok)return optimistic;
@@ -324,6 +325,7 @@
         if(!result.ok)return result;
         prepared.push(result);
       }
+      if(!sessionCurrent()||!active||listenerState!=='healthy')return model.failure('account-sync/session-changed','The account sync session changed');
       const optimisticEntities=[...new Set(prepared.map(item=>item.entityKey))].map(entityKey=>working.get(entityKey));
       try{await journal.enqueueOperations(prepared.map(item=>item.operation),optimisticEntities);}
       catch(error){setError(error,'journal','account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
@@ -343,6 +345,30 @@
       return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
     }
     function addEntity({entityType,entityId,identity,values}){return buildMutation({entityType,entityId,identity,kind:'add',patch:values});}
+    function ensureFavorite({targetUid,displayName,expectedGeneration=0,operationId,clientAt}={}){
+      const epoch=lifecycleEpoch;
+      const work=mutationPromise.then(async()=>{
+        if(!model.firebaseKey(targetUid,128)||targetUid===owner||!model.fieldValueValid('favorite','displayName',displayName)||!Number.isSafeInteger(expectedGeneration)||expectedGeneration<0)return model.failure('account-sync/identity-invalid','Favorite identity is invalid');
+        for(let attempt=0;attempt<3;attempt++){
+          if(!sessionCurrent()||!active||!eligible||epoch!==lifecycleEpoch)return model.failure('account-sync/session-changed','Favorite sync is not ready');
+          const ready=await waitForListenerReady({timeoutMs:8000});
+          if(!ready.ok)return ready;
+          if(!sessionCurrent()||!active||epoch!==lifecycleEpoch)return model.failure('account-sync/session-changed','Favorite sync session changed');
+          const existing=getEntity('favorite',targetUid);
+          if(existing&&!existing.deleted)return Object.freeze({ok:true,status:'already-present',value:existing});
+          if((existing?.generation||0)!==expectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
+          const limit=global.PogoDomain?.productLimits?.MAX_FAVORITES||100;
+          if(activeEntities('favorite').length>=limit)return model.failure('account-sync/favorite-limit','The account has reached its Favorite limit');
+          const patch={displayName,...Object.fromEntries(Object.entries(existing?.values?.tagIds||{}).map(([id,value])=>[`tagIds/${id}`,value]))};
+          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt,intentExpectedGeneration:expectedGeneration}]);
+          if(result.ok)return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
+          // No operation was enqueued for these admission failures. Wait for an
+          // in-flight acknowledgement; never retry across a lifecycle change.
+          if(!['account-sync/session-changed','account-sync/listener-not-ready'].includes(result.error?.code)||attempt===2)return result;
+        }
+      });
+      mutationPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
     function patchEntity({entityType,entityId,patch}){return buildMutation({entityType,entityId,kind:'patch',patch});}
     function addMigrationEntity({entityType,entityId,identity,values}){return buildMutation({entityType,entityId,identity,kind:'add',patch:values,migration:true});}
     function patchMigrationEntity({entityType,entityId,patch}){return buildMutation({entityType,entityId,kind:'patch',patch,migration:true});}
@@ -468,7 +494,7 @@
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
-    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,runAuthorizedWatchedMutation,mutationReviewDecision,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
+    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,runAuthorizedWatchedMutation,mutationReviewDecision,mutateBatch,ensureFavorite,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
   }
 
   root.accountSyncController=Object.freeze({createAccountSyncController});
