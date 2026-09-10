@@ -12,6 +12,7 @@
     "data.js",
     "js/domain/productLimits.js",
     "js/domain/favoriteCapabilities.js",
+    "js/domain/favoritePickerModel.js",
     "js/domain/priorities.js",
     "js/ui/badges.js",
     "js/domain/username.js",
@@ -94,6 +95,7 @@
     "js/data/accountSyncRuntime.js",
     "js/domain/cacheAdapters.js",
     "js/app/application.js"
+    "js/app/favoritePicker.js"
   ],
   "lazyScriptFiles": [
     "js/domain/specialTradeBoardExport.js",
