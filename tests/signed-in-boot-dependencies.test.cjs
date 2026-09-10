@@ -25,7 +25,7 @@ test('default signed-in graph excludes all six candidates in every locale',()=>{
   for(const locale of ['en','de','ja','es']){
     const scripts=defaultScripts(locale);
     for(const file of removed)assert.ok(!scripts.includes(file),`${locale}: ${file}`);
-    assert.equal(scripts.length,locale==='en'?67:68);
+    assert.equal(scripts.length,locale==='en'?73:74);
     assert.equal(scripts.at(-1),'js/app/application.js');
     for(const file of ['js/domain/trainerPreferences.js','js/data/accountSyncRuntime.js','js/services/firebaseAppCheck.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js'])assert.ok(scripts.includes(file),file);
   }

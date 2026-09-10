@@ -165,3 +165,8 @@ test('offline archive tooling selects its proof without browser, Firebase, ident
     assert.equal(plan.functions,false);assert.equal(plan.rules,false);assert.equal(plan.legacyReset,false);assert.equal(plan.performance,false);
   }
 });
+
+test('isolated Favorite backend and Rules use their dedicated qualification without routing through provider infrastructure',()=>{
+  const plan=select(['functions/favorite-resolver/index.js','tests/firebase/database.rules.favorite-resolver.json']);
+  assert.equal(plan.commands.some(([,args])=>args.includes('check:contract')||args.includes('check:sec02-production-rules')),false);
+});
