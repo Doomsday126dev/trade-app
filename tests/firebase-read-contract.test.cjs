@@ -86,3 +86,17 @@ test('static read validation uses the trusted registry even when the target neve
   const result=check(dir);assert.equal(result.status,0,result.stderr);
   assert.equal(JSON.parse(result.stdout).directReads.length,25);
 });
+
+
+test('trusted control accepts immutable .104 raw preservation without modifying its stale registry',t=>{
+  const dir=fixture(t),runtime='384d6bea6664c0e20a69b08c5623ec21563f80a4';
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
+    fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${runtime}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
+  }
+  const before=fs.readFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'utf8');
+  const result=check(dir);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,25);
+  assert.equal(fs.readFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'utf8'),before);
+  change(dir,'js/app/application.js',"const paths=[...OWNED_MY_LIST_TYPES.map(type=>`${type}/${username}`),`users/${username}`];","const paths=[...OWNED_MY_LIST_TYPES.map(type=>`${type}/${username}`),`users/Other`];");
+  assert.match(check(dir).stderr,/path bindings or execution semantics changed/);
+});

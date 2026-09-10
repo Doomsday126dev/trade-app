@@ -113,7 +113,7 @@
       readLegacyProvisioningFreeze:'205cf1dddbfab5c8356c518ae48493f7620218549bf93ae282c9a2e99cfb5ca8',
       syncOwnAuthIndex:'ba9ba732bb8e7e4d37b857b4abd9b0c152765f43c050e29206bfc7c7c6944bcb',
       accountSyncRolloutEligible:'c1f5a8e7f551fed025ea12370d5ba84608be3590e30de6f4de14e863cefcd309',
-      accountSyncReadLegacySources:'af2cce11993d102668d4875c77ab2927231d6cd13e981ef326380b3e8f2f4428',
+      accountSyncReadLegacySources:Object.freeze(['af2cce11993d102668d4875c77ab2927231d6cd13e981ef326380b3e8f2f4428','47362d8f67a5afae6330665c71f7cf18c197c71ace8146181cdc2a5a2aecdb0f']),
       loadPublicShareData:'76a88a00a0bc891b17695eb49f76d626f585c2ee03a31f590290b95526df670d',
       runLoginHealthCheck:'61bfc130258e4b27ca6e20a155d0a2df0cf4aba8feb8adc2410120b7e79840f0',
       doLogin:'91de13ef5bb7bdd6e2c398e1b7df1991bb70b3066f1b1269aade0f2457b48128',
