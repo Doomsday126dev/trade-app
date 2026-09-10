@@ -1498,7 +1498,7 @@ function ensureProviderAccountFoundationClient(){
   providerAccountFoundationClient=providerAccountFoundationService.createProviderAccountClient({
     firebaseApp:fbApp,auth,firebaseAppCheckReady,getLifecycleSnapshot:providerAuthSnapshot,
     importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js'),
-    storage:localStorage
+    storage:localStorage,clientRelease:clientReleaseDomain.RELEASE_ID
   });
   return providerAccountFoundationClient;
 }
@@ -1719,6 +1719,7 @@ async function continueWithGoogle(){
   }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
 }
 async function checkGoogleOnboarding(){
+  const authority=providerAuthSnapshot();
   const input=document.getElementById('google-onboarding-handle'),status=document.getElementById('google-onboarding-status');
   const friendCode=String(document.getElementById('google-onboarding-friend-code')?.value||'').trim();
   try{
@@ -1739,7 +1740,10 @@ async function checkGoogleOnboarding(){
       result=await providerOnboardingController.reconcile();
     }
     if(result?.status==='account-ready'){
-      const resolution=Object.freeze({status:'existing',uid:auth.currentUser.uid,
+      const current=providerAuthSnapshot();
+      if(!authority||current?.uid!==authority.uid||current.lifecycleId!==authority.lifecycleId)
+        throw providerFailure('provider-account/auth-lifecycle-changed','canceled');
+      const resolution=Object.freeze({status:'existing',uid:authority.uid,lifecycleId:authority.lifecycleId,
         username:result.foundation.canonicalTrainerName,foundation:result.foundation,
         ...(result.initialProfile?{profile:result.initialProfile}: {})});
       providerGoogleAccountResolution=resolution;hideGoogleOnboarding();return activateGoogleResolvedAccount(resolution);
