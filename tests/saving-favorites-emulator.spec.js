@@ -158,3 +158,29 @@ for(const entryPoint of ['Trainers','shared list'])test(`existing canonical Favo
   await page.reload();await expect.poll(()=>page.evaluate(()=>typeof managedAccountSyncRuntime!=='undefined'&&managedAccountSyncRuntime?.projectionReady),{timeout:30000}).toBe(true);
   expect(await page.evaluate(other=>ensureTrainerHistoryStore().isFavorite(other),fixture.other)).toBe(false);
 });
+
+
+test('full browser process restart restores Auth and acknowledges retained pending work',async({browserName})=>{
+  const {chromium,webkit}=require('@playwright/test');
+  const os=require('node:os');
+  const fixture=await seed(),profile=fs.mkdtempSync(path.join(os.tmpdir(),'incident-profile-'));
+  const type=browserName==='webkit'?webkit:chromium,use=test.info().project.use;
+  const options={baseURL:String(use.baseURL||'http://localhost:4187'),headless:true,serviceWorkers:'block',viewport:use.viewport,userAgent:use.userAgent,isMobile:use.isMobile,hasTouch:use.hasTouch,deviceScaleFactor:use.deviceScaleFactor};
+  let context=await type.launchPersistentContext(profile,options);
+  try{
+    let page=context.pages()[0]||await context.newPage();await routeEmulators(page,fixture);await login(page,fixture);await settled(page);
+    const migrations=Object.keys((await account(fixture)).migrations);
+    await page.evaluate(()=>{window.__incidentRejectWrites=true;switchTab('mylist');openCombinedEditor(combinedGroups().findIndex(group=>group[0].name==='Pikachu'));});
+    await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();
+    await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).pendingCount)).toBe(1);
+    expect(Object.values((await account(fixture)).tradeEntries)[0].values.priority).toBe('H');
+    await context.close();
+    context=await type.launchPersistentContext(profile,options);page=context.pages()[0]||await context.newPage();
+    await routeEmulators(page,fixture,{legacy:false});await page.goto('./?saving-incident-restarted');
+    await expect.poll(()=>page.evaluate(()=>typeof managedAccountSyncRuntime!=='undefined'&&managedAccountSyncRuntime?.projectionReady),{timeout:30000}).toBe(true);
+    expect(await page.evaluate(()=>auth.currentUser.uid)).toBe(fixture.uid);await settled(page);
+    expect(Object.values((await account(fixture)).tradeEntries)[0].values.priority).toBe('L');
+    expect(Object.keys((await account(fixture)).migrations)).toEqual(migrations);
+    expect(await page.evaluate(()=>JSON.parse(localStorage.getItem(ensureTrainerHistoryStore().retainedKey)).legacyExtension.preserve)).toBe(true);
+  }finally{await context.close();fs.rmSync(profile,{recursive:true,force:true});}
+});

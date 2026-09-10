@@ -372,9 +372,24 @@
       return Object.freeze({candidates:Object.freeze(values),record:Object.freeze({schemaVersion:model.SCHEMA_VERSION,kind:RECOVERY_REVIEW_KIND,ownerUid:owner,trainerUsername:name,evidenceFingerprint,candidateCount:values.length,acceptedAt:Number(clock())})});
     }
     async function readRecoveryReviewAcceptance(evidence){
-      const result=await controller.runAuthorizedMutation(()=>repository.readRecoveryReviewAcceptance(evidence.record));
-      if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be read'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
-      return result.value;
+      // A retained write can acknowledge while startup reads this receipt, changing
+      // the listener version. Re-read only this side-effect-free exact receipt;
+      // never retry acceptance writes or relax the controller's authority guard.
+      for(let attempt=0;attempt<3;attempt++){
+        requireRunning();await requireListenerAuthority();
+        let result;
+        try{result=await controller.runAuthorizedMutation(()=>repository.readRecoveryReviewAcceptance(evidence.record));}
+        catch(error){
+          if(error?.code!=='account-sync/listener-authority-lost'||attempt===2)throw error;
+          requireRunning();await requireListenerAuthority();
+          const state=await controller.snapshot();requireRunning();
+          if(!state.controllerHealthy||state.lastError||state.blockedCount||state.conflictCount)throw error;
+          continue;
+        }
+        requireRunning();
+        if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be read'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
+        return result.value;
+      }
     }
     async function persistRecoveryReviewAcceptance(evidence){
       const result=await controller.runAuthorizedMutation(()=>repository.createRecoveryReviewAcceptance(evidence.record));
