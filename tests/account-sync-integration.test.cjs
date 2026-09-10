@@ -200,7 +200,7 @@ test('auth transitions invalidate stale sync starts before publishing account st
         start:async()=>{if(stage==='failed-start-snapshot')throw new Error('synthetic startup failure');await wait('start');return{ok:true};},
         snapshot:async()=>{await wait(stage.endsWith('snapshot')?stage:'new-snapshot');return{state:'owner-saved'};},
         stop:async()=>{calls.stopped++;await wait('disabled-stop');}};
-      const context={auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',_sessionTransientGeneration:1,
+      const context={window:{PogoDomain:{favoriteCapabilities:{resolverEnabled:false}}},managedFavoriteAdditions:null,favoriteAdditionUiState:null,auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',_sessionTransientGeneration:1,
         accountSyncRuntimeGeneration:1,accountSyncRuntimeStopPromise:null,accountSyncRuntimeStartPromise:null,accountSyncRuntimeStartBinding:'',
         managedAccountSyncRuntime:['existing-snapshot','disabled-stop'].includes(stage)?runtime:null,accountSyncUiState:initialState,
         accountSyncInitialProviderProfile:{},accountSyncCanonicalEntities:[],accountSyncClone:structuredClone,

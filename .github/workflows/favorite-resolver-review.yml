@@ -1,0 +1,47 @@
+name: Favorite resolver qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'functions/favorite-resolver/**'
+      - 'firebase.favorite-resolver*.json'
+      - 'js/**/favorite*'
+      - 'js/app/application.js'
+      - 'js/data/accountSync*.js'
+      - 'tests/favorite-*'
+      - 'tests/support/favorite*'
+      - 'tests/firebase/database.rules.favorite-resolver.json'
+      - 'scripts/*favorite-resolver*'
+      - '.github/workflows/favorite-resolver-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: favorite-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  ordinary-user:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions/favorite-resolver --ignore-scripts
+      - run: npm --prefix functions/favorite-resolver test
+      - run: node scripts/build-favorite-resolver-rules.cjs --check
+      - run: node --test tests/favorite-additions.test.cjs tests/favorite-recovery-preview.test.cjs tests/favorite-write-transport.test.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Auth and RTDB emulator qualification
+        env:
+          GCLOUD_PROJECT: demo-pogo-saving-incident
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9599
+          FIREBASE_DATABASE_EMULATOR_HOST: 127.0.0.1:9500
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          npx --yes firebase-tools@13.31.2 emulators:exec --only auth,database --project demo-pogo-saving-incident --config firebase.favorite-resolver.emulator.json 'node scripts/check-favorite-resolver-emulators.cjs'
