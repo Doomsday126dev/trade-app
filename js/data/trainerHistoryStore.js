@@ -36,6 +36,7 @@
   function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
     if(!storage)throw new TypeError('trainer history requires storage');
     const key=ownerKey(identity);
+    const retainedKey=`${key}:before-canonical-v1`;
     function cleanFavorite(value,fallbackTime=0){
       const item=trainerRef(value?.displayName||value?.trainerName);
       if(!item.key)return null;
@@ -104,14 +105,14 @@
     function favoriteFor(username){const item=trainerRef(username);return read().favorites.find(value=>value.key===item.key)||null;}
     function uniqueTagId(state){let suffix=Number(now()).toString(36),id=`tag_${suffix}`,index=1;while(state.tags[id])id=`tag_${suffix}_${index++}`;return id;}
     return Object.freeze({
-      key,read,favoriteFor,
+      key,retainedKey,read,favoriteFor,
       isFavorite:username=>!!favoriteFor(username),
       toggleFavorite(username,{targetUid=''}={}){
         const state=read(),item=trainerRef(username),index=state.favorites.findIndex(value=>value.key===item.key),timestamp=Number(now());
         if(index>=0)state.favorites.splice(index,1);
         else state.favorites.push({...item,...(String(targetUid).trim()?{targetUid:String(targetUid).trim()}:{}),tagIds:[],createdAt:timestamp,updatedAt:timestamp});
         state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
-        write(state);return{favorite:index<0,state:read()};
+        write(state);return{ok:true,favorite:index<0,state:read()};
       },
       updateCanonicalName(username){
         const state=read(),item=trainerRef(username),current=state.favorites.find(value=>value.key===item.key);
@@ -188,6 +189,10 @@
         write(state);return{ok:true,created,state:read()};
       },
       replaceSyncedOrganization({favorites=[],tags={}}={}){
+        const raw=storage.getItem(key);
+        // Keep the exact bytes before normalization/projection can prune history.
+        // Never merge this archive back: canonical tombstones remain authoritative.
+        if(raw!==null&&storage.getItem(retainedKey)===null)storage.setItem(retainedKey,raw);
         const state=read(),canonical=Array.isArray(favorites)?favorites:[];
         // Once the account-sync listener is authoritative, this device-local
         // projection must mirror it exactly. Older unresolved favorites remain

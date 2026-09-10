@@ -216,8 +216,13 @@
     }
     for(const item of favoriteInputs){
       if(!item.targetUid){
-        const unresolved={entityType:'favorite',entityId:`unresolved:${item.displayName.toLocaleLowerCase('en-US')}`,identity:{targetUid:''},values:{displayName:item.displayName},source:'legacy-favorite'};
-        recoveryCandidates.push(await candidate(ownerUid,'favorite-uid-unresolved',unresolved,sourceFingerprint));continue;
+        const unresolved={entityType:'favorite',entityId:`unresolved:${item.displayName.toLocaleLowerCase('en-US')}`,identity:{targetUid:''},values:{displayName:item.displayName,...(Object.keys(item.tagIds).length?{tagIds:item.tagIds}:{})},source:'legacy-favorite'};
+        // An interrupted older migration may already have committed its original
+        // name-only record. Keep that exact evidence and migration identity on
+        // resume; the retained device source still contains its organization.
+        const earlier=await candidate(ownerUid,'favorite-uid-unresolved',{...unresolved,values:{displayName:item.displayName}},sourceFingerprint);
+        const existing=plain(input.remoteRecoveryCandidates)[earlier.candidateId];
+        recoveryCandidates.push(existing?earlier:await candidate(ownerUid,'favorite-uid-unresolved',unresolved,sourceFingerprint));continue;
       }
       const seed={entityType:'favorite',entityId:item.targetUid,identity:{targetUid:item.targetUid},values:{displayName:item.displayName,tagIds:item.tagIds},source:'legacy-favorite'},current=canonical.get(canonicalKey(seed));
       if(!input.canonicalInitialized&&!current){favoriteSeeds.push(seed);rememberSeed(seed);continue;}
