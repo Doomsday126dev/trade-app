@@ -295,8 +295,9 @@
       }
       return Object.freeze({ok:true,status:'independent'});
     }
-    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt},{working}){
+    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt,intentExpectedGeneration},{working}){
       const entityKey=key(entityType,entityId),current=working.get(entityKey)||null,paths=Object.keys(patch),base=merge.operationBase(current,paths);
+      if(intentExpectedGeneration!==undefined&&(current?.generation||0)!==intentExpectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
       let baseGeneration=base.baseGeneration,generation=base.generation;
       if(kind==='add'||kind==='delete')generation=baseGeneration+1;
       const operationId=migration===true?`op_${await model.sha256Hex(model.canonicalJson([
@@ -359,7 +360,7 @@
           const limit=global.PogoDomain?.productLimits?.MAX_FAVORITES||100;
           if(activeEntities('favorite').length>=limit)return model.failure('account-sync/favorite-limit','The account has reached its Favorite limit');
           const patch={displayName,...Object.fromEntries(Object.entries(existing?.values?.tagIds||{}).map(([id,value])=>[`tagIds/${id}`,value]))};
-          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt}]);
+          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt,intentExpectedGeneration:expectedGeneration}]);
           if(result.ok)return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
           // No operation was enqueued for these admission failures. Wait for an
           // in-flight acknowledgement; never retry across a lifecycle change.

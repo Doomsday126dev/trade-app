@@ -41,3 +41,18 @@ test('resolver client rejects mismatched identities, extra data and self targets
  const api=load().PogoServices.favoriteResolverClient;
  for(const row of[{handle:'X',status:'resolved',targetUid:'owner',canonicalHandle:'X'},{handle:'X',status:'resolved',targetUid:'target',canonicalHandle:'x'},{handle:'X',status:'resolved',targetUid:'target',canonicalHandle:'X',privateNote:'secret'}])assert.throws(()=>api.validateResponse({version:1,results:[row]},['X'],'owner'),{code:'favorite/response-invalid'});
 });
+
+test('a lifecycle change during asynchronous admission cannot rebase an older add intent',async()=>{
+ const w=load(),h=w.PogoTesting.accountSyncHarness.createMultiDeviceHarness(),other=h.createDevice('other');await other.start();
+ const state=h.createMemoryJournalState(),original=w.PogoTesting.accountSyncHarness.createMemoryJournal(h.ownerUid,state,h.clock);let armed=false,controller;
+ const journal={...original,async listRecoveryCandidates(options){if(armed){armed=false;
+   await other.controller.ensureFavorite({targetUid:'uid-Target',displayName:'Target'});await h.settle();
+   await other.controller.deleteEntity({entityType:'favorite',entityId:'uid-Target'});await h.settle();
+   await controller.acceptRemote(h.server.snapshot());
+ }return original.listRecoveryCandidates(options);}};
+ controller=w.PogoData.accountSyncController.createAccountSyncController({journal,repository:h.server,ownerUid:h.ownerUid,enabled:true,writesEnabled:true,allowlistedUids:[h.ownerUid],online:()=>true,clock:h.clock,crypto:webcrypto});
+ await controller.activate();await controller.waitForListenerReady({timeoutMs:1000});armed=true;
+ const result=await controller.ensureFavorite({targetUid:'uid-Target',displayName:'Target',expectedGeneration:0});
+ assert.equal(result.ok,false);assert.equal(result.error.code,'account-sync/lifecycle-conflict');assert.equal(state.operations.size,0);assert.equal(h.server.snapshot().favorites['uid-Target'].deleted,true);
+ await controller.deactivate();await other.controller.deactivate();
+});
