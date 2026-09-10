@@ -1439,7 +1439,7 @@ function noteProviderAuthState(user){
   if(uid!==providerAuthLifecycleUid){
     providerAuthLifecycleUid=uid;
     providerAuthLifecycleGeneration++;
-    providerAuthRecentAt=uid?Date.now():0;
+    providerAuthRecentAt=0;
     providerGoogleAccountResolution=null;
   }
   return providerAuthLifecycleGeneration;
@@ -1473,6 +1473,7 @@ async function providerAccountBoundarySnapshot(uid){
   const accountDataFingerprint=await providerBoundaryFingerprint({
     lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,allData[type]?.[cur]||{}])),
     favorites:history.favorites||[],tags:history.tags||{},board:profile.specialTradeBoard||{lf:[],ft:[]},
+    intentDeclarations:profile.intentDeclarations||[],
     canonicalEntities:accountSyncCanonicalEntities
   });
   return Object.freeze({
@@ -1534,34 +1535,44 @@ function validCanonicalFoundation(value,uid){
     (value.identityKind==='provider_only'?value.legacyUsername===null:value.legacyUsername===value.canonicalTrainerName);
 }
 async function resolveGoogleAccountBinding(uid){
-  const expectedUid=String(uid||'');
-  if(!expectedUid||auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  await ensureFirebaseDataProtection();
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  const canonical=await ensureProviderAccountFoundationClient().read();
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  if(canonical.status==='ready'){
-    const foundation=canonical.foundation,username=String(foundation?.canonicalTrainerName||'');
-    if(!validCanonicalFoundation(foundation,expectedUid))throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    if(foundation.identityKind==='provider_only')return Object.freeze({status:'existing',uid:expectedUid,username,foundation});
-    const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving legacy account timed out','provider-link/account-resolution-timeout');
-    const indexRecord=indexSnapshot.exists()?indexSnapshot.val():null;
-    if(!indexRecord||String(indexRecord.username||'')!==username)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    const userSnapshot=await withTimeout(get(ref(db,`users/${username}`)),5000,'Verifying legacy account timed out','provider-link/account-resolution-timeout');
-    const userRecord=userSnapshot.exists()?userSnapshot.val():null;
-    if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    return Object.freeze({status:'existing',uid:expectedUid,username,foundation,userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
-  }
-  if(canonical.status!=='missing')throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  const expectedUid=String(uid||''),authority=providerAuthSnapshot();
+  const requireCurrent=()=>{
+    const current=providerAuthSnapshot();
+    if(!expectedUid||authority?.uid!==expectedUid||current?.uid!==expectedUid||current.lifecycleId!==authority.lifecycleId)
+      throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  };
+  const invalid=()=>{throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');};
+  const healthy=value=>value&&typeof value==='object'&&!Array.isArray(value)&&
+    ['disabled','frozen','identityFrozen'].every(key=>value[key]===undefined||value[key]===false)&&
+    ['status','state'].every(key=>value[key]===undefined||value[key]==='active');
+  requireCurrent();
+  await ensureFirebaseDataProtection();requireCurrent();
+  // Missing is affirmative authority evidence. An unavailable or conflicting
+  // canonical read must never downgrade to legacy login or new-account creation.
+  const canonical=await ensureProviderAccountFoundationClient().read();requireCurrent();
+  const foundation=canonical.status==='ready'?canonical.foundation:null;
+  if(foundation){
+    if(!validCanonicalFoundation(foundation,expectedUid))invalid();
+    if(foundation.identityKind==='provider_only')return Object.freeze({status:'existing',uid:expectedUid,
+      username:foundation.canonicalTrainerName,foundation,lifecycleId:authority.lifecycleId});
+  }else if(canonical.status!=='missing')invalid();
   const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving Google account timed out','provider-link/account-resolution-timeout');
-  if(!indexSnapshot.exists())return Object.freeze({status:'unlinked',uid:expectedUid});
-  const indexRecord=indexSnapshot.val()||{},username=String(indexRecord.username||'').trim();
-  if(!providerOnboardingModelDomain.HANDLE_PATTERN.test(username))throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  requireCurrent();
+  if(!indexSnapshot.exists()){
+    if(foundation)invalid();
+    return Object.freeze({status:'unlinked',uid:expectedUid,lifecycleId:authority.lifecycleId});
+  }
+  const indexRecord=indexSnapshot.val(),username=indexRecord?.username;
+  if(!healthy(indexRecord)||typeof username!=='string'||username!==username.trim()||
+    !providerOnboardingModelDomain.HANDLE_PATTERN.test(username)||
+    foundation&&foundation.canonicalTrainerName!==username)invalid();
   const userSnapshot=await withTimeout(get(ref(db,`users/${username}`)),5000,'Verifying Google account timed out','provider-link/account-resolution-timeout');
+  requireCurrent();
   const userRecord=userSnapshot.exists()?userSnapshot.val():null;
-  if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  throw accountLinkingModelDomain.failure('provider-link/legacy-migration-required');
+  if(!healthy(userRecord)||userRecord.authUid!==expectedUid||userRecord.identityKind==='provider_only'||userRecord.legacyAccessConfigured===false)invalid();
+  // Existing reciprocal ownership needs no namespace backfill or foundation write.
+  return Object.freeze({status:'existing',uid:expectedUid,username,foundation,lifecycleId:authority.lifecycleId,
+    userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
 }
 async function checkGoogleOnboardingHandle(handle,binding){
   const authority=providerAuthSnapshot();
@@ -1582,9 +1593,16 @@ function createGoogleProviderAdapter(){
     reauthenticateCurrentUser:options=>google.reauthenticateCurrentUser(options),
     unlinkCurrentUser:options=>google.unlinkCurrentUser(options),
     signInProvider:async options=>{
-      const signedIn=await google.signInProvider(options),resolution=await resolveGoogleAccountBinding(signedIn.uid);
-      providerGoogleAccountResolution=resolution;
-      return Object.freeze({uid:signedIn.uid,status:resolution.status==='existing'?'existing':'new-user'});
+      const signedIn=await google.signInProvider(options),authority=providerAuthSnapshot();
+      try{
+        const resolution=await resolveGoogleAccountBinding(signedIn.uid);
+        providerGoogleAccountResolution=resolution;
+        return Object.freeze({uid:signedIn.uid,status:resolution.status==='existing'?'existing':'new-user'});
+      }catch(error){
+        const current=providerAuthSnapshot();
+        if(current?.uid===signedIn.uid&&current.lifecycleId===authority?.lifecycleId)await firebaseSignOut(auth);
+        throw error;
+      }
     },
     beginRedirectLink:unsupported,completeRedirectLink:unsupported,beginRedirectSignIn:unsupported,completeRedirectSignIn:unsupported,
     browserContext:google.browserContext
@@ -1619,13 +1637,14 @@ function ensureProviderLinkingController(){
 async function activateGoogleResolvedAccount(resolution){
   const authority=providerAuthSnapshot(),uid=resolution?.uid,username=resolution?.username,foundation=resolution?.foundation;
   const providerOnly=foundation?.identityKind==='provider_only'&&foundation?.legacyAccessConfigured===false;
-  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||!validCanonicalFoundation(foundation,uid)||
+  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||(foundation&&!validCanonicalFoundation(foundation,uid))||
+    (resolution.lifecycleId&&resolution.lifecycleId!==authority.lifecycleId)||
     (!providerOnly&&(resolution.userRecord?.authUid!==uid||resolution.indexRecord?.username!==username))){
     throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
   }
   activateOwnedSession(uid,username);
-  activeCanonicalIdentity=Object.freeze({uid,username,identityKind:foundation.identityKind,
-    legacyAccessConfigured:foundation.legacyAccessConfigured,legacyUsername:foundation.legacyUsername,handleKey:foundation.handleKey});
+  activeCanonicalIdentity=foundation?Object.freeze({uid,username,identityKind:foundation.identityKind,
+    legacyAccessConfigured:foundation.legacyAccessConfigured,legacyUsername:foundation.legacyUsername,handleKey:foundation.handleKey}):null;
   cur=username;currentAuthUid=uid;stampSession(username);
   const local=getLocal();
   const userRecord=providerOnly?{
@@ -1638,6 +1657,9 @@ async function activateGoogleResolvedAccount(resolution){
   ensureProtectedSubscriptions();
   accountSyncInitialProviderProfile=providerOnly?resolution.profile||{}:{};
   const runtimeResult=await ensureAccountSyncRuntime();
+  const current=providerAuthSnapshot();
+  if(current?.uid!==uid||current.lifecycleId!==authority.lifecycleId||cur!==username)
+    throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
   if(providerOnly&&(!runtimeResult?.ok||managedAccountSyncRuntime?.ownerUid!==uid||
     managedAccountSyncRuntime.profileReady!==true||!accountSyncProjectionReady())){
     throw accountLinkingModelDomain.failure('provider-link/account-sync-not-ready');
@@ -1660,6 +1682,7 @@ function providerUiMessage(code){return i18nCore.t({
   'provider-link/onboarding-required':'security.googleOnboardingRequired',
   'provider-link/legacy-migration-required':'security.googleLegacyMigrationRequired',
   'provider-account/namespace-not-certified':'security.googleCreationNotReady',
+  'provider-account/creation-disabled':'security.googleCreationNotReady',
   'provider-account/handle-conflict':'security.googleHandleUnavailable',
   'provider-account/ambiguous-result':'security.googleCreationVerifying',
   'provider-account/pending-reconciliation':'security.googleCreationVerifying'
@@ -1714,6 +1737,9 @@ async function continueWithGoogle(){
     const resolution=providerGoogleAccountResolution?.uid===auth?.currentUser?.uid?providerGoogleAccountResolution:await resolveGoogleAccountBinding(auth?.currentUser?.uid);
     return await activateGoogleResolvedAccount(resolution);
   }catch(cause){
+    const resolution=providerGoogleAccountResolution,current=providerAuthSnapshot();
+    if(resolution?.status==='unlinked'&&current?.uid===resolution.uid&&current.lifecycleId===resolution.lifecycleId)
+      await firebaseSignOut(auth);
     if(error)error.textContent=providerUiMessage(cause?.code);
     return null;
   }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
@@ -9640,8 +9666,9 @@ async function reconnectAuth(){
   const pin=prompt(i18nCore.t('saveStatus.reconnectPrompt',{trainer:cur}));
   if(!pin)return;
   if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
-  const ok=await verifyPin(pin,ud.pin);
-  if(!ok){toast(i18nCore.t('saveStatus.wrongPin'));return;}
+  // A same-UID admin reset deliberately leaves the legacy verifier unchanged.
+  // For a bound account, Firebase is the current credential authority.
+  if(!ud.authUid&&!await verifyPin(pin,ud.pin)){toast(i18nCore.t('saveStatus.wrongPin'));return;}
   try{
     await ensureFirebaseIdentity(cur,pin,ud);
     // Auth observer will pick up the signin and auto-flush the queue
@@ -9874,7 +9901,8 @@ function googleProviderPresentation(method,controllerState){
 }
 function usernamePinAccessUsable(){
   const user=cur?allData.users?.[cur]:null;
-  return!!(cur&&user&&user.authUid===auth?.currentUser?.uid&&String(user.pin??'').trim());
+  return!!(cur&&user&&user.authUid===auth?.currentUser?.uid&&String(user.pin??'').trim()&&
+    (auth.currentUser.providerData||[]).some(provider=>provider?.providerId==='password'));
 }
 function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;

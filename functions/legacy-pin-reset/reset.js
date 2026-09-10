@@ -65,8 +65,10 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
     requireThat(Object.entries(authIndex).filter(([, value]) => value?.username === username ||
       (typeof value?.username === 'string' && collisionKey(value.username) === collisionKey(username))).length === 1);
     requireThat(Object.keys(loginDirectory).filter(name => collisionKey(name) === collisionKey(username)).length === 1);
-    // Any provider-authority ownership or freeze evidence is out of scope, not repairable here.
-    requireThat(await adapter.legacyOnly(uid, username), 'reset/identity-not-legacy');
+    // Exact migrated legacy ownership may retain PIN access. Holds, conflicts,
+    // provider-only accounts and retired access remain ineligible.
+    const canonicalEvidence = await adapter.legacyResetEvidence(uid, username, version);
+    requireThat(HASH.test(canonicalEvidence || ''), 'reset/identity-not-legacy');
     const account = await adapter.getAuthUser(uid);
     requireThat(account?.uid === uid && account.email === user.authEmail && account.disabled === false &&
       !account.tenantId && typeof account.metadata?.creationTime === 'string' && Number.isFinite(Date.parse(account.metadata.creationTime)));
@@ -97,7 +99,7 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
       requireThat(await adapter.legacyOnly(match.uid, username) && await adapter.retiredSlotIsUnowned(match.uid, uid, username));
       retiredSlots.push({ uid: match.uid, email: match.email, created, providers: retiredProviders, retirementManifest: fence.manifestFingerprint, retiredAt: fence.createdAt });
     }
-    const stable = { username, uid, email: account.email, version, created: account.metadata.creationTime, providers: linked };
+    const stable = { username, uid, email: account.email, version, created: account.metadata.creationTime, providers: linked, canonicalEvidence };
     if (retiredSlots.length) stable.retiredSlots = retiredSlots.sort((a, b) => a.uid.localeCompare(b.uid));
     return { username, targetUid: uid, fingerprint: digest(stable), created: stable.created };
   }
