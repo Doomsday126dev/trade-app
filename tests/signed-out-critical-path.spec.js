@@ -28,11 +28,11 @@ async function installRestoredFirebaseScenario(page,{appCheck='success'}={}){
       inspect();
     },{once:true});
   },restoredIdentity);
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:"const app={name:'pogo'};export function initializeApp(){return app}"
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:`const listeners=new Set();const initial={uid:${JSON.stringify(restoredIdentity.uid)}};const auth={currentUser:initial};
       globalThis.__emitPogoMockAuth=user=>{auth.currentUser=user;listeners.forEach(listener=>listener(user));};
@@ -40,7 +40,7 @@ async function installRestoredFirebaseScenario(page,{appCheck='success'}={}){
       export async function signInWithEmailAndPassword(){return{user:auth.currentUser}}export async function createUserWithEmailAndPassword(){return{user:auth.currentUser}}
       export async function signOut(){globalThis.__emitPogoMockAuth(null)}export async function updatePassword(){}export async function deleteUser(){}`
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:`globalThis.__pogoMockDatabaseCalls=[];export function getDatabase(){return{kind:'mock-db'}}export function ref(_db,path){return{path}}
       export async function set(target){globalThis.__pogoMockDatabaseCalls.push('set:'+target.path)}export async function update(target){globalThis.__pogoMockDatabaseCalls.push('update:'+target.path)}
@@ -51,7 +51,7 @@ async function installRestoredFirebaseScenario(page,{appCheck='success'}={}){
   let markRequested;
   const requested=new Promise(resolve=>{markRequested=resolve;});
   const blocked=new Promise(resolve=>{releaseAppCheck=resolve;});
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',async route=>{
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js',async route=>{
     markRequested();
     if(appCheck==='delayed')await blocked;
     const initialization=appCheck==='failure'
@@ -70,13 +70,13 @@ test.describe('signed-out critical path',()=>{
   });
 
   test('meaningful pre-auth status paints while Auth state is still pending',async({page})=>{
-    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+    await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
       contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
       body:"export function initializeApp(config,name){return {config,name}}"
     }));
     let releaseAuth;
     const blockedAuth=new Promise(resolve=>{releaseAuth=resolve;});
-    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',async route=>{
+    await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',async route=>{
       await blockedAuth;
       await route.fulfill({
         contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
@@ -101,12 +101,12 @@ test.describe('signed-out critical path',()=>{
   });
 
   test('Auth-only bootstrap reveals an interactive shell without loading protected features',async({page})=>{
-    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+    await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
       contentType:'application/javascript',
       headers:{'access-control-allow-origin':'*'},
       body:"export function initializeApp(config,name){return {config,name}}"
     }));
-    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>route.fulfill({
+    await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>route.fulfill({
       contentType:'application/javascript',
       headers:{'access-control-allow-origin':'*'},
       body:"export function getAuth(app){return {app,currentUser:null}};export function onAuthStateChanged(auth,listener){queueMicrotask(()=>listener(null));return ()=>{}};export const signInWithEmailAndPassword=()=>{};export const createUserWithEmailAndPassword=()=>{};export const signOut=()=>{};export const updatePassword=()=>{};export const deleteUser=()=>{};"

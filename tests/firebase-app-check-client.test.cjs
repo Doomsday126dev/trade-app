@@ -57,6 +57,8 @@ test('missing invalid or failed configuration stays inert without a debug fallba
 });
 
 test('App Check starts after paint and activates the RTDB client only after successful initialization',()=>{
+  assert.match(html,/https:\/\/www\.gstatic\.com\/firebasejs\/12\.14\.0/);
+  assert.doesNotMatch(html,/firebasejs\/10\.12\.2/);
   assert.match(html,/import\(`\$\{base\}\/firebase-app-check\.js`\)/);
   assert.match(html,/ReCaptchaEnterpriseProvider:appCheckMod\.ReCaptchaEnterpriseProvider/);
   assert.match(html,/firebaseAppCheckInitializationPromise=loadFirebaseAppCheckSdk\(\)[\s\S]+initializeAppCheckOnce\(\{app,siteKey:FIREBASE_APP_CHECK_SITE_KEY,\.\.\.sdk\}\)/);

@@ -1,0 +1,3 @@
+{
+  "functions": [{ "source": "functions/favorite-resolver", "codebase": "favorite-resolver", "runtime": "nodejs22" }]
+}

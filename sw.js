@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-09-10.105';
+const RELEASE='2026-09-13.106';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
@@ -23,6 +23,7 @@ const RELEASE_ASSETS=[
   'css/app.css',
   'data.js',
   'js/domain/productLimits.js',
+  'js/domain/favoriteCapabilities.js',
   'js/domain/priorities.js',
   'js/ui/badges.js',
   'js/domain/username.js',
@@ -78,6 +79,8 @@ const RELEASE_ASSETS=[
   'js/services/firebaseClient.js',
   'js/services/firebaseAppCheck.js',
   'js/services/providerPublicShareGateway.js',
+  'js/services/favoriteResolverClient.js',
+  'js/services/favoriteWriteTransport.js',
   'js/services/e1ClientFoundationCanary.js',
   'js/data/subscriptionManager.js',
   'js/data/listenerLifecycle.js',
@@ -89,7 +92,10 @@ const RELEASE_ASSETS=[
   'js/data/favoriteShareSessionCache.js',
   'js/data/accountSyncJournal.js',
   'js/data/accountSyncRepository.js',
+  'js/data/favoriteAdditionRepository.js',
   'js/data/accountSyncController.js',
+  'js/data/favoriteAdditions.js',
+  'js/data/favoriteRecoveryPreview.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
   'js/app/application.js'

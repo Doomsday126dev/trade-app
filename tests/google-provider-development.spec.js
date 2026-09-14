@@ -3,11 +3,11 @@ const {test,expect}=require('@playwright/test');
 async function mockSignedOutAuth(page){
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
   await page.route('https://fonts.gstatic.com/**',route=>route.abort());
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:'export function initializeApp(config,name){return{config,name}}'
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:'const auth={currentUser:null};export function getAuth(){return auth}export function onAuthStateChanged(_auth,listener){queueMicrotask(()=>listener(null));return()=>{}}'
   }));

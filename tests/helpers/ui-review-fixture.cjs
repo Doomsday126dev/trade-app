@@ -154,9 +154,9 @@ async function installPublicReview(page,{theme='dark'}={}){
   const projection={version:2,username:'Avery',profile:{friendCode:'1111 2222 3333',bio:'Weekend meetups. Shiny and regional wants.',avatarPokemon:'',lastUpdated:REVIEW_NOW-3600000},
     lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],declarations,declarationCount:declarations.length,updatedAt:REVIEW_NOW-3600000};
   const fulfill=body=>route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body});
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',fulfill('export function initializeApp(){return {}}'));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',fulfill('export class ReCaptchaEnterpriseProvider{};export function initializeAppCheck(){return {}};export async function getToken(){return {token:"synthetic-local-fixture"}}'));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',fulfill(`const projection=${JSON.stringify(projection)};export function getDatabase(){return {}};export function ref(_,path){return {path}};export async function get(target){globalThis.__reviewPublicReads=(globalThis.__reviewPublicReads||[]).concat(target.path);return {exists:()=>true,val:()=>projection}}`));
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',fulfill('export function initializeApp(){return {}}'));
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js',fulfill('export class ReCaptchaEnterpriseProvider{};export function initializeAppCheck(){return {}};export async function getToken(){return {token:"synthetic-local-fixture"}}'));
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',fulfill(`const projection=${JSON.stringify(projection)};export function getDatabase(){return {}};export function ref(_,path){return {path}};export async function get(target){globalThis.__reviewPublicReads=(globalThis.__reviewPublicReads||[]).concat(target.path);return {exists:()=>true,val:()=>projection}}`));
   await page.addInitScript(()=>{
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__reviewCopy=value;}}});
   },theme);
