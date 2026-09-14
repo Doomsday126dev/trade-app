@@ -20,6 +20,7 @@ async function fixture(count=2){
 async function call(server,f,handles,{token=f.token,appToken=server.token()}={}){const r=await fetch(server.url,{method:'POST',headers:{origin:'http://localhost:4188','content-type':'application/json',authorization:'Bearer '+token,'x-firebase-appcheck':appToken},body:JSON.stringify({handles})});return{status:r.status,value:await r.json()};}
 function domains(){const window={crypto:webcrypto,btoa:v=>Buffer.from(v,'binary').toString('base64')};const context=vm.createContext({window,Uint8Array,unescape,encodeURIComponent,decodeURIComponent,console,setTimeout,clearTimeout});for(const name of ['js/domain/productLimits.js','js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/favoriteAdditionRepository.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',name),'utf8'),context);return window;}
 async function operation(w,owner,t,index=0){const result=await w.PogoDomain.accountSyncModel.createOperation({ownerUid:owner,entityType:'favorite',entityId:t.uid,identity:{targetUid:t.uid},kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{displayName:0},patch:{displayName:t.handle},clientAt:Date.now(),operationId:'op_'+String(index).padStart(20,'0')},{crypto:webcrypto});assert.equal(result.ok,true);return result.value;}
+async function lifecycle(w,owner,t,{kind,baseGeneration,index,patch=kind==='add'?{displayName:t.handle}:{}}){const result=await w.PogoDomain.accountSyncModel.createOperation({ownerUid:owner,entityType:'favorite',entityId:t.uid,identity:kind==='add'?{targetUid:t.uid}:undefined,kind,baseGeneration,generation:baseGeneration+1,baseFieldRevisions:Object.fromEntries(Object.keys(patch).map(key=>[key,0])),patch,clientAt:Date.now(),operationId:'op_'+String(index).padStart(20,'0')},{crypto:webcrypto});assert.equal(result.ok,true);return result.value;}
 function repository(w,f,{beforeWrite,afterWrite}={}){
  return w.PogoData.favoriteAdditionRepository.createFavoriteAdditionRepository({repository:{},database:{},ownerUid:f.uid,enabled:true,ref:(_db,p='')=>p,serverTimestamp:()=>({'.sv':'timestamp'}),
  get:async p=>{const r=await req(p,'GET',undefined,f.token);assert.equal(r.status,200);return{exists:()=>r.value!==null,val:()=>r.value};},
@@ -69,6 +70,36 @@ test('ambiguous write readback preserves exact operation and retries do not dupl
  const removed=await w.PogoDomain.accountSyncModel.createOperation({ownerUid:f.uid,entityType:'favorite',entityId:f.targets[0].uid,kind:'delete',baseGeneration:1,generation:2,baseFieldRevisions:{},patch:{},clientAt:Date.now()},{crypto:webcrypto});
  const tombstone=w.PogoDomain.accountSyncMerge.mergeOperation(value,removed.value,{acceptedAt:Date.now()}).value;assert.equal((await req('accountSync/'+f.uid+'/favorites/'+f.targets[0].uid,'PUT',tombstone,f.token)).status,200);
  assert.equal((await repo.applyOperation(op)).status,'conflict');assert.equal((await req('accountSync/'+f.uid+'/favorites/'+f.targets[0].uid)).value.deleted,true);
+});
+test('generation-4 Favorite delete atomically tombstones and releases only its slot',{skip:!enabled},async()=>{
+ const f=await fixture(2),w=domains(),repo=repository(w,f),t=f.targets[0];
+ await repo.applyOperation(await operation(w,f.uid,t,5000));
+ await repo.applyOperation(await lifecycle(w,f.uid,t,{kind:'delete',baseGeneration:1,index:5001}));
+ await repo.applyOperation(await lifecycle(w,f.uid,t,{kind:'add',baseGeneration:2,index:5002,patch:{displayName:t.handle,'tagIds/tag_nearby':true}}));
+ const deletion=await lifecycle(w,f.uid,t,{kind:'delete',baseGeneration:3,index:5003}),result=await repo.applyOperation(deletion);
+ assert.equal(result.ok,true);const record=(await req('accountSync/'+f.uid+'/favorites/'+t.uid)).value,slots=(await req('favoriteSlots/'+f.uid)).value||{};
+ assert.equal(record.generation,4);assert.equal(record.deleted,true);assert.equal(record.values.tagIds.tag_nearby,true);assert.equal(Object.values(slots).includes(t.uid),false);
+ const restarted=repository(w,f);assert.equal((await restarted.applyOperation(deletion)).status,'idempotent');assert.equal(Object.values((await req('favoriteSlots/'+f.uid)).value||{}).includes(t.uid),false);
+});
+test('ambiguous Favorite delete response converges by exact tombstone and slot readback',{skip:!enabled},async()=>{
+ const f=await fixture(1),w=domains(),t=f.targets[0],initial=repository(w,f);await initial.applyOperation(await operation(w,f.uid,t,5100));
+ const deletion=await lifecycle(w,f.uid,t,{kind:'delete',baseGeneration:1,index:5101});let lost=true;
+ const repo=repository(w,f,{afterWrite:()=>{if(lost){lost=false;throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});}}});
+ assert.equal((await repo.applyOperation(deletion)).ok,true);assert.equal((await repository(w,f).applyOperation(deletion)).status,'idempotent');
+ assert.equal((await req('accountSync/'+f.uid+'/favorites/'+t.uid)).value.deleted,true);assert.equal(Object.values((await req('favoriteSlots/'+f.uid)).value||{}).includes(t.uid),false);
+});
+test('stale delete racing a newer re-add cannot release the newer admission slot',{skip:!enabled},async()=>{
+ const f=await fixture(1),w=domains(),t=f.targets[0],racer=repository(w,f);await racer.applyOperation(await operation(w,f.uid,t,5200));
+ const stale=await lifecycle(w,f.uid,t,{kind:'delete',baseGeneration:1,index:5201});let raced=false;
+ const repo=repository(w,f,{beforeWrite:async()=>{if(raced)return;raced=true;await racer.applyOperation(await lifecycle(w,f.uid,t,{kind:'delete',baseGeneration:1,index:5202}));await racer.applyOperation(await lifecycle(w,f.uid,t,{kind:'add',baseGeneration:2,index:5203}));}});
+ const result=await repo.applyOperation(stale);assert.equal(result.ok,false);assert.equal(result.status,'conflict');
+ const record=(await req('accountSync/'+f.uid+'/favorites/'+t.uid)).value,slots=(await req('favoriteSlots/'+f.uid)).value||{};
+ assert.equal(record.generation,3);assert.equal(record.deleted,false);assert.equal(Object.values(slots).includes(t.uid),true);
+});
+test('deleting one Favorite preserves every other Favorite slot',{skip:!enabled},async()=>{
+ const f=await fixture(2),w=domains(),repo=repository(w,f);await repo.applyOperation(await operation(w,f.uid,f.targets[0],5300));await repo.applyOperation(await operation(w,f.uid,f.targets[1],5301));
+ await repo.applyOperation(await lifecycle(w,f.uid,f.targets[0],{kind:'delete',baseGeneration:1,index:5302}));
+ const slots=(await req('favoriteSlots/'+f.uid)).value||{};assert.equal(Object.values(slots).includes(f.targets[0].uid),false);assert.equal(Object.values(slots).includes(f.targets[1].uid),true);assert.equal(Object.values(slots).filter(id=>id===f.targets[1].uid).length,1);
 });
 test('capacity slots cannot drop active membership or grant cross-account access',{skip:!enabled},async()=>{
  const f=await fixture(2),w=domains(),r=await repository(w,f).applyOperation(await operation(w,f.uid,f.targets[0],4000));assert.equal(r.ok,true);

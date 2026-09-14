@@ -20,6 +20,8 @@ test('ordinary Trainers addition persists, repeated ensure preserves tags, share
  const preview=await page.evaluate(ids=>previewPreservedFavorites(ids),ids);expect(preview.readOnly).toBe(true);expect(preview.rows[0].candidate.values.displayName).toBe(f.other);expect(await account(f)).toEqual(before);
  const second=await browser.newContext({serviceWorkers:'block'});try{const p=await second.newPage();await routeEmulators(p,f,{candidate:true,legacy:false});await login(p,f);await settled(p);expect(await p.evaluate(name=>ensureTrainerHistoryStore().isFavorite(name),f.newName)).toBe(true);}finally{await second.close();}
  page.on('dialog',dialog=>dialog.accept());await page.evaluate(name=>{_activeShareView={username:name,type:'wishlist'};return removeTrainerFavorite(name);},f.newName);await settled(page);expect((await account(f)).favorites[f.newUid].deleted).toBe(true);
+ expect(Object.values((await adminData('GET',`favoriteSlots/${f.uid}`)).value||{})).not.toContain(f.newUid);
+ await page.reload();await expect.poll(()=>page.evaluate(()=>typeof managedAccountSyncRuntime!=='undefined'&&managedAccountSyncRuntime?.projectionReady),{timeout:30000}).toBe(true);await settled(page);expect(await page.evaluate(name=>ensureTrainerHistoryStore().isFavorite(name),f.newName)).toBe(false);
  expect(await page.evaluate(uid=>allData.authIndex[uid],f.newUid)).toBeUndefined();
 });
 test('shared-list new addition queues honestly and survives reload with the same operation',async({page})=>{
