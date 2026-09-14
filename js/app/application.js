@@ -9,7 +9,7 @@ function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof get
 async function loadFirebaseSdk(){
   if(firebaseSdkReady())return true;
   if(!firebaseSdkPromise){
-    const base='https://www.gstatic.com/firebasejs/10.12.2';
+    const base='https://www.gstatic.com/firebasejs/12.14.0';
     firebaseSdkPromise=Promise.all([
       startPogoEarlyAuth(),
       import(`${base}/firebase-database.js`)
@@ -47,7 +47,7 @@ async function loadFirebaseSdk(){
 }
 function loadFirebaseAppCheckSdk(){
   if(firebaseAppCheckSdkPromise)return firebaseAppCheckSdkPromise;
-  const base='https://www.gstatic.com/firebasejs/10.12.2';
+  const base='https://www.gstatic.com/firebasejs/12.14.0';
   firebaseAppCheckStage='sdk-import';
   firebaseAppCheckSdkPromise=import(`${base}/firebase-app-check.js`).then(appCheckMod=>{
     firebaseAppCheckStage='sdk-import-settled';
@@ -164,7 +164,7 @@ window.__pogoCreateGroupEClientFoundationCanary=async(storedEnvelope)=>{
     getSessionGeneration:()=>_sessionTransientGeneration,
     getBrowserContextDigest:()=>e1ClientFoundationCanaryService.browserContextDigest(
       location.origin,location.pathname,fbApp.options.appId,crypto),
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js')
   });
   await e1ClientFoundationCanary.open(configuration);
   return e1ClientFoundationCanary;
@@ -1500,7 +1500,7 @@ function ensureProviderAccountFoundationClient(){
   if(!fbApp||!auth)throw providerFailure('provider-account/dependencies-invalid');
   providerAccountFoundationClient=providerAccountFoundationService.createProviderAccountClient({
     firebaseApp:fbApp,auth,firebaseAppCheckReady,getLifecycleSnapshot:providerAuthSnapshot,
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js'),
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js'),
     storage:localStorage
   });
   return providerAccountFoundationClient;
@@ -1511,7 +1511,7 @@ function ensureProviderPublicShareClient(){
   if(!fbApp)throw providerFailure('provider-public/dependencies-invalid');
   managedProviderPublicShareClient=providerPublicShareGatewayService.createProviderPublicShareClient({
     firebaseApp:fbApp,auth,firebaseAppCheckReady,enabled:true,
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js')
   });
   return managedProviderPublicShareClient;
 }
@@ -9183,7 +9183,7 @@ function legacyPinResetFailure(error){
 }
 async function callLegacyPinReset(data){
   try{
-    const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
+    const sdk=await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js');
     const callable=sdk.httpsCallable(sdk.getFunctions(fbApp,'us-central1'),'ownerResetLegacyPin',{limitedUseAppCheckTokens:true,timeout:125000});
     return(await callable(data)).data;
   }finally{delete data.pin;}

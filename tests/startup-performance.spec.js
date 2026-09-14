@@ -15,19 +15,19 @@ const SHELL_BUDGET={
 
 async function installFirebaseMocks(page,{appCheckFailure=false}={}){
   await page.route('https://static.cloudflareinsights.com/**',route=>route.abort('blockedbyclient'));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:"const app={name:'pogo',options:{appId:'mock-app'}};export function initializeApp(){return app}"
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:"const auth={currentUser:null};export function getAuth(){return auth}export function onAuthStateChanged(_auth,listener){queueMicrotask(()=>listener(null));return()=>{}}export async function signInWithEmailAndPassword(){return{user:null}}export async function createUserWithEmailAndPassword(){return{user:null}}export async function signOut(){}export async function updatePassword(){}export async function deleteUser(){}"
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:"export function getDatabase(){return{}}export function ref(_db,path){return{path}}export async function set(){}export async function update(){}export async function get(){return{exists:()=>false,val:()=>null}}export function onValue(_target,listener){queueMicrotask(()=>listener({exists:()=>false,val:()=>null}));return()=>{}}export async function runTransaction(){}export function serverTimestamp(){return 0}"
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:appCheckFailure
       ?"export class ReCaptchaEnterpriseProvider{}export function initializeAppCheck(){throw new Error('mock-app-check-failure')}"

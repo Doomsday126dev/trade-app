@@ -53,7 +53,7 @@ function startPogoEarlyAuth(){
   if(state.sdkPromise)return state.sdkPromise;
   window.__pogoStartup.authSdkStartedAt=performance.now();
   try{performance.mark('pogo:auth-sdk-start')}catch{}
-  var base='https://www.gstatic.com/firebasejs/10.12.2';
+  var base='https://www.gstatic.com/firebasejs/12.14.0';
   state.sdkPromise=Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js')]).then(function(modules){
     state.appMod=modules[0];state.authMod=modules[1];
     state.app=state.appMod.initializeApp(window.__POGO_FIREBASE_CONFIG,'pogo');

@@ -8,6 +8,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { CONTRACT } = require('./contract');
 const { createIdentityReader, createIdentityResolver } = require('./identity');
 const { createGcsQuotaStore, createQuota } = require('./quota');
+const { createGcsReplayStore, createAppCheckVerifier } = require('./app-check');
 const { createHandler } = require('./handler');
 const PROJECT = 'trade-list-a4297';
 const APP_ID = '1:1053781218847:web:378b312470943152d9a72a';
@@ -24,7 +25,8 @@ function configuredHandler() {
   if (!handler) {
     const app = initializeApp({ projectId: PROJECT, databaseURL: `https://${PROJECT}-default-rtdb.firebaseio.com` }, 'favorite-resolver');
     const auth = getAuth(app), appCheck = getAppCheck(app);
-    const quota = createQuota(createGcsQuotaStore(new Storage({ projectId: PROJECT, retryOptions: { autoRetry: false } }).bucket(`${PROJECT}-favorite-resolver-quota`)));
+    const bucket = new Storage({ projectId: PROJECT, retryOptions: { autoRetry: false } }).bucket(`${PROJECT}-favorite-resolver-quota`);
+    const quota = createQuota(createGcsQuotaStore(bucket));
     handler = createHandler({ enabled, origins: ORIGINS, quota, resolve: createIdentityResolver(createIdentityReader(getDatabase(app))),
       verifyAuth: async token => {
         const caller = await auth.verifyIdToken(token, true);
@@ -35,7 +37,7 @@ function configuredHandler() {
         }
         return caller;
       },
-      verifyAppCheck: async token => { const result = await appCheck.verifyToken(token, { consume: true }); return result.appId === APP_ID && result.alreadyConsumed === false; }
+      verifyAppCheck: createAppCheckVerifier({ appCheck, appId: APP_ID, replayStore: createGcsReplayStore(bucket) })
     });
   }
   return handler;

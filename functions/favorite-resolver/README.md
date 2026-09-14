@@ -13,7 +13,9 @@ share the latter response. No account repair or private-list access is provided.
 
 Production adapters call Firebase Admin `verifyIdToken(token, true)` and
 project-bound App Check `verifyToken(token,{consume:true})`; only the exact web
-app ID and `alreadyConsumed === false` are accepted. One limited-use token is
+app ID, a limited-use token JTI and `alreadyConsumed === false` are accepted.
+An atomic digest marker in the existing private quota-object prefix closes
+concurrent or missing upstream consumption signals without storing the token. One limited-use token is
 consumed per batch. CORS permits only the production Pages origin and exposes
 Retry-After. Authentication, attestation and caller validation apply to all rows.
 
