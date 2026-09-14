@@ -24,6 +24,7 @@ const RELEASE_ASSETS=[
   'data.js',
   'js/domain/productLimits.js',
   'js/domain/favoriteCapabilities.js',
+  'js/domain/favoritePickerModel.js',
   'js/domain/priorities.js',
   'js/ui/badges.js',
   'js/domain/username.js',
@@ -98,6 +99,7 @@ const RELEASE_ASSETS=[
   'js/data/favoriteRecoveryPreview.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
+  'js/app/favoritePicker.js',
   'js/app/application.js'
 ];
 // Required for offline features/routes, but intentionally omitted from the
