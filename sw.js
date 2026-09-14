@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-09-13.109';
+const RELEASE='2026-09-13.110';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
