@@ -3643,6 +3643,7 @@ async function ensureAccountSyncRuntime(){
       if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true&&initializationKind==='legacy-migration'){
         const resolver=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:currentSession,enabled:true});
         managedFavoriteAdditions=window.PogoData.favoriteAdditions.createFavoriteAdditions({ownerUid:uid,journal,controller:runtime.controller,resolver,sessionCurrent:currentSession,onChange:value=>{if(currentSession()){favoriteAdditionUiState=value;refreshFavoriteSavedPrompt();if(typeof renderFavoritePicker==='function')renderFavoritePicker();}}});
+        if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
         managedFavoriteRecoveryPreview=window.PogoData.favoriteRecoveryPreview.createFavoriteRecoveryPreview({ownerUid:uid,journal,resolver,sessionCurrent:currentSession});
         managedFavoriteAdditions.resume().catch(()=>{});
       }
