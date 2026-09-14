@@ -90,7 +90,8 @@
       if(newHandles.length>previous.remaining)throw failure('favorite/capacity-exceeded');
       for(const handle of handles){
         cancelled.delete(handle);let row=byHandle.get(handle);
-        if(row&&['cancelled','confirmed','already-present'].includes(row.state)){
+        const removed=row?.state==='unsuccessful'&&row.code==='favorite/removed';
+        if(row&&(['cancelled','confirmed','already-present'].includes(row.state)||removed)){
           const existing=row.targetUid?controller.getEntity('favorite',row.targetUid):null;
           if(row.state==='cancelled'||existing?.deleted)row=null;
         }
