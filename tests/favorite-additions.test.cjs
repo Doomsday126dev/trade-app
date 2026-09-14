@@ -8,6 +8,13 @@ test('ensure repeated on an existing Favorite preserves tags and never toggles o
  await f.device.controller.patchEntity({entityType:'favorite',entityId:'uid-Target',patch:{'tagIds/tag_group':true}});await f.h.settle();const tagged=JSON.stringify(f.h.server.snapshot().favorites['uid-Target']),operations=f.device.state.operations.size;
  await f.additions.ensure(['Target']);await f.additions.retry(['Target']);await f.h.settle();assert.equal(f.device.state.operations.size,operations);assert.equal(JSON.stringify(f.h.server.snapshot().favorites['uid-Target']),tagged);assert.equal(last(await f.additions.snapshot(),'Target').state,'confirmed');assert.equal(saved.deleted,false);await f.device.controller.deactivate();
 });
+test('ensure after removal starts a new add from the current tombstone generation',async()=>{
+ const f=await fixture();await f.additions.ensure(['Target']);await f.h.settle();const first=f.h.server.snapshot().favorites['uid-Target'],firstOperation=first.lifecycleMutation;
+ await f.device.controller.deleteEntity({entityType:'favorite',entityId:'uid-Target'});await f.h.settle();const tombstone=f.h.server.snapshot().favorites['uid-Target'];
+ const removed=last(await f.additions.snapshot(),'Target');assert.equal(removed.state,'unsuccessful');assert.equal(removed.code,'favorite/removed');
+ await f.additions.ensure(['Target']);await f.h.settle();const restored=f.h.server.snapshot().favorites['uid-Target'],rows=(await f.additions.snapshot()).rows.filter(row=>row.handle==='Target');
+ assert.equal(first.deleted,false);assert.equal(tombstone.deleted,true);assert.equal(restored.deleted,false);assert.equal(restored.generation,tombstone.generation+1);assert.notEqual(restored.lifecycleMutation,firstOperation);assert.equal(last({rows},'Target').state,'confirmed');assert.deepEqual(f.calls,[['Target'],['Target']]);await f.device.controller.deactivate();
+});
 test('100 selected targets use two bounded batches and queue through the same path',async()=>{
  const f=await fixture();await f.additions.ensure(Array.from({length:100},(_,i)=>'T'+i));await f.h.settle();assert.deepEqual(f.calls.map(x=>x.length),[50,50]);assert.equal(f.h.server.entities.size,100,JSON.stringify((await f.additions.snapshot()).rows.filter(row=>row.state==='unsuccessful').map(row=>row.code)));assert.equal((await f.additions.snapshot()).remaining,0);await assert.rejects(f.additions.ensure(['Extra']),{code:'favorite/capacity-exceeded'});await f.device.controller.deactivate();
 });
