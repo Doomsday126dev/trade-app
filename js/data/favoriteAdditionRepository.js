@@ -31,6 +31,15 @@
     }
     return Object.freeze({ok:true,changes:Object.freeze(changes),count:active.size});
   }
+  function releasePlan(owner,slots,entityId){
+    if(slots!=null&&!model.plainObject(slots))return model.failure('account-sync/favorite-capacity-invalid','Favorite capacity evidence is invalid');
+    const changes={};
+    for(const [slot,id] of Object.entries(slots||{})){
+      if(!/^s(0|[1-9][0-9]?)$/.test(slot)||!model.firebaseKey(id,128))return model.failure('account-sync/favorite-capacity-invalid','Favorite capacity evidence is invalid');
+      if(id===entityId)changes[`favoriteSlots/${owner}/${slot}`]=null;
+    }
+    return Object.freeze({ok:true,changes:Object.freeze(changes),released:Object.keys(changes).length});
+  }
   function createFavoriteAdditionRepository({repository,database,ref,get,update,serverTimestamp,ownerUid,enabled=false,sessionCurrent=()=>true,timeoutMs=12000}={}){
     const owner=model.firebaseKey(ownerUid,128);
     if(!owner||!repository||!database||[ref,get,update,serverTimestamp].some(fn=>typeof fn!=='function'))throw new TypeError('Favorite addition repository is incomplete');
@@ -38,12 +47,14 @@
     const target=id=>`accountSync/${owner}/favorites/${id}`;
     async function bounded(work){let timer;try{return await Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error('Favorite write could not be confirmed'),{code:'account-sync/network-failed'})),timeoutMs);})]);}finally{clearTimeout(timer);}}
     async function proof(operation){
-      current();const snapshot=await bounded(get(ref(database,target(operation.entityId))));current();
-      const value=snapshot.exists()?snapshot.val():null;
+      current();const [snapshot,slotsSnapshot]=await bounded(Promise.all([get(ref(database,target(operation.entityId))),get(ref(database,`favoriteSlots/${owner}`))]));current();
+      const value=snapshot.exists()?snapshot.val():null,slots=slotsSnapshot.exists()?slotsSnapshot.val():{};
       if(value===null)return null;
+      const plan=releasePlan(owner,slots,operation.entityId);if(!plan.ok)return plan;
       if(!merge.validateEntity(value,operation).ok)return model.failure('account-sync/committed-entity-invalid','Committed Favorite data is invalid');
       const result=merge.mergeOperation(value,operation,{acceptedAt:Date.now()});
-      return result.ok&&result.status==='idempotent'?Object.freeze({ok:true,status:'idempotent',value,conflicts:Object.freeze([])}):null;
+      const assigned=plan.released>0,consistent=operation.kind==='add'?assigned:(operation.kind==='delete'?!assigned:true);
+      return result.ok&&result.status==='idempotent'&&consistent?Object.freeze({ok:true,status:'idempotent',value,conflicts:Object.freeze([])}):null;
     }
     async function applyAddition(operation){
       if(operation.ownerUid!==owner)return model.failure('account-sync/owner-mismatch','Favorite owner differs');
@@ -54,7 +65,7 @@
         const records=accountSnapshot.exists()?accountSnapshot.val():{},slots=slotsSnapshot.exists()?slotsSnapshot.val():{};
         const existing=records?.[operation.entityId]||null,result=merge.mergeOperation(existing,operation,{acceptedAt:Date.now()});
         if(!result.ok)return Object.freeze({...result,status:result.conflicts?.length?'conflict':'rejected',current:existing});
-        if(result.status==='idempotent')return Object.freeze({ok:true,status:'idempotent',value:existing,conflicts:Object.freeze([])});
+        if(result.status==='idempotent')return await proof(operation)||model.failure('account-sync/favorite-write-rejected','Favorite could not be saved; refresh and review the account state');
         const plan=capacityPlan(owner,records,slots,result.value);if(!plan.ok)return plan;
         const timestamp=serverTimestamp(),value={...result.value,updatedAt:timestamp,...(!existing?{createdAt:timestamp}:{})};
         let writeError;
@@ -68,7 +79,36 @@
         if(attempt===2)return model.failure('account-sync/favorite-write-rejected','Favorite could not be saved; refresh and review the account state');
       }
     }
-    return Object.freeze({...repository,applyOperation:operation=>enabled&&operation.entityType==='favorite'&&operation.kind==='add'?applyAddition(operation):repository.applyOperation(operation)});
+    async function applyDeletion(operation){
+      if(operation.ownerUid!==owner)return model.failure('account-sync/owner-mismatch','Favorite owner differs');
+      const verified=await model.verifyOperation(operation);if(!verified.ok)return verified;
+      for(let attempt=0;attempt<3;attempt++){
+        current();
+        const [recordSnapshot,slotsSnapshot]=await bounded(Promise.all([get(ref(database,target(operation.entityId))),get(ref(database,`favoriteSlots/${owner}`))]));current();
+        const existing=recordSnapshot.exists()?recordSnapshot.val():null,slots=slotsSnapshot.exists()?slotsSnapshot.val():{};
+        const result=merge.mergeOperation(existing,operation,{acceptedAt:Date.now()});
+        if(!result.ok)return Object.freeze({...result,status:result.conflicts?.length?'conflict':'rejected',current:existing});
+        if(result.status==='idempotent')return await proof(operation)||model.failure('account-sync/favorite-write-rejected','Favorite removal could not be confirmed; refresh and review the account state');
+        const plan=releasePlan(owner,slots,operation.entityId);if(!plan.ok)return plan;
+        const timestamp=serverTimestamp(),value={...result.value,updatedAt:timestamp,deletedAt:timestamp};
+        let writeError;
+        try{current();await bounded(update(ref(database),{...plan.changes,[target(operation.entityId)]:value}));}
+        catch(error){writeError=error;}
+        current();const accepted=await proof(operation);if(accepted)return accepted;
+        const denied=/permission.?denied/i.test(String(writeError?.code||''));
+        if(writeError&&!denied)throw writeError;
+        // Rules validate the Favorite generation and the current slot owner in
+        // the same root update. A concurrent re-add or reassignment rejects the
+        // whole stale delete, which is retried only with this exact operation.
+        if(attempt===2)return model.failure('account-sync/favorite-write-rejected','Favorite could not be removed; refresh and review the account state');
+      }
+    }
+    return Object.freeze({...repository,applyOperation:operation=>{
+      if(!enabled||operation.entityType!=='favorite')return repository.applyOperation(operation);
+      if(operation.kind==='add')return applyAddition(operation);
+      if(operation.kind==='delete')return applyDeletion(operation);
+      return repository.applyOperation(operation);
+    }});
   }
-  root.favoriteAdditionRepository=Object.freeze({CAPACITY,capacityPlan,createFavoriteAdditionRepository});
+  root.favoriteAdditionRepository=Object.freeze({CAPACITY,capacityPlan,releasePlan,createFavoriteAdditionRepository});
 })(window);
