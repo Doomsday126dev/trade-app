@@ -20,9 +20,9 @@
     const configured=new Set((configuredProviders||[]).filter(key=>METHOD_KEYS.includes(key)&&key!=='username-pin'));
     function availability(key){
       if(key==='username-pin')return Object.freeze({visible:true,available:true,actionable:false,reason:'production-access-method'});
-      if(!developmentEnabled)return Object.freeze({visible:false,available:false,actionable:false,reason:'production-hidden'});
       const available=configured.has(key);
-      return Object.freeze({visible:true,available,actionable:available,reason:available?'development-configured':'provider-unconfigured'});
+      if(!developmentEnabled||!available)return Object.freeze({visible:false,available:false,actionable:false,reason:'production-hidden'});
+      return Object.freeze({visible:true,available,actionable:available,reason:'development-configured'});
     }
     function methods({providerData=[],usernamePinAvailable=true,linkedExternalProviders={},operationStates={}}={}){
       const ids=providerIds(providerData),external=externalLinks(linkedExternalProviders);

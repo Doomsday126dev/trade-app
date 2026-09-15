@@ -150,6 +150,14 @@ test('configured development providers are actionable while production remains i
   assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.visible,item.available,item.actionable,item.state])),[[true,true,true,'not-connected'],[true,true,true,'not-connected']]);
 });
 
+test('unconfigured providers remain hidden when another provider is enabled',()=>{
+  const {authProviderRegistry}=loadDomains();
+  const registry=authProviderRegistry.createAuthProviderRegistry({developmentEnabled:true,configuredProviders:['google']});
+  assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.key,item.visible,item.available,item.actionable,item.state])),[
+    ['google',true,true,true,'not-connected'],['discord',false,false,false,'unavailable']
+  ]);
+});
+
 test('username and PIN user links a provider without changing Firebase UID',async()=>{
   const h=createHarness();const uid=h.auth.snapshot().uid;
   const result=await prepareAndComplete(h.controller);
@@ -388,4 +396,13 @@ test('exact reviewed recovery evidence cannot change during linking even when co
   const h=createHarness();h.behavior.linkDeferred=deferred();await h.controller.prepareLinkPopup('google');const pending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.accounts.get('uid-a').migration.recoveryEvidence[0].candidateId='rewritten-with-same-count';h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/account-boundary-changed-recovery-evidence-fingerprint');
+});
+
+
+test('Auth replacement during asynchronous post-link boundary verification cannot report connected',async()=>{
+  const h=createHarness();await h.controller.prepareLinkPopup('google');
+  const snapshot=h.accountBoundary.snapshot;
+  h.accountBoundary.snapshot=async uid=>{const result=await snapshot(uid);h.auth.update({lifecycleId:'replaced'});return result;};
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/auth-lifecycle-changed');
+  assert.notEqual(h.controller.snapshot().status,'connected');
 });

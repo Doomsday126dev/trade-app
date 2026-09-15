@@ -10,7 +10,7 @@ const MANIFEST_PATH = path.resolve(__dirname, 'e1-authority-source-manifest.json
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
 const DEPLOY_CONFIRMATION = 'DEPLOY INACTIVE E1 GROUP E AUTHORITY';
 const EXECUTION_MODES = Object.freeze(['build', 'qualify', 'replace']);
-const COMMIT_A_SOURCE_SHA = 'ad2edab9be2b1c0e6851dfded3a0f3f71a73b987';
+const COMMIT_A_SOURCE_SHA = 'df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const SOURCE_PATHS = Object.freeze([
   'e1TargetContracts.js',
   'firestoreE1AuthorityAdapter.js',
@@ -18,7 +18,9 @@ const SOURCE_PATHS = Object.freeze([
   'handleNormalization.js',
   'package-lock.json',
   'package.json',
+  'providerPublicProjection.js',
   'readRateLimiters.js',
+  'rtdbPublicTrainerShareReader.js',
   'rtdbVerifiedLegacyMappingReader.js',
   'server.js'
 ]);
