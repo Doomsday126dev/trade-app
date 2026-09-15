@@ -4,7 +4,21 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawnSync, execFileSync } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
+const {
+  createBuildReceipt,
+  createQualificationReceipt,
+  dockerfile,
+  expectedBuildConfig,
+  sha256,
+  verifyArtifactProvenance,
+  verifyBuildReceipt,
+  verifyBuildResult,
+  verifyDependencyLock,
+  verifyQualificationReceipt
+} = require('../production/e1AuthorityBuildPolicy.cjs');
+const verifiedBuilds = new WeakMap();
 const {
   DEPLOY_CONFIRMATION,
   createDeploymentPlan,
@@ -71,6 +85,46 @@ function gcloudJson(spawn, args, label) {
   const result = spawn('gcloud', [...args, '--format=json'], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`e1/${label}-failed`);
   try { return JSON.parse(result.stdout); } catch { throw new Error(`e1/${label}-invalid`); }
+}
+
+function privateJsonPath(value) {
+  if (typeof value !== 'string' || !path.isAbsolute(value) || path.basename(value) !== value.split(path.sep).at(-1)) {
+    throw new Error('e1/authority-receipt-path-invalid');
+  }
+  const resolved = path.resolve(value);
+  const parent = path.dirname(resolved);
+  const stat = fs.statSync(parent);
+  if (!stat.isDirectory()) throw new Error('e1/authority-receipt-path-invalid');
+  return resolved;
+}
+
+function writePrivateJson(file, value) {
+  const resolved = privateJsonPath(file);
+  const temporary = `${resolved}.${randomUUID()}.tmp`;
+  try {
+    fs.writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600, flag: 'wx' });
+    fs.linkSync(temporary, resolved);
+  } catch {
+    throw new Error('e1/authority-receipt-write-failed');
+  } finally {
+    fs.rmSync(temporary, { force: true });
+  }
+  return resolved;
+}
+
+function readPrivateJson(file) {
+  let resolved;
+  let stat;
+  try {
+    resolved = privateJsonPath(file);
+    stat = fs.lstatSync(resolved);
+  } catch {
+    throw new Error('e1/authority-receipt-file-invalid');
+  }
+  if (!stat.isFile() || stat.isSymbolicLink() || (stat.mode & 0o077) !== 0 || stat.size > 1024 * 1024) {
+    throw new Error('e1/authority-receipt-file-invalid');
+  }
+  try { return JSON.parse(fs.readFileSync(resolved, 'utf8')); } catch { throw new Error('e1/authority-receipt-file-invalid'); }
 }
 
 function environment(container) {
@@ -227,48 +281,140 @@ function inactiveServiceSpec(plan, service, image) {
   return replacement;
 }
 
-function cloudBuildConfig(plan) {
-  return [
-    'steps:',
-    '- name: gcr.io/k8s-skaffold/pack',
-    '  entrypoint: pack',
-    '  args: [config, default-builder, gcr.io/buildpacks/builder:latest]',
-    '- name: gcr.io/k8s-skaffold/pack',
-    '  entrypoint: pack',
-    `  args: [build, ${plan.target.imageUri}, --network, cloudbuild, --publish]`,
-    '- name: gcr.io/cloud-builders/docker',
-    '  entrypoint: docker',
-    `  args: [pull, ${plan.target.imageUri}]`,
-    'images:',
-    `- ${plan.target.imageUri}`,
-    'options:',
-    '  logging: CLOUD_LOGGING_ONLY',
-    ''
-  ].join('\n');
+function cloudBuildConfig(plan, requestId) {
+  return `${JSON.stringify(expectedBuildConfig(plan, requestId), null, 2)}\n`;
 }
 
-function buildAuthority(plan, stagedSource, configPath, spawn) {
+function prepareBuildSource(plan, stagedSource, workDirectory) {
   const source = verifyStagedSource(plan, stagedSource);
-  const result = spawn('gcloud', [
-    'builds', 'submit', source,
+  const context = path.join(workDirectory, 'context');
+  fs.mkdirSync(context, { mode: 0o700 });
+  for (const file of plan.manifest.sourceFiles) {
+    const bytes = fs.readFileSync(path.join(source, file.path));
+    if (sha256(bytes) !== file.sha256) throw new Error('e1/authority-staged-source-hash-mismatch');
+    if (file.path === 'package-lock.json') verifyDependencyLock(bytes);
+    fs.writeFileSync(path.join(context, file.path), bytes, { mode: 0o600, flag: 'wx' });
+  }
+  fs.writeFileSync(path.join(context, 'Dockerfile'), dockerfile(), { mode: 0o600, flag: 'wx' });
+  const archive = path.join(workDirectory, 'source.tgz');
+  execFileSync('tar', ['-czf', archive, '-C', context,
+    ...plan.manifest.sourceFiles.map((file) => file.path), 'Dockerfile'], { stdio: 'pipe' });
+  fs.chmodSync(archive, 0o600);
+  return Object.freeze({ archive, archiveSha256: sha256(fs.readFileSync(archive)) });
+}
+
+function verifyBuildArchive(plan, archive, expectedSha256) {
+  if (sha256(fs.readFileSync(archive)) !== expectedSha256) throw new Error('e1/authority-build-archive-hash-mismatch');
+  const members = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+    .trim().split('\n').filter(Boolean);
+  const expectedMembers = [...plan.manifest.sourceFiles.map((file) => file.path), 'Dockerfile'];
+  if (JSON.stringify(members) !== JSON.stringify(expectedMembers) || new Set(members).size !== members.length ||
+      members.some((member) => path.isAbsolute(member) || member.includes('..') || member.includes('\\'))) {
+    throw new Error('e1/authority-build-archive-inventory-mismatch');
+  }
+  for (const file of plan.manifest.sourceFiles) {
+    const bytes = execFileSync('tar', ['-xOzf', archive, file.path], { stdio: ['ignore', 'pipe', 'pipe'] });
+    if (sha256(bytes) !== file.sha256) throw new Error('e1/authority-build-archive-source-mismatch');
+  }
+  const observedDockerfile = execFileSync('tar', ['-xOzf', archive, 'Dockerfile'],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  if (observedDockerfile !== dockerfile()) throw new Error('e1/authority-build-archive-dockerfile-mismatch');
+  return true;
+}
+
+function submitAuthorityBuild(plan, stagedSource, workDirectory, receiptPath, spawn) {
+  if (!plan.deploymentAllowed || plan.mode !== 'build') throw new Error('e1/authority-build-not-allowed');
+  const source = prepareBuildSource(plan, stagedSource, workDirectory);
+  const requestId = randomUUID();
+  const config = expectedBuildConfig(plan, requestId);
+  const configPath = path.join(workDirectory, 'cloudbuild.json');
+  fs.writeFileSync(configPath, JSON.stringify(config), { mode: 0o600, flag: 'wx' });
+  const submittedAt = Date.now();
+  const submitted = gcloudJson(spawn, [
+    'builds', 'submit', source.archive,
     `--project=${plan.target.projectId}`,
     `--region=${plan.target.region}`,
     `--config=${configPath}`,
     `--service-account=${plan.target.builderServiceAccountResource}`,
-    '--format=json',
+    '--async',
     '--quiet'
-  ], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
-  if (result.status !== 0) throw new Error('e1/authority-build-failed');
-  let build;
-  try { build = JSON.parse(result.stdout); } catch { throw new Error('e1/authority-build-result-invalid'); }
-  const imageDigest = build?.results?.images?.[0]?.digest;
-  if (!/^sha256:[a-f0-9]{64}$/u.test(imageDigest || '') || !/^[a-f0-9-]{20,64}$/u.test(build?.id || '')) {
+  ], 'authority-build-submit');
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/u.test(submitted?.id || '')) {
     throw new Error('e1/authority-build-result-invalid');
   }
-  return Object.freeze({ buildId: build.id, imageDigest, image: `${plan.target.imageUri}@${imageDigest}` });
+  const receipt = createBuildReceipt(plan, {
+    archiveSha256: source.archiveSha256,
+    buildId: submitted.id,
+    config,
+    requestId,
+    submittedAt
+  });
+  const persisted = writePrivateJson(receiptPath, receipt);
+  return Object.freeze({
+    state: 'submitted',
+    buildId: receipt.buildId,
+    receiptPath: persisted,
+    receiptSha256: receipt.receiptSha256
+  });
+}
+
+function inspectAuthorityBuild(plan, buildReceipt, workDirectory, spawn) {
+  const expectedReceipt = verifyBuildReceipt(plan, buildReceipt);
+  const build = gcloudJson(spawn, ['builds', 'describe', buildReceipt.buildId,
+    `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-build-readback');
+  const expected = Object.freeze({ ...expectedReceipt,
+    storageSource: structuredClone(build?.source?.storageSource) });
+  const built = verifyBuildResult(plan, build, expected);
+  const storage = expected.storageSource;
+  const archive = path.join(workDirectory, 'resolved-source.tgz');
+  const copied = spawn('gcloud', ['storage', 'cp',
+    `gs://${storage.bucket}/${storage.object}#${storage.generation}`, archive,
+    `--project=${plan.target.projectId}`, '--quiet'], { stdio: 'ignore' });
+  if (copied.status !== 0) throw new Error('e1/authority-build-source-download-failed');
+  fs.chmodSync(archive, 0o600);
+  verifyBuildArchive(plan, archive, expected.archiveSha256);
+  const artifact = gcloudJson(spawn, ['artifacts', 'docker', 'images', 'describe', built.image,
+    '--show-provenance', `--project=${plan.target.projectId}`], 'authority-provenance');
+  verifyArtifactProvenance(plan, artifact, build, expected, built);
+  return Object.freeze({ build, built, expected });
+}
+
+function qualifyAuthorityBuild(plan, receiptPath, qualificationPath, workDirectory, spawn) {
+  if (!plan.deploymentAllowed || plan.mode !== 'qualify') throw new Error('e1/authority-qualification-not-allowed');
+  const buildReceipt = readPrivateJson(receiptPath);
+  const inspected = inspectAuthorityBuild(plan, buildReceipt, workDirectory, spawn);
+  const qualification = createQualificationReceipt(plan, buildReceipt, inspected.build,
+    inspected.expected, inspected.built);
+  const persisted = writePrivateJson(qualificationPath, qualification);
+  return Object.freeze({
+    state: 'qualified',
+    buildId: inspected.built.buildId,
+    imageDigest: inspected.built.imageDigest,
+    image: inspected.built.image,
+    qualificationPath: persisted,
+    qualificationSha256: qualification.qualificationSha256
+  });
+}
+
+function requalifyAuthorityBuild(plan, receiptPath, qualificationPath, workDirectory, spawn) {
+  const buildReceipt = readPrivateJson(receiptPath);
+  const qualification = readPrivateJson(qualificationPath);
+  verifyQualificationReceipt(plan, buildReceipt, qualification);
+  const inspected = inspectAuthorityBuild(plan, buildReceipt, workDirectory, spawn);
+  const observed = createQualificationReceipt(plan, buildReceipt, inspected.build,
+    inspected.expected, inspected.built, Date.parse(qualification.qualifiedAt));
+  if (JSON.stringify(observed) !== JSON.stringify(qualification)) {
+    throw new Error('e1/authority-qualification-readback-mismatch');
+  }
+  verifiedBuilds.set(inspected.built, plan);
+  return inspected.built;
 }
 
 function replaceAuthority(plan, built, workDirectory, spawn) {
+  if (!plan.deploymentAllowed || plan.mode !== 'replace' || verifiedBuilds.get(built) !== plan) {
+    throw new Error('e1/authority-unverified-build');
+  }
+  verifiedBuilds.delete(built);
   const before = gcloudJson(spawn, ['run', 'services', 'describe', plan.target.service,
     `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-describe');
   verifyAuthorityService(plan, before, {
@@ -312,20 +458,45 @@ function replaceAuthority(plan, built, workDirectory, spawn) {
   });
 }
 
-function executePlan(plan, options = {}) {
-  if (!plan.deploymentAllowed) throw new Error('e1/authority-deployment-not-allowed');
+function executeBuild(plan, receiptPath, options = {}) {
   const spawn = options.spawn || spawnSync;
-  const workDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-authority-deploy-'));
+  const workDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-authority-build-'));
   fs.chmodSync(workDirectory, 0o700);
   let stagedSource;
   try {
     stagedSource = stagePinnedSource(plan);
-    const configPath = path.join(workDirectory, 'cloudbuild.yaml');
-    fs.writeFileSync(configPath, cloudBuildConfig(plan), { mode: 0o600 });
-    const built = buildAuthority(plan, stagedSource, configPath, spawn);
-    return replaceAuthority(plan, built, workDirectory, spawn);
+    return submitAuthorityBuild(plan, stagedSource, workDirectory, receiptPath, spawn);
   } finally {
     if (stagedSource) fs.rmSync(stagedSource, { recursive: true, force: true });
+    fs.rmSync(workDirectory, { recursive: true, force: true });
+  }
+}
+
+function executeQualification(plan, receiptPath, qualificationPath, options = {}) {
+  const workDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-authority-qualify-'));
+  fs.chmodSync(workDirectory, 0o700);
+  try {
+    return qualifyAuthorityBuild(plan, receiptPath, qualificationPath, workDirectory, options.spawn || spawnSync);
+  } finally {
+    fs.rmSync(workDirectory, { recursive: true, force: true });
+  }
+}
+
+function executeReplacement(plan, receiptPath, qualificationPath, approvedQualificationSha256, options = {}) {
+  const qualification = readPrivateJson(qualificationPath);
+  if (!/^[a-f0-9]{64}$/u.test(approvedQualificationSha256 || '')) {
+    throw new Error('e1/authority-qualification-approval-required');
+  }
+  if (qualification.qualificationSha256 !== approvedQualificationSha256) {
+    throw new Error('e1/authority-qualification-approval-mismatch');
+  }
+  const spawn = options.spawn || spawnSync;
+  const workDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-authority-replace-'));
+  fs.chmodSync(workDirectory, 0o700);
+  try {
+    const built = requalifyAuthorityBuild(plan, receiptPath, qualificationPath, workDirectory, spawn);
+    return replaceAuthority(plan, built, workDirectory, spawn);
+  } finally {
     fs.rmSync(workDirectory, { recursive: true, force: true });
   }
 }
@@ -346,7 +517,10 @@ function run(argv = process.argv.slice(2), options = {}) {
     manifest: options.manifest,
     resourceManifest: options.resourceManifest
   });
-  if (mode === 'deploy') return executePlan(plan, options);
+  if (mode === 'build') return executeBuild(plan, args.receipt, options);
+  if (mode === 'qualify') return executeQualification(plan, args.receipt, args.qualification, options);
+  if (mode === 'replace') return executeReplacement(plan, args.receipt, args.qualification,
+    args['approved-qualification-sha256'], options);
   const stagedSource = stagePinnedSource(plan);
   try {
     const output = publicPlan(plan);
@@ -375,16 +549,25 @@ module.exports = Object.freeze({
   PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
-  buildAuthority,
   cloudBuildConfig,
   environment,
-  executePlan,
+  executeBuild,
+  executeQualification,
+  executeReplacement,
   inactiveEnvironmentValid,
+  inspectAuthorityBuild,
+  prepareBuildSource,
+  qualifyAuthorityBuild,
   providerSubjectKeyVersions,
   providerSubjectKeyEnvironmentValid,
   inactiveServiceSpec,
+  readPrivateJson,
+  requalifyAuthorityBuild,
   replaceAuthority,
   run,
+  submitAuthorityBuild,
   verifyAuthorityIam,
-  verifyAuthorityService
+  verifyBuildArchive,
+  verifyAuthorityService,
+  writePrivateJson
 });

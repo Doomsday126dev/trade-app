@@ -1,6 +1,6 @@
 'use strict';
 
-const test = require('node:test');
+const { test, mock } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -26,7 +26,9 @@ const {
   PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
-  executePlan,
+  executeBuild,
+  executeQualification,
+  executeReplacement,
   inactiveEnvironmentValid,
   inactiveServiceSpec,
   providerSubjectKeyEnvironmentValid,
@@ -36,6 +38,7 @@ const {
   verifyAuthorityService
 } = require('../scripts/deploy-e1-production-authority.cjs');
 const { validateCompatibilityFloor } = require('../production/providerAccountCompatibilityFloor.cjs');
+const buildFixture = require('./helpers/authority-build-fixture.cjs');
 
 const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -63,7 +66,7 @@ function planFixture(mode = 'plan', overrides = {}) {
     mode,
     expectedSha: HEAD,
     explicitSource: manifest.sourceRoot,
-    confirmation: mode === 'deploy' ? DEPLOY_CONFIRMATION : undefined,
+    confirmation: mode === 'plan' ? undefined : DEPLOY_CONFIRMATION,
     repoRoot: REPO_ROOT,
     manifest,
     resourceManifest: loadResourceManifest(),
@@ -234,23 +237,26 @@ test('plan mode defaults locally stages source and performs zero cloud calls', (
   assert.equal(result.mode, 'plan');
   assert.equal(result.sourceCommitSha, COMMIT_A_SOURCE_SHA);
   assert.equal(result.iamMutations, 0);
+  assert.deepEqual(result.executionOrder, ['build', 'qualify', 'replace']);
+  assert.equal(result.combinedBuildAndReplace, false);
   assert.equal(result.deploymentAllowed, false);
   assert.equal(cloudCalls, 0);
   assert.doesNotMatch(output, /FIREBASE_WEB_API_KEY|secretKeyRef|private-server-value/u);
 });
 
-test('deploy mode requires exact confirmation clean refs and a clean tracked tree', () => {
-  assert.deepEqual(argumentsMap(['--mode=deploy', `--expected-sha=${HEAD}`, '--source=functions/e1-authority-service',
+test('separate execution modes require exact confirmation clean refs and a clean tracked tree', () => {
+  assert.deepEqual(argumentsMap(['--mode=build', `--expected-sha=${HEAD}`, '--source=functions/e1-authority-service',
     `--confirmation=${DEPLOY_CONFIRMATION}`]), {
-    mode: 'deploy', 'expected-sha': HEAD, source: 'functions/e1-authority-service', confirmation: DEPLOY_CONFIRMATION
+    mode: 'build', 'expected-sha': HEAD, source: 'functions/e1-authority-service', confirmation: DEPLOY_CONFIRMATION
   });
   assert.throws(() => createDeploymentPlan({
-    mode: 'deploy', expectedSha: HEAD, explicitSource: 'functions/e1-authority-service', confirmation: 'wrong',
+    mode: 'build', expectedSha: HEAD, explicitSource: 'functions/e1-authority-service', confirmation: 'wrong',
     repoRoot: REPO_ROOT, repository: immutableGitRepository(), manifest: loadManifest(),
     resourceManifest: loadResourceManifest()
   }), /confirmation-invalid/u);
-  assert.throws(() => planFixture('deploy', { repository: immutableGitRepository({ trackedStatus: () => ' M file' }) }),
+  assert.throws(() => planFixture('replace', { repository: immutableGitRepository({ trackedStatus: () => ' M file' }) }),
     /working-tree-dirty/u);
+  assert.throws(() => planFixture('deploy'), /mode-invalid/u);
   assert.throws(() => planFixture('plan', { repository: immutableGitRepository({ originMain: () => 'f'.repeat(40) }) }),
     /tooling-ref-mismatch/u);
 });
@@ -435,19 +441,20 @@ test('inactive authority replacement preserves unrelated configuration and strip
   assert.equal(Object.hasOwn(replacement.spec.template.metadata.annotations, 'run.googleapis.com/sources'), false);
 });
 
-test('mocked deploy builds staged Commit A source then dry-runs and replaces without IAM mutation', () => {
-  const plan = planFixture('deploy');
+test('build qualification and replacement are separate fail-closed invocations', () => {
+  const buildPlan = planFixture('build');
+  const qualificationPlan = planFixture('qualify');
+  const replacementPlan = planFixture('replace');
   const before = serviceFixture();
   before.spec.template.spec.containers[0].env = before.spec.template.spec.containers[0].env
     .filter((entry) => entry.name !== 'READ_PROOF_MODE');
-  const after = serviceFixture({ imageDigest: NEXT_IMAGE_DIGEST, revision: 'e1-identity-authority-00053-new' });
+  const after = serviceFixture({ imageDigest: buildFixture.DIGEST, revision: 'e1-identity-authority-00053-new' });
   let describeCalls = 0;
   const calls = [];
+  const fixture = buildFixture.buildSpawn(buildPlan);
   const spawn = (command, args) => {
     calls.push([command, ...args]);
-    if (args[0] === 'builds') return { status: 0, stdout: JSON.stringify({
-      id: '123e4567-e89b-42d3-a456-426614174000', results: { images: [{ digest: NEXT_IMAGE_DIGEST }] }
-    }) };
+    if (args[0] === 'builds' || args[0] === 'storage' || args[0] === 'artifacts') return fixture.spawn(command, args);
     if (args[0] === 'run' && args[1] === 'services' && args[2] === 'describe') {
       describeCalls += 1;
       return { status: 0, stdout: JSON.stringify(describeCalls === 1 ? before : after) };
@@ -458,18 +465,50 @@ test('mocked deploy builds staged Commit A source then dry-runs and replaces wit
     if (args[0] === 'run' && args[1] === 'services' && args[2] === 'replace') return { status: 0, stdout: '' };
     return { status: 1, stdout: '', stderr: 'unexpected' };
   };
-  const result = executePlan(plan, { spawn });
-  assert.equal(result.revision, 'e1-identity-authority-00053-new');
-  assert.equal(result.authorityGatesDisabled, true);
-  assert.equal(result.groupEClientMode, 'disabled');
-  assert.equal(calls.filter((call) => call.includes('replace')).length, 2);
-  assert.equal(calls.some((call) => call.includes('--dry-run')), true);
-  assert.equal(calls.some((call) => call.some((arg) => arg ===
-    '--service-account=projects/trade-list-a4297/serviceAccounts/e1-authority-builder@trade-list-a4297.iam.gserviceaccount.com')), true);
-  assert.equal(calls.some((call) => call.some((arg) => arg ===
-    '--impersonate-service-account=e1-authority-deployer@trade-list-a4297.iam.gserviceaccount.com')), true);
-  assert.equal(calls.some((call) => call.some((arg) => /add-iam-policy-binding|set-iam-policy|remove-iam-policy-binding/u.test(arg))), false);
-  assert.doesNotMatch(JSON.stringify(result), /secret|FIREBASE_WEB_API_KEY|private-server-value/u);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'authority-phases-test-'));
+  fs.chmodSync(directory, 0o700);
+  const receipt = path.join(directory, 'build.json');
+  const qualification = path.join(directory, 'qualification.json');
+  const verify = buildFixture.mockGoogleSignature(mock);
+  try {
+    const submitted = executeBuild(buildPlan, receipt, { spawn });
+    const afterBuild = calls.length;
+    assert.equal(submitted.state, 'submitted');
+    assert.deepEqual(calls.slice(0, afterBuild).map((call) => call.slice(1, 3)), [['builds', 'submit']]);
+    assert.equal(calls.slice(0, afterBuild).some((call) => call.includes('replace')), false);
+
+    const qualified = executeQualification(qualificationPlan, receipt, qualification, { spawn });
+    const afterQualification = calls.length;
+    assert.equal(qualified.state, 'qualified');
+    assert.deepEqual(calls.slice(afterBuild, afterQualification).map((call) => call.slice(1, 3)),
+      [['builds', 'describe'], ['storage', 'cp'], ['artifacts', 'docker']]);
+    assert.equal(calls.slice(afterBuild, afterQualification).some((call) => call.includes('replace')), false);
+
+    assert.throws(() => executeReplacement(replacementPlan, receipt, qualification, undefined, { spawn }),
+      /e1\/authority-qualification-approval-required/u);
+    assert.equal(calls.length, afterQualification);
+    assert.throws(() => executeReplacement(replacementPlan, receipt, qualification, '0'.repeat(64), { spawn }),
+      /e1\/authority-qualification-approval-mismatch/u);
+    assert.equal(calls.length, afterQualification);
+    const approvalSha256 = JSON.parse(fs.readFileSync(qualification, 'utf8')).qualificationSha256;
+    const result = executeReplacement(replacementPlan, receipt, qualification, approvalSha256, { spawn });
+    const replacementCalls = calls.slice(afterQualification);
+    assert.equal(result.revision, 'e1-identity-authority-00053-new');
+    assert.equal(result.authorityGatesDisabled, true);
+    assert.equal(result.groupEClientMode, 'disabled');
+    assert.equal(replacementCalls.some((call) => call[1] === 'builds' && call[2] === 'submit'), false);
+    assert.equal(replacementCalls.filter((call) => call.includes('replace')).length, 2);
+    assert.equal(replacementCalls.some((call) => call.includes('--dry-run')), true);
+    assert.equal(calls.some((call) => call.some((arg) => arg ===
+      '--service-account=projects/trade-list-a4297/serviceAccounts/e1-authority-builder@trade-list-a4297.iam.gserviceaccount.com')), true);
+    assert.equal(calls.some((call) => call.some((arg) => arg ===
+      '--impersonate-service-account=e1-authority-deployer@trade-list-a4297.iam.gserviceaccount.com')), true);
+    assert.equal(calls.some((call) => call.some((arg) => /add-iam-policy-binding|set-iam-policy|remove-iam-policy-binding/u.test(arg))), false);
+    assert.doesNotMatch(JSON.stringify(result), /secret|FIREBASE_WEB_API_KEY|private-server-value/u);
+  } finally {
+    verify.mock.restore();
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('authority helper source contains no IAM mutation command and gateway pin remains exact', () => {
