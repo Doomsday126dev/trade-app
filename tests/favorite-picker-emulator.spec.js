@@ -12,7 +12,11 @@ async function seedPicker(count=55){
  }
  expect((await adminData('PATCH','',patch)).status).toBe(200);return f;
 }
-async function open(page,f){await routeEmulators(page,f,{candidate:true,picker:true});await login(page,f);await settled(page);await page.getByRole('tab',{name:'Trainers',exact:true}).click();await page.locator('#trainer-mode-favorites').click();await page.locator('[data-add-trainers]').click();await expect.poll(()=>page.evaluate(()=>favoritePickerSession?.evidenceReady)).toBe(true);}
+async function open(page,f){await routeEmulators(page,f,{candidate:true,picker:true});await login(page,f);await settled(page);await page.getByRole('tab',{name:'Trainers',exact:true}).click();await page.locator('#trainer-mode-favorites').click();await page.locator('#favorite-trainers-controls [data-add-trainers]').click();await expect.poll(()=>page.evaluate(()=>favoritePickerSession?.evidenceReady)).toBe(true);}
+test('Trainers panel opens the shared Favorite picker',async({page})=>{
+ const f=await seedPicker(2);await routeEmulators(page,f,{candidate:true,picker:true});await login(page,f);await settled(page);await page.getByRole('tab',{name:'Trainers',exact:true}).click();
+ await page.locator('#trainer-picker-controls [data-add-trainers]').click();await expect.poll(()=>page.evaluate(()=>favoritePickerSession?.evidenceReady)).toBe(true);await expect(page.locator('#favorite-picker')).toBeVisible();
+});
 test('Select all resolves and persists 55 trainers; a preserved name remains independently addable',async({page})=>{
  const f=await seedPicker();await open(page,f);
  await expect(page.locator('[data-picker-all]')).toHaveText('Select all results (55)');

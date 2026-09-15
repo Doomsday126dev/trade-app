@@ -2180,7 +2180,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .contextual-omitted{margin:0 0 8px;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
 
 /* Independently gated Favorite picker candidate. */
-.favorite-picker-open{float:right;margin:0 0 8px 8px}
+.favorite-picker-controls{display:flex;justify-content:flex-end;margin-bottom:10px}.favorite-picker-open{margin:0}
 .favorite-picker{margin:auto;box-sizing:border-box;width:min(580px,calc(100vw - 32px));max-height:min(760px,calc(100dvh - 48px));padding:0;border:1px solid var(--border2);border-radius:16px;background:var(--card);color:var(--text);box-shadow:var(--shadow-high);overflow:hidden}
 .favorite-picker[open]{display:flex;flex-direction:column}
 .favorite-picker::backdrop{background:rgba(0,0,0,.62)}
@@ -2195,7 +2195,11 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .favorite-picker button:disabled{opacity:.5;cursor:default}
 .favorite-picker-rows{overflow:auto;min-height:100px;max-height:380px;overscroll-behavior:contain;padding:0 20px}
 .favorite-picker-row{display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px}
-.favorite-picker-row input{accent-color:var(--accent);width:18px;height:18px;flex-shrink:0;margin:0}
+.favorite-picker-row input{appearance:none;display:grid;place-content:center;width:20px;height:20px;flex-shrink:0;margin:0;border:1.5px solid var(--border-strong);border-radius:6px;background:var(--bg2);cursor:pointer;transition:border-color .15s ease,background-color .15s ease,box-shadow .15s ease}
+.favorite-picker-row input::before{content:"";width:10px;height:7px;border:solid var(--on-accent,#fff);border-width:0 0 2px 2px;transform:rotate(-45deg) scale(0);transform-origin:center;transition:transform .12s ease}
+.favorite-picker-row input:checked{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent)}
+.favorite-picker-row input:checked::before{transform:rotate(-45deg) scale(1)}
+.favorite-picker-row input:focus-visible{outline:2px solid var(--ac2);outline-offset:2px}.favorite-picker-row input:disabled{cursor:default;opacity:.48}
 .favorite-picker-name{min-width:0;flex:1;overflow-wrap:anywhere}
 .favorite-picker-state{font-size:11px;color:var(--muted);max-width:100px;text-align:right}
 .favorite-picker-row[data-state=preserved] .favorite-picker-state,.favorite-picker-row[data-state=unsuccessful] .favorite-picker-state{color:var(--warn)}
