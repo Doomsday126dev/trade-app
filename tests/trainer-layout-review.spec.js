@@ -80,6 +80,10 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await expect(directCopy).toBeFocused();
   await expect(page.locator('.group-management')).toBeVisible();
   await expect(page.locator('.favorite-groups-disclosure > summary')).toBeHidden();
+  await page.locator('.group-management > summary').click();
+  await expect(page.getByRole('button',{name:'Delete group',exact:true})).toBeVisible();
+  await preview(page,'desktop-group-wants-manage');
+  await page.locator('.group-management > summary').click();
   await preview(page,'desktop-group-wants-copy');
   await page.locator('[data-group-action="back"]').click();
   await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeFocused();
