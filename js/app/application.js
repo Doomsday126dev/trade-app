@@ -6088,7 +6088,8 @@ function favoriteAdditionMessage(row){
   if(row.state==='resolving'||row.state==='ready'||row.state==='selected')return i18nCore.t('favoriteAdd.resolving');
   if(['favorite/rate-limited','favorite/busy'].includes(row.code))return i18nCore.t('favoriteAdd.rateLimited');
   if(['favorite/capacity-exceeded','account-sync/favorite-limit'].includes(row.code))return i18nCore.t('favoriteAdd.limit');
-  if(['account-sync/entity-review-required','account-sync/lifecycle-conflict','favorite/removed'].includes(row.code))return i18nCore.t('favoriteAdd.review');
+  if(row.code==='account-sync/entity-review-required')return i18nCore.t('favoriteAdd.review');
+  if(['account-sync/lifecycle-conflict','favorite/removed'].includes(row.code))return i18nCore.t('favoriteAdd.changed');
   if(row.code==='favorite/identity-unavailable')return i18nCore.t('favoriteAdd.identityUnavailable');
   return i18nCore.t('favoriteAdd.unsuccessful');
 }
