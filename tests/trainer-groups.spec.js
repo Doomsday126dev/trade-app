@@ -68,7 +68,7 @@ async function fixture(page){
       return{ok:true,value:{version:1,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{Pikachu:name==='Bob'?'M':'H',...(name==='Alice'?{Snom:'L',...window.__extraWants}:{})},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt}};
     }},validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot});
     cache.activate({uid:'synthetic-group',username:cur});ensureFavoriteShareSessionCache=()=>cache;
-    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();
+    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');document.querySelector('.favorite-groups-disclosure').open=true;renderTrainerQuickLists();
   });
 }
 test('group CRUD and membership reuse private favorites; aggregate and copy only fresh permitted wants',async({page})=>{

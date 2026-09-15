@@ -39,10 +39,12 @@ test('Favorites search is a stable shared-shell control outside the rendered res
   assert.match(setter,/renderTrainerQuickLists\(\{favoritesOnly:true\}\)/);
   assert.doesNotMatch(setter,/renderTrainerQuickLists\(\)/);
   assert.match(html,/id="favorite-trainer-search"/);
-  assert.ok(html.indexOf('id="favorite-trainer-search"')<html.indexOf('id="favorite-trainers-controls"'));
+  assert.ok(html.indexOf('id="favorite-trainers-controls"')<html.indexOf('id="favorite-trainer-search"'));
+  assert.ok(html.indexOf('id="favorite-trainer-search"')<html.indexOf('id="favorite-trainers-list"'));
   assert.match(render,/if\(!preserveFavoriteControls\)favoritesControlsEl\.innerHTML/);
   assert.match(render,/if\(favoritesOnly\)return/);
-  assert.match(render,/data-favorite-clear/);
+  assert.match(render,/data-favorite-action="clear-groups"/);
+  assert.match(html,/function clearFavoriteGroupFilters\(\)\{trainerOrganizerState\.tagIds=\[\];renderTrainerQuickLists\(\);\}/);
 });
 
 test('Favorite Browse uses current permitted wants without reciprocal inventory hints',()=>{

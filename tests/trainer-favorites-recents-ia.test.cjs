@@ -65,14 +65,20 @@ test('default local organizer accepts 100 Favorites and rejects the 101st organi
   assert.deepEqual(JSON.parse(JSON.stringify(store.saveFavoriteOrganization('Trainer 100'))),{ok:false,code:'favorite-limit'});
 });
 
-test('favorite filters remain scoped, multi-tag, keyboard-native buttons with non-color state',()=>{
+test('favorite group access remains direct, multi-select, keyboard-native, and non-color dependent',()=>{
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.match(html,/class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"/);
   assert.match(render,/aria-pressed="\$\{selected\}"/);
   assert.match(render,/favorite-filter-check/);
-  assert.match(render,/favorite-filter-group/);
+  assert.match(render,/favorite-group-access-list/);
+  assert.match(render,/data-favorite-action="clear-groups"/);
+  assert.match(render,/data-favorite-action="view-group-wants"/);
+  assert.match(render,/organizer\.viewAllWants/);
+  assert.match(render,/organizer\.viewGroupWants/);
   assert.match(render,/favorite-filter-chip-surface/);
   assert.match(html,/function toggleFavoriteTagFilter[\s\S]*new Set\(trainerOrganizerState\.tagIds\)/);
+  assert.match(html,/function openFavoriteGroupWants[\s\S]*openTrainerGroup\(id\)[\s\S]*data-contextual-copy/);
+  assert.match(html,/scrollIntoView\(\{block:'nearest',inline:'nearest'\}\)/);
   assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
   assert.match(html,/\.favorite-filter-chip-surface\{[^}]*min-height:30px/);
 });

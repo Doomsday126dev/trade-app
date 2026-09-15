@@ -5291,8 +5291,9 @@ function renderTrainerGroups(){
   const state=store.read(),tags=Object.values(state.tags||{});
   if(trainerGroupState.id&&trainerGroupState.id!=='favorites'&&!state.tags[trainerGroupState.id])resetTrainerGroups();
   const tag=state.tags[trainerGroupState.id],isOpen=!!trainerGroupState.id;
+  if(isOpen){const disclosure=host.closest('.favorite-groups-disclosure');if(disclosure)disclosure.open=true;}
   const members=state.favorites.filter(item=>trainerGroupState.id==='favorites'||item.tagIds.includes(trainerGroupState.id));
-  for(const el of document.querySelectorAll('#trainer-panel-favorites > .favorite-toolbar-search, #favorite-trainers'))el.hidden=isOpen;
+  for(const el of document.querySelectorAll('#favorite-trainers'))el.hidden=isOpen;
   const countLabel=count=>groupText('memberCount',{count:i18nCore.formatNumber(count)});
   const groupRow=item=>{
     const favorites=state.favorites.filter(member=>item.id==='favorites'||member.tagIds.includes(item.id));
@@ -5447,7 +5448,12 @@ document.getElementById('trainer-groups')?.addEventListener('click',async event=
   if(trainer){openFavoriteTrainerByName(trainer);return;}
   const action=event.target.closest('[data-group-action]')?.dataset.groupAction;
   if(action==='who'){favoriteLookupScope=trainerGroupState.id==='favorites'?'':trainerGroupState.id;focusTrainerDiscoveryMode('pokemon');renderFavoriteBrowseResults();}
-  if(action==='back'){const id=trainerGroupState.id;await openTrainerGroup('');[...document.querySelectorAll('[data-group-open-id]')].find(button=>button.dataset.groupOpenId===id)?.focus({preventScroll:true});}
+  if(action==='back'){
+    const id=trainerGroupState.id,disclosure=document.querySelector('.favorite-groups-disclosure'),direct=disclosure?.dataset.directGroupView==='true';
+    await openTrainerGroup('');
+    if(direct&&disclosure){delete disclosure.dataset.directGroupView;disclosure.open=false;document.querySelector('[data-favorite-action="view-group-wants"]')?.focus({preventScroll:true});}
+    else [...document.querySelectorAll('[data-group-open-id]')].find(button=>button.dataset.groupOpenId===id)?.focus({preventScroll:true});
+  }
   if(action==='checked')markTrainerWantsChecked();
   if(action==='refresh')openTrainerGroup(trainerGroupState.id);
   if(action==='more'){trainerGroupState.limit+=120;renderTrainerGroupResults();}
@@ -5866,6 +5872,9 @@ function favoriteVariantLabel(entry){
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
+  const hasGroups=Object.keys(state.tags).length>0||!!favoriteLookupScope;
+  scope.closest('label').hidden=!hasGroups;
+  const defaultScope=document.getElementById('favorite-lookup-default');if(defaultScope)defaultScope.hidden=hasGroups;
   scope.innerHTML=`<option value="">${escHtml(groupText('favorites'))}</option>${Object.values(state.tags).map(tag=>`<option value="${escAttr(tag.id)}"${tag.id===favoriteLookupScope?' selected':''}>${escHtml(tag.label)}</option>`).join('')}${favoriteLookupScope&&!state.tags[favoriteLookupScope]?`<option selected value="${escAttr(favoriteLookupScope)}">${escHtml(groupText('unavailable'))}</option>`:''}`;
 }
 function renderFavoriteBrowseResults(){
@@ -5974,7 +5983,9 @@ function favoriteTrainerAction(event){
   const favoriteAction=control.dataset.favoriteAction;
   if(favoriteAction==='review-preserved'){openAccountSettingsSection('data');return;}
   if(favoriteAction==='clear-filters'){clearFavoriteFilters();return;}
+  if(favoriteAction==='clear-groups'){clearFavoriteGroupFilters();return;}
   if(favoriteAction==='toggle-tag'){toggleFavoriteTagFilter(control.dataset.favoriteTagId||'');return;}
+  if(favoriteAction==='view-group-wants'){void openFavoriteGroupWants();return;}
   if(favoriteAction==='toggle-menu'){toggleFavoriteCardMenu(event,control);return;}
   if(favoriteAction==='show-favorites'){focusTrainerDiscoveryMode('favorites');return;}
   if(favoriteAction==='refresh-browse'){refreshFavoriteBrowse();return;}
@@ -6002,9 +6013,18 @@ document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',
 document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
 function toggleFavoriteTagFilter(id){
   if(!id)return;
-  const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
+  const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists({favoriteGroupFocusId:id});
 }
+function clearFavoriteGroupFilters(){trainerOrganizerState.tagIds=[];renderTrainerQuickLists();}
 function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];syncFavoriteSearchControl();renderTrainerQuickLists();}
+async function openFavoriteGroupWants(){
+  const ids=trainerOrganizerState.tagIds.filter(id=>ensureTrainerHistoryStore()?.read().tags?.[id]);
+  if(ids.length>1)return;
+  const id=ids[0]||'favorites',disclosure=document.querySelector('.favorite-groups-disclosure');
+  if(disclosure)disclosure.dataset.directGroupView='true';
+  await openTrainerGroup(id);
+  if(trainerGroupState.id===id)document.querySelector('#trainer-group-results [data-contextual-copy]')?.focus({preventScroll:true});
+}
 async function renderPreservedFavoriteEvidence(host){
   const runtime=managedAccountSyncRuntime,user=auth?.currentUser,generation=_sessionTransientGeneration;
   if(!runtime||runtime.ownerUid!==user?.uid||!Number(accountSyncUiState?.recoveryCandidateCount))return;
@@ -6021,7 +6041,7 @@ async function renderPreservedFavoriteEvidence(host){
     }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
   }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
 }
-async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false}={}){
+async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
   if(accountSyncOrganizationHydrating()){
@@ -6038,21 +6058,26 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   renderTrainerGroups();
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
-  const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
-  const toolbar=state.favorites.length?`<details class="favorite-filters"${filtersActive?' open':''}><summary>${escHtml(i18nCore.t('organizer.filterTags'))}</summary><div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear data-favorite-action="clear-filters"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div></details>`:'';
-  const favoritesHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
+  const selectedTagIds=trainerOrganizerState.tagIds.filter(id=>state.tags?.[id]),groupWantsAvailable=selectedTagIds.length<=1;
+  const groupWantsLabel=i18nCore.t(selectedTagIds.length?'organizer.viewGroupWants':'organizer.viewAllWants');
+  const toolbar=state.favorites.length&&activeTags.length?`<div class="favorite-group-access" role="group" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!trainerOrganizerState.tagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${trainerOrganizerState.tagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}</span></button>${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div><button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants"${groupWantsAvailable?'':` disabled title="${escAttr(i18nCore.t('organizer.selectOneGroupWants'))}"`}>${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
+  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
-  syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
+  syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;
+  if(favoriteGroupFocusId){
+    const chip=[...favoritesControlsEl.querySelectorAll('[data-favorite-tag-id]')].find(button=>button.dataset.favoriteTagId===favoriteGroupFocusId);
+    chip?.focus({preventScroll:true});chip?.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
   previewEl.hidden=!previewItems.length;
-  previewEl.innerHTML=previewItems.length?`${favoritesHeading}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
+  previewEl.innerHTML=previewItems.length?`${favoritesHeading()}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
