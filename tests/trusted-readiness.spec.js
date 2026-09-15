@@ -288,7 +288,8 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await page.evaluate(()=>selectSettingsSection('security',{focus:false}));
   await expect(page.locator('[data-provider="username-pin"]')).toBeVisible();
   await expect(page.locator('[data-provider="username-pin"] [data-provider-status-label]')).toHaveText('Connected');
-  await expect(page.locator('.account-security-provider-development:visible')).toHaveCount(0);
+  await expect(page.locator('[data-provider="google"]')).toBeVisible();
+  await expect(page.locator('[data-provider="discord"]')).toBeHidden();
   await capture(page,'trusted-journey-settings-1440x900');
   await page.keyboard.press('Escape');
   await page.evaluate(()=>openSpecialTradeBoard());
@@ -354,7 +355,8 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await page.evaluate(()=>openSettingsPanel('account'));
     await page.evaluate(()=>selectSettingsSection('security',{focus:false}));
     await expect(page.locator('[data-provider="username-pin"]')).toBeVisible();
-    await expect(page.locator('.account-security-provider-development:visible')).toHaveCount(0);
+    await expect(page.locator('[data-provider="google"]')).toBeVisible();
+    await expect(page.locator('[data-provider="discord"]')).toBeHidden();
     const settingsBox=await page.locator('#settings-modal .modal').boundingBox();
     expect(settingsBox?.width).toBeLessThanOrEqual(viewport.width);
     expect(settingsBox?.height).toBeLessThanOrEqual(viewport.height);

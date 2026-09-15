@@ -119,15 +119,15 @@ function gatewayOnlyIam() {
   ] }] };
 }
 
-test('authority manifest pins the exact nine-file immutable Commit A source', () => {
+test('authority manifest pins the exact eleven-file immutable production source', () => {
   const manifest = loadManifest();
   assert.equal(verifyManifestShape(manifest), manifest);
   assert.equal(manifest.sourceCommitSha, COMMIT_A_SOURCE_SHA);
   assert.deepEqual(manifest.sourceFiles.map((file) => file.path), [...SOURCE_PATHS]);
   const observed = verifyPinnedSource(manifest, immutableGitRepository());
-  assert.equal(observed.length, 9);
+  assert.equal(observed.length, 11);
   assert.equal(observed.every((file) => file.sha256 === file.observedSha256), true);
-  assert.equal(sourceFingerprint(manifest.sourceFiles), '1f28539b8486c05f31bd0922b282945ba809ff3a88622d2fa10383f9e2d76f69');
+  assert.equal(sourceFingerprint(manifest.sourceFiles), '516eace167bffa4a51728e11c67fd01d465d72f8cd7ce194fb6282399171c520');
 });
 
 test('authority manifest rejects missing extra reordered changed private and wrong-commit source', () => {

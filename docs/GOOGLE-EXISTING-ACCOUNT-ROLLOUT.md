@@ -1,158 +1,159 @@
 # Google existing-account delivery
 
-Source continuation from main `07ee65bb6f20b0c009098489171bd01909cd0d3c`, release
-`2026-09-08.103`. No merge, deployment, provider configuration, namespace operation
-or real account mutation is part of this change. The .103 product UI is retained.
+Candidate release `2026-09-15.116` continues from accepted production `.115`
+(`df20ddbc5a273b8fef0832c4e38b3de86b69a2dd`). This document is the single
+approval boundary. Preparing it changes no production provider, function, IAM,
+Rules, account, or Pages state.
 
-## Reused implementation and completed source path
+## Candidate behavior
 
-PRs #54/#55 supply the provider registry, operation lease, two-click popup link,
-Firebase Google adapter, same-UID and account-boundary checks, collision/cancel
-handling, continuation privacy, and unlink protection. PRs #61/#62 supply canonical
-identity reads, separate provider-only creation, UID-rooted profile/sync and public
-projection. The later PIN reset, immutable binding, obsolete UID and publication
-session fences remain in place. No old PR is rebased or deployed.
+An authenticated Username/PIN account uses Firebase `linkWithPopup` on its current
+user. A later signed-out Google popup is accepted only when the resulting Firebase
+UID has either a valid canonical foundation or an authoritative missing-foundation
+response followed by the exact healthy reciprocal RTDB pair
+`authIndex/{uid}.username` and `users/{username}.authUid`. No email, display name,
+avatar, or trainer-name similarity participates in resolution. Missing reciprocal
+ownership signs the transient Google session out; account creation, provider public
+projection, and provider public writes remain disabled.
 
-The current-source regression was a `legacy-migration-required` rejection after a
-successful canonical **missing** response and exact reciprocal legacy mapping.
-Returning Google login now accepts that healthy existing account without writing a
-foundation. A migrated account still requires its canonical foundation and exact
-legacy reciprocity. A provider-only account still requires the validated canonical
-provider identity and never acquires a synthetic PIN or legacy mapping. Canonical
-read failure, malformed/frozen identity, mismatched UID/name and lifecycle drift
-fail closed; none becomes an onboarding or legacy fallback.
+Linking captures and rechecks Auth lifecycle, account-sync owner/generation,
+listener authority, lists, wants declarations, Favorites, groups, pending journal,
+recovery evidence, public identity, and trainer identity. Popup cancellation,
+blocking, network failure, credential collision, ambiguous authority, and stale
+callbacks fail without switching accounts. Username/PIN stays available while the
+Firebase password provider and reciprocal account remain present.
 
-The link operation remains `linkWithPopup(currentUser, provider)`. Signed-out login
-remains a separate `signInWithPopup` operation. Link fingerprints now include current
-wants declarations and special requirements as well as lists, Favorites/Groups,
-canonical entities, journal/migration generation, recovery evidence, public and
-trainer identity, and listener authority. The controller rechecks Auth after its
-asynchronous post-link snapshot. Restoring persistence does not fabricate a recent
-reauthentication timestamp. Failed account resolution releases only that attempt's
-Google session, leaving a fresh explicit retry possible.
+The reset-only compatibility change accepts a migrated legacy account only when its
+exact active Firestore account/handle pair, legacy version, password provider, and
+absence of conflicts remain unchanged through inspect, reservation, and
+postcondition. It does not broaden retired-slot eligibility. Deploying that reset
+source is not required by this rollout and is excluded from the operations below.
 
-PIN transition corrections were reproduced before changing source:
+## Fresh production readback
 
-- Reconnect used the old cached verifier even after a same-UID admin password reset.
-  Bound-account reconnect now asks Firebase to validate the current credential.
-- A cached verifier alone advertised PIN availability after the password provider
-  was absent. Settings/unlink now also require the current password provider.
-- The reset adapter rejected every canonical account. A separate reset-only evidence
-  check now accepts an exact active migrated legacy account/handle pair with matching
-  legacy version and no conflict. Its full evidence digest is bound to inspect,
-  reservation and postcondition. Provider-only, retired-access, held, conflicting and
-  incomplete identities remain blocked. The obsolete-slot `legacyOnly` check is
-  unchanged. Reset still updates only the existing Auth password, never identity,
-  Google linkage, product data or recovery records.
+Read-only inspection on 2026-09-15 found:
 
-## Fresh baseline evidence
+- Pages serves `.115`; remote main and release tag resolve to
+  `df20ddbc5a273b8fef0832c4e38b3de86b69a2dd`.
+- Google and email/password are enabled. Google requests no additional scopes.
+  Authorized domains are exactly `localhost`, `trade-list-a4297.firebaseapp.com`,
+  `trade-list-a4297.web.app`, and `doomsday126dev.github.io`; no Auth blocking
+  trigger is registered.
+- The Firebase browser key permits the GitHub Pages origin and Firebase Auth helper
+  origin and includes Identity Toolkit, Secure Token, App Check, RTDB, and Firestore.
+- Authority service `e1-identity-authority-00061-jbt` is private and grants Run
+  invocation only to `e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com`.
+  It runs as `e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com`
+  with image
+  `sha256:19c7574cb89f25cd7ad710941df63bd32ab41e0e7af3ead236c5641e5b8bd753`.
+  `READ_ACCOUNT_FOUNDATION_ENABLED=false`; all mutation/public-projection gates,
+  Group E, and read-proof mode remain disabled.
+- Callable `readE1AccountFoundation` is ready at revision
+  `reade1accountfoundation-00057-tuw`, public only at the callable transport, and
+  runs as the gateway identity. Its own `GATEWAY_INVOCATION_ENABLED=false`; App
+  Check is monitor mode with production debug tokens disabled. The gateway already
+  has App Check token-verifier and private-authority invoker authority; no new IAM
+  grant is required.
+- Its resolved source is
+  `gs://gcf-v2-sources-1053781218847-us-central1/readE1AccountFoundation/function-source.zip#1787693692613545`,
+  archive SHA-256
+  `44510f00ed531bdcfb2d71034c70289e754354aa035897f08fba594aaeaf9f21`.
+  All six member hashes match
+  `functions/production/e1-gateway-source-manifest.json`, source fingerprint
+  `666afda7de8aa299a1281214b8cda4a6c0c9002f3b7c84f2c8e8eaeedc2603d5`,
+  commit `129b7ad7dbf33a5bc0126aec20e2412eb08774a1`.
+- The deployed authority predates the current nine-field compatibility response.
+  It cannot serve migrated legacy foundations to this client. The replacement must
+  therefore use the already-reviewed `.115` authority source at commit
+  `df20ddbc5a273b8fef0832c4e38b3de86b69a2dd`, complete eleven-file source
+  fingerprint
+  `516eace167bffa4a51728e11c67fd01d465d72f8cd7ce194fb6282399171c520`.
+  This is a demonstrated dependency, not a request to enable creation.
+- Existing canary `Doomsday126`, UID
+  `YG4BGZk0XQbNQlZoBtovjYOpvkw1`, has exact reciprocal RTDB ownership and active
+  Firestore foundation revision 1. Firebase Auth is enabled and currently contains
+  both `password` and `google.com`. Access references are
+  `authIndex/YG4BGZk0XQbNQlZoBtovjYOpvkw1`, `users/Doomsday126`, and
+  `projects/trade-list-a4297/databases/phase-e-identity/documents/accounts/YG4BGZk0XQbNQlZoBtovjYOpvkw1`.
+  Credentials remain owner-held and must be entered in a normal browser; no secret
+  is copied to source, logs, or this document.
 
-Remote main and the public `js/domain/clientRelease.js` both matched .103 during
-this task. Read-only deployment metadata returned:
+## Consolidated approval package
 
-- Authority `e1-identity-authority-00061-jbt`, URL
-  `https://e1-identity-authority-wrywkbfzya-uc.a.run.app`, runtime identity
-  `e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com`.
-- Only `readE1AccountFoundation`, `reserveE1TrainerHandle`, and `ownerResetLegacyPin`
-  were listed as active Gen 2 functions.
-- `READ_ACCOUNT_FOUNDATION_ENABLED=false`; all listed authority mutation gates and
-  `CLIENT_FOUNDATION_USE_ENABLED` were false; Group E disabled; read proof false.
-- Firebase config read at `2026-09-09T01:21:34Z`: Google already enabled, email/password
-  enabled, no blocking-function events configured. Authorized domains were
-  `localhost`, `trade-list-a4297.firebaseapp.com`, `trade-list-a4297.web.app`, and
-  `doomsday126dev.github.io`. Google client ID was
-  `1053781218847-grqh9ndhfgqso7n44ro0gsls0sl0l3on.apps.googleusercontent.com`.
+Approval is for the immutable final PR #96 head and these ordered operations only.
+Every preflight must re-read current state and stop on drift. Operation/build IDs
+must be persisted immediately; ambiguous calls are inspected and never blindly
+repeated.
 
-OAuth consent audience/testers, OAuth origins/redirects and API-key referrers have
-not been freshly verified. No historical screenshot or owner canary substitutes
-for that readback. Google Testing mode with only basic identity scopes permits users
-outside the test-user list; it is not an owner-only enforcement boundary.
-[Google's current audience guidance](https://support.google.com/cloud/answer/15549945?hl=en)
+1. **Merge, but do not release Pages yet.** Require exact-head CI and focused
+   security review. The merged `.116` source enables only
+   `providerAccountCompatibility`, `googlePublicEntry`, and
+   `googleExistingAccountLinking`; `providerAccountCreation`, provider public reads,
+   and provider public writes stay false.
+2. **Replace the authority inactive.** Stage only the eleven authority files from
+   immutable commit `df20ddbc5a273b8fef0832c4e38b3de86b69a2dd`; require fingerprint
+   `516eace167bffa4a51728e11c67fd01d465d72f8cd7ce194fb6282399171c520`.
+   Build with `e1-authority-builder@trade-list-a4297.iam.gserviceaccount.com`, push
+   only to repository `e1-authority`, and deploy service `e1-identity-authority`
+   as `e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com`.
+   Preserve CPU, memory, concurrency, timeout, max instances, ingress, private IAM,
+   database, RTDB target, and operator hashes. Set every operation and publication
+   gate false, including `READ_ACCOUNT_FOUNDATION_ENABLED=false`, and keep Group E,
+   read proof, client foundation use, and provider-account creation false. Qualify
+   staged bytes, build identity, image digest/provenance, ready revision, runtime
+   identity, private IAM, and exact environment before continuing.
+3. **Enable only the read path.** Patch the qualified authority revision to
+   `READ_ACCOUNT_FOUNDATION_ENABLED=true`, retaining its exact image and every other
+   setting. Then PATCH only the complete existing environment map of Cloud Function
+   `readE1AccountFoundation` so `GATEWAY_INVOCATION_ENABLED=true`; preserve its
+   resolved source generation, entry point, builder/runtime identities, resources,
+   callable public transport, App Check monitor mode, debug-token false, Group E
+   disabled, read proof false, rate-limit policy, and authority URL/audience. A
+   Functions v2 configuration update may rebuild; qualify the resulting managed
+   source, builder, image provenance, ready revision, runtime identity, IAM, and
+   environment before use. No API or IAM change is expected.
+4. **Read-only protocol preflight.** With a fresh production Auth and genuine App
+   Check token, require the exact nine-field `SUCCESS` response for the canary UID.
+   Confirm its canonical trainer name, legacy identity kind, reciprocal RTDB pair,
+   and UID without logging identifiers. A missing-foundation fixture may return only
+   `FOUNDATION_NOT_INITIALIZED`; unavailable, malformed, frozen, conflicting, or
+   mismatched evidence stops.
+5. **Human OAuth canary.** Use a normal user-controlled browser at
+   `https://doomsday126dev.github.io/trade-app/`; no automation, remote debugging,
+   debug App Check provider, token pasting, or lowered reCAPTCHA threshold. First
+   verify a clean Username/PIN login for `Doomsday126`, exact UID, provider set, and
+   private hashes/counts for lists, wants, Favorites, groups, pending operations,
+   recovery evidence, public share, and listener authority. Because this account is
+   already Google-linked, verify the required return path first: sign out, choose
+   **Continue with Google**, and require the same UID and trainer account. To exercise
+   the actual **Connect Google** path, separately verify PIN fallback, unlink only
+   `google.com`, sign out/in with PIN, choose **Connect** twice as designed, select
+   the same owner-held Google account, and require the same UID. Stop before unlink
+   if PIN fallback is not independently proven. Re-test sign-out and fresh Google
+   return, popup cancel/block, and a wrong already-linked Google credential; none may
+   merge, switch, or mutate product state.
+6. **Negative new-identity canary.** In a separate normal profile, a specifically
+   approved disposable Google identity may attempt Continue once. It may create a
+   transient Firebase Auth record under Firebase's federated sign-in contract, but
+   must receive creation-disabled, be signed out, and must not obtain an app account,
+   trainer name, RTDB mapping, Firestore foundation, account-sync partition, or
+   product data. If zero creation of even an orphan Firebase Auth record is required,
+   stop: that requires a separately designed Identity Platform `beforeUserCreated`
+   blocking policy. Do not infer or merge by email to avoid it.
+7. **Release Pages.** Only after the authority/gateway and human canary pass, run the
+   normal guarded Pages release for exact `.116` merge source. Verify deployment
+   provenance, HTML/client/service-worker `.116`, Google entry visibility, creation
+   and provider-public gates false, a fresh same-UID Google return, PIN login, App
+   Check readiness, Saved/account-sync health, current Favorite behavior, and `.115`
+   Trainers/Favorites/group-wants presentation.
+8. **Rollback.** First restore `.115` Pages or an exact follow-up with the three
+   existing-account client capabilities false. Then set the read gateway gate false,
+   qualify its resulting revision, and set the authority read gate false. Preserve
+   the Google provider (already enabled), linked credentials, all account records,
+   Rules, IAM, App Check, and evidence. Never delete an Auth user or rewrite identity
+   or product data as rollback.
 
-## Smallest next approval: bounded existing-account canary
-
-After review/green exact-head CI **and closure of the parallel security findings**,
-request one source-pinned, isolated canary window for explicitly authorized existing
-accounts. Do not use the authority deployment helper under security remediation.
-The approval must bind the reviewed source/package, existing revision rollback,
-canary accounts (private UID evidence), origin, duration and final provider state.
-This task requests no automatic execution or approval consumption.
-
-1. Deploy/verify compatible read-only authority and the existing read gateway from
-   reviewed immutable source. Enable only `READ_ACCOUNT_FOUNDATION_ENABLED=true`
-   and the read gateway's `GATEWAY_INVOCATION_ENABLED=true`. Retain all identity
-   mutation/public projection gates false, existing least-privilege identities,
-   App Check requirement, rate-limit policy and gateway-only authority invocation.
-   Respect the current gateway contract (`APP_CHECK_ENFORCEMENT_MODE=monitor`,
-   debug tokens false); the operation itself requires a verified App Check app.
-   Do not silently relax guards to deploy. Verify exact SUCCESS and MISSING response
-   schemas using approved canary UIDs before a Google account change. This allows
-   authenticated own-account reads and bounded rate-limit receipts, not account
-   creation or migration. No provider-subject secret is needed for legacy reads.
-2. If the canary includes migrated-account reset, deploy the reviewed isolated reset
-   package preserving its current permissions, journal and secret. This expands
-   eligibility only to the proven reciprocal legacy pair; it performs no reset by
-   deployment. An owner reset is a separately enumerated canary action.
-3. Reuse the already-enabled Google provider; enable no additional provider. Verify
-   the exact OAuth origin `https://doomsday126dev.github.io` and callback
-   `https://trade-list-a4297.firebaseapp.com/__/auth/handler`. For a local canary,
-   specify one approved localhost port and its exact OAuth origin/API-key referrer
-   and App Check setup separately. Keep all legitimate prior restrictions. Do not
-   change OAuth client/secret, authorized domains, Rules or IAM by assumption.
-   [Firebase Google setup](https://firebase.google.com/docs/auth/web/google-signin)
-4. The isolated canary build requests only:
-
-   ```js
-   window.__POGO_PROVIDER_CAPABILITIES__ = {
-     providerAccountCompatibility: true,
-     googlePublicEntry: true,
-     googleExistingAccountLinking: true,
-     providerAccountCreation: false,
-     providerPublicReadSupport: false,
-     providerPublicWriteSupport: false
-   };
-   ```
-
-   Public Pages stays .103 with its default gates. Browser flags are visibility
-   controls, not admission authority. This is an authorized-account test, **not**
-   a claim that the existing Google configuration excludes everyone else. If hard
-   owner-only admission is required, separately qualify a server admission control
-   before the canary; Firebase blocking functions require Identity Platform and
-   also run when linking providers.
-   [Firebase blocking-function constraints](https://firebase.google.com/docs/auth/extend-with-blocking-functions)
-5. Capture private exact UID/identity and data fingerprints before link. Test current
-   PIN login → Connect Google → fresh second click → fresh Google login in another
-   browser profile → exact same account. Cover unmigrated and migrated healthy
-   fixtures/accounts where authorized; preserve wants/special requirements, Groups,
-   Favorites, public ownership, Saved sync, and reviewed/active recovery evidence.
-   Cover cancel, popup block, collision, offline read, sign-out/session replacement,
-   Google reauthentication and PIN fallback. Unlink/relink only if explicitly
-   included in the canary approval and the alternative method was verified first.
-   [Firebase's same-UID linking contract](https://firebase.google.com/docs/auth/web/account-linking)
-6. Exercise Safari, Chromium, Firefox, mobile Safari/Chrome and installed PWA with
-   authorized accounts. Emulator/injected tests cannot establish popup, mobile/PWA,
-   OAuth-helper, credential-ownership or real browser-policy success. No redirect
-   fallback is introduced. Record failure and keep public rollout gated if a
-   supported surface cannot complete this exact flow.
-7. Close out added local-only configuration and compare the exact intended diff.
-   Preserve linked credentials and every account record. Hiding public entry is
-   reversible; do not disable Google or remove a credential on which a canary
-   account now depends. Public release/enablement requires a subsequent approval.
-
-## Focused verification
-
-- Google foundation suite: 108 passing before the additional lifecycle regression;
-  final exact-head CI supplies the complete changed-area result.
-- Transition application regressions: 11 passing, including actual extracted
-  resolver/activation/reconnect code, canonical vs legacy paths, and stale sessions.
-- Isolated reset package: 77 passing including 10 migrated-provider transition cases.
-- Auth/RTDB emulator: 24 Rules/identity tests and 2 reset/sync tests pass. The synthetic
-  Google-linked fixture returns the same UID before/after reset, retains providerData,
-  rejects the old PIN and accepts the new PIN. This is not a real OAuth result.
-- Auth/Firestore emulator: all 32 foundation/namespace/hold/race tests pass.
-- Focused desktop/mobile Chromium Google-entry and reset UI: 10 passing (injected Auth).
-- Firebase read inventory reviewed: two duplicate branch sites consolidated into one
-  reciprocal path (23 direct reads total); no startup read added.
-
-No archives are read as authentication or ownership authority. No ordinary users
-are migrated, no PINs removed, and no accounts deleted.
+Real Google popup, helper-origin, browser policy, account ownership, and production
+App Check success remain human-canary requirements; emulator/injected tests do not
+prove them. PR #97 remains a separate new-account milestone and is not merged,
+rebased, deployed, or enabled by this package.

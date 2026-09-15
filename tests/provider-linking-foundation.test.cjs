@@ -150,6 +150,14 @@ test('configured development providers are actionable while production remains i
   assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.visible,item.available,item.actionable,item.state])),[[true,true,true,'not-connected'],[true,true,true,'not-connected']]);
 });
 
+test('unconfigured providers remain hidden when another provider is enabled',()=>{
+  const {authProviderRegistry}=loadDomains();
+  const registry=authProviderRegistry.createAuthProviderRegistry({developmentEnabled:true,configuredProviders:['google']});
+  assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.key,item.visible,item.available,item.actionable,item.state])),[
+    ['google',true,true,true,'not-connected'],['discord',false,false,false,'unavailable']
+  ]);
+});
+
 test('username and PIN user links a provider without changing Firebase UID',async()=>{
   const h=createHarness();const uid=h.auth.snapshot().uid;
   const result=await prepareAndComplete(h.controller);
