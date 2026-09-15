@@ -13,7 +13,7 @@ async function seedPicker(count=55){
  expect((await adminData('PATCH','',patch)).status).toBe(200);return f;
 }
 async function open(page,f){await routeEmulators(page,f,{candidate:true,picker:true});await login(page,f);await settled(page);await page.getByRole('tab',{name:'Trainers',exact:true}).click();await page.locator('#trainer-mode-favorites').click();await page.locator('[data-add-trainers]').click();await expect.poll(()=>page.evaluate(()=>favoritePickerSession?.evidenceReady)).toBe(true);}
-test('Select all resolves and persists 55 trainers across pages; existing and preserved entries remain distinct',async({page})=>{
+test('Select all resolves and persists 55 trainers; a preserved name remains independently addable',async({page})=>{
  const f=await seedPicker();await open(page,f);
  await expect(page.locator('[data-picker-all]')).toHaveText('Select all results (55)');
  await page.locator('#favorite-picker-search').fill('AtlasTrainer0');await expect(page.locator('[data-picker-all]')).toHaveText('Select all results (9)');await page.locator('[data-picker-all]').click();
@@ -22,7 +22,7 @@ test('Select all resolves and persists 55 trainers across pages; existing and pr
  await expect(page.locator('[data-picker-add]')).toHaveText('Add 55 favorites');await page.locator('[data-picker-add]').click();await settled(page);
  await expect.poll(async()=>Object.values((await account(f)).favorites||{}).filter(row=>!row.deleted).length,{timeout:30000}).toBe(55);
  await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected.length)).toBe(0);
- await page.locator('#favorite-picker-search').fill(f.other);await expect(page.locator('[data-picker-rows]')).toContainText('Preserved · review');await expect(page.locator('[data-picker-rows] input')).toBeDisabled();
+ const preserved=JSON.stringify((await account(f)).recoveryCandidates);await page.locator('#favorite-picker-search').fill(f.other);await expect(page.locator('[data-picker-rows]')).toContainText('Older info preserved · add new');await expect(page.locator('[data-picker-rows] input')).toBeEnabled();await page.locator('[data-picker-rows] input').check();await page.locator('[data-picker-add]').click();await expect.poll(async()=>(await account(f)).favorites?.[f.targetUid]?.deleted,{timeout:30000}).toBe(false);await settled(page);expect(JSON.stringify((await account(f)).recoveryCandidates)).toBe(preserved);
  await page.locator('#favorite-picker-search').fill('AtlasTrainer01');await expect(page.locator('[data-picker-rows]')).toContainText('Already added');await expect(page.locator('[data-picker-add]')).toBeDisabled();
 });
 for(const [label,width,height] of [['desktop',1440,900],['390',390,844],['320',320,700]])test(`synthetic ${label} picker has visible bottom action and usable selection`,async({page})=>{
@@ -38,7 +38,7 @@ test('partial identity failure retains only unsuccessful selections and retries 
  const f=await seedPicker(2),failed=f.targets[1];await adminData('DELETE','authIndex/'+failed.uid);
  await open(page,f);await page.locator('[data-picker-all]').click();await page.locator('[data-picker-add]').click();await settled(page);
  await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected)).toEqual([failed.name]);
- const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Not saved · retry');
+ const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Not saved · add again');
  await adminData('PUT','authIndex/'+failed.uid,{username:failed.name});await page.locator('[data-picker-add]').click();await settled(page);
  expect((await account(f)).favorites[f.targets[0].uid]).toEqual(first);await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected.length)).toBe(0);
 });

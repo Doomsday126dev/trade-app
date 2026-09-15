@@ -41,18 +41,15 @@
       refreshing=snapshot().then(value=>{current();onChange(value);return value;}).finally(()=>{refreshing=null;});return refreshing;
     }
     function serialize(task){const result=work.then(task);work=result.catch(()=>{});return result;}
-    async function processRows(rows){
+    async function processRows(rows,{explicit=false}={}){
       const operations=await journal.listOperations({statuses:['pending','sending','blocked','conflict','acknowledged']});current();
       const retained=new Set(operations.map(record=>record.operationId));
-      const candidates=await journal.listRecoveryCandidates();current();
       const todo=[];
       for(const row of rows){
-        if(retained.has(row.operationId)){const operation=operations.find(record=>record.operationId===row.operationId);if(operation?.status==='blocked'&&model.blockedRetryEligible(operation)){await controller.retry(row.operationId);current();}continue;}
+        if(retained.has(row.operationId)){const operation=operations.find(record=>record.operationId===row.operationId);if(!explicit&&operation?.status==='blocked'&&model.blockedRetryEligible(operation)){await controller.retry(row.operationId);current();}continue;}
         if(row.state==='already-present'||row.state==='confirmed'||row.state==='cancelled')continue;
         if(row.retryAt&&row.retryAt>now())continue;
         if(cancelled.has(row.handle)){row.state='cancelled';await save(row);continue;}
-        const fold=value=>String(value||'').normalize('NFKC').toLocaleLowerCase('en-US');
-        if(candidates.some(candidate=>candidate.entityType==='favorite'&&fold(candidate.values?.displayName)===fold(row.handle))){row.state='unsuccessful';row.code='account-sync/entity-review-required';await save(row);continue;}
         row.state='resolving';row.code='';await save(row);todo.push(row);
       }
       await refresh();
@@ -86,11 +83,18 @@
     function ensure(handles){return serialize(async()=>{
       current();if(!Array.isArray(handles)||!handles.length||handles.length>CAPACITY||handles.some(handle=>!validHandle(handle))||new Set(handles).size!==handles.length)throw failure('favorite/request-invalid');
       const previous=await snapshot(),byHandle=new Map(previous.rows.map(row=>[row.handle,{...row}])),rows=[];
-      const newHandles=handles.filter(handle=>!byHandle.has(handle)&&!controller.activeEntities('favorite').some(entity=>entity.values.displayName===handle));
+      const operations=await journal.listOperations({statuses:['pending','sending','blocked','conflict','acknowledged']});current();
+      const operationById=new Map(operations.map(record=>[record.operationId,record]));
+      const newHandles=handles.filter(handle=>!controller.activeEntities('favorite').some(entity=>entity.values.displayName===handle));
       if(newHandles.length>previous.remaining)throw failure('favorite/capacity-exceeded');
       for(const handle of handles){
         cancelled.delete(handle);let row=byHandle.get(handle);
         const removed=row?.state==='unsuccessful'&&row.code==='favorite/removed';
+        const retained=operationById.get(row?.operationId);
+        // A deliberate Add after a completed or pre-enqueue failure is a new
+        // request based on current canonical state. Pending/conflicting durable
+        // work keeps its original operation and generation.
+        if(row?.state==='unsuccessful'&&(!retained||retained.status==='acknowledged'))row=null;
         if(row&&(['cancelled','confirmed','already-present'].includes(row.state)||removed)){
           const existing=row.targetUid?controller.getEntity('favorite',row.targetUid):null;
           if(row.state==='cancelled'||existing?.deleted)row=null;
@@ -103,7 +107,7 @@
         }
         rows.push(row);
       }
-      const result=await processRows(rows);await prune();return result;
+      const result=await processRows(rows,{explicit:true});await prune();return result;
     });}
     function retry(handles){return serialize(async()=>{const rows=await read();return processRows(rows.filter(row=>!handles||handles.includes(row.handle)));});}
     function cancel(handles){for(const handle of handles||[])cancelled.add(handle);return serialize(async()=>{const value=await snapshot();for(const row of value.rows)if(cancelled.has(row.handle)&&!['pending','confirmed','already-present'].includes(row.state)){await save({...row,state:'cancelled'});}return refresh();});}

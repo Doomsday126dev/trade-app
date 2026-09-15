@@ -271,7 +271,7 @@
       if(!active||!eligible||!online()||listenerState!=='healthy'||!Number.isFinite(nextAttemptAt))return;
       retryTimer=setTimeout(()=>{retryTimer=null;drain();},Math.max(0,nextAttemptAt-Number(clock())));
     }
-    async function mutationReviewDecision(mutations){
+    async function mutationReviewDecision(mutations,{freshFavoriteAddition=false}={}){
       const candidates=await journal.listRecoveryCandidates();
       for(const candidate of candidates){
         if(candidate.ownerUid!==owner||candidate.schemaVersion!==model.SCHEMA_VERSION||!['tradeEntry','favorite','tag'].includes(candidate.entityType))return model.failure('account-sync/recovery-evidence-invalid','Preserved evidence needs review');
@@ -284,6 +284,10 @@
             try{overlaps||=model.tradeEntryId(candidate.identity)!==candidate.entityId;}
             catch{overlaps=true;}
           }else if(candidate.entityType==='favorite'){
+            // A securely resolved, explicit current addition does not resolve,
+            // delete or replay preserved legacy evidence. Other Favorite edits
+            // still require review when they overlap that evidence.
+            if(freshFavoriteAddition&&mutation.kind==='add')continue;
             const target=candidate.identity?.targetUid;
             const current=entities.get(key(mutation.entityType,mutation.entityId));
             const name=mutation.patch?.displayName??current?.values?.displayName;
@@ -311,12 +315,12 @@
       working.set(entityKey,optimistic.value);
       return Object.freeze({ok:true,operation:operation.value,value:optimistic.value,entityKey});
     }
-    async function performMutationBatch(mutations){
+    async function performMutationBatch(mutations,{freshFavoriteAddition=false}={}){
       if(!eligible)return model.failure('account-sync/disabled','Cross-device sync is not enabled for this account');
       if(!active)return model.failure('account-sync/session-inactive','Cross-device sync session is not active');
       if(!Array.isArray(mutations)||!mutations.length)return Object.freeze({ok:true,status:'unchanged',count:0,operations:Object.freeze([]),values:Object.freeze([])});
       if(listenerState!=='healthy')return model.failure('account-sync/listener-not-ready','The live account sync listener is not ready');
-      const review=await mutationReviewDecision(mutations);
+      const review=await mutationReviewDecision(mutations,{freshFavoriteAddition});
       if(!review.ok)return review;
       if(!sessionCurrent()||!active||listenerState!=='healthy')return model.failure('account-sync/session-changed','The account sync session changed');
       const working=new Map(entities),prepared=[];
@@ -360,7 +364,7 @@
           const limit=global.PogoDomain?.productLimits?.MAX_FAVORITES||100;
           if(activeEntities('favorite').length>=limit)return model.failure('account-sync/favorite-limit','The account has reached its Favorite limit');
           const patch={displayName,...Object.fromEntries(Object.entries(existing?.values?.tagIds||{}).map(([id,value])=>[`tagIds/${id}`,value]))};
-          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt,intentExpectedGeneration:expectedGeneration}]);
+          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt,intentExpectedGeneration:expectedGeneration}],{freshFavoriteAddition:true});
           if(result.ok)return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
           // No operation was enqueued for these admission failures. Wait for an
           // in-flight acknowledgement; never retry across a lifecycle change.
