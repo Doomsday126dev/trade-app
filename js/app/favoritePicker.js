@@ -3,8 +3,11 @@ let favoritePickerSession=null;
 const favoritePickerText=(key,values)=>i18nCore.t('favoritePicker.'+key,values);
 function installFavoritePickerButton(){
   if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled!==true||window.PogoDomain?.favoriteCapabilities?.pickerEnabled!==true||!managedFavoriteAdditions)return;
-  const host=document.getElementById('favorite-trainers-controls');if(!host||host.querySelector('[data-add-trainers]'))return;
-  const button=document.createElement('button');button.type='button';button.className='btn btn-secondary favorite-picker-open';button.dataset.addTrainers='';button.textContent=favoritePickerText('open');button.addEventListener('click',()=>openFavoritePicker(button));host.prepend(button);
+  for(const host of [document.getElementById('trainer-picker-controls'),document.getElementById('favorite-trainers-controls')]){
+    if(!host||host.querySelector('[data-add-trainers]'))continue;
+    host.classList.add('favorite-picker-controls');
+    const button=document.createElement('button');button.type='button';button.className='btn btn-secondary favorite-picker-open';button.dataset.addTrainers='';button.textContent=favoritePickerText('open');button.addEventListener('click',()=>openFavoritePicker(button));host.append(button);
+  }
 }
 function favoritePickerCurrent(session){return session===favoritePickerSession&&session.runtime===managedAccountSyncRuntime&&session.additions===managedFavoriteAdditions&&session.uid===auth?.currentUser?.uid;}
 async function openFavoritePicker(returnFocus){
@@ -50,7 +53,13 @@ async function submitFavoritePicker(){
   const session=favoritePickerSession;if(!session||session.busy)return;const state=session.model.snapshot();if(state.overCapacity||!state.newCount)return;
   const handles=state.selected.filter(name=>{const row=(favoriteAdditionUiState?.rows||[]).filter(row=>row.handle===name).at(-1);return !row||!['pending','confirmed','already-present'].includes(row.state);});
   session.busy=true;session.message=favoritePickerText('working');renderFavoritePicker();
-  const result=await ensureTrainerFavorites(handles);
+  let result=await ensureTrainerFavorites(handles);
+  for(const delay of [250,500,1000,1500,2000,2500]){
+    if(!favoritePickerCurrent(session)||!handles.some(handle=>[...(result?.rows||[])].reverse().find(row=>row.handle===handle)?.state==='pending'))break;
+    await new Promise(resolve=>setTimeout(resolve,delay));
+    if(!favoritePickerCurrent(session))return;
+    try{result=await session.additions.refresh();}catch{break;}
+  }
   if(!favoritePickerCurrent(session))return;session.busy=false;
   const rows=handles.map(handle=>[...(result?.rows||[])].reverse().find(row=>row.handle===handle));
   const confirmed=rows.filter(row=>['confirmed','already-present'].includes(row?.state)).length,pending=rows.filter(row=>row?.state==='pending').length,failed=rows.length-confirmed-pending;
