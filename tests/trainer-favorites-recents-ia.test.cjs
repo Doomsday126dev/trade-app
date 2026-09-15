@@ -72,8 +72,13 @@ test('favorite group access remains direct, multi-select, keyboard-native, and n
   assert.match(render,/favorite-filter-check/);
   assert.match(render,/favorite-group-access-list/);
   assert.match(render,/data-favorite-action="clear-groups"/);
+  assert.match(render,/data-favorite-action="view-group-wants"/);
+  assert.match(render,/organizer\.viewAllWants/);
+  assert.match(render,/organizer\.viewGroupWants/);
   assert.match(render,/favorite-filter-chip-surface/);
   assert.match(html,/function toggleFavoriteTagFilter[\s\S]*new Set\(trainerOrganizerState\.tagIds\)/);
+  assert.match(html,/function openFavoriteGroupWants[\s\S]*openTrainerGroup\(id\)[\s\S]*data-contextual-copy/);
+  assert.match(html,/scrollIntoView\(\{block:'nearest',inline:'nearest'\}\)/);
   assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
   assert.match(html,/\.favorite-filter-chip-surface\{[^}]*min-height:30px/);
 });

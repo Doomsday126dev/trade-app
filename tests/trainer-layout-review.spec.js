@@ -36,7 +36,7 @@ async function installPopulatedFavorites(page){
   });
 }
 
-test('populated Favorites keeps groups direct and trainer actions distinct at desktop, 390, and 320',async({page})=>{
+test('populated Favorites keeps groups direct and trainer actions distinct at desktop, 390, and 320',async({page},testInfo)=>{
   await installPopulatedFavorites(page);
   await page.setViewportSize({width:1440,height:900});
   await page.evaluate(()=>scrollTo(0,0));
@@ -45,15 +45,34 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await expect(page.locator('.favorite-group-access')).toBeVisible();
   await expect(page.locator('.favorite-group-access .favorite-filter-chip')).toHaveCount(4);
   await expect(page.getByRole('button',{name:'All Favorites',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('button',{name:'View all wants',exact:true})).toBeVisible();
   await expect(page.locator('.favorite-groups-disclosure')).not.toHaveAttribute('open','');
   await preview(page,'desktop-populated-favorites');
+
+  await page.getByRole('button',{name:'View all wants',exact:true}).click();
+  await expect(page.locator('#trainer-groups-title')).toHaveText('All Favorites');
+  await expect(page.locator('#trainer-group-results [data-contextual-copy]').first()).toBeFocused();
+  await page.locator('[data-group-action="back"]').click();
+  await expect(page.getByRole('button',{name:'View all wants',exact:true})).toBeFocused();
 
   const regional=page.getByRole('button',{name:'Regional swaps and distance trades',exact:true});
   await regional.click();
   await expect(regional).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
+  await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeVisible();
   await page.evaluate(()=>scrollTo(0,0));
   await preview(page,'desktop-group-selected');
+
+  await page.getByRole('button',{name:'View group wants',exact:true}).click();
+  const directCopy=page.locator('#trainer-group-results [data-contextual-copy]').first();
+  await expect(directCopy).toBeVisible();
+  await expect(directCopy).toBeFocused();
+  await expect(page.locator('.group-management')).toBeVisible();
+  await expect(page.locator('.favorite-groups-disclosure > summary')).toBeHidden();
+  await preview(page,'desktop-group-wants-copy');
+  await page.locator('[data-group-action="back"]').click();
+  await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeFocused();
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
 
   const first=page.locator('.favorite-card-shell').first();
   await expect(first.locator('.favorite-card-primary .favorite-card-chevron')).toBeVisible();
@@ -74,6 +93,7 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await expect(page.locator('.favorite-group-access')).toBeVisible();
 
   for(const width of [390,320]){
+    await page.getByRole('button',{name:'All Favorites',exact:true}).click();
     await page.setViewportSize({width,height:844});
     await page.evaluate(()=>scrollTo(0,0));
     await expect(page.locator('.favorite-card-primary').first()).toBeVisible();
@@ -82,11 +102,25 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
       overflow:document.documentElement.scrollWidth>innerWidth,
       primary:document.querySelector('.favorite-card-primary').getBoundingClientRect().width,
       more:document.querySelector('.favorite-card-more').getBoundingClientRect().height,
-      chips:document.querySelector('.favorite-group-access-list').getBoundingClientRect().width
+      chips:document.querySelector('.favorite-group-access-list').getBoundingClientRect().width,
+      action:document.querySelector('.favorite-group-wants-action').getBoundingClientRect().height
     }));
     expect(geometry.overflow).toBe(false);expect(geometry.primary).toBeGreaterThan(120);
-    expect(geometry.more).toBeGreaterThanOrEqual(44);expect(geometry.chips).toBeGreaterThan(0);
-    await preview(page,`${width}-populated-favorites`);
+    expect(geometry.more).toBeGreaterThanOrEqual(44);expect(geometry.chips).toBeGreaterThan(0);expect(geometry.action).toBeGreaterThanOrEqual(44);
+    const lastChip=page.locator('.favorite-group-access-list [data-favorite-tag-id]').last();
+    await lastChip.focus();
+    await expect.poll(()=>page.evaluate(()=>document.querySelector('.favorite-group-access-list').scrollLeft)).toBeGreaterThan(0);
+    await lastChip.press('Enter');
+    await expect(lastChip).toBeFocused();
+    const chipPosition=await lastChip.evaluate((chip)=>{const item=chip.getBoundingClientRect(),strip=chip.parentElement.getBoundingClientRect();return{left:item.left-strip.left,right:item.right-strip.right};});
+    expect(chipPosition.left).toBeGreaterThanOrEqual(-1);expect(chipPosition.right).toBeLessThanOrEqual(1);
+    await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeVisible();
+    if(testInfo.project.name==='mobile'){
+      await page.getByRole('button',{name:'View group wants',exact:true}).tap();
+      await expect(page.locator('#trainer-group-results [data-contextual-copy]').first()).toBeVisible();
+      await page.locator('[data-group-action="back"]').tap();
+    }
+    if(width===390)await preview(page,'390-group-selected');
   }
 
   await page.evaluate(async()=>{
