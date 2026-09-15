@@ -2180,7 +2180,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .contextual-omitted{margin:0 0 8px;white-space:pre-line;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
 
 /* Independently gated Favorite picker candidate. */
-.favorite-picker-controls{display:flex;justify-content:flex-end;margin-bottom:10px}.favorite-picker-open{margin:0}
+.favorite-picker-open{margin:0}
 .favorite-picker{margin:auto;box-sizing:border-box;width:min(580px,calc(100vw - 32px));max-height:min(760px,calc(100dvh - 48px));padding:0;border:1px solid var(--border2);border-radius:16px;background:var(--card);color:var(--text);box-shadow:var(--shadow-high);overflow:hidden}
 .favorite-picker[open]{display:flex;flex-direction:column}
 .favorite-picker::backdrop{background:rgba(0,0,0,.62)}
@@ -2209,4 +2209,69 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(max-width:600px){
  .favorite-picker{width:100%;max-width:100%;margin:auto 0 0;max-height:calc(100dvh - 20px);border-radius:16px 16px 0 0;border-bottom:0}
  .favorite-picker header{padding:16px 16px 10px}.favorite-picker-tools{padding:0 16px 8px}.favorite-picker-rows{padding:0 16px;max-height:none;flex:1}.favorite-picker-pagination{padding:0 16px}.favorite-picker footer{padding:10px 16px max(16px,env(safe-area-inset-bottom))}.favorite-picker h2{font-size:18px}
+}
+
+/* Trainer discovery: search first, saved trainers next, optional organization. */
+#tab-find .have-hdr,#tab-find .trainer-discovery-content{width:100%;max-width:960px;margin-inline:auto}
+#tab-find .trainer-discovery-primary{width:100%}
+#tab-find .trainer-discovery-modes{display:flex;width:100%;gap:24px;padding:0;margin:20px 0 24px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}
+#tab-find .trainer-discovery-modes button{flex:0 1 auto;min-height:46px;padding:10px 2px;border-radius:0;border-bottom:2px solid transparent;font-size:13px;white-space:nowrap}
+#tab-find .trainer-discovery-modes button[aria-current="true"]{border-bottom-color:var(--accent);background:transparent;color:var(--text);box-shadow:none}
+#tab-find .trainer-discovery-modes button:hover{background:transparent;color:var(--text)}
+#tab-find .discovery-search-shell{max-width:none}
+.trainer-search-actions{display:flex;align-items:flex-start;gap:12px}
+.trainer-search-actions .trainer-search-shell{flex:1;min-width:0}
+#trainer-picker-controls{flex:none}
+#trainer-picker-controls .favorite-picker-open{min-height:48px;white-space:nowrap}
+#favorite-trainers-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:0 0 14px}
+#favorite-trainers-controls .trainer-section-heading{grid-column:1;grid-row:1;margin:0}
+#favorite-trainers-controls .favorite-picker-open{grid-column:2;grid-row:1;white-space:nowrap}
+#favorite-trainers-controls .favorite-group-access{grid-column:1/-1;grid-row:2;display:flex;align-items:center;gap:10px;min-width:0}
+.favorite-group-access-list{display:flex;align-items:center;flex-wrap:wrap;gap:2px 7px;min-width:0}
+#tab-find #favorite-trainers{padding:0;border:0;margin:0}
+#favorite-trainers > .favorite-toolbar-search{margin-bottom:16px}
+#tab-find .favorite-card-surface{padding:10px 14px;min-height:64px}
+#tab-find .favorite-card-primary{display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;min-width:0}
+#tab-find .favorite-card-primary-copy{display:block;min-width:0}
+#tab-find .favorite-card-chevron{color:var(--muted)}
+#tab-find .favorite-card-primary:hover .favorite-card-chevron,#tab-find .favorite-card-primary:focus-visible .favorite-card-chevron{color:var(--ac2)}
+#tab-find .favorite-card-open{display:none}
+#tab-find .favorite-card-add-tag{min-width:0;border-color:transparent;background:transparent;color:var(--muted)}
+#tab-find .favorite-card-add-tag:hover{background:var(--surface-hover);color:var(--text)}
+#tab-find .favorite-card-more{border-color:transparent;background:transparent}
+.favorite-groups-disclosure{margin-top:24px;border-top:1px solid var(--border)}
+.favorite-groups-disclosure > summary{display:flex;align-items:center;gap:10px;min-height:48px;list-style:none;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer}
+.favorite-groups-disclosure > summary::-webkit-details-marker{display:none}
+.favorite-groups-disclosure > summary::after{content:'+';margin-left:auto;font-size:18px}
+.favorite-groups-disclosure[open] > summary::after{content:'−'}
+.favorite-groups-disclosure #trainer-groups{margin:0;padding:8px 0 16px;border-bottom:0}
+#tab-find .trainer-discovery-content[data-mode="favorites"] .trainer-discovery-supporting{display:none}
+#tab-find .trainer-discovery-supporting{gap:24px}
+#recent-trainers > .empty-state{display:flex;align-items:center;gap:8px;padding:12px 0;text-align:left;flex-wrap:wrap}
+#recent-trainers > .empty-state .empty-svg{width:22px;height:22px;margin:0}
+#recent-trainers > .empty-state .empty-s{flex-basis:100%;margin:0;padding-left:30px}
+#recent-trainers > .empty-state .empty-t{font-size:13px;color:var(--muted)}
+.favorite-scope-control{margin:10px 0 0}
+.favorite-scope-control .group-picker{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;margin:0;color:var(--muted);font-size:12px}
+.favorite-scope-control .group-picker[hidden],#favorite-lookup-default[hidden]{display:none}
+.favorite-scope-control .group-picker select{flex:0 1 260px;width:auto;min-height:40px;padding-block:7px;font-size:12px}
+#favorite-lookup-default{margin:0;color:var(--muted)}
+#tab-find .field-control:focus,#tab-find .app-search-input:focus{outline:none;box-shadow:none;border-color:var(--accent)}
+#tab-find .field-control:focus-visible,#tab-find .app-search-input:focus-visible{outline:2px solid var(--accent);outline-offset:0;box-shadow:none;border-color:transparent}
+@media(max-width:600px){
+ #tab-find .trainer-discovery-modes{gap:18px;margin:14px 0 20px}
+ #tab-find .trainer-discovery-modes button{font-size:12px}
+ .trainer-search-actions{gap:8px}
+ #trainer-picker-controls{margin-left:0}
+ #trainer-picker-controls .favorite-picker-open{min-height:44px}
+ #tab-find .favorite-card-surface{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:10px}
+ #tab-find .favorite-card-footer{padding:0;border:0}
+ #tab-find .favorite-card-add-tag{display:none}
+ #favorite-trainers-controls{gap:8px}
+ #favorite-trainers-controls .favorite-picker-open{padding-inline:10px}
+ #favorite-trainers-controls .favorite-group-access{display:grid;gap:2px}
+ .favorite-group-access-list{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;padding-bottom:2px}
+ .favorite-group-access-list::-webkit-scrollbar{display:none}
+ .favorite-group-access-list .favorite-filter-chip{flex:none}
+ .favorite-groups-disclosure{margin-top:20px}
 }

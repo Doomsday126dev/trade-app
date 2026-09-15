@@ -357,7 +357,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <div class="trainer-discovery-workspace">
     <div class="trainer-discovery-primary">
     <section class="trainer-discovery-panel" id="trainer-panel-trainers" role="tabpanel" aria-labelledby="trainer-mode-trainers" data-discovery-panel="trainers">
-    <div id="trainer-picker-controls"></div>
+    <div class="trainer-search-actions">
     <div class="trainer-search-shell discovery-search-shell search-lookup">
       <div class="trainer-search-row">
         <div class="trainer-combobox app-search-shell">
@@ -377,19 +377,23 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       </div>
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
+    <div id="trainer-picker-controls"></div>
+    </div>
     </section>
     <section class="trainer-discovery-panel" id="trainer-panel-favorites" role="tabpanel" aria-labelledby="trainer-mode-favorites" data-discovery-panel="favorites" hidden>
-    <section id="trainer-groups" aria-labelledby="trainer-groups-title"></section>
-    <div class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"><span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span><input class="app-search-input field-control" id="favorite-trainer-search" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" data-i18n-aria-label="organizer.searchFavorites" aria-label="Search favorites"><button type="button" class="trainer-search-clear" id="favorite-trainer-search-clear" onclick="clearFavoriteSearch()" data-i18n-aria-label="trainer.clearSearch" aria-label="Clear search" hidden>×</button></div>
     <section id="favorite-trainers" class="trainer-quick-section">
       <div id="favorite-trainers-controls"></div>
+    <div class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"><span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span><input class="app-search-input field-control" id="favorite-trainer-search" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" data-i18n-aria-label="organizer.searchFavorites" aria-label="Search favorites"><button type="button" class="trainer-search-clear" id="favorite-trainer-search-clear" onclick="clearFavoriteSearch()" data-i18n-aria-label="trainer.clearSearch" aria-label="Clear search" hidden>×</button></div>
       <div id="favorite-trainers-list"></div>
     </section>
+    <details class="favorite-groups-disclosure">
+      <summary data-i18n="organizer.manageTags">Manage groups</summary>
+      <section id="trainer-groups" aria-labelledby="trainer-groups-title"></section>
+    </details>
     </section>
     <section class="trainer-discovery-panel" id="trainer-panel-pokemon" role="tabpanel" aria-labelledby="trainer-mode-pokemon" data-discovery-panel="pokemon" hidden>
     <section class="favorite-browse" id="favorite-pokemon-browse" data-expanded="true" aria-label="Find by Pokémon" data-i18n-aria-label="favoriteBrowse.title">
         <div class="favorite-browse-content" id="favorite-browse-panel">
-          <label class="group-picker"><span data-i18n="who.scope">Trainers</span><select class="field-control" id="favorite-lookup-scope" aria-label="Trainer scope" data-i18n-aria-label="who.scope"></select></label>
           <div class="favorite-browse-search discovery-search-shell app-search-shell search-lookup">
             <span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span>
             <input class="app-search-input field-control" type="text" id="favorite-browse-input" autocomplete="off" spellcheck="false"
@@ -398,6 +402,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
               oninput="favoriteBrowseInput(this.value)" onfocus="favoriteBrowseInput(this.value)" onblur="setTimeout(closeFavoriteBrowseSuggestions,120)" onkeydown="favoriteBrowseKeydown(event)">
             <button type="button" class="trainer-search-clear" id="favorite-browse-clear" onclick="clearFavoriteBrowse()" data-i18n-aria-label="favoriteBrowse.clear" aria-label="Clear Pokémon search" hidden>×</button>
             <div class="ac-dropdown" id="favorite-browse-suggestions" role="listbox" data-i18n-aria-label="favoriteBrowse.suggestionsLabel" aria-label="Pokémon suggestions"></div>
+          </div>
+          <div class="favorite-scope-control">
+            <label class="group-picker" for="favorite-lookup-scope"><span data-i18n="who.scope">Trainers</span><select class="field-control" id="favorite-lookup-scope" aria-label="Trainer scope" data-i18n-aria-label="who.scope"></select></label>
+            <p id="favorite-lookup-default" class="type-meta" data-i18n="groups.favorites" hidden>All Favorites</p>
           </div>
           <div class="favorite-browse-result-region" id="favorite-browse-results" role="region" aria-live="polite" aria-atomic="false"></div>
         </div>

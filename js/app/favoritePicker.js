@@ -5,7 +5,6 @@ function installFavoritePickerButton(){
   if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled!==true||window.PogoDomain?.favoriteCapabilities?.pickerEnabled!==true||!managedFavoriteAdditions)return;
   for(const host of [document.getElementById('trainer-picker-controls'),document.getElementById('favorite-trainers-controls')]){
     if(!host||host.querySelector('[data-add-trainers]'))continue;
-    host.classList.add('favorite-picker-controls');
     const button=document.createElement('button');button.type='button';button.className='btn btn-secondary favorite-picker-open';button.dataset.addTrainers='';button.textContent=favoritePickerText('open');button.addEventListener('click',()=>openFavoritePicker(button));host.append(button);
   }
 }
