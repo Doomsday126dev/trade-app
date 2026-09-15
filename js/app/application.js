@@ -6013,7 +6013,7 @@ document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',
 document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
 function toggleFavoriteTagFilter(id){
   if(!id)return;
-  const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists({favoriteGroupFocusId:id});
+  trainerOrganizerState.tagIds=[id];renderTrainerQuickLists({favoriteGroupFocusId:id});
 }
 function clearFavoriteGroupFilters(){trainerOrganizerState.tagIds=[];renderTrainerQuickLists();}
 function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];syncFavoriteSearchControl();renderTrainerQuickLists();}
@@ -6054,13 +6054,16 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
     return;
   }
   const state=store.read();
+  const requestedTagIds=Array.isArray(trainerOrganizerState.tagIds)?trainerOrganizerState.tagIds:[];
+  trainerOrganizerState.tagIds=requestedTagIds.length===1&&state.tags?.[requestedTagIds[0]]?[requestedTagIds[0]]:[];
   if(noteEl){noteEl.style.display='none';noteEl.textContent='';}
   renderTrainerGroups();
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
-  const selectedTagIds=trainerOrganizerState.tagIds.filter(id=>state.tags?.[id]),groupWantsAvailable=selectedTagIds.length<=1;
+  const selectedTagIds=trainerOrganizerState.tagIds;
   const groupWantsLabel=i18nCore.t(selectedTagIds.length?'organizer.viewGroupWants':'organizer.viewAllWants');
-  const toolbar=state.favorites.length&&activeTags.length?`<div class="favorite-group-access" role="group" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!trainerOrganizerState.tagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${trainerOrganizerState.tagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}</span></button>${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div><button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants"${groupWantsAvailable?'':` disabled title="${escAttr(i18nCore.t('organizer.selectOneGroupWants'))}"`}>${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
+  const groupChips=activeTags.length?`<span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!selectedTagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selectedTagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}</span></button>${activeTags.map(tag=>{const selected=selectedTagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div>`:'';
+  const toolbar=state.favorites.length?`<div class="favorite-group-access${activeTags.length?'':' wants-only'}" role="group" aria-label="${escAttr(i18nCore.t('organizer.favoriteScope'))}">${groupChips}<button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants">${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
   const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;

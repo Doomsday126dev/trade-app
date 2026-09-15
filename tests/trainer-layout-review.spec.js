@@ -59,6 +59,17 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await regional.click();
   await expect(regional).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
+  const weekend=page.getByRole('button',{name:'Weekend trades',exact:true});
+  await weekend.click();
+  await expect(weekend).toHaveAttribute('aria-pressed','true');
+  await expect(regional).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
+  await regional.click();
+  await expect(regional).toHaveAttribute('aria-pressed','true');
+  await expect(weekend).toHaveAttribute('aria-pressed','false');
+  await regional.click();
+  await expect(regional).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
   await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeVisible();
   await page.evaluate(()=>scrollTo(0,0));
   await preview(page,'desktop-group-selected');
@@ -74,6 +85,12 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await expect(page.getByRole('button',{name:'View group wants',exact:true})).toBeFocused();
   await expect(page.locator('.favorite-card-shell')).toHaveCount(8);
 
+  await page.evaluate(async()=>{trainerOrganizerState.tagIds=[window.__reviewGroupIds.regional,window.__reviewGroupIds.raid];await renderTrainerQuickLists();});
+  await expect(page.getByRole('button',{name:'All Favorites',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('button',{name:'View all wants',exact:true})).toBeEnabled();
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(24);
+  await regional.click();
+
   const first=page.locator('.favorite-card-shell').first();
   await expect(first.locator('.favorite-card-primary .favorite-card-chevron')).toBeVisible();
   await expect(first.locator('.favorite-card-primary button')).toHaveCount(0);
@@ -85,6 +102,7 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   await expect(first.locator('.favorite-card-menu')).toBeVisible();
 
   await page.getByRole('button',{name:'All Favorites',exact:true}).click();
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(24);
   await page.locator('.favorite-groups-disclosure > summary').click();
   await page.locator(`[data-group-open-id="${await page.evaluate(()=>window.__reviewGroupIds.weekend)}"]`).click();
   await expect(page.locator('#trainer-group-results [data-contextual-copy]').first()).toBeVisible();
@@ -129,6 +147,28 @@ test('populated Favorites keeps groups direct and trainer actions distinct at de
   });
   await expect(page.locator('.favorite-group-access')).toHaveCount(0);
   await expect(page.locator('#favorite-trainers-list .empty-state')).toBeVisible();
+});
+
+test('saved Favorites without groups still open the honest all-Favorites aggregate and Copy Search',async({page})=>{
+  await installPopulatedFavorites(page);
+  await page.evaluate(async()=>{
+    const store=ensureTrainerHistoryStore(),state=store.read();
+    store.replaceSyncedOrganization({favorites:state.favorites.map(item=>({...item,tagIds:[]})),tags:{}});
+    trainerOrganizerState.query='Alice';
+    await renderTrainerQuickLists();
+  });
+  await expect(page.locator('.favorite-group-access-list')).toHaveCount(0);
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(1);
+  await expect(page.getByRole('button',{name:'View all wants',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'View all wants',exact:true}).click();
+  await expect(page.locator('#trainer-groups-title')).toHaveText('All Favorites');
+  await expect(page.locator('#trainer-groups .trainer-section-heading')).toContainText('24 trainers');
+  const copy=page.locator('#trainer-group-results [data-contextual-copy]').first();
+  await expect(copy).toBeVisible();await copy.click();
+  await expect.poll(()=>page.evaluate(()=>window.__reviewCopy.length)).toBeGreaterThan(0);
+  await page.locator('[data-group-action="back"]').click();
+  await expect(page.locator('.favorite-card-shell')).toHaveCount(1);
+  await expect(page.locator('#favorite-trainer-search')).toHaveValue('Alice');
 });
 
 test('Who wants this stays simple with real populated variants and priorities on mobile',async({page})=>{
