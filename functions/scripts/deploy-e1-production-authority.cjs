@@ -437,6 +437,7 @@ function replaceAuthority(plan, built, workDirectory, spawn) {
   const before = gcloudJson(spawn, ['run', 'services', 'describe', plan.target.service,
     `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-describe');
   verifyAuthorityService(plan, before, {
+    allowLegacyMissingFalseEnvironment: true,
     allowLegacyMissingReadProofMode: true,
     allowPrivateEnvironment: true
   });
