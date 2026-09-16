@@ -207,9 +207,18 @@ function verifyArtifactProvenance(plan, artifact, build, expected, built) {
   for (const key of ['images', 'tags', 'timeout', 'serviceAccount']) {
     if (config[key] !== undefined) equal(config[key], expected.config[key], 'provenance-config-mismatch');
   }
+  const dockerDigest = TOOLCHAIN.docker.split('@sha256:')[1];
+  const dockerRepository = TOOLCHAIN.docker.split('@')[0];
+  const dockerUris = [
+    dockerRepository,
+    TOOLCHAIN.docker,
+    `${TOOLCHAIN.docker}@sha256:${dockerDigest}`
+  ];
   if (!definition.resolvedDependencies?.some((dependency) =>
-    [TOOLCHAIN.docker, TOOLCHAIN.docker.split('@')[0]].includes(dependency.uri) &&
-    dependency.digest?.sha256 === TOOLCHAIN.docker.split('@sha256:')[1])) fail('provenance-toolchain-mismatch');
+    dockerUris.includes(dependency.uri) && exactFields(dependency.digest, ['sha256']) &&
+    dependency.digest.sha256 === dockerDigest)) {
+    fail('provenance-toolchain-mismatch');
+  }
   // Source archive SHA-256, generation, output and service account are bound through
   // the authenticated Cloud Build resource for this exact signed invocation ID.
   equal(verifyBuildResult(plan, build, expected), built, 'provenance-build-mismatch');

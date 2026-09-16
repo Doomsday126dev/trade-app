@@ -126,6 +126,36 @@ test('signed provenance binds build identity, builder, configuration and output'
   const a=structuredClone(original);a.provenance_summary.provenance[0].envelope.payload+='x';assert.throws(()=>policy.verifyArtifactProvenance(plan,a,s.build,s.expected,s.built),/provenance-envelope/);
  } finally {verify.mock.restore();}
 });
+test('signed provenance canonicalizes only the exact duplicated approved toolchain digest URI',()=>{
+ const verify=fixture.mockGoogleSignature(mock);
+ try {
+  const s=scenario(),digest=policy.TOOLCHAIN.docker.split('@sha256:')[1];
+  const repository=policy.TOOLCHAIN.docker.split('@')[0];
+  const duplicate=`${policy.TOOLCHAIN.docker}@sha256:${digest}`;
+  const artifactWith=(uri,digestRecord={sha256:digest})=>{
+   const a=fixture.artifact(plan,s.build,s.config),occurrence=a.provenance_summary.provenance[0];
+   const dependency=occurrence.build.inTotoSlsaProvenanceV1.predicate.buildDefinition.resolvedDependencies[0];
+   dependency.uri=uri;dependency.digest=digestRecord;
+   occurrence.envelope=fixture.sign(occurrence.build.inTotoSlsaProvenanceV1);
+   return a;
+  };
+  for(const uri of [repository,policy.TOOLCHAIN.docker,duplicate]){
+   assert.equal(policy.verifyArtifactProvenance(plan,artifactWith(uri),s.build,s.expected,s.built),true);
+  }
+  const wrong='d'.repeat(64);
+  const rejected=[
+   artifactWith(`${repository}@sha256:${wrong}@sha256:${digest}`),
+   artifactWith(`${policy.TOOLCHAIN.docker}@sha256:${wrong}`),
+   artifactWith(duplicate,{sha256:wrong}),
+   artifactWith(`gcr.io/cloud-builders/other@sha256:${digest}@sha256:${digest}`),
+   artifactWith(`${duplicate}@sha256:${digest}`),
+   artifactWith(duplicate,{sha256:digest,sha512:'unexpected'})
+  ];
+  for(const candidate of rejected){
+   assert.throws(()=>policy.verifyArtifactProvenance(plan,candidate,s.build,s.expected,s.built),/provenance-toolchain-mismatch/);
+  }
+ } finally {verify.mock.restore();}
+});
 test('signed provenance accepts only the observed successful step result metadata',()=>{
  const verify=fixture.mockGoogleSignature(mock);
  try {
