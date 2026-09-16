@@ -194,7 +194,15 @@ function verifyArtifactProvenance(plan, artifact, build, expected, built) {
   if (!external || typeof external.buildConfig !== 'string' || external.buildConfigSource || external.sourceToBuild) fail('provenance-config-missing');
   let config;
   try { config = JSON.parse(Buffer.from(external.buildConfig, 'base64').toString('utf8')); } catch { fail('provenance-config-missing'); }
-  verifyConfig(config, expected.config);
+  const signedConfigFields = new Set([
+    'steps', 'images', 'tags', 'timeout', 'serviceAccount', 'options', 'substitutions', 'sourceProvenance'
+  ]);
+  const signedResultFields = ['status', 'timing', 'pullTiming'];
+  if (!config || typeof config !== 'object' || Array.isArray(config) || !Array.isArray(config.steps) ||
+      Object.keys(config).some((name) => !signedConfigFields.has(name)) ||
+      config.steps?.some((step) => Object.hasOwn(step, 'exitCode'))) fail('provenance-config-mismatch');
+  const executedSteps = config.steps?.some((step) => signedResultFields.some((name) => Object.hasOwn(step, name)));
+  verifyConfig(config, expected.config, executedSteps);
   equal(external.substitutions || {}, {}, 'provenance-substitutions-invalid');
   for (const key of ['images', 'tags', 'timeout', 'serviceAccount']) {
     if (config[key] !== undefined) equal(config[key], expected.config[key], 'provenance-config-mismatch');

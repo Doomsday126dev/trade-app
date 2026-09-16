@@ -126,6 +126,53 @@ test('signed provenance binds build identity, builder, configuration and output'
   const a=structuredClone(original);a.provenance_summary.provenance[0].envelope.payload+='x';assert.throws(()=>policy.verifyArtifactProvenance(plan,a,s.build,s.expected,s.built),/provenance-envelope/);
  } finally {verify.mock.restore();}
 });
+test('signed provenance accepts only the observed successful step result metadata',()=>{
+ const verify=fixture.mockGoogleSignature(mock);
+ try {
+  const s=scenario(),original=fixture.artifact(plan,s.build,s.config);
+  const actualShape=structuredClone(original),occurrence=actualShape.provenance_summary.provenance[0];
+  const statement=occurrence.build.inTotoSlsaProvenanceV1;
+  const buildConfig={
+   steps:s.config.steps.map(step=>({...structuredClone(step),status:'SUCCESS',timing:{startTime:s.build.startTime,
+    endTime:s.build.finishTime},pullTiming:{startTime:s.build.startTime,endTime:s.build.startTime}})),
+   options:{...structuredClone(s.config.options),pool:{}},sourceProvenance:structuredClone(s.build.sourceProvenance),
+   tags:structuredClone(s.config.tags)
+  };
+  statement.predicate.buildDefinition.externalParameters.buildConfig=Buffer.from(JSON.stringify(buildConfig)).toString('base64');
+  occurrence.envelope=fixture.sign(statement);
+  assert.equal(policy.verifyArtifactProvenance(plan,actualShape,s.build,s.expected,s.built),true);
+
+  const mutations=[
+   x=>x.steps[0].name='gcr.io/cloud-builders/docker',
+   x=>x.steps[0].entrypoint='sh',
+   x=>x.steps[0].args.push('--build-arg=EXTRA=1'),
+   x=>x.steps[0].env=['DOCKER_BUILDKIT=1'],
+   x=>x.steps[0].secretEnv=['SECRET'],
+   x=>x.steps[0].volumes=[{name:'extra',path:'/extra'}],
+   x=>x.steps[0].dir='other',
+   x=>x.steps[0].waitFor=['-'],
+   x=>x.steps[0].id='other',
+   x=>x.steps[0].timeout='1s',
+   x=>x.steps[0].unexpectedInput=true,
+   x=>x.steps[0].exitCode=0,
+   x=>x.steps[0].status='FAILURE',
+   x=>x.serviceAccount='projects/other/serviceAccounts/other',
+   x=>x.unexpectedInput=true,
+   x=>x.substitutions={EXTRA:'1'}
+  ];
+  for(const mutate of mutations){
+   const candidate=structuredClone(actualShape),item=candidate.provenance_summary.provenance[0];
+   const signed=item.build.inTotoSlsaProvenanceV1,external=signed.predicate.buildDefinition.externalParameters;
+   const config=JSON.parse(Buffer.from(external.buildConfig,'base64').toString('utf8'));
+   mutate(config);external.buildConfig=Buffer.from(JSON.stringify(config)).toString('base64');item.envelope=fixture.sign(signed);
+   assert.throws(()=>policy.verifyArtifactProvenance(plan,candidate,s.build,s.expected,s.built),/e1\/authority-/);
+  }
+  const substituted=structuredClone(actualShape),item=substituted.provenance_summary.provenance[0];
+  item.build.inTotoSlsaProvenanceV1.predicate.buildDefinition.externalParameters.substitutions={EXTRA:'1'};
+  item.envelope=fixture.sign(item.build.inTotoSlsaProvenanceV1);
+  assert.throws(()=>policy.verifyArtifactProvenance(plan,substituted,s.build,s.expected,s.built),/provenance-substitutions-invalid/);
+ } finally {verify.mock.restore();}
+});
 test('build-only persists a sealed receipt and cannot inspect or replace the service',()=>withStaged((p,staged,work)=>{
  const f=fixture.buildSpawn(p),receipt=path.join(work,'build.json');
  const submitted=deploy.submitAuthorityBuild(p,staged,work,receipt,f.spawn);
