@@ -507,7 +507,8 @@ test('build qualification and replacement are separate fail-closed invocations',
   const replacementPlan = planFixture('replace');
   const before = serviceFixture();
   before.spec.template.spec.containers[0].env = before.spec.template.spec.containers[0].env
-    .filter((entry) => entry.name !== 'READ_PROOF_MODE');
+    .filter((entry) => entry.name !== 'READ_PROOF_MODE' &&
+      !LEGACY_MISSING_FALSE_ENVIRONMENT.includes(entry.name));
   const after = serviceFixture({ imageDigest: buildFixture.DIGEST, revision: 'e1-identity-authority-00053-new' });
   let describeCalls = 0;
   const calls = [];
