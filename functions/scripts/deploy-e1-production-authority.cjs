@@ -53,6 +53,11 @@ const REQUIRED_INACTIVE_ENVIRONMENT = Object.freeze({
   READ_PROOF_MODE: 'false',
   GROUP_E_CLIENT_MODE: 'disabled'
 });
+const LEGACY_MISSING_FALSE_ENVIRONMENT = Object.freeze([
+  'READ_PROVIDER_PUBLIC_SHARE_ENABLED',
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
+  'PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED'
+]);
 const GROUP_E_PRIVATE_ENVIRONMENT = Object.freeze([
   'GROUP_E_SUBJECT_BINDINGS',
   'GROUP_E_COHORT_DIGEST',
@@ -138,8 +143,16 @@ function inactiveEnvironmentValid(env, options = {}) {
     READ_ACCOUNT_FOUNDATION_ENABLED: 'true',
     PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'true'
   } : REQUIRED_INACTIVE_ENVIRONMENT;
+  if (options.allowLegacyMissingFalseEnvironment === true &&
+      LEGACY_MISSING_FALSE_ENVIRONMENT.some((name) => required[name] !== 'false')) {
+    return false;
+  }
   return Object.entries(required).every(([name, value]) => {
     if (name === 'READ_PROOF_MODE' && options.allowLegacyMissingReadProofMode === true && env[name] === undefined) {
+      return true;
+    }
+    if (options.allowLegacyMissingFalseEnvironment === true && env[name] === undefined &&
+        LEGACY_MISSING_FALSE_ENVIRONMENT.includes(name)) {
       return true;
     }
     return env[name] === value;
@@ -209,6 +222,10 @@ function verifyAuthorityService(plan, service, options = {}) {
   const env = environment(container);
   const compatibilityFloor = options.compatibilityFloor || loadCompatibilityFloor();
   const keyVersions = providerSubjectKeyVersions(container);
+  const compatibilityEnvironment = options.allowLegacyMissingFalseEnvironment === true ? {
+    ...Object.fromEntries(LEGACY_MISSING_FALSE_ENVIRONMENT.map((name) => [name, 'false'])),
+    ...env
+  } : env;
   const ready = (service?.status?.conditions || []).some((condition) =>
     condition.type === 'Ready' && String(condition.status) === 'True');
   if (service?.metadata?.name !== plan.target.service || service?.status?.url !== plan.target.origin ||
@@ -224,7 +241,7 @@ function verifyAuthorityService(plan, service, options = {}) {
   }
   try {
     assertProviderCompatibilityDeployment({ floor: compatibilityFloor, authoritySourceFingerprint: plan.sourceFingerprint,
-      environment: env, availableKeyVersions: keyVersions });
+      environment: compatibilityEnvironment, availableKeyVersions: keyVersions });
   } catch {
     throw new Error('e1/authority-runtime-or-inactive-state-invalid');
   }
@@ -237,6 +254,7 @@ function verifyAuthorityService(plan, service, options = {}) {
 function inactiveServiceSpec(plan, service, image) {
   const compatibilityFloor = loadCompatibilityFloor();
   verifyAuthorityService(plan, service, {
+    allowLegacyMissingFalseEnvironment: true,
     allowLegacyMissingReadProofMode: true,
     allowPrivateEnvironment: true
   });
@@ -262,8 +280,9 @@ function inactiveServiceSpec(plan, service, image) {
     PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'true'
   } : REQUIRED_INACTIVE_ENVIRONMENT;
   const originalNames = new Set((container.env || []).map((entry) => entry.name));
+  const permittedMissingNames = new Set(['READ_PROOF_MODE', ...LEGACY_MISSING_FALSE_ENVIRONMENT]);
   if (Object.keys(requiredEnvironment)
-    .some((name) => name !== 'READ_PROOF_MODE' && !originalNames.has(name))) {
+    .some((name) => !permittedMissingNames.has(name) && !originalNames.has(name))) {
     throw new Error('e1/authority-required-inactive-environment-missing');
   }
   container.env = (container.env || []).flatMap((entry) => {
@@ -273,8 +292,8 @@ function inactiveServiceSpec(plan, service, image) {
     }
     return [entry];
   });
-  if (!originalNames.has('READ_PROOF_MODE')) {
-    container.env.push({ name: 'READ_PROOF_MODE', value: requiredEnvironment.READ_PROOF_MODE });
+  for (const name of permittedMissingNames) {
+    if (!originalNames.has(name)) container.env.push({ name, value: requiredEnvironment[name] });
   }
   const fakeReady = { ...replacement, status: { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] } };
   verifyAuthorityService(plan, fakeReady, { expectedImage: image });
@@ -546,6 +565,7 @@ module.exports = Object.freeze({
   AUTHORITY_GATES,
   DEPLOY_CONFIRMATION,
   GROUP_E_PRIVATE_ENVIRONMENT,
+  LEGACY_MISSING_FALSE_ENVIRONMENT,
   PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,

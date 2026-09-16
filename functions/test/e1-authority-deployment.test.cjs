@@ -23,6 +23,7 @@ const {
 } = require('../production/e1AuthorityDeploymentPlan.cjs');
 const {
   GROUP_E_PRIVATE_ENVIRONMENT,
+  LEGACY_MISSING_FALSE_ENVIRONMENT,
   PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
@@ -402,6 +403,65 @@ test('legacy authority preflight accepts only an absent or false read proof mode
   assert.throws(() => verifyAuthorityService(plan, missingOperationGate, {
     allowLegacyMissingReadProofMode: true
   }), /runtime-or-inactive-state-invalid/u);
+});
+
+test('legacy authority replacement materializes only the exact three missing false environment gates', () => {
+  const plan = planFixture();
+  const image = `${plan.target.imageUri}@${NEXT_IMAGE_DIGEST}`;
+  const without = (service, names) => {
+    service.spec.template.spec.containers[0].env = service.spec.template.spec.containers[0].env
+      .filter((entry) => !names.includes(entry.name));
+    return service;
+  };
+  const outputEnvironment = (service) => Object.fromEntries(
+    service.spec.template.spec.containers[0].env.map((entry) => [entry.name, String(entry.value ?? '')])
+  );
+
+  const allMissing = without(serviceFixture(), [...LEGACY_MISSING_FALSE_ENVIRONMENT]);
+  assert.throws(() => verifyAuthorityService(plan, allMissing), /runtime-or-inactive-state-invalid/u);
+  const postProviderFloor = validateCompatibilityFloor({
+    schemaVersion: 1,
+    stage: 'post-first-provider-account',
+    providerAccountsExist: true,
+    compatibilityIrreversible: true,
+    requiredProviderSubjectKeyVersions: [1],
+    compatibleAuthoritySourceFingerprints: [plan.sourceFingerprint]
+  });
+  assert.equal(inactiveEnvironmentValid(outputEnvironment(allMissing), {
+    allowLegacyMissingFalseEnvironment: true,
+    compatibilityFloor: postProviderFloor
+  }), false);
+  const allReplacement = inactiveServiceSpec(plan, allMissing, image);
+  const allOutput = outputEnvironment(allReplacement);
+  for (const name of LEGACY_MISSING_FALSE_ENVIRONMENT) assert.equal(allOutput[name], 'false');
+  assert.equal(verifyAuthorityService(plan, {
+    ...allReplacement,
+    status: { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] }
+  }, { expectedImage: image }), true);
+
+  for (const name of LEGACY_MISSING_FALSE_ENVIRONMENT) {
+    const singleReplacement = inactiveServiceSpec(plan, without(serviceFixture(), [name]), image);
+    assert.equal(outputEnvironment(singleReplacement)[name], 'false', name);
+  }
+
+  for (const name of LEGACY_MISSING_FALSE_ENVIRONMENT) {
+    const enabled = serviceFixture();
+    enabled.spec.template.spec.containers[0].env.find((entry) => entry.name === name).value = 'true';
+    assert.throws(() => inactiveServiceSpec(plan, enabled, image), /runtime-or-inactive-state-invalid/u, name);
+  }
+
+  const unrelatedMissing = without(serviceFixture(), ['RESERVE_HANDLE_ENABLED']);
+  assert.throws(() => inactiveServiceSpec(plan, unrelatedMissing, image), /runtime-or-inactive-state-invalid/u);
+
+  for (const name of LEGACY_MISSING_FALSE_ENVIRONMENT) {
+    const absentOutput = without(structuredClone(allReplacement), [name]);
+    absentOutput.status = { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] };
+    assert.throws(() => verifyAuthorityService(plan, absentOutput), /runtime-or-inactive-state-invalid/u, name);
+    const nonFalseOutput = structuredClone(allReplacement);
+    nonFalseOutput.spec.template.spec.containers[0].env.find((entry) => entry.name === name).value = 'true';
+    nonFalseOutput.status = { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] };
+    assert.throws(() => verifyAuthorityService(plan, nonFalseOutput), /runtime-or-inactive-state-invalid/u, name);
+  }
 });
 
 test('inactive authority replacement preserves unrelated configuration and strips all Group E activation values', () => {
