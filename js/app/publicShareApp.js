@@ -161,7 +161,8 @@
       model.xxl&&!sectionFlags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
-    return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${value?.note?`<p class="share-pcard-mod">${esc(value.note)}</p>`:''}</div></article>`;
+    const note=global.PogoDomain.publicSharePublication.publicNoteForDisplay(value?.note);
+    return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
