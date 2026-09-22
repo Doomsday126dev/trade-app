@@ -162,5 +162,6 @@
     ,'security.usernamePinNotConfigured':'Benutzername und PIN sind für dieses reine Anbieterkonto nicht eingerichtet.','security.googleLegacyMigrationRequired':'Dieses bestehende Konto muss zuerst seine alte Identitätsmigration abschließen.','security.googleCreationNotReady':'Neue Anbieterkonten bleiben deaktiviert, bis der alte Namensraum bestätigt ist.','security.googleCreationVerifying':'Das genaue Kontoergebnis wird geprüft. Erstelle das Konto nicht erneut.','providerOnboarding.ready':'Der Name hat die Vorprüfung bestanden. Erstelle das Konto, um ihn endgültig zu beanspruchen.','providerOnboarding.create':'Konto erstellen','providerOnboarding.verify':'Konto prüfen','providerOnboarding.checking':'Name wird geprüft…','providerOnboarding.creating':'Konto wird erstellt…','providerOnboarding.verifying':'Konto wird geprüft…'
     ,'security.googleReady':'Bereit zum Verknüpfen','security.googleReadyHelp':'Die Kontosicherheitsprüfung ist abgeschlossen. Fahre fort, um Google zu öffnen.'
     ,'restored.copySearch':"Suchstring kopieren",'restored.searchDetails':"Suchdetails"
+    ,'safeTransfer.temporarilyUnavailable':'Die sichere Transfersuche ist vorübergehend nicht verfügbar, während die vollständige Abdeckung der Wunschlisten geprüft wird.'
   });
 })(window);

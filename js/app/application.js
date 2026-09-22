@@ -10460,6 +10460,10 @@ function returnToTradeComparison(){
 // paste the result into PoGo's bag search to see safe-to-transfer mons.
 const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
 const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
+// Containment: existing source coverage cannot prove that every selected
+// trainer's current declarations are present. Keep both generation and copy
+// closed until that coverage contract is implemented and tested.
+const SAFE_TRANSFER_GENERATION_ENABLED=false;
 function safeTransferPreferenceKey(base){
   const uid=String(auth?.currentUser?.uid||'').trim();
   return uid?`${base}:${encodeURIComponent(uid)}`:null;
@@ -10579,6 +10583,7 @@ function _safeTransferAllDex(){
   return [...seen].sort((a,b)=>a-b);
 }
 function computeSafeTransferString(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:_safeTransferSelected?.size||0};
   if(!_safeTransferSelected||!_safeTransferSelected.size){
     return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
   }
@@ -10618,6 +10623,10 @@ function renderSafeTransferOutput(){
   const copyBtn=document.getElementById('stb-copy-btn');
   if(!out||!summary)return;
   const r=computeSafeTransferString();
+  if(r.status==='disabled'){
+    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
+    out.value='';warnWrap.innerHTML='';if(copyBtn)copyBtn.disabled=true;return;
+  }
   if(!r.picked){
     summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
     out.value='';
@@ -10644,6 +10653,12 @@ function renderSafeTransferOutput(){
 }
 async function copySafeTransferString(){
   const out=document.getElementById('stb-output');
+  const result=computeSafeTransferString();
+  if(result.status==='disabled'){
+    if(out){out.value='';out.blur();}
+    const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
+    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return;
+  }
   if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
   try{
     await copyText(out.value);

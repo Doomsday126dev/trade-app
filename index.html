@@ -543,7 +543,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <div id="stb-warn-wrap"></div>
         <textarea class="stb-output" id="stb-output" readonly data-i18n-placeholder="safeTransfer.placeholder" data-i18n-aria-label="safeTransfer.outputLabel" placeholder="Choose at least one trainer to create a search string." aria-label="Generated search string"></textarea>
         <div class="stb-actions">
-          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
+          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()" disabled><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
           <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')" data-i18n="common.close">Close</button>
         </div>
       </div>

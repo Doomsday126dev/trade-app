@@ -508,5 +508,6 @@
     ,'accountSync.favoriteSaved':'Favorite saved to your account.'
     ,'accountSync.favoriteRemoved':'Favorite removed from your account.'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
+    ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
   });
 })(window);

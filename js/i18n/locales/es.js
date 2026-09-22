@@ -162,5 +162,6 @@
     ,'security.usernamePinNotConfigured':'El nombre de usuario y el PIN no están configurados para esta cuenta solo de proveedor.','security.googleLegacyMigrationRequired':'Esta cuenta existente debe completar primero la migración de su identidad anterior.','security.googleCreationNotReady':'La creación de cuentas de proveedor sigue desactivada hasta certificar el espacio de nombres anterior.','security.googleCreationVerifying':'Comprobando el resultado exacto de la cuenta. No vuelvas a crearla.','providerOnboarding.ready':'El nombre superó la comprobación preliminar. Crea la cuenta para reclamarlo definitivamente.','providerOnboarding.create':'Crear cuenta','providerOnboarding.verify':'Verificar cuenta','providerOnboarding.checking':'Comprobando nombre…','providerOnboarding.creating':'Creando cuenta…','providerOnboarding.verifying':'Verificando cuenta…'
     ,'security.googleReady':'Listo para conectar','security.googleReadyHelp':'La comprobación de seguridad terminó. Continúa para abrir Google.'
     ,'restored.copySearch':"Copiar búsqueda",'restored.searchDetails':"Detalles de búsqueda"
+    ,'safeTransfer.temporarilyUnavailable':'La búsqueda de transferencias seguras no está disponible temporalmente mientras se verifica la cobertura completa de las listas de deseos.'
   });
 })(window);

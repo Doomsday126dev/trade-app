@@ -161,5 +161,6 @@
     ,'security.usernamePinNotConfigured':'このプロバイダー専用アカウントにはトレーナー名と PIN が設定されていません。','security.googleLegacyMigrationRequired':'この既存アカウントは、Google ログインを続ける前に従来のID移行を完了する必要があります。','security.googleCreationNotReady':'従来の名前空間が確認されるまで、新しいプロバイダーアカウントの作成は無効です。','security.googleCreationVerifying':'正確なアカウント結果を確認しています。アカウントを再作成しないでください。','providerOnboarding.ready':'名前の事前確認が完了しました。アカウントを作成して最終的に取得してください。','providerOnboarding.create':'アカウントを作成','providerOnboarding.verify':'アカウントを確認','providerOnboarding.checking':'名前を確認中…','providerOnboarding.creating':'アカウントを作成中…','providerOnboarding.verifying':'アカウントを確認中…'
     ,'security.googleReady':'接続の準備完了','security.googleReadyHelp':'アカウントの安全確認が完了しました。続行して Google を開いてください。'
     ,'restored.copySearch':"検索式をコピー",'restored.searchDetails':"検索の詳細"
+    ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
   });
 })(window);
