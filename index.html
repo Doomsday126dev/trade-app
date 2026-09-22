@@ -1112,10 +1112,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/priorityValues.js',
+      'js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js',
+      'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js',
+      'js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js',
       'js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js',
       'js/domain/publicSharePublication.js',
       ...(providerCapabilities().providerPublicReadSupport?['js/domain/providerPublicProjection.js']:[]),
-      'js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
+      'js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
       'js/utils/textSafety.js','js/ui/stringHtml.js','js/services/firebaseAppCheck.js',
       ...(providerCapabilities().providerPublicReadSupport?['js/services/providerPublicShareGateway.js']:[]),
       'js/app/publicShareApp.js'
