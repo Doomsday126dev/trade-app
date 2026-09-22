@@ -50,3 +50,17 @@ test('public link action publishes multiline notes and catches other invalid tex
   await context.copyShareLink();
   assert.equal(published,0);assert.equal(copied,'');assert.equal(status,'product.publishFailed');
 });
+
+test('shared semantic labels distinguish ordinary, Dynamax and Gigantamax without duplicate Max wording',()=>{
+  const domain=loadDomains(),source=fs.readFileSync('js/app/application.js','utf8');
+  const block=source.slice(source.indexOf('function productShareCategoryLabel('),source.indexOf('function refreshProductShare('));
+  const labels={'list.dynamax':'Dynamax','list.gigantamax':'Gigantamax','share.flagShiny':'Shiny only','myList.lucky':'Lucky'};
+  const context={i18nCore:{t:key=>labels[key]||key},publicSharePublicationDomain:domain.publicSharePublication,priLabel:value=>({H:'High',M:'Medium',L:'Low'})[value]||value};
+  vm.createContext(context);vm.runInContext(block,context);
+  assert.equal(context.productShareDescription({name:'Bulbasaur',category:'wishlist',p:'H'}),'Bulbasaur · High');
+  assert.equal(context.productShareDescription({name:'Bulbasaur',category:'dynamax',p:'H'}),'Bulbasaur · Dynamax · High');
+  assert.equal(context.productShareDescription({name:'Dynamax Bulbasaur',category:'dynamax',p:'H'}),'Dynamax Bulbasaur · High');
+  assert.equal(context.productShareDescription({name:'Charizard',category:'gmax',p:'M'}),'Charizard · Gigantamax · Medium');
+  assert.equal(context.productShareDescription({name:'Gigantamax Charizard',category:'gmax',p:'M'}),'Gigantamax Charizard · Medium');
+  assert.equal(context.productShareDescription({name:'Pikachu',category:'wishlist',note:'Saturday\u2028After 3 pm'}),'Pikachu · Saturday\nAfter 3 pm');
+});

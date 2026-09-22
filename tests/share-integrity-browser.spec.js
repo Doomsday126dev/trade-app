@@ -28,7 +28,7 @@ test('Groups reports a partial removal among same-identity notes',async({page})=
   await expect(page.locator('.group-availability')).not.toContainText('No changes');
 });
 
-test('Share publishes a multiline note through the real action',async({page})=>{
+test('Share publishes a multiline note and copied text distinguishes Max categories once',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{
     const note='Saturday\nAfter 3 pm';
@@ -42,6 +42,18 @@ test('Share publishes a multiline note through the real action',async({page})=>{
   const publication=await page.evaluate(()=>({note:window.__publishedDeclarations[0].note,copied:window.__copied}));
   expect(publication.note).toBe('Saturday\u2028After 3 pm');
   expect(publication.copied).toContain('?view=AuditViewer&list=wishlist');
+
+  await page.evaluate(()=>{
+    allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity'}},wishlist:{AuditViewer:{Bulbasaur:'H'}},dynamax:{AuditViewer:{Bulbasaur:'H'}},gmax:{AuditViewer:{'Gigantamax Charizard':'M'}},costumes:{}});
+    openProductShare('text');
+  });
+  await page.locator('#product-share-text button').click();
+  const copied=await page.evaluate(()=>window.__copied);
+  expect(copied).toContain('- Bulbasaur · High');
+  expect(copied).toContain('- Bulbasaur · Dynamax · High');
+  expect(copied).toContain('- Gigantamax Charizard · Medium');
+  expect(copied).not.toContain('Gigantamax Charizard · Gigantamax');
+});
 
 async function fixture(page){
   const errors=[];page.on('pageerror',error=>errors.push(error.message));

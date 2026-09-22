@@ -5868,7 +5868,7 @@ function favoriteLookupModel(){
   return{...aggregate,...tradeListComparisonDomain.whoWants(aggregate.entries,{selected:favoriteBrowseState.selected,variantKey:favoriteLookupVariant},{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})};
 }
 function favoriteVariantLabel(entry){
-  return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
+  return productShareDescription({...entry,p:'',note:''});
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
@@ -6508,8 +6508,16 @@ function openProductShare(mode='link'){
   document.getElementById('product-share-scope').value='full';
   openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
 }
+function productShareCategoryLabel(entry){
+  const category=entry.category||entry.type||entry.ref?.type;
+  const key=category==='dynamax'?'list.dynamax':category==='gmax'?'list.gigantamax':'';
+  if(!key)return'';
+  const label=i18nCore.t(key),name=String(entry.dn||entry.name||'').normalize('NFKC').toLocaleLowerCase();
+  const markers=category==='dynamax'?[label,'dynamax','dmax','d-max','ダイマックス','dinamax']:[label,'gigantamax','gmax','g-max','キョダイマックス','gigamax','gigadynamax'];
+  return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
+}
 function productShareDescription(entry){
-  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -6549,8 +6557,7 @@ async function exportProductShareImage(){
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
   const flag=(name,label)=>entry[name]&&!sectionFlags.includes(name)?label:'';
-  const category=entry.category||entry.type||entry.ref?.type;
-  const form=category==='dynamax'?i18nCore.t('list.dynamax'):category==='gmax'?i18nCore.t('list.gigantamax'):'';
+  const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
   return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,
