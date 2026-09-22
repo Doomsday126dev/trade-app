@@ -234,7 +234,7 @@ test('only confirmed list and profile changes request automatic publication',()=
   const writeUser=between('async function writeUser(u,data)','function canWriteLoginDirectoryNow');
   const writeList=between('async function writeList(type,u,list,{previousList,orderModel}={})','function refreshAddPokemonChoices');
   const canonicalAck=between('async function publishAccountSyncProjection','function retireMigratedLegacyListQueue');
-  const profile=between('async function saveProfile(){','// ── UI HELPERS');
+  const profile=between('async function saveProfile(event){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
   assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit'\)/);

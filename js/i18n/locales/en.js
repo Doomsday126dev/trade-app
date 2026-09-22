@@ -507,6 +507,7 @@
     ,'accountSync.favoritePending':'Favorite change saved on this device; waiting for account sync.'
     ,'accountSync.favoriteSaved':'Favorite saved to your account.'
     ,'accountSync.favoriteRemoved':'Favorite removed from your account.'
+    ,'settings.profileSharingSummary':'Your trainer identity and details you can share.','settings.friendCodeHelp':'12 digits, included when you share your trainer profile.','settings.profileSharedOptional':'Optional, included when you share your profile.','settings.profileNoChanges':'No unsaved changes','settings.profileUnsaved':'Unsaved changes','settings.discardChanges':'Discard','settings.saveChanges':'Save changes'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
     ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
     ,'contextSearch.copyProtected':'Copy protected search','contextSearch.copyBroad':'Copy broad special search','contextSearch.mixedHelp':'Ordinary wants use protected discovery. Special or exact wants use a separate broad species search so requested matches are not excluded.'
