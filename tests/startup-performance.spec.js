@@ -100,7 +100,9 @@ for(const profile of profiles){
     expect(protectedState.appCheckStartedAfterRequest).toBe(true);
     expect(protectedState.readyAfterAppCheck).toBe(true);
     expect(protectedState.appCheckImports).toBe(1);
-    expect(protectedState.featureScriptCount).toBeLessThanOrEqual(75);
+    // Existing-account Google adds seven capability-gated modules to the protected app.
+    // The signed-out shell above must still load zero eager first-party scripts.
+    expect(protectedState.featureScriptCount).toBeLessThanOrEqual(82);
     expect(protectedState.signedInApplicationLoaded).toBe(true);
     expect(protectedState.maxLongTask).toBeLessThanOrEqual(200);
     console.log(`STARTUP_PERF ${JSON.stringify({profile:profile.name,shell,protected:protectedState})}`);

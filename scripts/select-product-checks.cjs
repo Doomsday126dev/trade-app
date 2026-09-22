@@ -12,7 +12,8 @@ const OWNER_GROUPS=[PRODUCT,SYNC,PRIVACY,RELEASE,PUBLIC_BACKEND,
   ['functions/test/e1-rate-limit.test.cjs','functions/test/e1-reserve-trainer-handle.test.cjs']];
 const BACKEND_TEST_SUPPORT={
   'functions/test/helpers.cjs':['approved-viewer','common-callable','favorites','handle','history','safety-contract','tags'],
-  'functions/test/helpers/groupEFixture.cjs':['e1-gateway','e1-group-e-admission','e1-group-e-client-foundation','e1-group-e-control-store','e1-production-client-foundation-execution']
+  'functions/test/helpers/groupEFixture.cjs':['e1-gateway','e1-group-e-admission','e1-group-e-client-foundation','e1-group-e-control-store','e1-production-client-foundation-execution'],
+  'functions/test/helpers/authority-build-fixture.cjs':['e1-authority-build-policy','e1-authority-deployment']
 };
 const LEGACY_RESET=['tests/legacy-identity-fences.test.cjs','tests/legacy-slot-reconciliation.test.cjs','tests/legacy-slot-reconciliation-evidence.test.cjs','tests/legacy-slot-reconciliation-production.test.cjs','tests/legacy-identity-audit.test.cjs','tests/legacy-pin-reset-login.test.cjs','tests/legacy-pin-reset-ops.test.cjs'];
 const legacyResetFile=file=>/^functions\/legacy-pin-reset\//.test(file)||[
