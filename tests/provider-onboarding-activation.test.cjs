@@ -19,9 +19,11 @@ test('onboarding handoff fences a same-UID lifecycle change before any owned ses
 });
 test('provider creation sends the current product release as diagnostic metadata',()=>{
   let options;
+  const release=/const RELEASE_ID=['"]([^'"]+)['"]/.exec(fs.readFileSync('js/domain/clientRelease.js','utf8'))?.[1];
+  assert.equal(release,'2026-09-22.117');
   const context=vm.createContext({PROVIDER_CAPABILITIES:{providerAccountCompatibility:true},providerAccountFoundationClient:null,
     providerAccountFoundationService:{createProviderAccountClient:value=>{options=value;return{};}},fbApp:{},auth:{},
-    firebaseAppCheckReady:()=>{},providerAuthSnapshot:()=>{},localStorage:{},clientReleaseDomain:{RELEASE_ID:'2026-09-08.103'}});
+    firebaseAppCheckReady:()=>{},providerAuthSnapshot:()=>{},localStorage:{},clientReleaseDomain:{RELEASE_ID:release}});
   vm.runInContext(extract('ensureProviderAccountFoundationClient'),context);context.ensureProviderAccountFoundationClient();
-  assert.equal(options.clientRelease,'2026-09-08.103');
+  assert.equal(options.clientRelease,release);
 });
