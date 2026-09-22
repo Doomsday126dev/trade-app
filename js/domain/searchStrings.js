@@ -6,6 +6,7 @@
   const POGO_STR_LIMIT=1500;
   const GAME_LANGUAGE_STORAGE_KEYS=Object.freeze({locale:'pogoPokemonGoSearchLocale:v1',override:'pogoPokemonGoSearchLocaleOverride:v1'});
   const CONTEXTUAL_SEARCH_POLICIES=Object.freeze({
+    unresolved:Object.freeze({id:'unresolved',query:null,labelKey:'workflow.notIncluded'}),
     ordinary:Object.freeze({id:'ordinary-protected',query:syntax.PRIORITY_QUERY,labelKey:'contextSearch.copyProtected'}),
     shiny:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'}),
     lucky:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'}),
@@ -108,15 +109,33 @@
     return{len,cls};
   }
 
+  function contextualEntryIdentity(entry={}){
+    const raw=entry.no,number=(typeof raw==='number'||typeof raw==='string'&&/^\d+$/.test(raw))?Number(raw):NaN;
+    if(!Number.isSafeInteger(number)||number<1||number>9999)return Object.freeze({resolved:false,explicit:false,category:'invalid-dex'});
+    const name=String(entry.name||'').normalize('NFKC').trim();
+    if(!name)return Object.freeze({resolved:true,explicit:false,category:'species-number',speciesId:number});
+    const catalog=root.pokemonCatalog,names=global.PogoI18n?.pokemonNames,dex=root.publicPokemonDex;
+    if(!catalog?.decorateCatalogEntry||!names?.resolveDisplayName||!dex?.dex)return Object.freeze({resolved:false,explicit:false,category:'identity-unavailable',speciesId:number});
+    const legacy=catalog.resolveLegacyKey?.(name);
+    const canonicalName=legacy?.canonicalKey||name;
+    const canonical=catalog.decorateCatalogEntry({...entry,no:number,name:canonicalName,displayName:canonicalName,dn:canonicalName});
+    if(!canonical||dex.dex(canonical.name)!==number)return Object.freeze({resolved:false,explicit:false,category:'unresolved-catalog',speciesId:number});
+    const presentation=names.resolveDisplayName(canonical,{locale:'ja'});
+    const declaredExplicit=Boolean(canonical.regionalFormCode||canonical.goFormId||canonical.goCostumeId||canonical.gameplayDistinctGender||canonical.representedMaxState&&canonical.representedMaxState!=='standard');
+    const explicit=declaredExplicit||presentation.category!=='ordinary-species';
+    return Object.freeze({resolved:true,explicit,category:presentation.category,catalogId:canonical.catalogId,speciesId:number});
+  }
+
   function contextualEntryPolicy(entry={}){
+    const identity=contextualEntryIdentity(entry);
+    if(!identity.resolved)return CONTEXTUAL_SEARCH_POLICIES.unresolved;
     if(entry.shiny===true)return CONTEXTUAL_SEARCH_POLICIES.shiny;
     if(entry.lucky===true)return CONTEXTUAL_SEARCH_POLICIES.lucky;
     if(entry.xxl===true||entry.xxs===true)return CONTEXTUAL_SEARCH_POLICIES.size;
     const category=String(entry.category||entry.type||'wishlist').toLowerCase();
-    const identityText=String(entry.dn||entry.displayName||entry.name||'');
     const explicit=Boolean(entry.gender||entry.mod||entry.note||entry.backgroundId)
       ||!['','wishlist'].includes(category)
-      ||/\([^)]*\)|^[AGHP]-/.test(identityText);
+      ||identity.explicit;
     return explicit?CONTEXTUAL_SEARCH_POLICIES.explicit:CONTEXTUAL_SEARCH_POLICIES.ordinary;
   }
 
@@ -128,7 +147,8 @@
     const manual=entries.map(entry=>{
       const raw=entry.no,number=(typeof raw==='number'||typeof raw==='string'&&/^\d+$/.test(raw))?Number(raw):NaN;
       const no=Number.isSafeInteger(number)&&number>0&&number<=9999?number:null;
-      return{...entry,no,unresolved:no===null};
+      const normalized={...entry,no};
+      return{...normalized,unresolved:no===null||contextualEntryPolicy(normalized).id==='unresolved'};
     });
     const resolved=manual.filter(e=>!e.unresolved),ordinary=resolved.filter(entry=>contextualEntryPolicy(entry).id==='ordinary-protected'),special=resolved.filter(entry=>contextualEntryPolicy(entry).id==='special-broad');
     const parts=[],partPolicies=[];
@@ -145,5 +165,5 @@
     return{locale,limit,parts,partPolicies,policy,manual,total:manual.length,unresolved:manual.filter(e=>e.unresolved).length,speciesOnly:true};
   }
 
-  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,GAME_LANGUAGE_STORAGE_KEYS,CONTEXTUAL_SEARCH_POLICIES,resolveGameLocalePreference,contextualEntryPolicy,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo,contextualSearchPlan});
+  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,GAME_LANGUAGE_STORAGE_KEYS,CONTEXTUAL_SEARCH_POLICIES,resolveGameLocalePreference,contextualEntryIdentity,contextualEntryPolicy,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo,contextualSearchPlan});
 })(window);

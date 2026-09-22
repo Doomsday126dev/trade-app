@@ -295,6 +295,32 @@ test.describe('anonymous public share bootstrap',()=>{
     await assertPublicPrivacy(page);
   });
 
+  test('regional-form clipboard policy is independent of interface and Pokémon GO languages',async({browser})=>{
+    const declaration={intent:'lf',name:'H-Typhlosion',category:'wishlist',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false};
+    const projection={...publicProjection,version:2,declarations:[declaration],declarationCount:1};
+    for(const [interfaceLocale,gameLocale,expected] of [
+      ['ja','en','!traded&157'],
+      ['en','ja','!こうかん&157']
+    ]){
+      const context=await browser.newContext();
+      const page=await context.newPage();
+      await page.addInitScript(({interfaceLocale,gameLocale})=>{
+        localStorage.setItem('pogoUiLocale:v1',interfaceLocale);
+        localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify(gameLocale));
+        localStorage.setItem('pogoPokemonGoSearchLocaleOverride:v1','true');
+        Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__regionalCopy=value;}}});
+      },{interfaceLocale,gameLocale});
+      await installPublicFirebase(page,{projection});
+      await page.goto('./?view=PublicTrainer&list=wishlist');
+      expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe(interfaceLocale);
+      const copy=page.locator('[data-want-section="H"] [data-contextual-copy]');
+      await expect(copy).toHaveAttribute('data-contextual-copy',expected);
+      await copy.click();
+      expect(await page.evaluate(()=>window.__regionalCopy)).toBe(expected);
+      await context.close();
+    }
+  });
+
   test('locale fallback and four responsive sizes preserve a usable public action',async({browser})=>{
     for(const [saved,browserLocale,expected,width,height] of [
       ['', 'ja-JP','ja',320,568],['es','de-DE','es',390,844],

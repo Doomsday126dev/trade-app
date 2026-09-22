@@ -7,7 +7,7 @@ const root=path.join(__dirname,'..');
 function load(){
   const window={};window.window=window;
   const context=vm.createContext({window});
-  for(const file of ['js/i18n/locales/en.js','js/i18n/locales/ja.js','js/i18n/locales/es.js','js/i18n/locales/de.js','js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/core.js','js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js','js/utils/textSafety.js','js/ui/stringHtml.js','js/domain/tradeListComparison.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+  for(const file of ['js/i18n/locales/en.js','js/i18n/locales/ja.js','js/i18n/locales/es.js','js/i18n/locales/de.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js','js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js','js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js','js/utils/textSafety.js','js/ui/stringHtml.js','js/domain/tradeListComparison.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
   return window;
 }
 const json=value=>JSON.parse(JSON.stringify(value));
@@ -31,10 +31,8 @@ test('split and unresolved guidance localize without known-variant checklists',(
     assert.ok(partial.includes(t('workflow.omittedHelp')));assert.doesNotMatch(partial,/contextual-manual/);
   }
 });
-test('lightweight public shell accepts every catalog species and variant without checklists',()=>{
+test('public shell canonical identity dependencies accept every catalog species and variant without checklists',()=>{
   const w=load();
-  for(const file of ['publicPokemonDex','spriteSlugs'])vm.runInNewContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),{window:w});
-  delete w.PogoI18n.pokemonNames;
   const rows=JSON.parse(fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8').match(/const rows=(.*);/)[1]);
   const t=(key,params={})=>w.PogoLocales.en[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
   for(const [name,no]of rows){
@@ -49,7 +47,7 @@ test('empty and unknown scopes never emit a match-all prefilter',()=>{
   assert.equal(unknown.unresolved,3);assert.equal(unknown.manual.length,3);assert.equal(unknown.parts.length,0);
 });
 test('mixed ordinary and special scopes split protected and broad discovery without mutation',()=>{
-  const input=[{name:'Pikachu costume',no:25,shiny:true,backgroundId:'exact',gender:'f',mod:'unsupported',note:'private'},{name:'Unmapped',no:null},{name:'Pikachu',no:25}];
+  const input=[{name:'Pikachu (Purple Party)',no:25,shiny:true,backgroundId:'exact',gender:'f',mod:'unsupported',note:'private'},{name:'Unmapped',no:null},{name:'Pikachu',no:25}];
   const before=JSON.stringify(input),plan=load().PogoDomain.searchStrings.contextualSearchPlan(input);
   assert.deepEqual(json(plan.parts),['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25','!traded&25']);
   assert.deepEqual(json(plan.partPolicies),['ordinary-protected','special-broad']);assert.equal(plan.policy,'mixed');assert.equal(plan.manual.length,3);assert.equal(plan.unresolved,1);
@@ -70,7 +68,7 @@ test('all supported query locales restore the complete protected ordinary policy
   assert.equal(domain.searchStrings.contextualSearchPlan([{no:25}],{locale:'fr'}).locale,'en');
 });
 test('oversized scopes split on species boundaries with every species represented once',()=>{
-  const entries=Array.from({length:2000},(_,i)=>({name:`Fixture ${i+1}`,no:i+1}));
+  const entries=Array.from({length:2000},(_,i)=>({no:i+1}));
   for(const locale of ['en','ja','es','de']){
     const plan=load().PogoDomain.searchStrings.contextualSearchPlan(entries,{locale});
     assert(plan.parts.length>1);assert(plan.parts.every(part=>part.length<=1500));

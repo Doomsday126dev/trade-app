@@ -8,12 +8,23 @@ const vm=require('node:vm');
 
 const root=path.resolve(__dirname,'..');
 const source=file=>fs.readFileSync(path.join(root,file),'utf8');
-function load(){
+function loadWithoutIdentity(){
   const window={};
   vm.runInNewContext(source('js/domain/pokemonGoSearchSyntax.js'),{window,Object,Set});
   vm.runInNewContext(source('js/domain/searchStrings.js'),{window,Object,Set});
   return window.PogoDomain.searchStrings;
 }
+function loadIdentityAware(){
+  const window={};
+  for(const file of [
+    'js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js',
+    'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js',
+    'js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js',
+    'js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js'
+  ])vm.runInNewContext(source(file),{window,Object,Set});
+  return window;
+}
+const load=()=>loadIdentityAware().PogoDomain.searchStrings;
 const plain=value=>JSON.parse(JSON.stringify(value));
 
 const EXPECTED=Object.freeze({
@@ -31,6 +42,56 @@ test('literal locale oracle covers complete ordinary and special command policie
       assert.deepEqual(plain(search.contextualSearchPlan([{name:'Pikachu',no:25,...requirement},{name:'Mewtwo',no:150,...requirement}],{locale}).parts),[expected.broad],`${locale} ${JSON.stringify(requirement)}`);
     }
   }
+});
+
+test('canonical form policy is invariant across interface labels and game-search languages',()=>{
+  const window=loadIdentityAware(),search=window.PogoDomain.searchStrings,names=window.PogoI18n.pokemonNames;
+  const canonical={name:'H-Typhlosion',displayName:'H-Typhlosion',no:157};
+  const labels=Object.fromEntries(['en','ja','es','de'].map(locale=>[locale,names.displayName(canonical,{locale})]));
+  assert.deepEqual(labels,{
+    en:'H-Typhlosion',ja:'ヒスイのすがた バクフーン',
+    es:'Typhlosion (forma de Hisui)',de:'Tornupto (Hisui-Form)'
+  });
+  const expected=Object.freeze({en:'!traded&157',ja:'!こうかん&157',es:'!intercambiados&157',de:'!getauscht&157'});
+  for(const interfaceLocale of ['en','ja','es','de'])for(const gameLocale of ['en','ja','es','de']){
+    const entry={...canonical,dn:labels[interfaceLocale],displayName:labels[interfaceLocale]};
+    assert.equal(search.contextualEntryIdentity(entry).category,'regional-form');
+    assert.equal(search.contextualEntryPolicy(entry).id,'special-broad');
+    const plan=search.contextualSearchPlan([entry],{locale:gameLocale});
+    assert.equal(plan.policy,'special-broad');
+    assert.deepEqual(plain(plan.parts),[expected[gameLocale]]);
+    assert.deepEqual(plain(search.stringParts(plan.parts[0])),['157']);
+  }
+});
+
+test('catalog semantics cover full-width descriptors, regional aliases, hyphenated forms, and legacy aliases',()=>{
+  const window=loadIdentityAware(),search=window.PogoDomain.searchStrings,names=window.PogoI18n.pokemonNames;
+  const origin={name:'Giratina (Origin)',displayName:'Giratina (Origin)',no:487};
+  const japaneseOrigin=names.displayName(origin,{locale:'ja'});
+  assert.equal(japaneseOrigin,'ギラティナ（オリジンフォルム）');
+  for(const entry of [
+    {...origin,dn:japaneseOrigin,displayName:japaneseOrigin},
+    {name:'H-Typhlosion',dn:'ヒスイのすがた バクフーン',no:157},
+    {name:'Galarian Articuno',dn:'ガラルのすがた フリーザー',no:144},
+    {name:'Pikachu Party Hat',dn:'ピカチュウ（パーティーハット）',no:25},
+    {name:'Pikachu (Purple Party)',dn:'Pikachu mit Partyhut',no:25}
+  ])assert.equal(search.contextualEntryPolicy(entry).id,'special-broad',entry.name);
+  for(const locale of ['en','ja','es','de']){
+    const entry={name:'Nidoran-F',dn:names.displayName({name:'Nidoran-F',displayName:'Nidoran-F',no:29},{locale}),no:29};
+    assert.equal(search.contextualEntryPolicy(entry).id,'ordinary-protected',locale);
+  }
+  const unresolved={name:'Unknown translated form',dn:'ヒスイのすがた バクフーン',no:157};
+  assert.equal(search.contextualEntryPolicy(unresolved).id,'unresolved');
+  const plan=search.contextualSearchPlan([unresolved],{locale:'ja'});
+  assert.equal(plan.unresolved,1);assert.equal(plan.policy,'none');assert.deepEqual(plain(plan.parts),[]);
+});
+
+test('named identities fail closed when canonical dependencies are unavailable',()=>{
+  const search=loadWithoutIdentity();
+  assert.equal(search.contextualEntryIdentity({name:'H-Typhlosion',no:157}).category,'identity-unavailable');
+  const named=search.contextualSearchPlan([{name:'H-Typhlosion',no:157}],{locale:'en'});
+  assert.equal(named.unresolved,1);assert.deepEqual(plain(named.parts),[]);
+  assert.deepEqual(plain(search.contextualSearchPlan([{no:157}],{locale:'en'}).parts),[EXPECTED.en.protected.replace('25,150','157')]);
 });
 
 test('mixed scopes split policy domains and keep repeated species where meanings differ',()=>{

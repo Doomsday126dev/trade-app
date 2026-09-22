@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
 const window={};window.window=window;
-for(const file of ['priorityValues','tradeListComparison','pokemonGoSearchSyntax','searchStrings'])vm.runInNewContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),{window});
+for(const file of ['js/domain/priorityValues.js','js/domain/tradeListComparison.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js','js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js','js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js'])vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),{window});
 const {priorityValues:priority,tradeListComparison:declarations,searchStrings:search}=window.PogoDomain;
 const plain=value=>JSON.parse(JSON.stringify(value));
 
@@ -66,7 +66,7 @@ test('all section combinations retain exact manual checks and unknown variants i
 });
 
 test('a 1,000-want section splits safely and preserves every manual declaration',()=>{
-  const entries=Array.from({length:1000},(_,index)=>({name:'Synthetic '+index,no:index+1,p:'H'}));
+  const entries=Array.from({length:1000},(_,index)=>({no:index+1,p:'H'}));
   const plan=search.contextualSearchPlan(entries,{locale:'ja'});
   assert.equal(plan.total,1000);assert.equal(plan.manual.length,1000);assert.ok(plan.parts.length>1);
   assert.ok(plan.parts.every(part=>part.length<=1500));
