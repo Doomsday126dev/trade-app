@@ -76,10 +76,17 @@ test('provider boundary includes current wants declarations, Groups, recovery an
     trainerHistoryStore:{read:()=>({favorites:[{name:'Friend',tagIds:['g1']}],tags:{g1:{label:'Group'}}})},
     managedListenerLifecycle:{snapshot:()=>({session:'same-session'})},OWNED_MY_LIST_TYPES:['wishlist'],accountSyncCanonicalEntities:[{id:'canonical'}],
     accountSyncRuntimeGeneration:7,accountSyncMigrationState:'complete',accountSyncUiState:{listenerHealthy:true,controllerHealthy:true},
-    accountSyncModel:{canonicalJson:JSON.stringify},activePublicShareHydrationToken:{username:'Trainer'},providerBoundaryFingerprint:async value=>JSON.stringify(value)});
+    accountSyncModel:{canonicalJson:JSON.stringify},activePublicShareHydrationToken:{username:'Trainer'},providerBoundaryFingerprint:async value=>JSON.stringify(value),
+    _sessionTransientGeneration:0,providerAccountBoundaryReadiness:async()=>({runtime:context.managedAccountSyncRuntime,username:'Trainer',sessionGeneration:0}),
+    accountLinkingModelDomain:{productEvidence:async value=>({
+      fingerprint:JSON.stringify(value),
+      components:{lists:'lists',favorites:'favorites',favoriteTags:'tags',specialTradeBoard:'board',intentDeclarations:JSON.stringify(value.intentDeclarations),canonicalEntities:'canonical'},
+      summaries:{favorites:{length:1},intentDeclarations:{length:1}}
+    })}});
   vm.runInContext(extract('providerAccountBoundarySnapshot'),context);
   const before=await context.providerAccountBoundarySnapshot('same-uid');
   assert.match(before.accountDataFingerprint,/Group/);assert.equal(before.reviewedEvidenceCount,1);assert.equal(before.activeEvidenceCount,0);
+  assert.equal(before.accountDataSummary.favorites.length,1);assert.equal(before.accountDataSummary.intentDeclarations.length,1);
   profile.intentDeclarations[0].requirements.lucky=false;
   const after=await context.providerAccountBoundarySnapshot('same-uid');assert.notEqual(after.accountDataFingerprint,before.accountDataFingerprint);
 });
