@@ -9,7 +9,8 @@ const { execFileSync } = require('node:child_process');
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-authority-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
 const DEPLOY_CONFIRMATION = 'DEPLOY INACTIVE E1 GROUP E AUTHORITY';
-const COMMIT_A_SOURCE_SHA = 'ad2edab9be2b1c0e6851dfded3a0f3f71a73b987';
+const EXECUTION_MODES = Object.freeze(['build', 'qualify', 'replace']);
+const COMMIT_A_SOURCE_SHA = 'df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const SOURCE_PATHS = Object.freeze([
   'e1TargetContracts.js',
   'firestoreE1AuthorityAdapter.js',
@@ -17,7 +18,9 @@ const SOURCE_PATHS = Object.freeze([
   'handleNormalization.js',
   'package-lock.json',
   'package.json',
+  'providerPublicProjection.js',
   'readRateLimiters.js',
+  'rtdbPublicTrainerShareReader.js',
   'rtdbVerifiedLegacyMappingReader.js',
   'server.js'
 ]);
@@ -192,7 +195,7 @@ function createDeploymentPlan(options = {}) {
   if (fs.existsSync(path.join(repoRoot, '.gcloudignore'))) {
     throw new Error('e1/repository-root-gcloudignore-present');
   }
-  if (!['plan', 'deploy'].includes(options.mode)) throw new Error('e1/authority-deployment-mode-invalid');
+  if (!['plan', ...EXECUTION_MODES].includes(options.mode)) throw new Error('e1/authority-deployment-mode-invalid');
   if (!GIT_SHA.test(options.expectedSha || '')) throw new Error('e1/authority-expected-sha-invalid');
   const resolvedSource = path.resolve(repoRoot, options.explicitSource || '');
   const expectedSource = path.resolve(repoRoot, manifest.sourceRoot);
@@ -200,7 +203,8 @@ function createDeploymentPlan(options = {}) {
     throw new Error('e1/authority-explicit-source-mismatch');
   }
   if (!fs.existsSync(expectedSource)) throw new Error('e1/authority-source-missing');
-  if (options.mode === 'deploy' && options.confirmation !== DEPLOY_CONFIRMATION) {
+  const executionMode = EXECUTION_MODES.includes(options.mode);
+  if (executionMode && options.confirmation !== DEPLOY_CONFIRMATION) {
     throw new Error('e1/authority-deployment-confirmation-invalid');
   }
   const repository = options.repository || createGitRepository(repoRoot);
@@ -211,7 +215,7 @@ function createDeploymentPlan(options = {}) {
   if (repository.sourceStatus(manifest.sourceRoot)) throw new Error('e1/authority-source-dirty');
   const sourceFiles = verifyPinnedSource(manifest, repository);
   const trackedWorkingTreeClean = repository.trackedStatus() === '';
-  if (options.mode === 'deploy' && !trackedWorkingTreeClean) throw new Error('e1/authority-working-tree-dirty');
+  if (executionMode && !trackedWorkingTreeClean) throw new Error('e1/authority-working-tree-dirty');
   return Object.freeze({
     mode: options.mode,
     toolingSourceSha: options.expectedSha,
@@ -223,7 +227,7 @@ function createDeploymentPlan(options = {}) {
     manifest: Object.freeze(manifest),
     target,
     trackedWorkingTreeClean,
-    deploymentAllowed: options.mode === 'deploy' && trackedWorkingTreeClean && options.confirmation === DEPLOY_CONFIRMATION
+    deploymentAllowed: executionMode && trackedWorkingTreeClean && options.confirmation === DEPLOY_CONFIRMATION
   });
 }
 
@@ -278,6 +282,8 @@ function publicPlan(plan) {
     databaseId: plan.target.databaseId,
     rtdbDatabaseUrl: plan.target.rtdbDatabaseUrl,
     inactiveOnly: true,
+    executionOrder: Object.freeze(['build', 'qualify', 'replace']),
+    combinedBuildAndReplace: false,
     iamMutations: 0,
     trackedWorkingTreeClean: plan.trackedWorkingTreeClean,
     deploymentAllowed: plan.deploymentAllowed
@@ -287,6 +293,7 @@ function publicPlan(plan) {
 module.exports = Object.freeze({
   COMMIT_A_SOURCE_SHA,
   DEPLOY_CONFIRMATION,
+  EXECUTION_MODES,
   MANIFEST_PATH,
   PRIVATE_PATH_PATTERNS,
   RESOURCE_MANIFEST_PATH,
