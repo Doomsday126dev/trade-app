@@ -44,7 +44,7 @@ function legacyV3Fixture({missingIndex=false,duplicateSlot=false,fences={}}={}){
   const service=createResetService({ownerUid:'owner-uid',hmacKey:'test-only'.repeat(8),now:()=>now,
     journal:{get:async()=>{journalReads++;throw Error('inspect must not read receipts');}},
     adapter:{readIdentityFence:async id=>{fenceReads.push(id);return structuredClone(fences[id]??null);},
-      readEvidence:async()=>structuredClone(evidence),legacyOnly:async()=>{legacyReads++;return true;},
+      readEvidence:async()=>structuredClone(evidence),legacyOnly:async()=>true,legacyResetEvidence:async()=>{legacyReads++;return 'a'.repeat(64);},
       getAuthUser:async id=>id==='owner-uid'?{uid:id,disabled:false}:{uid,email:'trainer_v3@pogotrades.nyc',disabled:false,metadata:{creationTime:'2026-05-26T12:48:15.135Z'},providerData:[{providerId:'password',uid:'trainer_v3@pogotrades.nyc'}]},
       listAuthIdentities:async()=>[{uid,email:'trainer_v3@pogotrades.nyc',disabled:false},...(duplicateSlot?[{uid:'older-v2-target',email:'trainer_v2@pogotrades.nyc',disabled:false}]:[])],
       updatePassword:async()=>{mutations++;throw Error('No credential mutation permitted');}}});

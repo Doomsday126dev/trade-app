@@ -140,7 +140,7 @@ test('Git discovery includes deletions, both rename owners, type changes and lit
 });
 
 test('backend helper edits and deletions select their declared consumer suites',()=>{
-  for(const [helper,test]of [['functions/test/helpers.cjs','functions/test/tags.test.cjs'],['functions/test/helpers/groupEFixture.cjs','functions/test/e1-group-e-admission.test.cjs']]){
+  for(const [helper,test]of [['functions/test/helpers.cjs','functions/test/tags.test.cjs'],['functions/test/helpers/groupEFixture.cjs','functions/test/e1-group-e-admission.test.cjs'],['functions/test/helpers/authority-build-fixture.cjs','functions/test/e1-authority-build-policy.test.cjs']]){
     for(const deleted of [false,true]){
       const plan=select([helper],{exists:file=>!deleted||file!==helper});
       assert.ok(plan.node.includes(test));assert.equal(plan.functions,true);assert.deepEqual(plan.errors,[]);

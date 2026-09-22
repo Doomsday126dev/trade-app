@@ -9,7 +9,13 @@ const html=read('index.html'),app=read('js/app/application.js'),adapter=read('js
 const inventory=JSON.parse(read('scripts/pages/frontend-files.json'));
 const releaseAssets=new Set([...worker.matchAll(/^\s+'([^']+)',?$/gm)].map(match=>match[1]));
 
-test('ordinary production startup exposes no Google action or provider module',()=>{
+test('existing-account release exposes Google while keeping provider creation and public projection disabled',()=>{
+  assert.match(html,/providerAccountCompatibility:true/);
+  assert.match(html,/googlePublicEntry:true/);
+  assert.match(html,/googleExistingAccountLinking:true/);
+  assert.match(html,/providerAccountCreation:window\.__POGO_PROVIDER_CAPABILITIES__\?\.providerAccountCreation===true/);
+  assert.match(html,/providerPublicReadSupport:window\.__POGO_PROVIDER_CAPABILITIES__\?\.providerPublicReadSupport===true/);
+  assert.match(html,/providerPublicWriteSupport:window\.__POGO_PROVIDER_CAPABILITIES__\?\.providerPublicWriteSupport===true/);
   assert.match(html,/id="google-login-option" hidden/);
   assert.match(html,/googleOption\.hidden=!providerCapabilities\(\)\.googlePublicEntry/);
   const beforeTemplate=html.slice(0,html.indexOf('<template id="pogo-feature-assets">'));
@@ -25,7 +31,7 @@ test('public privacy notice is standalone and discloses the Google identity boun
   assert.match(html,/if\(window\.__pogoPrivacyRequest\)[\s\S]+revealPrivacyNotice/);
 });
 
-test('Google implementation modules are inventoried but omitted from the production shell cache',()=>{
+test('Google implementation modules are lazy loaded and omitted from the shell cache',()=>{
   for(const file of['js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js']){
     assert.match(html,new RegExp(`${file.replaceAll('.','\\.')}[^>]+data-pogo-provider-capability`));
     assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);
