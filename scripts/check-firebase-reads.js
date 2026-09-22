@@ -10,7 +10,13 @@ const indexSource=require('./lib/frontend-source.cjs').readFrontendSource(root);
 const registrySource=readFileSync(path.join(controlRoot,'js/data/firebaseReadRegistry.js'),'utf8');
 const window={};
 vm.runInNewContext(registrySource,{window});
-const {READ_SURFACES,SOURCE_CALL_CONTRACT}=window.PogoData.firebaseReadRegistry;
+const {READ_SURFACES,SOURCE_CALL_CONTRACT:defaultSourceCallContract,SOURCE_CALL_CONTRACTS={}}=window.PogoData.firebaseReadRegistry;
+const runtimeSourceSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
+if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIME_SOURCE_SHA must be a full lowercase SHA');
+// Known rollback revisions select their reviewed historical contract. A future
+// runtime may use the current contract only when its parsed reads, handler
+// hashes, paths, gates and call counts still match it exactly.
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const inventory=reconcileReadSites(collectReadSites(root),SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
 const repositoryInventory=collectReadSites(root,{repository:true});

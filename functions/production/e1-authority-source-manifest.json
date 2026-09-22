@@ -5,8 +5,8 @@
   "region": "us-central1",
   "service": "e1-identity-authority",
   "sourceRoot": "functions/e1-authority-service",
-  "sourceCommitSha": "ad2edab9be2b1c0e6851dfded3a0f3f71a73b987",
-  "sourceFingerprint": "1f28539b8486c05f31bd0922b282945ba809ff3a88622d2fa10383f9e2d76f69",
+  "sourceCommitSha": "df20ddbc5a273b8fef0832c4e38b3de86b69a2dd",
+  "sourceFingerprint": "516eace167bffa4a51728e11c67fd01d465d72f8cd7ce194fb6282399171c520",
   "sourceFiles": [
     {
       "path": "e1TargetContracts.js",
@@ -14,7 +14,7 @@
     },
     {
       "path": "firestoreE1AuthorityAdapter.js",
-      "sha256": "626a56ad6cca4551ac6220b09165fc3eed5ef6e063ae90df56c4322878c68cc4"
+      "sha256": "d74d86f2cf757f31ff5cdaab1972c51616f1ec74da7c829ecefa445cfa51e7b0"
     },
     {
       "path": "groupEAdmissionReceipt.js",
@@ -33,8 +33,16 @@
       "sha256": "a9d1ccc295897d508816cc1fcfb4fd3a6a430fdb7c9225247abf93d92c6c04d1"
     },
     {
+      "path": "providerPublicProjection.js",
+      "sha256": "26953336f650c8f74dab2e73309b16747d2bd6373653d4650ca3a5ff90a8e626"
+    },
+    {
       "path": "readRateLimiters.js",
       "sha256": "23e91a9372a85e096ab2c4de5beb2bc6f4ef3461bcb9b64e42a4f31f3af35864"
+    },
+    {
+      "path": "rtdbPublicTrainerShareReader.js",
+      "sha256": "b83221b885fc87564e6020761af6c34511a038879c856bd31b13deca9240e2e6"
     },
     {
       "path": "rtdbVerifiedLegacyMappingReader.js",
@@ -42,7 +50,7 @@
     },
     {
       "path": "server.js",
-      "sha256": "55cf22774c696942aec0f7bc010013de3f2106984349fbb915e974f9427a8bbe"
+      "sha256": "cc36f2c797aa6ce84043ecb0b5db5a385d9fd285b8cb11446dd9c6dae15ec5d0"
     }
   ],
   "entrypointFile": "server.js",
