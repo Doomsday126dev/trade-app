@@ -9646,13 +9646,35 @@ async function denyRequest(reqId){
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
+let _profileSavedDraft=null;
+function profileDraftValues(){
+  return{
+    friendCode:document.getElementById('fc-inp')?.value||'',
+    bio:document.getElementById('prof-bio')?.value||'',
+    discord:document.getElementById('prof-discord')?.value||'',
+    avatarPokemon:document.getElementById('prof-av-input')?.value||''
+  };
+}
+function captureProfileDraft(){_profileSavedDraft=profileDraftValues();syncProfileDirtyState();}
+function syncProfileDirtyState(){
+  if(!_profileSavedDraft)return false;
+  const dirty=JSON.stringify(profileDraftValues())!==JSON.stringify(_profileSavedDraft);
+  const save=document.getElementById('profile-save'),discard=document.getElementById('profile-discard'),status=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');
+  if(save)save.disabled=!dirty;if(discard)discard.disabled=!dirty;
+  if(friendCode)friendCode.removeAttribute('aria-invalid');
+  if(status){status.classList.remove('is-error');status.textContent=i18nCore.t(dirty?'settings.profileUnsaved':'settings.profileNoChanges');}
+  return dirty;
+}
+function discardProfileChanges(){
+  closeAvatarPicker();updateFcDisplay();document.getElementById('settings-profile-heading')?.focus({preventScroll:true});
+}
 function updateFcDisplay(){
   const ud=allData.users?.[cur]||{};
   const fc=ud.friendCode||'';
   document.getElementById('my-fc-wrap').innerHTML=fc
     ?`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">🎮 ${fc}</div>`
     :`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">+ ${escHtml(i18nCore.t('profile.addFriendCode'))}</div>`;
-  document.getElementById('pfc-disp').textContent=fc||i18nCore.t('profile.notSet');
+  const display=document.getElementById('pfc-disp');if(display)display.textContent=fc||i18nCore.t('profile.notSet');
   document.getElementById('fc-inp').value=fc;
   // Populate profile fields
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
@@ -9662,6 +9684,7 @@ function updateFcDisplay(){
   const picker=document.getElementById('wp-picker');
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
   updateAvatarPreview(ud.avatarPokemon||'');
+  captureProfileDraft();
 }
 function applyAccountSyncProviderProfile(profile){
   if(!cur||!providerOnlyIdentityActive()||managedAccountSyncRuntime?.ownerUid!==auth?.currentUser?.uid)return false;
@@ -9669,13 +9692,14 @@ function applyAccountSyncProviderProfile(profile){
   const s=getLocal();s.users[cur]=normalizedUserRecord(cur,s.users?.[cur],{...values.value,identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null});
   saveLocal(s);allData=runtimeDataWithSelectedTrainer(s);queueRefreshAll('account-sync:provider-profile');return true;
 }
-async function saveProfile(){
+async function saveProfile(event){
+  event?.preventDefault?.();
   const fc=document.getElementById('fc-inp').value.trim();
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
   const discord=document.getElementById('prof-discord')?.value.trim()||'';
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
-  const err=document.getElementById('profile-err');err.textContent='';
-  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');return;}
+  const err=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');err.textContent='';err.classList.toggle('is-error',false);
+  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');err.classList.add('is-error');friendCode?.setAttribute('aria-invalid','true');friendCode?.focus();return;}
   const upd={friendCode:fc,bio,discord,avatarPokemon};
   if(providerOnlyIdentityActive()){
     const runtime=managedAccountSyncRuntime;
@@ -9970,6 +9994,7 @@ let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
 let _pendingSettingsRouteSection=null;
+let _settingsInertSiblings=[];
 const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data']);
 const SETTINGS_DESKTOP_QUERY='(min-width:768px)';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
@@ -10052,6 +10077,21 @@ function restoreAndClearSettingsScrollSnapshot(){
   requestAnimationFrame(()=>preserveSettingsScrollSnapshot(snapshot));
 }
 function settingsUsesPageMode(){return _settingsContext==='account'&&matchMedia(SETTINGS_DESKTOP_QUERY).matches;}
+function setSettingsUnderlyingContentInert(active){
+  const overlay=document.getElementById('settings-modal');
+  if(active){
+    if(_settingsInertSiblings.length||!overlay)return;
+    let current=overlay;
+    while(current&&current!==document.body){
+      const parent=current.parentElement;if(!parent)break;
+      for(const element of parent.children)if(element!==current&&element instanceof HTMLElement)_settingsInertSiblings.push({element,inert:element.inert});
+      current=parent;
+    }
+    _settingsInertSiblings.forEach(({element})=>{element.inert=true;});
+    return;
+  }
+  _settingsInertSiblings.forEach(({element,inert})=>{if(element.isConnected)element.inert=inert;});_settingsInertSiblings=[];
+}
 function applySettingsPresentation(){
   const overlay=document.getElementById('settings-modal');if(!overlay)return;
   const pageMode=settingsUsesPageMode();overlay.classList.toggle('settings-page-mode',pageMode);
@@ -10257,6 +10297,7 @@ function openModal(id,options={}){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   _modalActiveId=id;
   m.classList.add('open');
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(true);
   // Focus first focusable element
   _modalFocusTimer=setTimeout(()=>{
     _modalFocusTimer=null;
@@ -10268,8 +10309,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
+    if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
-    if(ev.key!=='Tab'||(id==='settings-modal'&&settingsUsesPageMode()))return;
+    if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10286,6 +10328,7 @@ function closeModal(id){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
   const returnFocus=_modalPrevFocus;_modalPrevFocus=null;
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
@@ -11480,7 +11523,7 @@ function avatarEntryForName(name){
   return legacy?pokemonCatalogDomain.decorateCatalogEntry(legacy):null;
 }
 function updateAvatarPreview(name){
-  const prev=document.getElementById('prof-av-preview');
+  const prev=document.getElementById('settings-account-av');
   const label=document.getElementById('prof-av-name'),clear=document.getElementById('prof-av-clear');
   if(!prev)return;
   if(!name||!name.trim()){
@@ -11513,20 +11556,21 @@ function renderAvatarPicker(query=''){
   out.innerHTML=matches.length?matches.map((entry,index)=>`<button type="button" class="profile-avatar-option${entry.name===selected?' selected':''}" role="option" aria-selected="${entry.name===selected}" data-catalog-id="${escAttr(entry.catalogId)}" onclick="selectAvatarOption(this.dataset.catalogId)" tabindex="${index===avatarPickerFocusIndex?'0':'-1'}"><span class="profile-avatar-option-sprite sprite-slot-profile">${spriteImg(entry.no,48,'avatar-picker-sprite',entry.name,'',entry.displayName,{catalogId:entry.catalogId,scaleCap:1.8})}</span><span>${escHtml(entry.displayName)}</span></button>`).join(''):`<p class="profile-avatar-empty">${escHtml(i18nCore.t('common.noResults'))}</p>`;
 }
 function avatarPickerKeydown(event){
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeAvatarPicker();return;}
   const options=[...document.querySelectorAll('#prof-av-results .profile-avatar-option')];if(!options.length)return;
-  if(event.key==='Escape'){event.preventDefault();closeAvatarPicker();return;}
   if(!['ArrowDown','ArrowUp','Home','End','Enter'].includes(event.key))return;
   event.preventDefault();
+  const focusedIndex=options.indexOf(document.activeElement);if(focusedIndex>=0)avatarPickerFocusIndex=focusedIndex;
   if(event.key==='Enter'){options[avatarPickerFocusIndex]?.click();return;}
   if(event.key==='Home')avatarPickerFocusIndex=0;else if(event.key==='End')avatarPickerFocusIndex=options.length-1;else avatarPickerFocusIndex=(avatarPickerFocusIndex+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
   options.forEach((option,index)=>option.tabIndex=index===avatarPickerFocusIndex?0:-1);options[avatarPickerFocusIndex]?.focus();
 }
 function selectAvatarOption(catalogId){
   const entry=avatarEntryForCatalogId(catalogId),input=document.getElementById('prof-av-input');if(!entry||!input)return;
-  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();
+  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();syncProfileDirtyState();
 }
 function clearAvatarSelection(){
-  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');
+  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');syncProfileDirtyState();
 }
 // Build a <img> that uses the full sprite fallback chain — same cascade
 // logic spriteImg() uses, but with avatar styling (no transform-scale, just

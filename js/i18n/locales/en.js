@@ -508,6 +508,7 @@
     ,'accountSync.favoriteSaved':'Favorite saved to your account.'
     ,'accountSync.favoriteRemoved':'Favorite removed from your account.'
     ,'export.artUnavailable':'Art unavailable','export.imageFormat':'Image format','export.compactImage':'Compact board','export.phoneImage':'Phone-readable sheet','export.compactImageHelp':'Fits more entries in one view.','export.phoneImageHelp':'Uses larger names and art in priority order for easier phone viewing.'
+    ,'settings.profileSharingSummary':'Your trainer identity and details you can share.','settings.friendCodeHelp':'12 digits, included when you share your trainer profile.','settings.profileSharedOptional':'Optional, included when you share your profile.','settings.profileNoChanges':'No unsaved changes','settings.profileUnsaved':'Unsaved changes','settings.discardChanges':'Discard','settings.saveChanges':'Save changes'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
     ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
   });
