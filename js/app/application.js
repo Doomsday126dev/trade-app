@@ -991,6 +991,23 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   }
   return urls;
 }
+const REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS=Object.freeze({
+  scatterbug:Object.freeze({no:664,url:`${SPRITE_BASE}664.png`})
+});
+function reviewedEquivalentSpriteOverride(no,name,dn,url){
+  const shared=REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS.scatterbug;
+  return Number.parseInt(no,10)===shared.no&&url===shared.url&&/^Scatterbug(?:\s|\()/i.test(String(name||dn||''));
+}
+function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
+  if(!isApprovedRuntimeSpriteUrl(url))return'';
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url))return url;
+  const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
+  const exactRequired=identity?.exactRequired??(
+    normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
+  );
+  const vettedChain=identity||!exactRequired?chain:publicSpriteUrls(name||dn,gender,no);
+  return vettedChain.includes(url)?url:'';
+}
 // ── PER-IMAGE SPRITE NORMALIZATION ─────────────────────────────
 // Different Pokémon have different padding within their sprites — Joltik fills 30% of frame,
 // Mewtwo fills 85%. Detect each sprite's actual character bounds via canvas + persist scale.
@@ -1183,10 +1200,12 @@ function effectiveSpriteOrigin(url){
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const context=spriteCatalogContext(no,name,dn,opts?.catalogId);
+  const fallbackChain=spriteFallbackChain(no,name,gender,dn,context.catalogId);
+  const urlOverride=vettedSpriteUrlOverride(no,name,gender,dn,opts?.urlOverride,fallbackChain);
   const urls=[
     ...(context.override?.url?[context.override.url]:[]),
-    ...(opts?.urlOverride?[opts.urlOverride]:[]),
-    ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
+    ...(urlOverride?[urlOverride]:[]),
+    ...fallbackChain
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
   if(!urls.length){
     const knownUnavailable=context.reviewed?.status==='unavailable';
