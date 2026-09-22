@@ -5948,7 +5948,7 @@ function favoriteLookupModel(){
 }
 function favoriteLookupSignature(model){return JSON.stringify([pokemonGoSearchLocale(),model.entries]);}
 function favoriteVariantLabel(entry){
-  return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
+  return productShareDescription({...entry,p:'',note:''});
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
@@ -6589,8 +6589,16 @@ function openProductShare(mode='link'){
   document.getElementById('product-share-scope').value='full';
   openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
 }
+function productShareCategoryLabel(entry){
+  const category=entry.category||entry.type||entry.ref?.type;
+  const key=category==='dynamax'?'list.dynamax':category==='gmax'?'list.gigantamax':'';
+  if(!key)return'';
+  const label=i18nCore.t(key),name=String(entry.dn||entry.name||'').normalize('NFKC').toLocaleLowerCase();
+  const markers=category==='dynamax'?[label,'dynamax','dmax','d-max','ダイマックス','dinamax']:[label,'gigantamax','gmax','g-max','キョダイマックス','gigamax','gigadynamax'];
+  return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
+}
 function productShareDescription(entry){
-  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',entry.note].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -6667,8 +6675,7 @@ async function exportProductShareImage(){
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
   const flag=(name,label)=>entry[name]&&!sectionFlags.includes(name)?label:'';
-  const category=entry.category||entry.type||entry.ref?.type;
-  const form=category==='dynamax'?i18nCore.t('list.dynamax'):category==='gmax'?i18nCore.t('list.gigantamax'):'';
+  const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
   return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,
@@ -6689,7 +6696,7 @@ async function renderProductShareImage(entries,owner){
   const canvas=document.createElement('canvas'),measure=canvas.getContext('2d');measure.font='12px sans-serif';
   const wrap=text=>{
     const lines=[];
-    for(const paragraph of String(text||'').split('\n')){
+    for(const paragraph of String(text||'').split(/\r\n?|\n|\u2028/u)){
       let line='';
       for(const word of paragraph.split(/\s+/).filter(Boolean)){
         const candidate=line?`${line} ${word}`:word;
@@ -11802,12 +11809,12 @@ async function copyShareLink(){
   if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
   const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
   const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
-  const initialDeclarations=declarationState();
   const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
   linkPublicationStatus('product.publishing');
   const input=document.getElementById('share-public-url');if(input)input.value=url;
   try{
+    const initialDeclarations=declarationState();
     const result=await publishPublicShareNow(username,'explicit_share');
     if(!current())return;
     if(declarationState()!==initialDeclarations){

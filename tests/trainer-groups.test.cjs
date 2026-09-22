@@ -37,6 +37,15 @@ test('new scopes distinguish first check, additions, promotions, removals and ex
   assert.equal(groupWants([member('A',{entries:current,previous:before})],{now,scope:'new'}).entries.length,2);
   assert.equal(wantsChanges(current,current).updated,false);
 });
+test('partial removal compares semantic signatures without counting exact aliases twice',()=>{
+  const {wantsChanges}=window.PogoDomain.tradeListComparison;
+  const saturday=entry({note:'Saturday'}),sunday=entry({note:'Sunday'}),saturdayAlias=entry({name:'PIKACHU',note:'Saturday'});
+  const result=wantsChanges([saturday],[saturday,saturdayAlias,sunday,sunday]);
+  assert.equal(result.updated,true);assert.equal(result.removed,1);
+  assert.equal(result.changed.length,0);assert.equal(result.added.length,0);assert.equal(result.newTop.length,0);
+  const exact=wantsChanges([saturday,saturdayAlias],[saturday]);
+  assert.equal(exact.updated,false);assert.equal(exact.removed,0);assert.equal(exact.changed.length,0);
+});
 test('existing history retains Favorite baselines beyond recents, fences target identity and does not advance on open',()=>{
   for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(fs.readFileSync(file,'utf8'),{window});
   const values=new Map(),storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value),removeItem:key=>values.delete(key)};
