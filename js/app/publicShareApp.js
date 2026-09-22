@@ -170,6 +170,12 @@
     return t('share.updated',{time:core().relativeTimeFromTimestamp(value)});
   }
   function listLabel(type){return t(LIST_KEYS[type]||'list.others');}
+  function pokemonGoSearchLocale(){
+    const search=global.PogoDomain.searchStrings,keys=search.GAME_LANGUAGE_STORAGE_KEYS;
+    let stored=null,override=false;
+    try{stored=JSON.parse(global.localStorage.getItem(keys.locale));override=JSON.parse(global.localStorage.getItem(keys.override))===true;}catch{}
+    return search.resolveGameLocalePreference(core().getLocale(),stored,override);
+  }
   function renderHeader(snapshot){
     const profile=snapshot.profile||{},username=snapshot.username;
     const header=document.getElementById('share-hdr');
@@ -203,7 +209,7 @@
     spriteOptical.observe(out);
   }
   function searchHtml(entries,label){
-    const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:core().getLocale()});
+    const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:pokemonGoSearchLocale()});
     return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:label,compact:true,copyLabel:t('workflow.copySection',{section:label})});
   }
   async function copySearch(control){

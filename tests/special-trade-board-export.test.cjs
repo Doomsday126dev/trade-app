@@ -91,26 +91,29 @@ test('canvas renderer uses reviewed sprites with unambiguous starbursts and alig
   assert.match(genderMarker,/ctx\.moveTo/);
   assert.match(genderMarker,/ctx\.lineTo/);
   assert.doesNotMatch(genderMarker,/fillText|['"]F['"]|['"]M['"]/);
-  assert.match(renderer,/filter\(entry=>imgMap\.has\(boardEntryImageKey\(entry\)\)\)/);
+  assert.match(renderer,/const drawableBoard=\{lf:\[\.\.\.sourceBoard\.lf\],ft:\[\.\.\.sourceBoard\.ft\]\}/);
   assert.match(source,/const mappedHome=/);
   assert.match(source,/other\/home\/\$\{id\}\.png/);
   assert.match(source,/const highQuality=\[\.\.\.mappedHome,\.\.\.publicSpriteUrls/);
   assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
-  assert.doesNotMatch(renderer,/drawSpriteFallback|Artwork pending|backgroundShortLabel|· BG|backgroundId|backgroundImageMap|drawBackgroundArtwork/);
+  assert.match(renderer,/else drawSpriteFallback\(ctx,e,sx,sy,gridSprSize\)/);
+  assert.doesNotMatch(renderer,/Artwork pending|backgroundShortLabel|· BG|backgroundId|backgroundImageMap|drawBackgroundArtwork/);
   assert.doesNotMatch(renderer,/drawMirrorMarker|drawQuantityMarker|drawLuckyMarker|entry\.mirror|entry\.qty|entry\.lucky|e\.note|entry\.note/);
   assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
 });
 
-test('Board editor presents only artwork, gender, Shiny, and removal controls',()=>{
+test('Board curation reflects declarations without resurrecting retired inline editors',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
   const start=source.indexOf('function renderSpecialBoard()');
-  const end=source.indexOf('async function clearSpecialBoard()',start);
+  const end=source.indexOf('async function addSpecialEntry(',start);
   const editor=source.slice(start,end);
-  assert.match(editor,/sb-row-gender/);
-  assert.match(editor,/toggleSpecialFlag\('\$\{side\}',\$\{i\},'shiny'\)/);
-  assert.match(editor,/sb-row-rm/);
+  assert.match(editor,/productDeclarations\(\)\.entries/);
+  assert.match(editor,/type="checkbox"[^>]+toggleBoardSelection/);
+  assert.match(editor,/spriteImg\(e\.no,34,'sb-row-sprite',e\.name,e\.gender/);
+  assert.match(editor,/e\.shiny\?/);
+  assert.doesNotMatch(editor,/sb-row-gender|toggleSpecialFlag|sb-row-rm/);
   assert.doesNotMatch(editor,/sb-row-background|setSpecialBackground|sb-row-note|setSpecialNote|sb-row-qty|setSpecialQty|mirror/);
   const globals=source.slice(source.indexOf('Object.assign(window,{'));
   assert.doesNotMatch(globals,/setSpecialBackground|setSpecialNote|setSpecialQty/);

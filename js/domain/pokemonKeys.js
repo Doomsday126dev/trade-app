@@ -79,10 +79,10 @@
     return String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');
   }
 
-  function identity(catalogId,goCostumeId,primary,aliases,searchAliases=[]){
+  function identity(catalogId,goCostumeId,primary,aliases,searchAliases=[],speciesId=25){
     return Object.freeze({
       catalogId,
-      speciesId:25,
+      speciesId,
       goFormId:goCostumeId,
       goCostumeId,
       gameplayDistinctGender:'',
@@ -148,6 +148,12 @@
     identity('pokemon:25:costume:PIKACHU_PXP_2026','PIKACHU_PXP_2026','Pikachu (Cosmog Spacesuit)',['Cosmog-themed Spacesuit Pikachu'],['Cosmog Spacesuit Pikachu']),
     identity('pokemon:25:costume:PIKACHU_WCS_2026','PIKACHU_WCS_2026','Pikachu (Worlds 2026)',['World Championships 2026 Pikachu'],['Worlds 2026 Pikachu'])
   ]);
+  // Correct a presentation typo without changing the persisted legacy catalog ID
+  // or expanding the audited duplicate-costume identity inventory.
+  const LEGACY_LABEL_CORRECTIONS=Object.freeze([
+    identity('pokemon:80:standard:legacy:Slowpoke%202021','','Slowbro 2021',['Slowpoke 2021'],[],80)
+  ]);
+  const catalogIdentityDefinitions=Object.freeze([...VERIFIED_IDENTITIES,...LEGACY_LABEL_CORRECTIONS]);
 
   const UNRESOLVED_COSTUME_KEYS=Object.freeze([
     'Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
@@ -157,12 +163,12 @@
 
   const verifiedAliasIndex=new Map();
   const verifiedIdentityByCatalogKey=new Map();
-  VERIFIED_IDENTITIES.forEach(def=>def.aliases.forEach(alias=>{
+  catalogIdentityDefinitions.forEach(def=>def.aliases.forEach(alias=>{
     const key=normalizeCatalogKey(alias),prior=verifiedAliasIndex.get(key);
     if(prior&&prior.catalogId!==def.catalogId)throw new Error(`Ambiguous Pokemon catalog alias: ${alias}`);
     verifiedAliasIndex.set(key,def);
   }));
-  VERIFIED_IDENTITIES.forEach(def=>verifiedIdentityByCatalogKey.set(normalizeCatalogKey(def.catalogId),def));
+  catalogIdentityDefinitions.forEach(def=>verifiedIdentityByCatalogKey.set(normalizeCatalogKey(def.catalogId),def));
 
   const verifiedMissingEntries=Object.freeze([
     Object.freeze({
@@ -229,7 +235,7 @@
       groups.get(entry.catalogId).push(entry);
     }
     return order.map(catalogId=>{
-      const rows=groups.get(catalogId),def=VERIFIED_IDENTITIES.find(item=>item.catalogId===catalogId);
+      const rows=groups.get(catalogId),def=catalogIdentityDefinitions.find(item=>item.catalogId===catalogId);
       const primary=(def&&rows.find(row=>row.name===def.primary))||rows[0];
       const legacyAliases=Object.freeze([...new Set(rows.flatMap(row=>row.legacyAliases||[row.name]))]);
       const searchAliases=Object.freeze([...new Set(rows.flatMap(row=>row.searchAliases||[]))]);

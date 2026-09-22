@@ -90,7 +90,7 @@ test('group CRUD and membership reuse private favorites; aggregate and copy only
   await expect(page.locator('.group-wants')).toContainText('Alice');await expect(page.locator('.group-wants')).toContainText('Bob');await expect(page.locator('.group-wants')).toContainText('Old');
   expect(await page.evaluate(()=>__reads.length)).toBe(4);
   await page.locator('#trainer-group-scope').selectOption('top');await expect(page.locator('.group-wants')).not.toContainText('Bob');
-  await page.locator('#trainer-group-results [data-contextual-copy]').click();expect(await page.evaluate(()=>__copy)).toBe('!traded&25');
+  await page.locator('#trainer-group-results [data-contextual-copy]').click();expect(await page.evaluate(()=>__copy)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25');
   await page.locator('[data-group-form="rename"] input').fill('Japan friends');await page.getByRole('button',{name:'Rename',exact:true}).click();
   expect(await page.evaluate(()=>Object.values(ensureTrainerHistoryStore().read().tags).map(x=>x.label))).toEqual(['Japan friends']);
   await page.locator('.group-membership summary').click();
