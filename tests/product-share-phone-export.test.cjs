@@ -33,7 +33,13 @@ test('phone sheet keeps all 70 entries ordered and all distinguishing label text
   assert.equal(drawn.filter(item=>['High','Medium','Low'].includes(item.text)).length,3);
   assert.ok(drawn.find(item=>item.text==='High').y<drawn.find(item=>item.text==='Medium').y);
   assert.ok(drawn.find(item=>item.text==='Medium').y<drawn.find(item=>item.text==='Low').y);
-  assert.ok(canvas.width===domain.metrics.width*2&&canvas.height>1000);
+  const orderedY=entries.map((entry,index)=>index<69?drawn.find(item=>item.image===entry.name).y:drawn.find(item=>item.text===entry.name).y);
+  assert.ok(orderedY.every((y,index)=>index===0||y>orderedY[index-1]),'entries remain visually ordered from first through seventieth');
+  assert.equal(domain.metrics.width,420);
+  assert.equal(domain.metrics.columns,1);
+  assert.equal(canvas.width,840);
+  assert.ok(canvas.height>1000&&canvas.height<24000,'70 entries fit below the 12000 logical-pixel cap');
+  assert.ok(domain.metrics.nameFontSize*390/domain.metrics.width>=12,'name text remains at least 12px when fit to a 390px phone');
   assert.ok(!drawn.some(item=>item.text?.includes('…')));
 });
 

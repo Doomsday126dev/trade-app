@@ -1,6 +1,6 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
-  const METRICS=Object.freeze({width:720,padding:24,columns:2,gap:12,headerHeight:78,sectionHeaderHeight:42,cardPadding:12,artSize:88,lineHeight:18,cardGap:10});
+  const METRICS=Object.freeze({width:420,padding:24,columns:1,gap:0,headerHeight:78,sectionHeaderHeight:42,cardPadding:12,artSize:88,nameFontSize:16,detailFontSize:14,lineHeight:18,cardGap:10});
 
   function wrapText(ctx,value,maxWidth){
     const lines=[];
@@ -39,15 +39,15 @@
     const innerWidth=METRICS.width-METRICS.padding*2;
     const cardWidth=(innerWidth-METRICS.gap)/METRICS.columns;
     const textWidth=cardWidth-METRICS.cardPadding*3-METRICS.artSize;
-    measure.font='700 16px sans-serif';
+    measure.font=`700 ${METRICS.nameFontSize}px sans-serif`;
     const prepared=[];
     for(const section of sections){
       const items=await Promise.all(section.entries.map(async entry=>{
         const name=entry.dn||entry.name||'';
         const nameLines=wrapText(measure,name,textWidth);
-        measure.font='14px sans-serif';
+        measure.font=`${METRICS.detailFontSize}px sans-serif`;
         const detailLines=wrapText(measure,detailsFor(entry,section),textWidth);
-        measure.font='700 16px sans-serif';
+        measure.font=`700 ${METRICS.nameFontSize}px sans-serif`;
         const textHeight=nameLines.length*METRICS.lineHeight+detailLines.length*METRICS.lineHeight;
         return{entry,image:await loadImage(entry),nameLines,detailLines,height:Math.max(METRICS.artSize+METRICS.cardPadding*2,textHeight+METRICS.cardPadding*2)};
       }));
@@ -82,8 +82,8 @@
         if(item.image)drawImage(ctx,item.image,artX,artY,METRICS.artSize,METRICS.artSize);
         else missingArt(ctx,artX,artY,METRICS.artSize,missingArtLabel);
         const textX=artX+METRICS.artSize+METRICS.cardPadding,textY=rowTop+METRICS.cardPadding+15;
-        ctx.fillStyle='#f4f7f8';ctx.font='700 16px sans-serif';fillTextLines(ctx,item.nameLines,textX,textY,METRICS.lineHeight);
-        ctx.fillStyle='#b8c2c9';ctx.font='14px sans-serif';fillTextLines(ctx,item.detailLines,textX,textY+item.nameLines.length*METRICS.lineHeight,METRICS.lineHeight);
+        ctx.fillStyle='#f4f7f8';ctx.font=`700 ${METRICS.nameFontSize}px sans-serif`;fillTextLines(ctx,item.nameLines,textX,textY,METRICS.lineHeight);
+        ctx.fillStyle='#b8c2c9';ctx.font=`${METRICS.detailFontSize}px sans-serif`;fillTextLines(ctx,item.detailLines,textX,textY+item.nameLines.length*METRICS.lineHeight,METRICS.lineHeight);
         if(item.entry.shiny){ctx.fillStyle='#ffffff';ctx.font='700 18px sans-serif';ctx.fillText('✦',x+cardWidth-25,rowTop+23);}
       });
       y=rowTop+(group.rowHeights[group.rowHeights.length-1]||0)+16;
