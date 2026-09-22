@@ -1,7 +1,7 @@
 name: Favorite resolver qualification
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'fix/product-integrity-115-*']
     paths:
       - 'functions/favorite-resolver/**'
       - 'firebase.favorite-resolver*.json'

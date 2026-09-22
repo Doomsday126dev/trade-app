@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
+      - 'fix/product-integrity-115-*'
   workflow_dispatch:
 
 permissions:
