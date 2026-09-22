@@ -459,10 +459,12 @@ function renderCombinedList(model=productDeclarations()){
       element=document.createElement('section');element.className=`mylist-priority-section wants-section ${section.priority||'mylist-dex-section'}`;element.dataset.wantsSection=section.key;element.dataset.wantsPriority=section.priority;
       element.innerHTML=`<div class="wants-section-header"><h3 class="mylist-priority-heading"><button type="button" class="mylist-priority-toggle" data-section="${escAttr(section.key)}" onclick="toggleWantsSection(this.dataset.section)"><span class="wants-section-title"></span><span class="priority-count"></span>${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</button></h3><div class="wants-section-search"></div></div><div class="mylist-priority-body"><div class="mygrid"></div></div>`;
     }
-    const toggle=element.querySelector('.mylist-priority-toggle');toggle.setAttribute('aria-expanded',String(!collapsed));
-    element.querySelector('.wants-section-title').textContent=label;
-    element.querySelector('.priority-count').textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
-    const body=element.querySelector('.mylist-priority-body');body.hidden=collapsed;
+    const header=element.firstElementChild,heading=header.firstElementChild,toggle=heading.firstElementChild;
+    const title=toggle.firstElementChild,count=title.nextElementSibling,search=header.lastElementChild,body=header.nextElementSibling;
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    title.textContent=label;
+    count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
+    body.hidden=collapsed;
     const rows=(collapsed?[]:filtered.slice(0,limit)).map(e=>{
       const entries=byEntry.get(e),selected=entries.every(x=>combinedSelection.has(productSelectionKey(x))),priority=section.priority;
       const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
@@ -485,16 +487,20 @@ function renderCombinedList(model=productDeclarations()){
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
     });
-    const grid=element.querySelector('.mygrid');
-    rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
-    while(grid.children.length>rows.length)grid.lastElementChild.remove();
-    body.querySelector('.wants-show-more')?.remove();
+    const grid=[...body.children].find(child=>child.classList.contains('mygrid'));
+    const focusedElement=rows.some(row=>row.contains(document.activeElement))?document.activeElement:null;
+    if(rows.length*2<grid.children.length&&!focusedElement)grid.replaceChildren(...rows);
+    else{
+      rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
+      while(grid.children.length>rows.length)grid.lastElementChild.remove();
+    }
+    if(focusedElement&&document.activeElement!==focusedElement&&focusedElement.isConnected)focusedElement.focus({preventScroll:true});
+    if(body.lastElementChild?.classList.contains('wants-show-more'))body.lastElementChild.remove();
     if(filtered.length>limit){hasMore=true;if(!collapsed)body.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary wants-show-more" data-section="${escAttr(section.key)}" data-limit="${limit}" onclick="showMoreWantsSection(this.dataset.section,Number(this.dataset.limit))">${escHtml(i18nCore.t('workflow.showSection',{section:label}))}</button>`);}
     if(section.key==='NEEDS_PRIORITY'){
-      if(!body.querySelector('.wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
-      body.querySelector('.wants-priority-help').textContent=i18nCore.t('workflow.needsPriorityHelp');
+      if(!body.firstElementChild?.classList.contains('wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
+      body.firstElementChild.textContent=i18nCore.t('workflow.needsPriorityHelp');
     }
-    const search=element.querySelector('.wants-section-search');
     const entries=model.entries.filter(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)===section.key);
     updateWantsSearch(search,entries,label,{copyLabel:i18nCore.t('workflow.copySection',{section:label})});
     search.title=i18nCore.t('workflow.fullSection',{section:label});
@@ -10509,6 +10515,10 @@ function returnToTradeComparison(){
 // paste the result into PoGo's bag search to see safe-to-transfer mons.
 const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
 const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
+// Containment: existing source coverage cannot prove that every selected
+// trainer's current declarations are present. Keep both generation and copy
+// closed until that coverage contract is implemented and tested.
+const SAFE_TRANSFER_GENERATION_ENABLED=false;
 function safeTransferPreferenceKey(base){
   const uid=String(auth?.currentUser?.uid||'').trim();
   return uid?`${base}:${encodeURIComponent(uid)}`:null;
@@ -10628,6 +10638,7 @@ function _safeTransferAllDex(){
   return [...seen].sort((a,b)=>a-b);
 }
 function computeSafeTransferString(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:_safeTransferSelected?.size||0};
   if(!_safeTransferSelected||!_safeTransferSelected.size){
     return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
   }
@@ -10667,6 +10678,10 @@ function renderSafeTransferOutput(){
   const copyBtn=document.getElementById('stb-copy-btn');
   if(!out||!summary)return;
   const r=computeSafeTransferString();
+  if(r.status==='disabled'){
+    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
+    out.value='';warnWrap.innerHTML='';if(copyBtn)copyBtn.disabled=true;return;
+  }
   if(!r.picked){
     summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
     out.value='';
@@ -10693,6 +10708,12 @@ function renderSafeTransferOutput(){
 }
 async function copySafeTransferString(){
   const out=document.getElementById('stb-output');
+  const result=computeSafeTransferString();
+  if(result.status==='disabled'){
+    if(out){out.value='';out.blur();}
+    const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
+    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return;
+  }
   if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
   try{
     await copyText(out.value);
