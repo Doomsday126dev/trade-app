@@ -23,7 +23,7 @@ test('phone sheet keeps all 70 entries ordered and all distinguishing label text
   const sectionsFor=list=>['H','M','L'].map(priority=>({priority,flags:[],entries:list.filter(entry=>entry.p===priority)}));
   await domain.render({
     entries,owner:'Fixture',sectionsFor,sectionLabel:section=>({H:'High',M:'Medium',L:'Low'})[section.priority],
-    detailsFor:entry=>entry===entries[0]?'Female · Shiny · Keep exact form wording':'',loadImage:async entry=>entry.missing?null:entry,
+    detailsFor:entry=>entry===entries[0]?'Female · Shiny · Keep exact form wording':entry===entries[1]?'Saturday\u2028After 3 pm':'',loadImage:async entry=>entry.missing?null:entry,
     drawImage(_ctx,image,x,y){drawn.push({image:image.name,x,y});},createCanvas:()=>canvas,toBlob:async()=>({type:'image/png'}),
     locale:'en',titleLabel:'Looking For',countLabel:count=>`${count} Pokémon`,missingArtLabel:'Art unavailable'
   });
@@ -41,12 +41,17 @@ test('phone sheet keeps all 70 entries ordered and all distinguishing label text
   assert.ok(canvas.height>1000&&canvas.height<24000,'70 entries fit below the 12000 logical-pixel cap');
   assert.ok(domain.metrics.nameFontSize*390/domain.metrics.width>=12,'name text remains at least 12px when fit to a 390px phone');
   assert.ok(!drawn.some(item=>item.text?.includes('…')));
+  const firstNoteLine=drawn.find(item=>item.text==='Saturday'),secondNoteLine=drawn.find(item=>item.text==='After 3 pm');
+  assert.ok(firstNoteLine&&secondNoteLine,'published note line separator remains visible in the phone export');
+  assert.equal(secondNoteLine.x,firstNoteLine.x);assert.equal(secondNoteLine.y-firstNoteLine.y,domain.metrics.lineHeight);
+  assert.equal(drawn.some(item=>item.text==='Saturday After 3 pm'),false);
 });
 
 test('wrapping breaks long words without truncating them',()=>{
   const {domain,ctx}=harness();
   const label='VeryLongExactFormIdentityWithoutSpaces';
   assert.equal(domain.wrapText(ctx,label,64).join(''),label);
+  assert.deepEqual(Array.from(domain.wrapText(ctx,'Saturday\u2028After 3 pm',256)),['Saturday','After 3 pm']);
 });
 
 test('Share image UI keeps compact export and exposes an accessible phone option',()=>{

@@ -4,7 +4,7 @@
 
   function wrapText(ctx,value,maxWidth){
     const lines=[];
-    for(const paragraph of String(value||'').split('\n')){
+    for(const paragraph of String(value||'').split(/\r\n?|\n|\u2028/u)){
       let line='';
       for(const word of paragraph.split(/\s+/).filter(Boolean)){
         const candidate=line?`${line} ${word}`:word;
