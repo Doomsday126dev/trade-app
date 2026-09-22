@@ -164,5 +164,6 @@
     ,'settings.profileSharingSummary':'Deine Traineridentität und Angaben, die du teilen kannst.','settings.friendCodeHelp':'12 Ziffern, enthalten, wenn du dein Trainerprofil teilst.','settings.profileSharedOptional':'Optional, enthalten, wenn du dein Profil teilst.','settings.profileNoChanges':'Keine ungespeicherten Änderungen','settings.profileUnsaved':'Ungespeicherte Änderungen','settings.discardChanges':'Verwerfen','settings.saveChanges':'Änderungen speichern'
     ,'restored.copySearch':"Suchstring kopieren",'restored.searchDetails':"Suchdetails"
     ,'safeTransfer.temporarilyUnavailable':'Die sichere Transfersuche ist vorübergehend nicht verfügbar, während die vollständige Abdeckung der Wunschlisten geprüft wird.'
+    ,'contextSearch.copyProtected':'Geschützte Suche kopieren','contextSearch.copyBroad':'Breite Spezialsuche kopieren','contextSearch.mixedHelp':'Normale Gesuche verwenden die geschützte Suche. Besondere oder genaue Gesuche verwenden eine getrennte breite Artensuche, damit gewünschte Treffer nicht ausgeschlossen werden.'
   });
 })(window);

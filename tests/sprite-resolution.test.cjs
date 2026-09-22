@@ -46,10 +46,15 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Snom'),872);
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Pikachu (Worlds 2026)'),25);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['assets/sprites/go/vivillon-garden.png']);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png','https://img.pokemondb.net/sprites/home/normal/avalugg.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png']);
   assert.equal(sprites.pokemondbSlug('Basculin (White Stripe)','Basculin (White Stripe)'),'basculin-white-striped');
   assert.equal(sprites.pokemondbSlug('Avalugg (Hisuian Form)','Avalugg (Hisuian Form)'),'avalugg-hisuian');
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f')),['https://img.pokemondb.net/sprites/home/normal/salandit-female.png','https://img.pokemondb.net/sprites/home/normal/salandit.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f',757)),[
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/female/757.png',
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/757.png',
+    'https://img.pokemondb.net/sprites/home/normal/salandit-female.png',
+    'https://img.pokemondb.net/sprites/home/normal/salandit.png'
+  ]);
   assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-go'),true);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pikachu-saree.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2025)','f')),['assets/sprites/go/pikachu-world-champs-2025-f.png','assets/sprites/go/pikachu-world-champs-2025.png']);
@@ -87,8 +92,8 @@ test('stored or guessed research URLs cannot enter the render or export chain',(
   assert.equal(sprites.canonicalSpriteOverride('pokemon:25:costume:PIKACHU_WCS_2025'),null);
   const entry=applicationFunction('entrySpriteUrl','spriteUrl');
   assert.match(entry,/if\(reviewed\.knownVariant\)return reviewed\.urls\[0\]\|\|null/);
-  assert.match(entry,/if\(isApprovedRuntimeSpriteUrl\(storedUrl\)\)return storedUrl/);
-  assert.match(html,/const approvedOverride=isApprovedRuntimeSpriteUrl\(e\.spriteUrl\)\?e\.spriteUrl:''/);
+  assert.match(entry,/if\(!identity\.exactRequired&&isApprovedRuntimeSpriteUrl\(storedUrl\)\)return storedUrl/);
+  assert.match(html,/const approvedOverride=!identity\.exactRequired&&isApprovedRuntimeSpriteUrl\(e\.spriteUrl\)\?e\.spriteUrl:''/);
   assert.match(html,/other\/home\/\$\{id\}\.png/);
   assert.doesNotMatch(html,/const GO_COSTUME_SPRITE_SLUGS|POKEMONDB_GO_COSTUME_ALIASES|pokemondbGoCostumeUrl|POKEMINERS_SPRITE_BASE|SEREBII_SPRITE_BASE|cdn08\.net/);
 });
@@ -114,7 +119,7 @@ test('successful 1x1 placeholders enter the same bounded fallback path as errors
   assert.match(html,/function validateSpriteLoad\(img\)[\s\S]*naturalWidth\|\|0\)<=1[\s\S]*trySpriteFallback\(img\)/);
   assert.match(html,/data-fallbacks="\$\{fallbacks\}" onload="validateSpriteLoad\(this\)" onerror="trySpriteFallback\(this\)"/);
   assert.match(html,/const fbs=\(img\.dataset\.fallbacks\|\|''\)\.split\('\|'\)\.filter\(Boolean\)/);
-  assert.match(html,/if\(!fbs\.length\)\{img\.style\.display='none';return;\}/);
+  assert.match(html,/if\(!fbs\.length\)\{[\s\S]*placeholder\.className=`pc-sprite-placeholder load-failed/);
   assert.doesNotMatch(sw,/1×1 transparent|iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB/);
 });
 
