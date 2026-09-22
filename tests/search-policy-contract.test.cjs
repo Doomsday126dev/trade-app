@@ -94,6 +94,18 @@ test('named identities fail closed when canonical dependencies are unavailable',
   assert.deepEqual(plain(search.contextualSearchPlan([{no:157}],{locale:'en'}).parts),[EXPECTED.en.protected.replace('25,150','157')]);
 });
 
+test('hyphenated Pumpkaboo form retains policy and species across all interface labels',()=>{
+  const search=loadIdentityAware().PogoDomain.searchStrings;
+  const canonical={name:'Pumpkaboo - Super',no:710};
+  const labels=['Pumpkaboo - Super','バケッチャ（とくだいサイズ）','Pumpkaboo (tamaño extragrande)','Irrbis (Größe XL)'];
+  const outputs={en:'!traded&710',ja:'!こうかん&710',es:'!intercambiados&710',de:'!getauscht&710'};
+  for(const label of labels)for(const [locale,expected]of Object.entries(outputs)){
+    const entry={...canonical,dn:label,displayName:label};
+    assert.equal(search.contextualEntryPolicy(entry).id,'special-broad');
+    assert.deepEqual(plain(search.contextualSearchPlan([entry],{locale}).parts),[expected]);
+  }
+});
+
 test('mixed scopes split policy domains and keep repeated species where meanings differ',()=>{
   const search=load(),plan=search.contextualSearchPlan([
     {name:'Pikachu',no:25,p:'H'},
