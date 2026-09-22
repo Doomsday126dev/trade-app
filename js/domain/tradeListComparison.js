@@ -100,14 +100,34 @@
   function wantsChanges(current=[],previous=null,options={}){
     const key=entry=>wantedIntentKey({...entry,backgroundId:''},options);
     const signature=entry=>JSON.stringify([entry.p||'',entry.note||'']);
-    const before=new Map();
-    for(const entry of previous||[]){const id=key(entry);if(!before.has(id))before.set(id,[]);before.get(id).push(entry);}
-    const entries=current.filter(entry=>entry.intent==='lf');
-    const added=previous===null?[]:entries.filter(entry=>!before.has(key(entry)));
-    const newTop=previous===null?[]:entries.filter(entry=>entry.p==='H'&&!before.get(key(entry))?.some(old=>old.p==='H'));
-    const changed=previous===null?[]:entries.filter(entry=>!before.get(key(entry))?.some(old=>signature(old)===signature(entry)));
-    const ids=new Set(entries.map(key));
-    const removed=previous===null?0:[...before.keys()].filter(id=>!ids.has(id)).length;
+    const unique=(rows=[])=>{
+      const exact=new Map();
+      for(const entry of rows)if(entry.intent==='lf'){
+        const id=key(entry),semantic=signature(entry),exactKey=JSON.stringify([id,semantic]);
+        if(!exact.has(exactKey))exact.set(exactKey,{entry,id,semantic});
+      }
+      return[...exact.values()];
+    };
+    const beforeEntries=unique(previous||[]),entries=unique(current);
+    const beforeExact=new Set(beforeEntries.map(item=>JSON.stringify([item.id,item.semantic])));
+    const beforeIds=new Set(beforeEntries.map(item=>item.id));
+    const beforeTopIds=new Set(beforeEntries.filter(item=>item.entry.p==='H').map(item=>item.id));
+    const added=previous===null?[]:entries.filter(item=>!beforeIds.has(item.id)).map(item=>item.entry);
+    const newTop=previous===null?[]:entries.filter(item=>item.entry.p==='H'&&!beforeTopIds.has(item.id)).map(item=>item.entry);
+    const changed=previous===null?[]:entries.filter(item=>!beforeExact.has(JSON.stringify([item.id,item.semantic]))).map(item=>item.entry);
+    let removed=0;
+    if(previous!==null){
+      const currentById=new Map();
+      for(const item of entries){if(!currentById.has(item.id))currentById.set(item.id,new Set());currentById.get(item.id).add(item.semantic);}
+      const beforeById=new Map();
+      for(const item of beforeEntries){if(!beforeById.has(item.id))beforeById.set(item.id,new Set());beforeById.get(item.id).add(item.semantic);}
+      for(const[id,signatures]of beforeById){
+        const currentSignatures=currentById.get(id)||new Set();
+        const beforeUnmatched=[...signatures].filter(value=>!currentSignatures.has(value)).length;
+        const currentUnmatched=[...currentSignatures].filter(value=>!signatures.has(value)).length;
+        removed+=Math.max(0,beforeUnmatched-currentUnmatched);
+      }
+    }
     return{first:previous===null,added,newTop,changed,removed,updated:changed.length>0||removed>0};
   }
   function groupWants(members=[],{scope='all',now=Date.now(),...options}={}){

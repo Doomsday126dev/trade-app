@@ -1003,6 +1003,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-pcard-name{font-weight:500;font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .share-pcard-meta{display:inline-flex;gap:4px;align-items:center;font-size:9px}
 .share-pcard-mod{color:var(--muted);font-family:var(--mono)}
+.share-pcard-note{white-space:pre-line}
 .share-pcard-flag{padding:1px 4px;border-radius:3px;font-weight:700;font-size:9px}
 .share-pcard-flag.lucky{background:rgba(250,204,21,.18);color:#facc15}
 .share-pcard-flag.xxl{background:rgba(99,102,241,.18);color:var(--trait-xxl)}

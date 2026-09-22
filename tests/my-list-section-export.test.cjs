@@ -26,7 +26,7 @@ function imageHarness(locale='en'){
     wantSectionLabel:(section,options)=>window.PogoDomain.priorityValues.wantSectionLabel(section,t,options)
   });
   const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
-  const start=source.indexOf('function productShareImageDetails('),end=source.indexOf('\nfunction refreshAll()',start);
+  const start=source.indexOf('function productShareCategoryLabel('),end=source.indexOf('\nfunction refreshAll()',start);
   assert.ok(start>=0&&end>start);
   vm.runInContext(source.slice(start,end),context);
   return{context,drawn,artRequests,canvas,t};

@@ -79,7 +79,8 @@ test('avatar picker owns Escape and consecutive arrow navigation',async({page})=
   await waitForApp(page);await establishAccount(page);
   await page.evaluate(()=>openSettingsPanel('account'));
   await page.locator('#prof-av-open').click();
-  await page.locator('#prof-av-search').fill('pika');
+  await page.locator('#prof-av-search').fill('nidoran');
+  await expect(page.locator('.profile-avatar-option')).toHaveCount(2);
   await page.locator('#prof-av-search').press('ArrowDown');
   const first=await page.locator('.profile-avatar-option:focus').getAttribute('data-catalog-id');
   await page.keyboard.press('ArrowDown');
@@ -121,7 +122,9 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
     await page.locator('.settings-modal-close').focus();await page.keyboard.press('Shift+Tab');
     expect(await page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
     await page.locator('#prof-av-open').click();
-    await page.locator('#prof-av-search').fill('pika');await page.locator('#prof-av-search').press('ArrowDown');
+    await page.locator('#prof-av-search').fill('nidoran');
+    await expect(page.locator('.profile-avatar-option')).toHaveCount(2);
+    await page.locator('#prof-av-search').press('ArrowDown');
     const first=await page.locator('.profile-avatar-option:focus').getAttribute('data-catalog-id');
     await page.keyboard.press('ArrowDown');
     expect(await page.locator('.profile-avatar-option:focus').getAttribute('data-catalog-id')).not.toBe(first);
