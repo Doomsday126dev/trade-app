@@ -11,7 +11,7 @@ function imageHarness(locale='en'){
   for(const file of ['js/i18n/locales/en.js',`js/i18n/locales/${locale}.js`,'js/domain/priorityValues.js']){
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   }
-  const ctx={font:'',fillStyle:'',textAlign:'left',scale(){},fillRect(){},measureText(text){return{width:String(text).length*6};},fillText(text,x,y){drawn.push({text:String(text),x,y});}};
+  const ctx={font:'',fillStyle:'',strokeStyle:'',lineWidth:1,textAlign:'left',scale(){},fillRect(){},strokeRect(){},measureText(text){return{width:String(text).length*6};},fillText(text,x,y){drawn.push({text:String(text),x,y});}};
   const canvas={width:0,height:0,getContext(){return ctx;},toBlob(done){done({type:'image/png',size:1024});}};
   const t=(key,values={})=>String(window.PogoLocales[locale][key]||key).replace(/\{(\w+)\}/g,(_,name)=>String(values[name]??''));
   Object.assign(context,{
@@ -67,6 +67,7 @@ test('active export uses ordered priority and exact special sections without los
   const imageNames=drawn.filter(item=>item.image).map(item=>item.image);
   assert.equal(imageNames.length,entries.length-1);
   assert.ok(text.some(item=>item.text==='Unmapped'),'missing art still names the entry');
+  assert.ok(text.some(item=>item.text==='Art unavailable'),'missing exact art is explicit');
   assert.ok(text.map(item=>item.text).join(' ').includes('Antique'));
   assert.ok(text.map(item=>item.text).join(' ').includes('Alolan'));
   assert.equal(text.filter(item=>item.text==='✦').length,2,'shiny remains visible in priority and special wants');

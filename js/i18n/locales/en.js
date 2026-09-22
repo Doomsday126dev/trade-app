@@ -507,6 +507,7 @@
     ,'accountSync.favoritePending':'Favorite change saved on this device; waiting for account sync.'
     ,'accountSync.favoriteSaved':'Favorite saved to your account.'
     ,'accountSync.favoriteRemoved':'Favorite removed from your account.'
+    ,'export.artUnavailable':'Art unavailable'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
     ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
   });
