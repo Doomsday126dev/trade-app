@@ -1465,22 +1465,43 @@ function providerAuthSnapshot(){
 async function providerBoundaryFingerprint(value){
   return accountSyncModel.sha256Hex(accountSyncModel.canonicalJson(value));
 }
+async function providerAccountBoundaryReadiness(uid){
+  const user=auth?.currentUser,username=cur,sessionGeneration=_sessionTransientGeneration;
+  const current=()=>auth?.currentUser===user&&user?.uid===uid&&cur===username&&sessionGeneration===_sessionTransientGeneration;
+  if(!uid||!username||!current())throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const started=await ensureAccountSyncRuntime();
+  const runtime=managedAccountSyncRuntime;
+  if(!current())throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  if(!started?.ok||runtime?.ownerUid!==uid||runtime.projectionReady!==true||runtime.profileReady!==true)
+    throw accountLinkingModelDomain.failure('provider-link/account-boundary-not-ready');
+  const state=await runtime.snapshot();
+  if(!current()||runtime!==managedAccountSyncRuntime)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+  if(!accountSyncProjectionReady()||state.active!==true||state.listenerHealthy!==true||state.controllerHealthy!==true||state.lastError||
+    Number(state.pendingCount)||Number(state.blockedCount)||Number(state.conflictCount))
+    throw accountLinkingModelDomain.failure('provider-link/account-boundary-not-ready');
+  return Object.freeze({runtime,state,username,sessionGeneration});
+}
 async function providerAccountBoundarySnapshot(uid){
-  if(!uid||uid!==auth?.currentUser?.uid||!cur)throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const readiness=await providerAccountBoundaryReadiness(uid);
   const session=managedSessionCache.snapshot(),owner=session.activeOwner;
   if(owner?.uid!==uid||owner?.username!==cur)throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
-  if(managedAccountSyncRuntime?.ownerUid!==uid||typeof managedAccountSyncRuntime.listRecoveryCandidates!=='function')throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
-  const candidates=await managedAccountSyncRuntime.listRecoveryCandidates({unresolvedOnly:false});
+  if(readiness.runtime!==managedAccountSyncRuntime||typeof readiness.runtime.listRecoveryCandidates!=='function')throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const candidates=await readiness.runtime.listRecoveryCandidates({unresolvedOnly:false});
   if(!Array.isArray(candidates))throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
   const profile=allData.users?.[cur]||{},history=trainerHistoryStore?.read?.()||{favorites:[],tags:{}},listener=managedListenerLifecycle.snapshot();
-  const accountDataFingerprint=await providerBoundaryFingerprint({
+  const productEvidence=await accountLinkingModelDomain.productEvidence({
     lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,allData[type]?.[cur]||{}])),
     favorites:history.favorites||[],tags:history.tags||{},board:profile.specialTradeBoard||{lf:[],ft:[]},
     intentDeclarations:profile.intentDeclarations||[],
     canonicalEntities:accountSyncCanonicalEntities
-  });
+  },{fingerprint:providerBoundaryFingerprint});
+  if(readiness.runtime!==managedAccountSyncRuntime||readiness.username!==cur||readiness.sessionGeneration!==_sessionTransientGeneration)
+    throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
   return Object.freeze({
-    accountDataFingerprint,
+    accountDataFingerprint:productEvidence.fingerprint,
+    accountDataComponents:productEvidence.components,
+    accountDataSummary:productEvidence.summaries,
     journalOwner:owner.uid,
     journalGeneration:accountSyncRuntimeGeneration,
     migrationGeneration:String(managedAccountSyncRuntime?.migrationPlan?.deviceMigrationId||accountSyncMigrationState||'inactive'),

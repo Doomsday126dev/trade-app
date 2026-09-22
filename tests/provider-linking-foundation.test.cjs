@@ -50,8 +50,14 @@ function accountFixture(uid,handle){
 }
 
 function boundaryFor(account){
+  const accountDataComponents={
+    lists:digest(account.myList),favorites:digest(account.favorites),favoriteTags:digest(account.tags),
+    specialTradeBoard:digest(account.specialTradeBoard),intentDeclarations:digest(account.intentDeclarations||[]),
+    canonicalEntities:digest(account.canonicalEntities||[])
+  };
   return{
     accountDataFingerprint:digest({myList:account.myList,favorites:account.favorites,tags:account.tags,board:account.specialTradeBoard}),
+    accountDataComponents,
     journalOwner:account.journal.ownerUid,
     journalGeneration:account.journal.generation,
     migrationGeneration:account.migration.generation,
