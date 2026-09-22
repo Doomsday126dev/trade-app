@@ -84,7 +84,9 @@ protect and exactly verify the complete name set; read back permanent Rules,
 IAM and serving revisions; seal the generation; invalidate and drain temporary
 admission; activate the signed durable pointer and qualified runtime gate; then
 end the temporary fence while proving the permanent Rules still deny old
-allocation. RTDB, IAM, and Firestore are separate systems. The signed control
+allocation. Each stage must re-read the active temporary fence until permanent
+closure is verified, then re-read the exact permanent Rules and privileged
+writer closure at every subsequent stage. RTDB, IAM, and Firestore are separate systems. The signed control
 record attests the completed cross-system transition; a Firestore transaction
 does not make those external changes atomic. An interruption leaves creation
 disabled until the relevant stage is requalified.

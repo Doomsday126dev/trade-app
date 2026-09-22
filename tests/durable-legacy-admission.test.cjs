@@ -94,10 +94,16 @@ test('every interrupted cutover stage remains disabled until its exact evidence 
     { permanentRulesStillActive: true, oldClientAllocationStillDenied: true, providerCreationReadbackHealthy: true }
   ];
   let stage = STAGES[0];
+  const closure = { permanentRulesReadbackDigest: policy.candidateRulesSha256,
+    privilegedIamReadbackComplete: true, privilegedAllocationPermissionsAbsent: true,
+    activeServiceRevisionReadbackComplete: true, legacyAllocationScriptsQuiesced: true };
   for (const [index, proof] of evidence.entries()) {
     assert.throws(() => advance(stage, {}), /unqualified/u);
     assert.equal(rollback(stage, false).creationEnabled, false);
-    stage = advance(stage, proof);
+    const current = { ...proof, ...(index <= 3 ? { temporaryRulesActive: true } : closure) };
+    if (index > 0 && index <= 3) assert.throws(() => advance(stage, proof), /unqualified/u);
+    if (index > 3) assert.throws(() => advance(stage, proof), /unqualified/u);
+    stage = advance(stage, current);
     assert.equal(stage, STAGES[index + 1]);
   }
   assert.equal(rollback(stage, true).preserveProviderCompatibility, true);
