@@ -161,7 +161,8 @@
       model.xxl&&!sectionFlags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
-    return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${value?.note?`<p class="share-pcard-mod">${esc(value.note)}</p>`:''}</div></article>`;
+    const note=global.PogoDomain.publicSharePublication.publicNoteForDisplay(value?.note);
+    return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
@@ -169,6 +170,12 @@
     return t('share.updated',{time:core().relativeTimeFromTimestamp(value)});
   }
   function listLabel(type){return t(LIST_KEYS[type]||'list.others');}
+  function pokemonGoSearchLocale(){
+    const search=global.PogoDomain.searchStrings,keys=search.GAME_LANGUAGE_STORAGE_KEYS;
+    let stored=null,override=false;
+    try{stored=JSON.parse(global.localStorage.getItem(keys.locale));override=JSON.parse(global.localStorage.getItem(keys.override))===true;}catch{}
+    return search.resolveGameLocalePreference(core().getLocale(),stored,override);
+  }
   function renderHeader(snapshot){
     const profile=snapshot.profile||{},username=snapshot.username;
     const header=document.getElementById('share-hdr');
@@ -202,7 +209,7 @@
     spriteOptical.observe(out);
   }
   function searchHtml(entries,label){
-    const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:core().getLocale()});
+    const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:pokemonGoSearchLocale()});
     return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:label,compact:true,copyLabel:t('workflow.copySection',{section:label})});
   }
   async function copySearch(control){

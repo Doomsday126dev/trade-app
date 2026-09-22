@@ -459,10 +459,12 @@ function renderCombinedList(model=productDeclarations()){
       element=document.createElement('section');element.className=`mylist-priority-section wants-section ${section.priority||'mylist-dex-section'}`;element.dataset.wantsSection=section.key;element.dataset.wantsPriority=section.priority;
       element.innerHTML=`<div class="wants-section-header"><h3 class="mylist-priority-heading"><button type="button" class="mylist-priority-toggle" data-section="${escAttr(section.key)}" onclick="toggleWantsSection(this.dataset.section)"><span class="wants-section-title"></span><span class="priority-count"></span>${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</button></h3><div class="wants-section-search"></div></div><div class="mylist-priority-body"><div class="mygrid"></div></div>`;
     }
-    const toggle=element.querySelector('.mylist-priority-toggle');toggle.setAttribute('aria-expanded',String(!collapsed));
-    element.querySelector('.wants-section-title').textContent=label;
-    element.querySelector('.priority-count').textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
-    const body=element.querySelector('.mylist-priority-body');body.hidden=collapsed;
+    const header=element.firstElementChild,heading=header.firstElementChild,toggle=heading.firstElementChild;
+    const title=toggle.firstElementChild,count=title.nextElementSibling,search=header.lastElementChild,body=header.nextElementSibling;
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    title.textContent=label;
+    count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
+    body.hidden=collapsed;
     const rows=(collapsed?[]:filtered.slice(0,limit)).map(e=>{
       const entries=byEntry.get(e),selected=entries.every(x=>combinedSelection.has(productSelectionKey(x))),priority=section.priority;
       const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
@@ -485,16 +487,20 @@ function renderCombinedList(model=productDeclarations()){
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
     });
-    const grid=element.querySelector('.mygrid');
-    rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
-    while(grid.children.length>rows.length)grid.lastElementChild.remove();
-    body.querySelector('.wants-show-more')?.remove();
+    const grid=[...body.children].find(child=>child.classList.contains('mygrid'));
+    const focusedElement=rows.some(row=>row.contains(document.activeElement))?document.activeElement:null;
+    if(rows.length*2<grid.children.length&&!focusedElement)grid.replaceChildren(...rows);
+    else{
+      rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
+      while(grid.children.length>rows.length)grid.lastElementChild.remove();
+    }
+    if(focusedElement&&document.activeElement!==focusedElement&&focusedElement.isConnected)focusedElement.focus({preventScroll:true});
+    if(body.lastElementChild?.classList.contains('wants-show-more'))body.lastElementChild.remove();
     if(filtered.length>limit){hasMore=true;if(!collapsed)body.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary wants-show-more" data-section="${escAttr(section.key)}" data-limit="${limit}" onclick="showMoreWantsSection(this.dataset.section,Number(this.dataset.limit))">${escHtml(i18nCore.t('workflow.showSection',{section:label}))}</button>`);}
     if(section.key==='NEEDS_PRIORITY'){
-      if(!body.querySelector('.wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
-      body.querySelector('.wants-priority-help').textContent=i18nCore.t('workflow.needsPriorityHelp');
+      if(!body.firstElementChild?.classList.contains('wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
+      body.firstElementChild.textContent=i18nCore.t('workflow.needsPriorityHelp');
     }
-    const search=element.querySelector('.wants-section-search');
     const entries=model.entries.filter(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)===section.key);
     updateWantsSearch(search,entries,label,{copyLabel:i18nCore.t('workflow.copySection',{section:label})});
     search.title=i18nCore.t('workflow.fullSection',{section:label});
@@ -2025,6 +2031,7 @@ function syncPokemonGoSearchLanguageControl(){
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
+  if(cur&&favoriteBrowseState.selected)renderFavoriteBrowseResults();
   if(cur){const declarations=productDeclarations();renderCombinedList(declarations);renderIntentEntries('',declarations);if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5275,6 +5282,7 @@ function applyTranslationAttributes(root=document){
 function renderInterimProductLabels(){
   document.documentElement.lang=i18nCore.getLocale();
   applyTranslationAttributes();
+  syncProfileDirtyState();
   const navLabels=[
     ['nav-mylist','nav.myList','nav.myList'],['nav-find','trainer.modeTrainers','trainer.modeTrainers'],
     ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
@@ -5945,8 +5953,9 @@ function favoriteLookupModel(){
   }),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
   return{...aggregate,...tradeListComparisonDomain.whoWants(aggregate.entries,{selected:favoriteBrowseState.selected,variantKey:favoriteLookupVariant},{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})};
 }
+function favoriteLookupSignature(model){return JSON.stringify([pokemonGoSearchLocale(),model.entries]);}
 function favoriteVariantLabel(entry){
-  return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
+  return productShareDescription({...entry,p:'',note:''});
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
@@ -5963,7 +5972,7 @@ function renderFavoriteBrowseResults(){
   if(!favorites.length){output.removeAttribute('aria-busy');output.innerHTML=favoriteBrowseEmpty('favoriteBrowse.noFavoritesTitle','favoriteBrowse.noFavoritesBody');return;}
   if(!selected){output.removeAttribute('aria-busy');output.innerHTML='';return;}
   if(favoriteBrowseState.busy)return;
-  const model=favoriteLookupModel();output.dataset.lookupSignature=JSON.stringify(model.entries);
+  const model=favoriteLookupModel();output.dataset.lookupSignature=favoriteLookupSignature(model);
   const options=model.variants.map(item=>`<option value="${escAttr(item.key)}"${item.key===favoriteLookupVariant?' selected':''}>${escHtml(favoriteVariantLabel(item.entry))}</option>`).join('');
   const missing=favoriteLookupVariant&&!model.variants.some(item=>item.key===favoriteLookupVariant);
   const rows=model.entries.flatMap(entry=>entry.members.map(match=>({entry,match})));
@@ -6004,7 +6013,7 @@ document.getElementById('favorite-browse-results')?.addEventListener('change',ev
 });
 document.getElementById('favorite-browse-results')?.addEventListener('click',event=>{
   if(event.target.closest('[data-lookup-more]')){favoriteLookupLimit+=60;renderFavoriteBrowseResults();return;}
-  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==JSON.stringify(favoriteLookupModel().entries)){
+  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==favoriteLookupSignature(favoriteLookupModel())){
     event.preventDefault();event.stopImmediatePropagation();renderFavoriteBrowseResults();toast(groupText('stale'));
   }
 },true);
@@ -6586,8 +6595,16 @@ function openProductShare(mode='link'){
   document.getElementById('product-share-scope').value='full';
   openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
 }
+function productShareCategoryLabel(entry){
+  const category=entry.category||entry.type||entry.ref?.type;
+  const key=category==='dynamax'?'list.dynamax':category==='gmax'?'list.gigantamax':'';
+  if(!key)return'';
+  const label=i18nCore.t(key),name=String(entry.dn||entry.name||'').normalize('NFKC').toLocaleLowerCase();
+  const markers=category==='dynamax'?[label,'dynamax','dmax','d-max','ダイマックス','dinamax']:[label,'gigantamax','gmax','g-max','キョダイマックス','gigamax','gigadynamax'];
+  return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
+}
 function productShareDescription(entry){
-  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',entry.note].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -6627,8 +6644,7 @@ async function exportProductShareImage(){
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
   const flag=(name,label)=>entry[name]&&!sectionFlags.includes(name)?label:'';
-  const category=entry.category||entry.type||entry.ref?.type;
-  const form=category==='dynamax'?i18nCore.t('list.dynamax'):category==='gmax'?i18nCore.t('list.gigantamax'):'';
+  const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
   return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,
@@ -6649,7 +6665,7 @@ async function renderProductShareImage(entries,owner){
   const canvas=document.createElement('canvas'),measure=canvas.getContext('2d');measure.font='12px sans-serif';
   const wrap=text=>{
     const lines=[];
-    for(const paragraph of String(text||'').split('\n')){
+    for(const paragraph of String(text||'').split(/\r\n?|\n|\u2028/u)){
       let line='';
       for(const word of paragraph.split(/\s+/).filter(Boolean)){
         const candidate=line?`${line} ${word}`:word;
@@ -9608,13 +9624,40 @@ async function denyRequest(reqId){
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
+let _profileSavedDraft=null;
+function profileDraftValues(){
+  return{
+    friendCode:document.getElementById('fc-inp')?.value||'',
+    bio:document.getElementById('prof-bio')?.value||'',
+    discord:document.getElementById('prof-discord')?.value||'',
+    avatarPokemon:document.getElementById('prof-av-input')?.value||''
+  };
+}
+function captureProfileDraft(){_profileSavedDraft=profileDraftValues();syncProfileDirtyState();}
+function syncProfileDirtyState(){
+  if(!_profileSavedDraft)return false;
+  const dirty=JSON.stringify(profileDraftValues())!==JSON.stringify(_profileSavedDraft);
+  const save=document.getElementById('profile-save'),discard=document.getElementById('profile-discard'),status=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');
+  if(save)save.disabled=!dirty;if(discard)discard.disabled=!dirty;
+  const code=friendCode?.value.trim()||'';
+  if(friendCode?.getAttribute('aria-invalid')==='true'&&code&&!validateFc(code)){
+    if(status){status.classList.add('is-error');status.textContent=i18nCore.t('profile.friendCodeInvalid');}
+    return dirty;
+  }
+  if(friendCode)friendCode.removeAttribute('aria-invalid');
+  if(status){status.classList.remove('is-error');status.textContent=i18nCore.t(dirty?'settings.profileUnsaved':'settings.profileNoChanges');}
+  return dirty;
+}
+function discardProfileChanges(){
+  closeAvatarPicker();updateFcDisplay();document.getElementById('settings-profile-heading')?.focus({preventScroll:true});
+}
 function updateFcDisplay(){
   const ud=allData.users?.[cur]||{};
   const fc=ud.friendCode||'';
   document.getElementById('my-fc-wrap').innerHTML=fc
     ?`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">🎮 ${fc}</div>`
     :`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">+ ${escHtml(i18nCore.t('profile.addFriendCode'))}</div>`;
-  document.getElementById('pfc-disp').textContent=fc||i18nCore.t('profile.notSet');
+  const display=document.getElementById('pfc-disp');if(display)display.textContent=fc||i18nCore.t('profile.notSet');
   document.getElementById('fc-inp').value=fc;
   // Populate profile fields
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
@@ -9624,6 +9667,7 @@ function updateFcDisplay(){
   const picker=document.getElementById('wp-picker');
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
   updateAvatarPreview(ud.avatarPokemon||'');
+  captureProfileDraft();
 }
 function applyAccountSyncProviderProfile(profile){
   if(!cur||!providerOnlyIdentityActive()||managedAccountSyncRuntime?.ownerUid!==auth?.currentUser?.uid)return false;
@@ -9631,13 +9675,14 @@ function applyAccountSyncProviderProfile(profile){
   const s=getLocal();s.users[cur]=normalizedUserRecord(cur,s.users?.[cur],{...values.value,identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null});
   saveLocal(s);allData=runtimeDataWithSelectedTrainer(s);queueRefreshAll('account-sync:provider-profile');return true;
 }
-async function saveProfile(){
+async function saveProfile(event){
+  event?.preventDefault?.();
   const fc=document.getElementById('fc-inp').value.trim();
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
   const discord=document.getElementById('prof-discord')?.value.trim()||'';
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
-  const err=document.getElementById('profile-err');err.textContent='';
-  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');return;}
+  const err=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');err.textContent='';err.classList.toggle('is-error',false);
+  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');err.classList.add('is-error');friendCode?.setAttribute('aria-invalid','true');friendCode?.focus();return;}
   const upd={friendCode:fc,bio,discord,avatarPokemon};
   if(providerOnlyIdentityActive()){
     const runtime=managedAccountSyncRuntime;
@@ -9932,6 +9977,7 @@ let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
 let _pendingSettingsRouteSection=null;
+let _settingsInertSiblings=[];
 const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data']);
 const SETTINGS_DESKTOP_QUERY='(min-width:768px)';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
@@ -10014,6 +10060,21 @@ function restoreAndClearSettingsScrollSnapshot(){
   requestAnimationFrame(()=>preserveSettingsScrollSnapshot(snapshot));
 }
 function settingsUsesPageMode(){return _settingsContext==='account'&&matchMedia(SETTINGS_DESKTOP_QUERY).matches;}
+function setSettingsUnderlyingContentInert(active){
+  const overlay=document.getElementById('settings-modal');
+  if(active){
+    if(_settingsInertSiblings.length||!overlay)return;
+    let current=overlay;
+    while(current&&current!==document.body){
+      const parent=current.parentElement;if(!parent)break;
+      for(const element of parent.children)if(element!==current&&element instanceof HTMLElement)_settingsInertSiblings.push({element,inert:element.inert});
+      current=parent;
+    }
+    _settingsInertSiblings.forEach(({element})=>{element.inert=true;});
+    return;
+  }
+  _settingsInertSiblings.forEach(({element,inert})=>{if(element.isConnected)element.inert=inert;});_settingsInertSiblings=[];
+}
 function applySettingsPresentation(){
   const overlay=document.getElementById('settings-modal');if(!overlay)return;
   const pageMode=settingsUsesPageMode();overlay.classList.toggle('settings-page-mode',pageMode);
@@ -10219,6 +10280,7 @@ function openModal(id,options={}){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   _modalActiveId=id;
   m.classList.add('open');
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(true);
   // Focus first focusable element
   _modalFocusTimer=setTimeout(()=>{
     _modalFocusTimer=null;
@@ -10230,8 +10292,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
+    if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
-    if(ev.key!=='Tab'||(id==='settings-modal'&&settingsUsesPageMode()))return;
+    if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10248,6 +10311,7 @@ function closeModal(id){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
   const returnFocus=_modalPrevFocus;_modalPrevFocus=null;
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
@@ -11442,7 +11506,7 @@ function avatarEntryForName(name){
   return legacy?pokemonCatalogDomain.decorateCatalogEntry(legacy):null;
 }
 function updateAvatarPreview(name){
-  const prev=document.getElementById('prof-av-preview');
+  const prev=document.getElementById('settings-account-av');
   const label=document.getElementById('prof-av-name'),clear=document.getElementById('prof-av-clear');
   if(!prev)return;
   if(!name||!name.trim()){
@@ -11475,20 +11539,21 @@ function renderAvatarPicker(query=''){
   out.innerHTML=matches.length?matches.map((entry,index)=>`<button type="button" class="profile-avatar-option${entry.name===selected?' selected':''}" role="option" aria-selected="${entry.name===selected}" data-catalog-id="${escAttr(entry.catalogId)}" onclick="selectAvatarOption(this.dataset.catalogId)" tabindex="${index===avatarPickerFocusIndex?'0':'-1'}"><span class="profile-avatar-option-sprite sprite-slot-profile">${spriteImg(entry.no,48,'avatar-picker-sprite',entry.name,'',entry.displayName,{catalogId:entry.catalogId,scaleCap:1.8})}</span><span>${escHtml(entry.displayName)}</span></button>`).join(''):`<p class="profile-avatar-empty">${escHtml(i18nCore.t('common.noResults'))}</p>`;
 }
 function avatarPickerKeydown(event){
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeAvatarPicker();return;}
   const options=[...document.querySelectorAll('#prof-av-results .profile-avatar-option')];if(!options.length)return;
-  if(event.key==='Escape'){event.preventDefault();closeAvatarPicker();return;}
   if(!['ArrowDown','ArrowUp','Home','End','Enter'].includes(event.key))return;
   event.preventDefault();
+  const focusedIndex=options.indexOf(document.activeElement);if(focusedIndex>=0)avatarPickerFocusIndex=focusedIndex;
   if(event.key==='Enter'){options[avatarPickerFocusIndex]?.click();return;}
   if(event.key==='Home')avatarPickerFocusIndex=0;else if(event.key==='End')avatarPickerFocusIndex=options.length-1;else avatarPickerFocusIndex=(avatarPickerFocusIndex+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
   options.forEach((option,index)=>option.tabIndex=index===avatarPickerFocusIndex?0:-1);options[avatarPickerFocusIndex]?.focus();
 }
 function selectAvatarOption(catalogId){
   const entry=avatarEntryForCatalogId(catalogId),input=document.getElementById('prof-av-input');if(!entry||!input)return;
-  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();
+  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();syncProfileDirtyState();
 }
 function clearAvatarSelection(){
-  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');
+  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');syncProfileDirtyState();
 }
 // Build a <img> that uses the full sprite fallback chain — same cascade
 // logic spriteImg() uses, but with avatar styling (no transform-scale, just
@@ -11718,12 +11783,12 @@ async function copyShareLink(){
   if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
   const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
   const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
-  const initialDeclarations=declarationState();
   const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
   linkPublicationStatus('product.publishing');
   const input=document.getElementById('share-public-url');if(input)input.value=url;
   try{
+    const initialDeclarations=declarationState();
     const result=await publishPublicShareNow(username,'explicit_share');
     if(!current())return;
     if(declarationState()!==initialDeclarations){
