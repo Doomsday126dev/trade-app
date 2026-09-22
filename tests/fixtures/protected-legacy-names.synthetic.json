@@ -1,0 +1,11 @@
+{
+  "sourceSets": {
+    "users": { "complete": true, "names": ["ExistingTrainer"] },
+    "loginDirectory": { "complete": true, "names": ["ExistingTrainer"] },
+    "authIndex": { "complete": true, "names": ["ExistingTrainer"] },
+    "aliases": { "complete": true, "names": ["PastTrainer", "PASTTRAINER"] },
+    "canonicalClaims": { "complete": true, "names": ["ExistingTrainer"] }
+  },
+  "claims": {},
+  "completed": {}
+}

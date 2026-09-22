@@ -7,6 +7,7 @@ const { initializeApp, deleteApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const { createFirestoreE1AuthorityAdapter } = require('../src/adapters/firestoreE1AuthorityAdapter');
 const { canonicalHandle } = require('../src/domain/e1AuthorityBoundary');
+const { POLICY_DIGEST, canonicalJson, digest } = require('../e1-authority-service/durableProviderAdmission');
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT || 'demo-pogo-e1-authority';
 const FIRESTORE_HOST = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:9810';
@@ -101,6 +102,26 @@ async function certifyProviderCreation(overrides = {}) {
     expiresAt: 10_000,
     ...overrides
   });
+}
+
+async function sealDurableAdmission(overrides = {}) {
+  const keys = crypto.generateKeyPairSync('ed25519');
+  const generation = { schemaVersion: 1, state: 'sealed', generationId: 'generation-synthetic-0001',
+    normalizationVersion: 1, inventoryEvidenceDigest: 'a'.repeat(64),
+    coveredHandleKeysDigest: 'b'.repeat(64), protectedClaimsDigest: 'c'.repeat(64),
+    coveredHandleCount: 2, heldHandleCount: 1, writerPolicyDigest: POLICY_DIGEST,
+    writerClosureEvidenceDigest: 'd'.repeat(64), sealedAt: 100 };
+  const signed = { schemaVersion: 1, state: 'active', generationId: generation.generationId,
+    generationDigest: digest(generation), writerPolicyDigest: POLICY_DIGEST,
+    writerClosureEvidenceDigest: generation.writerClosureEvidenceDigest, activatedAt: 200,
+    invalidatedAt: null };
+  const control = { ...signed, operatorSignature: crypto.sign(null, Buffer.from(canonicalJson(signed)),
+    keys.privateKey).toString('base64url'), ...overrides };
+  await firestore.doc(`protectedNamespaceGenerations/${generation.generationId}`).set(generation);
+  await firestore.doc('authorityConfig/durableProviderAdmission').set(control);
+  return { keys, generation, control, adapter: createFirestoreE1AuthorityAdapter({ firestore,
+    now: () => 1000, durableAdmissionPublicKey: keys.publicKey,
+    expectedDurableGenerationId: generation.generationId }) };
 }
 
 async function clearFirestore() {
@@ -356,6 +377,99 @@ test('provider creation atomically writes canonical account handle provider reve
   assert.equal(snapshots[2].data().providerSubjectKey, request.providerSubjectKey);
   assert.equal(snapshots[3].data().uid, request.uid);
   assert.equal(snapshots[4].data().operation, 'createProviderAccountFoundation');
+});
+
+test('durable signed generation admits one atomic provider foundation without temporary certification', async () => {
+  const admission = await sealDurableAdmission();
+  const request = providerInput('firebase_durable_a', 'DurableTrainer', 'request-durable-create-a');
+  assert.equal((await admission.adapter.createProviderAccountFoundation(request, { durableAdmission: true })).status, 'created');
+  assert.equal((await admission.adapter.createProviderAccountFoundation(request, { durableAdmission: true })).replay, true);
+  assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).data().identityKind, 'provider_only');
+  assert.equal((await firestore.doc(`providerSubjects/${request.providerSubjectKey}`).get()).data().uid, request.uid);
+});
+
+test('durable admission denies missing, invalidated, superseded, partial and wrong-policy generations', async () => {
+  const cases = [
+    async () => { await firestore.doc('authorityConfig/durableProviderAdmission').delete(); },
+    async () => { await firestore.doc('authorityConfig/durableProviderAdmission').update({ state: 'invalidated' }); },
+    async () => { await firestore.doc('authorityConfig/durableProviderAdmission').update({ generationId: 'generation-synthetic-0002' }); },
+    async () => { await firestore.doc('authorityConfig/durableProviderAdmission').update({ writerPolicyDigest: 'e'.repeat(64) }); },
+    async () => { await firestore.doc('protectedNamespaceGenerations/generation-synthetic-0001').update({ coveredHandleCount: 1 }); },
+    async () => { await firestore.doc('protectedNamespaceGenerations/generation-synthetic-0001').delete(); }
+  ];
+  for (let i = 0; i < cases.length; i++) {
+    await clearFirestore();
+    const admission = await sealDurableAdmission();
+    await cases[i]();
+    const request = providerInput(`firebase_durable_denied_${i}`, `DeniedTrainer${i}`, `request-durable-denied-${i}`);
+    await assert.rejects(admission.adapter.createProviderAccountFoundation(request, { durableAdmission: true }),
+      error => error?.code === 'e1/legacy-namespace-not-certified');
+    assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).exists, false);
+  }
+});
+
+test('durable occupied and held names deny, while same UID conflicting requests do not duplicate an account', async () => {
+  const admission = await sealDurableAdmission();
+  const held = providerInput('firebase_durable_held', 'HeldTrainer', 'request-durable-held');
+  await firestore.doc(`trainerHandles/${held.handleKey}`).set({ schemaVersion: 1, state: 'held',
+    sourceNamesDigest: 'a'.repeat(64), generationId: null });
+  await assert.rejects(admission.adapter.createProviderAccountFoundation(held, { durableAdmission: true }),
+    error => error?.code === 'e1/handle-conflict');
+  const first = providerInput('firebase_durable_owner', 'ClaimTrainer', 'request-durable-owner-1');
+  await admission.adapter.createProviderAccountFoundation(first, { durableAdmission: true });
+  const second = providerInput(first.uid, 'OtherTrainer', 'request-durable-owner-2');
+  await assert.rejects(admission.adapter.createProviderAccountFoundation(second, { durableAdmission: true }),
+    error => error?.code === 'e1/account-conflict');
+  assert.equal((await firestore.doc(`accounts/${first.uid}`).get()).data().handleKey, first.handleKey);
+  assert.equal(await admission.adapter.readPublicShareIdentity(held), null);
+  const directory = await admission.adapter.listTrainerDirectory({ normalizedQuery: '', pageSize: 25 });
+  assert.deepEqual(directory.handles.map(item => item.canonicalTrainerName), ['ClaimTrainer']);
+});
+
+test('durable simultaneous normalized claims have one complete winner', async () => {
+  const admission = await sealDurableAdmission();
+  const first = providerInput('firebase_durable_race_a', 'RaceAlias', 'request-durable-race-a');
+  const second = providerInput('firebase_durable_race_b', 'RACEALIAS', 'request-durable-race-b');
+  const results = await Promise.allSettled([
+    admission.adapter.createProviderAccountFoundation(first, { durableAdmission: true }),
+    admission.adapter.createProviderAccountFoundation(second, { durableAdmission: true })
+  ]);
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal(results.filter(result => result.status === 'rejected' && result.reason?.code === 'e1/handle-conflict').length, 1);
+  const winner = results[0].status === 'fulfilled' ? first : second;
+  const loser = winner === first ? second : first;
+  assert.equal((await firestore.doc(`accounts/${winner.uid}`).get()).exists, true);
+  assert.equal((await firestore.doc(`accounts/${loser.uid}`).get()).exists, false);
+  assert.equal((await firestore.doc(`providerSubjects/${loser.providerSubjectKey}`).get()).exists, false);
+});
+
+test('generation invalidation overlapping registration blocks stale creation', async () => {
+  const admission = await sealDurableAdmission();
+  let invalidated = false;
+  const hookedFirestore = {
+    doc: path => firestore.doc(path),
+    runTransaction: fn => firestore.runTransaction(transaction => fn(new Proxy(transaction, {
+      get(target, property) {
+        if (property !== 'get') {
+          const value = target[property]; return typeof value === 'function' ? value.bind(target) : value;
+        }
+        return async ref => {
+          if (!invalidated && ref.path === 'authorityConfig/durableProviderAdmission') {
+            invalidated = true;
+            await firestore.doc(ref.path).update({ state: 'invalidated', invalidatedAt: 250 });
+          }
+          return target.get(ref);
+        };
+      }
+    })))
+  };
+  const guarded = createFirestoreE1AuthorityAdapter({ firestore: hookedFirestore, now: () => 1000,
+    durableAdmissionPublicKey: admission.keys.publicKey,
+    expectedDurableGenerationId: admission.generation.generationId });
+  const request = providerInput('firebase_durable_stale', 'StaleTrainer', 'request-durable-stale');
+  await assert.rejects(guarded.createProviderAccountFoundation(request, { durableAdmission: true }),
+    error => error?.code === 'e1/legacy-namespace-not-certified');
+  assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).exists, false);
 });
 
 test('missing stale malformed or incomplete namespace certification blocks provider creation without partial writes', async () => {

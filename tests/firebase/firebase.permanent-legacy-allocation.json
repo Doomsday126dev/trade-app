@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.permanent-legacy-allocation.json" },
+  "emulators": {
+    "auth": { "port": 9798 },
+    "database": { "port": 9701 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}
