@@ -48,17 +48,24 @@ test('empty and unknown scopes never emit a match-all prefilter',()=>{
   const unknown=plan([{name:'Worlds 2026 unknown',no:null},{name:'Invalid',no:true},{name:'Unsafe',no:'25 OR 150'}]);
   assert.equal(unknown.unresolved,3);assert.equal(unknown.manual.length,3);assert.equal(unknown.parts.length,0);
 });
-test('species-only searches keep every qualifier for manual review without excluding shiny BG or CP',()=>{
+test('mixed ordinary and special scopes split protected and broad discovery without mutation',()=>{
   const input=[{name:'Pikachu costume',no:25,shiny:true,backgroundId:'exact',gender:'f',mod:'unsupported',note:'private'},{name:'Unmapped',no:null},{name:'Pikachu',no:25}];
   const before=JSON.stringify(input),plan=load().PogoDomain.searchStrings.contextualSearchPlan(input);
-  assert.deepEqual(json(plan.parts),['!traded&25']);assert.equal(plan.manual.length,3);assert.equal(plan.unresolved,1);
+  assert.deepEqual(json(plan.parts),['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25','!traded&25']);
+  assert.deepEqual(json(plan.partPolicies),['ordinary-protected','special-broad']);assert.equal(plan.policy,'mixed');assert.equal(plan.manual.length,3);assert.equal(plan.unresolved,1);
   assert.equal(plan.manual[0].mod,'unsupported');assert.equal(JSON.stringify(input),before);
 });
-test('all supported query locales use the canonical serializer and unchanged species identity',()=>{
+test('all supported query locales restore the complete protected ordinary policy',()=>{
   const domain=load().PogoDomain;
-  for(const [locale,traded]of Object.entries({en:'traded',ja:'こうかん',es:'intercambiados',de:'getauscht'})){
+  const expected={
+    en:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25,150',
+    ja:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&25,150',
+    es:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&25,150',
+    de:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25,150'
+  };
+  for(const [locale,value]of Object.entries(expected)){
     const plan=domain.searchStrings.contextualSearchPlan([{no:150},{no:25}],{locale});
-    assert.equal(plan.parts[0],`!${traded}&25,150`);
+    assert.equal(plan.parts[0],value);
   }
   assert.equal(domain.searchStrings.contextualSearchPlan([{no:25}],{locale:'fr'}).locale,'en');
 });
@@ -73,8 +80,8 @@ test('oversized scopes split on species boundaries with every species represente
 test('receive and give are distinct intersections of declared offers, never inventory or shared wants',()=>{
   const d=load().PogoDomain,entry=(name,no,intent)=>({name,no,intent,type:'wishlist'});
   const result=d.tradeListComparison.compareDeclarations({mine:[entry('Pikachu',25,'lf'),entry('Eevee',133,'ft')],theirs:[entry('Pikachu',25,'ft'),entry('Eevee',133,'lf')],offersAvailable:true});
-  assert.equal(d.searchStrings.contextualSearchPlan(result.iOffer).parts[0],'!traded&133');
-  assert.equal(d.searchStrings.contextualSearchPlan(result.theyOffer).parts[0],'!traded&25');
+  assert.equal(d.searchStrings.contextualSearchPlan(result.iOffer).parts[0],'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&133');
+  assert.equal(d.searchStrings.contextualSearchPlan(result.theyOffer).parts[0],'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25');
 });
 test('localized panels expose unresolved omissions, escape content and use identical displayed/copied bytes',()=>{
   const w=load();

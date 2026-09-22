@@ -162,5 +162,6 @@
     ,'security.googleReady':'接続の準備完了','security.googleReadyHelp':'アカウントの安全確認が完了しました。続行して Google を開いてください。'
     ,'restored.copySearch':"検索式をコピー",'restored.searchDetails':"検索の詳細"
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
+    ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
   });
 })(window);

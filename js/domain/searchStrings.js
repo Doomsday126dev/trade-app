@@ -4,6 +4,18 @@
   if(!syntax)throw new Error('Pokémon GO search syntax must load before search string helpers');
   const PREFILTER=syntax.queryPrefix(syntax.PRIORITY_QUERY,'en');
   const POGO_STR_LIMIT=1500;
+  const GAME_LANGUAGE_STORAGE_KEYS=Object.freeze({locale:'pogoPokemonGoSearchLocale:v1',override:'pogoPokemonGoSearchLocaleOverride:v1'});
+  const CONTEXTUAL_SEARCH_POLICIES=Object.freeze({
+    ordinary:Object.freeze({id:'ordinary-protected',query:syntax.PRIORITY_QUERY,labelKey:'contextSearch.copyProtected'}),
+    shiny:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'}),
+    lucky:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'}),
+    size:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'}),
+    explicit:Object.freeze({id:'special-broad',query:Object.freeze({profile:'canonical',excludeTraded:true}),labelKey:'contextSearch.copyBroad'})
+  });
+
+  function resolveGameLocalePreference(interfaceLocale='en',storedLocale=null,override=false){
+    return override===true&&syntax.SUPPORTED_LOCALES.includes(storedLocale)?storedLocale:syntax.localeKey(interfaceLocale);
+  }
 
   function dexNumbersFromSearchItems(items){
     return syntax.uniqueDexNumbers((items||[]).map(({term})=>parseInt(String(term||'').match(/\d+/)?.[0]||'',10)));
@@ -96,8 +108,21 @@
     return{len,cls};
   }
 
-  // A deliberately broad species prefilter. Exact declaration identity stays in
-  // the review list; unsupported entries never disappear into numeric parsing.
+  function contextualEntryPolicy(entry={}){
+    if(entry.shiny===true)return CONTEXTUAL_SEARCH_POLICIES.shiny;
+    if(entry.lucky===true)return CONTEXTUAL_SEARCH_POLICIES.lucky;
+    if(entry.xxl===true||entry.xxs===true)return CONTEXTUAL_SEARCH_POLICIES.size;
+    const category=String(entry.category||entry.type||'wishlist').toLowerCase();
+    const identityText=String(entry.dn||entry.displayName||entry.name||'');
+    const explicit=Boolean(entry.gender||entry.mod||entry.note||entry.backgroundId)
+      ||!['','wishlist'].includes(category)
+      ||/\([^)]*\)|^[AGHP]-/.test(identityText);
+    return explicit?CONTEXTUAL_SEARCH_POLICIES.explicit:CONTEXTUAL_SEARCH_POLICIES.ordinary;
+  }
+
+  // Ordinary discovery restores the named protected profile. Explicit/special
+  // wants keep a broad species route so their requested matches are not removed
+  // by contradictory global exclusions. Mixed scopes produce separate commands.
   function contextualSearchPlan(entries=[],options={}){
     const locale=syntax.localeKey(options.locale),limit=Math.min(POGO_STR_LIMIT,Math.max(32,Number(options.limit)||POGO_STR_LIMIT));
     const manual=entries.map(entry=>{
@@ -105,16 +130,20 @@
       const no=Number.isSafeInteger(number)&&number>0&&number<=9999?number:null;
       return{...entry,no,unresolved:no===null};
     });
-    const numbers=syntax.uniqueDexNumbers(manual.filter(e=>!e.unresolved).map(e=>e.no));
-    const query=dexNumbers=>syntax.serializeQuery({profile:'canonical',excludeTraded:true,dexNumbers},locale);
-    const parts=[];let pending=[];
-    for(const no of numbers){
-      if(pending.length&&query([...pending,no]).length>limit){parts.push(query(pending));pending=[];}
-      pending.push(no);
-    }
-    if(pending.length)parts.push(query(pending));
-    return{locale,limit,parts,manual,total:manual.length,unresolved:manual.filter(e=>e.unresolved).length,speciesOnly:true};
+    const resolved=manual.filter(e=>!e.unresolved),ordinary=resolved.filter(entry=>contextualEntryPolicy(entry).id==='ordinary-protected'),special=resolved.filter(entry=>contextualEntryPolicy(entry).id==='special-broad');
+    const parts=[],partPolicies=[];
+    const append=(rows,policy)=>{
+      const numbers=syntax.uniqueDexNumbers(rows.map(e=>e.no));let pending=[];
+      const query=dexNumbers=>syntax.serializeQuery(syntax.withDexNumbers(policy.query,dexNumbers),locale);
+      const flush=()=>{if(!pending.length)return;parts.push(query(pending));partPolicies.push(policy.id);pending=[];};
+      for(const no of numbers){if(pending.length&&query([...pending,no]).length>limit)flush();pending.push(no);}
+      flush();
+    };
+    append(ordinary,CONTEXTUAL_SEARCH_POLICIES.ordinary);
+    append(special,CONTEXTUAL_SEARCH_POLICIES.explicit);
+    const policy=ordinary.length&&special.length?'mixed':ordinary.length?'ordinary-protected':special.length?'special-broad':'none';
+    return{locale,limit,parts,partPolicies,policy,manual,total:manual.length,unresolved:manual.filter(e=>e.unresolved).length,speciesOnly:true};
   }
 
-  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo,contextualSearchPlan});
+  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,GAME_LANGUAGE_STORAGE_KEYS,CONTEXTUAL_SEARCH_POLICIES,resolveGameLocalePreference,contextualEntryPolicy,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo,contextualSearchPlan});
 })(window);
