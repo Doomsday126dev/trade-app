@@ -91,14 +91,15 @@ test('canvas renderer uses reviewed sprites with unambiguous starbursts and alig
   assert.match(genderMarker,/ctx\.moveTo/);
   assert.match(genderMarker,/ctx\.lineTo/);
   assert.doesNotMatch(genderMarker,/fillText|['"]F['"]|['"]M['"]/);
-  assert.match(renderer,/filter\(entry=>imgMap\.has\(boardEntryImageKey\(entry\)\)\)/);
+  assert.match(renderer,/const drawableBoard=\{lf:\[\.\.\.sourceBoard\.lf\],ft:\[\.\.\.sourceBoard\.ft\]\}/);
   assert.match(source,/const mappedHome=/);
   assert.match(source,/other\/home\/\$\{id\}\.png/);
   assert.match(source,/const highQuality=\[\.\.\.mappedHome,\.\.\.publicSpriteUrls/);
   assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
-  assert.doesNotMatch(renderer,/drawSpriteFallback|Artwork pending|backgroundShortLabel|· BG|backgroundId|backgroundImageMap|drawBackgroundArtwork/);
+  assert.match(renderer,/else drawSpriteFallback\(ctx,e,sx,sy,gridSprSize\)/);
+  assert.doesNotMatch(renderer,/Artwork pending|backgroundShortLabel|· BG|backgroundId|backgroundImageMap|drawBackgroundArtwork/);
   assert.doesNotMatch(renderer,/drawMirrorMarker|drawQuantityMarker|drawLuckyMarker|entry\.mirror|entry\.qty|entry\.lucky|e\.note|entry\.note/);
   assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
 });

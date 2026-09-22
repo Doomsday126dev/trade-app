@@ -1,0 +1,28 @@
+{
+  "source": "PokeAPI pokemon.csv pinned at 575291cdb197a7e3a320297be276c9de4ef8401a",
+  "numericMappings": {
+    "Basculin (White Stripe)": 10247,
+    "Zygarde (Complete)": 10120,
+    "Zacian (Crowned)": 10188,
+    "Zamazenta (Crowned)": 10189,
+    "Dialga (Origin)": 10245,
+    "Palkia (Origin)": 10246,
+    "Enamorus (Therian)": 10249,
+    "Ogerpon (Wellspring Mask)": 10273,
+    "Ogerpon (Hearthflame Mask)": 10274,
+    "Ogerpon (Cornerstone Mask)": 10275
+  },
+  "publicForms": {
+    "Pumpkaboo - Small": 10027,
+    "Pumpkaboo - Large": 10028,
+    "Pumpkaboo - Super": 10029
+  },
+  "labelCorrections": {
+    "Slowbro 2021": 80
+  },
+  "distinctStoredNames": ["Unown", "Unown (!)", "Unown (?)"],
+  "genderSemantics": {
+    "visiblyDifferent": [{"name": "Venusaur", "no": 3}],
+    "sameArt": [{"name": "Salandit", "no": 757}]
+  }
+}
