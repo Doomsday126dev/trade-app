@@ -107,7 +107,7 @@ jobs:
             target/tests/trainer-preferences.test.cjs
           node target/scripts/check-domain-helpers.js
           node target/scripts/check-community-membership.js
-          FIREBASE_READ_SOURCE_DIR=target node control/scripts/check-firebase-reads.js
+          PAGES_RUNTIME_SOURCE_SHA="${{ inputs.runtime_source_sha }}" FIREBASE_READ_SOURCE_DIR=target node control/scripts/check-firebase-reads.js
           node target/scripts/check-global-identity-contract.js
           node --check target/data.js
           node --check target/sw.js
