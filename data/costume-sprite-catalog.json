@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-29",
+  "reviewedAt": "2026-09-22",
   "source": {
     "id": "pokemondb-go-reviewed",
     "homepage": "https://pokemondb.net/sprites",
@@ -139,6 +139,15 @@
     {
       "no": 4,
       "names": [
+        "Charmander (Friede's Goggles)",
+        "Charmander wearing Friede's goggles"
+      ],
+      "status": "unavailable",
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+    },
+    {
+      "no": 4,
+      "names": [
         "Charmander (Red Party)",
         "Charmander Party Hat"
       ],
@@ -175,6 +184,15 @@
     {
       "no": 5,
       "names": [
+        "Charmeleon (Friede's Goggles)",
+        "Charmeleon wearing Friede's goggles"
+      ],
+      "status": "unavailable",
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+    },
+    {
+      "no": 5,
+      "names": [
         "Charmeleon Party Hat"
       ],
       "status": "exact",
@@ -205,6 +223,15 @@
       "sha256": {
         "default": "5c2e49a423fc3f78b866f0335308e4d913c92b0cd3efe5e48be77a6387f31d92"
       }
+    },
+    {
+      "no": 6,
+      "names": [
+        "Charizard (Friede's Goggles)",
+        "Charizard wearing Friede's goggles"
+      ],
+      "status": "unavailable",
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
     },
     {
       "no": 6,
@@ -1714,6 +1741,15 @@
       "sha256": {
         "default": "566d2db61000c6b37837d76e3a248204f71c4211aba97829aab2b9b0b464e122"
       }
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Turquoise)",
+        "PokéXciting Pikachu (Turquoise)"
+      ],
+      "status": "unavailable",
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
     },
     {
       "no": 25,

@@ -22,10 +22,10 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:376,exact:355,unsupported:21});
-  assert.equal(report.candidates.length,21);
-  assert.equal(report.coverage.releaseEvidenceEntries,13);
-  assert.equal(report.upcomingIdentities.length,4);
+  assert.deepEqual(report.counts,{canonical:380,exact:355,unsupported:25});
+  assert.equal(report.candidates.length,25);
+  assert.equal(report.coverage.releaseEvidenceEntries,15);
+  assert.equal(report.upcomingIdentities.length,1);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
   assert.equal(buildReport({...inputs(),online:true}).status,'no-new-findings');
 });
@@ -79,12 +79,38 @@ test('newly released evidence identities missing from the catalog are flagged; f
   data.releases.entries.at(-1).releaseDate='2026-10-01';
   assert.equal(buildReport(data).missingIdentities.length,0);
 });
-test('announced September costumes become missing-identity findings on release day',()=>{
+test('released September costumes are unavailable records while later announcements stay queued',()=>{
   const data=inputs();data.now=new Date('2026-09-17T00:00:00Z');
   const report=buildReport(data);
-  assert.equal(report.upcomingIdentities.length,0);assert.equal(report.missingIdentities.length,4);
-  assert.ok(report.missingIdentities.some(row=>row.catalogName==="Charmander (Friede's Goggles)"));
-  assert.ok(report.missingIdentities.some(row=>row.catalogName==='Pikachu (PokeXciting Turquoise)'));
+  assert.equal(report.upcomingIdentities.length,1);assert.equal(report.missingIdentities.length,0);
+  for(const name of ["Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)",'Pikachu (PokeXciting Turquoise)']){
+    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'unavailable',name);
+    const pending=data.pending.entries.find(row=>row.displayIdentity===name);
+    assert.equal(pending?.identityStatus,'released',name);
+    assert.equal(pending?.artworkStatus,'unavailable',name);
+  }
+});
+test('current review evidence records exact retrieval times, URLs, hashes and unresolved source gaps',()=>{
+  const data=inputs(),digest=/^[0-9a-f]{64}$/;
+  assert.equal(data.releases.reviewEvidence.reviewedAt,'2026-09-22T21:15:29Z');
+  assert.match(data.releases.reviewEvidence.acceptedArtworkSnapshot.sha256,digest);
+  assert.equal(data.releases.reviewEvidence.acceptedArtworkSnapshot.retrievedAt,'2026-09-22T21:14:26.054Z');
+  const sources=data.releases.reviewEvidence.sources;
+  for(const source of Object.values(sources)){
+    assert.match(source.url,/^https:\/\//);assert.match(source.retrievedAt,/^2026-09-22T/);assert.match(source.sha256,digest);
+  }
+  assert.equal(sources.events.result,'unresolved-sign-in-required');
+  assert.match(sources.events.gap,/sign-in page/);
+  assert.equal(sources.worldsRecordedUrl.result,'unresolved-bot-challenge');
+  assert.match(sources.worldsRecordedUrl.gap,/challenge shell/);
+  assert.equal(sources.worldsOfficial.result,'released');
+  const released=data.releases.entries.filter(row=>row.lifecycleStatus==='released');
+  const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
+  assert.equal(released.length,13);assert.equal(announced.length,2);
+  assert.ok(released.every(row=>row.artworkStatus==='unavailable'));
+  assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Astronaut)','Pikachu (Batik Shirt)']);
+  assert.equal(announced.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
+  assert.equal(announced.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'unavailable');
 });
 test('broken, tampered and wrong-source local asset mappings are reported',()=>{
   const missing=inputs();missing.catalog.entries[0].assets.default='assets/sprites/go/missing.png';
