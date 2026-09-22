@@ -1,5 +1,9 @@
 'use strict';
 const { fail } = require('./reset');
+const { createHash } = require('node:crypto');
+const canonical = value => value && typeof value === 'object' ?
+  Array.isArray(value) ? value.map(canonical) : Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+const fingerprint = value => createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
 const { ROOT } = require('./identity-fence');
 const FIELDS = ['authUid', 'authEmail', 'authVersion', 'username', 'authReady', 'isAdmin', 'disabled', 'frozen', 'identityFrozen', 'status', 'state'];
 const pick = value => Object.fromEntries(FIELDS.filter(key => Object.hasOwn(value || {}, key)).map(key => [key, value[key]]));
@@ -27,6 +31,31 @@ function createAdapter({ database, auth, firestore, updatePassword }) {
       const handle = await firestore.doc(`trainerHandles/${handleKey}`).get();
       const conflicts = await firestore.collection(`identityConflicts/${uid}/events`).limit(1).get();
       return !account.exists && !handle.exists && conflicts.empty;
+    },
+    async legacyResetEvidence(uid, username, version) {
+      const normalized = username.normalize('NFKC').trim().toLowerCase();
+      const handleKey = `v1_${Buffer.from(normalized, 'utf8').toString('hex')}`;
+      const account = await firestore.doc(`accounts/${uid}`).get();
+      const handle = await firestore.doc(`trainerHandles/${handleKey}`).get();
+      const conflicts = await firestore.collection(`identityConflicts/${uid}/events`).limit(1).get();
+      if (!conflicts.empty) return null;
+      if (!account.exists && !handle.exists) return fingerprint({ kind: 'legacy', uid, username, version });
+      if (!account.exists || !handle.exists) return null;
+      const a = account.data(), h = handle.data();
+      const healthy = value => value && typeof value === 'object' && !Array.isArray(value) &&
+        ['disabled', 'frozen', 'identityFrozen'].every(key => value[key] === undefined || value[key] === false);
+      const positive = value => Number.isSafeInteger(value) && value > 0;
+      if (!healthy(a) || !healthy(h) || a.schemaVersion !== 1 || h.schemaVersion !== 1 ||
+          a.uid !== uid || h.uid !== uid || a.canonicalTrainerName !== username || h.canonicalTrainerName !== username ||
+          a.normalizedTrainerName !== normalized || h.normalizedTrainerName !== normalized || a.handleKey !== handleKey ||
+          (a.identityKind !== undefined && a.identityKind !== 'legacy_migrated') ||
+          (a.legacyAccessConfigured !== undefined && a.legacyAccessConfigured !== true) ||
+          a.legacyUsername !== username || a.legacyAuthVersion !== version || a.status !== 'active' || h.state !== 'active' ||
+          !positive(a.revision) || !positive(h.revision) || !positive(a.createdAt) || !positive(h.claimedAt) ||
+          !positive(a.updatedAt) || a.updatedAt < a.createdAt || !positive(h.updatedAt) || h.updatedAt < h.claimedAt) return null;
+      // Bind the exact read evidence to inspection, reservation and postcondition.
+      // This is reset eligibility only; obsolete-slot/reconciliation legacyOnly stays strict.
+      return fingerprint({ account: a, handle: h });
     },
     async retiredSlotIsUnowned(uid, currentUid, username) {
       for (const root of ['accountSync', 'accounts', 'trainerShares', 'userPreferences', 'shareVisibility', 'shareAccess']) {

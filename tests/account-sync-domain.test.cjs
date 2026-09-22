@@ -510,7 +510,8 @@ test('preserved recovery candidates require review and cannot present as saved',
   await journal.putRecoveryCandidate({ownerUid:'uid-owner',candidateId:'recovery_candidate_0001',reason:'stale-device-cache'});
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,crypto:webcrypto,clock:h.clock});
   const snapshot=await controller.snapshot();
-  assert.equal(snapshot.recoveryCandidateCount,1);assert.equal(snapshot.state,'review-required');assert.notEqual(snapshot.state,'saved');
+  assert.equal(snapshot.recoveryCandidateCount,1);assert.equal(snapshot.state,'inactive');assert.notEqual(snapshot.state,'saved');
+  await controller.activate();await controller.waitForListenerReady();assert.equal((await controller.snapshot()).state,'review-required');await controller.deactivate();
 });
 
 test('auth detach preserves the owner journal and reattach resumes only that account',async()=>{

@@ -8,6 +8,8 @@ const vm=require('node:vm');
 const {collectReadSites,reconcileReadSites}=require('../scripts/lib/firebase-read-sites.cjs');
 const root=path.join(__dirname,'..');
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
+const current='4614e1e4345befbb7c1b1a75fa3230e57e8e94a4';
+const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
 const contract=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACT;
@@ -17,18 +19,18 @@ function fixture(t){
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
   return dir;
 }
-function check(dir){return spawnSync(process.execPath,[path.join(root,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env:{...process.env,FIREBASE_READ_SOURCE_DIR:dir}});}
+function check(dir,runtimeSourceSha=current){return spawnSync(process.execPath,[path.join(root,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env:{...process.env,FIREBASE_READ_SOURCE_DIR:dir,PAGES_RUNTIME_SOURCE_SHA:runtimeSourceSha}});}
 function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
-test('parsed inventory accounts for 25 sites, nine additions and sixteen existing sites',()=>{
+test('parsed .116 inventory accounts for 23 reviewed sites',()=>{
   const actual=collectReadSites(root);
-  assert.equal(actual.length,25);
+  assert.equal(actual.length,23);
   const inventory=reconcileReadSites(actual,contract.directReadSites,contract.readHandlerHashes);
   assert.equal(inventory.filter(site=>site.classification==='A').length,16);
-  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,9);
-  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,25);
+  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,7);
+  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,23);
   assert.ok(inventory.every(site=>site.normalizedPath&&site.justification&&site.featureGate));
   assert.ok(!contract.needles.some(item=>item.text.includes('loginDirectory/${handle}')));
 });
@@ -37,7 +39,7 @@ test('trusted control validates the unchanged immutable .87 runtime and ignores 
   for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
     fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${tagged}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
   }
-  const result=check(dir);assert.equal(result.status,0,result.stderr);
+  const result=check(dir,tagged);assert.equal(result.status,0,result.stderr);
   assert.equal(JSON.parse(result.stdout).directReads.length,25);
 });
 test('an unregistered direct read fails even in an existing handler',t=>{
@@ -83,6 +85,44 @@ test('static read validation uses the trusted registry even when the target neve
   const file=path.join(dir,'index.html');
   fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/<script src="js\/data\/firebaseReadRegistry\.js\?v=[^"]+"><\/script>\n/g,''));
   fs.writeFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'throw new Error("target registry must never execute during validation");');
-  const result=check(dir);assert.equal(result.status,0,result.stderr);
+  const result=check(dir,current);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,23);
+});
+
+
+test('trusted control accepts immutable .104 raw preservation without modifying its stale registry',t=>{
+  const dir=fixture(t),runtime='384d6bea6664c0e20a69b08c5623ec21563f80a4';
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
+    fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${runtime}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
+  }
+  const before=fs.readFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'utf8');
+  const result=check(dir,runtime);assert.equal(result.status,0,result.stderr);
   assert.equal(JSON.parse(result.stdout).directReads.length,25);
+  assert.equal(fs.readFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'utf8'),before);
+  change(dir,'js/app/application.js',"const paths=[...OWNED_MY_LIST_TYPES.map(type=>`${type}/${username}`),`users/${username}`];","const paths=[...OWNED_MY_LIST_TYPES.map(type=>`${type}/${username}`),`users/Other`];");
+  assert.match(check(dir,runtime).stderr,/path bindings or execution semantics changed/);
+});
+
+test('trusted control accepts the exact .115 rollback read contract',t=>{
+  const dir=fixture(t);
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
+    fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${rollback}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
+  }
+  const result=check(dir,rollback);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,25);
+});
+
+test('future runtime SHAs retain the exact current read contract',t=>{
+  const dir=fixture(t),future='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  const result=check(dir,future);assert.equal(result.status,0,result.stderr);
+  change(dir,'js/app/application.js','async function doLogin(){','async function doLogin(){get(ref(db,"unregistered"));');
+  assert.match(check(dir,future).stderr,/inventory changed/);
+});
+
+test('an unregistered source cannot select the historical rollback contract',t=>{
+  const dir=fixture(t),future='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
+    fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${rollback}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
+  }
+  assert.match(check(dir,future).stderr,/inventory changed/);
 });

@@ -180,6 +180,8 @@ test('workflow checks out runtime_source_sha, never github.sha, and preserves im
   assert.equal(regression.env.PAGES_RUNTIME_SOURCE_SHA,'${{ inputs.runtime_source_sha }}');
   assert.equal(regression.env.PAGES_RUNTIME_RELEASE_ID,'${{ inputs.runtime_release_id }}');
   assert.equal(regression.env.PAGES_RUNTIME_RELEASE_TAG,'${{ inputs.runtime_release_tag }}');
+  const validateTarget=job.steps.find(step=>step.name==='Run mandatory frontend release suite');
+  assert.match(validateTarget.run,/PAGES_RUNTIME_SOURCE_SHA="\$\{\{ inputs\.runtime_source_sha \}\}" FIREBASE_READ_SOURCE_DIR=target node control\/scripts\/check-firebase-reads\.js/);
   const uses=[...reusableText.matchAll(/^\s*uses:\s*([^\s]+)$/gm)].map(match=>match[1]);
   for(const value of uses)assert.match(value,/@[0-9a-f]{40}$/);
   assert.match(reusableText,/actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/);
@@ -196,7 +198,7 @@ test('workflow permissions remain minimal and deploy/build jobs stay separate',(
 
 test('reviewed frontend allowlist stays exact and excludes control/private trees',()=>{
   const result=validator.validateReleaseCoherence(root,{expectedReleaseId:RELEASE_ID});
-  assert.equal(result.files.length,558);assert.equal(result.scriptCount,79);
+  assert.equal(result.files.length,566);assert.equal(result.scriptCount,87);
   assert.equal(result.allowlist.hostedOnlyScriptFiles.length,5);
   assert.ok(result.allowlist.lazyScriptFiles.includes('js/app/publicShareApp.js'));
   for(const file of result.files)assert.doesNotMatch(file,/^(?:functions|tests|docs|\.github|\.local|node_modules|screenshots|logs)\//);
@@ -254,7 +256,7 @@ test('schema 2 artifact records distinct runtime and control provenance without 
   const result=builder.buildArtifact({source:root,output,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,githubRunId:RUN_ID,controlWorkflowSha:CONTROL_SHA});
   assert.equal(result.schema_version,2);assert.equal(result.source_sha,RUNTIME_SHA);assert.equal(result.release_tag,RUNTIME_TAG);
   assert.equal(result.deployment_selector,SELECTOR);assert.equal(result.dispatcher_sha,DISPATCHER_SHA);assert.equal(result.artifact_digest,ARTIFACT_DIGEST);
-  assert.equal(builder.walk(output).length,559);fs.rmSync(output,{recursive:true,force:true});
+  assert.equal(builder.walk(output).length,567);fs.rmSync(output,{recursive:true,force:true});
 });
 
 test('artifact builder rejects runtime-tag and selector mismatches and non-empty output',()=>{
@@ -335,7 +337,7 @@ test('current-run matching rejects concurrent, zero, multiple, wrong selector, a
 test('postdeploy requires schema 2 and exact runtime/control provenance',async()=>{
   const files=runtimeFiles(),fetchImpl=pagesFetch(files);
   const result=await verifier.verifyServedDeployment({fetchImpl,siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST});
-  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,79);
+  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,87);
   files.set('deployment-manifest.json',JSON.stringify(legacyManifest()));
   await assert.rejects(verifier.verifyServedDeployment({fetchImpl:pagesFetch(files),siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST}),/not accepted post-deploy/);
 });

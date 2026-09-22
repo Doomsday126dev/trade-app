@@ -2,6 +2,9 @@
   const root=global.PogoData=global.PogoData||{};
   const freezeEntry=entry=>Object.freeze({...entry,consumers:Object.freeze([...entry.consumers])});
   const READ_SURFACES=Object.freeze([
+    {id:'candidate_favorite_addition_capacity',path:'accountSync/{currentUid}/favorites',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
+    {id:'candidate_favorite_addition_proof',path:'accountSync/{currentUid}/favorites/{targetUid}',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
+    {id:'candidate_favorite_slots',path:'favoriteSlots/{currentUid}',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated_owner',consumers:['favoriteAdditionRepository'],status:'candidate_inactive'},
     {id:'login_directory_live',path:'loginDirectory',method:'onValue',breadth:'broad',ownerScope:'public',audience:'anonymous',consumers:['login'],status:'transitional'},
     {id:'users_live',path:'users',method:'onValue',breadth:'broad',ownerScope:'legacyAdmin',audience:'admin',consumers:['admin_on_demand'],status:'planned_retirement'},
     {id:'auth_index_live',path:'authIndex',method:'onValue',breadth:'broad',ownerScope:'legacyAdmin',audience:'admin',consumers:['admin_on_demand'],status:'planned_retirement'},
@@ -74,10 +77,8 @@
   });
   // Ordered read sites bind each parsed call to its handler, path and reviewed purpose.
   const directReadSites=Object.freeze([
-    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','D','New migrated-foundation branch verifies fresh legacy mapping; exclusive with missing-foundation branch, not a duplicate.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','D','New migrated-foundation branch verifies reverse UID binding; canonical foundation alone does not prove legacy ownership.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','Existing missing-foundation branch distinguishes unlinked account from migration-required legacy account; no cached identity reuse.'),
-    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Existing missing-foundation branch checks reverse mapping before fail-closed migration-required result.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','One exact reciprocal check serves migrated and unmigrated legacy accounts after an authoritative canonical read; never an error fallback.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Verify the exact reverse UID binding and healthy record before existing-account activation; no identity writes or migration required.'),
     site('writeProviderPublicShareSnapshot','get(target)','trainerShares/{currentUid}','provider_public_readback','providerShare','D','New post-transaction readback distinguishes committed/reconciled content from timeout or conflict; earlier transaction evidence is not equivalent.'),
     site('writeVerifiedLegacyPublicSnapshot','get(target)','publicShares/{currentUsername}','legacy_public_readback','publish','C','New post-write content and hydration-token verification prevents reporting publication or copying a link before the matching projection is confirmed.'),
     site('repairMemberAccount','get(ref(db,`users/${username}`))','users/{username}','admin_verification_reads','admin','A','Verify intentionally retained Admin metadata repair; established UID replacement remains blocked before this path.'),
@@ -105,7 +106,7 @@
     directGetCount:directReadSites.filter(site=>site.operation==='get').length,
     directReadSites,
     readHandlerHashes:Object.freeze({
-      resolveGoogleAccountBinding:'f3e431d7873b3e6e52ab7996ded83d92e7e4c61d4b70ee0e2f0623f8e7f37c7d',
+      resolveGoogleAccountBinding:"89f818b5c45d027385158681964726ae0916176e430dba5781683551dae1df9e",
       writeProviderPublicShareSnapshot:'5835654f0e125a398c6931e97cf905549b5dc741c534fbd16572257bfa1914e6',
       writeVerifiedLegacyPublicSnapshot:'d50329ae64c23791516ca3b0d2d800ecc0c33b903c27f4b26969b049570cb62c',
       repairMemberAccount:'c9fc61723b6999aba4ad01dfa036025c570ecbbd7d3b9414e67f4ca2b0917f0a',
@@ -113,7 +114,7 @@
       readLegacyProvisioningFreeze:'205cf1dddbfab5c8356c518ae48493f7620218549bf93ae282c9a2e99cfb5ca8',
       syncOwnAuthIndex:'ba9ba732bb8e7e4d37b857b4abd9b0c152765f43c050e29206bfc7c7c6944bcb',
       accountSyncRolloutEligible:'c1f5a8e7f551fed025ea12370d5ba84608be3590e30de6f4de14e863cefcd309',
-      accountSyncReadLegacySources:'af2cce11993d102668d4875c77ab2927231d6cd13e981ef326380b3e8f2f4428',
+      accountSyncReadLegacySources:Object.freeze(['af2cce11993d102668d4875c77ab2927231d6cd13e981ef326380b3e8f2f4428','47362d8f67a5afae6330665c71f7cf18c197c71ace8146181cdc2a5a2aecdb0f']),
       loadPublicShareData:'76a88a00a0bc891b17695eb49f76d626f585c2ee03a31f590290b95526df670d',
       runLoginHealthCheck:'61bfc130258e4b27ca6e20a155d0a2df0cf4aba8feb8adc2410120b7e79840f0',
       doLogin:'91de13ef5bb7bdd6e2c398e1b7df1991bb70b3066f1b1269aade0f2457b48128',
@@ -153,9 +154,9 @@
       })
     ]),
     needles:Object.freeze([
-      Object.freeze({text:'get(ref(db,`users/${username}`))',count:5}),
+      Object.freeze({text:'get(ref(db,`users/${username}`))',count:4}),
       Object.freeze({text:'get(ref(db,`loginDirectory/${username}`))',count:2}),
-      Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:2}),
+      Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:1}),
       Object.freeze({text:'get(target)',count:2}),
       Object.freeze({text:"get(ref(db,'legacyProvisioningFreeze'))",count:1}),
       Object.freeze({text:'get(ref(db,`authIndex/${owner}`))',count:1}),
@@ -173,6 +174,32 @@
     broadSubscribePaths:Object.freeze(['authIndex','communities','communityRequests','costumes','dynamax','gmax','have','loginDirectory','offers','requests','trades','userCommunities','users','wishlist'])
   });
 
+  // The trusted Pages control validates exact, reviewed runtime revisions. The
+  // .115 rollback still carries the pre-.116 two-branch Google resolver, while
+  // .116 intentionally consolidates those branches into one reciprocal read.
+  const legacyGoogleResolverSites=Object.freeze([
+    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','D','Reviewed migrated-foundation branch verifies fresh legacy mapping; exclusive with the missing-foundation branch.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','D','Reviewed migrated-foundation branch verifies reverse UID binding; exclusive with the missing-foundation branch.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','Reviewed missing-foundation branch distinguishes unlinked from migration-required legacy accounts.'),
+    site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Reviewed missing-foundation branch checks reverse ownership before failing closed.')
+  ]);
+  const LEGACY_SOURCE_CALL_CONTRACT=Object.freeze({
+    ...SOURCE_CALL_CONTRACT,
+    directGetCount:25,
+    directReadSites:Object.freeze([...legacyGoogleResolverSites,...directReadSites.slice(2)]),
+    readHandlerHashes:Object.freeze({...SOURCE_CALL_CONTRACT.readHandlerHashes,
+      resolveGoogleAccountBinding:'f3e431d7873b3e6e52ab7996ded83d92e7e4c61d4b70ee0e2f0623f8e7f37c7d'}),
+    needles:Object.freeze(Array.from(SOURCE_CALL_CONTRACT.needles,item=>Object.freeze({...item,
+      count:item.text==='get(ref(db,`users/${username}`))'?5:
+        item.text==='get(ref(db,`authIndex/${expectedUid}`))'?2:item.count})))
+  });
+  const SOURCE_CALL_CONTRACTS=Object.freeze({
+    '4614e1e4345befbb7c1b1a75fa3230e57e8e94a4':SOURCE_CALL_CONTRACT,
+    'df20ddbc5a273b8fef0832c4e38b3de86b69a2dd':LEGACY_SOURCE_CALL_CONTRACT,
+    '384d6bea6664c0e20a69b08c5623ec21563f80a4':LEGACY_SOURCE_CALL_CONTRACT,
+    '671579c07e8c14c2f1c7d5c6c149332c550a225c':LEGACY_SOURCE_CALL_CONTRACT
+  });
+
   const CANDIDATE_SURFACE_GROUPS=Object.freeze({
     shareVisibility:Object.freeze(['candidate_share_directory_read','candidate_share_mode_read','candidate_trainer_share_read','candidate_trainer_share_live']),
     syncedPreferences:Object.freeze(['candidate_preference_metadata_live','candidate_preference_favorites_live','candidate_preference_trainer_metadata_live','candidate_preference_tags_live','candidate_preference_tag_labels_live','candidate_preference_recents_live','candidate_preference_history_live'])
@@ -187,5 +214,5 @@
     return Object.freeze({ok:violations.length===0,violations:Object.freeze(violations)});
   }
 
-  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT,CANDIDATE_SURFACE_GROUPS,validateFeatureGateContract});
+  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT,SOURCE_CALL_CONTRACTS,CANDIDATE_SURFACE_GROUPS,validateFeatureGateContract});
 })(window);

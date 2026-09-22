@@ -16,8 +16,8 @@ async function installLoginTransport(page){
     localStorage.setItem('pogoWhatsNewSeen',JSON.stringify(Date.now()));
   });
   const fulfill=(route,body)=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body});
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>fulfill(route,'export function initializeApp(){return {name:"boot-qualification"}}'));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>fulfill(route,`
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>fulfill(route,'export function initializeApp(){return {name:"boot-qualification"}}'));
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>fulfill(route,`
     const user={uid:${JSON.stringify(identity.uid)},providerData:[{providerId:'password'}]};
     const auth={currentUser:localStorage.getItem('__bootMockAuthenticated')?user:null},listeners=new Set();
     function emit(value){auth.currentUser=value;for(const listener of listeners)listener(value)}
@@ -32,14 +32,14 @@ async function installLoginTransport(page){
     export async function signOut(){localStorage.removeItem('__bootMockAuthenticated');emit(null)}
     export async function updatePassword(){}export async function deleteUser(){}
   `));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',route=>fulfill(route,'export class ReCaptchaEnterpriseProvider{}export function initializeAppCheck(){return {}}'));
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js',route=>fulfill(route,'export class ReCaptchaEnterpriseProvider{}export function initializeAppCheck(){return {}}'));
   const remote={
     loginDirectory:{[identity.username]:{authReady:true,authVersion:1}},
     authIndex:{[identity.uid]:{username:identity.username}},
     users:{[identity.username]:{authUid:identity.uid,authVersion:1,pinHashed:true}},
     wishlist:{[identity.username]:{Pikachu:'H'}},dynamax:{[identity.username]:{}},gmax:{[identity.username]:{}},costumes:{[identity.username]:{}}
   };
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>fulfill(route,`
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',route=>fulfill(route,`
     const remote=JSON.parse(localStorage.getItem('__bootMockRemote')||${JSON.stringify(JSON.stringify(remote))}),listeners=new Set();
     const clone=value=>value==null?null:structuredClone(value);
     const read=path=>path?path.split('/').reduce((node,key)=>node?.[key],remote)??null:remote;
@@ -56,7 +56,7 @@ async function installLoginTransport(page){
     export function serverTimestamp(){return Date.now()}
   `));
   // Exercise the real readiness boundary instead of relying on local SDK speed.
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',async route=>{
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',async route=>{
     await new Promise(resolve=>setTimeout(resolve,150));
     await route.fallback();
   });
@@ -83,12 +83,12 @@ test('fresh Username/PIN login and restored authenticated session use the reduce
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>__bootSignIns)).toBe(1);
   expect(await page.evaluate(()=>({user:cur,uid:auth.currentUser.uid,ready:firebaseDataProtectionReady}))).toEqual({user:identity.username,uid:identity.uid,ready:true});
-  await assertReducedRuntime(page,67);
+  await assertReducedRuntime(page,82);
   await page.reload();
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>cur)).toBe(identity.username);
   expect(await page.evaluate(()=>window.__bootSignIns||0)).toBe(0);
-  await assertReducedRuntime(page,67);
+  await assertReducedRuntime(page,82);
   expect(errors).toEqual([]);
 });
 
@@ -99,7 +99,7 @@ test('non-English feature loading retains translations without disabled modules'
   await page.evaluate(()=>__pogoEnsureFullApp('boot-german-qualification'));
   await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null);
   expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe('de');
-  await assertReducedRuntime(page,68);
+  await assertReducedRuntime(page,83);
 });
 
 test('installed offline shell retains the independent public-route code without private application loading',async({browser,baseURL})=>{

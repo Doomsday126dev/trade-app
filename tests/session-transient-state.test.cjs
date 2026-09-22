@@ -28,11 +28,12 @@ function transientHarness(){
     'feedback-status':{textContent:'Removed Pidgey Undo'},
     'favorite-saved-prompt':{hidden:false,querySelector:()=>({onclick:()=>{}})},
     'shortcuts-modal':{id:'shortcuts-modal',classList:classList(['ov','open'])},
-    'mylist-filter':{value:'private search'},
+    'combined-filter':{value:'private search'},
     'have-filter':{value:'private inventory search'},
     'add-tray':{hidden:false,innerHTML:'Pidgey'},
     'sync-banner':{hidden:false}
   };
+  for(const id of ['wants-selection-tools','wants-select-toggle','combined-selected-count','tab-mylist','wants-find','wants-combine'])elements[id]={hidden:false,open:true,textContent:'',classList:classList()};
   const conflictToast={id:'conflict',removed:false,remove(){this.removed=true;}};
   const selected={style:{transform:'translateX(10px)'},classList:classList(['bulk-selected'])};
   const checked={checked:true};
@@ -55,7 +56,7 @@ function transientHarness(){
     _modalKeyHandler:()=>{},_modalPrevFocus:{},rpinTarget:'TrainerA',addTray:[{name:'Pidgey'}],
     acItems:[1],acFiltered:[1],acFocusIdx:1,
     dragSrc:{},bulkMode:true,bulkSelected:new Set(['Pidgey']),
-    combinedSelection:new Set(['Pidgey']),combinedOwner:'TrainerA',combinedEditor:{},
+    combinedSelection:new Set(['Pidgey']),combinedOwner:'TrainerA',combinedEditor:{},wantsSelectionMode:true,wantsSectionLimits:new Map(),wantsCollapsedSections:new Set(),wantsCustomScopes:new Map(),closeWantsListTools(){},
     productShareSnapshot:[{name:'Pidgey'}],productShareOwner:'TrainerA',productShareScope:'full',
     _safeTransferSelected:new Set(['TrainerB']),_qaSelected:{lf:new Set(['Pidgey']),ft:new Set()},
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
@@ -138,7 +139,7 @@ test('session cleanup resets modal, selection, filter, queue, and pending compar
   for(const required of [
     "document.querySelectorAll('.ov.open')",'bulkSelected.clear()',
     'addTray=[]','rpinTarget=null','_activeDiff=null','closeTradeMatchModal(false)',
-    "'mylist-filter'","'have-filter'",'_safeTransferSelected=null','voiceRecognition.abort()'
+    "'combined-filter'","'have-filter'",'_safeTransferSelected=null','voiceRecognition.abort()'
   ])assert.ok(block.includes(required),`Missing transient reset: ${required}`);
 });
 

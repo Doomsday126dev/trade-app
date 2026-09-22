@@ -9,7 +9,7 @@ function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof get
 async function loadFirebaseSdk(){
   if(firebaseSdkReady())return true;
   if(!firebaseSdkPromise){
-    const base='https://www.gstatic.com/firebasejs/10.12.2';
+    const base='https://www.gstatic.com/firebasejs/12.14.0';
     firebaseSdkPromise=Promise.all([
       startPogoEarlyAuth(),
       import(`${base}/firebase-database.js`)
@@ -47,13 +47,15 @@ async function loadFirebaseSdk(){
 }
 function loadFirebaseAppCheckSdk(){
   if(firebaseAppCheckSdkPromise)return firebaseAppCheckSdkPromise;
-  const base='https://www.gstatic.com/firebasejs/10.12.2';
+  const base='https://www.gstatic.com/firebasejs/12.14.0';
   firebaseAppCheckStage='sdk-import';
   firebaseAppCheckSdkPromise=import(`${base}/firebase-app-check.js`).then(appCheckMod=>{
     firebaseAppCheckStage='sdk-import-settled';
     return{
       initializeAppCheck:appCheckMod.initializeAppCheck,
-      ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider
+      ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider,
+      getToken:appCheckMod.getToken,
+      getLimitedUseToken:appCheckMod.getLimitedUseToken
     };
   }).catch(error=>{
     firebaseAppCheckStage='failed';
@@ -162,7 +164,7 @@ window.__pogoCreateGroupEClientFoundationCanary=async(storedEnvelope)=>{
     getSessionGeneration:()=>_sessionTransientGeneration,
     getBrowserContextDigest:()=>e1ClientFoundationCanaryService.browserContextDigest(
       location.origin,location.pathname,fbApp.options.appId,crypto),
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js')
   });
   await e1ClientFoundationCanary.open(configuration);
   return e1ClientFoundationCanary;
@@ -260,6 +262,7 @@ let favoriteShareSessionCache=null;
 const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
 const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
 let managedAccountSyncRuntime=null;
+let managedFavoriteAdditions=null,favoriteAdditionUiState=null,managedFavoriteRecoveryPreview=null;
 let accountSyncEligibleUid='';
 let accountSyncUiState=null;
 let accountSyncMigrationState='inactive';
@@ -626,7 +629,7 @@ function openCombinedEditor(index){
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
   document.getElementById('combined-priority').value=[...priorities][0]||'';
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
-  document.getElementById('combined-error').textContent='';
+  document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
   document.getElementById('combined-save').disabled=false;
   document.getElementById('wants-remove').hidden=!entries?.length;
   openModal('combined-editor-modal');
@@ -657,14 +660,14 @@ async function saveCombinedEditor(remove=false){
   button.disabled=true;
   try{
     const authority=await accountSyncMutationAuthority();
-    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail('product.editSyncRequired');
+    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
     for(const side of ['lf']){
       const existing=draft.entries.filter(e=>e.intent===side);
       if(existing.length){
         for(const entry of existing)for(const source of [entry,...entry.aliases||[]]){
-          const entity=combinedSourceEntity(source);if(!entity)return fail('product.editSyncRequired');
+          const entity=combinedSourceEntity(source);if(!entity)return fail('accountSync.editReview');
           if(seen.has(entity.entityId))continue;seen.add(entity.entityId);
           if(!sides.includes(side)){mutations.push({kind:'delete',entityType:'tradeEntry',entityId:entity.entityId});continue;}
           const patch={};
@@ -689,11 +692,11 @@ async function saveCombinedEditor(remove=false){
     }
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
-    if(!result?.ok)return fail('storage.offlineRecoveryUnavailable');
+    if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
     if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
     closeModal('combined-editor-modal');renderMyList();
-  }catch{fail('storage.offlineRecoveryUnavailable');}
+  }catch(error){fail(accountSyncEditFailureKey(error?.code));}
   finally{button.disabled=false;}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
@@ -1430,14 +1433,16 @@ async function flushSyncQueue(){
 function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('show',show);refreshSyncUi();}
 window.addEventListener('online',()=>{
   if(fbOn)flushSyncQueue();managedAccountSyncRuntime?.controller?.drain?.();
+  recoverAccountSyncAfterReconnect().catch(()=>{});
   managedAccountSyncRuntime?.retryPublicProjection?.().catch(error=>console.warn('Provider public-share retry remains pending',String(error?.code||'unknown')));
 });
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.onLine!==false)recoverAccountSyncAfterReconnect().catch(()=>{});});
 function noteProviderAuthState(user){
   const uid=String(user?.uid||'');
   if(uid!==providerAuthLifecycleUid){
     providerAuthLifecycleUid=uid;
     providerAuthLifecycleGeneration++;
-    providerAuthRecentAt=uid?Date.now():0;
+    providerAuthRecentAt=0;
     providerGoogleAccountResolution=null;
   }
   return providerAuthLifecycleGeneration;
@@ -1460,21 +1465,43 @@ function providerAuthSnapshot(){
 async function providerBoundaryFingerprint(value){
   return accountSyncModel.sha256Hex(accountSyncModel.canonicalJson(value));
 }
+async function providerAccountBoundaryReadiness(uid){
+  const user=auth?.currentUser,username=cur,sessionGeneration=_sessionTransientGeneration;
+  const current=()=>auth?.currentUser===user&&user?.uid===uid&&cur===username&&sessionGeneration===_sessionTransientGeneration;
+  if(!uid||!username||!current())throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const started=await ensureAccountSyncRuntime();
+  const runtime=managedAccountSyncRuntime;
+  if(!current())throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  if(!started?.ok||runtime?.ownerUid!==uid||runtime.projectionReady!==true||runtime.profileReady!==true)
+    throw accountLinkingModelDomain.failure('provider-link/account-boundary-not-ready');
+  const state=await runtime.snapshot();
+  if(!current()||runtime!==managedAccountSyncRuntime)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+  if(!accountSyncProjectionReady()||state.active!==true||state.listenerHealthy!==true||state.controllerHealthy!==true||state.lastError||
+    Number(state.pendingCount)||Number(state.blockedCount)||Number(state.conflictCount))
+    throw accountLinkingModelDomain.failure('provider-link/account-boundary-not-ready');
+  return Object.freeze({runtime,state,username,sessionGeneration});
+}
 async function providerAccountBoundarySnapshot(uid){
-  if(!uid||uid!==auth?.currentUser?.uid||!cur)throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const readiness=await providerAccountBoundaryReadiness(uid);
   const session=managedSessionCache.snapshot(),owner=session.activeOwner;
   if(owner?.uid!==uid||owner?.username!==cur)throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
-  if(managedAccountSyncRuntime?.ownerUid!==uid||typeof managedAccountSyncRuntime.listRecoveryCandidates!=='function')throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
-  const candidates=await managedAccountSyncRuntime.listRecoveryCandidates({unresolvedOnly:false});
+  if(readiness.runtime!==managedAccountSyncRuntime||typeof readiness.runtime.listRecoveryCandidates!=='function')throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
+  const candidates=await readiness.runtime.listRecoveryCandidates({unresolvedOnly:false});
   if(!Array.isArray(candidates))throw accountLinkingModelDomain.failure('provider-link/account-boundary-invalid');
   const profile=allData.users?.[cur]||{},history=trainerHistoryStore?.read?.()||{favorites:[],tags:{}},listener=managedListenerLifecycle.snapshot();
-  const accountDataFingerprint=await providerBoundaryFingerprint({
+  const productEvidence=await accountLinkingModelDomain.productEvidence({
     lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,allData[type]?.[cur]||{}])),
     favorites:history.favorites||[],tags:history.tags||{},board:profile.specialTradeBoard||{lf:[],ft:[]},
+    intentDeclarations:profile.intentDeclarations||[],
     canonicalEntities:accountSyncCanonicalEntities
-  });
+  },{fingerprint:providerBoundaryFingerprint});
+  if(readiness.runtime!==managedAccountSyncRuntime||readiness.username!==cur||readiness.sessionGeneration!==_sessionTransientGeneration)
+    throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
   return Object.freeze({
-    accountDataFingerprint,
+    accountDataFingerprint:productEvidence.fingerprint,
+    accountDataComponents:productEvidence.components,
+    accountDataSummary:productEvidence.summaries,
     journalOwner:owner.uid,
     journalGeneration:accountSyncRuntimeGeneration,
     migrationGeneration:String(managedAccountSyncRuntime?.migrationPlan?.deviceMigrationId||accountSyncMigrationState||'inactive'),
@@ -1495,7 +1522,7 @@ function ensureProviderAccountFoundationClient(){
   if(!fbApp||!auth)throw providerFailure('provider-account/dependencies-invalid');
   providerAccountFoundationClient=providerAccountFoundationService.createProviderAccountClient({
     firebaseApp:fbApp,auth,firebaseAppCheckReady,getLifecycleSnapshot:providerAuthSnapshot,
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js'),
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js'),
     storage:localStorage,clientRelease:clientReleaseDomain.RELEASE_ID
   });
   return providerAccountFoundationClient;
@@ -1506,7 +1533,7 @@ function ensureProviderPublicShareClient(){
   if(!fbApp)throw providerFailure('provider-public/dependencies-invalid');
   managedProviderPublicShareClient=providerPublicShareGatewayService.createProviderPublicShareClient({
     firebaseApp:fbApp,auth,firebaseAppCheckReady,enabled:true,
-    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js')
   });
   return managedProviderPublicShareClient;
 }
@@ -1532,34 +1559,44 @@ function validCanonicalFoundation(value,uid){
     (value.identityKind==='provider_only'?value.legacyUsername===null:value.legacyUsername===value.canonicalTrainerName);
 }
 async function resolveGoogleAccountBinding(uid){
-  const expectedUid=String(uid||'');
-  if(!expectedUid||auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  await ensureFirebaseDataProtection();
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  const canonical=await ensureProviderAccountFoundationClient().read();
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  if(canonical.status==='ready'){
-    const foundation=canonical.foundation,username=String(foundation?.canonicalTrainerName||'');
-    if(!validCanonicalFoundation(foundation,expectedUid))throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    if(foundation.identityKind==='provider_only')return Object.freeze({status:'existing',uid:expectedUid,username,foundation});
-    const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving legacy account timed out','provider-link/account-resolution-timeout');
-    const indexRecord=indexSnapshot.exists()?indexSnapshot.val():null;
-    if(!indexRecord||String(indexRecord.username||'')!==username)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    const userSnapshot=await withTimeout(get(ref(db,`users/${username}`)),5000,'Verifying legacy account timed out','provider-link/account-resolution-timeout');
-    const userRecord=userSnapshot.exists()?userSnapshot.val():null;
-    if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-    return Object.freeze({status:'existing',uid:expectedUid,username,foundation,userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
-  }
-  if(canonical.status!=='missing')throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  const expectedUid=String(uid||''),authority=providerAuthSnapshot();
+  const requireCurrent=()=>{
+    const current=providerAuthSnapshot();
+    if(!expectedUid||authority?.uid!==expectedUid||current?.uid!==expectedUid||current.lifecycleId!==authority.lifecycleId)
+      throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  };
+  const invalid=()=>{throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');};
+  const healthy=value=>value&&typeof value==='object'&&!Array.isArray(value)&&
+    ['disabled','frozen','identityFrozen'].every(key=>value[key]===undefined||value[key]===false)&&
+    ['status','state'].every(key=>value[key]===undefined||value[key]==='active');
+  requireCurrent();
+  await ensureFirebaseDataProtection();requireCurrent();
+  // Missing is affirmative authority evidence. An unavailable or conflicting
+  // canonical read must never downgrade to legacy login or new-account creation.
+  const canonical=await ensureProviderAccountFoundationClient().read();requireCurrent();
+  const foundation=canonical.status==='ready'?canonical.foundation:null;
+  if(foundation){
+    if(!validCanonicalFoundation(foundation,expectedUid))invalid();
+    if(foundation.identityKind==='provider_only')return Object.freeze({status:'existing',uid:expectedUid,
+      username:foundation.canonicalTrainerName,foundation,lifecycleId:authority.lifecycleId});
+  }else if(canonical.status!=='missing')invalid();
   const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving Google account timed out','provider-link/account-resolution-timeout');
-  if(!indexSnapshot.exists())return Object.freeze({status:'unlinked',uid:expectedUid});
-  const indexRecord=indexSnapshot.val()||{},username=String(indexRecord.username||'').trim();
-  if(!providerOnboardingModelDomain.HANDLE_PATTERN.test(username))throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  requireCurrent();
+  if(!indexSnapshot.exists()){
+    if(foundation)invalid();
+    return Object.freeze({status:'unlinked',uid:expectedUid,lifecycleId:authority.lifecycleId});
+  }
+  const indexRecord=indexSnapshot.val(),username=indexRecord?.username;
+  if(!healthy(indexRecord)||typeof username!=='string'||username!==username.trim()||
+    !providerOnboardingModelDomain.HANDLE_PATTERN.test(username)||
+    foundation&&foundation.canonicalTrainerName!==username)invalid();
   const userSnapshot=await withTimeout(get(ref(db,`users/${username}`)),5000,'Verifying Google account timed out','provider-link/account-resolution-timeout');
+  requireCurrent();
   const userRecord=userSnapshot.exists()?userSnapshot.val():null;
-  if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
-  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  throw accountLinkingModelDomain.failure('provider-link/legacy-migration-required');
+  if(!healthy(userRecord)||userRecord.authUid!==expectedUid||userRecord.identityKind==='provider_only'||userRecord.legacyAccessConfigured===false)invalid();
+  // Existing reciprocal ownership needs no namespace backfill or foundation write.
+  return Object.freeze({status:'existing',uid:expectedUid,username,foundation,lifecycleId:authority.lifecycleId,
+    userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
 }
 async function checkGoogleOnboardingHandle(handle,binding){
   const authority=providerAuthSnapshot();
@@ -1580,9 +1617,16 @@ function createGoogleProviderAdapter(){
     reauthenticateCurrentUser:options=>google.reauthenticateCurrentUser(options),
     unlinkCurrentUser:options=>google.unlinkCurrentUser(options),
     signInProvider:async options=>{
-      const signedIn=await google.signInProvider(options),resolution=await resolveGoogleAccountBinding(signedIn.uid);
-      providerGoogleAccountResolution=resolution;
-      return Object.freeze({uid:signedIn.uid,status:resolution.status==='existing'?'existing':'new-user'});
+      const signedIn=await google.signInProvider(options),authority=providerAuthSnapshot();
+      try{
+        const resolution=await resolveGoogleAccountBinding(signedIn.uid);
+        providerGoogleAccountResolution=resolution;
+        return Object.freeze({uid:signedIn.uid,status:resolution.status==='existing'?'existing':'new-user'});
+      }catch(error){
+        const current=providerAuthSnapshot();
+        if(current?.uid===signedIn.uid&&current.lifecycleId===authority?.lifecycleId)await firebaseSignOut(auth);
+        throw error;
+      }
     },
     beginRedirectLink:unsupported,completeRedirectLink:unsupported,beginRedirectSignIn:unsupported,completeRedirectSignIn:unsupported,
     browserContext:google.browserContext
@@ -1617,13 +1661,14 @@ function ensureProviderLinkingController(){
 async function activateGoogleResolvedAccount(resolution){
   const authority=providerAuthSnapshot(),uid=resolution?.uid,username=resolution?.username,foundation=resolution?.foundation;
   const providerOnly=foundation?.identityKind==='provider_only'&&foundation?.legacyAccessConfigured===false;
-  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||!validCanonicalFoundation(foundation,uid)||
+  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||(foundation&&!validCanonicalFoundation(foundation,uid))||
+    (resolution.lifecycleId&&resolution.lifecycleId!==authority.lifecycleId)||
     (!providerOnly&&(resolution.userRecord?.authUid!==uid||resolution.indexRecord?.username!==username))){
     throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
   }
   activateOwnedSession(uid,username);
-  activeCanonicalIdentity=Object.freeze({uid,username,identityKind:foundation.identityKind,
-    legacyAccessConfigured:foundation.legacyAccessConfigured,legacyUsername:foundation.legacyUsername,handleKey:foundation.handleKey});
+  activeCanonicalIdentity=foundation?Object.freeze({uid,username,identityKind:foundation.identityKind,
+    legacyAccessConfigured:foundation.legacyAccessConfigured,legacyUsername:foundation.legacyUsername,handleKey:foundation.handleKey}):null;
   cur=username;currentAuthUid=uid;stampSession(username);
   const local=getLocal();
   const userRecord=providerOnly?{
@@ -1636,6 +1681,9 @@ async function activateGoogleResolvedAccount(resolution){
   ensureProtectedSubscriptions();
   accountSyncInitialProviderProfile=providerOnly?resolution.profile||{}:{};
   const runtimeResult=await ensureAccountSyncRuntime();
+  const current=providerAuthSnapshot();
+  if(current?.uid!==uid||current.lifecycleId!==authority.lifecycleId||cur!==username)
+    throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
   if(providerOnly&&(!runtimeResult?.ok||managedAccountSyncRuntime?.ownerUid!==uid||
     managedAccountSyncRuntime.profileReady!==true||!accountSyncProjectionReady())){
     throw accountLinkingModelDomain.failure('provider-link/account-sync-not-ready');
@@ -1658,6 +1706,7 @@ function providerUiMessage(code){return i18nCore.t({
   'provider-link/onboarding-required':'security.googleOnboardingRequired',
   'provider-link/legacy-migration-required':'security.googleLegacyMigrationRequired',
   'provider-account/namespace-not-certified':'security.googleCreationNotReady',
+  'provider-account/creation-disabled':'security.googleCreationNotReady',
   'provider-account/handle-conflict':'security.googleHandleUnavailable',
   'provider-account/ambiguous-result':'security.googleCreationVerifying',
   'provider-account/pending-reconciliation':'security.googleCreationVerifying'
@@ -1712,6 +1761,9 @@ async function continueWithGoogle(){
     const resolution=providerGoogleAccountResolution?.uid===auth?.currentUser?.uid?providerGoogleAccountResolution:await resolveGoogleAccountBinding(auth?.currentUser?.uid);
     return await activateGoogleResolvedAccount(resolution);
   }catch(cause){
+    const resolution=providerGoogleAccountResolution,current=providerAuthSnapshot();
+    if(resolution?.status==='unlinked'&&current?.uid===resolution.uid&&current.lifecycleId===resolution.lifecycleId)
+      await firebaseSignOut(auth);
     if(error)error.textContent=providerUiMessage(cause?.code);
     return null;
   }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
@@ -1993,6 +2045,8 @@ function resetSessionTransientUi(reason='session_boundary'){
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
+  if(typeof managedFavoriteAdditions!=='undefined'){managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;}
+  if(typeof closeFavoritePicker==='function')closeFavoritePicker({sessionChanged:true});
   if(typeof closeExistingPinReset==='function')closeExistingPinReset();
   if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
@@ -2037,7 +2091,7 @@ function resetSessionTransientUi(reason='session_boundary'){
   const feedbackStatus=document.getElementById('feedback-status');
   if(feedbackStatus)feedbackStatus.textContent='';
   const favoriteSavedPrompt=document.getElementById('favorite-saved-prompt');
-  if(favoriteSavedPrompt){favoriteSavedPrompt.hidden=true;const button=favoriteSavedPrompt.querySelector('button');if(button)button.onclick=null;}
+  if(favoriteSavedPrompt){favoriteSavedPrompt.hidden=true;if(favoriteSavedPrompt.dataset){delete favoriteSavedPrompt.dataset.canonical;delete favoriteSavedPrompt.dataset.trainer;}const button=favoriteSavedPrompt.querySelector('button');if(button)button.onclick=null;}
 
   document.querySelectorAll('.ov.open').forEach(el=>el.classList.remove('open'));
   document.querySelectorAll('.conflict-notice').forEach(el=>el.remove());
@@ -3323,14 +3377,36 @@ function accountSyncPreservedReviewReady(runtime=managedAccountSyncRuntime,snaps
   return runtime?.projectionReady===true&&runtime.ownerUid===auth?.currentUser?.uid&&snapshot?.state==='review-required'&&snapshot?.active===true&&snapshot?.listenerHealthy===true&&snapshot?.controllerHealthy===true&&!Number(snapshot?.pendingCount)&&!Number(snapshot?.blockedCount)&&!Number(snapshot?.conflictCount)&&Number(snapshot?.recoveryCandidateCount)>0;
 }
 function accountSyncProjectionReady(){
-  const state=String(accountSyncUiState?.state||'inactive');
-  return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime?.profileReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
+  return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime?.profileReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncRuntimeData.mutationBaselineReady(accountSyncUiState||{});
 }
 function accountSyncOrganizationHydrating(){
   const uid=auth?.currentUser?.uid,state=String(accountSyncUiState?.state||'inactive');
   if(!uid||ACCOUNT_SYNC_ROLLOUT.enabled!==true)return false;
   const bound=accountSyncEligibleUid===uid||managedAccountSyncRuntime?.ownerUid===uid;
   return bound&&managedAccountSyncRuntime?.projectionReady!==true&&!['sync-error','conflict','review-required'].includes(state);
+}
+function accountSyncEditFailureKey(code=''){
+  if(code==='account-sync/entity-review-required')return'accountSync.editReview';
+  if(accountSyncModel.unsafeRecoveryCode(code)||/identity|owner|schema|conflict/.test(String(code)))return'accountSync.editAccountReview';
+  return'accountSync.editWaiting';
+}
+let accountSyncReconnectPromise=null;
+async function recoverAccountSyncAfterReconnect(){
+  if(accountSyncReconnectPromise)return accountSyncReconnectPromise;
+  if(!cur||!auth?.currentUser?.uid||navigator.onLine===false)return;
+  const user=auth.currentUser,username=cur,generation=_sessionTransientGeneration;
+  const current=()=>auth?.currentUser===user&&cur===username&&generation===_sessionTransientGeneration;
+  const work=(async()=>{
+    await ensureFirebaseDataProtection();if(!current())return;
+    if(!managedAccountSyncRuntime){await ensureAccountSyncRuntime();return;}
+    await managedAccountSyncRuntime.controller.drain();if(!current())return;
+    const plan=accountSyncCurrentRecoveryPlan();
+    // Reattach only after ordinary transport/listener failure. Ownership, schema,
+    // blocked operations and review decisions retain their existing path.
+    if(plan.action==='restart-runtime'&&['account-sync/listener-failed','account-sync/listener-timeout','account-sync/source-read-timeout','account-sync/network-failed'].includes(plan.code))await performAccountSyncRecovery();
+  })();
+  accountSyncReconnectPromise=work;
+  try{return await work;}finally{if(accountSyncReconnectPromise===work)accountSyncReconnectPromise=null;}
 }
 function accountSyncClone(value){
   if(value==null)return value;
@@ -3401,7 +3477,13 @@ function resolveLegacyFavoriteIdentity(displayName,expectedTargetUid=''){
   if(!targetUid||expectedTargetUid&&targetUid!==expectedTargetUid)return null;
   return Object.freeze({targetUid,canonicalTrainerName});
 }
-async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid=''){
+async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid='',{allowIncidentResolver=true}={}){
+  if(allowIncidentResolver&&window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
+    const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
+    const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation});
+    const row=(await client.resolve([displayName]))[0];
+    return row.status==='resolved'&&(!expectedTargetUid||row.targetUid===expectedTargetUid)?Object.freeze({targetUid:row.targetUid,canonicalTrainerName:row.canonicalHandle}):null;
+  }
   return PROVIDER_CAPABILITIES.providerPublicReadSupport
     ?resolveCanonicalFavoriteIdentity(displayName,expectedTargetUid)
     :resolveLegacyFavoriteIdentity(displayName,expectedTargetUid);
@@ -3411,11 +3493,11 @@ async function accountSyncExactFavoriteUid(displayName,raw={},account={}){
   let expected='';
   if(candidate){
     const canonical=account?.favorites?.[candidate]||managedAccountSyncRuntime?.controller.getEntity('favorite',candidate);
-    if(canonical?.identity?.targetUid===candidate&&canonical?.values?.displayName===displayName)expected=candidate;
+    if(canonical?.ownerUid===auth?.currentUser?.uid&&canonical?.identity?.targetUid===candidate&&canonical?.values?.displayName===displayName&&window.PogoDomain.accountSyncMerge.validateEntity(canonical,{ownerUid:auth.currentUser.uid,entityType:'favorite',entityId:candidate}).ok)return candidate;
     else if(allData.users?.[displayName]?.authUid===candidate&&allData.authIndex?.[candidate]?.username===displayName)expected=candidate;
   }
   expected||=accountSyncProduct.exactFavoriteTargetUid(displayName,{users:allData.users,authIndex:allData.authIndex})||'';
-  try{return(await resolveFavoriteIdentityForSession(displayName,expected))?.targetUid||null;}
+  try{return(await resolveFavoriteIdentityForSession(displayName,expected,{allowIncidentResolver:false}))?.targetUid||null;}
   catch{return null;}
 }
 async function accountSyncReadLegacySources({account}={}){
@@ -3427,7 +3509,9 @@ async function accountSyncReadLegacySources({account}={}){
   const remoteLists={};OWNED_MY_LIST_TYPES.forEach((type,index)=>{remoteLists[type]=snapshots[index].exists()?snapshots[index].val():{};});
   const remoteProfile=snapshots.at(-1).exists()?snapshots.at(-1).val():{};
   if(remoteProfile?.authUid!==uid)throw Object.assign(new Error('Legacy migration source identity changed'),{code:'account-sync/identity-pair-invalid'});
-  const local=getLocal(),history=ensureTrainerHistoryStore()?.read()||{favorites:[],tags:{}};
+  const local=getLocal(),historyStore=ensureTrainerHistoryStore();
+  const rawTrainerHistory=historyStore?localStorage.getItem(historyStore.key):null;
+  const history=historyStore?.read()||{favorites:[],tags:{}};
   const localLists=Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,accountSyncClone(local[type]?.[username]||{})]));
   const localBoard=accountSyncClone(local.users?.[username]?.specialTradeBoard||{lf:[],ft:[]});
   const orders=accountSyncOrdersSnapshot(),legacyQueue=accountSyncClone(syncQueue||{});
@@ -3435,7 +3519,7 @@ async function accountSyncReadLegacySources({account}={}){
     deviceInstallId:accountSyncDeviceInstallId(uid),legacyRemoteLists:remoteLists,legacyLocalLists:localLists,
     legacyRemoteBoard:accountSyncClone(remoteProfile?.specialTradeBoard||{lf:[],ft:[]}),legacyLocalBoard:localBoard,
     legacyQueue,orders,favorites:accountSyncClone(history.favorites),tags:accountSyncClone(history.tags),
-    legacyRetainedSnapshot:Object.freeze({capturedAt:Date.now(),legacyRemoteLists:accountSyncClone(remoteLists),legacyLocalLists:localLists,legacyRemoteBoard:accountSyncClone(remoteProfile?.specialTradeBoard||{lf:[],ft:[]}),legacyLocalBoard:localBoard,legacyQueue,orders:accountSyncClone(orders),favorites:accountSyncClone(history.favorites),tags:accountSyncClone(history.tags)}),
+    legacyRetainedSnapshot:Object.freeze({capturedAt:Date.now(),rawTrainerHistory,legacyRemoteLists:accountSyncClone(remoteLists),legacyLocalLists:localLists,legacyRemoteBoard:accountSyncClone(remoteProfile?.specialTradeBoard||{lf:[],ft:[]}),legacyLocalBoard:localBoard,legacyQueue,orders:accountSyncClone(orders),favorites:accountSyncClone(history.favorites),tags:accountSyncClone(history.tags)}),
     dependencies:Object.freeze({
       parseListValue:value=>parsePri(value),
       catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw),
@@ -3536,6 +3620,7 @@ function retireProviderOnlyLegacyQueue(username=cur,uid=auth?.currentUser?.uid){
 function stopAccountSyncRuntime(){
   if(accountSyncRuntimeStopPromise)return accountSyncRuntimeStopPromise;
   accountSyncRuntimeGeneration++;
+  managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;
   const runtime=managedAccountSyncRuntime,pending=accountSyncRuntimeStartPromise;
   managedAccountSyncRuntime=null;accountSyncRuntimeStartPromise=null;accountSyncRuntimeStartBinding='';accountSyncEligibleUid='';accountSyncCanonicalEntities=[];accountSyncInitialProviderProfile={};
   const stopping=(async()=>{if(runtime)await runtime.stop();else await pending?.catch(()=>{});})();
@@ -3579,15 +3664,19 @@ async function ensureAccountSyncRuntime(){
   accountSyncEligibleUid=uid;
   const startPromise=(async()=>{
     const journal=accountSyncJournalData.createAccountSyncJournal({ownerUid:uid});
-    const repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
+    let repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
     let runtime=null;
     const currentSession=()=>generation===accountSyncRuntimeGeneration&&managedAccountSyncRuntime===runtime&&bindingCurrent();
+    if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
+      const transport=window.PogoServices.favoriteWriteTransport.createFavoriteWriteTransport({auth,ownerUid:uid,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:currentSession});
+      repository=window.PogoData.favoriteAdditionRepository.createFavoriteAdditionRepository({repository,database:db,ref,get,update:transport.update,serverTimestamp,ownerUid:uid,enabled:true,sessionCurrent:currentSession});
+    }
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
       ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,admitted:true,sessionCurrent:currentSession,
       initializationKind,
       initialProviderProfile:initializationKind==='provider-only'?initialProviderProfile:{},
       readMigrationSources:accountSyncReadLegacySources,
-      onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}},
+      onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();managedFavoriteAdditions?.refresh().catch(()=>{});}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
       onProviderProfile:profile=>currentSession()?applyAccountSyncProviderProfile(profile):false,
       onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
@@ -3602,6 +3691,13 @@ async function ensureAccountSyncRuntime(){
       accountSyncInitialProviderProfile={};
       accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
+      if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true&&initializationKind==='legacy-migration'){
+        const resolver=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:currentSession,enabled:true});
+        managedFavoriteAdditions=window.PogoData.favoriteAdditions.createFavoriteAdditions({ownerUid:uid,journal,controller:runtime.controller,resolver,sessionCurrent:currentSession,onChange:value=>{if(currentSession()){favoriteAdditionUiState=value;refreshFavoriteSavedPrompt();if(typeof renderFavoritePicker==='function')renderFavoritePicker();}}});
+        if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
+        managedFavoriteRecoveryPreview=window.PogoData.favoriteRecoveryPreview.createFavoriteRecoveryPreview({ownerUid:uid,journal,resolver,sessionCurrent:currentSession});
+        managedFavoriteAdditions.resume().catch(()=>{});
+      }
       if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
     }catch(error){
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
@@ -5246,8 +5342,9 @@ function renderTrainerGroups(){
   const state=store.read(),tags=Object.values(state.tags||{});
   if(trainerGroupState.id&&trainerGroupState.id!=='favorites'&&!state.tags[trainerGroupState.id])resetTrainerGroups();
   const tag=state.tags[trainerGroupState.id],isOpen=!!trainerGroupState.id;
+  if(isOpen){const disclosure=host.closest('.favorite-groups-disclosure');if(disclosure)disclosure.open=true;}
   const members=state.favorites.filter(item=>trainerGroupState.id==='favorites'||item.tagIds.includes(trainerGroupState.id));
-  for(const el of document.querySelectorAll('#trainer-panel-favorites > .favorite-toolbar-search, #favorite-trainers'))el.hidden=isOpen;
+  for(const el of document.querySelectorAll('#favorite-trainers'))el.hidden=isOpen;
   const countLabel=count=>groupText('memberCount',{count:i18nCore.formatNumber(count)});
   const groupRow=item=>{
     const favorites=state.favorites.filter(member=>item.id==='favorites'||member.tagIds.includes(item.id));
@@ -5262,9 +5359,9 @@ function renderTrainerGroups(){
   };
   host.innerHTML=`<div class="trainer-section-heading"><h2 id="trainer-groups-title">${escHtml(isOpen?(tag?.label||groupText('favorites')):groupText('title'))}</h2><span>${escHtml(isOpen?countLabel(members.length):groupText(accountSyncProjectionReady()?'synced':'local'))}</span></div>
     <div id="trainer-group-status" role="status"></div>
-    ${isOpen?`<div class="group-view-toolbar"><button type="button" class="btn btn-ghost" data-group-action="back">${escHtml(i18nCore.t('common.back'))}</button>${tag?`<details class="group-management"><summary>${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(groupText('manage'))}</summary><form class="group-create" data-group-form="rename"><input name="label" class="field-control" maxlength="${trainerPreferencesDomain.MAX_TAG_LABEL_LENGTH}" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button><button type="button" class="btn btn-icon btn-destructive" data-group-action="delete" title="${escAttr(groupText('delete'))}" aria-label="${escAttr(groupText('delete'))}">${uiIconMarkup('trash')}</button></form>
-      <details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details></details>`:''}</div>
-      <div class="group-actions"><label><span class="sr-only">${escHtml(i18nCore.t('phase2.scope'))}</span><select class="field-control" id="trainer-group-scope">${['all','top','new','newTop'].map(scope=>`<option value="${scope}"${trainerGroupState.scope===scope?' selected':''}>${escHtml(scope==='top'?i18nCore.t('phase2.top'):groupText(scope==='new'?'newSince':scope))}</option>`).join('')}</select></label><button class="btn btn-secondary btn-icon" data-group-action="refresh" title="${escAttr(groupText('refresh'))}" aria-label="${escAttr(groupText('refresh'))}"${trainerGroupState.busy?' disabled':''}>${uiIconMarkup('refresh')}</button><button type="button" class="btn btn-ghost" data-group-action="who">${uiIconMarkup('search')} ${escHtml(i18nCore.t('who.title'))}</button></div>
+    ${isOpen?`<section class="group-view-controls"><div class="group-view-toolbar"><button type="button" class="btn btn-ghost" data-group-action="back">${escHtml(i18nCore.t('common.back'))}</button>${tag?`<details class="group-management"><summary>${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(groupText('manage'))}</summary><div class="group-management-panel"><form class="group-create" data-group-form="rename"><input name="label" class="field-control" maxlength="${trainerPreferencesDomain.MAX_TAG_LABEL_LENGTH}" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button></form>
+      <button type="button" class="btn btn-destructive group-delete-action" data-group-action="delete">${uiIconMarkup('trash','ui-icon ui-icon-sm')} ${escHtml(groupText('delete'))}</button><details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details></div></details>`:''}</div>
+      ${members.length?`<div class="group-actions"><label><span class="sr-only">${escHtml(i18nCore.t('phase2.scope'))}</span><select class="field-control" id="trainer-group-scope">${['all','top','new','newTop'].map(scope=>`<option value="${scope}"${trainerGroupState.scope===scope?' selected':''}>${escHtml(scope==='top'?i18nCore.t('phase2.top'):groupText(scope==='new'?'newSince':scope))}</option>`).join('')}</select></label><button class="btn btn-secondary btn-icon" data-group-action="refresh" title="${escAttr(groupText('refresh'))}" aria-label="${escAttr(groupText('refresh'))}"${trainerGroupState.busy?' disabled':''}>${uiIconMarkup('refresh')}</button><button type="button" class="btn btn-ghost" data-group-action="who">${uiIconMarkup('search')} ${escHtml(i18nCore.t('who.title'))}</button></div>`:''}</section>
       <div id="trainer-group-results" aria-live="polite"></div>`:`<div class="group-list">${[{id:'favorites',label:groupText('favorites')},...tags].map(groupRow).join('')}</div><details class="group-new"><summary>${escHtml(groupText('create'))}</summary><form class="group-create" data-group-form="create"><input class="field-control" name="label" maxlength="${trainerPreferencesDomain.MAX_TAG_LABEL_LENGTH}" required aria-label="${escAttr(groupText('new'))}" placeholder="${escAttr(groupText('new'))}"><button class="btn btn-secondary">${escHtml(groupText('create'))}</button></form></details>`}`;
   renderTrainerGroupResults();
   for(const name of openDetails){const details=[...host.querySelectorAll('details')].find(el=>el.className===name);if(details)details.open=true;}
@@ -5313,12 +5410,12 @@ function renderTrainerGroupResults(){
   host.dataset.groupSignature=JSON.stringify(model.entries);
   host.dataset.reviewSignature=trainerGroupReviewSignature(model);
   const reviewOpen=host.querySelector('.group-review')?.open,searchOpen=host.querySelector('.contextual-details')?.open;
-  host.innerHTML=`${model.entries.length?contextualIntentSearchHtml(model.entries,groupText('search')):`<p>${escHtml(groupText(model.members.length?'noWants':'empty'))}</p>`}
-    <details class="group-review"${reviewOpen?' open':''}><summary>${escHtml(groupText('review'))}<span class="type-meta">${escHtml(groupText('updatedTrainers',{count:model.members.filter(member=>member.status==='available'&&member.changes?.updated&&!member.changes.first).length}))}</span></summary>
+  host.innerHTML=`${model.entries.length?contextualIntentSearchHtml(model.entries,groupText('search')):`<p class="group-empty">${escHtml(groupText(model.members.length?'noWants':'empty'))}</p>`}
+    ${model.members.length?`<details class="group-review"${reviewOpen?' open':''}><summary>${escHtml(groupText('review'))}<span class="type-meta">${escHtml(groupText('updatedTrainers',{count:model.members.filter(member=>member.status==='available'&&member.changes?.updated&&!member.changes.first).length}))}</span></summary>
     <p class="type-meta">${escHtml(groupText('historyLocal'))}</p>
     ${model.members.some(member=>member.status==='available')?`<button type="button" class="btn btn-secondary" data-group-action="checked">${escHtml(groupText('checkedAll'))}</button>`:''}
     <ul class="group-availability">${model.members.map(member=>`<li><button type="button" class="btn btn-ghost" data-group-open-trainer="${escAttr(member.displayName)}">${escHtml(member.displayName)}</button><span>${escHtml(groupChangeLabel(member))}${member.status==='available'&&member.aged?` · ${escHtml(groupAgeLabel(member))}`:''}${member.updatedAt?` · ${escHtml(i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}))}`:''}</span>${member.status==='available'?`<button type="button" class="btn btn-secondary" data-group-checked-trainer="${escAttr(member.displayName)}">${escHtml(groupText('checked'))}</button>`:''}</li>`).join('')}</ul>
-    <p class="type-meta">${escHtml(groupText('freshness'))}</p></details>
+    <p class="type-meta">${escHtml(groupText('freshness'))}</p></details>`:''}
     <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn):''}</div><div><strong>${escHtml([favoriteVariantLabel(entry),entry.note].filter(Boolean).join(' · '))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
     ${model.entries.length>trainerGroupState.limit?`<button class="btn btn-secondary" data-group-action="more">${escHtml(groupText('more'))}</button>`:''}`;
   if(searchOpen&&host.querySelector('.contextual-details'))host.querySelector('.contextual-details').open=true;
@@ -5402,7 +5499,12 @@ document.getElementById('trainer-groups')?.addEventListener('click',async event=
   if(trainer){openFavoriteTrainerByName(trainer);return;}
   const action=event.target.closest('[data-group-action]')?.dataset.groupAction;
   if(action==='who'){favoriteLookupScope=trainerGroupState.id==='favorites'?'':trainerGroupState.id;focusTrainerDiscoveryMode('pokemon');renderFavoriteBrowseResults();}
-  if(action==='back'){const id=trainerGroupState.id;await openTrainerGroup('');[...document.querySelectorAll('[data-group-open-id]')].find(button=>button.dataset.groupOpenId===id)?.focus({preventScroll:true});}
+  if(action==='back'){
+    const id=trainerGroupState.id,disclosure=document.querySelector('.favorite-groups-disclosure'),direct=disclosure?.dataset.directGroupView==='true';
+    await openTrainerGroup('');
+    if(direct&&disclosure){delete disclosure.dataset.directGroupView;disclosure.open=false;document.querySelector('[data-favorite-action="view-group-wants"]')?.focus({preventScroll:true});}
+    else [...document.querySelectorAll('[data-group-open-id]')].find(button=>button.dataset.groupOpenId===id)?.focus({preventScroll:true});
+  }
   if(action==='checked')markTrainerWantsChecked();
   if(action==='refresh')openTrainerGroup(trainerGroupState.id);
   if(action==='more'){trainerGroupState.limit+=120;renderTrainerGroupResults();}
@@ -5821,6 +5923,9 @@ function favoriteVariantLabel(entry){
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
+  const hasGroups=Object.keys(state.tags).length>0||!!favoriteLookupScope;
+  scope.closest('label').hidden=!hasGroups;
+  const defaultScope=document.getElementById('favorite-lookup-default');if(defaultScope)defaultScope.hidden=hasGroups;
   scope.innerHTML=`<option value="">${escHtml(groupText('favorites'))}</option>${Object.values(state.tags).map(tag=>`<option value="${escAttr(tag.id)}"${tag.id===favoriteLookupScope?' selected':''}>${escHtml(tag.label)}</option>`).join('')}${favoriteLookupScope&&!state.tags[favoriteLookupScope]?`<option selected value="${escAttr(favoriteLookupScope)}">${escHtml(groupText('unavailable'))}</option>`:''}`;
 }
 function renderFavoriteBrowseResults(){
@@ -5927,8 +6032,11 @@ function clearFavoriteSearch(){trainerOrganizerState.query='';syncFavoriteSearch
 function favoriteTrainerAction(event){
   const control=event.target.closest?.('[data-trainer-action],[data-favorite-action]');if(!control||!event.currentTarget.contains(control))return;
   const favoriteAction=control.dataset.favoriteAction;
+  if(favoriteAction==='review-preserved'){openAccountSettingsSection('data');return;}
   if(favoriteAction==='clear-filters'){clearFavoriteFilters();return;}
+  if(favoriteAction==='clear-groups'){clearFavoriteGroupFilters();return;}
   if(favoriteAction==='toggle-tag'){toggleFavoriteTagFilter(control.dataset.favoriteTagId||'');return;}
+  if(favoriteAction==='view-group-wants'){void openFavoriteGroupWants();return;}
   if(favoriteAction==='toggle-menu'){toggleFavoriteCardMenu(event,control);return;}
   if(favoriteAction==='show-favorites'){focusTrainerDiscoveryMode('favorites');return;}
   if(favoriteAction==='refresh-browse'){refreshFavoriteBrowse();return;}
@@ -5956,10 +6064,35 @@ document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',
 document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
 function toggleFavoriteTagFilter(id){
   if(!id)return;
-  const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
+  trainerOrganizerState.tagIds=[id];renderTrainerQuickLists({favoriteGroupFocusId:id});
 }
+function clearFavoriteGroupFilters(){trainerOrganizerState.tagIds=[];renderTrainerQuickLists();}
 function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];syncFavoriteSearchControl();renderTrainerQuickLists();}
-async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false}={}){
+async function openFavoriteGroupWants(){
+  const ids=trainerOrganizerState.tagIds.filter(id=>ensureTrainerHistoryStore()?.read().tags?.[id]);
+  if(ids.length>1)return;
+  const id=ids[0]||'favorites',disclosure=document.querySelector('.favorite-groups-disclosure');
+  if(disclosure)disclosure.dataset.directGroupView='true';
+  await openTrainerGroup(id);
+  if(trainerGroupState.id===id)document.querySelector('#trainer-group-results [data-contextual-copy]')?.focus({preventScroll:true});
+}
+async function renderPreservedFavoriteEvidence(host){
+  const runtime=managedAccountSyncRuntime,user=auth?.currentUser,generation=_sessionTransientGeneration;
+  if(!runtime||runtime.ownerUid!==user?.uid||!Number(accountSyncUiState?.recoveryCandidateCount))return;
+  const section=document.createElement('details');section.dataset.preservedFavorites='';host.append(section);
+  const current=()=>section.isConnected&&section.parentElement===host&&runtime===managedAccountSyncRuntime&&auth?.currentUser===user&&generation===_sessionTransientGeneration;
+  try{
+    const candidates=await runtime.listRecoveryCandidates();if(!current())return;
+    const favorites=candidates.filter(item=>item.ownerUid===user.uid&&item.resolved!==true&&item.entityType==='favorite'&&item.values?.displayName);
+    if(!favorites.length){section.remove();return;}
+    section.open=true;
+    section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavorites',{count:i18nCore.formatNumber(favorites.length)}))}</summary><p class="type-meta">${escHtml(i18nCore.t('accountSync.preservedFavoritesDetail'))}</p>${favorites.map(item=>{
+      const labels=Object.keys(item.values.tagIds||{}).map(id=>runtime.controller.getEntity('tag',id)?.values?.label).filter(Boolean);
+      return`<p data-preserved-favorite="${escAttr(item.candidateId)}">${escHtml(item.values.displayName)}${labels.length?` · ${escHtml(labels.join(', '))}`:''}</p>`;
+    }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
+  }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
+}
+async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
   if(accountSyncOrganizationHydrating()){
@@ -5972,23 +6105,33 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
     return;
   }
   const state=store.read();
+  const requestedTagIds=Array.isArray(trainerOrganizerState.tagIds)?trainerOrganizerState.tagIds:[];
+  trainerOrganizerState.tagIds=requestedTagIds.length===1&&state.tags?.[requestedTagIds[0]]?[requestedTagIds[0]]:[];
   if(noteEl){noteEl.style.display='none';noteEl.textContent='';}
   renderTrainerGroups();
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
-  const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
-  const toolbar=state.favorites.length?`<details class="favorite-filters"${filtersActive?' open':''}><summary>${escHtml(i18nCore.t('organizer.filterTags'))}</summary><div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear data-favorite-action="clear-filters"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div></details>`:'';
-  const favoritesHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
+  const selectedTagIds=trainerOrganizerState.tagIds;
+  const groupWantsLabel=i18nCore.t(selectedTagIds.length?'organizer.viewGroupWants':'organizer.viewAllWants');
+  const groupChips=activeTags.length?`<span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!selectedTagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selectedTagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}</span></button>${activeTags.map(tag=>{const selected=selectedTagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div>`:'';
+  const toolbar=state.favorites.length?`<div class="favorite-group-access${activeTags.length?'':' wants-only'}" role="group" aria-label="${escAttr(i18nCore.t('organizer.favoriteScope'))}">${groupChips}<button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants">${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
+  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
-  syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
+  syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;
+  if(favoriteGroupFocusId){
+    const chip=[...favoritesControlsEl.querySelectorAll('[data-favorite-tag-id]')].find(button=>button.dataset.favoriteTagId===favoriteGroupFocusId);
+    chip?.focus({preventScroll:true});chip?.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
+  renderPreservedFavoriteEvidence(favoritesListEl);
+  if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
   previewEl.hidden=!previewItems.length;
-  previewEl.innerHTML=previewItems.length?`${favoritesHeading}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
+  previewEl.innerHTML=previewItems.length?`${favoritesHeading()}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
@@ -6017,7 +6160,39 @@ async function queueFavoriteTags(username,tagIds){
   const result=await authority.controller.patchEntity({entityType:'favorite',entityId:favorite.targetUid,patch});
   return accountSyncAuthorityCurrent(authority)?result:accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
 }
+function favoriteAdditionMessage(row){
+  if(!row)return i18nCore.t('favoriteAdd.waiting');
+  if(row.state==='confirmed'||row.state==='already-present')return i18nCore.t('favoriteAdd.saved');
+  if(row.state==='pending')return i18nCore.t('favoriteAdd.pending');
+  if(row.state==='resolving'||row.state==='ready'||row.state==='selected')return i18nCore.t('favoriteAdd.resolving');
+  if(['favorite/rate-limited','favorite/busy'].includes(row.code))return i18nCore.t('favoriteAdd.rateLimited');
+  if(['favorite/capacity-exceeded','account-sync/favorite-limit'].includes(row.code))return i18nCore.t('favoriteAdd.limit');
+  if(row.code==='account-sync/entity-review-required')return i18nCore.t('favoriteAdd.review');
+  if(['account-sync/lifecycle-conflict','favorite/removed'].includes(row.code))return i18nCore.t('favoriteAdd.changed');
+  if(row.code==='favorite/identity-unavailable')return i18nCore.t('favoriteAdd.identityUnavailable');
+  return i18nCore.t('favoriteAdd.unsuccessful');
+}
+async function ensureTrainerFavorites(handles){
+  const authority=await accountSyncMutationAuthority();
+  if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)||!managedFavoriteAdditions){toast(i18nCore.t('favoriteAdd.waiting'));return null;}
+  const additions=managedFavoriteAdditions;
+  try{
+    const value=await additions.ensure(handles);
+    if(additions!==managedFavoriteAdditions||!accountSyncAuthorityCurrent(authority))return null;
+    if(handles.length===1){
+      const row=[...value.rows].reverse().find(row=>row.handle===handles[0]);toast(favoriteAdditionMessage(row),6000);
+      if(row&&['pending','confirmed','already-present'].includes(row.state)){
+        showFavoriteSavedPrompt(handles[0],{canonical:true});const prompt=document.getElementById('favorite-saved-prompt');if(prompt)prompt.dataset.favoriteHandle=handles[0];refreshFavoriteSavedPrompt();
+      }
+    }
+    renderTrainerQuickLists();if(_activeShareView&&handles.includes(_activeShareView.username))renderShareView(_activeShareView.username,_activeShareView.type);return value;
+  }catch(error){
+    if(additions!==managedFavoriteAdditions)return null;
+    toast(favoriteAdditionMessage({state:'unsuccessful',code:error?.code}),6000);return null;
+  }
+}
 async function toggleTrainerFavorite(username){
+  if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true)return ensureTrainerFavorites([username]);
   const store=ensureTrainerHistoryStore();if(!store)return;
   if(store.isFavorite(username)){await removeTrainerFavorite(username);return;}
   const authority=await accountSyncMutationAuthority();
@@ -6035,7 +6210,7 @@ async function toggleTrainerFavorite(username){
   }else result=store.saveFavoriteOrganization(username);
   if(!result.ok){toast(organizerMessage(result.code));return;}
   favoriteShareSessionCache?.syncFavorites(store.read().favorites);
-  showFavoriteSavedPrompt(username);renderTrainerQuickLists();
+  showFavoriteSavedPrompt(username,{canonical:authority.mode==='canonical'});renderTrainerQuickLists();
   if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
   const savedFavorite=store.favoriteFor(username);
   if(favoriteShareSessionCache&&favoriteBrowseState.selected&&savedFavorite){
@@ -6054,9 +6229,21 @@ async function openFavoriteTrainerByName(username){
   }
   return openTrainerByName(username);
 }
-function showFavoriteSavedPrompt(username){
+function favoritePersistenceKey({removed=false}={}){
+  const state=accountSyncUiState||{};
+  if(state.blockedCount||state.conflictCount||state.lastError||state.state==='sync-error')return'organizer.saveFailed';
+  return state.pendingCount||!state.listenerHealthy||state.state==='offline'?'accountSync.favoritePending':removed?'accountSync.favoriteRemoved':'accountSync.favoriteSaved';
+}
+function refreshFavoriteSavedPrompt(){
+  const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message');
+  if(prompt&&!prompt.hidden&&prompt.dataset.canonical==='true'&&message){
+    const row=prompt.dataset.favoriteHandle?[...(favoriteAdditionUiState?.rows||[])].reverse().find(row=>row.handle===prompt.dataset.favoriteHandle):null;
+    message.textContent=row?favoriteAdditionMessage(row):i18nCore.t(favoritePersistenceKey());
+  }
+}
+function showFavoriteSavedPrompt(username,{canonical=false}={}){
   const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message'),button=document.getElementById('favorite-saved-organize');if(!prompt||!message||!button)return;
-  clearTimeout(favoriteSavedPromptTimer);message.textContent=i18nCore.t('organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;announceFeedback(message.textContent);favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
+  clearTimeout(favoriteSavedPromptTimer);delete prompt.dataset.favoriteHandle;prompt.dataset.canonical=String(canonical);message.textContent=i18nCore.t(canonical?favoritePersistenceKey():'organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;announceFeedback(message.textContent);favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
 }
 async function removeTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username)||!confirm(i18nCore.t('organizer.removeConfirm',{trainer:username})))return;
@@ -6073,14 +6260,14 @@ async function removeTrainerFavorite(username){
     }
     const removed=store.toggleFavorite(username);if(!removed?.ok){toast(i18nCore.t('organizer.saveFailed'));return;}
   }
-  favoriteShareSessionCache?.syncFavorites(store.read().favorites);toast(i18nCore.t('trainer.favoriteRemoved'));renderFavoriteBrowseResults();renderTrainerQuickLists();if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
+  favoriteShareSessionCache?.syncFavorites(store.read().favorites);toast(i18nCore.t(authority.mode==='canonical'?favoritePersistenceKey({removed:true}):'trainer.favoriteRemoved'));renderFavoriteBrowseResults();renderTrainerQuickLists();if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
 }
 function organizerMessage(code){return i18nCore.t(`organizer.${code}`);}
 async function trainerOrganizerChanged(){
   const tagIds=[...document.querySelectorAll('#organizer-tag-assignment input:checked')].map(input=>input.dataset.tagId);
   const queued=await queueFavoriteTags(trainerOrganizerState.username,tagIds);
   const result=queued?(queued.ok?{ok:true}:queued):ensureTrainerHistoryStore()?.setFavoriteTags(trainerOrganizerState.username,tagIds),status=document.getElementById('organizer-status');
-  if(status)status.textContent=i18nCore.t(result?.ok?'organizer.savedLocal':'organizer.saveFailed');
+  if(status)status.textContent=i18nCore.t(result?.ok?(queued?favoritePersistenceKey():'organizer.savedLocal'):'organizer.saveFailed');
   if(result?.ok){renderFavoriteBrowseResults();renderTrainerQuickLists();}
 }
 function renderTrainerOrganizer(){
@@ -6263,6 +6450,9 @@ function showApp(){
   const activeTab=document.querySelector('.tab.active')?.dataset.tab;
   const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)&&activeTab!=='browse'?activeTab:'mylist';
   ensureProtectedSubscriptions();
+  // Auth may have fired before doLogin bound cur. Retry admission now that the
+  // signed-in product has an exact owner; start is deduplicated by the runtime.
+  ensureAccountSyncRuntime().catch(error=>console.warn('Account sync startup failed',accountSyncRuntimeData.diagnosticCode(error,'account-sync/start-failed')));
   let finalTab=nextTab;
   switchTab(finalTab,{render:false});
   window.scrollTo(0,0);
@@ -9075,7 +9265,7 @@ function legacyPinResetFailure(error){
 }
 async function callLegacyPinReset(data){
   try{
-    const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
+    const sdk=await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js');
     const callable=sdk.httpsCallable(sdk.getFunctions(fbApp,'us-central1'),'ownerResetLegacyPin',{limitedUseAppCheckTokens:true,timeout:125000});
     return(await callable(data)).data;
   }finally{delete data.pin;}
@@ -9482,6 +9672,7 @@ function syncLabelForStatus(s){
   return'—';
 }
 function refreshSyncUi(){
+  refreshFavoriteSavedPrompt();
   const s=_syncStatusCurrent;
   if(!s)return;
   const pill=document.getElementById('sync-pill');
@@ -9587,8 +9778,9 @@ async function reconnectAuth(){
   const pin=prompt(i18nCore.t('saveStatus.reconnectPrompt',{trainer:cur}));
   if(!pin)return;
   if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
-  const ok=await verifyPin(pin,ud.pin);
-  if(!ok){toast(i18nCore.t('saveStatus.wrongPin'));return;}
+  // A same-UID admin reset deliberately leaves the legacy verifier unchanged.
+  // For a bound account, Firebase is the current credential authority.
+  if(!ud.authUid&&!await verifyPin(pin,ud.pin)){toast(i18nCore.t('saveStatus.wrongPin'));return;}
   try{
     await ensureFirebaseIdentity(cur,pin,ud);
     // Auth observer will pick up the signin and auto-flush the queue
@@ -9821,7 +10013,8 @@ function googleProviderPresentation(method,controllerState){
 }
 function usernamePinAccessUsable(){
   const user=cur?allData.users?.[cur]:null;
-  return!!(cur&&user&&user.authUid===auth?.currentUser?.uid&&String(user.pin??'').trim());
+  return!!(cur&&user&&user.authUid===auth?.currentUser?.uid&&String(user.pin??'').trim()&&
+    (auth.currentUser.providerData||[]).some(provider=>provider?.providerId==='password'));
 }
 function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
@@ -12064,6 +12257,7 @@ function publicShareAction(event){
   const control=event.target.closest('[data-share-action]');if(!control)return;
   const username=control.dataset.username||_activeShareView?.username||'';
   if(control.dataset.shareAction==='favorite')toggleTrainerFavorite(username);
+  if(control.dataset.shareAction==='favorite-remove')removeTrainerFavorite(username);
   else if(control.dataset.shareAction==='list')renderShareView(username,control.dataset.listType||'wishlist');
   else if(control.dataset.shareAction==='intent')renderShareView(username,_activeShareView?.type||'wishlist',control.dataset.intent);
 }
@@ -12089,7 +12283,7 @@ function renderShareView(username,type,intent){
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
         <span class="meta-item">📅 ${escHtml(publicShareUpdatedLabel(ud.lastUpdated))}</span>
       </div>
-      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" data-share-action="favorite" data-username="${escAttr(username)}" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
+      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" data-share-action="${favorite?'favorite-remove':'favorite'}" data-username="${escAttr(username)}" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
       ${bioHtml}
     </div>`;
   // Tabs
@@ -14242,3 +14436,9 @@ window.__pogoAppReadyPromise=Promise.resolve().then(()=>{
   else bootPogoApp();
   return true;
 });
+
+// Support review only: returns evidence and proposed values; never writes them.
+async function previewPreservedFavorites(candidateIds){
+  if(!managedFavoriteRecoveryPreview)throw new Error('Favorite recovery resolver is not available');
+  return managedFavoriteRecoveryPreview.preview(candidateIds);
+}

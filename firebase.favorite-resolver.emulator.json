@@ -1,0 +1,4 @@
+{
+  "database": {"rules":"tests/firebase/database.rules.favorite-resolver.json"},
+  "emulators": {"auth":{"port":9599},"database":{"port":9500},"ui":{"enabled":false},"singleProjectMode":true}
+}

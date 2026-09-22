@@ -3,11 +3,11 @@ const {test,expect}=require('@playwright/test');
 async function mockSignedOutAuth(page){
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
   await page.route('https://fonts.gstatic.com/**',route=>route.abort());
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:'export function initializeApp(config,name){return{config,name}}'
   }));
-  await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',route=>route.fulfill({
+  await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:'const auth={currentUser:null};export function getAuth(){return auth}export function onAuthStateChanged(_auth,listener){queueMicrotask(()=>listener(null));return()=>{}}'
   }));
@@ -25,10 +25,10 @@ test.describe('development-only Google entry point',()=>{
     expect(requested.some(path=>path.endsWith('/js/services/googleAuthAdapter.js'))).toBe(false);
   });
 
-  test('ordinary production shell keeps Google absent',async({page})=>{
+  test('existing-account release reveals Google and loads provider modules only after an explicit click',async({page})=>{
     const requested=[];page.on('request',request=>requested.push(new URL(request.url()).pathname));
     await mockSignedOutAuth(page);await page.goto('/');
-    await expect(page.locator('#login-pg')).toBeVisible();await expect(page.locator('#google-login-option')).toBeHidden();
+    await expect(page.locator('#login-pg')).toBeVisible();await expect(page.locator('#google-login-option')).toBeVisible();
     expect(requested.some(path=>path.endsWith('/js/services/googleAuthAdapter.js'))).toBe(false);
     expect(requested.some(path=>path.endsWith('/js/domain/providerOnboardingModel.js'))).toBe(false);
     const cachedPaths=await page.evaluate(async()=>{
@@ -39,6 +39,9 @@ test.describe('development-only Google entry point',()=>{
     });
     expect(cachedPaths.some(path=>path.endsWith('/js/services/googleAuthAdapter.js'))).toBe(false);
     expect(cachedPaths.some(path=>path.endsWith('/js/domain/providerOnboardingModel.js'))).toBe(false);
+    await page.locator('#google-login-button').click();
+    await expect.poll(()=>requested.some(path=>path.endsWith('/js/services/googleAuthAdapter.js'))).toBe(true);
+    expect(requested.some(path=>path.endsWith('/js/domain/providerOnboardingModel.js'))).toBe(true);
   });
 
   test('explicit configured development gate reveals a localized 48px Google action without overflow',async({page})=>{

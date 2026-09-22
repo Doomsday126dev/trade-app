@@ -6,6 +6,8 @@ const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
+const favoritePicker=readFileSync(path.join(root,'js/app/favoritePicker.js'),'utf8');
+const css=readFileSync(path.join(root,'css/app.css'),'utf8');
 
 function memoryStorage(){const values=new Map();return{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};}
 function store({storage=memoryStorage(),identity={uid:'uid-a',username:'TrainerA'}}={}){const window={};for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage,identity,now:(()=>{let n=100;return()=>++n;})()});}
@@ -20,6 +22,16 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
   assert.match(html,/event\.key==='Enter'/);
 });
 
+test('Favorite picker is available from Trainers and waits briefly for canonical acknowledgement',()=>{
+  const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
+  assert.match(block,/id="trainer-picker-controls"/);
+  assert.match(favoritePicker,/\[document\.getElementById\('trainer-picker-controls'\),document\.getElementById\('favorite-trainers-controls'\)\]/);
+  const submit=favoritePicker.slice(favoritePicker.indexOf('async function submitFavoritePicker'),favoritePicker.indexOf('function cancelFavoritePicker'));
+  assert.match(submit,/session\.additions\.refresh\(\)/);
+  assert.match(submit,/\[250,500,1000,1500,2000,2500\]/);
+  assert.match(css,/\.favorite-picker-row input\{appearance:none/);
+});
+
 test('Favorites search is a stable shared-shell control outside the rendered results subtree',()=>{
   const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const setter=html.slice(html.indexOf('function setFavoriteSearch'),html.indexOf('function favoriteTrainerAction'));
@@ -27,10 +39,12 @@ test('Favorites search is a stable shared-shell control outside the rendered res
   assert.match(setter,/renderTrainerQuickLists\(\{favoritesOnly:true\}\)/);
   assert.doesNotMatch(setter,/renderTrainerQuickLists\(\)/);
   assert.match(html,/id="favorite-trainer-search"/);
-  assert.ok(html.indexOf('id="favorite-trainer-search"')<html.indexOf('id="favorite-trainers-controls"'));
+  assert.ok(html.indexOf('id="favorite-trainers-controls"')<html.indexOf('id="favorite-trainer-search"'));
+  assert.ok(html.indexOf('id="favorite-trainer-search"')<html.indexOf('id="favorite-trainers-list"'));
   assert.match(render,/if\(!preserveFavoriteControls\)favoritesControlsEl\.innerHTML/);
   assert.match(render,/if\(favoritesOnly\)return/);
-  assert.match(render,/data-favorite-clear/);
+  assert.match(render,/data-favorite-action="clear-groups"/);
+  assert.match(html,/function clearFavoriteGroupFilters\(\)\{trainerOrganizerState\.tagIds=\[\];renderTrainerQuickLists\(\);\}/);
 });
 
 test('Favorite Browse uses current permitted wants without reciprocal inventory hints',()=>{
@@ -156,7 +170,7 @@ test('Favorites stay in a loading state until same-UID account-sync projection i
 });
 
 test('Favorite UI uses one compact tag organizer and makes removal destructive',()=>{
-  assert.match(html,/showFavoriteSavedPrompt\(username\)/);
+  assert.match(html,/showFavoriteSavedPrompt\(username,\{canonical:/);
   assert.match(html,/openTrainerOrganizer\(username\)/);
   assert.doesNotMatch(html,/organizer-note|favorite-note-indicator|organizer\.hasPrivateNote/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);

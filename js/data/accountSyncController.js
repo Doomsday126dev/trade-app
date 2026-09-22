@@ -108,7 +108,7 @@
       const journalState=await journal.snapshot(),listenerHealthy=sessionCurrent()&&(!eligible||active&&listenerState==='healthy'),effectiveError=!sessionCurrent()?'account-sync/session-changed':lastError||journalState.blockedErrorCode||'';
       const recoverableBlockedCount=Number(journalState.recoverableBlockedCount)||0,unsafeBlockedCount=Number(journalState.unsafeBlockedCount)||0;
       const unsafeCurrent=lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError),unsafeEvidence=unsafeCurrent||unsafeBlockedCount>0;
-      const state=!eligible?'local-only':unsafeEvidence?'sync-error':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':journalState.blockedCount?'sync-error':!online()?'offline':journalState.pendingCount||['starting','listening'].includes(listenerState)?'pending-sync':effectiveError||listenerState==='failed'?'sync-error':!active?'inactive':'saved';
+      const state=!eligible?'local-only':unsafeEvidence?'sync-error':journalState.conflictCount?'conflict':journalState.blockedCount?'sync-error':!online()?'offline':effectiveError||listenerState==='failed'?'sync-error':!active?'inactive':journalState.pendingCount||['starting','listening'].includes(listenerState)?'pending-sync':journalState.recoveryCandidateCount?'review-required':'saved';
       const effectiveCategory=unsafeEvidence?'unsafe-evidence':lastErrorCategory||(journalState.blockedCount?'blocked-operation':'');
       return Object.freeze({state,eligible,active,online:online(),listenerState,listenerHealthy,controllerHealthy:active&&listenerHealthy&&!lastError&&!unsafeBlockedCount,lastSyncAt,lastError:effectiveError,lastErrorCategory:effectiveCategory,lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,recoverableBlockedCount,unsafeBlockedCount,blockedCategories:Object.freeze([...(journalState.blockedCategories||[])]),conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
     }
@@ -271,32 +271,65 @@
       if(!active||!eligible||!online()||listenerState!=='healthy'||!Number.isFinite(nextAttemptAt))return;
       retryTimer=setTimeout(()=>{retryTimer=null;drain();},Math.max(0,nextAttemptAt-Number(clock())));
     }
-    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false},{working}){
+    async function mutationReviewDecision(mutations,{freshFavoriteAddition=false}={}){
+      const candidates=await journal.listRecoveryCandidates();
+      for(const candidate of candidates){
+        if(candidate.ownerUid!==owner||candidate.schemaVersion!==model.SCHEMA_VERSION||!['tradeEntry','favorite','tag'].includes(candidate.entityType))return model.failure('account-sync/recovery-evidence-invalid','Preserved evidence needs review');
+        for(const mutation of mutations){
+          if(mutation.migration===true)continue;
+          if(mutation.entityType!==candidate.entityType)continue;
+          let overlaps=mutation.entityId===candidate.entityId;
+          if(candidate.entityType==='tradeEntry'){
+            // Unmapped catalog evidence cannot prove independence within trades.
+            try{overlaps||=model.tradeEntryId(candidate.identity)!==candidate.entityId;}
+            catch{overlaps=true;}
+          }else if(candidate.entityType==='favorite'){
+            // A securely resolved, explicit current addition does not resolve,
+            // delete or replay preserved legacy evidence. Other Favorite edits
+            // still require review when they overlap that evidence.
+            if(freshFavoriteAddition&&mutation.kind==='add')continue;
+            const target=candidate.identity?.targetUid;
+            const current=entities.get(key(mutation.entityType,mutation.entityId));
+            const name=mutation.patch?.displayName??current?.values?.displayName;
+            const fold=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');
+            overlaps||=target?target===mutation.entityId:!name||!candidate.values?.displayName||fold(name)===fold(candidate.values.displayName);
+          }else overlaps=true; // Tag-label conflicts can overlap across tag IDs.
+          if(overlaps)return model.failure('account-sync/entity-review-required','This item has a preserved change to review before editing');
+        }
+      }
+      return Object.freeze({ok:true,status:'independent'});
+    }
+    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt,intentExpectedGeneration},{working}){
       const entityKey=key(entityType,entityId),current=working.get(entityKey)||null,paths=Object.keys(patch),base=merge.operationBase(current,paths);
+      if(intentExpectedGeneration!==undefined&&(current?.generation||0)!==intentExpectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
       let baseGeneration=base.baseGeneration,generation=base.generation;
       if(kind==='add'||kind==='delete')generation=baseGeneration+1;
       const operationId=migration===true?`op_${await model.sha256Hex(model.canonicalJson([
         model.SCHEMA_VERSION,'pogo-account-sync-migration-operation',owner,entityType,entityId,kind,
         kind==='add'?identity:null,baseGeneration,generation,base.baseFieldRevisions,patch
-      ]),crypto)}`:undefined;
-      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,clientAt:migration===true?0:Number(clock()),operationId},{crypto});
+      ]),crypto)}`:intentOperationId;
+      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,clientAt:migration===true?0:(intentClientAt??Number(clock())),operationId},{crypto});
       if(!operation.ok)return operation;
       const optimistic=merge.mergeOperation(current,operation.value,{acceptedAt:operation.value.clientAt});
       if(!optimistic.ok)return optimistic;
       working.set(entityKey,optimistic.value);
       return Object.freeze({ok:true,operation:operation.value,value:optimistic.value,entityKey});
     }
-    async function performMutationBatch(mutations){
+    async function performMutationBatch(mutations,{freshFavoriteAddition=false}={}){
       if(!eligible)return model.failure('account-sync/disabled','Cross-device sync is not enabled for this account');
       if(!active)return model.failure('account-sync/session-inactive','Cross-device sync session is not active');
       if(!Array.isArray(mutations)||!mutations.length)return Object.freeze({ok:true,status:'unchanged',count:0,operations:Object.freeze([]),values:Object.freeze([])});
       if(listenerState!=='healthy')return model.failure('account-sync/listener-not-ready','The live account sync listener is not ready');
+      const review=await mutationReviewDecision(mutations,{freshFavoriteAddition});
+      if(!review.ok)return review;
+      if(!sessionCurrent()||!active||listenerState!=='healthy')return model.failure('account-sync/session-changed','The account sync session changed');
       const working=new Map(entities),prepared=[];
       for(const mutation of mutations){
         const result=await prepareMutation(mutation,{working});
         if(!result.ok)return result;
         prepared.push(result);
       }
+      if(!sessionCurrent()||!active||listenerState!=='healthy')return model.failure('account-sync/session-changed','The account sync session changed');
       const optimisticEntities=[...new Set(prepared.map(item=>item.entityKey))].map(entityKey=>working.get(entityKey));
       try{await journal.enqueueOperations(prepared.map(item=>item.operation),optimisticEntities);}
       catch(error){setError(error,'journal','account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
@@ -316,6 +349,30 @@
       return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
     }
     function addEntity({entityType,entityId,identity,values}){return buildMutation({entityType,entityId,identity,kind:'add',patch:values});}
+    function ensureFavorite({targetUid,displayName,expectedGeneration=0,operationId,clientAt}={}){
+      const epoch=lifecycleEpoch;
+      const work=mutationPromise.then(async()=>{
+        if(!model.firebaseKey(targetUid,128)||targetUid===owner||!model.fieldValueValid('favorite','displayName',displayName)||!Number.isSafeInteger(expectedGeneration)||expectedGeneration<0)return model.failure('account-sync/identity-invalid','Favorite identity is invalid');
+        for(let attempt=0;attempt<3;attempt++){
+          if(!sessionCurrent()||!active||!eligible||epoch!==lifecycleEpoch)return model.failure('account-sync/session-changed','Favorite sync is not ready');
+          const ready=await waitForListenerReady({timeoutMs:8000});
+          if(!ready.ok)return ready;
+          if(!sessionCurrent()||!active||epoch!==lifecycleEpoch)return model.failure('account-sync/session-changed','Favorite sync session changed');
+          const existing=getEntity('favorite',targetUid);
+          if(existing&&!existing.deleted)return Object.freeze({ok:true,status:'already-present',value:existing});
+          if((existing?.generation||0)!==expectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
+          const limit=global.PogoDomain?.productLimits?.MAX_FAVORITES||100;
+          if(activeEntities('favorite').length>=limit)return model.failure('account-sync/favorite-limit','The account has reached its Favorite limit');
+          const patch={displayName,...Object.fromEntries(Object.entries(existing?.values?.tagIds||{}).map(([id,value])=>[`tagIds/${id}`,value]))};
+          const result=await performMutationBatch([{entityType:'favorite',entityId:targetUid,identity:{targetUid},kind:'add',patch,intentOperationId:operationId,intentClientAt:clientAt,intentExpectedGeneration:expectedGeneration}],{freshFavoriteAddition:true});
+          if(result.ok)return Object.freeze({...result,operation:result.operations[0],value:result.values[0]});
+          // No operation was enqueued for these admission failures. Wait for an
+          // in-flight acknowledgement; never retry across a lifecycle change.
+          if(!['account-sync/session-changed','account-sync/listener-not-ready'].includes(result.error?.code)||attempt===2)return result;
+        }
+      });
+      mutationPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
     function patchEntity({entityType,entityId,patch}){return buildMutation({entityType,entityId,kind:'patch',patch});}
     function addMigrationEntity({entityType,entityId,identity,values}){return buildMutation({entityType,entityId,identity,kind:'add',patch:values,migration:true});}
     function patchMigrationEntity({entityType,entityId,patch}){return buildMutation({entityType,entityId,kind:'patch',patch,migration:true});}
@@ -441,7 +498,7 @@
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
-    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,runAuthorizedWatchedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
+    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,runAuthorizedWatchedMutation,mutationReviewDecision,mutateBatch,ensureFavorite,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
   }
 
   root.accountSyncController=Object.freeze({createAccountSyncController});

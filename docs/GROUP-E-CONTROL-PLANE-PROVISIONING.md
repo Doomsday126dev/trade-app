@@ -109,18 +109,24 @@ missing fields, extra fields, alternate text, or a condition represented only as
 
 ## Immutable inactive authority deployment
 
-`functions/production/e1-authority-source-manifest.json` pins the exact nine-file authority source from reviewed
-Commit A. `functions/scripts/deploy-e1-production-authority.cjs` stages only those Git objects in an isolated
-temporary directory. Plan mode performs no cloud operation and emits only sanitized source and identity provenance.
+`functions/production/e1-authority-source-manifest.json` pins the exact reviewed authority source inventory and
+commit. `functions/scripts/deploy-e1-production-authority.cjs` stages only those Git objects in
+an isolated temporary directory. Plan mode performs no cloud operation and emits only sanitized source and identity
+provenance.
 
-Deploy mode requires the exact confirmation `DEPLOY INACTIVE E1 GROUP E AUTHORITY`, clean synchronized refs, the
-reviewed builder and deployer identities, a private existing authority service, and the gateway as its sole Run
-invoker. It dry-runs before replacement, changes only the immutable image and inactive environment state, preserves
+The production helper has separate build, qualification, and replacement modes. Each requires the exact confirmation
+`DEPLOY INACTIVE E1 GROUP E AUTHORITY`, clean synchronized refs, and the reviewed identities. Build mode uses only
+digest-pinned executable images and writes a private build receipt. Qualification independently verifies the resolved
+source archive, executed build step, approved builder, image digest, Artifact Registry binding, and Google-signed
+provenance before writing a separate private qualification receipt. Replacement requires the exact reviewed
+qualification SHA-256, then requalifies those receipts and the cloud readbacks before its dry-run. It changes only the immutable image and inactive environment state, preserves
 unrelated required configuration without printing it, strips Group E private activation values, and performs no IAM
 mutation.
 
 **NOT AUTHORIZED - DO NOT RUN YET**
 
 ```sh
-node functions/scripts/deploy-e1-production-authority.cjs --mode=deploy --source=functions/e1-authority-service --expected-sha=<REVIEWED_TOOLING_SHA> --confirmation='DEPLOY INACTIVE E1 GROUP E AUTHORITY'
+node functions/scripts/deploy-e1-production-authority.cjs --mode=build --source=functions/e1-authority-service --expected-sha=<REVIEWED_TOOLING_SHA> --confirmation='DEPLOY INACTIVE E1 GROUP E AUTHORITY' --receipt=<PRIVATE_ABSOLUTE_BUILD_RECEIPT_PATH>
+node functions/scripts/deploy-e1-production-authority.cjs --mode=qualify --source=functions/e1-authority-service --expected-sha=<REVIEWED_TOOLING_SHA> --confirmation='DEPLOY INACTIVE E1 GROUP E AUTHORITY' --receipt=<PRIVATE_ABSOLUTE_BUILD_RECEIPT_PATH> --qualification=<PRIVATE_ABSOLUTE_QUALIFICATION_PATH>
+node functions/scripts/deploy-e1-production-authority.cjs --mode=replace --source=functions/e1-authority-service --expected-sha=<REVIEWED_TOOLING_SHA> --confirmation='DEPLOY INACTIVE E1 GROUP E AUTHORITY' --receipt=<PRIVATE_ABSOLUTE_BUILD_RECEIPT_PATH> --qualification=<PRIVATE_ABSOLUTE_QUALIFICATION_PATH> --approved-qualification-sha256=<EXACT_REVIEWED_QUALIFICATION_SHA256>
 ```

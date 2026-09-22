@@ -61,7 +61,9 @@ function reconcileReadSites(actual,reviewed,handlerHashes){
     const contract=reviewed[index];
     for(const field of ['file','handler','operation'])assert.equal(site[field],contract[field],`Read site ${index+1}: ${field} changed`);
     assert.equal(expressionKey(site.expression),expressionKey(contract.expression),`Read site ${index+1}: expression changed`);
-    assert.equal(site.handlerHash,handlerHashes[site.handler],`Read handler ${site.handler}: path bindings or execution semantics changed`);
+    const reviewedHashes=handlerHashes[site.handler];
+    const acceptedHashes=Array.isArray(reviewedHashes)?reviewedHashes:[reviewedHashes];
+    assert.ok(acceptedHashes.includes(site.handlerHash),`Read handler ${site.handler}: path bindings or execution semantics changed`);
     return {...contract,...site};
   });
 }

@@ -36,16 +36,23 @@
     if(!sessionCurrent||code==='account-sync/session-changed'||code==='account-sync/session-inactive')return Object.freeze({action:'none',category:'session',code:'account-sync/session-changed',...base});
     if(model.unsafeRecoveryCode(snapshot.lastError||code)||snapshot.lastErrorCategory==='canonical'||snapshot.lastErrorCategory==='unsafe-evidence'||unsafeBlockedCount)return Object.freeze({action:'none',category:'unsafe-evidence',code,...base});
     if(conflictCount||state==='conflict')return Object.freeze({action:'review-conflict',category:'conflict',code:'account-sync/conflict',...base});
-    if(reviewCount||state==='review-required')return projectionReady
-      ?Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base})
-      :Object.freeze({action:'restart-runtime',category:'projection',code:'account-sync/review-not-ready',...base});
     if(blockedCount&&recoverableBlockedCount===blockedCount&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true)return Object.freeze({action:'retry-blocked',category:'retained-change',code,...base});
     if(state==='offline'||state==='pending-sync'||['starting','listening'].includes(snapshot.listenerState))return Object.freeze({action:'none',category:state==='offline'?'offline':'pending-sync',code:state==='offline'?'account-sync/offline':'account-sync/pending',...base});
+    if((reviewCount||state==='review-required')&&!projectionReady&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true&&!snapshot.lastError)return Object.freeze({action:'restart-runtime',category:'projection',code:'account-sync/review-not-ready',...base});
     if(state==='sync-error'||state==='inactive'||!runtimePresent||!projectionReady||snapshot.active!==true||snapshot.listenerHealthy!==true||snapshot.controllerHealthy!==true)return Object.freeze({action:'restart-runtime',category:diagnosticCategory(snapshot.lastErrorCategory,!projectionReady?'projection':'runtime'),code,...base});
+    if(reviewCount||state==='review-required')return Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base});
     return Object.freeze({action:'none',category:'healthy',code:'account-sync/healthy',...base});
   }
   function healthySnapshot({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true}={}){
     return sessionCurrent&&runtimePresent&&projectionReady&&snapshot.state==='saved'&&snapshot.active===true&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true&&!snapshot.lastError&&!count(snapshot.pendingCount)&&!count(snapshot.blockedCount)&&!count(snapshot.conflictCount)&&!count(snapshot.recoveryCandidateCount);
+  }
+  // Recovery records are retained evidence, not a second canonical collection.
+  // A usable baseline still requires healthy ownership/schema/session evidence;
+  // the controller separately checks each mutation against overlapping reviews.
+  function mutationBaselineReady(snapshot={}){
+    return ['saved','pending-sync','offline','review-required'].includes(snapshot.state)&&
+      snapshot.active===true&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true&&
+      !snapshot.lastError&&!count(snapshot.blockedCount)&&!count(snapshot.conflictCount)&&!count(snapshot.unsafeBlockedCount);
   }
   function sanitizedDiagnostic({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true,recoveryOutcome='idle',release='unknown'}={}){
     const plan=recoveryPlan({snapshot,runtimePresent,projectionReady,sessionCurrent}),outcome=/^(?:idle|running|recovered|failed|pending|review)$/.test(String(recoveryOutcome))?String(recoveryOutcome):'failed';
@@ -365,9 +372,24 @@
       return Object.freeze({candidates:Object.freeze(values),record:Object.freeze({schemaVersion:model.SCHEMA_VERSION,kind:RECOVERY_REVIEW_KIND,ownerUid:owner,trainerUsername:name,evidenceFingerprint,candidateCount:values.length,acceptedAt:Number(clock())})});
     }
     async function readRecoveryReviewAcceptance(evidence){
-      const result=await controller.runAuthorizedMutation(()=>repository.readRecoveryReviewAcceptance(evidence.record));
-      if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be read'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
-      return result.value;
+      // A retained write can acknowledge while startup reads this receipt, changing
+      // the listener version. Re-read only this side-effect-free exact receipt;
+      // never retry acceptance writes or relax the controller's authority guard.
+      for(let attempt=0;attempt<3;attempt++){
+        requireRunning();await requireListenerAuthority();
+        let result;
+        try{result=await controller.runAuthorizedMutation(()=>repository.readRecoveryReviewAcceptance(evidence.record));}
+        catch(error){
+          if(error?.code!=='account-sync/listener-authority-lost'||attempt===2)throw error;
+          requireRunning();await requireListenerAuthority();
+          const state=await controller.snapshot();requireRunning();
+          if(!state.controllerHealthy||state.lastError||state.blockedCount||state.conflictCount)throw error;
+          continue;
+        }
+        requireRunning();
+        if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be read'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
+        return result.value;
+      }
     }
     async function persistRecoveryReviewAcceptance(evidence){
       const result=await controller.runAuthorizedMutation(()=>repository.createRecoveryReviewAcceptance(evidence.record));
@@ -449,7 +471,7 @@
         legacyRemoteLists:sources.legacyRemoteLists,legacyLocalLists:sources.legacyLocalLists,
         legacyRemoteBoard:sources.legacyRemoteBoard,legacyLocalBoard:sources.legacyLocalBoard,
         legacyQueue:sources.legacyQueue,orders:sources.orders,favorites:sources.favorites,tags:sources.tags,
-        remoteCanonical:[...Object.values(accountBefore?.tradeEntries||{}),...Object.values(accountBefore?.favorites||{}),...Object.values(accountBefore?.tags||{})],canonicalInitialized:accountBefore?.meta?.initialized===true
+        remoteCanonical:[...Object.values(accountBefore?.tradeEntries||{}),...Object.values(accountBefore?.favorites||{}),...Object.values(accountBefore?.tags||{})],remoteRecoveryCandidates:accountBefore?.recoveryCandidates,canonicalInitialized:accountBefore?.meta?.initialized===true
       },sources.dependencies||{});
       requireRunning();
       if(!plan.ok)throw Object.assign(new Error(plan.error.message),{code:plan.error.code});
@@ -566,5 +588,5 @@
     return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,updateProviderProfile,retryProviderProfile,retryPublicProjection,publishCurrentProjection,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get providerProfile(){return providerProfile;},get profileReady(){return profileReady;},get publicProjectionPending(){return!!publicProjectionPending;},get projectionReady(){return projectionReady;}});
   }
 
-  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,PROVIDER_PROFILE_PENDING_META,PROVIDER_PUBLICATION_PENDING_META,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
+  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,PROVIDER_PROFILE_PENDING_META,PROVIDER_PUBLICATION_PENDING_META,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,mutationBaselineReady,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
 })(window);

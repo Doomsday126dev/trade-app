@@ -140,7 +140,7 @@ test('Git discovery includes deletions, both rename owners, type changes and lit
 });
 
 test('backend helper edits and deletions select their declared consumer suites',()=>{
-  for(const [helper,test]of [['functions/test/helpers.cjs','functions/test/tags.test.cjs'],['functions/test/helpers/groupEFixture.cjs','functions/test/e1-group-e-admission.test.cjs']]){
+  for(const [helper,test]of [['functions/test/helpers.cjs','functions/test/tags.test.cjs'],['functions/test/helpers/groupEFixture.cjs','functions/test/e1-group-e-admission.test.cjs'],['functions/test/helpers/authority-build-fixture.cjs','functions/test/e1-authority-build-policy.test.cjs']]){
     for(const deleted of [false,true]){
       const plan=select([helper],{exists:file=>!deleted||file!==helper});
       assert.ok(plan.node.includes(test));assert.equal(plan.functions,true);assert.deepEqual(plan.errors,[]);
@@ -164,4 +164,9 @@ test('offline archive tooling selects its proof without browser, Firebase, ident
     assert.deepEqual(plan.browser,[]);assert.deepEqual(plan.commands,[]);
     assert.equal(plan.functions,false);assert.equal(plan.rules,false);assert.equal(plan.legacyReset,false);assert.equal(plan.performance,false);
   }
+});
+
+test('isolated Favorite backend and Rules use their dedicated qualification without routing through provider infrastructure',()=>{
+  const plan=select(['functions/favorite-resolver/index.js','tests/firebase/database.rules.favorite-resolver.json']);
+  assert.equal(plan.commands.some(([,args])=>args.includes('check:contract')||args.includes('check:sec02-production-rules')),false);
 });

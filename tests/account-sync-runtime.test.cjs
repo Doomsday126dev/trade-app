@@ -840,3 +840,33 @@ test('normal second-device adoption shares canonical state and retains the exist
   assert.equal((await b.snapshot()).state,'conflict');assert.equal(h.server.entities.get(`tradeEntry|${entry.entityId}`).values.priority,'M');
   assert.equal((await b.controller.acceptConflict(details[0].conflictId)).ok,true);assert.equal((await b.snapshot()).state,'saved');await a.stop();await b.stop();
 });
+
+
+for(const changes of [1,2,3])test(`startup recovery receipt tolerates ${changes} consecutive listener version changes within its bound`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const read=async()=>({...source('device-receipt-race',{remote:{Pikachu:'H'}}),favorites:[{displayName:'Unresolved',tagIds:[]}]});
+  const original=repositoryState.repository.readRecoveryReviewAcceptance.bind(repositoryState.repository);
+  repositoryState.repository.readRecoveryReviewAcceptance=async record=>{const result=await original(record);if(repositoryState.calls.readRecoveryReviewAcceptance<=changes)repositoryState.publish();return result;};
+  const runtime=createRuntime(window,h,repositoryState,journalState,read);
+  if(changes<3){assert.equal((await runtime.start()).ok,true);assert.equal(runtime.projectionReady,true);}
+  else{await assert.rejects(runtime.start(),error=>error.code==='account-sync/listener-authority-lost');assert.equal(runtime.projectionReady,false);}
+  assert.equal(repositoryState.calls.readRecoveryReviewAcceptance,Math.min(changes+1,3));
+  assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,0);
+  assert.equal(journalState.recoveryCandidates.size,1);assert.equal(h.server.entities.size,1);await runtime.stop();
+});
+
+for(const code of ['permission-denied','account-sync/recovery-review-acceptance-conflict','account-sync/session-stale'])test(`startup receipt does not retry ${code}`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const original=repositoryState.repository.readRecoveryReviewAcceptance.bind(repositoryState.repository);
+  repositoryState.repository.readRecoveryReviewAcceptance=async record=>{await original(record);throw Object.assign(new Error(code),{code});};
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>({...source('device-receipt-rejected'),favorites:[{displayName:'Unresolved',tagIds:[]}]}));
+  await assert.rejects(runtime.start(),error=>error.code===code);assert.equal(repositoryState.calls.readRecoveryReviewAcceptance,1);assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,0);assert.equal(runtime.projectionReady,false);await runtime.stop();
+});
+
+for(const failure of ['session','listener'])test(`receipt retry stops after a real ${failure} authority change`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();let current=true;
+  const original=repositoryState.repository.readRecoveryReviewAcceptance.bind(repositoryState.repository);
+  repositoryState.repository.readRecoveryReviewAcceptance=async record=>{const result=await original(record);if(failure==='session')current=false;else repositoryState.failListener(Object.assign(new Error('permission denied'),{code:'permission-denied'}));return result;};
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>({...source('device-receipt-authority'),favorites:[{displayName:'Unresolved',tagIds:[]}]}),()=>{},()=>{},async()=>({ok:true}),{sessionCurrent:()=>current,listenerReadyTimeoutMs:10});
+  await assert.rejects(runtime.start());assert.equal(repositoryState.calls.readRecoveryReviewAcceptance,1);assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,0);assert.equal(runtime.projectionReady,false);assert.equal(journalState.recoveryCandidates.size,1);await runtime.stop();
+});

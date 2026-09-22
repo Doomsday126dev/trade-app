@@ -1,0 +1,23 @@
+{
+  "deviceMigrationId": "migration_3f036a5a00d4f240cc0e48c4a00f16c7d7acf3b070aabd0d359e06275030bf06",
+  "sourceFingerprint": "29cf6df682a25206821a9fb00eca5d0d9fbaf985d3d75c7c72a80bdccb85a11a",
+  "recoveryCandidates": [
+    {
+      "ownerUid": "uid-owner",
+      "candidateId": "candidate_ede94518a0a4c1ea72dfaaea11fd3d602abe13d295d71e0885837d0e15cc6356",
+      "schemaVersion": 1,
+      "reason": "favorite-uid-unresolved",
+      "entityType": "favorite",
+      "entityId": "unresolved:other",
+      "identity": {
+        "targetUid": ""
+      },
+      "values": {
+        "displayName": "Other"
+      },
+      "source": "legacy-favorite",
+      "createdAt": 0,
+      "resolved": false
+    }
+  ]
+}

@@ -74,6 +74,41 @@ test('normal cross-device enrollment verifies reciprocal server identity before 
   assert.doesNotMatch(html,/accountSyncRolloutEligible\([^)]*\)\s*\|\|\s*true/);
 });
 
+test('late Favorite runtime startup installs the picker without another list render',async()=>{
+  let installs=0;
+  const runtime={ownerUid:'uid-a',controller:{},projectionReady:true,start:async()=>({ok:true}),snapshot:async()=>({state:'saved'}),stop:async()=>{}};
+  const additions={resume:async()=>{}};
+  const context={
+    window:{
+      PogoDomain:{favoriteCapabilities:{resolverEnabled:true}},
+      PogoServices:{
+        favoriteWriteTransport:{createFavoriteWriteTransport:()=>({})},
+        favoriteResolverClient:{createFavoriteResolverClient:()=>({})}
+      },
+      PogoData:{
+        favoriteAdditionRepository:{createFavoriteAdditionRepository:({repository})=>repository},
+        favoriteAdditions:{createFavoriteAdditions:()=>additions},
+        favoriteRecoveryPreview:{createFavoriteRecoveryPreview:()=>({})}
+      }
+    },
+    auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',_sessionTransientGeneration:1,
+    accountSyncRuntimeGeneration:0,accountSyncRuntimeStopPromise:null,accountSyncRuntimeStartPromise:null,accountSyncRuntimeStartBinding:'',
+    managedAccountSyncRuntime:null,managedFavoriteAdditions:null,managedFavoriteRecoveryPreview:null,favoriteAdditionUiState:null,
+    accountSyncInitialProviderProfile:{},accountSyncCanonicalEntities:[],accountSyncClone:structuredClone,
+    accountSyncRolloutEligible:async()=>true,firebaseDataProtectionReady:true,db:{},ref(){},get(){},onValue(){},runTransaction(){},serverTimestamp(){},
+    providerOnlyIdentityActive:()=>false,ACCOUNT_SYNC_ROLLOUT:{enabled:true,writesEnabled:true},
+    accountSyncJournalData:{createAccountSyncJournal:()=>({})},accountSyncRepositoryData:{createAccountSyncRepository:()=>({})},
+    accountSyncRuntimeData:{createAccountSyncRuntime:()=>runtime},accountSyncProjectionReady:()=>true,
+    firebaseAppCheckReady(){},loadFirebaseAppCheckSdk(){},
+    accountSyncClearStaleRecoveryPresentation(){},refreshSyncUi(){},refreshFavoriteSavedPrompt(){},renderFavoritePicker(){},
+    retireMigratedLegacyListQueue(){},accountSyncReadLegacySources(){},applyAccountSyncCanonicalEntities(){},publishAccountSyncProjection(){},
+    installFavoritePickerButton:()=>{installs++;}
+  };
+  vm.runInNewContext(appFunction('ensureAccountSyncRuntime'),context);
+  const result=await context.ensureAccountSyncRuntime();
+  assert.equal(result.ok,true);assert.equal(installs,1);assert.equal(context.managedFavoriteAdditions,additions);
+});
+
 test('every account sync runtime module is versioned in HTML and included in the offline app shell',()=>{
   const releaseId=html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
   assert.ok(releaseId,'active release id');
@@ -200,7 +235,7 @@ test('auth transitions invalidate stale sync starts before publishing account st
         start:async()=>{if(stage==='failed-start-snapshot')throw new Error('synthetic startup failure');await wait('start');return{ok:true};},
         snapshot:async()=>{await wait(stage.endsWith('snapshot')?stage:'new-snapshot');return{state:'owner-saved'};},
         stop:async()=>{calls.stopped++;await wait('disabled-stop');}};
-      const context={auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',_sessionTransientGeneration:1,
+      const context={window:{PogoDomain:{favoriteCapabilities:{resolverEnabled:false}}},managedFavoriteAdditions:null,favoriteAdditionUiState:null,auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',_sessionTransientGeneration:1,
         accountSyncRuntimeGeneration:1,accountSyncRuntimeStopPromise:null,accountSyncRuntimeStartPromise:null,accountSyncRuntimeStartBinding:'',
         managedAccountSyncRuntime:['existing-snapshot','disabled-stop'].includes(stage)?runtime:null,accountSyncUiState:initialState,
         accountSyncInitialProviderProfile:{},accountSyncCanonicalEntities:[],accountSyncClone:structuredClone,

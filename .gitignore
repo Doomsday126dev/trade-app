@@ -20,3 +20,4 @@ functions/.local/
 .local/admin-credentials/
 .local/firebase-rule-backups/
 .local/staging-creation-approvals/
+functions/favorite-resolver/.env*

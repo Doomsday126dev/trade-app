@@ -12,7 +12,8 @@ const OWNER_GROUPS=[PRODUCT,SYNC,PRIVACY,RELEASE,PUBLIC_BACKEND,
   ['functions/test/e1-rate-limit.test.cjs','functions/test/e1-reserve-trainer-handle.test.cjs']];
 const BACKEND_TEST_SUPPORT={
   'functions/test/helpers.cjs':['approved-viewer','common-callable','favorites','handle','history','safety-contract','tags'],
-  'functions/test/helpers/groupEFixture.cjs':['e1-gateway','e1-group-e-admission','e1-group-e-client-foundation','e1-group-e-control-store','e1-production-client-foundation-execution']
+  'functions/test/helpers/groupEFixture.cjs':['e1-gateway','e1-group-e-admission','e1-group-e-client-foundation','e1-group-e-control-store','e1-production-client-foundation-execution'],
+  'functions/test/helpers/authority-build-fixture.cjs':['e1-authority-build-policy','e1-authority-deployment']
 };
 const LEGACY_RESET=['tests/legacy-identity-fences.test.cjs','tests/legacy-slot-reconciliation.test.cjs','tests/legacy-slot-reconciliation-evidence.test.cjs','tests/legacy-slot-reconciliation-production.test.cjs','tests/legacy-identity-audit.test.cjs','tests/legacy-pin-reset-login.test.cjs','tests/legacy-pin-reset-ops.test.cjs'];
 const legacyResetFile=file=>/^functions\/legacy-pin-reset\//.test(file)||[
@@ -27,10 +28,12 @@ const legacyResetFile=file=>/^functions\/legacy-pin-reset\//.test(file)||[
   'tests/firebase/legacy-identity-guard.test.cjs','tests/helpers/legacy-reconciliation-emulator.cjs','tests/legacy-pin-reset.spec.js',
   'docs/LEGACY-IDENTITY-REPAIR.md',...LEGACY_RESET
 ].includes(file);
+const favoriteResolverFile=file=>/^functions\/favorite-resolver\//.test(file)||/^firebase\.favorite-resolver/.test(file)||file==='tests/firebase/database.rules.favorite-resolver.json'||file==='scripts/build-favorite-resolver-rules.cjs';
 function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
   const node=new Set(['tests/product-check-selection.test.cjs']),browser=new Set(),commands=[],errors=[];
   const any=pattern=>files.some(file=>pattern.test(file));
   const add=tests=>tests.forEach(file=>node.add(file));
+  if(files.some(favoriteResolverFile))add(['tests/favorite-additions.test.cjs','tests/favorite-recovery-preview.test.cjs','tests/favorite-write-transport.test.cjs']);
   const legacyReset=files.some(legacyResetFile);
   const resetOnly=legacyReset&&files.every(file=>legacyResetFile(file)||['tests/account-sync-runtime.test.cjs',
     'scripts/select-product-checks.cjs','tests/product-check-selection.test.cjs','.github/workflows/product-review.yml'].includes(file));
@@ -61,14 +64,14 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
     add(['tests/provider-public-projection.test.cjs','tests/provider-public-application-integration.test.cjs']);
     commands.push([process.execPath,['--test',...PUBLIC_BACKEND]]);
   }
-  if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&/^(?:functions\/|js\/(?:services\/(?:googleAuth|provider)|domain\/provider))/.test(file))){
+  if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&!favoriteResolverFile(file)&&/^(?:functions\/|js\/(?:services\/(?:googleAuth|provider)|domain\/provider))/.test(file))){
     add(['tests/provider-linking-foundation.test.cjs','tests/provider-account-foundation.test.cjs','tests/provider-privacy.test.cjs']);
     // An unfamiliar backend change does not silently receive UI-only coverage.
     commands.push(['npm',['--prefix','functions','run','check:contract']]);
   }
   if(any(/firestore.*rules/))commands.push(['npm',['run','check:e1-firestore-authority']]);
   if(files.includes('tests/firebase/database.rules.provider-public-projection.json'))commands.push(['bash',['scripts/check-provider-public-projection-rules.sh']]);
-  if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&/database.*rules|SECURITY-RULES|build-sec02-production-rules/.test(file)))commands.push(['npm',['run','check:sec02-production-rules']]);
+  if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&!favoriteResolverFile(file)&&/database.*rules|SECURITY-RULES|build-sec02-production-rules/.test(file)))commands.push(['npm',['run','check:sec02-production-rules']]);
   if(any(/^\.github\/workflows\/frontend-performance\.yml$/))add(['tests/performance-observability.test.cjs']);
   for(const file of files){
     if(resetOnly&&file==='tests/account-sync-runtime.test.cjs')continue;

@@ -145,6 +145,47 @@
     'nav.legacyInventoryShort':'Items',
     'nav.settingsShort':'Settings',
     'nav.adminShort':'Admin',
+    "favoritePicker.open":"Add favorites",
+    "organizer.filterGroups":"Filter by group",
+    "organizer.savedTrainers":"Saved trainers",
+    "organizer.favoriteScope":"Favorite scope",
+    "organizer.viewAllWants":"View all wants",
+    "organizer.viewGroupWants":"View group wants",
+    "favoritePicker.title":"Add trainers to Favorites",
+    "favoritePicker.description":"Choose trainers now. Their identities are checked when you add them.",
+    "favoritePicker.cancel":"Cancel",
+    "favoritePicker.search":"Search trainers",
+    "favoritePicker.searchHint":"Trainer name",
+    "favoritePicker.clear":"Clear selection",
+    "favoritePicker.all":"Select all results ({count})",
+    "favoritePicker.capacity":"{remaining} spots remaining \u00b7 {selected} selected",
+    "favoritePicker.already":"Already added",
+    "favoritePicker.preserved":"Older info preserved \u00b7 add new",
+    "favoritePicker.pending":"Pending save",
+    "favoritePicker.unsuccessful":"Not saved \u00b7 add again",
+    "favoritePicker.empty":"No trainers match this search.",
+    "favoritePicker.pages":"Trainer pages",
+    "favoritePicker.previous":"Previous",
+    "favoritePicker.next":"Next",
+    "favoritePicker.page":"{page} / {pages} \u00b7 {count} trainers",
+    "favoritePicker.over":"Choose {count} fewer trainers to stay within 100 Favorites.",
+    "favoritePicker.selectionDetail":"Selections stay with you across searches and pages.",
+    "favoritePicker.pendingDetail":"{count} pending. They are saved on this device, awaiting account confirmation.",
+    "favoritePicker.add":"Add {count} favorites",
+    "favoritePicker.working":"Checking and saving\u2026",
+    "favoritePicker.results":"{confirmed} confirmed \u00b7 {pending} pending \u00b7 {failed} unsuccessful. Pending and unsuccessful selections remain.",
+    "favoritePicker.cancelDetail":"Closed the picker. Confirmed additions remain saved; queued additions may still complete.",
+    "favoritePicker.notReady":"Account evidence is unavailable. Reconnect before adding.",
+    "favoriteAdd.waiting":"Connect to account sync before adding Favorites. Your existing information is preserved.",
+    "favoriteAdd.saved":"Favorite saved to your account.",
+    "favoriteAdd.pending":"Favorite pending \u2014 saved on this device and waiting for account confirmation.",
+    "favoriteAdd.resolving":"Checking trainer identities. Favorites are not saved yet.",
+    "favoriteAdd.rateLimited":"Not saved yet. Please wait before retrying; your selection is retained.",
+    "favoriteAdd.limit":"This selection exceeds the 100-Favorite limit. Remove some selections or existing Favorites.",
+    "favoriteAdd.review":"This Favorite has preserved information or changed since selection. Review it before adding again.",
+    "favoriteAdd.changed":"The Favorite changed. The current list is refreshed; choose Add again to confirm.",
+    "favoriteAdd.identityUnavailable":"This trainer could not be securely identified. No Favorite was added.",
+    "favoriteAdd.unsuccessful":"Favorite not saved. Your selection is retained; reconnect and retry.",
     'trainer.findTitle':'Find Trainer',
     'trainer.findDescription':'Search for a trainer to view their shared list and compare trades.',
     'trainer.findPlaceholder':'Search trainer name',
@@ -457,6 +498,15 @@
     ,'login.or':'or','login.continueGoogle':'Continue with Google','security.connect':'Connect','security.disconnect':'Disconnect','security.retry':'Retry','security.googleConnected':'Connected to this trainer account.','security.googleAlreadyConnected':'Already connected','security.googleAvailable':'Add Google as another way to access this same trainer account.','security.googleCollision':'Credential belongs to another account','security.googleCollisionHelp':'This Google credential is already attached elsewhere. Neither account was changed.','security.googlePopupBlocked':'Popup blocked','security.googlePopupBlockedHelp':'Allow the Google popup, then retry. No separate sign-in was started.','security.googleCanceled':'Canceled','security.googleCanceledHelp':'Google connection was canceled. Your account was not changed.','security.googleReauthRequired':'Reauthenticate','security.googleReauthHelp':'Confirm your Google sign-in before disconnecting it.','security.googleNetworkFailed':'Connection failed','security.googleRetryHelp':'Check your connection and retry. Your trainer data was not changed.','security.googleNeedsAttention':'Needs attention','security.googleLifecycleHelp':'Your sign-in changed during the operation. Start again from this account.','security.googleBoundaryHelp':'The account safety check did not pass, so Google was not changed.','security.googlePopupOnly':'Use the Google popup in this release. Redirect sign-in remains disabled.','security.googleOnboardingRequired':'Google is verified. Choose your trainer handle to continue.','security.googleSecureClaimRequired':'This handle is available. Account creation remains disabled until the secure claim service is configured.','security.googleHandleUnavailable':'That trainer handle is unavailable or could not be verified.','providerOnboarding.title':'Finish setting up PoGo Trades','providerOnboarding.description':'Google verified your sign-in. Choose your trainer handle explicitly; Google profile details are never used as your trainer identity.','providerOnboarding.handle':'Trainer handle','providerOnboarding.handlePlaceholder':'Your Pokémon GO trainer name','providerOnboarding.friendCode':'Friend Code (optional)','providerOnboarding.check':'Check handle','providerOnboarding.cancel':'Cancel'
     ,'security.usernamePinNotConfigured':'Username and PIN are not configured for this provider-only account.','security.googleLegacyMigrationRequired':'This existing account must complete its legacy identity migration before Google sign-in can continue.','security.googleCreationNotReady':'New provider account creation is not enabled until the legacy handle namespace is certified.','security.googleCreationVerifying':'Checking the exact account result. Do not submit the account again.','providerOnboarding.ready':'The handle passed the preliminary check. Create the account to make the final claim.','providerOnboarding.create':'Create account','providerOnboarding.verify':'Verify account','providerOnboarding.checking':'Checking handle…','providerOnboarding.creating':'Creating account…','providerOnboarding.verifying':'Verifying account…'
     ,'security.googleReady':'Ready to connect','security.googleReadyHelp':'Account safety check complete. Continue to open Google.'
+    ,'accountSync.editWaiting':'Your draft is still here. Wait for sync or reconnect, then retry. App & Data has the sync diagnostic.'
+    ,'accountSync.editAccountReview':'This account needs review before saving. Your draft is still here. Open App & Data for the diagnostic.'
+    ,'accountSync.editReview':'This entry has an earlier change awaiting review. Your draft is still here. Open App & Data to review it.'
+    ,'accountSync.preservedFavorites':'Retained Favorites needing review ({count})'
+    ,'accountSync.preservedFavoritesDetail':'These earlier bookmarks remain in recovery evidence. They are not active synced Favorites and do not grant access to a trainer’s list. Other saved entries can still be edited.'
+    ,'accountSync.preservedFavoritesUnavailable':'Retained Favorite details are unavailable. Open App & Data for the sync diagnostic.'
+    ,'accountSync.favoritePending':'Favorite change saved on this device; waiting for account sync.'
+    ,'accountSync.favoriteSaved':'Favorite saved to your account.'
+    ,'accountSync.favoriteRemoved':'Favorite removed from your account.'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
   });
 })(window);

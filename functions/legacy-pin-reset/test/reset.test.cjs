@@ -23,7 +23,7 @@ function fixture() {
   } };
   const adapter = { readEvidence: async () => structuredClone(evidence), getAuthUser: async uid => uid === 'owner-uid' ? { uid, disabled: false } : structuredClone(user),
     readIdentityFence: async () => null,
-    listAuthIdentities: async () => [{ uid: user.uid, email: user.email }], legacyOnly: async () => true,
+    listAuthIdentities: async () => [{ uid: user.uid, email: user.email }], legacyOnly: async () => true, legacyResetEvidence: async () => 'a'.repeat(64),
     updatePassword: async (uid, pin) => { assert.equal(uid, user.uid); password = pin; mutations++; } };
   const service = createResetService({ adapter, journal: createJournal(store), ownerUid: context.uid, hmacKey: 'k'.repeat(64), now: () => now });
   return { evidence, user, data, adapter, store, service, ledger: () => ledger, mutations: () => mutations, password: () => password };
@@ -56,7 +56,7 @@ for (const [name, change] of [
   ['Auth UID mismatch', f => f.user.uid = 'wrong'],
   ['disabled Auth user', f => f.user.disabled = true],
   ['frozen legacy identity', f => f.evidence.authIndex['trainer-uid'].frozen = true],
-  ['Firestore ownership or conflict', f => f.adapter.legacyOnly = async () => false],
+  ['Firestore ownership or conflict', f => f.adapter.legacyResetEvidence = async () => null],
   ['provider-only credential', f => f.user.providerData = f.user.providerData.filter(p => p.providerId !== 'password')],
   ['duplicate Auth slot', f => f.adapter.listAuthIdentities = async () => [{ uid: 'trainer-uid', email: 'trainer@pogotrades.nyc' }, { uid: 'other', email: 'trainer_v2@pogotrades.nyc' }]],
   ['missing creation proof', f => delete f.user.metadata.creationTime]
@@ -129,7 +129,7 @@ test('concrete adapter exposes only password update; no write is possible throug
   }) });
   await adapter.updatePassword('existing-uid', '654321');
   assert.deepEqual(calls, [{ url: 'https://identitytoolkit.googleapis.com/v1/projects/trade-list-a4297/accounts:update', body: { localId: 'existing-uid', password: '654321' }, redirect: 'error' }]);
-  assert.deepEqual(Object.keys(adapter).sort(), ['getAuthUser', 'legacyOnly', 'listAuthIdentities', 'readEvidence', 'readIdentityFence', 'retiredSlotIsUnowned', 'updatePassword']);
+  assert.deepEqual(Object.keys(adapter).sort(), ['getAuthUser', 'legacyOnly', 'legacyResetEvidence', 'listAuthIdentities', 'readEvidence', 'readIdentityFence', 'retiredSlotIsUnowned', 'updatePassword']);
 });
 test('password transport never retries 503 or lost HTTP responses and cannot select a non-emulator alternate project', async () => {
   for (const failure of ['503', 'network']) {

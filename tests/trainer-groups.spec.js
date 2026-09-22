@@ -68,12 +68,19 @@ async function fixture(page){
       return{ok:true,value:{version:1,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{Pikachu:name==='Bob'?'M':'H',...(name==='Alice'?{Snom:'L',...window.__extraWants}:{})},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt}};
     }},validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot});
     cache.activate({uid:'synthetic-group',username:cur});ensureFavoriteShareSessionCache=()=>cache;
-    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();
+    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');document.querySelector('.favorite-groups-disclosure').open=true;renderTrainerQuickLists();
   });
 }
 test('group CRUD and membership reuse private favorites; aggregate and copy only fresh permitted wants',async({page})=>{
   await fixture(page);await page.locator('.group-new > summary').click();await page.getByLabel('New group name',{exact:true}).fill('NYC trades');await page.getByRole('button',{name:'Create group',exact:true}).click();
+  await expect(page.locator('.group-empty')).toHaveText('No members in this group.');
+  await expect(page.locator('.group-review')).toHaveCount(0);
+  await expect(page.locator('.group-view-controls')).toBeVisible();
+  await expect(page.locator('.group-actions')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Delete group',exact:true})).toBeHidden();
+  if(process.env.GROUP_SCREENSHOTS){fs.mkdirSync(process.env.GROUP_SCREENSHOTS,{recursive:true});await page.screenshot({path:`${process.env.GROUP_SCREENSHOTS}/groups-empty-${test.info().project.name}.png`,animations:'disabled'});}
   await page.locator('.group-management > summary').click();
+  await expect(page.getByRole('button',{name:'Delete group',exact:true})).toBeVisible();
   await page.locator('.group-membership summary').click();
   for(const name of ['Alice','Bob','Private','Old']){
     const input=page.locator(`[data-group-member="${name}"]`);if(!await input.isVisible())await page.locator('.group-membership summary').click();await input.check();
