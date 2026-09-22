@@ -675,6 +675,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <input id="share-public-url" class="field-control" readonly data-i18n-aria-label="product.link" aria-label="Link">
     </section>
     <section id="product-share-image" hidden class="share-format-actions">
+      <div class="share-image-format" role="group" data-i18n-aria-label="export.imageFormat" aria-label="Image format">
+        <button type="button" aria-pressed="true" data-product-image-format="compact" onclick="setProductShareImageFormat('compact')" data-i18n="export.compactImage">Compact board</button>
+        <button type="button" aria-pressed="false" data-product-image-format="phone" onclick="setProductShareImageFormat('phone')" data-i18n="export.phoneImage">Phone-readable sheet</button>
+      </div>
+      <p class="share-image-format-help" id="product-share-image-help" data-i18n="export.compactImageHelp">Fits more entries in one view.</p>
       <button type="button" class="btn btn-primary" onclick="exportProductShareImage()" data-i18n="specialBoard.export">Export as image</button>
     </section>
     <section id="product-share-text" hidden class="share-format-actions">
