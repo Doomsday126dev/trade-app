@@ -23,6 +23,15 @@ const publicProjection=Object.freeze({
 const paddedSpritePath=path.join(__dirname,'..','assets','sprites','go','pikachu-world-champs-2025.png');
 const regularSprite='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="#8b7cf6"/></svg>';
 
+// Literal policy oracles must retain the requirements in each fixture. Deriving
+// an expected query from only {no} incorrectly treats special wants as ordinary.
+const PUBLIC_POLICY_QUERIES=Object.freeze({
+  en:{ordinaryPikachu:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25',specialPikachu:'!traded&25',specialEevee:'!traded&133'},
+  ja:{ordinaryPikachu:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&25',specialPikachu:'!こうかん&25',specialEevee:'!こうかん&133'},
+  es:{ordinaryPikachu:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&25',specialPikachu:'!intercambiados&25',specialEevee:'!intercambiados&133'},
+  de:{ordinaryPikachu:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25',specialPikachu:'!getauscht&25',specialEevee:'!getauscht&133'}
+});
+
 function representativePublicProjection(){
   const declaration=(name,p='',extra={})=>({intent:'lf',name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
   const declarations=[
@@ -113,11 +122,10 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
     await expect(page.locator('[data-want-section="L"] .contextual-details')).toBeHidden();
     await expect(page.locator('[data-want-section="LUCKY"] .contextual-details')).toBeHidden();
-    for(const [key,no] of [['H',25],['M',854],['L',1],['LUCKY',25],['XXL',143],['XXS',595],['SHINY',94],['LUCKY+SHINY',280],['NEEDS_PRIORITY',150]]){
+    for(const [key,expected] of [['H','!traded&25'],['M','!traded&854'],['L','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1'],['LUCKY','!traded&25'],['XXL','!traded&143'],['XXS','!traded&595'],['SHINY','!traded&94'],['LUCKY+SHINY','!traded&280'],['NEEDS_PRIORITY','!traded&150']]){
       const section=page.locator(`[data-want-section="${key}"]`);
       await expect(section.locator('.share-pcard')).toHaveCount(1);
       await expect(section.locator('.share-pcard .badge')).toHaveCount(0);
-      const expected=await page.evaluate(no=>PogoDomain.searchStrings.contextualSearchPlan([{no}],{locale:'en'}).parts[0],no);
       await section.locator('[data-contextual-copy]').click();
       expect(await page.evaluate(()=>window.__sectionCopy)).toBe(expected);
       await expect(section.locator('textarea')).toBeHidden();
@@ -186,7 +194,7 @@ test.describe('anonymous public share bootstrap',()=>{
     expect(await high.locator('*').count()).toBeLessThan(1300);
     const copy=high.locator('[data-contextual-copy]');
     await copy.click();
-    const expected=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]);
+    const expected='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150';
     expect(await page.evaluate(()=>window.__largeSectionCopy)).toBe(expected);
     await high.locator('[data-public-share-action="toggle-section"]').click();
     await expect(high.locator('.share-pcard')).toHaveCount(0);
@@ -213,8 +221,8 @@ test.describe('anonymous public share bootstrap',()=>{
       for(const intent of ['lf']){
         await expect(page.locator('[data-public-share-action="intent"]')).toHaveCount(0);
         await expect(page.locator('.share-pcard')).toHaveCount(2);
-        for(const [key,no] of [['H',25],['NEEDS_PRIORITY',133]]){
-          const expected=await page.evaluate(({no,locale})=>PogoDomain.searchStrings.contextualSearchPlan([{no}],{locale}).parts[0],{no,locale});
+        for(const [key,queryKey] of [['H','ordinaryPikachu'],['NEEDS_PRIORITY','specialEevee']]){
+          const expected=PUBLIC_POLICY_QUERIES[locale][queryKey];
           await page.locator(`[data-want-section="${key}"] [data-contextual-copy]`).click();
           expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
         }
@@ -268,7 +276,7 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.keyboard.press('Escape');
       await expect(page.locator('#settings-modal')).not.toHaveClass(/open/);
       await expect(page.locator('#share-language-trigger')).toBeFocused();
-      const expected=await page.evaluate(locale=>PogoDomain.searchStrings.contextualSearchPlan([{no:25}],{locale}).parts[0],locale);
+      const expected=PUBLIC_POLICY_QUERIES[locale].specialPikachu;
       await expect(copy).toHaveAttribute('data-contextual-copy',expected);
       await copy.click();
       expect(await page.evaluate(()=>window.__copiedSearch)).toBe(expected);
@@ -276,9 +284,9 @@ test.describe('anonymous public share bootstrap',()=>{
       expect(await copy.innerText()).not.toContain('share.');
     }
     await page.locator('[data-list-type="dynamax"]').click();
-    await expect(copy).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([4].map(no=>({no})),{locale:'de'}).parts[0]));
+    await expect(copy).toHaveAttribute('data-contextual-copy','!getauscht&4');
     await page.locator('[data-list-type="costumes"]').click();
-    await expect(copy).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([25].map(no=>({no})),{locale:'de'}).parts[0]));
+    await expect(copy).toHaveAttribute('data-contextual-copy','!getauscht&25');
     await page.evaluate(()=>{window.__denyCopy=true;});
     await copy.click();
     await expect(section.locator('.contextual-details')).toHaveAttribute('open','');

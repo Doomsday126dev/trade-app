@@ -164,5 +164,6 @@
     ,'settings.profileSharingSummary':'トレーナー情報と共有できる詳細を管理します。','settings.friendCodeHelp':'12桁。トレーナープロフィールを共有すると含まれます。','settings.profileSharedOptional':'任意。プロフィールを共有すると含まれます。','settings.profileNoChanges':'未保存の変更はありません','settings.profileUnsaved':'未保存の変更があります','settings.discardChanges':'変更を破棄','settings.saveChanges':'変更を保存'
     ,'restored.copySearch':"検索式をコピー",'restored.searchDetails':"検索の詳細"
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
+    ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
   });
 })(window);

@@ -2025,6 +2025,7 @@ function syncPokemonGoSearchLanguageControl(){
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
+  if(cur&&favoriteBrowseState.selected)renderFavoriteBrowseResults();
   if(cur){const declarations=productDeclarations();renderCombinedList(declarations);renderIntentEntries('',declarations);if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5945,6 +5946,7 @@ function favoriteLookupModel(){
   }),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
   return{...aggregate,...tradeListComparisonDomain.whoWants(aggregate.entries,{selected:favoriteBrowseState.selected,variantKey:favoriteLookupVariant},{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})};
 }
+function favoriteLookupSignature(model){return JSON.stringify([pokemonGoSearchLocale(),model.entries]);}
 function favoriteVariantLabel(entry){
   return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
 }
@@ -5963,7 +5965,7 @@ function renderFavoriteBrowseResults(){
   if(!favorites.length){output.removeAttribute('aria-busy');output.innerHTML=favoriteBrowseEmpty('favoriteBrowse.noFavoritesTitle','favoriteBrowse.noFavoritesBody');return;}
   if(!selected){output.removeAttribute('aria-busy');output.innerHTML='';return;}
   if(favoriteBrowseState.busy)return;
-  const model=favoriteLookupModel();output.dataset.lookupSignature=JSON.stringify(model.entries);
+  const model=favoriteLookupModel();output.dataset.lookupSignature=favoriteLookupSignature(model);
   const options=model.variants.map(item=>`<option value="${escAttr(item.key)}"${item.key===favoriteLookupVariant?' selected':''}>${escHtml(favoriteVariantLabel(item.entry))}</option>`).join('');
   const missing=favoriteLookupVariant&&!model.variants.some(item=>item.key===favoriteLookupVariant);
   const rows=model.entries.flatMap(entry=>entry.members.map(match=>({entry,match})));
@@ -6004,7 +6006,7 @@ document.getElementById('favorite-browse-results')?.addEventListener('change',ev
 });
 document.getElementById('favorite-browse-results')?.addEventListener('click',event=>{
   if(event.target.closest('[data-lookup-more]')){favoriteLookupLimit+=60;renderFavoriteBrowseResults();return;}
-  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==JSON.stringify(favoriteLookupModel().entries)){
+  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==favoriteLookupSignature(favoriteLookupModel())){
     event.preventDefault();event.stopImmediatePropagation();renderFavoriteBrowseResults();toast(groupText('stale'));
   }
 },true);
