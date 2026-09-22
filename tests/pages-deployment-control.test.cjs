@@ -180,6 +180,8 @@ test('workflow checks out runtime_source_sha, never github.sha, and preserves im
   assert.equal(regression.env.PAGES_RUNTIME_SOURCE_SHA,'${{ inputs.runtime_source_sha }}');
   assert.equal(regression.env.PAGES_RUNTIME_RELEASE_ID,'${{ inputs.runtime_release_id }}');
   assert.equal(regression.env.PAGES_RUNTIME_RELEASE_TAG,'${{ inputs.runtime_release_tag }}');
+  const validateTarget=job.steps.find(step=>step.name==='Run mandatory frontend release suite');
+  assert.match(validateTarget.run,/PAGES_RUNTIME_SOURCE_SHA="\$\{\{ inputs\.runtime_source_sha \}\}" FIREBASE_READ_SOURCE_DIR=target node control\/scripts\/check-firebase-reads\.js/);
   const uses=[...reusableText.matchAll(/^\s*uses:\s*([^\s]+)$/gm)].map(match=>match[1]);
   for(const value of uses)assert.match(value,/@[0-9a-f]{40}$/);
   assert.match(reusableText,/actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/);
