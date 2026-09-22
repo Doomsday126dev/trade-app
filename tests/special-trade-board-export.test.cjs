@@ -104,14 +104,16 @@ test('canvas renderer uses reviewed sprites with unambiguous starbursts and alig
   assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
 });
 
-test('Board editor presents only artwork, gender, Shiny, and removal controls',()=>{
+test('Board curation reflects declarations without resurrecting retired inline editors',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
   const start=source.indexOf('function renderSpecialBoard()');
-  const end=source.indexOf('async function clearSpecialBoard()',start);
+  const end=source.indexOf('async function addSpecialEntry(',start);
   const editor=source.slice(start,end);
-  assert.match(editor,/sb-row-gender/);
-  assert.match(editor,/toggleSpecialFlag\('\$\{side\}',\$\{i\},'shiny'\)/);
-  assert.match(editor,/sb-row-rm/);
+  assert.match(editor,/productDeclarations\(\)\.entries/);
+  assert.match(editor,/type="checkbox"[^>]+toggleBoardSelection/);
+  assert.match(editor,/spriteImg\(e\.no,34,'sb-row-sprite',e\.name,e\.gender/);
+  assert.match(editor,/e\.shiny\?/);
+  assert.doesNotMatch(editor,/sb-row-gender|toggleSpecialFlag|sb-row-rm/);
   assert.doesNotMatch(editor,/sb-row-background|setSpecialBackground|sb-row-note|setSpecialNote|sb-row-qty|setSpecialQty|mirror/);
   const globals=source.slice(source.indexOf('Object.assign(window,{'));
   assert.doesNotMatch(globals,/setSpecialBackground|setSpecialNote|setSpecialQty/);
