@@ -90,3 +90,44 @@ test('avatar picker owns Escape and consecutive arrow navigation',async({page})=
   await expect(page.locator('#settings-modal')).toBeVisible();
   await expect(page).toHaveURL(/#settings\/profile$/);
 });
+
+for(const theme of ['light','dark'])for(const width of [320,390,1440]){
+  test(`final Settings ${theme} at ${width}px preserves Save and keyboard behavior`,async({page})=>{
+    await page.setViewportSize({width,height:844});
+    await page.goto('./?settings-final-qualification',{waitUntil:'domcontentloaded'});
+    await waitForApp(page);await establishAccount(page);
+    await page.evaluate(theme=>{
+      const fixture=structuredClone(allData);const uid='settings-local-save';
+      auth={currentUser:{uid,providerData:[{providerId:'password'}]}};currentAuthUid=uid;
+      fixture.users.SettingsTester.authUid=uid;activateOwnedSession(uid,'SettingsTester');
+      db={};firebaseDataProtectionReady=true;
+      ref=(_db,path)=>path;get=async path=>{
+        const values={[`authIndex/${uid}`]:{username:'SettingsTester'},'users/SettingsTester/authUid':uid,[`accountSync/${uid}`]:null};
+        if(!Object.prototype.hasOwnProperty.call(values,path))throw new Error(`Unexpected fixture read: ${path}`);
+        return{val:()=>values[path]};
+      };
+      allData=normalizeData(fixture);saveLocal(allData);applyTheme(theme);openAccountSettingsSection('profile');
+    },theme);
+    await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.locator('#prof-bio').fill(`Saved ${theme} ${width}`);
+    await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
+    await page.locator('#settings-detail').hover();await page.mouse.wheel(0,1800);
+    await expect(page.locator('#profile-save')).toBeInViewport();
+    await captureReview(page,`settings-final-${theme}-${width}-save`);
+    await page.locator('#profile-save').click();
+    await expect(page.locator('#profile-save')).toBeDisabled();
+    expect(await page.evaluate(()=>allData.users.SettingsTester.bio)).toBe(`Saved ${theme} ${width}`);
+    await page.locator('.settings-modal-close').focus();await page.keyboard.press('Shift+Tab');
+    expect(await page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
+    await page.locator('#prof-av-open').click();
+    await page.locator('#prof-av-search').fill('pika');await page.locator('#prof-av-search').press('ArrowDown');
+    const first=await page.locator('.profile-avatar-option:focus').getAttribute('data-catalog-id');
+    await page.keyboard.press('ArrowDown');
+    expect(await page.locator('.profile-avatar-option:focus').getAttribute('data-catalog-id')).not.toBe(first);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#prof-av-dialog')).toBeHidden();await expect(page.locator('#settings-modal')).toBeVisible();
+    await page.locator('.settings-modal-close').click();
+    expect(await page.evaluate(()=>!!document.getElementById('account-trigger')?.closest('[inert]'))).toBe(false);
+  });
+}
