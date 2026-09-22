@@ -105,7 +105,6 @@ const RELEASE_ASSETS=[
 // Required for offline features/routes, but intentionally omitted from the
 // signed-in script graph: optional export feature and independent public route.
 const LAZY_RELEASE_ASSETS=[
-  'js/domain/productSharePhoneExport.js',
   'js/domain/specialTradeBoardExport.js',
   'js/app/publicShareApp.js'
 ];

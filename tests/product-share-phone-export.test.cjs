@@ -8,7 +8,7 @@ const root=join(__dirname,'..');
 
 function harness(){
   const window={};
-  vm.runInNewContext(readFileSync(join(root,'js/domain/productSharePhoneExport.js'),'utf8'),{window,Date,Promise});
+  vm.runInNewContext(readFileSync(join(root,'js/domain/specialTradeBoardExport.js'),'utf8'),{window,Date,Promise});
   const drawn=[];
   const ctx={font:'',fillStyle:'',strokeStyle:'',lineWidth:1,textAlign:'left',scale(){},fillRect(){},strokeRect(){},measureText(text){return{width:String(text).length*8};},fillText(text,x,y){drawn.push({text:String(text),x,y});}};
   const canvas={width:0,height:0,getContext(){return ctx;}};
@@ -61,5 +61,7 @@ test('Share image UI keeps compact export and exposes an accessible phone option
   assert.match(html,/<button[^>]+aria-pressed="false"[^>]+data-product-image-format="phone"/);
   assert.match(app,/productShareImageFormat==='phone'/);
   assert.match(app,/ensureProductSharePhoneExportDomain\(\)/);
+  assert.match(app,/function ensureProductSharePhoneExportDomain\(\)[\s\S]+ensureSpecialTradeBoardExportDomain\(\)\.then/);
+  assert.doesNotMatch(app,/js\/domain\/productSharePhoneExport\.js/);
   assert.match(app,/phoneExport\.render/);
 });
