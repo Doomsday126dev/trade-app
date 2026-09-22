@@ -6575,8 +6575,7 @@ function switchTab(t,opts={}){
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
 }
-let productShareScope='full',productShareSnapshot=[],productShareOwner='',productShareImageFormat='compact';
-let productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||null,productSharePhoneExportDomainPromise=null;
+let productShareScope='full',productShareSnapshot=[],productShareOwner='';
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
@@ -6607,23 +6606,6 @@ function setProductShareMode(mode){
     document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
   }
 }
-function setProductShareImageFormat(format){
-  productShareImageFormat=format==='phone'?'phone':'compact';
-  document.querySelectorAll('[data-product-image-format]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.productImageFormat===productShareImageFormat)));
-  const help=document.getElementById('product-share-image-help');
-  if(help)help.textContent=i18nCore.t(productShareImageFormat==='phone'?'export.phoneImageHelp':'export.compactImageHelp');
-}
-function ensureProductSharePhoneExportDomain(){
-  productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||productSharePhoneExportDomain;
-  if(productSharePhoneExportDomain)return Promise.resolve(productSharePhoneExportDomain);
-  if(productSharePhoneExportDomainPromise)return productSharePhoneExportDomainPromise;
-  productSharePhoneExportDomainPromise=ensureSpecialTradeBoardExportDomain().then(()=>{
-    productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||null;
-    if(!productSharePhoneExportDomain)throw new Error('Phone export is unavailable');
-    return productSharePhoneExportDomain;
-  }).catch(error=>{productSharePhoneExportDomainPromise=null;throw error;});
-  return productSharePhoneExportDomainPromise;
-}
 function productShareSnapshotCurrent(){
   return productShareOwner===cur&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
 }
@@ -6635,27 +6617,11 @@ async function copyProductShareText(){
 async function exportProductShareImage(){
   if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
   if(!productShareSnapshot.length){toast(i18nCore.t('export.entriesRequired'));return;}
-  const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope,format=productShareImageFormat;
+  const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope;
   try{
-    const phoneExport=format==='phone'?await ensureProductSharePhoneExportDomain():null;
-    const blob=format==='phone'
-      ?await phoneExport.render({
-        entries,owner,
-        sectionsFor:list=>PogoDomain.priorityValues.wantSections(list),
-        sectionLabel:section=>wantSectionLabel(section,{recipient:true}),
-        detailsFor:productShareImageDetails,
-        loadImage:async entry=>{
-          const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
-          return loadCanvasImageWithFallback(exportSpriteFallbackUrls({...entry,gender,spriteUrl:entrySpriteUrl(entry,entry.name,gender)})).catch(()=>null);
-        },
-        drawImage:drawImageContain,createCanvas:()=>document.createElement('canvas'),toBlob:canvasBlob,
-        locale:i18nCore.getLocale(),titleLabel:i18nCore.t('wants.title'),
-        countLabel:count=>i18nCore.t('myList.priorityPokemonCount',{count}),missingArtLabel:i18nCore.t('export.artUnavailable')
-      })
-      :await renderProductShareImage(entries,owner);
+    const blob=await renderProductShareImage(entries,owner);
     if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent())return;
-    const formatSuffix=format==='phone'?'-phone':'';
-    await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}${formatSuffix}.png`,i18nCore.t('product.share'));
+    await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}.png`,i18nCore.t('product.share'));
   }catch{toast(i18nCore.t('export.failed'));}
 }
 function productShareImageDetails(entry,section){

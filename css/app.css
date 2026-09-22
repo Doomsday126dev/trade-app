@@ -2004,11 +2004,6 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .intent-for-trade #mylist-out,.intent-for-trade #mylist-reorder-toggle{display:none}
 .more-destinations,.share-format-actions{display:flex;gap:12px;flex-wrap:wrap}
 .more-destinations .btn{min-height:52px;justify-content:flex-start}
-.product-share-modal .share-image-format{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;padding:4px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}
-.product-share-modal .share-image-format button{min-height:48px;padding:8px 12px;border:0;border-radius:calc(var(--radius-md) - 3px);background:transparent;color:var(--muted);font:inherit;font-weight:700}
-.product-share-modal .share-image-format button[aria-pressed="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.16)}
-.product-share-modal .share-image-format-help{flex-basis:100%;margin:-4px 0 0;color:var(--muted);font-size:12px}
-@media(max-width:480px){.product-share-modal .share-image-format{grid-template-columns:1fr}}
 .share-format-actions[hidden],#product-share-link[hidden]{display:none}
 .product-share-modal{width:560px;max-width:calc(100vw - 24px)}
 .product-share-modal section{padding:12px 0;overflow-wrap:anywhere}
