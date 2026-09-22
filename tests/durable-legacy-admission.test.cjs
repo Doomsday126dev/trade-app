@@ -129,6 +129,14 @@ test('synthetic privileged-writer readback requires exact IAM, Rules, service re
     projectPolicy: { bindings: [...fixture.projectPolicy.bindings, {
       role: Object.keys(EXPECTED_PERMISSIONS).find(role => EXPECTED_PERMISSIONS[role].includes('datastore.entities.create')),
       members: ['serviceAccount:unknown-writer@example.test'] }] } }), /unqualified/u);
+  for (const permission of ['resourcemanager.projects.setIamPolicy', 'iam.roles.update',
+    'iam.serviceAccounts.setIamPolicy', 'run.services.update', 'cloudfunctions.functions.update']) {
+    assert.throws(() => verifyPermanentWriterClosure({ ...fixture,
+      projectPolicy: { bindings: [...fixture.projectPolicy.bindings,
+        { role: 'projects/demo/roles/rogue', members: ['serviceAccount:unknown-writer@example.test'] }] },
+      roles: { ...fixture.roles, 'projects/demo/roles/rogue': { includedPermissions: [permission] } }
+    }), /unqualified/u, permission);
+  }
   const plan = protectionPlan({ sourceSets: sources(['SyntheticTrainer'], ['FormerSynthetic']) });
   const readback = Object.fromEntries(plan.actions.map(item => [item.path.split('/')[1], item.document]));
   const generation = sealGeneration({ plan, protectedClaimsReadback: readback,

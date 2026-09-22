@@ -32,7 +32,7 @@ function verifyPermanentWriterClosure(evidence) {
           !Array.isArray(binding.members) || binding.members.some(value =>
             applicationMembers.includes(value) || !evidence.operatorBreakGlassPrincipals.includes(value)))) fail();
   }
-  const dangerous = /^(?:firebaseauth\.users\.(?:create|import|delete)|firebasedatabase\.instances\.update|datastore\.entities\.(?:create|update|delete)|iam\.serviceAccounts\.(?:actAs|getAccessToken|signBlob|signJwt)|firebaserules\.releases\.create)$/u;
+  const dangerous = /^(?:firebaseauth\.users\.(?:create|import|delete)|firebasedatabase\.instances\.update|datastore\.entities\.(?:create|update|delete)|iam\.(?:serviceAccounts\.(?:actAs|getAccessToken|signBlob|signJwt|setIamPolicy)|roles\.(?:create|update|delete))|resourcemanager\.projects\.setIamPolicy|run\.services\.(?:create|update|delete)|cloudfunctions\.functions\.(?:create|update|delete)|firebaserules\.releases\.create)$/u;
   for (const binding of evidence.projectPolicy.bindings || []) {
     const permissions = evidence.roles?.[binding.role]?.includedPermissions;
     if (!Array.isArray(permissions) || !Array.isArray(binding.members)) fail();
