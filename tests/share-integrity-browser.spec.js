@@ -1,6 +1,33 @@
 const {test,expect}=require('@playwright/test');
 
 test.use({serviceWorkers:'block'});
+
+test('Groups reports a partial removal among same-identity notes',async({page})=>{
+  await fixture(page);
+  await page.evaluate(()=>{
+    const store=ensureTrainerHistoryStore();store.saveFavoriteOrganization('AuditFriend');
+    window.__shareIntegrityEntries=[
+      {intent:'lf',category:'wishlist',name:'Pikachu',p:'H',note:'Saturday'},
+      {intent:'lf',category:'wishlist',name:'Pikachu',p:'H',note:'Sunday'}
+    ];
+    const cache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({repository:{read:async name=>{
+      const declarations=publicSharePublicationDomain.publicDeclarations(window.__shareIntegrityEntries);
+      return{ok:true,value:{version:2,username:name,profile:{friendCode:'',lastUpdated:Date.now()},lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],declarations,declarationCount:declarations.length,updatedAt:Date.now()}};
+    }},validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot});
+    cache.activate({uid:'local-share-integrity',username:cur});ensureFavoriteShareSessionCache=()=>cache;
+    switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');document.querySelector('.favorite-groups-disclosure').open=true;renderTrainerQuickLists();
+  });
+  await page.evaluate(()=>openTrainerGroup('favorites'));
+  await expect(page.locator('.group-want')).toHaveCount(2);
+  await page.evaluate(()=>markTrainerWantsChecked());
+  await page.evaluate(()=>{window.__shareIntegrityEntries=window.__shareIntegrityEntries.slice(0,1);});
+  await page.evaluate(()=>openTrainerGroup('favorites'));
+  await expect(page.locator('.group-want')).toHaveCount(1);
+  const changes=await page.evaluate(()=>trainerGroupModel().members[0].changes);
+  expect(changes.updated).toBe(true);expect(changes.removed).toBe(1);
+  await expect(page.locator('.group-availability')).not.toContainText('No changes');
+});
+
 test('Share publishes a multiline note through the real action',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{
