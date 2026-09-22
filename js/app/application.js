@@ -5244,6 +5244,7 @@ function applyTranslationAttributes(root=document){
 function renderInterimProductLabels(){
   document.documentElement.lang=i18nCore.getLocale();
   applyTranslationAttributes();
+  syncProfileDirtyState();
   const navLabels=[
     ['nav-mylist','nav.myList','nav.myList'],['nav-find','trainer.modeTrainers','trainer.modeTrainers'],
     ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
@@ -9580,6 +9581,11 @@ function syncProfileDirtyState(){
   const dirty=JSON.stringify(profileDraftValues())!==JSON.stringify(_profileSavedDraft);
   const save=document.getElementById('profile-save'),discard=document.getElementById('profile-discard'),status=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');
   if(save)save.disabled=!dirty;if(discard)discard.disabled=!dirty;
+  const code=friendCode?.value.trim()||'';
+  if(friendCode?.getAttribute('aria-invalid')==='true'&&code&&!validateFc(code)){
+    if(status){status.classList.add('is-error');status.textContent=i18nCore.t('profile.friendCodeInvalid');}
+    return dirty;
+  }
   if(friendCode)friendCode.removeAttribute('aria-invalid');
   if(status){status.classList.remove('is-error');status.textContent=i18nCore.t(dirty?'settings.profileUnsaved':'settings.profileNoChanges');}
   return dirty;

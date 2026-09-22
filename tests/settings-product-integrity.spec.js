@@ -131,3 +131,31 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
     expect(await page.evaluate(()=>!!document.getElementById('account-trigger')?.closest('[inert]'))).toBe(false);
   });
 }
+
+test('dirty Profile status survives reopening and interface translation',async({page})=>{
+  await page.goto('./?settings-dirty-translation');await waitForApp(page);await establishAccount(page);
+  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  await page.locator('#prof-bio').fill('A draft that is still unsaved');
+  await page.locator('.settings-modal-close').click();
+  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
+  await page.evaluate(()=>changeInterfaceLocale('ja'));
+  await expect(page.locator('#profile-err')).toHaveText('未保存の変更があります');
+  await expect(page.locator('#prof-bio')).toHaveValue('A draft that is still unsaved');
+  await expect(page.locator('#profile-save')).toBeEnabled();
+});
+
+test('invalid Friend Code remains identified while other Profile fields change',async({page})=>{
+  await page.goto('./?settings-validation-state');await waitForApp(page);await establishAccount(page);
+  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  await page.locator('#fc-inp').fill('123');await page.locator('#profile-save').click();
+  await expect(page.locator('#fc-inp')).toHaveAttribute('aria-invalid','true');
+  await page.locator('#prof-bio').fill('Other field changed');
+  await expect(page.locator('#fc-inp')).toHaveAttribute('aria-invalid','true');
+  await expect(page.locator('#profile-err')).toHaveText('Friend Code must contain 12 digits.');
+  await page.evaluate(()=>changeInterfaceLocale('ja'));
+  await expect(page.locator('#profile-err')).toHaveText('フレンドコードは12桁の数字で入力してください。');
+  await page.locator('#fc-inp').fill('123456789012');
+  await expect(page.locator('#fc-inp')).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.locator('#profile-err')).toHaveText('未保存の変更があります');
+});
