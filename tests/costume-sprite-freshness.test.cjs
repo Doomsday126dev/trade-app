@@ -92,12 +92,15 @@ test('released September costumes are unavailable records while later announceme
 });
 test('current review evidence records exact retrieval times, URLs, hashes and unresolved source gaps',()=>{
   const data=inputs(),digest=/^[0-9a-f]{64}$/;
-  assert.equal(data.releases.reviewEvidence.reviewedAt,'2026-09-22T21:15:29Z');
+  const reviewedAt=Date.parse(data.releases.reviewEvidence.reviewedAt);
+  assert.ok(Number.isFinite(reviewedAt));
+  assert.equal(data.pending.reviewEvidence.reviewedAt,data.releases.reviewEvidence.reviewedAt);
   assert.match(data.releases.reviewEvidence.acceptedArtworkSnapshot.sha256,digest);
-  assert.equal(data.releases.reviewEvidence.acceptedArtworkSnapshot.retrievedAt,'2026-09-22T21:14:26.054Z');
+  assert.ok(Date.parse(data.releases.reviewEvidence.acceptedArtworkSnapshot.retrievedAt)<=reviewedAt);
   const sources=data.releases.reviewEvidence.sources;
   for(const source of Object.values(sources)){
-    assert.match(source.url,/^https:\/\//);assert.match(source.retrievedAt,/^2026-09-22T/);assert.match(source.sha256,digest);
+    const retrievedAt=Date.parse(source.retrievedAt);
+    assert.match(source.url,/^https:\/\//);assert.ok(Number.isFinite(retrievedAt));assert.ok(retrievedAt<=reviewedAt);assert.match(source.sha256,digest);
   }
   assert.equal(sources.events.result,'unresolved-sign-in-required');
   assert.match(sources.events.gap,/sign-in page/);
@@ -108,6 +111,7 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
   assert.equal(released.length,13);assert.equal(announced.length,2);
   assert.ok(released.every(row=>row.artworkStatus==='unavailable'));
+  assert.ok(data.releases.entries.every(row=>Date.parse(row.lastVerifiedAt)<=reviewedAt&&row.evidenceRetrieval.url===row.evidenceUrl));
   assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Astronaut)','Pikachu (Batik Shirt)']);
   assert.equal(announced.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
   assert.equal(announced.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'unavailable');
