@@ -14,9 +14,9 @@ const BROAD=Object.freeze({
 
 test.use({serviceWorkers:'block'});
 
-test('real search controls copy complete protected and broad strings in every supported game locale',async({page})=>{
+test('real search controls copy complete protected and broad strings in every supported game locale',async({page,baseURL})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  await fixture(page);
+  await fixture(page,baseURL);
   for(const locale of Object.keys(PROTECTED)){
     await page.evaluate(value=>changePokemonGoSearchLocale(value),locale);
     await copyAndExpect(page,'#combined-list > [data-wants-section="H"] [data-contextual-copy]',PROTECTED[locale]);
@@ -48,9 +48,9 @@ test('real search controls copy complete protected and broad strings in every su
   expect(errors).toEqual([]);
 });
 
-test('anonymous public share keeps its interface locale and copies the explicit game-search locale',async({page})=>{
+test('anonymous public share keeps its interface locale and copies the explicit game-search locale',async({page,baseURL})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  await fixture(page);
+  await fixture(page,baseURL);
   await page.addScriptTag({content:PUBLIC_SHARE_SOURCE.replace('global.__pogoStartPublicShare=start;','global.__searchPolicyPublic={state,renderList};global.__pogoStartPublicShare=start;')});
   const result=await page.evaluate(()=>{
     PogoI18n.core.setLocale('en',{persist:false});
@@ -66,8 +66,8 @@ test('anonymous public share keeps its interface locale and copies the explicit 
   expect(errors).toEqual([]);
 });
 
-async function fixture(page){
-  const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
+async function fixture(page,baseURL){
+  const origin=new URL(baseURL||'http://localhost:4174').origin;
   await page.route('**/*',route=>{
     let sameOrigin=false;try{sameOrigin=new URL(route.request().url()).origin===origin;}catch{}
     return sameOrigin?route.continue():route.abort();
