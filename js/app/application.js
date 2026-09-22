@@ -6624,17 +6624,13 @@ function setProductShareImageFormat(format){
   if(help)help.textContent=i18nCore.t(productShareImageFormat==='phone'?'export.phoneImageHelp':'export.compactImageHelp');
 }
 function ensureProductSharePhoneExportDomain(){
+  productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||productSharePhoneExportDomain;
   if(productSharePhoneExportDomain)return Promise.resolve(productSharePhoneExportDomain);
   if(productSharePhoneExportDomainPromise)return productSharePhoneExportDomainPromise;
-  productSharePhoneExportDomainPromise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src=`js/domain/productSharePhoneExport.js?v=${encodeURIComponent(window.__POGO_RELEASE_ID||'')}`;
-    script.onload=()=>{
-      productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||null;
-      if(productSharePhoneExportDomain)resolve(productSharePhoneExportDomain);else reject(new Error('Phone export is unavailable'));
-    };
-    script.onerror=()=>reject(new Error('Phone export could not load'));
-    document.head.appendChild(script);
+  productSharePhoneExportDomainPromise=ensureSpecialTradeBoardExportDomain().then(()=>{
+    productSharePhoneExportDomain=window.PogoDomain?.productSharePhoneExport||null;
+    if(!productSharePhoneExportDomain)throw new Error('Phone export is unavailable');
+    return productSharePhoneExportDomain;
   }).catch(error=>{productSharePhoneExportDomainPromise=null;throw error;});
   return productSharePhoneExportDomainPromise;
 }
