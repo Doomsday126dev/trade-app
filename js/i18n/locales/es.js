@@ -163,5 +163,6 @@
     ,'security.googleReady':'Listo para conectar','security.googleReadyHelp':'La comprobación de seguridad terminó. Continúa para abrir Google.'
     ,'settings.profileSharingSummary':'Tu identidad de Entrenador y los datos que puedes compartir.','settings.friendCodeHelp':'12 dígitos, incluidos cuando compartes tu perfil de Entrenador.','settings.profileSharedOptional':'Opcional, se incluye cuando compartes tu perfil.','settings.profileNoChanges':'No hay cambios sin guardar','settings.profileUnsaved':'Cambios sin guardar','settings.discardChanges':'Descartar','settings.saveChanges':'Guardar cambios'
     ,'restored.copySearch':"Copiar búsqueda",'restored.searchDetails':"Detalles de búsqueda"
+    ,'safeTransfer.temporarilyUnavailable':'La búsqueda de transferencias seguras no está disponible temporalmente mientras se verifica la cobertura completa de las listas de deseos.'
   });
 })(window);

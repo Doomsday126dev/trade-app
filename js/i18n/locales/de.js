@@ -163,5 +163,6 @@
     ,'security.googleReady':'Bereit zum Verknüpfen','security.googleReadyHelp':'Die Kontosicherheitsprüfung ist abgeschlossen. Fahre fort, um Google zu öffnen.'
     ,'settings.profileSharingSummary':'Deine Traineridentität und Angaben, die du teilen kannst.','settings.friendCodeHelp':'12 Ziffern, enthalten, wenn du dein Trainerprofil teilst.','settings.profileSharedOptional':'Optional, enthalten, wenn du dein Profil teilst.','settings.profileNoChanges':'Keine ungespeicherten Änderungen','settings.profileUnsaved':'Ungespeicherte Änderungen','settings.discardChanges':'Verwerfen','settings.saveChanges':'Änderungen speichern'
     ,'restored.copySearch':"Suchstring kopieren",'restored.searchDetails':"Suchdetails"
+    ,'safeTransfer.temporarilyUnavailable':'Die sichere Transfersuche ist vorübergehend nicht verfügbar, während die vollständige Abdeckung der Wunschlisten geprüft wird.'
   });
 })(window);
