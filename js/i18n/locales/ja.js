@@ -161,6 +161,7 @@
     ,'security.usernamePinNotConfigured':'このプロバイダー専用アカウントにはトレーナー名と PIN が設定されていません。','security.googleLegacyMigrationRequired':'この既存アカウントは、Google ログインを続ける前に従来のID移行を完了する必要があります。','security.googleCreationNotReady':'従来の名前空間が確認されるまで、新しいプロバイダーアカウントの作成は無効です。','security.googleCreationVerifying':'正確なアカウント結果を確認しています。アカウントを再作成しないでください。','providerOnboarding.ready':'名前の事前確認が完了しました。アカウントを作成して最終的に取得してください。','providerOnboarding.create':'アカウントを作成','providerOnboarding.verify':'アカウントを確認','providerOnboarding.checking':'名前を確認中…','providerOnboarding.creating':'アカウントを作成中…','providerOnboarding.verifying':'アカウントを確認中…'
     ,'security.googleReady':'接続の準備完了','security.googleReadyHelp':'アカウントの安全確認が完了しました。続行して Google を開いてください。'
     ,'settings.profileSharingSummary':'トレーナー情報と共有できる詳細を管理します。','settings.friendCodeHelp':'12桁。トレーナープロフィールを共有すると含まれます。','settings.profileSharedOptional':'任意。プロフィールを共有すると含まれます。','settings.profileNoChanges':'未保存の変更はありません','settings.profileUnsaved':'未保存の変更があります','settings.discardChanges':'変更を破棄','settings.saveChanges':'変更を保存'
+    ,'export.artUnavailable':'画像なし'
     ,'restored.copySearch':"検索式をコピー",'restored.searchDetails':"検索の詳細"
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
     ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
