@@ -511,7 +511,7 @@ function renderCombinedList(model=productDeclarations()){
       body.firstElementChild.textContent=i18nCore.t('workflow.needsPriorityHelp');
     }
     const entries=model.entries.filter(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)===section.key);
-    updateWantsSearch(search,entries,label,{copyLabel:i18nCore.t('workflow.copySection',{section:label})});
+    updateWantsSearch(search,entries,label);
     search.title=i18nCore.t('workflow.fullSection',{section:label});
     active.push(element);nodes.push(...rows);
   }
@@ -12434,7 +12434,7 @@ function renderShareView(username,type,intent){
     html+=`<section class="share-section share-want-section" data-want-section="${escAttr(key)}" aria-labelledby="${id}-title">
       <div class="share-section-hdr">
         <h2 class="share-section-title"><button type="button" id="${id}-title" class="share-section-toggle" data-recipient-section-action="toggle" data-section="${escAttr(key)}" aria-expanded="${!collapsed}" aria-controls="${id}-entries"><span class="share-section-chevron" aria-hidden="true">${collapsed?'›':'⌄'}</span><span class="badge ${priority||'special'}">${escHtml(label)}</span><span class="share-section-count">${escHtml(i18nCore.formatPlural('share.entryCount',entries.length))}</span></button></h2>
-        ${contextualIntentSearchHtml(entries,label,{compact:true,copyLabel:i18nCore.t('workflow.copySection',{section:label})})}
+        ${contextualIntentSearchHtml(entries,label,{compact:true})}
       </div>
       <div class="share-section-content" id="${id}-entries"${collapsed?' hidden':''}><div class="share-pgrid">${(collapsed?[]:sorted.slice(0,limit)).map(e=>{
         const flagsHtml=[

@@ -112,14 +112,17 @@ test('mixed explicit requirements make one compatible command and deduplicate sp
     {name:'Pikachu',no:25,shiny:true},
     {name:'Mewtwo',no:150,lucky:true}
   ],{locale:'en'});
-  assert.deepEqual(plain(plan.parts),['!4*&CP-2500&!shadow&!purified&!background&25,150']);
+  assert.deepEqual(plain(plan.parts),['!4*&!traded&CP-2500&!shadow&!purified&!background&25,150']);
   assert.deepEqual(plain(plan.partPolicies),['section']);
   assert.equal(plan.policy,'section');
 });
 
 test('independent special sections use compatible positive constraints',()=>{
   const search=load();
-  assert.deepEqual(plain(search.contextualSearchPlan([{name:'Pikachu',no:25,lucky:true}],{locale:'en'}).parts),['!4*&!shiny&CP-2500&!shadow&!purified&!background&lucky&25']);
+  // Lucky is the requested outcome of a future trade, not an already-Lucky inventory filter.
+  const prospectiveLucky=plain(search.contextualSearchPlan([{name:'Pikachu',no:25,lucky:true}],{locale:'en'}).parts);
+  assert.deepEqual(prospectiveLucky,['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25']);
+  assert.doesNotMatch(prospectiveLucky[0],/(?:^|&)lucky(?:&|$)/);
   assert.deepEqual(plain(search.contextualSearchPlan([{name:'Pikachu',no:25,xxl:true}],{locale:'en'}).parts),['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxl&25']);
   assert.deepEqual(plain(search.contextualSearchPlan([{name:'Pikachu',no:25,xxs:true}],{locale:'en'}).parts),['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxs&25']);
   assert.deepEqual(plain(search.contextualSearchPlan([{name:'Pikachu',no:25,shiny:true}],{locale:'en'}).parts),['!4*&!traded&CP-2500&!shadow&!purified&!background&25']);

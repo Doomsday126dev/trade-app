@@ -212,11 +212,11 @@ test.describe('anonymous public share bootstrap',()=>{
       ['H','!4*&!traded&CP-2500&!shadow&!purified&!background&25'],
       ['M','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&854'],
       ['L','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1'],
-      ['LUCKY','!4*&!shiny&CP-2500&!shadow&!purified&!background&lucky&25'],
+      ['LUCKY','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25'],
       ['XXL','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxl&143'],
       ['XXS','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxs&595'],
       ['SHINY','!4*&!traded&CP-2500&!shadow&!purified&!background&94'],
-      ['LUCKY+SHINY','!4*&CP-2500&!shadow&!purified&!background&lucky&280'],
+      ['LUCKY+SHINY','!4*&!traded&CP-2500&!shadow&!purified&!background&280'],
       ['NEEDS_PRIORITY','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150']
     ]){
       const section=page.locator(`[data-want-section="${key}"]`);

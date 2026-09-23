@@ -140,12 +140,13 @@
     if(resolved.length){
       const requirements={
         shiny:resolved.some(e=>e.shiny===true),
-        lucky:resolved.some(e=>e.lucky===true),
         background:resolved.some(e=>Boolean(e.backgroundId)),
         xxl:resolved.every(e=>e.xxl===true),
         xxs:resolved.every(e=>e.xxs===true)
       };
-      const queryModel={...syntax.PRIORITY_QUERY,profile:'section',excludeTraded:!requirements.lucky,excludeShiny:!requirements.shiny,excludeBackground:!requirements.background,includeLucky:requirements.lucky&&resolved.every(e=>e.lucky===true),includeXxl:requirements.xxl,includeXxs:requirements.xxs};
+      // A Lucky want describes the result of a future trade. Search the
+      // tradeable species, not an inventory of Pokémon already marked Lucky.
+      const queryModel={...syntax.PRIORITY_QUERY,profile:'section',excludeShiny:!requirements.shiny,excludeBackground:!requirements.background,includeXxl:requirements.xxl,includeXxs:requirements.xxs};
       const numbers=syntax.uniqueDexNumbers(resolved.map(e=>e.no));let pending=[];
       const query=dexNumbers=>syntax.serializeQuery(syntax.withDexNumbers(queryModel,dexNumbers),locale);
       const flush=()=>{if(!pending.length)return;parts.push(query(pending));partPolicies.push('section');pending=[];};

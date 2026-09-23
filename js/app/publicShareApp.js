@@ -210,7 +210,7 @@
   }
   function searchHtml(entries,label){
     const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:pokemonGoSearchLocale()});
-    return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:label,compact:true,copyLabel:t('workflow.copySection',{section:label})});
+    return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:label,compact:true});
   }
   async function copySearch(control){
     const value=control.dataset.copy;if(!value||control.disabled)return;

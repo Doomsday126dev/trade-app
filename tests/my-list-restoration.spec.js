@@ -67,7 +67,7 @@ test('restored rows remain bounded and details stay optional',async({page})=>{
   await expect(page.locator('#combined-list .myrow')).toHaveCount(12);
   const high=page.locator('#combined-list > [data-wants-section="H"]');
   await expect(high.locator('textarea')).toBeHidden();
-  await expect(high.getByRole('button',{name:'Copy High search',exact:true})).toBeVisible();
+  await expect(high.getByRole('button',{name:'Copy search string',exact:true})).toBeVisible();
   const data=await page.evaluate(()=>JSON.stringify(allData));
   for(const width of [320,390,768,1440]){
     await page.setViewportSize({width,height:900});
@@ -82,7 +82,7 @@ test('restored rows remain bounded and details stay optional',async({page})=>{
   }
   await high.locator('.wants-search-details > summary').click();
   await expect(high.locator('textarea')).toBeVisible();
-  await expect(high.locator('.contextual-search-body')).toContainText('Species prefilter only.');
+  await expect(high.locator('.contextual-search-body')).toContainText('These species could not be resolved and are not included in copied searches.');
   await expect(high.locator('.contextual-manual')).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(data);
 });
@@ -92,7 +92,7 @@ test('copy failure expands the raw string for manual recovery',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new Error('denied');};});
   const high=page.locator('#combined-list > [data-wants-section="H"]');
-  await high.getByRole('button',{name:'Copy High search',exact:true}).click();
+  await high.getByRole('button',{name:'Copy search string',exact:true}).click();
   await expect(high.locator('textarea')).toBeVisible();
   await expect(high.locator('textarea')).toBeFocused();
   await expect(high.locator('.contextual-copy-status')).not.toBeEmpty();

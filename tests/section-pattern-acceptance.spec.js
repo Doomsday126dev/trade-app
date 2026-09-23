@@ -96,17 +96,20 @@ test('47-entry High and independent sections copy literal full commands across f
   const literal={
     M:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&872',
     L:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&595',
-    LUCKY:'!4*&!shiny&CP-2500&!shadow&!purified&!background&lucky&172',
+    LUCKY:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&172',
     SHINY:'!4*&!traded&CP-2500&!shadow&!purified&!background&399',
     XXL:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxl&320',
     XXS:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxs&734'
   };
   for(const [key,expected] of Object.entries(literal)){
     const section=page.locator(`#combined-list > [data-wants-section="${key}"]`);
+    await expect(section.locator('[data-contextual-copy]')).toHaveText('Copy search string');
+    await expect(section.locator('[data-contextual-copy]')).toHaveAttribute('aria-label','Copy search string');
     await expect(section.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',expected);
     await section.locator('[data-contextual-copy]').click();
     expect(await page.evaluate(()=>__sectionCopied)).toBe(expected);
   }
+  await expect(high.locator('[data-contextual-copy]')).toHaveText('Copy search string');
   await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('No visible match');
   await expect(high.locator('.wants-row')).toHaveCount(0);
@@ -135,6 +138,37 @@ test('47-entry High and independent sections copy literal full commands across f
   const mobileViewport=artifact('my-list-390px-viewport.png');if(mobileViewport)await page.screenshot({path:mobileViewport});
   const mobile=artifact('my-list-390px.png');if(mobile)await page.screenshot({path:mobile,fullPage:true});
   const outputs=artifact('section-commands.json');if(outputs)fs.writeFileSync(outputs,JSON.stringify({high:HIGH_COMMAND,...literal},null,2)+'\n');
+});
+
+test('prospective Lucky wants retain tradeability and localized generic section actions',async({page})=>{
+  await install(page);
+  const localized={
+    en:{label:'Copy search string',lucky:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&172'},
+    ja:{label:'検索式をコピー',lucky:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&172'},
+    es:{label:'Copiar cadena de búsqueda',lucky:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&172'},
+    de:{label:'Suchstring kopieren',lucky:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&172'}
+  };
+  for(const [locale,{label,lucky}] of Object.entries(localized)){
+    await page.evaluate(()=>openSettingsPanel('account'));
+    await page.locator('[data-settings-target="language"]').click();
+    await page.locator('#settings-language').selectOption(locale);
+    await page.locator('#settings-search-language-override').check();
+    await page.locator('#settings-search-language').selectOption(locale);
+    await page.locator('.settings-modal-close').click();
+    await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe(locale);
+    const buttons=page.locator('#combined-list > [data-wants-section] [data-contextual-copy]');
+    await expect(buttons).toHaveCount(7);
+    for(const button of await buttons.all()){
+      await expect(button).toHaveText(label);
+      await expect(button).toHaveAttribute('aria-label',label);
+    }
+    const luckyButton=page.locator('#combined-list > [data-wants-section="LUCKY"] [data-contextual-copy]');
+    // Lucky is a future trade outcome, never a filter for an already-Lucky inventory.
+    await expect(luckyButton).toHaveAttribute('data-contextual-copy',lucky);
+    await luckyButton.click();
+    expect(await page.evaluate(()=>__sectionCopied)).toBe(lucky);
+  }
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__sectionBefore));
 });
 
 test('all Scatterbug and Spinda identities retain distinct rows, correct art, and species search',async({page})=>{
