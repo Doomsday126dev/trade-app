@@ -103,9 +103,9 @@ function invoke(handler, { body = requestBody(), token = TOKEN, method = 'POST' 
   });
 }
 
-function harness(overrides = {}) {
+function harness(overrides = {}, environmentOverrides = {}) {
   const calls = { create: [], createOptions: [], readback: [], legacy: [], presence: [], providerChecks: [], rate: [], logs: [] };
-  const configuration = loadConfiguration(environment({ CREATE_PROVIDER_ACCOUNT_ENABLED: 'true' }));
+  const configuration = loadConfiguration(environment({ CREATE_PROVIDER_ACCOUNT_ENABLED: 'true', ...environmentOverrides }));
   const dependencies = {
     now: () => NOW,
     async verifyFirebaseIdToken(_configuration, token) {
@@ -146,6 +146,32 @@ test('provider creation gate is false by default and fails before parsing Auth o
   const result = await invoke(handler);
   assert.deepEqual(result.body, { code: 'E1_NOT_ENABLED' });
   assert.equal(calls, 0);
+});
+
+test('durable admission is separately disabled and requires an operator public key plus creation gate', () => {
+  assert.equal(loadConfiguration(environment()).durableProviderAdmissionEnabled, false);
+  assert.throws(() => loadConfiguration(environment({ DURABLE_PROVIDER_ADMISSION_ENABLED: 'true' })),
+    /E1_CONFIGURATION_MISMATCH/u);
+  assert.throws(() => loadConfiguration(environment({ CREATE_PROVIDER_ACCOUNT_ENABLED: 'true',
+    DURABLE_PROVIDER_ADMISSION_ENABLED: 'true' })), /E1_CONFIGURATION_MISMATCH/u);
+  const { publicKey } = require('node:crypto').generateKeyPairSync('ed25519');
+  const configured = loadConfiguration(environment({ CREATE_PROVIDER_ACCOUNT_ENABLED: 'true',
+    DURABLE_PROVIDER_ADMISSION_ENABLED: 'true',
+    DURABLE_ADMISSION_PUBLIC_KEY: publicKey.export({ type: 'spki', format: 'pem' }),
+    DURABLE_ADMISSION_GENERATION_ID: 'generation-synthetic-0001' }));
+  assert.equal(configured.durableProviderAdmissionEnabled, true);
+});
+
+test('enabled durable route passes transaction mode without changing trusted Google identity binding', async () => {
+  const { publicKey } = require('node:crypto').generateKeyPairSync('ed25519');
+  const proof = harness({}, { DURABLE_PROVIDER_ADMISSION_ENABLED: 'true',
+    DURABLE_ADMISSION_PUBLIC_KEY: publicKey.export({ type: 'spki', format: 'pem' }),
+    DURABLE_ADMISSION_GENERATION_ID: 'generation-synthetic-0001' });
+  const result = await invoke(proof.handler);
+  assert.equal(result.body.code, 'SUCCESS');
+  assert.equal(proof.calls.createOptions[0].durableAdmission, true);
+  assert.equal(proof.calls.create[0].uid, UID);
+  assert.equal(proof.calls.create[0].providerId, 'google.com');
 });
 
 test('provider-subject key configuration is optional while inactive but mandatory and versioned for creation',()=>{

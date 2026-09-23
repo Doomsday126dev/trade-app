@@ -17,6 +17,17 @@ test('Rules and Functions changes cannot receive UI-only qualification',()=>{
   assert.ok(firestore.commands.some(([,args])=>args.includes('check:e1-firestore-authority')));
   assert.ok(!firestore.commands.some(([,args])=>args.includes('check:sec02-production-rules')));
 });
+test('durable authority admission changes run the Firestore suite with its emulator',()=>{
+  for(const file of [
+    'functions/e1-authority-service/firestoreE1AuthorityAdapter.js',
+    'functions/e1-authority-service/durableProviderAdmission.js',
+    'functions/test/e1-firestore-authority-emulator.test.cjs'
+  ]){
+    const plan=select([file]);
+    assert.ok(plan.commands.some(([,args])=>args.includes('check:e1-firestore-authority')),file);
+    assert.ok(!plan.node.includes('functions/test/e1-firestore-authority-emulator.test.cjs'),file);
+  }
+});
 test('unrelated documentation skips expensive performance while runtime changes retain it',()=>{
   assert.equal(select(['docs/product-audit/README.md']).performance,false);
   for(const file of ['js/app/application.js','css/app.css','sw.js','package-lock.json'])assert.equal(select([file]).performance,true,file);

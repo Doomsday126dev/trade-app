@@ -209,6 +209,15 @@ function providerSubjectKeyRing(env) {
 }
 
 function loadConfiguration(env = process.env, now = () => Date.now()) {
+  if (env.DURABLE_PROVIDER_ADMISSION_ENABLED !== undefined &&
+      !['true', 'false'].includes(env.DURABLE_PROVIDER_ADMISSION_ENABLED)) fail('E1_CONFIGURATION_MISMATCH');
+  const durableProviderAdmissionEnabled = env.DURABLE_PROVIDER_ADMISSION_ENABLED === 'true';
+  if (durableProviderAdmissionEnabled && (env.CREATE_PROVIDER_ACCOUNT_ENABLED !== 'true' ||
+      typeof env.DURABLE_ADMISSION_PUBLIC_KEY !== 'string' ||
+      !env.DURABLE_ADMISSION_PUBLIC_KEY.includes('BEGIN PUBLIC KEY') ||
+      !/^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u.test(env.DURABLE_ADMISSION_GENERATION_ID || ''))) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
   const providerSubjectHmacKeys = providerSubjectKeyRing(env);
   const providerAccountCompatibilityRequired = env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED === 'true';
   if (env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED !== undefined &&
@@ -229,6 +238,9 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
     providerSubjectHmacKeyVersion: env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '',
     providerSubjectHmacKeys,
     providerAccountCompatibilityRequired,
+    durableProviderAdmissionEnabled,
+    durableAdmissionPublicKey: durableProviderAdmissionEnabled ? env.DURABLE_ADMISSION_PUBLIC_KEY : null,
+    expectedDurableGenerationId: durableProviderAdmissionEnabled ? env.DURABLE_ADMISSION_GENERATION_ID : null,
     revision: env.K_REVISION || 'local'
   };
   try { validateTarget(configuration); } catch { fail('E1_CONFIGURATION_MISMATCH'); }
@@ -836,7 +848,9 @@ function reserveFingerprint(input) {
 function createDefaultAuthorityStore(configuration) {
   const { Firestore } = require('@google-cloud/firestore');
   const firestore = new Firestore({ projectId: configuration.projectId, databaseId: configuration.databaseId });
-  return createFirestoreE1AuthorityAdapter({ firestore });
+  return createFirestoreE1AuthorityAdapter({ firestore,
+    durableAdmissionPublicKey: configuration.durableProviderAdmissionEnabled ? configuration.durableAdmissionPublicKey : null,
+    expectedDurableGenerationId: configuration.expectedDurableGenerationId });
 }
 
 function assertRuntimeDependencies(configuration, requireImpl = require) {
@@ -1395,7 +1409,8 @@ function createHandler(configuration, dependencies = {}) {
         let result;
         let reconciled = false;
         try {
-          result = await createProviderAccount(input, { replayOnly });
+          result = await createProviderAccount(input, { replayOnly,
+            durableAdmission: configuration.durableProviderAdmissionEnabled === true });
         } catch (error) {
           const expected = new Set([
             'e1/replay-mismatch', 'e1/replay-not-found', 'e1/legacy-namespace-not-certified',

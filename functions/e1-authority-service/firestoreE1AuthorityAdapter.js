@@ -1,6 +1,7 @@
 'use strict';
 
 const { normalizeHandle } = require('./handleNormalization');
+const { validAdmission } = require('./durableProviderAdmission');
 
 const RATE_LIMIT_OPERATIONS = new Set([
   'readAccountFoundation',
@@ -42,7 +43,8 @@ function exactFields(value, fields) {
   return keys.length === expected.length && keys.every((key, index) => key === expected[index]);
 }
 
-function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() } = {}) {
+function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now(), durableAdmissionPublicKey = null,
+  expectedDurableGenerationId = null } = {}) {
   if (!firestore || typeof firestore.runTransaction !== 'function' || typeof firestore.doc !== 'function') {
     throw new TypeError('Firestore authority database required');
   }
@@ -53,6 +55,8 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   const providerSubjectRef = (providerSubjectKey) => firestore.doc(`providerSubjects/${providerSubjectKey}`);
   const providerCreationCertificationRef = () => firestore.doc('authorityConfig/providerAccountCreation');
   const legacyProvisioningFreezeRef = () => firestore.doc('authorityConfig/legacyProvisioningFreeze');
+  const durableAdmissionRef = () => firestore.doc('authorityConfig/durableProviderAdmission');
+  const protectedGenerationRef = (id) => firestore.doc(`protectedNamespaceGenerations/${id}`);
   const operationRef = (uid, requestId) => firestore.doc(`operationRequests/${uid}/requests/${requestId}`);
   const migrationRef = (uid, requestId) => firestore.doc(`identityMigrations/${uid}/operations/${requestId}`);
   const conflictRef = (uid, requestId) => firestore.doc(`identityConflicts/${uid}/events/${requestId}`);
@@ -317,6 +321,12 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     const handle = await handleRef(input.handleKey).get();
     if (!handle.exists) return null;
     const handleData = handle.data();
+    if (handleData?.state === 'held') {
+      if (exactFields(handleData, ['schemaVersion', 'state', 'sourceNamesDigest', 'generationId']) &&
+          handleData.schemaVersion === 1 && HASH_64.test(handleData.sourceNamesDigest || '') &&
+          handleData.generationId === null) return null;
+      fail('e1/public-identity-conflict');
+    }
     const uid = handleData?.uid;
     let canonicalHandle;
     try { canonicalHandle = normalizeHandle(handleData?.canonicalTrainerName); }
@@ -385,8 +395,15 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  async function createProviderAccountFoundation(input, { replayOnly = false } = {}) {
+  async function createProviderAccountFoundation(input, { replayOnly = false, durableAdmission = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
+      // The active pointer is read in the same transaction as every occupancy document.
+      // A concurrent invalidation/supersession forces Firestore to retry this transaction.
+      const admission = durableAdmission ? await transaction.get(durableAdmissionRef()) : null;
+      const generationId = admission?.data()?.generationId;
+      const generation = durableAdmission && typeof generationId === 'string' &&
+        /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u.test(generationId)
+        ? await transaction.get(protectedGenerationRef(generationId)) : null;
       const refs = [
         legacyProvisioningFreezeRef(),
         providerCreationCertificationRef(),
@@ -407,8 +424,12 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
         return prior;
       }
       const timestamp = now();
-      if (!freeze.exists || !validLegacyProvisioningFreeze(freeze.data(), timestamp) || !certification.exists ||
-          !validProviderCreationCertification(certification.data(), freeze.data(), timestamp)) {
+      const bounded = freeze.exists && validLegacyProvisioningFreeze(freeze.data(), timestamp) &&
+        certification.exists && validProviderCreationCertification(certification.data(), freeze.data(), timestamp);
+      const durable = admission?.exists && generation?.exists &&
+        validAdmission(admission.data(), generation.data(), durableAdmissionPublicKey, timestamp,
+          expectedDurableGenerationId);
+      if (durableAdmission ? !durable : !bounded) {
         fail('e1/legacy-namespace-not-certified');
       }
       if (account.exists) fail('e1/account-conflict');

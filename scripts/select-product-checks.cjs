@@ -69,7 +69,11 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
     // An unfamiliar backend change does not silently receive UI-only coverage.
     commands.push(['npm',['--prefix','functions','run','check:contract']]);
   }
-  if(any(/firestore.*rules/))commands.push(['npm',['run','check:e1-firestore-authority']]);
+  if(any(/firestore.*rules/)||files.some(file=>[
+    'functions/e1-authority-service/firestoreE1AuthorityAdapter.js',
+    'functions/e1-authority-service/durableProviderAdmission.js',
+    'functions/test/e1-firestore-authority-emulator.test.cjs'
+  ].includes(file)))commands.push(['npm',['run','check:e1-firestore-authority']]);
   if(files.includes('tests/firebase/database.rules.provider-public-projection.json'))commands.push(['bash',['scripts/check-provider-public-projection-rules.sh']]);
   if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&!favoriteResolverFile(file)&&/database.*rules|SECURITY-RULES|build-sec02-production-rules/.test(file)))commands.push(['npm',['run','check:sec02-production-rules']]);
   if(any(/^\.github\/workflows\/frontend-performance\.yml$/))add(['tests/performance-observability.test.cjs']);
@@ -83,7 +87,7 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
       else errors.push(`Deleted test has no surviving declared owner: ${file}. Declare replacement coverage before qualification.`);
     }
     if(/^tests\/[\w/-]+\.test\.cjs$/.test(file)&&exists(file)&&!file.includes('operator')&&!file.startsWith('tests/firebase/'))node.add(file);
-    if(/^functions\/test\/.+\.test\.cjs$/.test(file)&&exists(file)&&!commands.some(([command,args])=>command===process.execPath&&args[0]==='--test'&&args.includes(file)))node.add(file);
+    if(/^functions\/test\/.+\.test\.cjs$/.test(file)&&exists(file)&&file!=='functions/test/e1-firestore-authority-emulator.test.cjs'&&!commands.some(([command,args])=>command===process.execPath&&args[0]==='--test'&&args.includes(file)))node.add(file);
     if(/^tests\/[\w/-]+\.spec\.js$/.test(file)&&exists(file)&&!/(performance|provider)/i.test(file))browser.add(file);
   }
   // Keep deleted paths for ownership matching, but never pass them to runners.

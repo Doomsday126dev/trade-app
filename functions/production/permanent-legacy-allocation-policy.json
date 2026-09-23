@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "model": "permanent-legacy-allocation-closure",
+  "normalizationVersion": 1,
+  "candidateRulesSha256": "604ea2a9d5090f822e795ac5f6400f495ac6dc80e4a07c6ceb99f9ebb34884f2",
+  "guardedPaths": [
+    "users/{username}",
+    "loginDirectory/{username}",
+    "authIndex/{uid}",
+    "requests/{requestId}:approved"
+  ],
+  "privilegedWriterClosureRequired": true,
+  "legacyCreationMayResume": false,
+  "policyDigest": "debda873f5d19714a7cc47aeb80befdff093cfd997d124448b02a962621b57a7"
+}
