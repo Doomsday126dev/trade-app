@@ -852,7 +852,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 </div>
 
   <dialog class="legal-dialog" id="legal-dialog" aria-labelledby="legal-dialog-title">
-    <div class="legal-dialog-header"><h2 id="legal-dialog-title" data-i18n="legal.title">Legal &amp; acknowledgements</h2><form method="dialog"><button type="submit" class="btn btn-icon" data-i18n-aria-label="common.close" aria-label="Close">×</button></form></div>
+    <div class="legal-dialog-header"><h2 id="legal-dialog-title" tabindex="-1" data-i18n="legal.title">Legal &amp; acknowledgements</h2><form method="dialog"><button type="submit" class="btn btn-icon" data-i18n-aria-label="common.close" aria-label="Close">×</button></form></div>
     <div class="legal-acknowledgements">
       <h3 data-i18n="legal.sourcesTitle">Data &amp; asset acknowledgements</h3>
       <p data-i18n="legal.sourceUse">PokéAPI provides species, form, and sprite-repository inputs. Pokémon Database provides selected Pokémon HOME and Pokémon GO visual fallbacks.</p>
@@ -1188,9 +1188,22 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   function openLegalAcknowledgements(returnFocus=null){
     const dialog=document.getElementById('legal-dialog');
     if(!dialog||dialog.open)return;
+    const previousFocus=returnFocus||document.activeElement;
     ensureShellLocale().catch(()=>{}).finally(()=>{
       dialog.showModal();
-      dialog.addEventListener('close',()=>returnFocus?.focus?.(),{once:true});
+      document.getElementById('legal-dialog-title').focus({preventScroll:true});
+      const containFocus=event=>{
+        if(event.key!=='Tab')return;
+        const controls=[...dialog.querySelectorAll('button,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&(document.activeElement===first||document.activeElement===document.getElementById('legal-dialog-title'))){event.preventDefault();last?.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      };
+      dialog.addEventListener('keydown',containFocus);
+      dialog.addEventListener('close',()=>{
+        dialog.removeEventListener('keydown',containFocus);
+        if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
+      },{once:true});
     });
   }
   const stubs={

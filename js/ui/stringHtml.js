@@ -32,19 +32,38 @@
     const buttons=plan.parts.map((value,index)=>{
       const baseLabel=scopedCopyLabel||t('restored.copySearch');
       const copyLabel=plan.parts.length===1?baseLabel:`${baseLabel} ${index+1}/${plan.parts.length}`;
-      return `<button type="button" class="btn ${compact?'btn-secondary':'btn-primary'}" data-contextual-copy="${escAttr(value)}" data-copy-index="${index}" aria-label="${escAttr(copyLabel)}"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg>${escHtml(copyLabel)}</button>`;
+      return `<button type="button" class="btn ${compact?'btn-secondary':'btn-primary'}" data-contextual-copy="${escAttr(value)}" data-copy-index="${index}" data-copy-success="${escAttr(t('share.copied'))}" aria-label="${escAttr(copyLabel)}"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span class="contextual-copy-label">${escHtml(copyLabel)}</span></button>`;
     }).join('');
     // Only omissions and splitting need routine disclosure. Known requirements
     // remain ordinary wants; no per-entry checklist is built or retained.
     return`<section class="contextual-search${compact?' wants-compact-search':''}" aria-label="${escAttr(title)}"><div class="contextual-copy-actions">${buttons||`<span class="type-meta">${escHtml(t(plan.total?'workflow.searchUnavailable':'contextSearch.empty'))}</span>`}</div><details class="contextual-details wants-search-details"${compact&&!exception?' hidden':''}><summary>${escHtml(summary)}</summary><div class="contextual-search-body">${omitted.length?`<p class="contextual-unresolved">${escHtml(t('workflow.omittedHelp'))}</p><p class="contextual-omitted">${omitted.map(entry=>escHtml(entry.dn||entry.name||t('contextSearch.unknown'))).join('\n')}</p>`:''}${plan.parts.length>1?`<p>${escHtml(t('contextSearch.split',{count:plan.parts.length}))}</p>`:''}${!compact?`<p>${escHtml(t('contextSearch.warning'))}</p>`:''}${plan.parts.map(value=>`<div class="contextual-search-part"><textarea class="strbox" readonly rows="1" aria-label="${escAttr(label)}">${escHtml(value)}</textarea></div>`).join('')}</div></details><span class="contextual-copy-status" role="status" aria-live="polite"></span></section>`;
   }
+  const copyFeedback=new WeakMap();
   if(global.document)global.document.addEventListener('click',async event=>{
     const button=event.target.closest?.('[data-contextual-copy]');if(!button)return;
     const value=button.dataset.contextualCopy,panel=button.closest('.contextual-search');
     if(!value||value.length>POGO_STR_LIMIT||!panel)return;
     const status=panel.querySelector('.contextual-copy-status'),t=global.PogoI18n.core.t;
-    try{await global.navigator.clipboard.writeText(value);if(status.isConnected)status.textContent=t('share.copySuccess');}
-    catch{if(status.isConnected){const details=panel.querySelector('.contextual-details');details.hidden=false;details.open=true;status.textContent=t('strings.copyFailed');const field=panel.querySelectorAll('textarea')[Number(button.dataset.copyIndex)];field?.focus();field?.select();}}
+    const previous=copyFeedback.get(panel);if(previous)clearTimeout(previous.timer);
+    panel.querySelectorAll('.is-copied').forEach(control=>control.classList.remove('is-copied'));
+    status.textContent='';status.classList.remove('is-success','is-error');
+    panel.append(status);
+    const feedback={};copyFeedback.set(panel,feedback);
+    try{
+      await global.navigator.clipboard.writeText(value);
+      if(!status.isConnected||copyFeedback.get(panel)!==feedback)return;
+      button.classList.add('is-copied');status.classList.add('is-success');status.textContent=t('share.copySuccess');
+      feedback.timer=setTimeout(()=>{
+        button.classList.remove('is-copied');
+        if(copyFeedback.get(panel)===feedback){status.textContent='';status.classList.remove('is-success');copyFeedback.delete(panel);}
+      },2000);
+    }catch{
+      if(!status.isConnected||copyFeedback.get(panel)!==feedback)return;
+      const details=panel.querySelector('.contextual-details');details.hidden=false;details.open=true;
+      status.classList.add('is-error');status.textContent=t('strings.copyFailed');
+      details.querySelector('.contextual-search-body').prepend(status);
+      const field=panel.querySelectorAll('textarea')[Number(button.dataset.copyIndex)];field?.focus();field?.select();
+    }
   });
   root.stringHtml = Object.freeze({
     strLenHtml,
