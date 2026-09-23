@@ -82,18 +82,18 @@
     return'error';
   }
 
-  // This adapter accepts only the result of an exact, just-completed repository
-  // read. Completeness and currentness are derived here from that transport
-  // contract and the validated whole public projection; callers cannot assert
-  // them with optimistic state/freshness arguments.
-  function sourceFromRepositoryResult({trainerId,label,result,read}={},dependencies={}){
+  // Freshness evidence is minted only by the successful network read boundary.
+  // Callers cannot promote a cache-capable SDK result by attaching flags here.
+  function sourceFromRepositoryResult({trainerId,label,result}={},dependencies={}){
     const id=version(trainerId),username=normalizedText(label);
     if(!id||!username)return unavailableSource(id,'error');
     if(typeof dependencies.validateProjection!=='function'||typeof dependencies.intentEntries!=='function')throw new TypeError('Public projection adapters are required');
-    if(read?.kind!=='exact-public-share'||read?.scope!=='whole-projection'||read?.completed!==true||!version(read?.operationId)){
-      return unavailableSource(id,'stale',{readEvidence:Object.freeze({kind:normalizedText(read?.kind),scope:normalizedText(read?.scope),completed:read?.completed===true,operationId:version(read?.operationId)})});
-    }
     if(!result?.ok)return unavailableSource(id,repositoryFailureState(result?.error));
+    const evidence=result?.evidence;
+    if(evidence?.kind!=='server-confirmed-public-share'||evidence?.scope!=='whole-projection'||evidence?.completed!==true||!version(evidence?.operationId)||
+      !['rtdb-rest','https-callable'].includes(evidence?.transport)){
+      return unavailableSource(id,'stale',{readEvidence:Object.freeze({kind:normalizedText(evidence?.kind),transport:normalizedText(evidence?.transport),scope:normalizedText(evidence?.scope),completed:evidence?.completed===true,operationId:version(evidence?.operationId)})});
+    }
     const projection=result.value??result.snapshot??null;
     const checked=dependencies.validateProjection(projection,{username});
     if(!checked?.ok){
@@ -102,11 +102,18 @@
       return unavailableSource(id,mapped);
     }
     const declarations=dependencies.intentEntries(checked.snapshot,'lf');
+    if(checked.snapshot.version===2){
+      const declared=new Set(declarations.map(item=>`${normalizedText(item.category)}\u0000${normalizedKey(item.name)}`));
+      const undeclared=['wishlist','dynamax','gmax','costumes'].some(category=>
+        Object.keys(checked.snapshot.lists?.[category]||{}).some(name=>!declared.has(`${category}\u0000${normalizedKey(name)}`))
+      );
+      if(undeclared)return unavailableSource(id,'partial');
+    }
     const sourceVersion=`public-share:${fingerprint({version:checked.snapshot.version,updatedAt:checked.snapshot.updatedAt,declarations,lists:checked.snapshot.lists})}`;
     return Object.freeze({
       trainerId:id,state:'complete',complete:true,freshness:'current',snapshotVersion:`public-share-v${checked.snapshot.version}`,sourceVersion,
       pagination:Object.freeze({complete:true,nextCursor:null}),declarations:Object.freeze(declarations),
-      readEvidence:Object.freeze({kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:version(read.operationId)})
+      readEvidence:Object.freeze({kind:evidence.kind,transport:evidence.transport,scope:evidence.scope,completed:true,operationId:version(evidence.operationId)})
     });
   }
 
@@ -224,17 +231,20 @@
 
   function createController({loadSnapshot,plan,currentBinding,copy,revalidateBeforeCopy=false}={}){
     if(typeof loadSnapshot!=='function'||typeof plan!=='function'||typeof currentBinding!=='function'||typeof copy!=='function')throw new TypeError('Safe-transfer controller dependencies are incomplete');
-    let generation=0,state=Object.freeze({phase:'idle',request:null,plan:null,error:null,manualCommand:''}),listeners=new Set();
+    let generation=0,operationController=null,state=Object.freeze({phase:'idle',request:null,plan:null,error:null,manualCommand:''}),listeners=new Set();
     const publish=next=>{state=Object.freeze(next);for(const listener of listeners)listener(state);return state;};
     function subscribe(listener){if(typeof listener!=='function')throw new TypeError('listener required');listeners.add(listener);listener(state);return()=>listeners.delete(listener);}
     function invalidate(reason='binding_changed'){
+      operationController?.abort();operationController=null;
       generation++;return publish({phase:'invalidated',request:state.request,plan:null,error:Object.freeze({code:reason}),manualCommand:''});
     }
     async function start(request){
-      const token=++generation,requestBinding=request?.binding;
+      operationController?.abort();operationController=new AbortController();
+      const token=++generation,requestBinding=request?.binding,signal=operationController.signal;
+      const isCurrent=()=>token===generation&&!signal.aborted;
       publish({phase:'loading',request:Object.freeze({...request}),plan:null,error:null,manualCommand:''});
       let snapshot;
-      try{snapshot=await loadSnapshot(request,{generation:token});}
+      try{snapshot=await loadSnapshot(request,{generation:token,signal,isCurrent});}
       catch(error){if(token!==generation)return state;return publish({phase:'blocked',request,error:Object.freeze({code:String(error?.code||'load_error')}),plan:null,manualCommand:''});}
       if(token!==generation)return state;
       const live=currentBinding();
@@ -249,13 +259,14 @@
       if(!['ready','copy_failed','copied'].includes(active.phase)||!active.plan?.executable)return Object.freeze({ok:false,status:'not_ready'});
       if(!bindingMatches(active.plan.binding,currentBinding())){invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});}
       const command=active.plan.commands[index];if(!command)return Object.freeze({ok:false,status:'missing_part'});
-      const token=++generation;
+      operationController?.abort();operationController=new AbortController();
+      const token=++generation,signal=operationController.signal;
       publish({...active,phase:'copying',manualCommand:command.value,error:null,copyOperation:token,copiedPart:index});
       const stillCurrent=()=>token===generation&&state.copyOperation===token&&state.plan===active.plan&&bindingMatches(active.plan.binding,currentBinding());
       const stale=()=>{if(token===generation)invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});};
       try{
         if(revalidateBeforeCopy){
-          const snapshot=await loadSnapshot(active.request,{generation:token,reason:'copy'});
+          const snapshot=await loadSnapshot(active.request,{generation:token,reason:'copy',signal,isCurrent:stillCurrent});
           if(!stillCurrent())return stale();
           const refreshed=plan(snapshot,active.request);
           if(!refreshed?.ok||!refreshed.executable||refreshed.bindingFingerprint!==active.plan.bindingFingerprint||!bindingMatches(refreshed.binding,currentBinding())){
@@ -263,7 +274,7 @@
             return Object.freeze({ok:false,status:'stale'});
           }
         }
-        await copy(command.value);
+        await copy(command.value,{signal,isCurrent:stillCurrent});
         if(!stillCurrent())return stale();
         publish({...active,phase:'copied',manualCommand:command.value,error:null,copiedPart:index,copyOperation:token});
         return Object.freeze({ok:true,status:'copied',part:index,value:command.value,binding:active.plan.binding});

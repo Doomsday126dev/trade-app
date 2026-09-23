@@ -23,8 +23,9 @@
       status.textContent=state.phase==='copy_failed'?t('copyFailed'):state.phase==='copied'?t('copied'):t('ready',{candidates:state.plan.candidateSpecies.length,protected:state.plan.protectedSpecies.length});
       state.plan.commands.forEach((command,index)=>{
         const section=container.ownerDocument.createElement('section'),field=container.ownerDocument.createElement('textarea'),button=container.ownerDocument.createElement('button');
+        const manualRecovery=state.phase==='copy_failed'&&index===(state.copiedPart??0);
         section.className='stb-command-part';
-        field.className='stb-output';field.readOnly=true;field.value=command.value;field.dataset.safeTransferCommand=String(index);
+        field.className='stb-output';field.readOnly=true;field.disabled=!manualRecovery;field.value=manualRecovery?state.manualCommand:command.value;field.dataset.safeTransferCommand=String(index);
         button.className='stb-action-btn';button.type='button';button.textContent=t('copy',{part:index+1,total:state.plan.commands.length});button.dataset.safeTransferCopy=String(index);button.disabled=state.phase==='copying';
         section.append(field,button);commands.append(section);
       });

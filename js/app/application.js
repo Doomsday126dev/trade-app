@@ -109,7 +109,12 @@ function activateFirebaseDataClient(){
   if(firebaseDataProtectionReady&&db)return db;
   if(!fbApp||!firebaseDatabaseHandle)throw new Error('Firebase data client cannot activate before app setup');
   db=firebaseDatabaseHandle;
-  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
+  const serverReader=firebaseClientService.createServerConfirmedReader({
+    databaseUrl:FIREBASE_URL,fetchImpl:window.fetch.bind(window),
+    appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,
+    sessionCurrent:()=>Boolean(auth?.currentUser?.uid)
+  });
+  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue,serverReader});
   managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
   managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(managedFirebaseClient);
   managedOwnedDataCoordinator=ownedDataCoordinatorData.createOwnedDataCoordinator({
@@ -8409,13 +8414,14 @@ function buildStrings(type,username,intent='lf'){
   return Object.keys(out).length?out:null;
 }
 
-async function copyText(str){
+async function copyText(str,{signal=null,isCurrent=null}={}){
   if(navigator.clipboard&&window.isSecureContext){
     try{
       await navigator.clipboard.writeText(str);
       return;
     }catch{}
   }
+  if(signal?.aborted||typeof isCurrent==='function'&&!isCurrent())throw Object.assign(new Error('Copy operation was cancelled'),{code:'copy/cancelled'});
   const ta=document.createElement('textarea');
   ta.value=str;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='-1000px';ta.style.opacity='0';
   document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
@@ -10625,7 +10631,7 @@ const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
 // Containment: existing source coverage cannot prove that every selected
 // trainer's current declarations are present. Keep both generation and copy
 // closed until that coverage contract is implemented and tested.
-const SAFE_TRANSFER_GENERATION_ENABLED=false;
+const SAFE_TRANSFER_GENERATION_ENABLED=true;
 function safeTransferPreferenceKey(base){
   const uid=String(auth?.currentUser?.uid||'').trim();
   return uid?`${base}:${encodeURIComponent(uid)}`:null;
@@ -10642,13 +10648,6 @@ function safeTransferPreferenceKey(base){
 // Live selection (Set of usernames). Initialised in openSafeTransferModal()
 // from saved default if available, else empty.
 let _safeTransferSelected=null;
-function _safeTransferAllTrainers(){
-  // Everyone who has a non-empty wishlist (so selecting an inactive trainer
-  // who never added anything wouldn't usefully constrain anything anyway).
-  return Object.keys(allData.users||{})
-    .filter(u=>Object.keys(allData.wishlist?.[u]||{}).length>0)
-    .sort((a,b)=>(a===cur?-1:b===cur?1:0)||a.localeCompare(b,undefined,{sensitivity:'base'}));
-}
 function _loadSafeTransferDefault(){
   const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);
   if(!key)return null;
@@ -10656,185 +10655,13 @@ function _loadSafeTransferDefault(){
   if(Array.isArray(saved))return new Set(saved.filter(u=>typeof u==='string'));
   return null;
 }
-function openSafeTransferModal(){
-  // Initialise selection: saved default → fall back to "everyone except me"
-  // so the very first interaction does something useful even with no save.
-  if(!_safeTransferSelected){
-    const def=_loadSafeTransferDefault();
-    if(def&&def.size){
-      _safeTransferSelected=def;
-    }else{
-      _safeTransferSelected=new Set(_safeTransferAllTrainers().filter(u=>u!==cur));
-    }
-  }
-  // Prune anyone who's since become inactive / been removed.
-  const active=new Set(_safeTransferAllTrainers());
-  [..._safeTransferSelected].forEach(u=>{if(!active.has(u))_safeTransferSelected.delete(u);});
-  openModal('safe-transfer-modal');
-  // Seed prefilter checkbox from saved pref (default ON — safer for new users).
-  const chk=document.getElementById('stb-prefilter-chk');
-  if(chk){
-    const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
-    const saved=key?lsGet(key,true):true;
-    chk.checked=saved!==false;
-  }
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
-}
-function renderSafeTransferTrainers(){
-  const grid=document.getElementById('stb-trainer-grid');
-  if(!grid)return;
-  const trainers=_safeTransferAllTrainers();
-  if(!trainers.length){
-    grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;
-    return;
-  }
-  grid.innerHTML=trainers.map(u=>{
-    const isMe=u===cur;
-    const on=_safeTransferSelected.has(u);
-    const cls=`stb-trainer-chip${on?' on':''}${isMe?' is-me':''}`;
-    const label=isMe?`${escHtml(u)} (${escHtml(i18nCore.t('common.you'))})`:escHtml(u);
-    const title=isMe?i18nCore.t('safeTransfer.selfExcluded'):i18nCore.t('safeTransfer.toggleTrainer',{trainer:u});
-    return`<button type="button" class="${cls}" data-safe-transfer-trainer="${escAttr(u)}" ${isMe?'disabled':''} title="${escAttr(title)}">${label}</button>`;
-  }).join('');
-}
-document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
-  const control=event.target.closest('[data-safe-transfer-trainer]');if(control&&!control.disabled)toggleSafeTransferTrainer(control.dataset.safeTransferTrainer);
-});
-function toggleSafeTransferTrainer(name){
-  if(!_safeTransferSelected)return;
-  if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);
-  else _safeTransferSelected.add(name);
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
-}
-function setAllSafeTransferTrainers(all){
-  if(!_safeTransferSelected)_safeTransferSelected=new Set();
-  if(all){
-    _safeTransferAllTrainers().forEach(u=>{if(u!==cur)_safeTransferSelected.add(u);});
-  }else{
-    _safeTransferSelected.clear();
-  }
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
-}
 function saveSafeTransferAsDefault(){
   if(!_safeTransferSelected){toast(i18nCore.t('safeTransfer.nothingToSave'));return;}
   const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);if(!key)return;
   lsSet(key,[..._safeTransferSelected]);
   toast(i18nCore.t('safeTransfer.defaultSaved',{count:i18nCore.formatNumber(_safeTransferSelected.size)}));
 }
-function toggleSafeTransferPrefilter(on){
-  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);if(key)lsSet(key,!!on);
-  renderSafeTransferOutput();
-}
-function _safeTransferPrefilterEnabled(){
-  const chk=document.getElementById('stb-prefilter-chk');
-  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
-  return chk?chk.checked:(!key||lsGet(key,true)!==false);
-}
-// Map every species the app knows about to its base dex number. We dedupe
-// by dex so costume variants (which share dex with their base) only count
-// once: protecting "Pikachu Party Hat" implicitly protects all dex-25.
-function _safeTransferAllDex(){
-  const seen=new Set();
-  (DB.wishlist||[]).forEach(e=>{
-    const n=parseInt(e.no);
-    if(Number.isFinite(n)&&n>0)seen.add(n);
-  });
-  return [...seen].sort((a,b)=>a-b);
-}
-function computeSafeTransferString(){
-  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:_safeTransferSelected?.size||0};
-  if(!_safeTransferSelected||!_safeTransferSelected.size){
-    return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
-  }
-  // Build the "wanted" dex set from all selected trainers' wishlists.
-  // Conservative — any wishlist entry, regardless of priority or flags, counts.
-  const wantedDex=new Set();
-  const wishSrcByName={};
-  (DB.wishlist||[]).forEach(e=>{if(!wishSrcByName[e.name])wishSrcByName[e.name]=e;});
-  _safeTransferSelected.forEach(u=>{
-    const list=allData.wishlist?.[u]||{};
-    Object.keys(list).forEach(name=>{
-      const entry=wishSrcByName[name];
-      const dex=parseInt(entry?.no);
-      if(Number.isFinite(dex)&&dex>0)wantedDex.add(dex);
-    });
-  });
-  const all=_safeTransferAllDex();
-  const safe=all.filter(n=>!wantedDex.has(n));
-  const dexStr=safe.join(',');
-  const usePrefilter=_safeTransferPrefilterEnabled();
-  const query=pokemonGoSearchSyntaxDomain.safeTransferQuery(safe);
-  const str=safe.length?(usePrefilter?pokemonGoSearchSyntaxDomain.serializeQuery(query,pokemonGoSearchLocale()):dexStr):'';
-  return{
-    str,
-    dexStr,
-    prefilter:usePrefilter?pokemonGoSearchSyntaxDomain.queryPrefix(query,pokemonGoSearchLocale()):'',
-    safeCount:safe.length,
-    wantedCount:wantedDex.size,
-    totalDex:all.length,
-    picked:_safeTransferSelected.size
-  };
-}
-function renderSafeTransferOutput(){
-  const out=document.getElementById('stb-output');
-  const summary=document.getElementById('stb-summary');
-  const warnWrap=document.getElementById('stb-warn-wrap');
-  const copyBtn=document.getElementById('stb-copy-btn');
-  if(!out||!summary)return;
-  const r=computeSafeTransferString();
-  if(r.status==='disabled'){
-    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
-    out.value='';warnWrap.innerHTML='';if(copyBtn)copyBtn.disabled=true;return;
-  }
-  if(!r.picked){
-    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
-    out.value='';
-    warnWrap.innerHTML='';
-    if(copyBtn)copyBtn.disabled=true;
-    return;
-  }
-  out.value=r.str;
-  const charCount=r.str.length;
-  summary.innerHTML=`
-    <span>${escHtml(i18nCore.t('safeTransfer.summary',{safe:i18nCore.formatNumber(r.safeCount),total:i18nCore.formatNumber(r.totalDex),wanted:i18nCore.formatNumber(r.wantedCount),trainers:i18nCore.formatNumber(r.picked)}))}</span>
-    <span style="font-family:var(--mono);font-size:11px">${escHtml(i18nCore.t('safeTransfer.characters',{count:i18nCore.formatNumber(charCount)}))}</span>
-  `;
-  // Pokémon GO's bag search box accepts up to ~1000 chars before truncating
-  // silently. Warn well before the cliff so trainers can chunk the output.
-  if(charCount>=900){
-    warnWrap.innerHTML=`<div class="stb-warn">${escHtml(i18nCore.t('safeTransfer.limitWarning',{count:i18nCore.formatNumber(charCount)}))}</div>`;
-  }else if(charCount>=700){
-    warnWrap.innerHTML=`<div class="stb-warn" style="background:rgba(108,99,255,.08);border-color:rgba(108,99,255,.25);color:var(--ac2)">${escHtml(i18nCore.t('safeTransfer.nearLimit',{count:i18nCore.formatNumber(charCount)}))}</div>`;
-  }else{
-    warnWrap.innerHTML='';
-  }
-  if(copyBtn)copyBtn.disabled=!r.str;
-}
-async function copySafeTransferString(){
-  const out=document.getElementById('stb-output');
-  const result=computeSafeTransferString();
-  if(result.status==='disabled'){
-    if(out){out.value='';out.blur();}
-    const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
-    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return;
-  }
-  if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
-  try{
-    await copyText(out.value);
-    toast(i18nCore.t('safeTransfer.copied',{count:i18nCore.formatNumber(out.value.length)}));
-  }catch{
-    out.select();
-    document.execCommand('copy');
-    toast(i18nCore.t('safeTransfer.copiedFallback'));
-  }
-}
-
-// Candidate implementation. Function declarations intentionally replace the
-// contained legacy handlers above while keeping the literal false gate and its
-// small containment harness stable until a separately reviewed enablement.
+// Server-fresh, fail-closed safe-transfer implementation.
 let _safeTransferController=null;
 let _safeTransferCandidateMount=null;
 let _safeTransferLiveSourceVersions={};
@@ -10875,6 +10702,9 @@ function renderSafeTransferTrainers(){
     return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
   }).join('');
 }
+document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
+  const control=event.target.closest('[data-safe-transfer-trainer]');if(control&&!control.disabled)toggleSafeTransferTrainer(control.dataset.safeTransferTrainer);
+});
 function toggleSafeTransferTrainer(name){
   if(!_safeTransferSelected)return;
   if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);else _safeTransferSelected.add(name);
@@ -10919,27 +10749,26 @@ function _safeTransferCurrentBinding(){
     universeVersion:request.universe?.version,sourceVersions:Object.freeze({..._safeTransferLiveSourceVersions}),gameLocale:request.gameLocale
   });
 }
-async function _safeTransferReadPublicShare(member){
-  if(!member.targetUid)return managedPublicShareRepository.read(member.displayName);
+async function _safeTransferReadPublicShare(member,options={}){
+  if(!member.targetUid)return managedPublicShareRepository.readFresh(member.displayName,options);
   let identity;
   try{identity=await resolveFavoriteIdentityForSession(member.displayName,member.targetUid);}
   catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
   if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
-  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.read(identity.canonicalTrainerName);
+  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
   try{
-    const provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName);
-    if(provider?.ok)return{ok:true,value:provider.snapshot};
+    const provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName,options);
+    if(provider?.ok)return{ok:true,value:provider.snapshot,evidence:provider.evidence};
     if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
-    return managedPublicShareRepository.read(identity.canonicalTrainerName);
+    return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
   }catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
 }
 async function _safeTransferLoadSnapshot(request,context={}){
   const loadGeneration=context.generation;_safeTransferLoadGeneration=loadGeneration;
   const sources=await Promise.all(request.selection.map(async(member,index)=>{
-    const result=await _safeTransferReadPublicShare(member);
+    const result=await _safeTransferReadPublicShare(member,{signal:context.signal,isCurrent:context.isCurrent,operationId:`${loadGeneration}:${index}`});
     return safeTransferRestorationDomain.sourceFromRepositoryResult({
-      trainerId:member.id,label:member.displayName,result,
-      read:{kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:`${loadGeneration}:${index}`}
+      trainerId:member.id,label:member.displayName,result
     },{validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,intentEntries:publicSharePublicationDomain.intentEntries});
   }));
   const current=_safeTransferOwnerRequest();
@@ -10956,7 +10785,9 @@ function _ensureSafeTransferController(){
   if(_safeTransferController)return _safeTransferController;
   _safeTransferController=safeTransferRestorationDomain.createController({loadSnapshot:_safeTransferLoadSnapshot,plan:_safeTransferPlan,currentBinding:_safeTransferCurrentBinding,copy:copyText,revalidateBeforeCopy:true});
   const host=document.getElementById('stb-candidate');
-  if(host)_safeTransferCandidateMount=safeTransferCandidateUi.mountSafeTransferCandidate(host,{controller:_safeTransferController});
+  if(host)_safeTransferCandidateMount=safeTransferCandidateUi.mountSafeTransferCandidate(host,{
+    controller:_safeTransferController,t:(key,vars)=>i18nCore.t(`safeTransfer.candidate.${key}`,vars)
+  });
   return _safeTransferController;
 }
 async function _refreshSafeTransferCandidate(){

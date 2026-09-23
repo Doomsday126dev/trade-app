@@ -164,6 +164,7 @@
     ,'export.artUnavailable':'画像なし'
     ,'restored.copySearch':"検索式をコピー",'restored.searchDetails':"検索の詳細"
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
+    ,'safeTransfer.candidate.scope':'選択範囲：{trainers}','safeTransfer.candidate.loading':'サーバーで確認済みの共有希望を確認中…','safeTransfer.candidate.blocked':'検索を作成するには、完全で最新の選択範囲スナップショットが必要です。','safeTransfer.candidate.ready':'希望する{protected}種を保護した後の候補は{candidates}種です。','safeTransfer.candidate.empty':'この選択範囲のスナップショットには候補種が残っていません。','safeTransfer.candidate.copy':'{total}個中{part}個目をコピー','safeTransfer.candidate.copied':'コピーしました。','safeTransfer.candidate.copyFailed':'コピーできませんでした。現在の検索文字列を手動コピー用に下に残しました。'
     ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
   });
 })(window);

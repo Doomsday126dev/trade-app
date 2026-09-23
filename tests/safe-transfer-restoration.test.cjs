@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 function load(){
   const window={};window.window=window;
-  const context=vm.createContext({window,URL,Set,Map,Object,Array,String,Number,JSON,Promise});
+  const context=vm.createContext({window,URL,Set,Map,Object,Array,String,Number,JSON,Promise,AbortController});
   for(const file of ['js/domain/pokemonGoSearchSyntax.js','js/domain/safeTransferRestoration.js','js/domain/publicSharePublication.js'])vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   return window.PogoDomain;
 }
@@ -46,6 +46,9 @@ function snapshot(sources=[source()],overrides={}){
 function evaluate(value){return safe.evaluate(value,{catalog});}
 function plan(value,locale='en',characterBudget=1500){return safe.commandPlan(evaluate(value),{syntax,locale,characterBudget});}
 function plain(value){return JSON.parse(JSON.stringify(value));}
+function fresh(result,operationId='read-1',transport='rtdb-rest'){
+  return result?.ok?{...result,evidence:{kind:'server-confirmed-public-share',transport,scope:'whole-projection',completed:true,operationId}}:result;
+}
 
 test('five-want audit fixture protects every ordinary, canonical, Max, and costume species',()=>{
   const declarations=[
@@ -103,7 +106,7 @@ test('current complete public-share v2 projections and reviewed catalog exclusio
       {intent:'lf',category:'dynamax',name:'Bulbasaur',p:'',mod:'',gender:'',backgroundId:'',note:'',lucky:true,shiny:false,xxl:false,xxs:false}
     ],declarationCount:2
   };
-  const adapted=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:{ok:true,value:projection},read:{kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:'read-1'}},{
+  const adapted=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:fresh({ok:true,value:projection})},{
     validateProjection:domain.publicSharePublication.publicShareProjectionStatus,
     intentEntries:domain.publicSharePublication.intentEntries
   });
@@ -117,7 +120,6 @@ test('repository evidence, not caller defaults, establishes current complete sou
   const projection={version:2,username:'Trainer A',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes'],lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},updatedAt:1,declarations:[],declarationCount:0};
   const unproven=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:{ok:true,value:projection}},dependencies);
   assert.equal(unproven.state,'stale');assert.equal(unproven.complete,false);assert.equal(unproven.freshness,'unverified');
-  const evidence={kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:'read-2'};
   const cases=[
     [{ok:true,value:null},'missing'],
     [{ok:false,error:{code:'permission-denied'}},'inaccessible'],
@@ -126,7 +128,17 @@ test('repository evidence, not caller defaults, establishes current complete sou
     [{ok:true,value:{version:2,username:'Trainer A',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes'],lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},declarations:[],declarationCount:1}},'partial'],
     [{ok:true,value:{version:99,username:'Trainer A'}},'malformed']
   ];
-  for(const [result,state] of cases)assert.equal(safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result,read:evidence},dependencies).state,state);
+  for(const [result,state] of cases)assert.equal(safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:fresh(result,'read-2')},dependencies).state,state);
+});
+
+test('v2 compatibility lists cannot hide wants omitted from declarations',()=>{
+  const dependencies={validateProjection:domain.publicSharePublication.publicShareProjectionStatus,intentEntries:domain.publicSharePublication.intentEntries};
+  const projection={
+    version:2,username:'Trainer A',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes'],
+    lists:{wishlist:{Pikachu:{p:'H'}},dynamax:{},gmax:{},costumes:{}},declarations:[],declarationCount:0,updatedAt:2
+  };
+  const result=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:fresh({ok:true,value:projection},'read-hidden')},dependencies);
+  assert.equal(result.state,'partial');assert.equal(result.complete,false);assert.deepEqual(plain(result.declarations),[]);
 });
 
 test('missing, inaccessible, stale, partial, error and timeout inputs are non-executable',()=>{
@@ -277,9 +289,9 @@ test('deferred copy completion cannot restore an obsolete plan or manual command
   }
 });
 
-test('production integration retains hard containment and candidate browser proof reuses shared copyText',()=>{
+test('production integration uses literal reviewed enablement and shared cancellable copyText',()=>{
   const application=readFileSync(path.join(root,'js/app/application.js'),'utf8');
-  assert.match(application,/const SAFE_TRANSFER_GENERATION_ENABLED=false/);
-  assert.match(application,/async function copyText\(str\)[\s\S]*navigator\.clipboard\.writeText\(str\)[\s\S]*document\.execCommand\('copy'\)/);
-  assert.doesNotMatch(application,/SAFE_TRANSFER_GENERATION_ENABLED\s*=\s*(?:true|window|localStorage|location)/);
+  assert.match(application,/const SAFE_TRANSFER_GENERATION_ENABLED=true/);
+  assert.match(application,/async function copyText\(str,\{signal=null,isCurrent=null\}=\{\}\)[\s\S]*navigator\.clipboard\.writeText\(str\)[\s\S]*isCurrent\(\)[\s\S]*document\.execCommand\('copy'\)/);
+  assert.doesNotMatch(application,/SAFE_TRANSFER_GENERATION_ENABLED\s*=\s*(?:false|window|localStorage|location)/);
 });

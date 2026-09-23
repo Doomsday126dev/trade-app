@@ -1,4 +1,9 @@
 const {test,expect}=require('@playwright/test');
+const {readFileSync}=require('node:fs');
+const path=require('node:path');
+
+const enabledApplication=readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8');
+if(!enabledApplication.includes('const SAFE_TRANSFER_GENERATION_ENABLED=true;'))throw new Error('Reviewed Safe-transfer release gate is not enabled');
 
 const owner={uid:'safe-transfer-owner',username:'SafeTransferOwner'};
 
@@ -10,12 +15,6 @@ function projection(username,declarations=[]){
 }
 
 async function bootCandidate(page){
-  await page.route('**/js/app/application.js*',async route=>{
-    const response=await route.fetch();let source=await response.text();
-    if(!source.includes('const SAFE_TRANSFER_GENERATION_ENABLED=false;'))throw new Error('Candidate build gate not found');
-    source=source.replace('const SAFE_TRANSFER_GENERATION_ENABLED=false;','const SAFE_TRANSFER_GENERATION_ENABLED=true;');
-    await route.fulfill({response,body:source});
-  });
   await page.route('**/sw.js*',route=>route.abort());
   await page.route('https://**/*',route=>route.abort());
   await page.addInitScript(()=>{
@@ -43,15 +42,17 @@ async function establishFixture(page,{results,locale='en',group=true,deferred=fa
     if(locale==='en'){lsRemove(POGO_SEARCH_LANGUAGE_KEY);lsRemove(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY);}else{lsSet(POGO_SEARCH_LANGUAGE_KEY,locale);lsSet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,true);}
     window.__safeTransportReads=[];window.__safeDeferredReads=[];window.__safeResults=structuredClone(results);window.__safeDeferReads=deferred;
     const client={
-      read(path){
+      readServer(path,options={}){
         __safeTransportReads.push(path);const name=decodeURIComponent(path.split('/').pop()),result=structuredClone(__safeResults[name]);
-        if(!window.__safeDeferReads)return Promise.resolve(result);
-        return new Promise((resolve,reject)=>__safeDeferredReads.push({path,resolve:()=>resolve(result),reject}));
+        const withEvidence=value=>value?.ok?{...value,evidence:{kind:'server-confirmed-public-share',transport:'rtdb-rest',scope:'whole-projection',completed:true,operationId:options.operationId}}:value;
+        if(!window.__safeDeferReads)return Promise.resolve(withEvidence(result));
+        return new Promise((resolve,reject)=>__safeDeferredReads.push({path,resolve:()=>resolve(withEvidence(result)),reject}));
       },
+      read(){throw new Error('Safe-transfer qualification must not use cache-capable reads');},
       listen(){throw new Error('Safe-transfer qualification must use exact reads');}
     };
     managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(client);
-    window.__safeDirectWrites=[];window.__safeFallbackWrites=[];
+    window.__safeDirectWrites=[];window.__safeFallbackWrites=[];window.__safeFallbackAttempts=0;
     Object.defineProperty(window,'isSecureContext',{configurable:true,value:true});
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:value=>{
       if(clipboard==='deferred')return new Promise((resolve,reject)=>{window.__safeClipboard={value,resolve,reject};});
@@ -59,6 +60,7 @@ async function establishFixture(page,{results,locale='en',group=true,deferred=fa
       __safeDirectWrites.push(value);return Promise.resolve();
     }}});
     document.execCommand=command=>{
+      if(command==='copy')window.__safeFallbackAttempts++;
       if(command!=='copy'||clipboard==='fail'||clipboard==='deferred')return false;
       __safeFallbackWrites.push(document.activeElement?.value||'');return true;
     };
@@ -121,29 +123,48 @@ test('actual repository/validator path distinguishes empty and every blocked sou
     await waitForPhase(page,'blocked');
     expect(await page.evaluate(()=>_safeTransferController.snapshot().error.code)).toBe(`${state}_source`);
   }
+  const hidden=projection('Ada',[]);hidden.lists.wishlist.Pikachu={p:'H'};
+  await page.evaluate(hidden=>{window.__safeResults={Ada:{ok:true,value:hidden}};_safeTransferController.invalidate('case-hidden');renderSafeTransferOutput();},hidden);
+  await waitForPhase(page,'blocked');
+  expect(await page.evaluate(()=>_safeTransferController.snapshot().error.code)).toBe('partial_source');
 });
 
-test('actual command generation binds EN/JA/ES/DE and preserves exact split coverage',async({page})=>{
+test('actual language controls localize candidate UI while Pokémon GO command language remains independently selectable',async({page})=>{
   await bootCandidate(page);
   await establishFixture(page,{results:{Ada:{ok:true,value:projection('Ada',[declaration('Pikachu')])}},group:false});
   await openFromSettingsTools(page);await waitForPhase(page,'ready');
-  for(const locale of ['en','ja','es','de']){
-    await page.evaluate(locale=>{if(locale==='en'){lsRemove(POGO_SEARCH_LANGUAGE_KEY);lsRemove(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY);}else{lsSet(POGO_SEARCH_LANGUAGE_KEY,locale);lsSet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,true);}_safeTransferController.invalidate('language_changed');renderSafeTransferOutput();},locale);
-    await waitForPhase(page,'ready');
-    const result=await page.evaluate(()=>{const plan=_safeTransferController.snapshot().plan;return{locale:plan.gameLocale,parts:plan.commands.map(item=>({value:item.value,species:item.species})),candidates:plan.candidateSpecies};});
-    expect(result.locale).toBe(locale);expect(result.parts.flatMap(item=>item.species)).toEqual(result.candidates);
-    expect(result.parts.every(item=>item.value.length<=1500)).toBe(true);
-  }
+  await page.evaluate(()=>closeModal('safe-transfer-modal'));
+  await page.evaluate(()=>openSettingsPanel('account'));
+  await expect(page.locator('#settings-modal')).toBeVisible();
+  await page.locator('[data-settings-target="language"]').click();
+  await page.locator('#settings-language').selectOption('ja');
+  await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe('ja');
+  await page.locator('[data-settings-target="tools"]').click();await page.locator("button[onclick=\"openSettingsTool('safe-transfer')\"]").click();await waitForPhase(page,'ready');
+  await expect(page.locator('[data-safe-transfer-scope]')).toContainText('選択範囲');
+  expect(await page.evaluate(()=>_safeTransferController.snapshot().plan.gameLocale)).toBe('ja');
+
+  await page.evaluate(()=>closeModal('safe-transfer-modal'));
+  await page.evaluate(()=>openSettingsPanel('account'));
+  await expect(page.locator('#settings-modal')).toBeVisible();
+  await page.locator('[data-settings-target="language"]').click();
+  await page.locator('#settings-language').selectOption('es');await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe('es');
+  await page.locator('#settings-search-language-override').check();await page.locator('#settings-search-language').selectOption('de');
+  await page.locator('[data-settings-target="tools"]').click();await page.locator("button[onclick=\"openSettingsTool('safe-transfer')\"]").click();await waitForPhase(page,'ready');
+  await expect(page.locator('[data-safe-transfer-scope]')).toContainText('Ámbito seleccionado');
+  const result=await page.evaluate(()=>{const plan=_safeTransferController.snapshot().plan;return{locale:plan.gameLocale,parts:plan.commands.map(item=>({value:item.value,species:item.species})),candidates:plan.candidateSpecies};});
+  expect(result.locale).toBe('de');expect(result.parts.flatMap(item=>item.species)).toEqual(result.candidates);expect(result.parts.every(item=>item.value.length<=1500)).toBe(true);
 });
 
 test('shared clipboard fallback succeeds, while both-method failure preserves only the current manual command',async({page})=>{
   await bootCandidate(page);
   const results={Ada:{ok:true,value:projection('Ada',[declaration('Pikachu')])}};
   await establishFixture(page,{results,group:false,clipboard:'fallback'});await openFromSettingsTools(page);await waitForPhase(page,'ready');
+  await expect(page.locator('[data-safe-transfer-command="0"]')).toBeDisabled();
   await page.locator('[data-safe-transfer-copy="0"]').click();await waitForPhase(page,'copied');
   expect(await page.evaluate(()=>__safeFallbackWrites.length)).toBe(1);
   await page.evaluate(()=>{navigator.clipboard.writeText=()=>Promise.reject(new Error('denied'));document.execCommand=()=>false;});
   await page.locator('[data-safe-transfer-copy="0"]').click();await waitForPhase(page,'copy_failed');
+  await expect(page.locator('[data-safe-transfer-command="0"]')).toBeEnabled();
   const failed=await page.evaluate(()=>{const state=_safeTransferController.snapshot();return{manual:state.manualCommand,command:state.plan.commands[0].value,phase:state.phase};});
   expect(failed.manual).toBe(failed.command);expect(failed.phase).toBe('copy_failed');
 });
@@ -156,6 +177,7 @@ for(const outcome of ['resolve','reject'])test(`deferred clipboard ${outcome} af
   await page.evaluate(outcome=>{closeModal('safe-transfer-modal');if(outcome==='resolve')__safeClipboard.resolve();else __safeClipboard.reject(Object.assign(new Error('late failure'),{code:'clipboard-unavailable'}));},outcome);
   await page.waitForFunction(()=>_safeTransferController.snapshot().phase==='invalidated');
   expect(await page.evaluate(()=>({phase:_safeTransferController.snapshot().phase,manual:_safeTransferController.snapshot().manualCommand}))).toEqual({phase:'invalidated',manual:''});
+  expect(await page.evaluate(()=>__safeFallbackAttempts)).toBe(0);
 });
 
 test('account and group changes suppress delayed repository results, and copy-time source change fails closed',async({page})=>{

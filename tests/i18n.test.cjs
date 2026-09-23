@@ -202,10 +202,11 @@ test('covered active runtime surfaces use locale keys instead of English-only fe
 });
 
 test('canonical and private values remain outside interface translation',()=>{
+  const safeTransferDomain=readFileSync(path.join(__dirname,'../js/domain/safeTransferRestoration.js'),'utf8');
   assert.match(html,/placeholder="https:\/\/your-project-default-rtdb\.firebaseio\.com"/);
   assert.doesNotMatch(html,/const SAFE_TRANSFER_PREFILTER=/);
-  assert.match(html,/pokemonGoSearchSyntaxDomain\.safeTransferQuery\(safe\)/);
-  assert.match(html,/pokemonGoSearchSyntaxDomain\.serializeQuery\(query,pokemonGoSearchLocale\(\)\)/);
+  assert.match(safeTransferDomain,/safeTransferQuery\(ids\)/);
+  assert.match(safeTransferDomain,/serializeQuery\(syntax\.safeTransferQuery\(ids\),gameLocale\)/);
   assert.match(html,/tag\.label/);
   assert.doesNotMatch(html,/favorite\.note|organizer-note/);
   const exportBlock=html.slice(html.indexOf('function exportMyListMarkdown'),html.indexOf('// ── SPECIAL TRADE BOARD'));

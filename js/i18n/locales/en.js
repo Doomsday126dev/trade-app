@@ -511,6 +511,7 @@
     ,'export.artUnavailable':'Art unavailable'
     ,'restored.copySearch':"Copy Search",'restored.searchDetails':"Search details"
     ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
+    ,'safeTransfer.candidate.scope':'Selected scope: {trainers}','safeTransfer.candidate.loading':'Checking server-confirmed shared wants…','safeTransfer.candidate.blocked':'A complete, current scoped snapshot is required before a search can be created.','safeTransfer.candidate.ready':'{candidates} candidate species after protecting {protected} wanted species.','safeTransfer.candidate.empty':'No candidate species remain in this scoped snapshot.','safeTransfer.candidate.copy':'Copy part {part} of {total}','safeTransfer.candidate.copied':'Copied.','safeTransfer.candidate.copyFailed':'Copy failed. The current command is preserved below for manual copy.'
     ,'contextSearch.copyProtected':'Copy protected search','contextSearch.copyBroad':'Copy broad special search','contextSearch.mixedHelp':'Ordinary wants use protected discovery. Special or exact wants use a separate broad species search so requested matches are not excluded.'
   });
 })(window);

@@ -165,6 +165,7 @@
     ,'export.artUnavailable':'Imagen no disponible'
     ,'restored.copySearch':"Copiar búsqueda",'restored.searchDetails':"Detalles de búsqueda"
     ,'safeTransfer.temporarilyUnavailable':'La búsqueda de transferencias seguras no está disponible temporalmente mientras se verifica la cobertura completa de las listas de deseos.'
+    ,'safeTransfer.candidate.scope':'Ámbito seleccionado: {trainers}','safeTransfer.candidate.loading':'Comprobando deseos compartidos confirmados por el servidor…','safeTransfer.candidate.blocked':'Se requiere una instantánea completa y actual del ámbito antes de crear una búsqueda.','safeTransfer.candidate.ready':'{candidates} especies candidatas después de proteger {protected} especies deseadas.','safeTransfer.candidate.empty':'No quedan especies candidatas en esta instantánea del ámbito.','safeTransfer.candidate.copy':'Copiar parte {part} de {total}','safeTransfer.candidate.copied':'Copiado.','safeTransfer.candidate.copyFailed':'La copia falló. La búsqueda actual se conserva abajo para copiarla manualmente.'
     ,'contextSearch.copyProtected':'Copiar búsqueda protegida','contextSearch.copyBroad':'Copiar búsqueda amplia especial','contextSearch.mixedHelp':'Los deseos ordinarios usan la búsqueda protegida. Los deseos especiales o exactos usan otra búsqueda amplia por especie para no excluir coincidencias solicitadas.'
   });
 })(window);
