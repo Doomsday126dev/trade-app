@@ -201,6 +201,12 @@ test('reviewed frontend allowlist stays exact and excludes control/private trees
   assert.equal(result.files.length,568);assert.equal(result.scriptCount,89);
   assert.equal(result.allowlist.hostedOnlyScriptFiles.length,5);
   assert.ok(result.allowlist.lazyScriptFiles.includes('js/app/publicShareApp.js'));
+  const safeTransferDomainIndex=result.allowlist.scriptFiles.indexOf('js/domain/safeTransferRestoration.js');
+  const safeTransferUiIndex=result.allowlist.scriptFiles.indexOf('js/ui/safeTransferCandidate.js');
+  assert.equal(safeTransferDomainIndex,14);
+  assert.equal(result.allowlist.scriptFiles[safeTransferDomainIndex+1],'js/domain/searchStrings.js');
+  assert.equal(safeTransferUiIndex,17);
+  assert.equal(result.allowlist.scriptFiles[safeTransferUiIndex-1],'js/ui/stringHtml.js');
   for(const file of result.files)assert.doesNotMatch(file,/^(?:functions|tests|docs|\.github|\.local|node_modules|screenshots|logs)\//);
 });
 
