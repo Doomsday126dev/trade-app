@@ -356,7 +356,7 @@ if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
 const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
 if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
-const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug,publicSpriteUrls}=spriteSlugsDomain;
+const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug,publicSpriteUrls,spriteSemanticIdentity}=spriteSlugsDomain;
 const costumeSpriteCatalogDomain=window.PogoDomain?.costumeSpriteCatalog;
 if(!costumeSpriteCatalogDomain)throw new Error('Reviewed costume sprite catalog failed to load');
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
@@ -459,10 +459,12 @@ function renderCombinedList(model=productDeclarations()){
       element=document.createElement('section');element.className=`mylist-priority-section wants-section ${section.priority||'mylist-dex-section'}`;element.dataset.wantsSection=section.key;element.dataset.wantsPriority=section.priority;
       element.innerHTML=`<div class="wants-section-header"><h3 class="mylist-priority-heading"><button type="button" class="mylist-priority-toggle" data-section="${escAttr(section.key)}" onclick="toggleWantsSection(this.dataset.section)"><span class="wants-section-title"></span><span class="priority-count"></span>${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</button></h3><div class="wants-section-search"></div></div><div class="mylist-priority-body"><div class="mygrid"></div></div>`;
     }
-    const toggle=element.querySelector('.mylist-priority-toggle');toggle.setAttribute('aria-expanded',String(!collapsed));
-    element.querySelector('.wants-section-title').textContent=label;
-    element.querySelector('.priority-count').textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
-    const body=element.querySelector('.mylist-priority-body');body.hidden=collapsed;
+    const header=element.firstElementChild,heading=header.firstElementChild,toggle=heading.firstElementChild;
+    const title=toggle.firstElementChild,count=title.nextElementSibling,search=header.lastElementChild,body=header.nextElementSibling;
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    title.textContent=label;
+    count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(section.entries.length)});
+    body.hidden=collapsed;
     const rows=(collapsed?[]:filtered.slice(0,limit)).map(e=>{
       const entries=byEntry.get(e),selected=entries.every(x=>combinedSelection.has(productSelectionKey(x))),priority=section.priority;
       const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
@@ -485,16 +487,20 @@ function renderCombinedList(model=productDeclarations()){
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
     });
-    const grid=element.querySelector('.mygrid');
-    rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
-    while(grid.children.length>rows.length)grid.lastElementChild.remove();
-    body.querySelector('.wants-show-more')?.remove();
+    const grid=[...body.children].find(child=>child.classList.contains('mygrid'));
+    const focusedElement=rows.some(row=>row.contains(document.activeElement))?document.activeElement:null;
+    if(rows.length*2<grid.children.length&&!focusedElement)grid.replaceChildren(...rows);
+    else{
+      rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
+      while(grid.children.length>rows.length)grid.lastElementChild.remove();
+    }
+    if(focusedElement&&document.activeElement!==focusedElement&&focusedElement.isConnected)focusedElement.focus({preventScroll:true});
+    if(body.lastElementChild?.classList.contains('wants-show-more'))body.lastElementChild.remove();
     if(filtered.length>limit){hasMore=true;if(!collapsed)body.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary wants-show-more" data-section="${escAttr(section.key)}" data-limit="${limit}" onclick="showMoreWantsSection(this.dataset.section,Number(this.dataset.limit))">${escHtml(i18nCore.t('workflow.showSection',{section:label}))}</button>`);}
     if(section.key==='NEEDS_PRIORITY'){
-      if(!body.querySelector('.wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
-      body.querySelector('.wants-priority-help').textContent=i18nCore.t('workflow.needsPriorityHelp');
+      if(!body.firstElementChild?.classList.contains('wants-priority-help'))body.insertAdjacentHTML('afterbegin','<p class="wants-priority-help"></p>');
+      body.firstElementChild.textContent=i18nCore.t('workflow.needsPriorityHelp');
     }
-    const search=element.querySelector('.wants-section-search');
     const entries=model.entries.filter(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)===section.key);
     updateWantsSearch(search,entries,label,{copyLabel:i18nCore.t('workflow.copySection',{section:label})});
     search.title=i18nCore.t('workflow.fullSection',{section:label});
@@ -818,20 +824,20 @@ const COSTUME_FORM_SPRITE_IDS={
   "Thundurus (Incarnate)":642,"Thundurus (Therian)":10020,
   "Landorus (Incarnate)":645,"Landorus (Therian)":10021,
   "Keldeo (Ordinary)":647,"Keldeo (Resolute)":10024,
-  "Zygarde (50%)":718,"Zygarde (10%)":10118,"Zygarde (Complete)":10119,
+  "Zygarde (50%)":718,"Zygarde (10%)":10118,"Zygarde (Complete)":10120,
   "Hoopa (Confined)":720,"Hoopa (Unbound)":10086,
   "Necrozma (Dusk Mane)":10155,"Necrozma (Dawn Wings)":10156,
-  "Zacian (Hero)":888,"Zacian (Crowned)":10245,
-  "Zamazenta (Hero)":889,"Zamazenta (Crowned)":10246,
+  "Zacian (Hero)":888,"Zacian (Crowned)":10188,
+  "Zamazenta (Hero)":889,"Zamazenta (Crowned)":10189,
   "Calyrex (Ice Rider)":10193,"Calyrex (Shadow Rider)":10194,
-  "Dialga (Origin)":10247,"Palkia (Origin)":10248,
-  "Enamorus (Incarnate)":905,"Enamorus (Therian)":10251,
-  "Ogerpon (Teal Mask)":1017,"Ogerpon (Wellspring Mask)":10272,
-  "Ogerpon (Hearthflame Mask)":10273,"Ogerpon (Cornerstone Mask)":10274
+  "Dialga (Origin)":10245,"Palkia (Origin)":10246,
+  "Enamorus (Incarnate)":905,"Enamorus (Therian)":10249,
+  "Ogerpon (Teal Mask)":1017,"Ogerpon (Wellspring Mask)":10273,
+  "Ogerpon (Hearthflame Mask)":10274,"Ogerpon (Cornerstone Mask)":10275
 };
-const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"","users":{}},{"no":80,"name":"Slowpoke 2021","displayName":"Slowpoke 2021","spriteUrl":"","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"","users":{}}];
-// Additional form identities. When no permitted exact artwork is available,
-// the resolver intentionally falls back to the species sprite.
+const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"","users":{}},{"no":80,"name":"Slowbro 2021","displayName":"Slowbro 2021","spriteUrl":"","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"","users":{}}];
+// Additional form identities. Exact form art is resolved independently; when
+// it is unavailable, consumers must keep the identity and show missing art.
 const EXTRA_FORM_ENTRIES=[
   // Spinda — 8 standard spot patterns in Pokémon GO + heart form
   {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"",users:{}},
@@ -892,7 +898,8 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
-  if(isApprovedRuntimeSpriteUrl(storedUrl))return storedUrl;
+  const identity=spriteSemanticIdentity(context.canonicalName||resolvedName,gender,entry?.no);
+  if(!identity.exactRequired&&isApprovedRuntimeSpriteUrl(storedUrl))return storedUrl;
   return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName,context.catalogId);
 }
 // Resolves the BEST QUALITY sprite URL.
@@ -907,24 +914,26 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
   const compatibilityKeys=context.lookupKeys;
+  const identity=spriteSemanticIdentity(lookupName,gender,no);
   // 1. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
   const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
-  if(formKey)return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
+  if(formKey&&!(identity.explicitForm&&identity.genderDistinct))return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
   // 2. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
   //    a few form IDs map to PokeAPI placeholder PNGs (200 OK, ~400 bytes,
   //    no real character art). For those we skip ahead so PokemonDB HOME wins.
   const regionalKey=compatibilityKeys.find(key=>REGIONAL_FORM_IDS[key]);
-  if(regionalKey&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[regionalKey])){
+  if(regionalKey&&!(identity.explicitForm&&identity.genderDistinct)&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[regionalKey])){
     return`${SPRITE_BASE}${REGIONAL_FORM_IDS[regionalKey]}.png`;
   }
   // 3. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
-  if(gender==='f'){
+  if(gender==='f'&&!identity.explicitForm){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
   }
   // 4. Pokémon Database HOME render, then PokeAPI base.
   const pdb=pokemondbSpriteUrl(lookupName,dn||lookupName,gender);
   if(pdb)return pdb;
+  if(identity.exactRequired)return null;
   if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
@@ -965,14 +974,16 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   push(primary);
   const compatibilityKeys=context.lookupKeys;
   const safeName=context.canonicalName||name;
+  const identity=spriteSemanticIdentity(safeName,gender,no);
   // PokeAPI specific form variants
   for(const key of compatibilityKeys){
-    if(REGIONAL_FORM_IDS[key])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[key]}.png`);
-    if(COSTUME_FORM_SPRITE_IDS[key])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[key]}.png`);
+    if(REGIONAL_FORM_IDS[key]&&!(identity.explicitForm&&identity.genderDistinct))push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[key]}.png`);
+    if(COSTUME_FORM_SPRITE_IDS[key]&&!(identity.explicitForm&&identity.genderDistinct))push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[key]}.png`);
   }
-  if(gender==='f')push(femaleSpriteUrl(no));
+  if(gender==='f'&&!identity.explicitForm)push(femaleSpriteUrl(no));
   // Pokémon Database HOME for form/regional/gender variants.
   push(pokemondbSpriteUrl(safeName,dn||safeName,gender));
+  if(identity.exactRequired)return urls;
   if(gender==='f'){
     push(pokemondbSpriteUrl(safeName,dn||safeName,''));   // PokemonDB without -female suffix
     if(primary&&primary.includes('/female/')&&no){
@@ -985,6 +996,23 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
     push(`${SPRITE_BASE}${parseInt(no)}.png`);
   }
   return urls;
+}
+const REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS=Object.freeze({
+  scatterbug:Object.freeze({no:664,url:`${SPRITE_BASE}664.png`})
+});
+function reviewedEquivalentSpriteOverride(no,name,dn,url){
+  const shared=REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS.scatterbug;
+  return Number.parseInt(no,10)===shared.no&&url===shared.url&&/^Scatterbug(?:\s|\()/i.test(String(name||dn||''));
+}
+function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
+  if(!isApprovedRuntimeSpriteUrl(url))return'';
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url))return url;
+  const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
+  const exactRequired=identity?.exactRequired??(
+    normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
+  );
+  const vettedChain=identity||!exactRequired?chain:publicSpriteUrls(name||dn,gender,no);
+  return vettedChain.includes(url)?url:'';
 }
 // ── PER-IMAGE SPRITE NORMALIZATION ─────────────────────────────
 // Different Pokémon have different padding within their sprites — Joltik fills 30% of frame,
@@ -1178,10 +1206,12 @@ function effectiveSpriteOrigin(url){
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const context=spriteCatalogContext(no,name,dn,opts?.catalogId);
+  const fallbackChain=spriteFallbackChain(no,name,gender,dn,context.catalogId);
+  const urlOverride=vettedSpriteUrlOverride(no,name,gender,dn,opts?.urlOverride,fallbackChain);
   const urls=[
     ...(context.override?.url?[context.override.url]:[]),
-    ...(opts?.urlOverride?[opts.urlOverride]:[]),
-    ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
+    ...(urlOverride?[urlOverride]:[]),
+    ...fallbackChain
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
   if(!urls.length){
     const knownUnavailable=context.reviewed?.status==='unavailable';
@@ -1198,10 +1228,11 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const{cx,cy}=effectiveSpriteOrigin(url);
   const{transform,transformOrigin}=_spriteTransform(scale,cx,cy,optical.opticalOffsetX,optical.opticalOffsetY);
   const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
+  const unavailableLabel=i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
   return`<img src="${url}" data-src-key="${escAttr(url)}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
     style="image-rendering:${rendering};object-fit:contain;transform:${transform};transform-origin:${transformOrigin};clip-path:inset(0)"
     data-catalog-id="${escAttr(context.catalogId)}" data-optical-scale="${Number(optical.opticalScale)||1}" data-optical-x="${Number(optical.opticalOffsetX)||0}" data-optical-y="${Number(optical.opticalOffsetY)||0}"
-    data-scale-cap="${scaleCap||''}" data-fallbacks="${fallbacks}" onload="validateSpriteLoad(this)" onerror="trySpriteFallback(this)" loading="lazy" decoding="async">`;
+    data-scale-cap="${scaleCap||''}" data-fallback-label="${escAttr(unavailableLabel)}" data-fallbacks="${fallbacks}" onload="validateSpriteLoad(this)" onerror="trySpriteFallback(this)" loading="lazy" decoding="async">`;
 }
 function validateSpriteLoad(img){
   if(!img||img.dataset.spriteValidated===img.currentSrc)return;
@@ -1213,7 +1244,13 @@ function validateSpriteLoad(img){
 }
 function trySpriteFallback(img){
   const fbs=(img.dataset.fallbacks||'').split('|').filter(Boolean);
-  if(!fbs.length){img.style.display='none';return;}
+  if(!fbs.length){
+    const placeholder=document.createElement('span'),label=img.dataset.fallbackLabel||i18nCore.t('sprite.artUnavailable',{name:img.title||'Pokémon'});
+    placeholder.className=`pc-sprite-placeholder load-failed ${img.className||''}`;
+    placeholder.style.width=`${img.width||40}px`;placeholder.style.height=`${img.height||40}px`;
+    placeholder.setAttribute('role','img');placeholder.setAttribute('aria-label',label);placeholder.title=label;placeholder.textContent='?';
+    img.replaceWith(placeholder);return;
+  }
   const next=fbs.shift();
   img.dataset.fallbacks=fbs.join('|');
   img.dataset.srcKey=next;
@@ -1998,6 +2035,7 @@ function syncPokemonGoSearchLanguageControl(){
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
+  if(cur&&favoriteBrowseState.selected)renderFavoriteBrowseResults();
   if(cur){const declarations=productDeclarations();renderCombinedList(declarations);renderIntentEntries('',declarations);if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5248,6 +5286,7 @@ function applyTranslationAttributes(root=document){
 function renderInterimProductLabels(){
   document.documentElement.lang=i18nCore.getLocale();
   applyTranslationAttributes();
+  syncProfileDirtyState();
   const navLabels=[
     ['nav-mylist','nav.myList','nav.myList'],['nav-find','trainer.modeTrainers','trainer.modeTrainers'],
     ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
@@ -5918,8 +5957,9 @@ function favoriteLookupModel(){
   }),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
   return{...aggregate,...tradeListComparisonDomain.whoWants(aggregate.entries,{selected:favoriteBrowseState.selected,variantKey:favoriteLookupVariant},{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})};
 }
+function favoriteLookupSignature(model){return JSON.stringify([pokemonGoSearchLocale(),model.entries]);}
 function favoriteVariantLabel(entry){
-  return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
+  return productShareDescription({...entry,p:'',note:''});
 }
 function favoriteLookupControls(){
   const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
@@ -5936,7 +5976,7 @@ function renderFavoriteBrowseResults(){
   if(!favorites.length){output.removeAttribute('aria-busy');output.innerHTML=favoriteBrowseEmpty('favoriteBrowse.noFavoritesTitle','favoriteBrowse.noFavoritesBody');return;}
   if(!selected){output.removeAttribute('aria-busy');output.innerHTML='';return;}
   if(favoriteBrowseState.busy)return;
-  const model=favoriteLookupModel();output.dataset.lookupSignature=JSON.stringify(model.entries);
+  const model=favoriteLookupModel();output.dataset.lookupSignature=favoriteLookupSignature(model);
   const options=model.variants.map(item=>`<option value="${escAttr(item.key)}"${item.key===favoriteLookupVariant?' selected':''}>${escHtml(favoriteVariantLabel(item.entry))}</option>`).join('');
   const missing=favoriteLookupVariant&&!model.variants.some(item=>item.key===favoriteLookupVariant);
   const rows=model.entries.flatMap(entry=>entry.members.map(match=>({entry,match})));
@@ -5977,7 +6017,7 @@ document.getElementById('favorite-browse-results')?.addEventListener('change',ev
 });
 document.getElementById('favorite-browse-results')?.addEventListener('click',event=>{
   if(event.target.closest('[data-lookup-more]')){favoriteLookupLimit+=60;renderFavoriteBrowseResults();return;}
-  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==JSON.stringify(favoriteLookupModel().entries)){
+  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==favoriteLookupSignature(favoriteLookupModel())){
     event.preventDefault();event.stopImmediatePropagation();renderFavoriteBrowseResults();toast(groupText('stale'));
   }
 },true);
@@ -6559,8 +6599,16 @@ function openProductShare(mode='link'){
   document.getElementById('product-share-scope').value='full';
   openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
 }
+function productShareCategoryLabel(entry){
+  const category=entry.category||entry.type||entry.ref?.type;
+  const key=category==='dynamax'?'list.dynamax':category==='gmax'?'list.gigantamax':'';
+  if(!key)return'';
+  const label=i18nCore.t(key),name=String(entry.dn||entry.name||'').normalize('NFKC').toLocaleLowerCase();
+  const markers=category==='dynamax'?[label,'dynamax','dmax','d-max','ダイマックス','dinamax']:[label,'gigantamax','gmax','g-max','キョダイマックス','gigamax','gigadynamax'];
+  return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
+}
 function productShareDescription(entry){
-  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',entry.note].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -6600,12 +6648,20 @@ async function exportProductShareImage(){
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
   const flag=(name,label)=>entry[name]&&!sectionFlags.includes(name)?label:'';
-  const category=entry.category||entry.type||entry.ref?.type;
-  const form=category==='dynamax'?i18nCore.t('list.dynamax'):category==='gmax'?i18nCore.t('list.gigantamax'):'';
+  const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
   return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,
     flag('lucky',i18nCore.t('myList.lucky')),flag('xxl','XXL'),flag('xxs','XXS'),entry.note].filter(Boolean).join(' · ');
+}
+function drawProductShareMissingArt(ctx,x,y,width,height){
+  ctx.fillStyle='#20282d';ctx.fillRect(x,y,width,height);
+  ctx.strokeStyle='#59656d';ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,width-1,height-1);
+  ctx.textAlign='center';ctx.fillStyle='#d8e0e5';ctx.font='700 22px sans-serif';
+  ctx.fillText('?',x+width/2,y+height/2-4);
+  ctx.font='600 9px sans-serif';ctx.fillStyle='#a9b1b7';
+  ctx.fillText(i18nCore.t('export.artUnavailable'),x+width/2,y+height-10);
+  ctx.textAlign='left';
 }
 async function renderProductShareImage(entries,owner){
   const columns=8,width=900,padding=24,cellWidth=(width-padding*2)/columns;
@@ -6613,7 +6669,7 @@ async function renderProductShareImage(entries,owner){
   const canvas=document.createElement('canvas'),measure=canvas.getContext('2d');measure.font='12px sans-serif';
   const wrap=text=>{
     const lines=[];
-    for(const paragraph of String(text||'').split('\n')){
+    for(const paragraph of String(text||'').split(/\r\n?|\n|\u2028/u)){
       let line='';
       for(const word of paragraph.split(/\s+/).filter(Boolean)){
         const candidate=line?`${line} ${word}`:word;
@@ -6666,7 +6722,9 @@ async function renderProductShareImage(entries,owner){
     items.forEach(({entry,image,nameLines,detailLines},index)=>{
       if(index&&index%rowColumns===0)rowTop+=heights[index/rowColumns-1];
       const x=left+(index%rowColumns)*cellWidth;
-      if(image)drawImageContain(ctx,image,x+(cellWidth-76)/2,rowTop,76,76);
+      const artX=x+(cellWidth-76)/2;
+      if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
+      else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
       if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
       nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
@@ -7569,6 +7627,7 @@ function exportSpriteUrl(e){
 function exportSpriteFallbackUrls(e){
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
   const context=spriteCatalogContext(e.no,e.spriteName||e.name,e.dn||e.name,e.catalogId);
+  const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender});
   const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
   const compatibilityKeys=[...context.lookupKeys];
@@ -7576,11 +7635,11 @@ function exportSpriteFallbackUrls(e){
     const match=String(value||'').match(/^(.+?)\s*\((Alolan|Galarian|Hisuian|Paldean)\s+Forme?\)$/i);
     if(match)compatibilityKeys.push(`${regionalPrefix[match[2].toLowerCase()]}-${match[1].trim()}`);
   }
-  const mappedHome=reviewed?.knownVariant?[]:[...new Set(compatibilityKeys.flatMap(key=>[COSTUME_FORM_SPRITE_IDS[key],REGIONAL_FORM_IDS[key]]).filter(Boolean))]
+  const mappedHome=reviewed?.knownVariant||identity.explicitForm&&identity.genderDistinct?[]:[...new Set(compatibilityKeys.flatMap(key=>[COSTUME_FORM_SPRITE_IDS[key],REGIONAL_FORM_IDS[key]]).filter(Boolean))]
     .map(id=>`${SPRITE_BASE}other/home/${id}.png`);
   const highQuality=[...mappedHome,...publicSpriteUrls(e.spriteName||e.name,e.gender,e.no)];
   // A stored override is useful only when it is on the reviewed runtime allowlist.
-  const approvedOverride=isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
+  const approvedOverride=!identity.exactRequired&&isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
   return[...new Set([...highQuality,approvedOverride,...chain].filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
 function loadCanvasImage(url){
@@ -9569,13 +9628,40 @@ async function denyRequest(reqId){
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
+let _profileSavedDraft=null;
+function profileDraftValues(){
+  return{
+    friendCode:document.getElementById('fc-inp')?.value||'',
+    bio:document.getElementById('prof-bio')?.value||'',
+    discord:document.getElementById('prof-discord')?.value||'',
+    avatarPokemon:document.getElementById('prof-av-input')?.value||''
+  };
+}
+function captureProfileDraft(){_profileSavedDraft=profileDraftValues();syncProfileDirtyState();}
+function syncProfileDirtyState(){
+  if(!_profileSavedDraft)return false;
+  const dirty=JSON.stringify(profileDraftValues())!==JSON.stringify(_profileSavedDraft);
+  const save=document.getElementById('profile-save'),discard=document.getElementById('profile-discard'),status=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');
+  if(save)save.disabled=!dirty;if(discard)discard.disabled=!dirty;
+  const code=friendCode?.value.trim()||'';
+  if(friendCode?.getAttribute('aria-invalid')==='true'&&code&&!validateFc(code)){
+    if(status){status.classList.add('is-error');status.textContent=i18nCore.t('profile.friendCodeInvalid');}
+    return dirty;
+  }
+  if(friendCode)friendCode.removeAttribute('aria-invalid');
+  if(status){status.classList.remove('is-error');status.textContent=i18nCore.t(dirty?'settings.profileUnsaved':'settings.profileNoChanges');}
+  return dirty;
+}
+function discardProfileChanges(){
+  closeAvatarPicker();updateFcDisplay();document.getElementById('settings-profile-heading')?.focus({preventScroll:true});
+}
 function updateFcDisplay(){
   const ud=allData.users?.[cur]||{};
   const fc=ud.friendCode||'';
   document.getElementById('my-fc-wrap').innerHTML=fc
     ?`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">🎮 ${fc}</div>`
     :`<div class="fc-chip" onclick="openAccountSettingsSection('profile')">+ ${escHtml(i18nCore.t('profile.addFriendCode'))}</div>`;
-  document.getElementById('pfc-disp').textContent=fc||i18nCore.t('profile.notSet');
+  const display=document.getElementById('pfc-disp');if(display)display.textContent=fc||i18nCore.t('profile.notSet');
   document.getElementById('fc-inp').value=fc;
   // Populate profile fields
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
@@ -9585,6 +9671,7 @@ function updateFcDisplay(){
   const picker=document.getElementById('wp-picker');
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
   updateAvatarPreview(ud.avatarPokemon||'');
+  captureProfileDraft();
 }
 function applyAccountSyncProviderProfile(profile){
   if(!cur||!providerOnlyIdentityActive()||managedAccountSyncRuntime?.ownerUid!==auth?.currentUser?.uid)return false;
@@ -9592,13 +9679,14 @@ function applyAccountSyncProviderProfile(profile){
   const s=getLocal();s.users[cur]=normalizedUserRecord(cur,s.users?.[cur],{...values.value,identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null});
   saveLocal(s);allData=runtimeDataWithSelectedTrainer(s);queueRefreshAll('account-sync:provider-profile');return true;
 }
-async function saveProfile(){
+async function saveProfile(event){
+  event?.preventDefault?.();
   const fc=document.getElementById('fc-inp').value.trim();
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
   const discord=document.getElementById('prof-discord')?.value.trim()||'';
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
-  const err=document.getElementById('profile-err');err.textContent='';
-  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');return;}
+  const err=document.getElementById('profile-err'),friendCode=document.getElementById('fc-inp');err.textContent='';err.classList.toggle('is-error',false);
+  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');err.classList.add('is-error');friendCode?.setAttribute('aria-invalid','true');friendCode?.focus();return;}
   const upd={friendCode:fc,bio,discord,avatarPokemon};
   if(providerOnlyIdentityActive()){
     const runtime=managedAccountSyncRuntime;
@@ -9893,6 +9981,7 @@ let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
 let _pendingSettingsRouteSection=null;
+let _settingsInertSiblings=[];
 const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data']);
 const SETTINGS_DESKTOP_QUERY='(min-width:768px)';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
@@ -9975,6 +10064,21 @@ function restoreAndClearSettingsScrollSnapshot(){
   requestAnimationFrame(()=>preserveSettingsScrollSnapshot(snapshot));
 }
 function settingsUsesPageMode(){return _settingsContext==='account'&&matchMedia(SETTINGS_DESKTOP_QUERY).matches;}
+function setSettingsUnderlyingContentInert(active){
+  const overlay=document.getElementById('settings-modal');
+  if(active){
+    if(_settingsInertSiblings.length||!overlay)return;
+    let current=overlay;
+    while(current&&current!==document.body){
+      const parent=current.parentElement;if(!parent)break;
+      for(const element of parent.children)if(element!==current&&element instanceof HTMLElement)_settingsInertSiblings.push({element,inert:element.inert});
+      current=parent;
+    }
+    _settingsInertSiblings.forEach(({element})=>{element.inert=true;});
+    return;
+  }
+  _settingsInertSiblings.forEach(({element,inert})=>{if(element.isConnected)element.inert=inert;});_settingsInertSiblings=[];
+}
 function applySettingsPresentation(){
   const overlay=document.getElementById('settings-modal');if(!overlay)return;
   const pageMode=settingsUsesPageMode();overlay.classList.toggle('settings-page-mode',pageMode);
@@ -10180,6 +10284,7 @@ function openModal(id,options={}){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   _modalActiveId=id;
   m.classList.add('open');
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(true);
   // Focus first focusable element
   _modalFocusTimer=setTimeout(()=>{
     _modalFocusTimer=null;
@@ -10191,8 +10296,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
+    if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
-    if(ev.key!=='Tab'||(id==='settings-modal'&&settingsUsesPageMode()))return;
+    if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10209,6 +10315,7 @@ function closeModal(id){
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
+  if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
   const returnFocus=_modalPrevFocus;_modalPrevFocus=null;
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
@@ -10513,6 +10620,10 @@ function returnToTradeComparison(){
 // paste the result into PoGo's bag search to see safe-to-transfer mons.
 const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
 const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
+// Containment: existing source coverage cannot prove that every selected
+// trainer's current declarations are present. Keep both generation and copy
+// closed until that coverage contract is implemented and tested.
+const SAFE_TRANSFER_GENERATION_ENABLED=false;
 function safeTransferPreferenceKey(base){
   const uid=String(auth?.currentUser?.uid||'').trim();
   return uid?`${base}:${encodeURIComponent(uid)}`:null;
@@ -10632,6 +10743,7 @@ function _safeTransferAllDex(){
   return [...seen].sort((a,b)=>a-b);
 }
 function computeSafeTransferString(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:_safeTransferSelected?.size||0};
   if(!_safeTransferSelected||!_safeTransferSelected.size){
     return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
   }
@@ -10671,6 +10783,10 @@ function renderSafeTransferOutput(){
   const copyBtn=document.getElementById('stb-copy-btn');
   if(!out||!summary)return;
   const r=computeSafeTransferString();
+  if(r.status==='disabled'){
+    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
+    out.value='';warnWrap.innerHTML='';if(copyBtn)copyBtn.disabled=true;return;
+  }
   if(!r.picked){
     summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
     out.value='';
@@ -10697,6 +10813,12 @@ function renderSafeTransferOutput(){
 }
 async function copySafeTransferString(){
   const out=document.getElementById('stb-output');
+  const result=computeSafeTransferString();
+  if(result.status==='disabled'){
+    if(out){out.value='';out.blur();}
+    const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
+    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return;
+  }
   if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
   try{
     await copyText(out.value);
@@ -11388,7 +11510,7 @@ function avatarEntryForName(name){
   return legacy?pokemonCatalogDomain.decorateCatalogEntry(legacy):null;
 }
 function updateAvatarPreview(name){
-  const prev=document.getElementById('prof-av-preview');
+  const prev=document.getElementById('settings-account-av');
   const label=document.getElementById('prof-av-name'),clear=document.getElementById('prof-av-clear');
   if(!prev)return;
   if(!name||!name.trim()){
@@ -11421,20 +11543,21 @@ function renderAvatarPicker(query=''){
   out.innerHTML=matches.length?matches.map((entry,index)=>`<button type="button" class="profile-avatar-option${entry.name===selected?' selected':''}" role="option" aria-selected="${entry.name===selected}" data-catalog-id="${escAttr(entry.catalogId)}" onclick="selectAvatarOption(this.dataset.catalogId)" tabindex="${index===avatarPickerFocusIndex?'0':'-1'}"><span class="profile-avatar-option-sprite sprite-slot-profile">${spriteImg(entry.no,48,'avatar-picker-sprite',entry.name,'',entry.displayName,{catalogId:entry.catalogId,scaleCap:1.8})}</span><span>${escHtml(entry.displayName)}</span></button>`).join(''):`<p class="profile-avatar-empty">${escHtml(i18nCore.t('common.noResults'))}</p>`;
 }
 function avatarPickerKeydown(event){
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeAvatarPicker();return;}
   const options=[...document.querySelectorAll('#prof-av-results .profile-avatar-option')];if(!options.length)return;
-  if(event.key==='Escape'){event.preventDefault();closeAvatarPicker();return;}
   if(!['ArrowDown','ArrowUp','Home','End','Enter'].includes(event.key))return;
   event.preventDefault();
+  const focusedIndex=options.indexOf(document.activeElement);if(focusedIndex>=0)avatarPickerFocusIndex=focusedIndex;
   if(event.key==='Enter'){options[avatarPickerFocusIndex]?.click();return;}
   if(event.key==='Home')avatarPickerFocusIndex=0;else if(event.key==='End')avatarPickerFocusIndex=options.length-1;else avatarPickerFocusIndex=(avatarPickerFocusIndex+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
   options.forEach((option,index)=>option.tabIndex=index===avatarPickerFocusIndex?0:-1);options[avatarPickerFocusIndex]?.focus();
 }
 function selectAvatarOption(catalogId){
   const entry=avatarEntryForCatalogId(catalogId),input=document.getElementById('prof-av-input');if(!entry||!input)return;
-  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();
+  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();syncProfileDirtyState();
 }
 function clearAvatarSelection(){
-  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');
+  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');syncProfileDirtyState();
 }
 // Build a <img> that uses the full sprite fallback chain — same cascade
 // logic spriteImg() uses, but with avatar styling (no transform-scale, just
@@ -11664,12 +11787,12 @@ async function copyShareLink(){
   if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
   const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
   const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
-  const initialDeclarations=declarationState();
   const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
   linkPublicationStatus('product.publishing');
   const input=document.getElementById('share-public-url');if(input)input.value=url;
   try{
+    const initialDeclarations=declarationState();
     const result=await publishPublicShareNow(username,'explicit_share');
     if(!current())return;
     if(declarationState()!==initialDeclarations){
@@ -12040,11 +12163,9 @@ async function renderSpecialBoardImage(board,username){
     const img=await loadCanvasImageWithFallback(urls);
     if(img)imgMap.set(boardEntryImageKey(e),img);
   }));
-  const drawableBoard={
-    lf:sourceBoard.lf.filter(entry=>imgMap.has(boardEntryImageKey(entry))),
-    ft:sourceBoard.ft.filter(entry=>imgMap.has(boardEntryImageKey(entry)))
-  };
-  if(!drawableBoard.lf.length&&!drawableBoard.ft.length)throw new Error('No reviewed artwork is available for this board export');
+  // Layout/counts are declaration-owned. Missing art gets an honest marker;
+  // it must never delete a trade entry from the exported board.
+  const drawableBoard={lf:[...sourceBoard.lf],ft:[...sourceBoard.ft]};
   const layout=specialTradeBoardExportDomain.buildLayout(drawableBoard);
   const W=layout.width,pad=layout.padding,headerH=layout.headerHeight,footerH=layout.footerHeight;
   const gridCols=layout.columns,gridGap=layout.cardGap,gridCellH=layout.cardHeight,gridSprSize=48,sectionHdrH=layout.sectionHeaderHeight;
@@ -12154,7 +12275,8 @@ async function renderSpecialBoardImage(board,username){
       ctx.save();
       const gender=boardEntryGender(e);
       const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+4,img=imgMap.get(boardEntryImageKey(e));
-      drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
+      if(img)drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
+      else drawSpriteFallback(ctx,e,sx,sy,gridSprSize);
       drawEntryMarkers(e,cx,cy,gridCellW,gender,img);
       ctx.restore();
     });

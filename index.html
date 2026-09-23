@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-09-22.117';
+window.__POGO_RELEASE_ID='2026-09-22.119';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:true,
@@ -83,7 +83,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-09-22.117">
+<link rel="stylesheet" href="css/app.css?v=2026-09-22.119">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -543,7 +543,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <div id="stb-warn-wrap"></div>
         <textarea class="stb-output" id="stb-output" readonly data-i18n-placeholder="safeTransfer.placeholder" data-i18n-aria-label="safeTransfer.outputLabel" placeholder="Choose at least one trainer to create a search string." aria-label="Generated search string"></textarea>
         <div class="stb-actions">
-          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
+          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()" disabled><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
           <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')" data-i18n="common.close">Close</button>
         </div>
       </div>
@@ -737,28 +737,36 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   <div class="modal settings-modal ui-container ui-container-wide">
     <div class="settings-modal-header">
       <div><h2 id="settings-title" data-i18n="settings.title">Settings</h2><p id="settings-description" data-i18n="settings.description">Manage your profile, app health, appearance, and session.</p></div>
-      <button type="button" class="settings-modal-close btn btn-icon" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings">×</button>
+      <button type="button" class="settings-modal-close btn btn-secondary" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-left"></use></svg><span data-i18n="account.closeSettings">Close settings</span></button>
     </div>
     <div class="settings-modal-body">
       <div class="settings-layout" id="settings-layout">
         <nav class="settings-nav settings-account-only" aria-label="Settings sections" data-i18n-aria-label="settings.sectionsLabel"><div class="settings-nav-list">
-          <button type="button" class="settings-nav-button" data-settings-target="profile" onclick="selectSettingsSection('profile')"><span class="settings-nav-icon" aria-hidden="true">◉</span><span data-i18n="settings.sectionProfile">Profile</span></button>
-          <button type="button" class="settings-nav-button" data-settings-target="language" onclick="selectSettingsSection('language')"><span class="settings-nav-icon" aria-hidden="true">文</span><span data-i18n="settings.sectionLanguage">Language</span></button>
-          <button type="button" class="settings-nav-button" data-settings-target="appearance" onclick="selectSettingsSection('appearance')"><span class="settings-nav-icon" aria-hidden="true">◐</span><span data-i18n="settings.sectionAppearance">Appearance</span></button>
-          <button type="button" class="settings-nav-button" data-settings-target="security" onclick="selectSettingsSection('security')"><span class="settings-nav-icon" aria-hidden="true">◇</span><span data-i18n="settings.sectionSecurity">Account &amp; Security</span></button>
-          <button type="button" class="settings-nav-button" data-settings-target="tools" onclick="selectSettingsSection('tools')"><span class="settings-nav-icon" aria-hidden="true">⌘</span><span data-i18n="settings.sectionTools">Tools</span></button>
-          <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><span class="settings-nav-icon" aria-hidden="true">▣</span><span data-i18n="settings.sectionData">App &amp; Data</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="profile" onclick="selectSettingsSection('profile')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span data-i18n="settings.sectionProfile">Profile</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="language" onclick="selectSettingsSection('language')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="settings.sectionLanguage">Language</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="appearance" onclick="selectSettingsSection('appearance')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-sun"></use></svg><span data-i18n="settings.sectionAppearance">Appearance</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="security" onclick="selectSettingsSection('security')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="settings.sectionSecurity">Account &amp; Security</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="tools" onclick="selectSettingsSection('tools')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span data-i18n="settings.sectionTools">Tools</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg><span data-i18n="settings.sectionData">App &amp; Data</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
         </div></nav>
         <div class="settings-detail" id="settings-detail">
           <button type="button" class="bghost btn btn-secondary settings-mobile-back" onclick="showSettingsSectionList()" data-i18n="settings.backToSections">Back to Settings</button>
           <section class="settings-section settings-account-only" data-settings-section="profile" aria-labelledby="settings-profile-heading">
-            <div class="settings-section-heading"><h2 id="settings-profile-heading" data-i18n="settings.sectionProfile">Profile</h2></div>
-            <div class="settings-form" id="settings-profile-form">
-              <section class="settings-profile-group" aria-labelledby="settings-profile-trainer-heading"><h3 id="settings-profile-trainer-heading" data-i18n="settings.profileGroupTrainer">Trainer</h3><div class="settings-profile-card card-row"><div class="av" id="settings-account-av">?</div><div class="settings-profile-copy"><strong id="settings-account-name">—</strong><span data-i18n="settings.profileTrainerName">Trainer name</span></div></div><div class="profile-avatar-picker"><div class="profile-avatar-preview sprite-slot-avatar" id="prof-av-preview">?</div><div class="profile-avatar-control"><span class="profile-avatar-label" data-i18n="profile.avatar">Avatar Pokémon (optional)</span><input type="hidden" id="prof-av-input"><button type="button" class="profile-avatar-open btn btn-secondary" id="prof-av-open" onclick="openAvatarPicker()" aria-haspopup="dialog"><span id="prof-av-name" data-i18n="avatar.choose">Choose Pokémon</span></button><button type="button" class="profile-avatar-clear btn btn-ghost" id="prof-av-clear" onclick="clearAvatarSelection()" data-i18n="avatar.clear">Remove avatar</button></div></div><div class="profile-avatar-dialog" id="prof-av-dialog" role="dialog" aria-modal="false" aria-labelledby="prof-av-dialog-title" hidden><div class="profile-avatar-dialog-head"><strong id="prof-av-dialog-title" data-i18n="avatar.title">Choose an avatar Pokémon</strong><button type="button" class="btn btn-icon" onclick="closeAvatarPicker()" data-i18n-aria-label="common.close" aria-label="Close">×</button></div><div class="app-search-shell"><svg class="ui-icon ui-icon-sm app-search-icon" aria-hidden="true"><use href="#ui-icon-search"></use></svg><input class="app-search-input" id="prof-av-search" type="search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="prof-av-results" data-i18n-placeholder="avatar.search" placeholder="Search Pokémon" oninput="renderAvatarPicker(this.value)" onkeydown="avatarPickerKeydown(event)"></div><div class="profile-avatar-results" id="prof-av-results" role="listbox" data-i18n-aria-label="avatar.results" aria-label="Avatar Pokémon results"></div><p class="profile-avatar-help" data-i18n="avatar.help">Verified sprites are shown. More results appear as you search.</p></div></section>
-              <section class="settings-profile-group" aria-labelledby="settings-profile-pogo-heading"><h3 id="settings-profile-pogo-heading" data-i18n="settings.profileGroupPokemonGo">Pokémon GO</h3><div class="field"><label data-i18n="profile.friendCode">Friend Code</label><div class="settings-identity-value" id="pfc-disp">—</div></div><div class="field"><label for="fc-inp" data-i18n="profile.updateFriendCode">Update Friend Code</label><input class="field-control" type="text" id="fc-inp" placeholder="0000 0000 0000" maxlength="14" inputmode="numeric" oninput="formatFc(this)"><div class="fc-hint" id="fc-hint"></div></div></section>
-              <section class="settings-profile-group" aria-labelledby="settings-profile-about-heading"><h3 id="settings-profile-about-heading" data-i18n="settings.profileGroupAbout">About</h3><div class="field profile-bio-field"><label for="prof-bio"><span data-i18n="profile.bio">Bio</span> <span data-i18n="profile.bioVisibility">(optional, shown to other trainers)</span></label><textarea class="field-control" id="prof-bio" data-i18n-placeholder="profile.bioPlaceholder" placeholder="For example, your area and trade preferences" maxlength="120" rows="3"></textarea></div><div class="field"><label for="prof-discord"><span data-i18n="profile.discordHandle">Discord handle</span> <span data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40"></div></section>
-              <div class="settings-form-status" id="profile-err" role="status" aria-live="polite"></div><div class="settings-form-actions"><button class="bpri btn btn-primary" onclick="saveProfile()" data-i18n="common.save">Save</button></div>
-            </div>
+            <div class="settings-section-heading"><h2 id="settings-profile-heading" data-i18n="settings.sectionProfile">Profile</h2><p data-i18n="settings.profileSharingSummary">Your trainer identity and details you can share.</p></div>
+            <form class="settings-form settings-profile-form" id="settings-profile-form" onsubmit="saveProfile(event)">
+              <section class="settings-profile-group settings-profile-identity" aria-labelledby="settings-profile-trainer-heading">
+                <h3 class="sr-only" id="settings-profile-trainer-heading" data-i18n="settings.profileGroupTrainer">Trainer</h3>
+                <div class="settings-identity-row">
+                  <div class="profile-avatar-preview sprite-slot-avatar" id="settings-account-av">?</div>
+                  <div class="settings-profile-copy"><strong id="settings-account-name">—</strong><span data-i18n="settings.profileTrainerName">Trainer name</span></div>
+                  <div class="profile-avatar-control"><input type="hidden" id="prof-av-input"><button type="button" class="profile-avatar-open btn btn-secondary" id="prof-av-open" onclick="openAvatarPicker()" aria-haspopup="dialog"><span id="prof-av-name" data-i18n="avatar.choose">Choose Pokémon</span></button><button type="button" class="profile-avatar-clear btn btn-ghost" id="prof-av-clear" onclick="clearAvatarSelection()" data-i18n="avatar.clear">Remove avatar</button></div>
+                </div>
+                <div class="profile-avatar-dialog" id="prof-av-dialog" role="dialog" aria-modal="false" aria-labelledby="prof-av-dialog-title" hidden><div class="profile-avatar-dialog-head"><strong id="prof-av-dialog-title" data-i18n="avatar.title">Choose an avatar Pokémon</strong><button type="button" class="btn btn-icon" onclick="closeAvatarPicker()" data-i18n-aria-label="common.close" aria-label="Close">×</button></div><div class="app-search-shell"><svg class="ui-icon ui-icon-sm app-search-icon" aria-hidden="true"><use href="#ui-icon-search"></use></svg><input class="app-search-input" id="prof-av-search" type="search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="prof-av-results" data-i18n-placeholder="avatar.search" placeholder="Search Pokémon" oninput="renderAvatarPicker(this.value)" onkeydown="avatarPickerKeydown(event)"></div><div class="profile-avatar-results" id="prof-av-results" role="listbox" data-i18n-aria-label="avatar.results" aria-label="Avatar Pokémon results" onkeydown="avatarPickerKeydown(event)"></div><p class="profile-avatar-help" data-i18n="avatar.help">Verified sprites are shown. More results appear as you search.</p></div>
+              </section>
+              <section class="settings-profile-group" aria-labelledby="settings-profile-pogo-heading"><h3 id="settings-profile-pogo-heading" data-i18n="settings.profileGroupPokemonGo">Pokémon GO</h3><div class="settings-field-row"><label for="fc-inp"><span data-i18n="profile.friendCode">Friend Code</span><small data-i18n="settings.friendCodeHelp">12 digits, included when you share your trainer profile.</small></label><div><input class="field-control settings-friend-code" type="text" id="fc-inp" placeholder="0000 0000 0000" maxlength="14" inputmode="numeric" aria-describedby="fc-hint" oninput="formatFc(this);syncProfileDirtyState()"><div class="fc-hint" id="fc-hint"></div></div></div></section>
+              <section class="settings-profile-group" aria-labelledby="settings-profile-about-heading"><h3 id="settings-profile-about-heading" data-i18n="settings.profileGroupAbout">About</h3><div class="settings-field-row profile-bio-field"><label for="prof-bio"><span data-i18n="profile.bio">Bio</span><small data-i18n="settings.profileSharedOptional">Optional, included when you share your profile.</small></label><textarea class="field-control" id="prof-bio" data-i18n-placeholder="profile.bioPlaceholder" placeholder="For example, your area and trade preferences" maxlength="120" rows="3" oninput="syncProfileDirtyState()"></textarea></div><div class="settings-field-row"><label for="prof-discord"><span data-i18n="profile.discordHandle">Discord handle</span><small data-i18n="common.optional">Optional</small></label><input class="field-control" type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40" oninput="syncProfileDirtyState()"></div></section>
+              <div class="settings-form-actions settings-profile-actions"><div class="settings-form-status" id="profile-err" role="status" aria-live="polite">No unsaved changes</div><button type="button" class="btn btn-secondary" id="profile-discard" onclick="discardProfileChanges()" disabled data-i18n="settings.discardChanges">Discard</button><button type="submit" class="bpri btn btn-primary" id="profile-save" disabled data-i18n="settings.saveChanges">Save changes</button></div>
+            </form>
           </section>
           <section class="settings-section language-settings-panel" data-settings-section="language" aria-labelledby="settings-language-heading">
             <div class="settings-section-heading"><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
@@ -862,93 +870,93 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-09-22.117"></script>
-<script src="js/domain/productLimits.js?v=2026-09-22.117"></script>
-<script src="js/domain/favoriteCapabilities.js?v=2026-09-22.117"></script>
-<script src="js/domain/favoritePickerModel.js?v=2026-09-22.117"></script>
-<script src="js/domain/priorities.js?v=2026-09-22.117"></script>
-<script src="js/ui/badges.js?v=2026-09-22.117"></script>
-<script src="js/domain/username.js?v=2026-09-22.117"></script>
-<script src="js/domain/requestAccess.js?v=2026-09-22.117"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-22.117"></script>
-<script src="js/domain/priorityValues.js?v=2026-09-22.117"></script>
-<script src="js/domain/scheduleDates.js?v=2026-09-22.117"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-09-22.117"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-09-22.117"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-22.117"></script>
-<script src="js/domain/searchStrings.js?v=2026-09-22.117"></script>
-<script src="js/ui/stringHtml.js?v=2026-09-22.117"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-09-22.117"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-09-22.117"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-09-22.117"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-09-22.117"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-09-22.117"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-22.117"></script>
-<script src="js/domain/fuzzyText.js?v=2026-09-22.117"></script>
-<script src="js/domain/autocompleteText.js?v=2026-09-22.117"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-09-22.117"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-09-22.117"></script>
-<script src="js/domain/relativeTime.js?v=2026-09-22.117"></script>
-<script src="js/domain/clientRelease.js?v=2026-09-22.117"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-09-22.117"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-22.117"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-09-22.117"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-09-22.117"></script>
-<script src="js/domain/eventPresentation.js?v=2026-09-22.117"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-09-22.117"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-09-22.117" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-09-22.117"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-09-22.117"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-09-22.117"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-09-22.117"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-09-22.117"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-09-22.117"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-09-22.117" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-09-22.117"></script>
-<script src="js/utils/textSafety.js?v=2026-09-22.117"></script>
-<script src="js/ui/stringPanels.js?v=2026-09-22.117"></script>
-<script src="js/ui/emptyState.js?v=2026-09-22.117"></script>
-<script src="js/i18n/locales/en.js?v=2026-09-22.117"></script>
-<script src="js/i18n/locales/ja.js?v=2026-09-22.117"></script>
-<script src="js/i18n/locales/es.js?v=2026-09-22.117"></script>
-<script src="js/i18n/locales/de.js?v=2026-09-22.117"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-22.117"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-09-22.117"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-22.117"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-09-22.117"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-22.117"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-09-22.117"></script>
-<script src="js/i18n/core.js?v=2026-09-22.117"></script>
-<script src="js/services/firebaseClient.js?v=2026-09-22.117"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-09-22.117"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-09-22.117" data-pogo-provider-public-capability></script>
-<script src="js/services/favoriteResolverClient.js?v=2026-09-22.117"></script>
-<script src="js/services/favoriteWriteTransport.js?v=2026-09-22.117"></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-22.117"></script>
-<script src="js/data/subscriptionManager.js?v=2026-09-22.117"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-09-22.117"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-09-22.117"></script>
-<script src="js/data/currentUserRepository.js?v=2026-09-22.117"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-09-22.117"></script>
-<script src="js/data/publicShareRepository.js?v=2026-09-22.117"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-09-22.117"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-09-22.117"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-09-22.117"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-09-22.117"></script>
-<script src="js/data/favoriteAdditionRepository.js?v=2026-09-22.117"></script>
-<script src="js/data/accountSyncController.js?v=2026-09-22.117"></script>
-<script src="js/data/favoriteAdditions.js?v=2026-09-22.117"></script>
-<script src="js/data/favoriteRecoveryPreview.js?v=2026-09-22.117"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-09-22.117"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-09-22.117"></script>
-<script src="js/app/favoritePicker.js?v=2026-09-22.117"></script>
-<script src="js/app/application.js?v=2026-09-22.117"></script>
+<script src="data.js?v=2026-09-22.119"></script>
+<script src="js/domain/productLimits.js?v=2026-09-22.119"></script>
+<script src="js/domain/favoriteCapabilities.js?v=2026-09-22.119"></script>
+<script src="js/domain/favoritePickerModel.js?v=2026-09-22.119"></script>
+<script src="js/domain/priorities.js?v=2026-09-22.119"></script>
+<script src="js/ui/badges.js?v=2026-09-22.119"></script>
+<script src="js/domain/username.js?v=2026-09-22.119"></script>
+<script src="js/domain/requestAccess.js?v=2026-09-22.119"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-22.119"></script>
+<script src="js/domain/priorityValues.js?v=2026-09-22.119"></script>
+<script src="js/domain/scheduleDates.js?v=2026-09-22.119"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-09-22.119"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-09-22.119"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-22.119"></script>
+<script src="js/domain/searchStrings.js?v=2026-09-22.119"></script>
+<script src="js/ui/stringHtml.js?v=2026-09-22.119"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-09-22.119"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-09-22.119"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-09-22.119"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-09-22.119"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-09-22.119"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-22.119"></script>
+<script src="js/domain/fuzzyText.js?v=2026-09-22.119"></script>
+<script src="js/domain/autocompleteText.js?v=2026-09-22.119"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-09-22.119"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-09-22.119"></script>
+<script src="js/domain/relativeTime.js?v=2026-09-22.119"></script>
+<script src="js/domain/clientRelease.js?v=2026-09-22.119"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-09-22.119"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-22.119"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-09-22.119"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-09-22.119"></script>
+<script src="js/domain/eventPresentation.js?v=2026-09-22.119"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-09-22.119"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-09-22.119" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-09-22.119"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-09-22.119"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-09-22.119"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-09-22.119"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-09-22.119"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-09-22.119"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-09-22.119" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-09-22.119"></script>
+<script src="js/utils/textSafety.js?v=2026-09-22.119"></script>
+<script src="js/ui/stringPanels.js?v=2026-09-22.119"></script>
+<script src="js/ui/emptyState.js?v=2026-09-22.119"></script>
+<script src="js/i18n/locales/en.js?v=2026-09-22.119"></script>
+<script src="js/i18n/locales/ja.js?v=2026-09-22.119"></script>
+<script src="js/i18n/locales/es.js?v=2026-09-22.119"></script>
+<script src="js/i18n/locales/de.js?v=2026-09-22.119"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-22.119"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-09-22.119"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-22.119"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-09-22.119"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-22.119"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-09-22.119"></script>
+<script src="js/i18n/core.js?v=2026-09-22.119"></script>
+<script src="js/services/firebaseClient.js?v=2026-09-22.119"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-09-22.119"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-09-22.119" data-pogo-provider-public-capability></script>
+<script src="js/services/favoriteResolverClient.js?v=2026-09-22.119"></script>
+<script src="js/services/favoriteWriteTransport.js?v=2026-09-22.119"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-22.119"></script>
+<script src="js/data/subscriptionManager.js?v=2026-09-22.119"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-09-22.119"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-09-22.119"></script>
+<script src="js/data/currentUserRepository.js?v=2026-09-22.119"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-09-22.119"></script>
+<script src="js/data/publicShareRepository.js?v=2026-09-22.119"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-09-22.119"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-09-22.119"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-09-22.119"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-09-22.119"></script>
+<script src="js/data/favoriteAdditionRepository.js?v=2026-09-22.119"></script>
+<script src="js/data/accountSyncController.js?v=2026-09-22.119"></script>
+<script src="js/data/favoriteAdditions.js?v=2026-09-22.119"></script>
+<script src="js/data/favoriteRecoveryPreview.js?v=2026-09-22.119"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-09-22.119"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-09-22.119"></script>
+<script src="js/app/favoritePicker.js?v=2026-09-22.119"></script>
+<script src="js/app/application.js?v=2026-09-22.119"></script>
 
 </template>
 <script>
@@ -1112,10 +1120,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/priorityValues.js',
+      'js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js',
+      'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js',
+      'js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js',
       'js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js',
       'js/domain/publicSharePublication.js',
       ...(providerCapabilities().providerPublicReadSupport?['js/domain/providerPublicProjection.js']:[]),
-      'js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
+      'js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
       'js/utils/textSafety.js','js/ui/stringHtml.js','js/services/firebaseAppCheck.js',
       ...(providerCapabilities().providerPublicReadSupport?['js/services/providerPublicShareGateway.js']:[]),
       'js/app/publicShareApp.js'

@@ -122,6 +122,7 @@ test('search-language override is device-local and regenerates every visible str
   assert.match(block,/select\.disabled=!override/);
   assert.match(block,/renderCombinedList\(declarations\)/);
   assert.match(block,/renderTrainerGroupResults\(\)/);
+  assert.match(block,/favoriteBrowseState\.selected\)renderFavoriteBrowseResults\(\)/);
   assert.match(block,/renderStrings\(\)/);
   assert.doesNotMatch(block,/renderMyStrings\(/);
   assert.match(block,/renderDiffModal\(\)/);

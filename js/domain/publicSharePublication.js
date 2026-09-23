@@ -39,6 +39,9 @@
     return REQUIRED_LIST_SURFACES.filter(type=>value.includes(type));
   }
   const DECLARATION_FIELDS=Object.freeze(['intent','category','name','p','mod','gender','backgroundId','note','lucky','shiny','xxl','xxs']);
+  const PUBLIC_NOTE_LINE_SEPARATOR='\u2028';
+  function publicNoteValue(value){return String(value??'').replace(/\r\n?|\n/gu,PUBLIC_NOTE_LINE_SEPARATOR);}
+  function publicNoteForDisplay(value){return String(value??'').replace(/\u2028/gu,'\n');}
   function publicDeclarations(entries,{strict=false}={}){
     if(!Array.isArray(entries)||entries.length>2000)throw new TypeError('Invalid public declarations');
     return entries.map(entry=>{
@@ -49,7 +52,8 @@
           if(strict&&typeof entry[key]!=='boolean')throw new TypeError('Invalid public flag');
           item[key]=entry[key]===true;
         }else{
-          const value=entry[key]??'';
+          let value=entry[key]??'';
+          if(!strict&&key==='note'&&typeof value==='string')value=publicNoteValue(value);
           if(typeof value!=='string'||value.length>(key==='name'?200:160)||/[\u0000-\u001f\u007f]/u.test(value))throw new TypeError('Invalid public text');
           item[key]=value;
         }
@@ -269,6 +273,6 @@
 
   root.publicSharePublication=Object.freeze({
     REQUIRED_LIST_SURFACES,REQUIRED_SOURCE_SURFACES,ALLOWED_TRIGGERS,LIST_ALIASES,
-    DECLARATION_FIELDS,publicDeclarations,intentEntries,publicShareProjectionStatus,ownerProjectionReview,createPublicSharePublicationGate,buildPublicShareSnapshot
+    DECLARATION_FIELDS,PUBLIC_NOTE_LINE_SEPARATOR,publicNoteValue,publicNoteForDisplay,publicDeclarations,intentEntries,publicShareProjectionStatus,ownerProjectionReview,createPublicSharePublicationGate,buildPublicShareSnapshot
   });
 })(window);
