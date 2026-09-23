@@ -41,7 +41,7 @@ before(async () => { await adminAuth.createUser({ uid: 'original-pin-uid', email
   password: 'synthetic-pin-password-123' }); });
 after(async () => { await deleteApp(app); });
 
-test('Auth emulator allocates an orphan Google UID, rejects original linking, then preserves original UID after exact Admin unlink', async () => {
+test('Auth emulator collision requires provider and email release before the original PIN UID can link', async () => {
   const subject = 'synthetic-google-subject-1';
   const first = await authRequest('signInWithIdp', googleRequest(subject));
   assert.equal(first.status, 200);
@@ -70,13 +70,19 @@ test('Auth emulator allocates an orphan Google UID, rejects original linking, th
   });
   assert.equal(session.currentUser.uid, 'original-pin-uid');
   const collided = await authRequest('signInWithIdp', googleRequest(subject, pin.value.idToken));
+  assert.equal(collided.status, 200);
   assert.equal(collided.value.errorMessage ?? collided.value.error?.message,
     'FEDERATED_USER_ID_ALREADY_LINKED');
   assert.equal(collided.value.localId, undefined);
   const before = await adminAuth.getUser(orphanUid);
   assert.equal(before.providerData.find(item => item.providerId === 'google.com')?.uid, subject);
-  await adminAuth.updateUser(orphanUid, { providersToUnlink: ['google.com'],
-    email: `released-${orphanUid}@example.test` });
+  await adminAuth.updateUser(orphanUid, { providersToUnlink: ['google.com'] });
+  const providerOnlyRelease = await adminAuth.getUser(orphanUid);
+  assert.equal(providerOnlyRelease.providerData.some(item => item.providerId === 'google.com'), false);
+  assert.equal(providerOnlyRelease.email, 'synthetic-google@example.test');
+  const emailCollision = await authRequest('signInWithIdp', googleRequest(subject, pin.value.idToken));
+  assert.equal(emailCollision.value.errorMessage, 'EMAIL_EXISTS');
+  await adminAuth.updateUser(orphanUid, { email: `released-${orphanUid}@example.test` });
   const afterRelease = await adminAuth.getUser(orphanUid);
   assert.equal(afterRelease.providerData.some(item => item.providerId === 'google.com'), false);
   assert.equal(afterRelease.email, `released-${orphanUid}@example.test`.toLowerCase());

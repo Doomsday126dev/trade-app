@@ -98,7 +98,7 @@ test('all supported locales contain Google, onboarding, and recovery copy',()=>{
 test('signed-out Google entry directs existing trainers to PIN-first linking without promising credential transfer',()=>{
   assert.match(html,/id="google-login-button"[\s\S]*?data-i18n="login\.existingGoogleHelp"/);
   assert.match(read('js/i18n/locales/en.js'),/PIN first, then use Settings/);
-  assert.match(read('js/i18n/locales/en.js'),/retrying Connect Google will not move it/);
+  assert.match(read('js/i18n/locales/en.js'),/retrying Connect Google will not move the credential/);
   assert.match(html,/providerAccountCreation:window\.__POGO_PROVIDER_CAPABILITIES__\?\.providerAccountCreation===true/);
 });
 
