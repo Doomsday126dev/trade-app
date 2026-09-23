@@ -6,7 +6,7 @@ const reviewDir=process.env.SETTINGS_REVIEW_DIR||'';
 async function captureReview(page,name){
   if(!reviewDir)return;
   mkdirSync(reviewDir,{recursive:true});
-  await page.screenshot({path:path.join(reviewDir,`${name}.png`),fullPage:false});
+  await page.screenshot({path:path.join(reviewDir,`${name}.png`),fullPage:false,animations:'disabled'});
 }
 
 async function waitForApp(page){
@@ -119,6 +119,8 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
     await page.locator('#profile-save').click();
     await expect(page.locator('#profile-save')).toBeDisabled();
     expect(await page.evaluate(()=>allData.users.SettingsTester.bio)).toBe(`Saved ${theme} ${width}`);
+    await expect(page.locator('#toast')).toBeHidden({timeout:5000});
+    await captureReview(page,`settings-final-${theme}-${width}-saved`);
     await page.locator('.settings-modal-close').focus();await page.keyboard.press('Shift+Tab');
     expect(await page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
     await page.locator('#prof-av-open').click();

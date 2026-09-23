@@ -36,7 +36,8 @@ test('Settings focus and nested avatar keyboard handlers stay within the visible
 });
 
 test('Settings visual direction is scoped to the Settings overlay',()=>{
-  assert.match(css,/\.settings-overlay\.settings-page-mode \.settings-layout\{max-width:1120px;grid-template-columns:200px minmax\(0,1fr\);gap:40px\}/);
+  assert.match(css,/\.settings-overlay\.settings-page-mode \.settings-layout\{[^}]*padding-inline:var\(--page-gutter\);grid-template-columns:200px minmax\(0,1fr\);gap:28px/);
+  assert.match(css,/\.settings-modal-close\{[^}]*flex:0 0 auto;[^}]*white-space:nowrap/);
   assert.match(css,/\.settings-overlay \.settings-profile-form\{/);
   assert.match(html,/data-i18n="account\.closeSettings"/);
   for(const icon of ['users','globe','sun','shield','wrench','archive'])assert.match(html,new RegExp(`#ui-icon-${icon}`));
