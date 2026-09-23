@@ -12,22 +12,73 @@ async function capture(page,name){
   await page.screenshot({path:path.join(output,`${name}.png`),animations:'disabled'});
 }
 async function metrics(page){return page.evaluate(()=>{
+  const box=element=>{if(!element)return null;const rect=element.getBoundingClientRect();return{left:rect.left,right:rect.right,width:rect.width};};
+  const shell=document.querySelector('#tab-mylist');
   const grid=document.querySelector('[data-wants-section="H"] .mygrid');
-  return{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,zoom:getComputedStyle(document.documentElement).zoom,rootFont:getComputedStyle(document.documentElement).fontSize,contentWidth:grid?.getBoundingClientRect().width,columns:grid?getComputedStyle(grid).gridTemplateColumns.split(' ').length:null,pageOverflow:document.documentElement.scrollWidth>innerWidth};
+  const surfaces={heading:box(shell?.querySelector('.my-hdr')),add:box(shell?.querySelector('.add-form')),toolbar:box(shell?.querySelector('.wants-list-toolbar')),section:box(shell?.querySelector('[data-wants-section="H"] .wants-section-header')),grid:box(grid)};
+  return{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,zoom:getComputedStyle(document.documentElement).zoom,rootFont:getComputedStyle(document.documentElement).fontSize,shell:box(shell),surfaces,contentWidth:surfaces.grid?.width,cardWidth:box(grid?.querySelector('.wants-row'))?.width,columns:grid?getComputedStyle(grid).gridTemplateColumns.split(' ').length:null,pageOverflow:document.documentElement.scrollWidth>innerWidth};
 });}
 test('same fixture wide comparison and measured responsive columns',async({page})=>{
   await page.setViewportSize({width:1920,height:1080});await installVisualFixture(page);
   await capture(page,baseline?'my-list-before-1920':'my-list-after-1920');
   const measurements=[{capture:'wide-comparison',...await metrics(page)}];
-  for(const width of [1920,1440,1408,1407,1366,1280,1024,818,817,768,390,320]){
+  for(const width of [1920,1440,1120,1088,1087,1024,818,817,768,390,320]){
     await page.setViewportSize({width,height:900});
     const measured=await metrics(page);measurements.push(measured);
     expect(measured.pageOverflow).toBe(false);
-    if(!baseline)expect(measured.columns).toBe(measured.contentWidth>=1344?3:measured.contentWidth>=768?2:1);
+    if(!baseline)expect(measured.columns).toBe(measured.contentWidth>=64*parseFloat(measured.rootFont)?3:measured.contentWidth>=48*parseFloat(measured.rootFont)?2:1);
+    if(!baseline&&[1920,1440].includes(width)){
+      expect(measured.shell.width).toBe(1120);
+      expect(Math.abs((measured.shell.left+measured.shell.right)/2-width/2)).toBeLessThanOrEqual(1);
+      expect(measured.contentWidth).toBe(1056);
+      expect(measured.cardWidth).toBeGreaterThanOrEqual(340);
+      expect(measured.cardWidth).toBeLessThanOrEqual(365);
+      for(const surface of Object.values(measured.surfaces)){
+        expect(surface).not.toBeNull();
+        expect(Math.abs(surface.left-measured.surfaces.grid.left)).toBeLessThanOrEqual(1);
+        expect(Math.abs(surface.right-measured.surfaces.grid.right)).toBeLessThanOrEqual(1);
+      }
+    }
     expect(await page.locator('[data-wants-section="H"] .myrow-name').allTextContents()).toEqual(HIGH_NAMES);
-    if([1366,1024,390,320].includes(width))await capture(page,`${baseline?'before':'after'}-my-list-${width}`);
+    if([1440,1024,390,320].includes(width))await capture(page,`${baseline?'before':'after'}-my-list-${width}`);
   }
   if(output)fs.writeFileSync(path.join(output,`${baseline?'before':'after'}-measurements.json`),JSON.stringify(measurements,null,2));
+});
+test('compact cards wrap long localized labels beside selection and actions',async({page})=>{
+  test.skip(baseline);await installVisualFixture(page);
+  await page.evaluate(()=>startWantsSelection());
+  const row=page.locator('#combined-list > [data-wants-section="H"] .wants-row').first();
+  await row.locator('.wants-select').check();
+  for(const width of [1440,1920])for(const label of [
+    'Pikachu (Winterveranstaltung mit außergewöhnlicher Sonderform)',
+    'ピカチュウ（特別な冬のイベントで登場する長い姿の名称）'
+  ]){
+    await page.setViewportSize({width,height:900});
+    await row.locator('.wants-name').evaluate((node,value)=>{node.textContent=value;},label);
+    const layout=await row.evaluate(node=>{
+      const box=element=>{const rect=element.getBoundingClientRect();return{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height};};
+      const name=node.querySelector('.wants-name'),range=document.createRange();range.selectNodeContents(name);
+      return{row:box(node),sprite:box(node.querySelector('.myrow-sprite-wrap')),name:box(name),actions:box(node.querySelector('.mctrl')),
+        targets:[...node.querySelectorAll('.myrow-edit,.myrow-remove')].map(box),
+        textRects:[...range.getClientRects()].filter(rect=>rect.width&&rect.height).map(rect=>({left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom})),
+        whiteSpace:getComputedStyle(name).whiteSpace,overflow:getComputedStyle(name).overflow,fontSize:getComputedStyle(name).fontSize};
+    });
+    expect(layout.row.width).toBeGreaterThanOrEqual(340);
+    expect(layout.row.width).toBeLessThanOrEqual(365);
+    expect(layout.textRects.length).toBeGreaterThanOrEqual(2);
+    expect(layout.whiteSpace).toBe('normal');expect(layout.overflow).toBe('visible');expect(layout.fontSize).toBe('14px');
+    expect(layout.sprite.width).toBe(34);expect(layout.targets).toHaveLength(2);
+    for(const target of layout.targets){expect(target.width).toBeGreaterThanOrEqual(40);expect(target.height).toBeGreaterThanOrEqual(44);}
+    expect(layout.sprite.right).toBeLessThanOrEqual(layout.name.left+1);
+    expect(layout.name.right).toBeLessThanOrEqual(layout.actions.left+1);
+    expect(layout.actions.right).toBeLessThanOrEqual(layout.row.right+1);
+    for(const rect of layout.textRects){
+      expect(rect.left).toBeGreaterThanOrEqual(layout.name.left-1);
+      expect(rect.right).toBeLessThanOrEqual(layout.name.right+1);
+      expect(rect.top).toBeGreaterThanOrEqual(layout.name.top-1);
+      expect(rect.bottom).toBeLessThanOrEqual(layout.name.bottom+1);
+    }
+  }
 });
 test('copy feedback occupies the same footprint in every locale and failures expose recovery',async({page})=>{
   test.setTimeout(90000);
