@@ -60,7 +60,8 @@ retain same-UID profile and PIN-version updates. This enforces old-client and
 admin UI writes at Rules, regardless of a visible button or client-side check.
 An old client can still ask Firebase Auth to create an Auth-only record before
 Rules deny its app binding. The synthetic signed-out Google flow confirms that
-an unmapped UID receives no existing app-account resolution or protected name.
+an unmapped UID receives no existing app-account resolution; the permanent
+Rules emulator separately denies new legacy bindings and private reads.
 It also reproduces a concrete interference path: the Google credential stays
 allocated to the Auth-only UID, so a later `linkWithPopup` from a legitimate
 PIN account fails `auth/credential-already-in-use`. This fails the proposed
@@ -95,12 +96,16 @@ policy bindings, and every reachable route. Future live readback must enumerate
 all allocation, deployment, and impersonation paths; a missing inventory is
 not proof of absence. Each serving revision needs 100% traffic and the
 independently reviewed image digest, source fingerprint, environment, account,
-and route set. A synthetic negative with a correct service account and matching
-ready/serving names but an unreviewed writer-enabled image is rejected. The
-approved review digest must be pinned by a separate review, not computed from
-the live inventory under test. Readback references and digests are traceable
-inputs, but synthetic fixtures and caller-supplied readbacks are not production
-closure proof. Live provenance and completeness remain preflight inputs.
+and route set. Route probes must attest reachability, response status, and the
+serving revision; creation/reserve/repair/migration/conflict gates must be off.
+Synthetic negatives reject both an unreviewed writer-enabled image and a
+self-approved manifest with an enabled writer gate. The approved review digest
+must be pinned by a separate review, not computed from the live inventory under
+test. The verifier cannot authenticate that pin or the provenance of caller
+readbacks by itself: a caller who controls both can fabricate a passing receipt.
+Such a receipt is not production closure proof. Independent approved source/image
+manifest and live readback provenance/completeness remain mandatory preflight
+inputs, and no generation may be activated from an unanchored receipt.
 That inventory must prove application principals lack Firebase Auth create/import,
 RTDB privileged writes, identity database delete, service-account impersonation,
 and Rules/IAM/deployment modification.

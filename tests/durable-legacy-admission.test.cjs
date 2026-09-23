@@ -23,7 +23,8 @@ function syntheticWriterFixture() {
     readyRevision: 'revision-1', servingRevision: 'revision-1', trafficPercent: 100,
     imageDigest: `sha256:${'c'.repeat(64)}`, sourceFingerprint: 'b'.repeat(64), resourceEtag: `etag-${name}`,
     environment: name === 'ownerresetlegacypin' ? { LEGACY_PIN_RESET_ENABLED: 'false' } :
-      { LEGACY_ALLOCATION_ENABLED: 'false' } }));
+      { CREATE_PROVIDER_ACCOUNT_ENABLED: 'false', RESERVE_HANDLE_ENABLED: 'false', REPAIR_FOUNDATION_ENABLED: 'false',
+        APPLY_MIGRATION_ENABLED: 'false', FREEZE_CONFLICT_ENABLED: 'false' } }));
   const trackedDeployers = Object.fromEntries(TRACKED_DEPLOYERS.map(account => [account, 'absent']));
   const reviewedDeployment = { schemaVersion: 1, projectId: 'trade-list-a4297', sourceCommitSha: 'a'.repeat(40),
     reviewedAt: 50, trackedDeployers, serviceAccounts: Object.keys(EXPECTED_ROLES),
@@ -38,7 +39,8 @@ function syntheticWriterFixture() {
     serviceAccountInventoryComplete: true, operatorBreakGlassPrincipals: [], trackedDeployers,
     pendingLegacyAllocations: 0, inflightReadbackComplete: true,
     inflightOperations: [], provisioningScriptsQuiesced: true, provisioningScripts: [], services,
-    reachableRoutes: reviewedDeployment.services.flatMap(service => service.routes),
+    reachableRoutes: reviewedDeployment.services.flatMap(service => service.routes.map(route => ({ ...route,
+      reachable: true, servingRevision: 'revision-1', httpStatus: 401 }))),
     serviceAccountInventory: Object.keys(EXPECTED_ROLES),
     projectPolicy: { etag: 'iam-etag-synthetic-1', bindings: Object.entries(EXPECTED_ROLES).flatMap(([principal, roles]) =>
       roles.map(role => ({ role, members: [`serviceAccount:${principal}`],
@@ -120,6 +122,7 @@ test('signed active generation rejects malformed, stale, mismatched, invalidated
 });
 
 test('old signed active pointer cannot reauthorize after all routes are gated and repinned', () => {
+  const { fixture, reviewedDeployment, approvedReviewDigest, withReadbacks } = syntheticWriterFixture();
   const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
   const generation = { schemaVersion: 1, state: 'sealed', generationId: 'generation-synthetic-old',
     normalizationVersion: 1, inventoryEvidenceDigest: 'a'.repeat(64), coveredHandleKeysDigest: 'b'.repeat(64),
@@ -128,15 +131,17 @@ test('old signed active pointer cannot reauthorize after all routes are gated an
   const oldControl = signActiveGeneration({ generation, activatedAt: 150, privateKey });
   assert.equal(validAdmission(oldControl, generation, publicKey, 200, generation.generationId), true);
   const replacementGenerationId = 'generation-synthetic-never-reused';
-  const servingRoutes = ['/createE1ProviderAccountFoundation', '/createProviderAccountFoundation'].map(path => ({
-    path, reachable: true, revision: 'reviewed-revision', sourceFingerprint: 'a'.repeat(64),
+  const servingRoutes = fixture.reachableRoutes.map(({ service, method, path }) => ({
+    service, method, path, reachable: true, revision: 'reviewed-revision', sourceFingerprint: 'a'.repeat(64),
     configuration: { CREATE_PROVIDER_ACCOUNT_ENABLED: 'false', DURABLE_ADMISSION_GENERATION_ID: replacementGenerationId } }));
   const proof = { oldGenerationId: generation.generationId, replacementGenerationId,
-    expectedRouteKeys: servingRoutes.map(route => route.path), servingRoutes, routeReadbackDigest: digest(servingRoutes) };
+    writerEvidence: withReadbacks(fixture), reviewedDeployment, approvedReviewDigest,
+    servingRoutes, routeReadbackDigest: digest(servingRoutes) };
   assert.equal(verifyRevocationBarrier(proof), true);
   assert.equal(validAdmission(oldControl, generation, publicKey, 200, replacementGenerationId), false);
   assert.equal(verifyRevocationBarrier({ ...proof, replacementGenerationId: generation.generationId }), false);
   assert.equal(verifyRevocationBarrier({ ...proof, servingRoutes: servingRoutes.slice(0, 1) }), false);
+  assert.equal(verifyRevocationBarrier({ ...proof, servingRoutes: [{ ...servingRoutes[0], service: 'invented' }] }), false);
   assert.equal(verifyRevocationBarrier({ ...proof, servingRoutes: servingRoutes.map((route, index) => index ? {
     ...route, configuration: { ...route.configuration, CREATE_PROVIDER_ACCOUNT_ENABLED: 'true' } } : route),
   }), false);
@@ -171,6 +176,8 @@ test('every interrupted cutover stage remains disabled until its exact evidence 
     assert.equal(rollback(stage, false).creationEnabled, false);
     assert.throws(() => advance(stage, { temporaryRulesActive: true, writerClosureComplete: true,
       operatorSignedActiveGeneration: true, providerCreationReadbackHealthy: true }), /unqualified/u);
+    if (stage === 'names-protected') assert.throws(() => advance(stage, { temporaryBarrier }), /unqualified/u,
+      'permanent-writers-closed cannot be reached with only temporary Rules evidence');
     const current = index === STAGES.length - 2 ? { ...evidence, temporaryBarrier: { ...temporaryBarrier,
       freeze: releasedFreeze, readbackRefs: { ...temporaryBarrier.readbackRefs, freezeDigest: digest(releasedFreeze) } } } : evidence;
     if (index === STAGES.length - 2) {
@@ -214,6 +221,15 @@ test('synthetic privileged-writer readback requires exact IAM, Rules, service re
     imageDigest: `sha256:${'d'.repeat(64)}`, environment: { LEGACY_PIN_RESET_ENABLED: 'true' } }) };
   assert.throws(() => check(unreviewed), /unqualified/u,
     'correct account, matching serving revision and traffic cannot hide an unreviewed writer-enabled image');
+  const selfApprovedWriter = { ...fixture, services: fixture.services.map(service => service.name !== 'e1-identity-authority' ? service : {
+    ...service, environment: { ...service.environment, CREATE_PROVIDER_ACCOUNT_ENABLED: 'true' } }) };
+  const selfApprovedReview = { ...reviewedDeployment, services: reviewedDeployment.services.map(service =>
+    service.name !== 'e1-identity-authority' ? service : { ...service, allowedRevisions: [{ ...service.allowedRevisions[0],
+      environment: selfApprovedWriter.services.find(item => item.name === service.name).environment }] }) };
+  assert.throws(() => verifyPermanentWriterClosure(withReadbacks(selfApprovedWriter), {
+    reviewedDeployment: selfApprovedReview, approvedReviewDigest: digest(selfApprovedReview) }), /unqualified/u);
+  assert.throws(() => check({ ...fixture, reachableRoutes: fixture.reachableRoutes.map((route, index) =>
+    index ? route : { ...route, servingRevision: 'unreviewed-revision' }) }), /unqualified/u);
   assert.throws(() => check({ ...fixture, reachableRoutes: [...fixture.reachableRoutes,
     { service: 'ownerresetlegacypin', method: 'POST', path: '/unreviewed-writer' }] }), /unqualified/u);
   assert.throws(() => check({ ...fixture, serviceInventoryComplete: false }), /unqualified/u);

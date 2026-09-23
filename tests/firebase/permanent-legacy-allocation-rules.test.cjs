@@ -40,6 +40,13 @@ test('old browser/admin allocation and request approval remain closed without th
   await denied(call('PUT', `authIndex/${ids.old}`, { username: 'NewTrainer' }, tokens.admin));
   await denied(call('PATCH', 'requests/req_1700000000000_seed', { status: 'approved' }, tokens.admin));
 });
+test('Auth-only UID cannot read a legitimate private user or promote itself through stale legacy bindings', async () => {
+  await denied(call('GET', 'users/Existing', undefined, tokens.old));
+  await denied(call('GET', `authIndex/${ids.owner}`, undefined, tokens.old));
+  await denied(call('PUT', 'users/ProtectedName', { authUid: ids.old, authEmail: 'old@example.test' }, tokens.old));
+  await denied(call('PUT', 'loginDirectory/ProtectedName', { authReady: true }, tokens.old));
+  await denied(call('PUT', `authIndex/${ids.old}`, { username: 'ProtectedName' }, tokens.old));
+});
 test('same UID sign-in reads, profile updates and reviewed PIN version update remain available', async () => {
   await allowed(call('GET', 'loginDirectory/Existing'));
   await allowed(call('GET', 'users/Existing', undefined, tokens.owner));

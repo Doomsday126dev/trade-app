@@ -17,6 +17,8 @@ const TRACKED_DEPLOYERS = Object.freeze([resourceManifest.build.builderServiceAc
 const HASH = /^[a-f0-9]{64}$/u;
 const IMAGE = /^sha256:[a-f0-9]{64}$/u;
 const routeKey = route => `${route.service}:${route.method}:${route.path}`;
+const WRITER_GATES = Object.freeze(['CREATE_PROVIDER_ACCOUNT_ENABLED', 'RESERVE_HANDLE_ENABLED',
+  'REPAIR_FOUNDATION_ENABLED', 'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED']);
 function verifyPermanentWriterClosure(evidence, { reviewedDeployment, approvedReviewDigest } = {}) {
   const fail = () => { throw new Error('writer-closure/unqualified'); };
   if (!evidence || typeof evidence !== 'object' || !reviewedDeployment ||
@@ -70,11 +72,19 @@ function verifyPermanentWriterClosure(evidence, { reviewedDeployment, approvedRe
         !Array.isArray(expected.routes) || !expected.routes.length ||
         !expected.routes.every(route => route?.service === service.name && route.method && route.path)) fail();
     if (service.name === 'ownerresetlegacypin' && service.environment?.LEGACY_PIN_RESET_ENABLED !== 'false') fail();
+    if (service.name !== 'ownerresetlegacypin' &&
+        WRITER_GATES.some(gate => service.environment?.[gate] !== 'false')) fail();
     reviewedRoutes.push(...expected.routes);
   }
   if (!same(reviewedRoutes.map(routeKey), evidence.reachableRoutes.map(routeKey)) ||
       new Set(reviewedRoutes.map(routeKey)).size !== reviewedRoutes.length ||
       new Set(evidence.reachableRoutes.map(routeKey)).size !== evidence.reachableRoutes.length) fail();
+  for (const route of evidence.reachableRoutes) {
+    const service = evidence.services.find(item => item.name === route.service);
+    if (route.reachable !== true || route.servingRevision !== service?.servingRevision ||
+        !Number.isInteger(route.httpStatus) || route.httpStatus < 200 || route.httpStatus >= 500 ||
+        route.httpStatus === 404) fail();
+  }
   const applicationMembers = Object.keys(EXPECTED_ROLES).map(principal => `serviceAccount:${principal}`);
   for (const [principal, expectedRoles] of Object.entries(EXPECTED_ROLES)) {
     const member = `serviceAccount:${principal}`;
@@ -112,6 +122,7 @@ function verifyPermanentWriterClosure(evidence, { reviewedDeployment, approvedRe
   return Object.freeze({ schemaVersion: 1, kind: 'verified-permanent-writer-closure',
     policyDigest: policy.policyDigest, rulesDigest, reviewedDeploymentDigest: approvedReviewDigest,
     evidenceDigest: digest({ evidence, approvedReviewDigest }), capturedAt: evidence.capturedAt,
-    serviceInventoryDigest: digest(evidence.services), routeProbeDigest: digest(evidence.reachableRoutes) });
+    serviceInventoryDigest: digest(evidence.services), routeProbeDigest: digest(evidence.reachableRoutes),
+    reachableRouteKeys: Object.freeze(evidence.reachableRoutes.map(routeKey).sort()) });
 }
 module.exports = Object.freeze({ REQUIRED_SERVICES, TRACKED_DEPLOYERS, verifyPermanentWriterClosure });

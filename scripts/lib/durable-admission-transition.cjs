@@ -33,7 +33,8 @@ function advance(state, evidence) {
         freeze?.schemaVersion !== 1 || freeze?.state !== 'active' || freeze?.releasedAt !== null ||
         freeze?.provisioningContractDigest !== temporaryContract.provisioningContractDigest ||
         !Number.isSafeInteger(barrier.capturedAt) || freeze.activatedAt > barrier.capturedAt) deny();
-  } else {
+  }
+  if (next === 'permanent-writers-closed' || position >= STAGES.indexOf('permanent-writers-closed')) {
     try { closure = verifyPermanentWriterClosure(evidence.writerEvidence, {
       reviewedDeployment: evidence.reviewedDeployment, approvedReviewDigest: evidence.approvedReviewDigest }); }
     catch { deny(); }
@@ -82,13 +83,17 @@ function rollback(stage, providerAccountsExist) {
 // Invalidation is safe against restoration of the old signed pointer only after
 // every reachable serving revision has stopped creation and rejected its pin.
 // This is an operator readback requirement, not a Firestore IAM restriction.
-function verifyRevocationBarrier({ oldGenerationId, replacementGenerationId, expectedRouteKeys, servingRoutes,
-  routeReadbackDigest } = {}) {
+function verifyRevocationBarrier({ oldGenerationId, replacementGenerationId, writerEvidence,
+  reviewedDeployment, approvedReviewDigest, servingRoutes, routeReadbackDigest } = {}) {
+  let closure;
+  try { closure = verifyPermanentWriterClosure(writerEvidence, { reviewedDeployment, approvedReviewDigest }); }
+  catch { return false; }
+  const expectedRouteKeys = closure.reachableRouteKeys;
   if (!oldGenerationId || !replacementGenerationId || replacementGenerationId === oldGenerationId ||
       !Array.isArray(expectedRouteKeys) || expectedRouteKeys.length === 0 ||
       !Array.isArray(servingRoutes) || servingRoutes.length !== expectedRouteKeys.length ||
       new Set(expectedRouteKeys).size !== expectedRouteKeys.length ||
-      expectedRouteKeys.some(key => !servingRoutes.some(route => route.path === key)) ||
+      expectedRouteKeys.some(key => !servingRoutes.some(route => `${route.service}:${route.method}:${route.path}` === key)) ||
       routeReadbackDigest !== safeDigest(servingRoutes)) return false;
   return servingRoutes.every(route => route?.reachable === true && route?.revision && route?.sourceFingerprint &&
     route?.configuration?.CREATE_PROVIDER_ACCOUNT_ENABLED === 'false' &&
