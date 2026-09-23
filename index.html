@@ -513,10 +513,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ov" id="safe-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="stb-title">
   <div class="modal" style="max-width:520px">
     <button class="ov-x" onclick="closeModal('safe-transfer-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button>
-    <h3 id="stb-title">🗑️ <span data-i18n="safeTransfer.title">Safe-to-transfer search string</span></h3>
+    <h3 id="stb-title">🗑️ <span data-i18n="safeTransfer.title">Scoped transfer-review search</span></h3>
     <div class="stb-modal-body">
       <div class="stb-intro">
-        <span data-i18n="safeTransfer.intro">Creates a Pokémon GO search string for species that none of the selected trainers have on their wishlist. Paste it into your Pokémon storage search before reviewing transfers.</span>
+        <span data-i18n="safeTransfer.intro">Uses complete shared wants from exactly the trainers you select. Review every match in Pokémon GO before transferring.</span>
       </div>
       <div class="stb-section">
         <div class="stb-section-hdr">
@@ -799,7 +799,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
             <button class="settings-tool" onclick="openSettingsTool('import')"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
             <button class="settings-tool" onclick="openSettingsTool('export')"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
-            <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Safe-to-transfer search string</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Scoped transfer-review search</span></button>
             <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
             <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health')"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
             <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
