@@ -11,6 +11,10 @@
     if(!client||typeof client.read!=='function'||typeof client.listen!=='function')throw new TypeError('Public-share repository requires a Firebase client');
     return Object.freeze({
       read:username=>client.read(`publicShares/${shareUsername(username)}`),
+      readFresh:(username,options)=>{
+        if(typeof client.readServer!=='function')return Promise.resolve({ok:false,error:{code:'firebase/server-read-unavailable',message:'Server-confirmed public-share reads are unavailable'}});
+        return client.readServer(`publicShares/${shareUsername(username)}`,options);
+      },
       listen:(username,handlers)=>client.listen(`publicShares/${shareUsername(username)}`,handlers)
     });
   }

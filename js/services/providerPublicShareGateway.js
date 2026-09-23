@@ -20,6 +20,18 @@
       timer=setTimeout(()=>reject(failure(code)),timeoutMs);
     })]).finally(()=>clearTimeout(timer));
   }
+  function current(options){return !options?.signal?.aborted&&(typeof options?.isCurrent!=='function'||options.isCurrent());}
+  function cancellable(value,options){
+    if(!current(options))return Promise.reject(failure('provider-public/cancelled'));
+    return new Promise((resolve,reject)=>{
+      const onAbort=()=>reject(failure('provider-public/cancelled'));
+      options?.signal?.addEventListener?.('abort',onAbort,{once:true});
+      Promise.resolve(value).then(result=>{
+        options?.signal?.removeEventListener?.('abort',onAbort);
+        if(!current(options))reject(failure('provider-public/cancelled'));else resolve(result);
+      },error=>{options?.signal?.removeEventListener?.('abort',onAbort);reject(error);});
+    });
+  }
   function foldHandle(value){return String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');}
   function compareHandles(left,right){
     const a=Array.from(left),b=Array.from(right),length=Math.min(a.length,b.length);
@@ -77,11 +89,17 @@
       if(authRequired&&auth?.currentUser?.uid!==uid)throw failure('provider-public/session-changed');
       return result?.data;
     }
-    async function read(trainerHandle){
+    async function read(trainerHandle,options={}){
       const handle=String(trainerHandle||'').normalize('NFKC').trim();
       if(!enabled)return Object.freeze({ok:false,status:'disabled'});
       if(!validHandle(handle))return Object.freeze({ok:false,status:'invalid'});
-      try{return response(await callable(CALLABLE,{schemaVersion:1,trainerHandle:handle}),handle);}
+      try{
+        const parsed=response(await cancellable(callable(CALLABLE,{schemaVersion:1,trainerHandle:handle}),options),handle);
+        if(!parsed.ok)return parsed;
+        const operationId=String(options.operationId||'').trim();
+        if(!operationId)return parsed;
+        return Object.freeze({...parsed,evidence:Object.freeze({kind:'server-confirmed-public-share',transport:'https-callable',scope:'whole-projection',completed:true,operationId})});
+      }
       catch(error){
         if(String(error?.code||'').startsWith('provider-public/'))throw error;
         const server=String(error?.details?.code||'');

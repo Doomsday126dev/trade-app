@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 function load(files){
   const window={};
-  const context=vm.createContext({window});
+  const context=vm.createContext({window,URL,AbortController,setTimeout,clearTimeout});
   files.forEach(file=>vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context));
   return window;
 }
@@ -38,6 +38,36 @@ test('Firebase client exposes predictable exact read/listen results',async()=>{
   assert.deepEqual(seen,[{bio:'updated'}]);
   listening.unsubscribe();
   assert.equal(calls.stop,1);
+});
+
+test('server-confirmed reader uses exact no-store REST with App Check and no URL credential',async()=>{
+  const window=load(['js/services/firebaseClient.js']);
+  const calls=[];
+  const reader=window.PogoServices.firebaseClient.createServerConfirmedReader({
+    databaseUrl:'https://example-default-rtdb.firebaseio.com',
+    fetchImpl:async(url,options)=>{calls.push({url,options});return{ok:true,status:200,json:async()=>({version:2,username:'Trainer'})};},
+    appCheckReady:async()=>({ok:true,instance:{id:'app-check'}}),
+    loadAppCheckSdk:async()=>({getToken:async()=>({token:'app-check-secret'})}),sessionCurrent:()=>true
+  });
+  const result=await reader.read('publicShares/Trainer Name',{operationId:'operation-1',isCurrent:()=>true});
+  assert.equal(result.ok,true);assert.equal(result.value.username,'Trainer');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.evidence)),{kind:'server-confirmed-public-share',transport:'rtdb-rest',path:'publicShares/Trainer Name',scope:'whole-projection',completed:true,operationId:'operation-1',httpStatus:200});
+  assert.equal(calls[0].url,'https://example-default-rtdb.firebaseio.com/publicShares/Trainer%20Name.json');
+  assert.equal(calls[0].url.includes('auth='),false);assert.equal(calls[0].url.includes('app-check-secret'),false);
+  assert.equal(calls[0].options.headers['X-Firebase-AppCheck'],'app-check-secret');
+  assert.equal(calls[0].options.cache,'no-store');assert.equal(calls[0].options.credentials,'omit');
+});
+
+test('server-confirmed reader cancels before transport and never mints evidence',async()=>{
+  const window=load(['js/services/firebaseClient.js']);let fetches=0,release;
+  const pending=new Promise(resolve=>{release=resolve;});
+  const reader=window.PogoServices.firebaseClient.createServerConfirmedReader({
+    databaseUrl:'http://127.0.0.1:9000/?ns=demo-safe-transfer',fetchImpl:async()=>{fetches++;return{ok:true,status:200,json:async()=>null};},
+    appCheckReady:()=>pending,loadAppCheckSdk:async()=>({getToken:async()=>({token:'unused'})}),sessionCurrent:()=>true
+  });
+  const aborter=new AbortController(),read=reader.read('publicShares/Trainer',{operationId:'operation-2',signal:aborter.signal,isCurrent:()=>true});
+  aborter.abort();release({ok:true,instance:{}});
+  const result=await read;assert.equal(result.ok,false);assert.equal(result.error.code,'firebase/server-read-cancelled');assert.equal(fetches,0);assert.equal(result.evidence,undefined);
 });
 
 test('Firebase client converts read and listener failures to stable error shapes',async()=>{
@@ -82,6 +112,15 @@ test('public-share repository uses one exact public projection path',async()=>{
   repo.listen('Trainer',{});
   assert.deepEqual(calls,['publicShares/Trainer','publicShares/Trainer']);
   assert.throws(()=>repo.read('bad/name'),/valid Firebase key/);
+});
+
+test('public-share fresh reads are additive and exact',async()=>{
+  const window=load(['js/data/publicShareRepository.js']);const calls=[];
+  const client={read:async()=>({ok:true}),readServer:async(target,options)=>{calls.push([target,options.operationId]);return{ok:true,value:{}};},listen:()=>({ok:true,unsubscribe(){}})};
+  const repo=window.PogoData.publicShareRepository.createPublicShareRepository(client);
+  await repo.readFresh('Trainer',{operationId:'fresh-1'});
+  assert.deepEqual(calls,[['publicShares/Trainer','fresh-1']]);
+  assert.throws(()=>repo.readFresh('bad/name',{operationId:'fresh-2'}),/valid Firebase key/);
 });
 
 test('cache adapters update exact records without mutating the source cache',()=>{

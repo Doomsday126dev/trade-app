@@ -237,7 +237,7 @@ test('localized Admin and dialog surfaces preserve bounded responsive geometry',
   for(const marker of [
     'data-i18n="admin.pendingRequests"','data-i18n="settings.profileGroupTrainer"',
     'data-i18n="settings.profileGroupPokemonGo"','data-i18n="settings.profileGroupAbout"',
-    "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="product.board"'
+    'i18nCore.t(`safeTransfer.candidate.${key}`','data-i18n="product.board"'
   ])assert.ok(html.includes(marker),marker);
   assert.match(html,/\.admin-member-row\{display:grid/);
   assert.match(html,/@media\(max-width:600px\)\{\.admin-header/);

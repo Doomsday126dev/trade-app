@@ -109,7 +109,12 @@ function activateFirebaseDataClient(){
   if(firebaseDataProtectionReady&&db)return db;
   if(!fbApp||!firebaseDatabaseHandle)throw new Error('Firebase data client cannot activate before app setup');
   db=firebaseDatabaseHandle;
-  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
+  const serverReader=firebaseClientService.createServerConfirmedReader({
+    databaseUrl:FIREBASE_URL,fetchImpl:window.fetch.bind(window),
+    appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,
+    sessionCurrent:()=>Boolean(auth?.currentUser?.uid)
+  });
+  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue,serverReader});
   managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
   managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(managedFirebaseClient);
   managedOwnedDataCoordinator=ownedDataCoordinatorData.createOwnedDataCoordinator({
@@ -339,11 +344,15 @@ if(!pokemonEntryRulesDomain)throw new Error('Pokemon entry rule helpers failed t
 const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry,MAX_TYPE_SEARCH,entrySearchFilters}=pokemonEntryRulesDomain;
 const pokemonGoSearchSyntaxDomain=window.PogoDomain?.pokemonGoSearchSyntax;
 if(!pokemonGoSearchSyntaxDomain)throw new Error('Pokémon GO search syntax failed to load');
+const safeTransferRestorationDomain=window.PogoDomain?.safeTransferRestoration;
+if(!safeTransferRestorationDomain)throw new Error('Safe-transfer restoration candidate failed to load');
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo}=searchStringDomain;
 const stringHtmlUi=window.PogoUi?.stringHtml;
 if(!stringHtmlUi)throw new Error('String HTML helpers failed to load');
+const safeTransferCandidateUi=window.PogoUi?.safeTransferCandidate;
+if(!safeTransferCandidateUi)throw new Error('Safe-transfer candidate UI failed to load');
 const {strLenHtml,strWarnHtml}=stringHtmlUi;
 const scheduleEventRulesDomain=window.PogoDomain?.scheduleEventRules;
 if(!scheduleEventRulesDomain)throw new Error('Schedule event rule helpers failed to load');
@@ -2079,6 +2088,7 @@ function resetSessionTransientUi(reason='session_boundary'){
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
+  if(typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.(reason);
   if(typeof managedFavoriteAdditions!=='undefined'){managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;}
   if(typeof closeFavoritePicker==='function')closeFavoritePicker({sessionChanged:true});
   if(typeof closeExistingPinReset==='function')closeExistingPinReset();
@@ -8404,13 +8414,14 @@ function buildStrings(type,username,intent='lf'){
   return Object.keys(out).length?out:null;
 }
 
-async function copyText(str){
+async function copyText(str,{signal=null,isCurrent=null}={}){
   if(navigator.clipboard&&window.isSecureContext){
     try{
       await navigator.clipboard.writeText(str);
       return;
     }catch{}
   }
+  if(signal?.aborted||typeof isCurrent==='function'&&!isCurrent())throw Object.assign(new Error('Copy operation was cancelled'),{code:'copy/cancelled'});
   const ta=document.createElement('textarea');
   ta.value=str;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='-1000px';ta.style.opacity='0';
   document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
@@ -10306,6 +10317,7 @@ function openModal(id,options={}){
 function closeModal(id){
   const options=arguments[1]||{};
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
+  if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
   document.getElementById(id)?.classList.remove('open');
   if(_modalActiveId!==id)return;
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
@@ -10619,7 +10631,7 @@ const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
 // Containment: existing source coverage cannot prove that every selected
 // trainer's current declarations are present. Keep both generation and copy
 // closed until that coverage contract is implemented and tested.
-const SAFE_TRANSFER_GENERATION_ENABLED=false;
+const SAFE_TRANSFER_GENERATION_ENABLED=true;
 function safeTransferPreferenceKey(base){
   const uid=String(auth?.currentUser?.uid||'').trim();
   return uid?`${base}:${encodeURIComponent(uid)}`:null;
@@ -10636,13 +10648,6 @@ function safeTransferPreferenceKey(base){
 // Live selection (Set of usernames). Initialised in openSafeTransferModal()
 // from saved default if available, else empty.
 let _safeTransferSelected=null;
-function _safeTransferAllTrainers(){
-  // Everyone who has a non-empty wishlist (so selecting an inactive trainer
-  // who never added anything wouldn't usefully constrain anything anyway).
-  return Object.keys(allData.users||{})
-    .filter(u=>Object.keys(allData.wishlist?.[u]||{}).length>0)
-    .sort((a,b)=>(a===cur?-1:b===cur?1:0)||a.localeCompare(b,undefined,{sensitivity:'base'}));
-}
 function _loadSafeTransferDefault(){
   const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);
   if(!key)return null;
@@ -10650,46 +10655,51 @@ function _loadSafeTransferDefault(){
   if(Array.isArray(saved))return new Set(saved.filter(u=>typeof u==='string'));
   return null;
 }
+function saveSafeTransferAsDefault(){
+  if(!_safeTransferSelected){toast(i18nCore.t('safeTransfer.nothingToSave'));return;}
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);if(!key)return;
+  lsSet(key,[..._safeTransferSelected]);
+  toast(i18nCore.t('safeTransfer.defaultSaved',{count:i18nCore.formatNumber(_safeTransferSelected.size)}));
+}
+// Server-fresh, fail-closed safe-transfer implementation.
+let _safeTransferController=null;
+let _safeTransferCandidateMount=null;
+let _safeTransferLiveSourceVersions={};
+let _safeTransferLoadGeneration=0;
+function _safeTransferScopeModel(){
+  const state=ensureTrainerHistoryStore()?.read?.()||{favorites:[],tags:{}};
+  const activeGroup=trainerGroupState.id==='favorites'||state.tags?.[trainerGroupState.id]?trainerGroupState.id:'';
+  const members=(state.favorites||[]).filter(item=>!activeGroup||activeGroup==='favorites'||item.tagIds.includes(activeGroup));
+  const groupLabel=activeGroup==='favorites'?groupText('favorites'):state.tags?.[activeGroup]?.label||'';
+  return Object.freeze({
+    id:activeGroup?`group:${activeGroup}`:'trainers:favorites',kind:activeGroup?'group':'trainers',label:groupLabel,
+    members:Object.freeze(members.map(item=>Object.freeze({...item,id:item.targetUid?`uid:${item.targetUid}`:`trainer:${item.key}`})))
+  });
+}
+function _safeTransferMemberKey(item){return item?.key||String(item?.displayName||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');}
+function _safeTransferSelectedMembers(model=_safeTransferScopeModel()){
+  const selected=_safeTransferSelected||new Set();
+  return model.members.filter(item=>selected.has(_safeTransferMemberKey(item)));
+}
+function _safeTransferAllTrainers(){return _safeTransferScopeModel().members.map(item=>item.displayName);}
 function openSafeTransferModal(){
-  // Initialise selection: saved default → fall back to "everyone except me"
-  // so the very first interaction does something useful even with no save.
+  const model=_safeTransferScopeModel(),active=new Set(model.members.map(_safeTransferMemberKey));
   if(!_safeTransferSelected){
-    const def=_loadSafeTransferDefault();
-    if(def&&def.size){
-      _safeTransferSelected=def;
-    }else{
-      _safeTransferSelected=new Set(_safeTransferAllTrainers().filter(u=>u!==cur));
-    }
+    const saved=_loadSafeTransferDefault();
+    _safeTransferSelected=saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
   }
-  // Prune anyone who's since become inactive / been removed.
-  const active=new Set(_safeTransferAllTrainers());
-  [..._safeTransferSelected].forEach(u=>{if(!active.has(u))_safeTransferSelected.delete(u);});
+  [..._safeTransferSelected].forEach(key=>{if(!active.has(key))_safeTransferSelected.delete(key);});
   openModal('safe-transfer-modal');
-  // Seed prefilter checkbox from saved pref (default ON — safer for new users).
-  const chk=document.getElementById('stb-prefilter-chk');
-  if(chk){
-    const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
-    const saved=key?lsGet(key,true):true;
-    chk.checked=saved!==false;
-  }
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
+  const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox){checkbox.checked=true;checkbox.disabled=true;}
+  renderSafeTransferTrainers();renderSafeTransferOutput();
 }
 function renderSafeTransferTrainers(){
-  const grid=document.getElementById('stb-trainer-grid');
-  if(!grid)return;
-  const trainers=_safeTransferAllTrainers();
-  if(!trainers.length){
-    grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;
-    return;
-  }
-  grid.innerHTML=trainers.map(u=>{
-    const isMe=u===cur;
-    const on=_safeTransferSelected.has(u);
-    const cls=`stb-trainer-chip${on?' on':''}${isMe?' is-me':''}`;
-    const label=isMe?`${escHtml(u)} (${escHtml(i18nCore.t('common.you'))})`:escHtml(u);
-    const title=isMe?i18nCore.t('safeTransfer.selfExcluded'):i18nCore.t('safeTransfer.toggleTrainer',{trainer:u});
-    return`<button type="button" class="${cls}" data-safe-transfer-trainer="${escAttr(u)}" ${isMe?'disabled':''} title="${escAttr(title)}">${label}</button>`;
+  const grid=document.getElementById('stb-trainer-grid');if(!grid)return;
+  const model=_safeTransferScopeModel();
+  if(!model.members.length){grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;return;}
+  grid.innerHTML=model.members.map(item=>{
+    const key=_safeTransferMemberKey(item),on=_safeTransferSelected.has(key);
+    return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
   }).join('');
 }
 document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
@@ -10697,133 +10707,120 @@ document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
 });
 function toggleSafeTransferTrainer(name){
   if(!_safeTransferSelected)return;
-  if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);
-  else _safeTransferSelected.add(name);
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
+  if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);else _safeTransferSelected.add(name);
+  _safeTransferController?.invalidate('selection_changed');renderSafeTransferTrainers();renderSafeTransferOutput();
 }
 function setAllSafeTransferTrainers(all){
   if(!_safeTransferSelected)_safeTransferSelected=new Set();
-  if(all){
-    _safeTransferAllTrainers().forEach(u=>{if(u!==cur)_safeTransferSelected.add(u);});
-  }else{
-    _safeTransferSelected.clear();
-  }
-  renderSafeTransferTrainers();
-  renderSafeTransferOutput();
+  if(all)_safeTransferScopeModel().members.forEach(item=>_safeTransferSelected.add(_safeTransferMemberKey(item)));else _safeTransferSelected.clear();
+  _safeTransferController?.invalidate('selection_changed');renderSafeTransferTrainers();renderSafeTransferOutput();
 }
-function saveSafeTransferAsDefault(){
-  if(!_safeTransferSelected){toast(i18nCore.t('safeTransfer.nothingToSave'));return;}
-  const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);if(!key)return;
-  lsSet(key,[..._safeTransferSelected]);
-  toast(i18nCore.t('safeTransfer.defaultSaved',{count:i18nCore.formatNumber(_safeTransferSelected.size)}));
+function toggleSafeTransferPrefilter(){
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);if(key)lsSet(key,true);
+  const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox)checkbox.checked=true;
 }
-function toggleSafeTransferPrefilter(on){
-  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);if(key)lsSet(key,!!on);
-  renderSafeTransferOutput();
+function _safeTransferPrefilterEnabled(){return true;}
+function _safeTransferCatalogEntries(){
+  return pokemonCatalogDomain.canonicalizeEntries(uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES));
 }
-function _safeTransferPrefilterEnabled(){
-  const chk=document.getElementById('stb-prefilter-chk');
-  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
-  return chk?chk.checked:(!key||lsGet(key,true)!==false);
+function _safeTransferUniverse(){
+  const reviewed=_safeTransferCatalogEntries(),candidates=listSource('wishlist');
+  const version=`catalog:${safeTransferRestorationDomain.fingerprint(reviewed.map(item=>[item.catalogId,item.speciesId||item.no]))}`;
+  return safeTransferRestorationDomain.createReviewedUniverse({version,reviewedEntries:reviewed,candidateEntries:candidates});
 }
-// Map every species the app knows about to its base dex number. We dedupe
-// by dex so costume variants (which share dex with their base) only count
-// once: protecting "Pikachu Party Hat" implicitly protects all dex-25.
-function _safeTransferAllDex(){
-  const seen=new Set();
-  (DB.wishlist||[]).forEach(e=>{
-    const n=parseInt(e.no);
-    if(Number.isFinite(n)&&n>0)seen.add(n);
+function _safeTransferScope(model=_safeTransferScopeModel(),selected=_safeTransferSelectedMembers(model)){
+  const selection=selected.map(item=>({id:item.id,label:item.displayName}));
+  const membership=model.members.map(item=>[item.id,item.displayName,item.targetUid||'',...(item.tagIds||[])]);
+  const version=`scope:${safeTransferRestorationDomain.fingerprint({id:model.id,membership,selection:selection.map(item=>item.id)})}`;
+  return Object.freeze({id:model.id,version,displayedSelectionVersion:version,kind:model.kind,selected:Object.freeze(selection)});
+}
+function _safeTransferAccount(){
+  const id=String(auth?.currentUser?.uid||'').trim();return id?Object.freeze({id,version:`session:${id}:${_sessionTransientGeneration}`}):null;
+}
+function _safeTransferOwnerRequest(){
+  const model=_safeTransferScopeModel(),selected=_safeTransferSelectedMembers(model),scope=_safeTransferScope(model,selected),account=_safeTransferAccount(),universe=_safeTransferUniverse(),gameLocale=pokemonGoSearchLocale();
+  const ownerFingerprint=safeTransferRestorationDomain.fingerprint({account,scope,universeVersion:universe?.version,gameLocale});
+  return Object.freeze({account,scope,selection:Object.freeze(selected.map(item=>Object.freeze({...item}))),universe,gameLocale,ownerFingerprint});
+}
+function _safeTransferCurrentBinding(){
+  const request=_safeTransferOwnerRequest();
+  return Object.freeze({
+    account:request.account,scope:Object.freeze({id:request.scope.id,version:request.scope.version,kind:request.scope.kind,selectedIds:Object.freeze(request.scope.selected.map(item=>item.id))}),
+    universeVersion:request.universe?.version,sourceVersions:Object.freeze({..._safeTransferLiveSourceVersions}),gameLocale:request.gameLocale
   });
-  return [...seen].sort((a,b)=>a-b);
+}
+async function _safeTransferReadPublicShare(member,options={}){
+  if(!member.targetUid)return managedPublicShareRepository.readFresh(member.displayName,options);
+  let identity;
+  try{identity=await resolveFavoriteIdentityForSession(member.displayName,member.targetUid);}
+  catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
+  if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
+  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
+  try{
+    const provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName,options);
+    if(provider?.ok)return{ok:true,value:provider.snapshot,evidence:provider.evidence};
+    if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
+    return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
+  }catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
+}
+async function _safeTransferLoadSnapshot(request,context={}){
+  const loadGeneration=context.generation;_safeTransferLoadGeneration=loadGeneration;
+  const sources=await Promise.all(request.selection.map(async(member,index)=>{
+    const result=await _safeTransferReadPublicShare(member,{signal:context.signal,isCurrent:context.isCurrent,operationId:`${loadGeneration}:${index}`});
+    return safeTransferRestorationDomain.sourceFromRepositoryResult({
+      trainerId:member.id,label:member.displayName,result
+    },{validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,intentEntries:publicSharePublicationDomain.intentEntries});
+  }));
+  const current=_safeTransferOwnerRequest();
+  if(loadGeneration===_safeTransferLoadGeneration&&current.ownerFingerprint===request.ownerFingerprint){
+    _safeTransferLiveSourceVersions=Object.fromEntries(sources.filter(source=>source.state==='complete').map(source=>[source.trainerId,source.sourceVersion]));
+  }
+  return Object.freeze({contractVersion:safeTransferRestorationDomain.CONTRACT_VERSION,account:request.account,scope:request.scope,universe:request.universe,sources:Object.freeze(sources)});
+}
+function _safeTransferPlan(snapshot,request){
+  const catalog=safeTransferRestorationDomain.createCatalog(_safeTransferCatalogEntries());
+  return safeTransferRestorationDomain.commandPlan(safeTransferRestorationDomain.evaluate(snapshot,{catalog}),{syntax:pokemonGoSearchSyntaxDomain,locale:request.gameLocale});
+}
+function _ensureSafeTransferController(){
+  if(_safeTransferController)return _safeTransferController;
+  _safeTransferController=safeTransferRestorationDomain.createController({loadSnapshot:_safeTransferLoadSnapshot,plan:_safeTransferPlan,currentBinding:_safeTransferCurrentBinding,copy:copyText,revalidateBeforeCopy:true});
+  const host=document.getElementById('stb-candidate');
+  if(host)_safeTransferCandidateMount=safeTransferCandidateUi.mountSafeTransferCandidate(host,{
+    controller:_safeTransferController,t:(key,vars)=>i18nCore.t(`safeTransfer.candidate.${key}`,vars)
+  });
+  return _safeTransferController;
+}
+async function _refreshSafeTransferCandidate(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return null;
+  const request=_safeTransferOwnerRequest();
+  if(!request.account||!request.universe||!request.selection.length){_safeTransferController?.invalidate('explicit_scope_required');return null;}
+  _safeTransferLiveSourceVersions={};return _ensureSafeTransferController().start(request);
 }
 function computeSafeTransferString(){
-  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:_safeTransferSelected?.size||0};
-  if(!_safeTransferSelected||!_safeTransferSelected.size){
-    return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
-  }
-  // Build the "wanted" dex set from all selected trainers' wishlists.
-  // Conservative — any wishlist entry, regardless of priority or flags, counts.
-  const wantedDex=new Set();
-  const wishSrcByName={};
-  (DB.wishlist||[]).forEach(e=>{if(!wishSrcByName[e.name])wishSrcByName[e.name]=e;});
-  _safeTransferSelected.forEach(u=>{
-    const list=allData.wishlist?.[u]||{};
-    Object.keys(list).forEach(name=>{
-      const entry=wishSrcByName[name];
-      const dex=parseInt(entry?.no);
-      if(Number.isFinite(dex)&&dex>0)wantedDex.add(dex);
-    });
-  });
-  const all=_safeTransferAllDex();
-  const safe=all.filter(n=>!wantedDex.has(n));
-  const dexStr=safe.join(',');
-  const usePrefilter=_safeTransferPrefilterEnabled();
-  const query=pokemonGoSearchSyntaxDomain.safeTransferQuery(safe);
-  const str=safe.length?(usePrefilter?pokemonGoSearchSyntaxDomain.serializeQuery(query,pokemonGoSearchLocale()):dexStr):'';
-  return{
-    str,
-    dexStr,
-    prefilter:usePrefilter?pokemonGoSearchSyntaxDomain.queryPrefix(query,pokemonGoSearchLocale()):'',
-    safeCount:safe.length,
-    wantedCount:wantedDex.size,
-    totalDex:all.length,
-    picked:_safeTransferSelected.size
-  };
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:0,picked:_safeTransferSelected?.size||0};
+  const state=_safeTransferController?.snapshot?.(),plan=state?.plan;
+  return{status:state?.phase||'idle',str:plan?.commands?.[0]?.value||'',safeCount:plan?.candidateSpecies?.length||0,wantedCount:plan?.protectedSpecies?.length||0,totalDex:plan?.universe?.reviewed?.length||0,picked:plan?.scope?.selected?.length||0,commands:plan?.commands||[]};
 }
 function renderSafeTransferOutput(){
-  const out=document.getElementById('stb-output');
-  const summary=document.getElementById('stb-summary');
-  const warnWrap=document.getElementById('stb-warn-wrap');
-  const copyBtn=document.getElementById('stb-copy-btn');
-  if(!out||!summary)return;
-  const r=computeSafeTransferString();
-  if(r.status==='disabled'){
-    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
-    out.value='';warnWrap.innerHTML='';if(copyBtn)copyBtn.disabled=true;return;
-  }
-  if(!r.picked){
-    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
-    out.value='';
-    warnWrap.innerHTML='';
-    if(copyBtn)copyBtn.disabled=true;
+  const host=document.getElementById('stb-candidate');
+  if(!SAFE_TRANSFER_GENERATION_ENABLED){
+    const summary=document.getElementById('stb-summary'),out=document.getElementById('stb-output'),copyBtn=document.getElementById('stb-copy-btn'),warn=document.getElementById('stb-warn-wrap');
+    if(summary)summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
+    if(out)out.value='';if(copyBtn)copyBtn.disabled=true;if(warn)warn.innerHTML='';
+    if(host)host.innerHTML=`<p class="stb-summary"><span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span></p><textarea class="stb-output" id="stb-output" readonly></textarea><button class="stb-action-btn" id="stb-copy-btn" disabled>${escHtml(i18nCore.t('safeTransfer.copy'))}</button>`;
     return;
   }
-  out.value=r.str;
-  const charCount=r.str.length;
-  summary.innerHTML=`
-    <span>${escHtml(i18nCore.t('safeTransfer.summary',{safe:i18nCore.formatNumber(r.safeCount),total:i18nCore.formatNumber(r.totalDex),wanted:i18nCore.formatNumber(r.wantedCount),trainers:i18nCore.formatNumber(r.picked)}))}</span>
-    <span style="font-family:var(--mono);font-size:11px">${escHtml(i18nCore.t('safeTransfer.characters',{count:i18nCore.formatNumber(charCount)}))}</span>
-  `;
-  // Pokémon GO's bag search box accepts up to ~1000 chars before truncating
-  // silently. Warn well before the cliff so trainers can chunk the output.
-  if(charCount>=900){
-    warnWrap.innerHTML=`<div class="stb-warn">${escHtml(i18nCore.t('safeTransfer.limitWarning',{count:i18nCore.formatNumber(charCount)}))}</div>`;
-  }else if(charCount>=700){
-    warnWrap.innerHTML=`<div class="stb-warn" style="background:rgba(108,99,255,.08);border-color:rgba(108,99,255,.25);color:var(--ac2)">${escHtml(i18nCore.t('safeTransfer.nearLimit',{count:i18nCore.formatNumber(charCount)}))}</div>`;
-  }else{
-    warnWrap.innerHTML='';
-  }
-  if(copyBtn)copyBtn.disabled=!r.str;
+  void _refreshSafeTransferCandidate();
 }
-async function copySafeTransferString(){
-  const out=document.getElementById('stb-output');
-  const result=computeSafeTransferString();
-  if(result.status==='disabled'){
-    if(out){out.value='';out.blur();}
+async function copySafeTransferString(index=0){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED){
+    const out=document.getElementById('stb-output');if(out){out.value='';out.blur();}
     const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
-    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return;
+    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return Object.freeze({ok:false,status:'disabled'});
   }
-  if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
-  try{
-    await copyText(out.value);
-    toast(i18nCore.t('safeTransfer.copied',{count:i18nCore.formatNumber(out.value.length)}));
-  }catch{
-    out.select();
-    document.execCommand('copy');
-    toast(i18nCore.t('safeTransfer.copiedFallback'));
-  }
+  const result=await _ensureSafeTransferController().copyPart(Number(index)||0);
+  if(result.ok)toast(i18nCore.t('safeTransfer.copied',{count:i18nCore.formatNumber(result.value.length)}));
+  return result;
 }
 function renderDiffModal(){
   if(!_activeDiff)return;
