@@ -2163,15 +2163,15 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 }
 
 /* Wants workflow: intent lives in the section; rows keep Pokémon and exact details. */
-#tab-mylist{max-width:1440px}
+#tab-mylist{max-width:var(--container-wide)}
 #combined-list{container: wants-list / inline-size}
 #combined-list .mygrid{grid-template-columns:minmax(0,1fr);gap:8px;border:0;background:transparent}
 #combined-list .myrow{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}
 #combined-list .myrow:hover{background:var(--surface-hover)}
-/* 24rem minimum for two; 28rem per card for three leaves room for
-   selection, long localized names, qualifiers and the two action targets. */
+/* Three compact cards fit the standard 1056px inner shell; names and
+   qualifiers wrap while sprite and action targets retain their size. */
 @container wants-list (min-width:48rem){#combined-list .mygrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@container wants-list (min-width:84rem){#combined-list .mygrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container wants-list (min-width:64rem){#combined-list .mygrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 #tab-mylist .wants-list-toolbar{margin-bottom:18px}
 #combined-list .wants-section-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;margin-bottom:8px}
 #combined-list .mylist-priority-heading{margin:0;padding:0!important;border-radius:0;background:none}
@@ -2245,7 +2245,8 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 #combined-list .myrow-sprite-wrap{pointer-events:none}
 @media(max-width:600px){#combined-list .myrow-trait.lucky,#combined-list .myrow-trait.shiny{width:auto;min-width:0;max-width:none;font-size:0}#combined-list .myrow-trait.lucky::before,#combined-list .myrow-trait.shiny::before{font-size:12px}}
 @media(min-width:601px){
- .wants-section-search .wants-compact-search{display:grid;grid-template-columns:auto auto;justify-content:end}
+ .wants-section-search .wants-compact-search{display:grid;grid-template-columns:max-content;justify-content:end}
+ .wants-section-search .contextual-copy-actions{justify-self:end}
  .wants-section-search .contextual-unresolved,.wants-section-search .contextual-copy-status{grid-column:1/-1;justify-self:end}
 }
 
