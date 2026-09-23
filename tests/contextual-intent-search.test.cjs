@@ -46,11 +46,11 @@ test('empty and unknown scopes never emit a match-all prefilter',()=>{
   const unknown=plan([{name:'Worlds 2026 unknown',no:null},{name:'Invalid',no:true},{name:'Unsafe',no:'25 OR 150'}]);
   assert.equal(unknown.unresolved,3);assert.equal(unknown.manual.length,3);assert.equal(unknown.parts.length,0);
 });
-test('mixed ordinary and special scopes split protected and broad discovery without mutation',()=>{
+test('mixed requirements produce one compatible section command without mutation',()=>{
   const input=[{name:'Pikachu (Purple Party)',no:25,shiny:true,backgroundId:'exact',gender:'f',mod:'unsupported',note:'private'},{name:'Unmapped',no:null},{name:'Pikachu',no:25}];
   const before=JSON.stringify(input),plan=load().PogoDomain.searchStrings.contextualSearchPlan(input);
-  assert.deepEqual(json(plan.parts),['!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25','!traded&25']);
-  assert.deepEqual(json(plan.partPolicies),['ordinary-protected','special-broad']);assert.equal(plan.policy,'mixed');assert.equal(plan.manual.length,3);assert.equal(plan.unresolved,1);
+  assert.deepEqual(json(plan.parts),['!4*&!traded&CP-2500&!shadow&!purified&25']);
+  assert.deepEqual(json(plan.partPolicies),['section']);assert.equal(plan.policy,'section');assert.equal(plan.manual.length,3);assert.equal(plan.unresolved,1);
   assert.equal(plan.manual[0].mod,'unsupported');assert.equal(JSON.stringify(input),before);
 });
 test('all supported query locales restore the complete protected ordinary policy',()=>{

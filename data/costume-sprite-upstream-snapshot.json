@@ -3502,6 +3502,50 @@
           "label": "Roaming Form"
         }
       ]
+    },
+    {
+      "dex": 327,
+      "species": "Spinda",
+      "url": "https://pokemondb.net/sprites/spinda",
+      "reviewedAt": "2026-09-23",
+      "files": [
+        {
+          "file": "spinda-01.png",
+          "label": "Pattern #1"
+        },
+        {
+          "file": "spinda-02.png",
+          "label": "Pattern #2"
+        },
+        {
+          "file": "spinda-03.png",
+          "label": "Pattern #3"
+        },
+        {
+          "file": "spinda-04.png",
+          "label": "Pattern #4"
+        },
+        {
+          "file": "spinda-05.png",
+          "label": "Pattern #5"
+        },
+        {
+          "file": "spinda-06.png",
+          "label": "Pattern #6"
+        },
+        {
+          "file": "spinda-07.png",
+          "label": "Pattern #7"
+        },
+        {
+          "file": "spinda-08.png",
+          "label": "Pattern #8"
+        },
+        {
+          "file": "spinda-09.png",
+          "label": "Pattern #9"
+        }
+      ]
     }
   ]
 }

@@ -16,11 +16,11 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,380);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,355);
+  assert.equal(catalog.entries.length,389);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,364);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,25);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,462);
+  assert.equal(assets.length,471);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/img\.pokemondb\.net|pokeminers|serebii|cdn08/i);

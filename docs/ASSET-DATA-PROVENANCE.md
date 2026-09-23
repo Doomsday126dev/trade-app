@@ -25,6 +25,8 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 
 ### Pokémon Database
 
+- 2026-09-23 focused correction: individually reviewed the GO gallery at https://pokemondb.net/sprites/spinda. Its explicit Pattern #1–#8 captions correspond to the existing Spinda (Form 1)–(Form 8) identities and the numbered files `spinda-01.png`–`spinda-08.png`. Pattern #9 (`spinda-09.png`) was visually checked for the heart-shaped forehead marking and maps to the existing Spinda (Heart) identity. All nine are distinct, SHA-256-pinned, self-hosted files; no saved names or IDs change. The Spinda snapshot page carries its own review date; the older pages' capture date is unchanged.
+
 - URLs: https://pokemondb.net/about ; https://pokemondb.net/sprites ; https://img.pokemondb.net/sprites/
 - Use: selected Pokémon HOME form/gender fallbacks and a reviewed catalog of exact Pokémon GO costume sprites.
 - Copy/serve/reference: reviewed GO sprite files are saved under `assets/sprites/go/` and served by PoGo Trades, following the sprite gallery's request to self-host images instead of consuming its bandwidth. The app does not copy Pokémon Database prose, page layout, or data presentation. HOME fallbacks remain constrained runtime references while their broader replacement is evaluated separately.

@@ -52,6 +52,7 @@
   });
   const SERIALIZATION_PROFILES=Object.freeze({
     priority:Object.freeze(['excludeAppraisal4Star','excludeTraded','excludeShiny','maxCp','excludeShadow','excludePurified','excludeBackground']),
+    section:Object.freeze(['excludeAppraisal4Star','excludeTraded','excludeShiny','maxCp','excludeShadow','excludePurified','excludeBackground','includeLucky','includeXxl','includeXxs']),
     safeTransfer:Object.freeze(['excludeFavorite','excludeAppraisal4Star','excludeShiny','excludeShadow','excludePurified','excludeBackground','excludeTraded','excludeLegendary','excludeMythical','maxCp']),
     canonical:Object.freeze([...Object.keys(BOOLEAN_CLAUSES),'maxCp'])
   });

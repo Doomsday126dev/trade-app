@@ -26,10 +26,10 @@ const regularSprite='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="
 // Literal policy oracles must retain the requirements in each fixture. Deriving
 // an expected query from only {no} incorrectly treats special wants as ordinary.
 const PUBLIC_POLICY_QUERIES=Object.freeze({
-  en:{ordinaryPikachu:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25',specialPikachu:'!traded&25',specialEevee:'!traded&133'},
-  ja:{ordinaryPikachu:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&25',specialPikachu:'!こうかん&25',specialEevee:'!こうかん&133'},
-  es:{ordinaryPikachu:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&25',specialPikachu:'!intercambiados&25',specialEevee:'!intercambiados&133'},
-  de:{ordinaryPikachu:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25',specialPikachu:'!getauscht&25',specialEevee:'!getauscht&133'}
+  en:{ordinaryPikachu:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25',specialPikachu:'!4*&!traded&CP-2500&!shadow&!purified&!background&25',specialEevee:'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&133'},
+  ja:{ordinaryPikachu:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&25',specialPikachu:'!4*&!こうかん&cp-2500&!しゃどう&!らいと&!はいけい&25',specialEevee:'!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&133'},
+  es:{ordinaryPikachu:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&25',specialPikachu:'!4*&!intercambiados&PC-2500&!oscuro&!purificado&!fondo&25',specialEevee:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&133'},
+  de:{ordinaryPikachu:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25',specialPikachu:'!4*&!getauscht&WP-2500&!Crypto&!Erlöst&!hintergrund&25',specialEevee:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&133'}
 });
 
 function representativePublicProjection(){
@@ -109,6 +109,92 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
+  test('reviewed Max and Rockruff shared art works without private catalog data and never guesses a Gmax style',async({page})=>{
+    const names=['Charmander (Dynamax)','Toxtricity (Amped) (Dynamax)','Toxtricity (Low Key) (Dynamax)','Urshifu (Single Strike) (Dynamax)','Urshifu (Rapid Strike) (Dynamax)','Rockruff (Dusk)','Urshifu (Gigantamax)'];
+    const declarations=names.map(name=>({intent:'lf',name,category:name.includes('Gigantamax')?'gmax':name.includes('Dynamax')?'dynamax':'wishlist',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}));
+    await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:7},realSprites:true});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__maxSearch=value;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const cards=page.locator('#share-list-out .share-pcard');
+    await expect(cards).toHaveCount(1);
+    expect(await page.evaluate(()=>typeof POGO_TRADE_DB)).toBe('undefined');
+    const expected={
+      'Charmander (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png',
+      'Toxtricity (Amped) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-amped.png',
+      'Toxtricity (Low Key) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-low-key.png',
+      'Urshifu (Single Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-single-strike.png',
+      'Urshifu (Rapid Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-rapid-strike.png',
+      'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png',
+      'Urshifu (Gigantamax)':null
+    };
+    const seen=[];
+    for(const [category,count,query] of [
+      ['wishlist',1,'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&744'],
+      ['dynamax',5,'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&4,849,892'],
+      ['gmax',1,'!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&892']
+    ]){
+      await page.locator(`[data-list-type="${category}"]`).click();
+      await expect(cards).toHaveCount(count);
+      await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+      const imageCount=category==='gmax'?0:count;
+      await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.filter(image=>image.complete&&image.naturalWidth>1).length),{timeout:30000}).toBe(imageCount);
+      for(const row of await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')||null})))){
+        expect(row.src,row.name).toBe(expected[row.name]);seen.push(row.name);
+      }
+      await expect(cards.locator('.public-share-pokemon-mark')).toHaveCount(category==='gmax'?1:0);
+      const copy=page.locator('[data-want-section="H"] [data-contextual-copy]');
+      await expect(copy).toHaveCount(1);await copy.click();
+      expect(await page.evaluate(()=>__maxSearch)).toBe(query);
+    }
+    expect(new Set(seen)).toEqual(new Set(names));
+    await assertPublicPrivacy(page);
+  });
+
+  test('all 27 pattern identities load through anonymous bootstrap and image failures cannot remove search species',async({page,browser})=>{
+    const patterns=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
+    const names=[...patterns.map(pattern=>`Scatterbug (${pattern})`),...Array.from({length:8},(_,index)=>`Spinda (Form ${index+1})`),'Spinda (Heart)'];
+    const declarations=names.map(name=>({intent:'lf',name,category:'wishlist',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}));
+    const projection={...publicProjection,version:2,declarations,declarationCount:27};
+    await installPublicFirebase(page,{projection,realSprites:true});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__patternSearch=value;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const cards=page.locator('#share-list-out .share-pcard');
+    await expect(cards).toHaveCount(27);
+    await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+    await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.length===27&&images.every(image=>image.complete&&image.naturalWidth>1)),{timeout:30000}).toBe(true);
+    const rendered=await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')})));
+    expect(new Set(rendered.map(row=>row.name)).size).toBe(27);
+    for(const row of rendered){
+      if(row.name.startsWith('Scatterbug'))expect(row.src,row.name).toBe('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png');
+      else{
+        const number=row.name==='Spinda (Heart)'?'09':row.name.match(/Form (\d+)/)[1].padStart(2,'0');
+        expect(row.src,row.name).toBe(`assets/sprites/go/spinda-${number}.png`);
+      }
+    }
+    const expected='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&327,664';
+    const copy=page.locator('[data-want-section="H"] [data-contextual-copy]');
+    await expect(copy).toHaveCount(1);await copy.click();
+    expect(await page.evaluate(()=>__patternSearch)).toBe(expected);
+    await assertPublicPrivacy(page);
+    // A fresh context prevents the already decoded successful images from
+    // satisfying the forced-failure case out of the browser's memory cache.
+    const failed=await browser.newPage();
+    await installPublicFirebase(failed,{projection,realSprites:true});
+    await failed.route('**/__pattern_art_unavailable__.png',route=>route.fulfill({status:404,body:'Forced fixture artwork failure'}));
+    await failed.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__patternSearch=value;}}}));
+    await failed.goto('./?view=PublicTrainer&list=wishlist');
+    const failedCards=failed.locator('#share-list-out .share-pcard'),failedCopy=failed.locator('[data-want-section="H"] [data-contextual-copy]');
+    await expect(failedCards).toHaveCount(27);
+    await failedCards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';image.src='/__pattern_art_unavailable__.png';}));
+    await expect(failedCards.locator('.public-share-pokemon-mark')).toHaveCount(27);
+    await expect(failedCopy).toHaveAttribute('data-contextual-copy',expected);await failedCopy.click();
+    expect(await failed.evaluate(()=>__patternSearch)).toBe(expected);
+    await expect(failed.locator('#share-list-out .contextual-omitted')).toHaveCount(0);
+    expect(await failedCards.locator('.share-pcard-name').allTextContents()).toEqual(rendered.map(row=>row.name));
+    await assertPublicPrivacy(failed);
+    await failed.close();
+  });
+
   test('public section copy preserves priority, standalone requirements and distinct same-species wants',async({page})=>{
     const projection=representativePublicProjection();
     await installPublicFirebase(page,{projection,realSprites:!!process.env.WANT_WORKFLOW_SCREENSHOT_DIR});
@@ -122,7 +208,17 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
     await expect(page.locator('[data-want-section="L"] .contextual-details')).toBeHidden();
     await expect(page.locator('[data-want-section="LUCKY"] .contextual-details')).toBeHidden();
-    for(const [key,expected] of [['H','!traded&25'],['M','!traded&854'],['L','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1'],['LUCKY','!traded&25'],['XXL','!traded&143'],['XXS','!traded&595'],['SHINY','!traded&94'],['LUCKY+SHINY','!traded&280'],['NEEDS_PRIORITY','!traded&150']]){
+    for(const [key,expected] of [
+      ['H','!4*&!traded&CP-2500&!shadow&!purified&!background&25'],
+      ['M','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&854'],
+      ['L','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1'],
+      ['LUCKY','!4*&!shiny&CP-2500&!shadow&!purified&!background&lucky&25'],
+      ['XXL','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxl&143'],
+      ['XXS','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxs&595'],
+      ['SHINY','!4*&!traded&CP-2500&!shadow&!purified&!background&94'],
+      ['LUCKY+SHINY','!4*&CP-2500&!shadow&!purified&!background&lucky&280'],
+      ['NEEDS_PRIORITY','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150']
+    ]){
       const section=page.locator(`[data-want-section="${key}"]`);
       await expect(section.locator('.share-pcard')).toHaveCount(1);
       await expect(section.locator('.share-pcard .badge')).toHaveCount(0);
@@ -284,9 +380,9 @@ test.describe('anonymous public share bootstrap',()=>{
       expect(await copy.innerText()).not.toContain('share.');
     }
     await page.locator('[data-list-type="dynamax"]').click();
-    await expect(copy).toHaveAttribute('data-contextual-copy','!getauscht&4');
+    await expect(copy).toHaveAttribute('data-contextual-copy','!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&4');
     await page.locator('[data-list-type="costumes"]').click();
-    await expect(copy).toHaveAttribute('data-contextual-copy','!getauscht&25');
+    await expect(copy).toHaveAttribute('data-contextual-copy','!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25');
     await page.evaluate(()=>{window.__denyCopy=true;});
     await copy.click();
     await expect(section.locator('.contextual-details')).toHaveAttribute('open','');
@@ -299,8 +395,8 @@ test.describe('anonymous public share bootstrap',()=>{
     const declaration={intent:'lf',name:'H-Typhlosion',category:'wishlist',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false};
     const projection={...publicProjection,version:2,declarations:[declaration],declarationCount:1};
     for(const [interfaceLocale,gameLocale,expected] of [
-      ['ja','en','!traded&157'],
-      ['en','ja','!こうかん&157']
+      ['ja','en','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&157'],
+      ['en','ja','!4*&!こうかん&!色違い&cp-2500&!しゃどう&!らいと&!はいけい&157']
     ]){
       const context=await browser.newContext();
       const page=await context.newPage();

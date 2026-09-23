@@ -36,7 +36,11 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Mewtwo'),150);
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Mew'),151);
   assert.doesNotMatch(publicDexRuntime,/Doomsday126|Ghyslaine|friendCode|"users"/);
-  assert.ok(Buffer.byteLength(publicDexRuntime)<30000,'public dex should stay compact');
+  // Include runtime supplemental forms and generated Max labels, not just data.js.
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Spinda (Heart)'),327);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Scatterbug (Garden)'),664);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Charmander (Dynamax)'),4);
+  assert.ok(Buffer.byteLength(publicDexRuntime)<35000,'complete runtime public dex should stay compact');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Blipbug')),['https://img.pokemondb.net/sprites/home/normal/blipbug.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Snom','',872)),[
     'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/872.png',

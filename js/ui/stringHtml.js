@@ -29,17 +29,14 @@
     const omitted=plan.manual.filter(entry=>entry.unresolved);
     const exception=omitted.length||plan.parts.length>1;
     const summary=omitted.length?t('workflow.notIncluded',{count:omitted.length}):t(plan.parts.length>1?'workflow.splitSearch':'restored.searchDetails');
-    const policyCount=id=>(plan.partPolicies||[]).filter(value=>value===id).length;
     const buttons=plan.parts.map((value,index)=>{
-      const policy=plan.partPolicies?.[index],baseLabel=policy==='ordinary-protected'?t('contextSearch.copyProtected'):policy==='special-broad'?t('contextSearch.copyBroad'):scopedCopyLabel||t('restored.copySearch');
-      const samePolicyIndex=policy?(plan.partPolicies.slice(0,index+1).filter(value=>value===policy).length):index+1;
-      const samePolicyTotal=policy?policyCount(policy):plan.parts.length;
-      const copyLabel=samePolicyTotal===1?baseLabel:`${baseLabel} ${samePolicyIndex}/${samePolicyTotal}`;
+      const baseLabel=scopedCopyLabel||t('restored.copySearch');
+      const copyLabel=plan.parts.length===1?baseLabel:`${baseLabel} ${index+1}/${plan.parts.length}`;
       return `<button type="button" class="btn ${compact?'btn-secondary':'btn-primary'}" data-contextual-copy="${escAttr(value)}" data-copy-index="${index}" aria-label="${escAttr(copyLabel)}"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg>${escHtml(copyLabel)}</button>`;
     }).join('');
     // Only omissions and splitting need routine disclosure. Known requirements
     // remain ordinary wants; no per-entry checklist is built or retained.
-    return`<section class="contextual-search${compact?' wants-compact-search':''}" aria-label="${escAttr(title)}"><div class="contextual-copy-actions">${buttons||`<span class="type-meta">${escHtml(t(plan.total?'workflow.searchUnavailable':'contextSearch.empty'))}</span>`}</div><details class="contextual-details wants-search-details"${compact&&!exception?' hidden':''}><summary>${escHtml(summary)}</summary><div class="contextual-search-body">${omitted.length?`<p class="contextual-unresolved">${escHtml(t('workflow.omittedHelp'))}</p><p class="contextual-omitted">${omitted.map(entry=>escHtml(entry.dn||entry.name||t('contextSearch.unknown'))).join('\n')}</p>`:''}${plan.policy==='mixed'?`<p>${escHtml(t('contextSearch.mixedHelp'))}</p>`:''}${plan.parts.length>1?`<p>${escHtml(t('contextSearch.split',{count:plan.parts.length}))}</p>`:''}${!compact?`<p>${escHtml(t('contextSearch.warning'))}</p>`:''}${plan.parts.map(value=>`<div class="contextual-search-part"><textarea class="strbox" readonly rows="1" aria-label="${escAttr(label)}">${escHtml(value)}</textarea></div>`).join('')}</div></details><span class="contextual-copy-status" role="status" aria-live="polite"></span></section>`;
+    return`<section class="contextual-search${compact?' wants-compact-search':''}" aria-label="${escAttr(title)}"><div class="contextual-copy-actions">${buttons||`<span class="type-meta">${escHtml(t(plan.total?'workflow.searchUnavailable':'contextSearch.empty'))}</span>`}</div><details class="contextual-details wants-search-details"${compact&&!exception?' hidden':''}><summary>${escHtml(summary)}</summary><div class="contextual-search-body">${omitted.length?`<p class="contextual-unresolved">${escHtml(t('workflow.omittedHelp'))}</p><p class="contextual-omitted">${omitted.map(entry=>escHtml(entry.dn||entry.name||t('contextSearch.unknown'))).join('\n')}</p>`:''}${plan.parts.length>1?`<p>${escHtml(t('contextSearch.split',{count:plan.parts.length}))}</p>`:''}${!compact?`<p>${escHtml(t('contextSearch.warning'))}</p>`:''}${plan.parts.map(value=>`<div class="contextual-search-part"><textarea class="strbox" readonly rows="1" aria-label="${escAttr(label)}">${escHtml(value)}</textarea></div>`).join('')}</div></details><span class="contextual-copy-status" role="status" aria-live="polite"></span></section>`;
   }
   if(global.document)global.document.addEventListener('click',async event=>{
     const button=event.target.closest?.('[data-contextual-copy]');if(!button)return;

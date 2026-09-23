@@ -8,19 +8,28 @@ const PROTECTED=Object.freeze({
   es:'!4*&!intercambiados&!variocolor&PC-2500&!oscuro&!purificado&!fondo&25',
   de:'!4*&!getauscht&!Schillernd&WP-2500&!Crypto&!Erlöst&!hintergrund&25'
 });
-const BROAD=Object.freeze({
-  en:'!traded&1',ja:'!こうかん&1',es:'!intercambiados&1',de:'!getauscht&1'
+const SHINY=Object.freeze({
+  en:'!4*&!traded&CP-2500&!shadow&!purified&!background&1',
+  ja:'!4*&!こうかん&cp-2500&!しゃどう&!らいと&!はいけい&1',
+  es:'!4*&!intercambiados&PC-2500&!oscuro&!purificado&!fondo&1',
+  de:'!4*&!getauscht&WP-2500&!Crypto&!Erlöst&!hintergrund&1'
 });
 
 test.use({serviceWorkers:'block'});
 
-test('real search controls copy complete protected and broad strings in every supported game locale',async({page,baseURL})=>{
+test('real search controls copy one compatible string per section in every supported game locale',async({page,baseURL})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await fixture(page,baseURL);
-  for(const locale of Object.keys(PROTECTED)){
-    await page.evaluate(value=>changePokemonGoSearchLocale(value),locale);
+  for(const [uiLocale,locale] of [['ja','en'],['en','ja'],['de','es'],['es','de']]){
+    await page.evaluate(()=>openSettingsPanel('account'));
+    await page.locator('[data-settings-target="language"]').click();
+    await page.locator('#settings-language').selectOption(uiLocale);
+    await page.locator('#settings-search-language-override').check();
+    await page.locator('#settings-search-language').selectOption(locale);
+    await page.locator('.settings-modal-close').click();
+    await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe(uiLocale);
     await copyAndExpect(page,'#combined-list > [data-wants-section="H"] [data-contextual-copy]',PROTECTED[locale]);
-    await copyAndExpect(page,'#combined-list > [data-wants-section="SHINY"] [data-contextual-copy]',BROAD[locale]);
+    await copyAndExpect(page,'#combined-list > [data-wants-section="SHINY"] [data-contextual-copy]',SHINY[locale]);
   }
 
   await page.evaluate(()=>{
@@ -29,9 +38,8 @@ test('real search controls copy complete protected and broad strings in every su
     refreshCombinedSearch();
   });
   const mixed=page.locator('#combined-search [data-contextual-copy]');
-  await expect(mixed).toHaveCount(2);
-  await copyAndExpect(page,mixed.nth(0),PROTECTED.en);
-  await copyAndExpect(page,mixed.nth(1),BROAD.en);
+  await expect(mixed).toHaveCount(1);
+  await copyAndExpect(page,mixed,'!4*&!traded&CP-2500&!shadow&!purified&!background&1,25');
 
   const who=await page.evaluate(()=>{
     const entry={intent:'lf',name:'Pikachu',dn:'Pikachu',no:25,p:'H',type:'wishlist',members:[{key:'friend',displayName:'Friend',priorities:['H']}]};
@@ -48,7 +56,7 @@ test('real search controls copy complete protected and broad strings in every su
   expect(errors).toEqual([]);
 });
 
-test('anonymous public share keeps its interface locale and copies the explicit game-search locale',async({page,baseURL})=>{
+test('isolated shared renderer keeps its interface locale and copies the explicit game-search locale',async({page,baseURL})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await fixture(page,baseURL);
   await page.addScriptTag({content:PUBLIC_SHARE_SOURCE.replace('global.__pogoStartPublicShare=start;','global.__searchPolicyPublic={state,renderList};global.__pogoStartPublicShare=start;')});
