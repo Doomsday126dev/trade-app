@@ -25,9 +25,9 @@ test('default signed-in graph excludes all six candidates in every locale',()=>{
   for(const locale of ['en','de','ja','es']){
     const scripts=defaultScripts(locale);
     for(const file of removed)assert.ok(!scripts.includes(file),`${locale}: ${file}`);
-    assert.equal(scripts.length,locale==='en'?75:76);
+    assert.equal(scripts.length,locale==='en'?77:78);
     assert.equal(scripts.at(-1),'js/app/application.js');
-    for(const file of ['js/domain/trainerPreferences.js','js/data/accountSyncRuntime.js','js/services/firebaseAppCheck.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js'])assert.ok(scripts.includes(file),file);
+    for(const file of ['js/domain/safeTransferRestoration.js','js/ui/safeTransferCandidate.js','js/domain/trainerPreferences.js','js/data/accountSyncRuntime.js','js/services/firebaseAppCheck.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js'])assert.ok(scripts.includes(file),file);
   }
   assert.doesNotMatch(application,/firebaseReadRegistryData|trainerPreferenceSyncDomain|trainerPreferencesRepositoryData|trainerPreferenceSyncQueueData|trainerTagPanelUi|managedTrainerPreferencesRepository/);
 });
