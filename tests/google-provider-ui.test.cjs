@@ -64,6 +64,17 @@ test('signed-out Google account resolution uses exact UID mappings and no profil
   assert.doesNotMatch(resolution,/email|displayName|photoURL/);
 });
 
+test('Google-first can allocate Auth UID before disabled app-account creation rejects it',()=>{
+  const signIn=adapter.slice(adapter.indexOf('async function signInProvider'),adapter.indexOf('async function reauthenticateCurrentUser'));
+  assert.match(signIn,/signInWithPopup\(auth,googleProvider\(\)\)/);
+  const applicationAdapter=app.slice(app.indexOf('function createGoogleProviderAdapter'),app.indexOf('function ensureProviderLinkingController'));
+  assert.match(applicationAdapter,/const signedIn=await google\.signInProvider\(options\)[\s\S]*?await resolveGoogleAccountBinding\(signedIn\.uid\)/);
+  assert.match(applicationAdapter,/await firebaseSignOut\(auth\)/);
+  const entry=app.slice(app.indexOf('async function continueWithGoogle'),app.indexOf('async function checkGoogleOnboarding(){'));
+  assert.match(entry,/await controller\.signIn\('google'/);
+  assert.match(entry,/if\(!PROVIDER_CAPABILITIES\.providerAccountCreation\)throw providerFailure\('provider-account\/creation-disabled'\)/);
+});
+
 test('Connected Accounts presents all required safe states and actions',()=>{
   const surface=app.slice(app.indexOf('const GOOGLE_PROVIDER_STATE'),app.indexOf('function configureSettingsPanel'));
   for(const value of['already-connected','collision','popup-blocked','canceled','recent-auth-required','network-failed','auth-lifecycle-changed','connecting','prepared','disconnecting','reauthenticate','retry','disconnect','continue','connect'])assert.match(surface,new RegExp(value));
@@ -80,8 +91,15 @@ test('Google unlink requires an exact usable Username and PIN account record',()
 });
 
 test('all supported locales contain Google, onboarding, and recovery copy',()=>{
-  const keys=['login.continueGoogle','security.connect','security.disconnect','security.retry','security.googleReady','security.googleReadyHelp','security.googleConnected','security.googleAlreadyConnected','security.googleCollision','security.googlePopupBlocked','security.googleCanceled','security.googleReauthRequired','security.googleNetworkFailed','security.googleNeedsAttention','providerOnboarding.title','providerOnboarding.description','providerOnboarding.handle','providerOnboarding.check','providerOnboarding.cancel'];
+  const keys=['login.continueGoogle','login.existingGoogleHelp','security.connect','security.disconnect','security.retry','security.googleReady','security.googleReadyHelp','security.googleConnected','security.googleAlreadyConnected','security.googleCollision','security.googleCollisionHelp','security.googlePopupBlocked','security.googleCanceled','security.googleReauthRequired','security.googleNetworkFailed','security.googleNeedsAttention','providerOnboarding.title','providerOnboarding.description','providerOnboarding.handle','providerOnboarding.check','providerOnboarding.cancel'];
   for(const locale of['en','ja','es','de']){const source=read(`js/i18n/locales/${locale}.js`);for(const key of keys)assert.match(source,new RegExp(`'${key.replaceAll('.','\\.')}'`),`${locale}:${key}`);}
+});
+
+test('signed-out Google entry directs existing trainers to PIN-first linking without promising credential transfer',()=>{
+  assert.match(html,/id="google-login-button"[\s\S]*?data-i18n="login\.existingGoogleHelp"/);
+  assert.match(read('js/i18n/locales/en.js'),/PIN first, then use Settings/);
+  assert.match(read('js/i18n/locales/en.js'),/retrying Connect Google will not move it/);
+  assert.match(html,/providerAccountCreation:window\.__POGO_PROVIDER_CAPABILITIES__\?\.providerAccountCreation===true/);
 });
 
 test('Google source contains no redirect fallback, broad scopes, secrets, or token persistence',()=>{
