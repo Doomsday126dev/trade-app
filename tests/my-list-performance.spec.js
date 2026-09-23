@@ -35,6 +35,22 @@ async function installListFixture(page,count){
 }
 
 test.describe('isolated My List scale profile',()=>{
+  test('filter shrink preserves focus on a retained row',async({page})=>{
+    await page.route('https://**/*',route=>route.abort());
+    await page.goto(`./?my-list-focus=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+    await page.evaluate(()=>window.__pogoEnsureFullApp('my-list-focus-test'));
+    await page.waitForFunction(()=>typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);
+    await installListFixture(page,120);
+    const result=await page.evaluate(()=>{
+      const row=[...document.querySelectorAll('#combined-list .myrow')].find(node=>node.dataset.name==='Synthetic Pokemon 0119');
+      const control=row.querySelector('.myrow-edit');control.focus();
+      renderMyList('Synthetic Pokemon 0119',{reason:'filter'});
+      return{focused:document.activeElement===control,connected:control.isConnected,visible:[...document.querySelectorAll('#combined-list .myrow')].filter(node=>!node.hidden).length};
+    });
+    expect(result).toEqual({focused:true,connected:true,visible:1});
+  });
+
   test('correctness and structural bounds remain stable through 1,000 entries',async({page},testInfo)=>{
     test.skip(testInfo.project.name!=='desktop','Isolated desktop benchmark avoids duplicate noisy timing runs.');
     await page.route('https://**/*',route=>route.abort());
