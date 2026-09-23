@@ -76,7 +76,10 @@ test('long real catalog labels, selection, order, focus and zoom retain usable r
     window.__longNames=costumes.map(entry=>entry.name);
   });
   await page.locator('#combined-list .wants-select').first().check();
-  expect(await page.locator('#combined-list .wants-row').first().evaluate(el=>getComputedStyle(el).backgroundColor)).not.toBe(await page.locator('#combined-list .wants-row').nth(1).evaluate(el=>getComputedStyle(el).backgroundColor));
+  await expect.poll(async()=>{
+    const colors=await page.locator('#combined-list .wants-row').evaluateAll(rows=>rows.slice(0,2).map(row=>getComputedStyle(row).backgroundColor));
+    return colors[0]===colors[1];
+  }).toBe(false);
   const names=await page.locator('#combined-list .wants-row').evaluateAll(rows=>rows.map(row=>row.dataset.name));
   const assertRows=async()=>{
     expect(await page.locator('#combined-list .wants-row').evaluateAll(rows=>rows.map(row=>row.dataset.name))).toEqual(names);

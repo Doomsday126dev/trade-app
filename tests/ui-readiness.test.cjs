@@ -59,7 +59,9 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
   assert.match(html,/\.account-action\{[^}]*min-height:48px/);
   assert.match(html,/\.local-settings-trigger\{[^}]*min-height:48px/);
   assert.match(html,/\.trainer-sync-recovery\{[^}]*min-height:48px/);
-  assert.match(html,/\.settings-modal-close\{[^}]*width:48px;height:48px;min-width:48px;min-height:48px/);
+  // The desktop label is content-sized; its hit area still has a 48px floor.
+  assert.match(html,/\.settings-modal-close\{[^}]*flex:0 0 auto;width:auto;min-width:48px;min-height:48px/);
+  assert.match(html,/\.settings-overlay \.settings-modal-close\{width:48px;padding:0\}/);
 });
 
 test('narrow login composition reserves space for language controls',()=>{

@@ -2365,3 +2365,60 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
  .favorite-group-access-list .favorite-filter-chip{flex:none}
  .favorite-groups-disclosure{margin-top:20px}
 }
+
+/* Let localized Add controls claim their text width, then wrap as a unit when space runs out. */
+@media(max-width:600px){
+  #tab-mylist .add-form .frow{
+    display:flex;
+    grid-column:1/-1;
+    flex-wrap:wrap;
+    align-items:stretch;
+    gap:7px 6px;
+    min-width:0;
+  }
+  #tab-mylist .add-form .ac-wrap{
+    order:1;
+    flex:1 1 140px;
+    min-width:140px;
+    width:auto;
+  }
+  #tab-mylist .add-actions{
+    order:2;
+    display:flex;
+    flex:0 0 auto;
+    margin:0;
+  }
+  #tab-mylist .add-actions .bsave{
+    width:max-content;
+    min-width:max-content;
+    min-height:48px;
+    margin:0;
+    padding:8px 12px;
+    line-height:1.2;
+    white-space:normal;
+    box-shadow:none;
+  }
+  #tab-mylist .add-form .add-pri-group{
+    order:3;
+    flex:0 0 auto;
+    width:max-content;
+    max-width:100%;
+  }
+  #tab-mylist .add-advanced-toggle{
+    order:4;
+    flex:0 0 auto;
+    width:max-content;
+    max-width:100%;
+    min-height:48px;
+    padding:6px 10px;
+    white-space:normal;
+  }
+  #tab-mylist .add-advanced-toggle span:first-child{
+    flex:1 1 auto;
+    min-width:0;
+    text-align:center;
+    hyphens:auto;
+    overflow-wrap:anywhere;
+  }
+  #tab-mylist .add-advanced-toggle .caret{flex:0 0 auto}
+}
