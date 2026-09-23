@@ -6,15 +6,54 @@ const { normalizeHandle } = require('../functions/e1-authority-service/handleNor
 const { POLICY_DIGEST, canonicalJson, digest, validAdmission } = require('../functions/e1-authority-service/durableProviderAdmission');
 const { protectionPlan, verifyProtection } = require('../scripts/lib/protected-legacy-namespace.cjs');
 const policy = require('../functions/production/permanent-legacy-allocation-policy.json');
-const { STAGES, advance, rollback } = require('../scripts/lib/durable-admission-transition.cjs');
-const { verifyPermanentWriterClosure } = require('../scripts/lib/permanent-legacy-writer-closure.cjs');
-const { SERVICE_ACCOUNTS, EXPECTED_ROLES, EXPECTED_CONDITIONS, EXPECTED_PERMISSIONS } =
+const { STAGES, advance, rollback, verifyRevocationBarrier } = require('../scripts/lib/durable-admission-transition.cjs');
+const { REQUIRED_SERVICES, TRACKED_DEPLOYERS, verifyPermanentWriterClosure } =
+  require('../scripts/lib/permanent-legacy-writer-closure.cjs');
+const { EXPECTED_ROLES, EXPECTED_CONDITIONS, EXPECTED_PERMISSIONS } =
   require('../scripts/lib/legacy-slot-reconciliation-boundary.cjs');
 const rules = require('./firebase/database.rules.permanent-legacy-allocation.json');
+const temporaryRules = require('./firebase/database.rules.legacy-provisioning-freeze.json');
+const temporaryContract = require('../functions/production/legacy-provisioning-contract.json');
 const { sealGeneration, signActiveGeneration } = require('../scripts/lib/durable-generation-candidate.cjs');
 const sources = (users, aliases = []) => ({ users: { complete: true, names: users },
   loginDirectory: { complete: true, names: users }, authIndex: { complete: true, names: users },
   aliases: { complete: true, names: aliases }, canonicalClaims: { complete: true, names: users } });
+function syntheticWriterFixture() {
+  const services = Object.entries(REQUIRED_SERVICES).map(([name, serviceAccount]) => ({ name, serviceAccount,
+    readyRevision: 'revision-1', servingRevision: 'revision-1', trafficPercent: 100,
+    imageDigest: `sha256:${'c'.repeat(64)}`, sourceFingerprint: 'b'.repeat(64), resourceEtag: `etag-${name}`,
+    environment: name === 'ownerresetlegacypin' ? { LEGACY_PIN_RESET_ENABLED: 'false' } :
+      { LEGACY_ALLOCATION_ENABLED: 'false' } }));
+  const trackedDeployers = Object.fromEntries(TRACKED_DEPLOYERS.map(account => [account, 'absent']));
+  const reviewedDeployment = { schemaVersion: 1, projectId: 'trade-list-a4297', sourceCommitSha: 'a'.repeat(40),
+    reviewedAt: 50, trackedDeployers, serviceAccounts: Object.keys(EXPECTED_ROLES),
+    operatorBreakGlassPrincipals: [], services: services.map(service => ({ name: service.name,
+      serviceAccount: service.serviceAccount, allowedRevisions: [{ name: service.servingRevision,
+        imageDigest: service.imageDigest, sourceFingerprint: service.sourceFingerprint,
+        environment: service.environment }], routes: [{ service: service.name, method: 'POST', path: `/${service.name}` }] })) };
+  const approvedReviewDigest = digest(reviewedDeployment);
+  const fixture = {
+    projectId: 'trade-list-a4297', capturedAt: 200, deployedRules: rules, rulesRelease: 'release-synthetic-1',
+    iamInventoryComplete: true, serviceInventoryComplete: true, routeReadbackComplete: true,
+    serviceAccountInventoryComplete: true, operatorBreakGlassPrincipals: [], trackedDeployers,
+    pendingLegacyAllocations: 0, inflightReadbackComplete: true,
+    inflightOperations: [], provisioningScriptsQuiesced: true, provisioningScripts: [], services,
+    reachableRoutes: reviewedDeployment.services.flatMap(service => service.routes),
+    serviceAccountInventory: Object.keys(EXPECTED_ROLES),
+    projectPolicy: { etag: 'iam-etag-synthetic-1', bindings: Object.entries(EXPECTED_ROLES).flatMap(([principal, roles]) =>
+      roles.map(role => ({ role, members: [`serviceAccount:${principal}`],
+        ...(EXPECTED_CONDITIONS[role] ? { condition: { expression: EXPECTED_CONDITIONS[role] } } : {}) }))) },
+    roles: Object.fromEntries(Object.entries(EXPECTED_PERMISSIONS).map(([role, includedPermissions]) =>
+      [role, { includedPermissions }])),
+    serviceAccountPolicies: Object.fromEntries(Object.keys(EXPECTED_ROLES).map(principal => [principal, { bindings: [] }]))
+  };
+  const withReadbacks = value => ({ ...value, readbackRefs: {
+    rulesRelease: value.rulesRelease, projectIamEtag: value.projectPolicy?.etag,
+    serviceInventoryDigest: digest(value.services), serviceAccountInventoryDigest: digest(value.serviceAccountInventory),
+    routeProbeDigest: digest(value.reachableRoutes), inflightLedgerDigest: digest(value.inflightOperations),
+    scriptInventoryDigest: digest(value.provisioningScripts) } });
+  return { fixture, reviewedDeployment, approvedReviewDigest, withReadbacks };
+}
 
 test('permanent Rules policy is pinned to the admission runtime', () => {
   assert.equal(policy.policyDigest, POLICY_DIGEST);
@@ -80,29 +119,65 @@ test('signed active generation rejects malformed, stale, mismatched, invalidated
   assert.equal(validAdmission(active, generation, publicKey, 300, 'generation-superseded-2'), false);
 });
 
+test('old signed active pointer cannot reauthorize after all routes are gated and repinned', () => {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+  const generation = { schemaVersion: 1, state: 'sealed', generationId: 'generation-synthetic-old',
+    normalizationVersion: 1, inventoryEvidenceDigest: 'a'.repeat(64), coveredHandleKeysDigest: 'b'.repeat(64),
+    protectedClaimsDigest: 'c'.repeat(64), coveredHandleCount: 1, heldHandleCount: 1,
+    writerPolicyDigest: POLICY_DIGEST, writerClosureEvidenceDigest: 'd'.repeat(64), sealedAt: 100 };
+  const oldControl = signActiveGeneration({ generation, activatedAt: 150, privateKey });
+  assert.equal(validAdmission(oldControl, generation, publicKey, 200, generation.generationId), true);
+  const replacementGenerationId = 'generation-synthetic-never-reused';
+  const servingRoutes = ['/createE1ProviderAccountFoundation', '/createProviderAccountFoundation'].map(path => ({
+    path, reachable: true, revision: 'reviewed-revision', sourceFingerprint: 'a'.repeat(64),
+    configuration: { CREATE_PROVIDER_ACCOUNT_ENABLED: 'false', DURABLE_ADMISSION_GENERATION_ID: replacementGenerationId } }));
+  const proof = { oldGenerationId: generation.generationId, replacementGenerationId,
+    expectedRouteKeys: servingRoutes.map(route => route.path), servingRoutes, routeReadbackDigest: digest(servingRoutes) };
+  assert.equal(verifyRevocationBarrier(proof), true);
+  assert.equal(validAdmission(oldControl, generation, publicKey, 200, replacementGenerationId), false);
+  assert.equal(verifyRevocationBarrier({ ...proof, replacementGenerationId: generation.generationId }), false);
+  assert.equal(verifyRevocationBarrier({ ...proof, servingRoutes: servingRoutes.slice(0, 1) }), false);
+  assert.equal(verifyRevocationBarrier({ ...proof, servingRoutes: servingRoutes.map((route, index) => index ? {
+    ...route, configuration: { ...route.configuration, CREATE_PROVIDER_ACCOUNT_ENABLED: 'true' } } : route),
+  }), false);
+});
+
 test('every interrupted cutover stage remains disabled until its exact evidence is present', () => {
-  const evidence = [
-    { temporaryRulesActive: true, browserAllocationDenied: true, requestApprovalDenied: true, adminProvisioningPaused: true },
-    { pendingLegacyAllocations: 0, inflightReadbackComplete: true },
-    { protectionPlanComplete: true, exactSetReadback: true, normalizationVersion: 1 },
-    { permanentRulesReadbackDigest: policy.candidateRulesSha256, privilegedIamReadbackComplete: true,
-      privilegedAllocationPermissionsAbsent: true, activeServiceRevisionReadbackComplete: true,
-      legacyAllocationScriptsQuiesced: true },
-    { operatorSealedGeneration: true, generationMatchesExactCoverage: true, generationPolicyDigest: POLICY_DIGEST },
-    { boundedCertificationInvalidated: true, boundedInFlightAccounted: true },
-    { operatorSignedActiveGeneration: true, durableRuntimeGateQualified: true, providerCreationGateQualified: true },
-    { permanentRulesStillActive: true, oldClientAllocationStillDenied: true, providerCreationReadbackHealthy: true }
-  ];
+  const { fixture, reviewedDeployment, approvedReviewDigest, withReadbacks } = syntheticWriterFixture();
+  const writerEvidence = withReadbacks(fixture);
+  const plan = protectionPlan({ sourceSets: sources(['SyntheticTrainer'], ['FormerSynthetic']) });
+  const protectedClaimsReadback = Object.fromEntries(plan.actions.map(item => [item.path.split('/')[1], item.document]));
+  const generation = sealGeneration({ plan, protectedClaimsReadback, writerEvidence, reviewedDeployment,
+    approvedReviewDigest, generationId: 'generation-synthetic-0002', sealedAt: 100 });
+  const keys = crypto.generateKeyPairSync('ed25519');
+  const control = signActiveGeneration({ generation, activatedAt: 150, privateKey: keys.privateKey });
+  const freeze = { schemaVersion: 1, state: 'active', provisioningContractDigest:
+    temporaryContract.provisioningContractDigest, activatedAt: 50, releasedAt: null };
+  const temporaryBarrier = { rules: temporaryRules, rulesRelease: 'temporary-synthetic-1', freeze,
+    capturedAt: 200, provisioningScripts: [], readbackRefs: { rulesRelease: 'temporary-synthetic-1',
+      freezeDigest: digest(freeze), scriptInventoryDigest: digest([]) } };
+  const runtimeConfiguration = { CREATE_PROVIDER_ACCOUNT_ENABLED: 'true', DURABLE_PROVIDER_ADMISSION_ENABLED: 'true',
+    DURABLE_ADMISSION_GENERATION_ID: generation.generationId };
+  const providerSmoke = { status: 'SUCCESS', appCheckCode: 'app-check/initialized' };
+  const releasedFreeze = { ...freeze, state: 'released', releasedAt: 201 };
+  const evidence = { temporaryBarrier, legacyOperations: [], legacyOperationsDigest: digest([]),
+    protectionPlan: plan, protectedClaimsReadback, writerEvidence, reviewedDeployment, approvedReviewDigest,
+    generation, boundedCertification: null, boundedInFlightOperations: [], boundedInFlightDigest: digest([]),
+    control, runtimePublicKey: keys.publicKey, runtimeConfiguration,
+    runtimeConfigurationDigest: digest(runtimeConfiguration), providerSmoke, providerSmokeDigest: digest(providerSmoke) };
   let stage = STAGES[0];
-  const closure = { permanentRulesReadbackDigest: policy.candidateRulesSha256,
-    privilegedIamReadbackComplete: true, privilegedAllocationPermissionsAbsent: true,
-    activeServiceRevisionReadbackComplete: true, legacyAllocationScriptsQuiesced: true };
-  for (const [index, proof] of evidence.entries()) {
+  for (let index = 0; index < STAGES.length - 1; index++) {
     assert.throws(() => advance(stage, {}), /unqualified/u);
     assert.equal(rollback(stage, false).creationEnabled, false);
-    const current = { ...proof, ...(index <= 3 ? { temporaryRulesActive: true } : closure) };
-    if (index > 0 && index <= 3) assert.throws(() => advance(stage, proof), /unqualified/u);
-    if (index > 3) assert.throws(() => advance(stage, proof), /unqualified/u);
+    assert.throws(() => advance(stage, { temporaryRulesActive: true, writerClosureComplete: true,
+      operatorSignedActiveGeneration: true, providerCreationReadbackHealthy: true }), /unqualified/u);
+    const current = index === STAGES.length - 2 ? { ...evidence, temporaryBarrier: { ...temporaryBarrier,
+      freeze: releasedFreeze, readbackRefs: { ...temporaryBarrier.readbackRefs, freezeDigest: digest(releasedFreeze) } } } : evidence;
+    if (index === STAGES.length - 2) {
+      assert.throws(() => advance(stage, { ...current, control: { ...control, state: 'invalidated' } }), /unqualified/u);
+      assert.throws(() => advance(stage, { ...current, temporaryBarrier: { ...current.temporaryBarrier,
+        readbackRefs: { ...current.temporaryBarrier.readbackRefs, freezeDigest: 'a'.repeat(64) } } }), /unqualified/u);
+    }
     stage = advance(stage, current);
     assert.equal(stage, STAGES[index + 1]);
   }
@@ -111,45 +186,44 @@ test('every interrupted cutover stage remains disabled until its exact evidence 
 });
 
 test('synthetic privileged-writer readback requires exact IAM, Rules, service revisions and drained operations', () => {
-  const fixture = {
-    deployedRules: rules, iamInventoryComplete: true, operatorBreakGlassPrincipals: [],
-    pendingLegacyAllocations: 0, inflightReadbackComplete: true,
-    provisioningScriptsQuiesced: true,
-    services: Object.entries(SERVICE_ACCOUNTS).map(([name, serviceAccount]) =>
-      ({ name, serviceAccount, readyRevision: 'revision-1', servingRevision: 'revision-1', trafficPercent: 100 })),
-    projectPolicy: { bindings: Object.entries(EXPECTED_ROLES).flatMap(([principal, roles]) =>
-      roles.map(role => ({ role, members: [`serviceAccount:${principal}`],
-        ...(EXPECTED_CONDITIONS[role] ? { condition: { expression: EXPECTED_CONDITIONS[role] } } : {}) }))) },
-    roles: Object.fromEntries(Object.entries(EXPECTED_PERMISSIONS).map(([role, includedPermissions]) =>
-      [role, { includedPermissions }])),
-    serviceAccountPolicies: Object.fromEntries(Object.keys(EXPECTED_ROLES).map(principal => [principal, { bindings: [] }]))
-  };
-  assert.equal(verifyPermanentWriterClosure(fixture).applicationWriterClosureVerified, true);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture, pendingLegacyAllocations: 1 }), /unqualified/u);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture, provisioningScriptsQuiesced: false }), /unqualified/u);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture, projectPolicy: { bindings: [] } }), /unqualified/u);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture, roles: { ...fixture.roles,
+  const { fixture, reviewedDeployment, approvedReviewDigest, withReadbacks } = syntheticWriterFixture();
+  const review = { reviewedDeployment, approvedReviewDigest };
+  const check = value => verifyPermanentWriterClosure(withReadbacks(value), review);
+  assert.equal(check(fixture).kind, 'verified-permanent-writer-closure');
+  assert.throws(() => check({ ...fixture, pendingLegacyAllocations: 1 }), /unqualified/u);
+  assert.throws(() => check({ ...fixture, provisioningScriptsQuiesced: false }), /unqualified/u);
+  assert.throws(() => check({ ...fixture, projectPolicy: { etag: 'other', bindings: [] } }), /unqualified/u);
+  assert.throws(() => check({ ...fixture, roles: { ...fixture.roles,
     [Object.keys(EXPECTED_PERMISSIONS)[0]]: { includedPermissions: ['firebaseauth.users.create'] } } }), /unqualified/u);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture, deployedRules: {} }), /unqualified/u);
-  assert.throws(() => verifyPermanentWriterClosure({ ...fixture,
+  assert.throws(() => check({ ...fixture, deployedRules: {} }), /unqualified/u);
+  assert.throws(() => check({ ...fixture,
     projectPolicy: { bindings: [...fixture.projectPolicy.bindings, {
       role: Object.keys(EXPECTED_PERMISSIONS).find(role => EXPECTED_PERMISSIONS[role].includes('datastore.entities.create')),
-      members: ['serviceAccount:unknown-writer@example.test'] }] } }), /unqualified/u);
+      members: ['serviceAccount:unknown-writer@example.test'] }], etag: fixture.projectPolicy.etag } }), /unqualified/u);
   for (const permission of ['resourcemanager.projects.setIamPolicy', 'iam.roles.update',
     'iam.serviceAccounts.setIamPolicy', 'run.services.update', 'cloudfunctions.functions.update']) {
-    assert.throws(() => verifyPermanentWriterClosure({ ...fixture,
+    assert.throws(() => check({ ...fixture,
       projectPolicy: { bindings: [...fixture.projectPolicy.bindings,
-        { role: 'projects/demo/roles/rogue', members: ['serviceAccount:unknown-writer@example.test'] }] },
+        { role: 'projects/demo/roles/rogue', members: ['serviceAccount:unknown-writer@example.test'] }],
+        etag: fixture.projectPolicy.etag },
       roles: { ...fixture.roles, 'projects/demo/roles/rogue': { includedPermissions: [permission] } }
     }), /unqualified/u, permission);
   }
+  const unreviewed = { ...fixture, services: fixture.services.map((service, index) => index ? service : {
+    ...service, readyRevision: 'unreviewed-revision', servingRevision: 'unreviewed-revision',
+    imageDigest: `sha256:${'d'.repeat(64)}`, environment: { LEGACY_PIN_RESET_ENABLED: 'true' } }) };
+  assert.throws(() => check(unreviewed), /unqualified/u,
+    'correct account, matching serving revision and traffic cannot hide an unreviewed writer-enabled image');
+  assert.throws(() => check({ ...fixture, reachableRoutes: [...fixture.reachableRoutes,
+    { service: 'ownerresetlegacypin', method: 'POST', path: '/unreviewed-writer' }] }), /unqualified/u);
+  assert.throws(() => check({ ...fixture, serviceInventoryComplete: false }), /unqualified/u);
   const plan = protectionPlan({ sourceSets: sources(['SyntheticTrainer'], ['FormerSynthetic']) });
   const readback = Object.fromEntries(plan.actions.map(item => [item.path.split('/')[1], item.document]));
   const generation = sealGeneration({ plan, protectedClaimsReadback: readback,
-    writerEvidence: fixture, generationId: 'generation-synthetic-0002', sealedAt: 100 });
+    writerEvidence: withReadbacks(fixture), ...review, generationId: 'generation-synthetic-0002', sealedAt: 100 });
   const keys = crypto.generateKeyPairSync('ed25519');
   const control = signActiveGeneration({ generation, activatedAt: 200, privateKey: keys.privateKey });
   assert.equal(validAdmission(control, generation, keys.publicKey, 200, generation.generationId), true);
-  assert.throws(() => sealGeneration({ plan, protectedClaimsReadback: {}, writerEvidence: fixture,
+  assert.throws(() => sealGeneration({ plan, protectedClaimsReadback: {}, writerEvidence: withReadbacks(fixture), ...review,
     generationId: 'generation-synthetic-0002', sealedAt: 100 }), /coverage-unqualified/u);
 });

@@ -11,7 +11,8 @@ freeze/certification path and existing-account Google/PIN login are unchanged.
 both be explicitly true before the authority route can use the durable path.
 The authority runtime also pins `DURABLE_ADMISSION_GENERATION_ID` and the
 operator public key; replaying an older signed pointer after supersession cannot
-activate it under a runtime pinned to the new generation.
+activate it under a runtime pinned to the new generation. A pin does not reject
+a restored, still-valid signed pointer for the same generation.
 The route still derives the UID from a verified Firebase ID token and checks a
 fresh, linked Google subject. The same Firestore transaction reads the signed
 `authorityConfig/durableProviderAdmission` active pointer, its sealed
@@ -25,14 +26,29 @@ documents; a new request cannot bypass the gate. Firestore retries a transaction
 that races a control-document change.
 
 Only a separately authorized operator holding the offline Ed25519 private key
-may sign an active generation. The runtime receives only the pinned public key.
+may sign an active generation. The signature authenticates the specified
+generation and activation fields; it supplies no independent freshness or
+anti-replay clock. The runtime receives only the pinned public key.
 The registration client has no write access to the Firestore identity database;
 its Rules remain deny-all. Operator establishment and supersession use a new
-signed pointer. Invalidation changes or removes the pointer and immediately
-blocks new creation. Future IAM qualification must ensure no registering client
-or application service can write either admission document, impersonate the
-operator, or alter/delete protected legacy claims. Firestore Admin SDK bypasses
-Rules, so emulator tests do not establish that IAM boundary.
+signed pointer. Invalidation changes or removes the pointer and blocks new
+creation while the reviewed runtime and configuration remain intact. Firestore
+IAM create/get/update permissions are scoped to the identity database, not to
+individual admission or held-claim documents. The authority runtime can update
+those documents using its Admin SDK credentials; deny-all client Rules do not
+restrict it. IAM can exclude other application principals and impersonators,
+but it cannot prevent a compromised authority runtime from altering held claims
+or restoring an old pointer. That restriction depends on independently reviewed
+authority code, exact serving image/configuration readback, and no unreviewed
+deploy or runtime impersonation. Resilience to authority-runtime compromise
+would require a different control plane or monotonic revocation anchor.
+
+Before invalidating an active pointer, all reachable creation routes must be
+read back with creation disabled and a never-reused replacement generation pin;
+`verifyRevocationBarrier` rejects an incomplete route set. Re-enable creation
+only with a newly reviewed generation. The old pointer then fails the pin check
+in reviewed code even if its document is restored. This is a future operator
+procedure, not a live IAM qualification or a current deployment.
 
 ## Permanent legacy closure and name protection
 
@@ -42,10 +58,17 @@ RTDB Rules candidate and a pinned policy digest. The candidate denies new
 request approval, deletions, and identity-changing repairs. Existing records
 retain same-UID profile and PIN-version updates. This enforces old-client and
 admin UI writes at Rules, regardless of a visible button or client-side check.
-An old client could still ask Firebase Auth to create an orphan credential before
-Rules deny its app binding. That credential is not an app account or a protected
-name; the future cutover must decide whether separate Auth creation controls are
-needed to prevent orphan credentials. No such control is activated here.
+An old client can still ask Firebase Auth to create an Auth-only record before
+Rules deny its app binding. The synthetic signed-out Google flow confirms that
+an unmapped UID receives no existing app-account resolution or protected name.
+It also reproduces a concrete interference path: the Google credential stays
+allocated to the Auth-only UID, so a later `linkWithPopup` from a legitimate
+PIN account fails `auth/credential-already-in-use`. This fails the proposed
+orphan-tolerance condition. Cutover needs an explicit, reviewed credential
+collision/recovery decision that preserves legitimate login and PIN recovery.
+This candidate neither blocks Auth globally nor deletes/cleans up accounts.
+Synthetic tests do not prove every stale provisioning or repair path is
+isolated; those remain part of the preflight inventory.
 
 `scripts/plan-protected-legacy-namespace.cjs` accepts synthetic fixtures only.
 Its pure planner requires complete users, loginDirectory, authIndex, alias, and
@@ -61,16 +84,26 @@ normalizer rejects them; a future private inventory must review that list.
 The fixture inventory is synthetic. Historical aggregate inventories cannot
 qualify a production generation.
 
-The privileged-writer verifier checks the exact permanent Rules digest, active
-service revisions/accounts, project role bindings and included permissions,
-service-account impersonation grants, drained operations, and quiesced
-provisioning scripts. Its service identity inventory comes from the existing
-legacy-slot reconciliation boundary. The future live readback must include
-`firebase-adminsdk-fbsvc`, `legacy-pin-reset-runtime`,
-`e1-identity-authority-runtime`, and `e1-authority-gateway`, plus all serving
-functions/Cloud Run revisions and project-level roles. It must prove application
-principals lack Firebase Auth create/import, RTDB privileged writes, identity
-database delete, service-account impersonation, and Rules/IAM modification.
+The privileged-writer verifier checks the exact permanent Rules digest, project
+roles and permissions, service-account impersonation grants, drained operations,
+and quiesced provisioning scripts. The former four-service inventory was
+insufficient: the expected serving set now includes the reset function, the
+authority service, and six gateway exports (foundation read, reserve, public
+share read, directory list, favorite identity resolution, and provider-account
+creation). It also tracks authority builder/deployer principals, service-account
+policy bindings, and every reachable route. Future live readback must enumerate
+all allocation, deployment, and impersonation paths; a missing inventory is
+not proof of absence. Each serving revision needs 100% traffic and the
+independently reviewed image digest, source fingerprint, environment, account,
+and route set. A synthetic negative with a correct service account and matching
+ready/serving names but an unreviewed writer-enabled image is rejected. The
+approved review digest must be pinned by a separate review, not computed from
+the live inventory under test. Readback references and digests are traceable
+inputs, but synthetic fixtures and caller-supplied readbacks are not production
+closure proof. Live provenance and completeness remain preflight inputs.
+That inventory must prove application principals lack Firebase Auth create/import,
+RTDB privileged writes, identity database delete, service-account impersonation,
+and Rules/IAM/deployment modification.
 The authority's scoped Firestore create/get/update role still supports the
 reviewed atomic transaction; unrelated mutation gates must remain false while
 provider creation is on. Project-owner break-glass power cannot be neutralized
@@ -78,7 +111,10 @@ by application Rules; it is an operator control and must be recorded separately.
 
 ## Finite transition and recovery
 
-The resumable stage checker requires, in order: block competing writes with the
+The resumable stage checker consumes Rules/freeze readbacks, empty operation
+ledgers, exact protection readback, a reverified writer-closure receipt, sealed
+generation, signed control, and runtime configuration digest. Caller-supplied
+`complete` booleans alone cannot advance a stage. It requires, in order: block competing writes with the
 bounded fence; account for in-flight allocations by readback, never by timeout;
 protect and exactly verify the complete name set; read back permanent Rules,
 IAM and serving revisions; seal the generation; invalidate and drain temporary
@@ -110,3 +146,10 @@ canary plan, monitoring and stop criteria, and both rollback plans. It must
 explicitly authorize each live Rules/IAM/write/deploy step. No production
 inventory, hold, account mutation, Rules/IAM change, or deployment is performed
 by this branch.
+
+The private first-mutation harness contract is unchanged by this branch.
+`functions/test/e1-production-first-mutation-guard.test.cjs` contains the
+private-harness test; this checkout lacks
+`functions/.local/e1-group-d-reserve-console.js`, so that subtest is unavailable
+locally. Synthetic admission tests do not substitute for live IAM/OAuth
+qualification or the private harness.

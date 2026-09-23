@@ -5,9 +5,10 @@ const { POLICY_DIGEST, canonicalJson, digest, validGeneration, validAdmission } 
 const { verifyProtection } = require('./protected-legacy-namespace.cjs');
 const { verifyPermanentWriterClosure } = require('./permanent-legacy-writer-closure.cjs');
 
-function sealGeneration({ plan, protectedClaimsReadback, writerEvidence, generationId, sealedAt }) {
+function sealGeneration({ plan, protectedClaimsReadback, writerEvidence, reviewedDeployment,
+  approvedReviewDigest, generationId, sealedAt }) {
   if (!verifyProtection(plan, protectedClaimsReadback)) throw new Error('generation/coverage-unqualified');
-  const closure = verifyPermanentWriterClosure(writerEvidence);
+  const closure = verifyPermanentWriterClosure(writerEvidence, { reviewedDeployment, approvedReviewDigest });
   const generation = {
     schemaVersion: 1, state: 'sealed', generationId, normalizationVersion: 1,
     inventoryEvidenceDigest: plan.inventoryEvidenceDigest,

@@ -33,6 +33,40 @@ test('genuinely unmapped Google identity remains distinct from existing login',a
   const f=fixture({records:{'authIndex/same-uid':null}});
   assert.equal((await f.context.resolveGoogleAccountBinding('same-uid')).status,'unlinked');
 });
+test('synthetic Auth-only Google sign-in remains unmapped but collides with later legitimate PIN linking',async()=>{
+  const adapterSource=fs.readFileSync('js/services/googleAuthAdapter.js','utf8');
+  const browser={};browser.window=browser;
+  vm.runInNewContext(adapterSource,{window:browser,console});
+  const credentialOwners=new Map();
+  const auth={currentUser:null};
+  const credential='owner-controlled-google';
+  const google=browser.PogoServices.googleAuthAdapter.createGoogleAuthAdapter({
+    getAuth:()=>auth,GoogleAuthProvider:class {},
+    signInWithPopup:async()=>{
+      const uid=credentialOwners.get(credential)||'same-uid';
+      credentialOwners.set(credential,uid);
+      auth.currentUser={uid,providerData:[{providerId:'google.com'}]};
+      return{user:auth.currentUser};
+    },
+    linkWithPopup:async user=>{
+      if(credentialOwners.get(credential)!==user.uid){const error=new Error('collision');error.code='auth/credential-already-in-use';throw error;}
+      return{user};
+    },reauthenticateWithPopup:async()=>{throw new Error('unused');},unlink:async()=>{throw new Error('unused');},
+    getAdditionalUserInfo:()=>({isNewUser:true})
+  });
+  const result=await google.signInProvider({providerKey:'google'});
+  assert.equal(result.uid,'same-uid');
+  const resolution=fixture({records:{'authIndex/same-uid':null,'users/Trainer':{authUid:'legitimate-pin-uid'}}});
+  assert.equal((await resolution.context.resolveGoogleAccountBinding('same-uid')).status,'unlinked');
+  // A new Auth user has no reciprocal app binding; rejecting it does not erase
+  // the Auth credential allocation. No app-account or protected-name write occurs.
+  assert.equal(credentialOwners.get(credential),'same-uid');
+  auth.currentUser={uid:'legitimate-pin-uid',providerData:[{providerId:'password'}]};
+  await assert.rejects(google.linkCurrentUser({providerKey:'google'}),
+    {code:'auth/credential-already-in-use'});
+  assert.equal(auth.currentUser.uid,'legitimate-pin-uid');
+  assert.equal(credentialOwners.get(credential),'same-uid');
+});
 test('reset PIN reconnect validates Firebase instead of rejecting the new PIN against an old verifier',async()=>{
   let calls=0;
   const context=vm.createContext({cur:'Trainer',allData:{users:{Trainer:{authUid:'same-uid',pin:'old-hash'}}},

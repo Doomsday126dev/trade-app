@@ -35,7 +35,12 @@ test('local release command retains permanent release coverage with existing fil
 });
 
 test('PR planning precedes dependency setup and executes the same changed-area selector',()=>{
-  const steps=YAML.parse(read('.github/workflows/product-review.yml')).jobs['public-share'].steps;
+  const workflow=YAML.parse(read('.github/workflows/product-review.yml'));
+  assert.deepEqual(workflow.on.pull_request.branches,['main','auth/google-onboarding-readiness']);
+  assert.equal(workflow.on.pull_request_target,undefined);
+  assert.equal(workflow.on.workflow_run,undefined);
+  assert.deepEqual(workflow.permissions,{contents:'read',actions:'read'});
+  const steps=workflow.jobs['public-share'].steps;
   const plan=steps.findIndex(step=>step.run==='node scripts/select-product-checks.cjs --plan');
   const deps=steps.findIndex(step=>step.run==='npm ci --prefix functions --ignore-scripts');
   const run=steps.findIndex(step=>step.run==='node scripts/select-product-checks.cjs');

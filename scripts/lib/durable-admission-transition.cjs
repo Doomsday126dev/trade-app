@@ -1,6 +1,12 @@
 'use strict';
-const { POLICY_DIGEST } = require('../../functions/e1-authority-service/durableProviderAdmission');
+const crypto = require('node:crypto');
+const { POLICY_DIGEST, digest, validGeneration, validAdmission } =
+  require('../../functions/e1-authority-service/durableProviderAdmission');
 const policy = require('../../functions/production/permanent-legacy-allocation-policy.json');
+const temporaryContract = require('../../functions/production/legacy-provisioning-contract.json');
+const { verifyProtection } = require('./protected-legacy-namespace.cjs');
+const { verifyPermanentWriterClosure } = require('./permanent-legacy-writer-closure.cjs');
+const safeDigest = value => { try { return digest(value); } catch { return null; } };
 const STAGES = Object.freeze([
   'disabled', 'legacy-writers-blocked', 'inflight-accounted', 'names-protected',
   'permanent-writers-closed', 'generation-sealed', 'temporary-admission-invalidated',
@@ -12,30 +18,53 @@ function advance(state, evidence) {
     throw new Error('transition/stage-invalid');
   }
   const next = STAGES[position + 1];
-  const permanentClosureVerified = () => evidence.permanentRulesReadbackDigest === policy.candidateRulesSha256 &&
-    evidence.privilegedIamReadbackComplete === true && evidence.privilegedAllocationPermissionsAbsent === true &&
-    evidence.activeServiceRevisionReadbackComplete === true && evidence.legacyAllocationScriptsQuiesced === true;
-  // Every transition must re-read the currently enforced barrier. An expired
-  // temporary fence cannot qualify a later snapshot or sealed generation.
-  if (position < STAGES.indexOf('permanent-writers-closed') ? evidence.temporaryRulesActive !== true :
-      !permanentClosureVerified()) throw new Error(`transition/${next}-unqualified`);
-  const checks = {
-    'legacy-writers-blocked': () => evidence.temporaryRulesActive === true && evidence.browserAllocationDenied === true &&
-      evidence.requestApprovalDenied === true && evidence.adminProvisioningPaused === true,
-    'inflight-accounted': () => evidence.pendingLegacyAllocations === 0 && evidence.inflightReadbackComplete === true,
-    'names-protected': () => evidence.protectionPlanComplete === true && evidence.exactSetReadback === true &&
-      evidence.normalizationVersion === 1,
-    'permanent-writers-closed': permanentClosureVerified,
-    'generation-sealed': () => evidence.operatorSealedGeneration === true && evidence.generationMatchesExactCoverage === true &&
-      evidence.generationPolicyDigest === POLICY_DIGEST,
-    'temporary-admission-invalidated': () => evidence.boundedCertificationInvalidated === true &&
-      evidence.boundedInFlightAccounted === true,
-    'durable-active': () => evidence.operatorSignedActiveGeneration === true &&
-      evidence.durableRuntimeGateQualified === true && evidence.providerCreationGateQualified === true,
-    'temporary-fence-ended': () => evidence.permanentRulesStillActive === true &&
-      evidence.oldClientAllocationStillDenied === true && evidence.providerCreationReadbackHealthy === true
-  };
-  if (!checks[next]()) throw new Error(`transition/${next}-unqualified`);
+  const deny = () => { throw new Error(`transition/${next}-unqualified`); };
+  let closure = null;
+  if (position < STAGES.indexOf('permanent-writers-closed')) {
+    const barrier = evidence.temporaryBarrier;
+    const rulesDigest = crypto.createHash('sha256').update(`${JSON.stringify(barrier?.rules, null, 2)}\n`).digest('hex');
+    const freeze = barrier?.freeze;
+    if (rulesDigest !== temporaryContract.candidateRulesSha256 ||
+        barrier?.rulesRelease !== barrier?.readbackRefs?.rulesRelease || !barrier?.rulesRelease ||
+        barrier?.readbackRefs?.freezeDigest !== safeDigest(freeze) ||
+        barrier?.readbackRefs?.scriptInventoryDigest !== safeDigest(barrier?.provisioningScripts) ||
+        !Array.isArray(barrier?.provisioningScripts) ||
+        barrier.provisioningScripts.some(script => script?.state !== 'quiesced') ||
+        freeze?.schemaVersion !== 1 || freeze?.state !== 'active' || freeze?.releasedAt !== null ||
+        freeze?.provisioningContractDigest !== temporaryContract.provisioningContractDigest ||
+        !Number.isSafeInteger(barrier.capturedAt) || freeze.activatedAt > barrier.capturedAt) deny();
+  } else {
+    try { closure = verifyPermanentWriterClosure(evidence.writerEvidence, {
+      reviewedDeployment: evidence.reviewedDeployment, approvedReviewDigest: evidence.approvedReviewDigest }); }
+    catch { deny(); }
+  }
+  if (next === 'inflight-accounted' && (!Array.isArray(evidence.legacyOperations) ||
+      evidence.legacyOperations.length !== 0 ||
+      evidence.legacyOperationsDigest !== safeDigest(evidence.legacyOperations))) deny();
+  if (next === 'names-protected' && !verifyProtection(evidence.protectionPlan,
+    evidence.protectedClaimsReadback)) deny();
+  if (next === 'generation-sealed' && (!validGeneration(evidence.generation) ||
+      evidence.generation.writerPolicyDigest !== POLICY_DIGEST ||
+      evidence.generation.writerClosureEvidenceDigest !== closure.evidenceDigest ||
+      evidence.generation.coveredHandleKeysDigest !== evidence.protectionPlan?.coveredHandleKeysDigest ||
+      evidence.generation.protectedClaimsDigest !== evidence.protectionPlan?.protectedClaimsDigest ||
+      !verifyProtection(evidence.protectionPlan, evidence.protectedClaimsReadback))) deny();
+  if (next === 'temporary-admission-invalidated' && (evidence.boundedCertification !== null ||
+      !Array.isArray(evidence.boundedInFlightOperations) || evidence.boundedInFlightOperations.length !== 0 ||
+      evidence.boundedInFlightDigest !== safeDigest(evidence.boundedInFlightOperations))) deny();
+  if ((next === 'durable-active' || next === 'temporary-fence-ended') && (!validAdmission(evidence.control, evidence.generation,
+      evidence.runtimePublicKey, evidence.writerEvidence?.capturedAt, evidence.runtimeConfiguration?.DURABLE_ADMISSION_GENERATION_ID) ||
+      evidence.runtimeConfiguration?.CREATE_PROVIDER_ACCOUNT_ENABLED !== 'true' ||
+      evidence.runtimeConfiguration?.DURABLE_PROVIDER_ADMISSION_ENABLED !== 'true' ||
+      evidence.runtimeConfigurationDigest !== safeDigest(evidence.runtimeConfiguration) ||
+      evidence.generation.writerClosureEvidenceDigest !== closure.evidenceDigest)) deny();
+  if (next === 'temporary-fence-ended' &&
+      (evidence.temporaryBarrier?.freeze?.state !== 'released' ||
+       evidence.temporaryBarrier?.readbackRefs?.freezeDigest !== safeDigest(evidence.temporaryBarrier.freeze) ||
+       evidence.temporaryBarrier?.readbackRefs?.rulesRelease !== evidence.temporaryBarrier?.rulesRelease ||
+       evidence.temporaryBarrier.freeze.releasedAt <= evidence.temporaryBarrier.freeze.activatedAt ||
+       evidence.providerSmoke?.status !== 'SUCCESS' || evidence.providerSmoke?.appCheckCode !== 'app-check/initialized' ||
+       evidence.providerSmokeDigest !== safeDigest(evidence.providerSmoke) || closure.rulesDigest !== policy.candidateRulesSha256)) deny();
   return next;
 }
 function rollback(stage, providerAccountsExist) {
@@ -50,4 +79,19 @@ function rollback(stage, providerAccountsExist) {
     deleteProviderAccounts: false
   });
 }
-module.exports = Object.freeze({ STAGES, advance, rollback });
+// Invalidation is safe against restoration of the old signed pointer only after
+// every reachable serving revision has stopped creation and rejected its pin.
+// This is an operator readback requirement, not a Firestore IAM restriction.
+function verifyRevocationBarrier({ oldGenerationId, replacementGenerationId, expectedRouteKeys, servingRoutes,
+  routeReadbackDigest } = {}) {
+  if (!oldGenerationId || !replacementGenerationId || replacementGenerationId === oldGenerationId ||
+      !Array.isArray(expectedRouteKeys) || expectedRouteKeys.length === 0 ||
+      !Array.isArray(servingRoutes) || servingRoutes.length !== expectedRouteKeys.length ||
+      new Set(expectedRouteKeys).size !== expectedRouteKeys.length ||
+      expectedRouteKeys.some(key => !servingRoutes.some(route => route.path === key)) ||
+      routeReadbackDigest !== safeDigest(servingRoutes)) return false;
+  return servingRoutes.every(route => route?.reachable === true && route?.revision && route?.sourceFingerprint &&
+    route?.configuration?.CREATE_PROVIDER_ACCOUNT_ENABLED === 'false' &&
+    route?.configuration?.DURABLE_ADMISSION_GENERATION_ID === replacementGenerationId);
+}
+module.exports = Object.freeze({ STAGES, advance, rollback, verifyRevocationBarrier });
