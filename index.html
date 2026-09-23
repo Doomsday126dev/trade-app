@@ -539,13 +539,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         </label>
       </div>
       <div class="stb-section">
-        <div class="stb-summary" id="stb-summary"></div>
-        <div id="stb-warn-wrap"></div>
-        <textarea class="stb-output" id="stb-output" readonly data-i18n-placeholder="safeTransfer.placeholder" data-i18n-aria-label="safeTransfer.outputLabel" placeholder="Choose at least one trainer to create a search string." aria-label="Generated search string"></textarea>
-        <div class="stb-actions">
-          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()" disabled><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
-          <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')" data-i18n="common.close">Close</button>
+        <div id="stb-candidate">
+          <div class="stb-summary" id="stb-summary"></div>
+          <div id="stb-warn-wrap"></div>
+          <textarea class="stb-output" id="stb-output" readonly data-i18n-placeholder="safeTransfer.placeholder" data-i18n-aria-label="safeTransfer.outputLabel" placeholder="Choose at least one trainer to create a search string." aria-label="Generated search string"></textarea>
+          <button class="stb-action-btn" id="stb-copy-btn" disabled><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="safeTransfer.copy">Copy search string</span></button>
         </div>
+        <div class="stb-actions"><button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')" data-i18n="common.close">Close</button></div>
       </div>
     </div>
   </div>
@@ -884,8 +884,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/pokemonSearchTerms.js?v=2026-09-22.119"></script>
 <script src="js/domain/pokemonEntryRules.js?v=2026-09-22.119"></script>
 <script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-22.119"></script>
+<script src="js/domain/safeTransferRestoration.js?v=2026-09-22.119"></script>
 <script src="js/domain/searchStrings.js?v=2026-09-22.119"></script>
 <script src="js/ui/stringHtml.js?v=2026-09-22.119"></script>
+<script src="js/ui/safeTransferCandidate.js?v=2026-09-22.119"></script>
 <script src="js/domain/scheduleEventRules.js?v=2026-09-22.119"></script>
 <script src="js/domain/scheduleTradeRules.js?v=2026-09-22.119"></script>
 <script src="js/domain/pokemonKeys.js?v=2026-09-22.119"></script>

@@ -339,11 +339,15 @@ if(!pokemonEntryRulesDomain)throw new Error('Pokemon entry rule helpers failed t
 const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry,MAX_TYPE_SEARCH,entrySearchFilters}=pokemonEntryRulesDomain;
 const pokemonGoSearchSyntaxDomain=window.PogoDomain?.pokemonGoSearchSyntax;
 if(!pokemonGoSearchSyntaxDomain)throw new Error('Pokémon GO search syntax failed to load');
+const safeTransferRestorationDomain=window.PogoDomain?.safeTransferRestoration;
+if(!safeTransferRestorationDomain)throw new Error('Safe-transfer restoration candidate failed to load');
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo}=searchStringDomain;
 const stringHtmlUi=window.PogoUi?.stringHtml;
 if(!stringHtmlUi)throw new Error('String HTML helpers failed to load');
+const safeTransferCandidateUi=window.PogoUi?.safeTransferCandidate;
+if(!safeTransferCandidateUi)throw new Error('Safe-transfer candidate UI failed to load');
 const {strLenHtml,strWarnHtml}=stringHtmlUi;
 const scheduleEventRulesDomain=window.PogoDomain?.scheduleEventRules;
 if(!scheduleEventRulesDomain)throw new Error('Schedule event rule helpers failed to load');
@@ -2079,6 +2083,7 @@ function resetSessionTransientUi(reason='session_boundary'){
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
+  if(typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.(reason);
   if(typeof managedFavoriteAdditions!=='undefined'){managedFavoriteAdditions?.close();managedFavoriteAdditions=null;favoriteAdditionUiState=null;if(typeof managedFavoriteRecoveryPreview!=='undefined')managedFavoriteRecoveryPreview=null;}
   if(typeof closeFavoritePicker==='function')closeFavoritePicker({sessionChanged:true});
   if(typeof closeExistingPinReset==='function')closeExistingPinReset();
@@ -10306,6 +10311,7 @@ function openModal(id,options={}){
 function closeModal(id){
   const options=arguments[1]||{};
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
+  if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
   document.getElementById(id)?.classList.remove('open');
   if(_modalActiveId!==id)return;
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
@@ -10824,6 +10830,166 @@ async function copySafeTransferString(){
     document.execCommand('copy');
     toast(i18nCore.t('safeTransfer.copiedFallback'));
   }
+}
+
+// Candidate implementation. Function declarations intentionally replace the
+// contained legacy handlers above while keeping the literal false gate and its
+// small containment harness stable until a separately reviewed enablement.
+let _safeTransferController=null;
+let _safeTransferCandidateMount=null;
+let _safeTransferLiveSourceVersions={};
+let _safeTransferLoadGeneration=0;
+function _safeTransferScopeModel(){
+  const state=ensureTrainerHistoryStore()?.read?.()||{favorites:[],tags:{}};
+  const activeGroup=trainerGroupState.id==='favorites'||state.tags?.[trainerGroupState.id]?trainerGroupState.id:'';
+  const members=(state.favorites||[]).filter(item=>!activeGroup||activeGroup==='favorites'||item.tagIds.includes(activeGroup));
+  const groupLabel=activeGroup==='favorites'?groupText('favorites'):state.tags?.[activeGroup]?.label||'';
+  return Object.freeze({
+    id:activeGroup?`group:${activeGroup}`:'trainers:favorites',kind:activeGroup?'group':'trainers',label:groupLabel,
+    members:Object.freeze(members.map(item=>Object.freeze({...item,id:item.targetUid?`uid:${item.targetUid}`:`trainer:${item.key}`})))
+  });
+}
+function _safeTransferMemberKey(item){return item?.key||String(item?.displayName||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');}
+function _safeTransferSelectedMembers(model=_safeTransferScopeModel()){
+  const selected=_safeTransferSelected||new Set();
+  return model.members.filter(item=>selected.has(_safeTransferMemberKey(item)));
+}
+function _safeTransferAllTrainers(){return _safeTransferScopeModel().members.map(item=>item.displayName);}
+function openSafeTransferModal(){
+  const model=_safeTransferScopeModel(),active=new Set(model.members.map(_safeTransferMemberKey));
+  if(!_safeTransferSelected){
+    const saved=_loadSafeTransferDefault();
+    _safeTransferSelected=saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
+  }
+  [..._safeTransferSelected].forEach(key=>{if(!active.has(key))_safeTransferSelected.delete(key);});
+  openModal('safe-transfer-modal');
+  const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox){checkbox.checked=true;checkbox.disabled=true;}
+  renderSafeTransferTrainers();renderSafeTransferOutput();
+}
+function renderSafeTransferTrainers(){
+  const grid=document.getElementById('stb-trainer-grid');if(!grid)return;
+  const model=_safeTransferScopeModel();
+  if(!model.members.length){grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;return;}
+  grid.innerHTML=model.members.map(item=>{
+    const key=_safeTransferMemberKey(item),on=_safeTransferSelected.has(key);
+    return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
+  }).join('');
+}
+function toggleSafeTransferTrainer(name){
+  if(!_safeTransferSelected)return;
+  if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);else _safeTransferSelected.add(name);
+  _safeTransferController?.invalidate('selection_changed');renderSafeTransferTrainers();renderSafeTransferOutput();
+}
+function setAllSafeTransferTrainers(all){
+  if(!_safeTransferSelected)_safeTransferSelected=new Set();
+  if(all)_safeTransferScopeModel().members.forEach(item=>_safeTransferSelected.add(_safeTransferMemberKey(item)));else _safeTransferSelected.clear();
+  _safeTransferController?.invalidate('selection_changed');renderSafeTransferTrainers();renderSafeTransferOutput();
+}
+function toggleSafeTransferPrefilter(){
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);if(key)lsSet(key,true);
+  const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox)checkbox.checked=true;
+}
+function _safeTransferPrefilterEnabled(){return true;}
+function _safeTransferCatalogEntries(){
+  return pokemonCatalogDomain.canonicalizeEntries(uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES));
+}
+function _safeTransferUniverse(){
+  const reviewed=_safeTransferCatalogEntries(),candidates=listSource('wishlist');
+  const version=`catalog:${safeTransferRestorationDomain.fingerprint(reviewed.map(item=>[item.catalogId,item.speciesId||item.no]))}`;
+  return safeTransferRestorationDomain.createReviewedUniverse({version,reviewedEntries:reviewed,candidateEntries:candidates});
+}
+function _safeTransferScope(model=_safeTransferScopeModel(),selected=_safeTransferSelectedMembers(model)){
+  const selection=selected.map(item=>({id:item.id,label:item.displayName}));
+  const membership=model.members.map(item=>[item.id,item.displayName,item.targetUid||'',...(item.tagIds||[])]);
+  const version=`scope:${safeTransferRestorationDomain.fingerprint({id:model.id,membership,selection:selection.map(item=>item.id)})}`;
+  return Object.freeze({id:model.id,version,displayedSelectionVersion:version,kind:model.kind,selected:Object.freeze(selection)});
+}
+function _safeTransferAccount(){
+  const id=String(auth?.currentUser?.uid||'').trim();return id?Object.freeze({id,version:`session:${id}:${_sessionTransientGeneration}`}):null;
+}
+function _safeTransferOwnerRequest(){
+  const model=_safeTransferScopeModel(),selected=_safeTransferSelectedMembers(model),scope=_safeTransferScope(model,selected),account=_safeTransferAccount(),universe=_safeTransferUniverse(),gameLocale=pokemonGoSearchLocale();
+  const ownerFingerprint=safeTransferRestorationDomain.fingerprint({account,scope,universeVersion:universe?.version,gameLocale});
+  return Object.freeze({account,scope,selection:Object.freeze(selected.map(item=>Object.freeze({...item}))),universe,gameLocale,ownerFingerprint});
+}
+function _safeTransferCurrentBinding(){
+  const request=_safeTransferOwnerRequest();
+  return Object.freeze({
+    account:request.account,scope:Object.freeze({id:request.scope.id,version:request.scope.version,kind:request.scope.kind,selectedIds:Object.freeze(request.scope.selected.map(item=>item.id))}),
+    universeVersion:request.universe?.version,sourceVersions:Object.freeze({..._safeTransferLiveSourceVersions}),gameLocale:request.gameLocale
+  });
+}
+async function _safeTransferReadPublicShare(member){
+  if(!member.targetUid)return managedPublicShareRepository.read(member.displayName);
+  let identity;
+  try{identity=await resolveFavoriteIdentityForSession(member.displayName,member.targetUid);}
+  catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
+  if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
+  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.read(identity.canonicalTrainerName);
+  try{
+    const provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName);
+    if(provider?.ok)return{ok:true,value:provider.snapshot};
+    if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
+    return managedPublicShareRepository.read(identity.canonicalTrainerName);
+  }catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
+}
+async function _safeTransferLoadSnapshot(request,context={}){
+  const loadGeneration=context.generation;_safeTransferLoadGeneration=loadGeneration;
+  const sources=await Promise.all(request.selection.map(async(member,index)=>{
+    const result=await _safeTransferReadPublicShare(member);
+    return safeTransferRestorationDomain.sourceFromRepositoryResult({
+      trainerId:member.id,label:member.displayName,result,
+      read:{kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:`${loadGeneration}:${index}`}
+    },{validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,intentEntries:publicSharePublicationDomain.intentEntries});
+  }));
+  const current=_safeTransferOwnerRequest();
+  if(loadGeneration===_safeTransferLoadGeneration&&current.ownerFingerprint===request.ownerFingerprint){
+    _safeTransferLiveSourceVersions=Object.fromEntries(sources.filter(source=>source.state==='complete').map(source=>[source.trainerId,source.sourceVersion]));
+  }
+  return Object.freeze({contractVersion:safeTransferRestorationDomain.CONTRACT_VERSION,account:request.account,scope:request.scope,universe:request.universe,sources:Object.freeze(sources)});
+}
+function _safeTransferPlan(snapshot,request){
+  const catalog=safeTransferRestorationDomain.createCatalog(_safeTransferCatalogEntries());
+  return safeTransferRestorationDomain.commandPlan(safeTransferRestorationDomain.evaluate(snapshot,{catalog}),{syntax:pokemonGoSearchSyntaxDomain,locale:request.gameLocale});
+}
+function _ensureSafeTransferController(){
+  if(_safeTransferController)return _safeTransferController;
+  _safeTransferController=safeTransferRestorationDomain.createController({loadSnapshot:_safeTransferLoadSnapshot,plan:_safeTransferPlan,currentBinding:_safeTransferCurrentBinding,copy:copyText,revalidateBeforeCopy:true});
+  const host=document.getElementById('stb-candidate');
+  if(host)_safeTransferCandidateMount=safeTransferCandidateUi.mountSafeTransferCandidate(host,{controller:_safeTransferController});
+  return _safeTransferController;
+}
+async function _refreshSafeTransferCandidate(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return null;
+  const request=_safeTransferOwnerRequest();
+  if(!request.account||!request.universe||!request.selection.length){_safeTransferController?.invalidate('explicit_scope_required');return null;}
+  _safeTransferLiveSourceVersions={};return _ensureSafeTransferController().start(request);
+}
+function computeSafeTransferString(){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED)return{status:'disabled',str:'',safeCount:0,wantedCount:0,totalDex:0,picked:_safeTransferSelected?.size||0};
+  const state=_safeTransferController?.snapshot?.(),plan=state?.plan;
+  return{status:state?.phase||'idle',str:plan?.commands?.[0]?.value||'',safeCount:plan?.candidateSpecies?.length||0,wantedCount:plan?.protectedSpecies?.length||0,totalDex:plan?.universe?.reviewed?.length||0,picked:plan?.scope?.selected?.length||0,commands:plan?.commands||[]};
+}
+function renderSafeTransferOutput(){
+  const host=document.getElementById('stb-candidate');
+  if(!SAFE_TRANSFER_GENERATION_ENABLED){
+    const summary=document.getElementById('stb-summary'),out=document.getElementById('stb-output'),copyBtn=document.getElementById('stb-copy-btn'),warn=document.getElementById('stb-warn-wrap');
+    if(summary)summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span>`;
+    if(out)out.value='';if(copyBtn)copyBtn.disabled=true;if(warn)warn.innerHTML='';
+    if(host)host.innerHTML=`<p class="stb-summary"><span>${escHtml(i18nCore.t('safeTransfer.temporarilyUnavailable'))}</span></p><textarea class="stb-output" id="stb-output" readonly></textarea><button class="stb-action-btn" id="stb-copy-btn" disabled>${escHtml(i18nCore.t('safeTransfer.copy'))}</button>`;
+    return;
+  }
+  void _refreshSafeTransferCandidate();
+}
+async function copySafeTransferString(index=0){
+  if(!SAFE_TRANSFER_GENERATION_ENABLED){
+    const out=document.getElementById('stb-output');if(out){out.value='';out.blur();}
+    const copyBtn=document.getElementById('stb-copy-btn');if(copyBtn)copyBtn.disabled=true;
+    toast(i18nCore.t('safeTransfer.temporarilyUnavailable'));return Object.freeze({ok:false,status:'disabled'});
+  }
+  const result=await _ensureSafeTransferController().copyPart(Number(index)||0);
+  if(result.ok)toast(i18nCore.t('safeTransfer.copied',{count:i18nCore.formatNumber(result.value.length)}));
+  return result;
 }
 function renderDiffModal(){
   if(!_activeDiff)return;

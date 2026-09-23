@@ -103,13 +103,30 @@ test('current complete public-share v2 projections and reviewed catalog exclusio
       {intent:'lf',category:'dynamax',name:'Bulbasaur',p:'',mod:'',gender:'',backgroundId:'',note:'',lucky:true,shiny:false,xxl:false,xxs:false}
     ],declarationCount:2
   };
-  const adapted=safe.sourceFromPublicProjection({trainerId:'trainer-a',label:'Trainer A',projection},{
+  const adapted=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:{ok:true,value:projection},read:{kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:'read-1'}},{
     validateProjection:domain.publicSharePublication.publicShareProjectionStatus,
     intentEntries:domain.publicSharePublication.intentEntries
   });
   assert.equal(adapted.state,'complete');assert.equal(adapted.declarations.length,2);assert.match(adapted.sourceVersion,/^public-share:/);
   const universe=safe.createReviewedUniverse({version:'release-119',reviewedEntries:[{no:1},{no:4},{no:25},{no:151}],candidateEntries:[{no:1},{no:4},{no:25}]});
   assert.deepEqual(plain(universe),{version:'release-119',species:[1,4,25,151],excludedSpecies:[151],policy:'existing-tradeable-wishlist-catalog-exclusions'});
+});
+
+test('repository evidence, not caller defaults, establishes current complete source state',()=>{
+  const dependencies={validateProjection:domain.publicSharePublication.publicShareProjectionStatus,intentEntries:domain.publicSharePublication.intentEntries};
+  const projection={version:2,username:'Trainer A',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes'],lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},updatedAt:1,declarations:[],declarationCount:0};
+  const unproven=safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result:{ok:true,value:projection}},dependencies);
+  assert.equal(unproven.state,'stale');assert.equal(unproven.complete,false);assert.equal(unproven.freshness,'unverified');
+  const evidence={kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:'read-2'};
+  const cases=[
+    [{ok:true,value:null},'missing'],
+    [{ok:false,error:{code:'permission-denied'}},'inaccessible'],
+    [{ok:false,error:{code:'deadline-exceeded'}},'timeout'],
+    [{ok:false,error:{code:'cache-obsolete'}},'stale'],
+    [{ok:true,value:{version:2,username:'Trainer A',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes'],lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},declarations:[],declarationCount:1}},'partial'],
+    [{ok:true,value:{version:99,username:'Trainer A'}},'malformed']
+  ];
+  for(const [result,state] of cases)assert.equal(safe.sourceFromRepositoryResult({trainerId:'trainer-a',label:'Trainer A',result,read:evidence},dependencies).state,state);
 });
 
 test('missing, inaccessible, stale, partial, error and timeout inputs are non-executable',()=>{
@@ -228,6 +245,36 @@ test('displayed, computed and copied scope share one exact versioned binding',as
   assert.equal(state.plan.scope.version,state.plan.binding.scope.version);
   assert.deepEqual(plain(state.plan.scope.selected.map(item=>item.id)),plain(state.plan.binding.scope.selectedIds));
   assert.deepEqual(plain(result.binding),plain(state.plan.binding));assert.equal(copied,result.value);
+});
+
+test('game language participates in readiness and copy binding',async()=>{
+  const fixture=controllerFixture();
+  await fixture.controller.start({binding:plain(fixture.qualified.binding),selection});
+  fixture.live={...plain(fixture.live),gameLocale:'ja'};
+  const result=await fixture.controller.copyPart(0);
+  assert.equal(result.status,'stale');assert.equal(fixture.controller.snapshot().phase,'invalidated');
+});
+
+test('deferred copy completion cannot restore an obsolete plan or manual command',async()=>{
+  const scenarios=['account','selection','source','close','identical_generation'];
+  for(const outcome of ['resolve','reject'])for(const scenario of scenarios){
+    let settle;const deferred=new Promise((resolve,reject)=>{settle=outcome==='resolve'?resolve:reject;});
+    const fixture=controllerFixture({copy:()=>deferred});
+    const request={binding:plain(fixture.qualified.binding),selection};
+    await fixture.controller.start(request);
+    const pending=fixture.controller.copyPart(0);
+    if(scenario==='account')fixture.live={...plain(fixture.live),account:{id:'account-b',version:'session-2'}};
+    if(scenario==='selection'){fixture.live={...plain(fixture.live),scope:{...plain(fixture.live.scope),version:'scope-2'}};fixture.controller.invalidate('selection_changed');}
+    if(scenario==='source'){fixture.live={...plain(fixture.live),sourceVersions:{'trainer-a':'source-trainer-a-2'}};fixture.controller.invalidate('source_refreshed');}
+    if(scenario==='close')fixture.controller.invalidate('closed');
+    if(scenario==='identical_generation')await fixture.controller.start(request);
+    settle(outcome==='resolve'?undefined:Object.assign(new Error('clipboard failed'),{code:'clipboard-unavailable'}));
+    const result=await pending,state=fixture.controller.snapshot();
+    assert.equal(result.status,'stale',`${scenario}/${outcome}`);
+    assert.notEqual(state.phase,'copied',`${scenario}/${outcome}`);
+    assert.notEqual(state.phase,'copy_failed',`${scenario}/${outcome}`);
+    assert.equal(state.manualCommand,'',`${scenario}/${outcome}`);
+  }
 });
 
 test('production integration retains hard containment and candidate browser proof reuses shared copyText',()=>{

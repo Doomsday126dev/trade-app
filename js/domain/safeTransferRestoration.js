@@ -1,7 +1,7 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
   const CONTRACT_VERSION=1;
-  const SOURCE_STATES=Object.freeze(['complete','missing','inaccessible','stale','partial','error','timeout']);
+  const SOURCE_STATES=Object.freeze(['complete','missing','inaccessible','stale','partial','malformed','obsolete','error','timeout']);
   const WANT_CATEGORIES=Object.freeze(['wishlist','dynamax','gmax','costumes','special']);
   const APPLICATION_CHARACTER_BUDGET=1500;
 
@@ -67,21 +67,46 @@
     return Object.freeze({version:universeVersion,species:reviewed,excludedSpecies:Object.freeze(reviewed.filter(id=>!candidateSet.has(id))),policy:normalizedText(policy)});
   }
 
-  function sourceFromPublicProjection({trainerId,label,projection,freshness='current',state='complete'}={},dependencies={}){
+  function unavailableSource(trainerId,state,details={}){
+    return Object.freeze({
+      trainerId:version(trainerId)||'',state,complete:false,freshness:'unverified',
+      pagination:Object.freeze({complete:false,nextCursor:null}),declarations:Object.freeze([]),...details
+    });
+  }
+
+  function repositoryFailureState(error){
+    const code=normalizedKey(error?.code);
+    if(/(?:permission|denied|unauth|forbidden)/.test(code))return'inaccessible';
+    if(/(?:timeout|deadline)/.test(code))return'timeout';
+    if(/(?:stale|cache|obsolete)/.test(code))return'stale';
+    return'error';
+  }
+
+  // This adapter accepts only the result of an exact, just-completed repository
+  // read. Completeness and currentness are derived here from that transport
+  // contract and the validated whole public projection; callers cannot assert
+  // them with optimistic state/freshness arguments.
+  function sourceFromRepositoryResult({trainerId,label,result,read}={},dependencies={}){
     const id=version(trainerId),username=normalizedText(label);
-    if(!id||!username)return Object.freeze({trainerId:id||'',state:'error',complete:false,freshness,pagination:Object.freeze({complete:false,nextCursor:null}),declarations:Object.freeze([])});
-    if(state!=='complete')return Object.freeze({trainerId:id,state,complete:false,freshness,pagination:Object.freeze({complete:false,nextCursor:null}),declarations:Object.freeze([])});
+    if(!id||!username)return unavailableSource(id,'error');
     if(typeof dependencies.validateProjection!=='function'||typeof dependencies.intentEntries!=='function')throw new TypeError('Public projection adapters are required');
+    if(read?.kind!=='exact-public-share'||read?.scope!=='whole-projection'||read?.completed!==true||!version(read?.operationId)){
+      return unavailableSource(id,'stale',{readEvidence:Object.freeze({kind:normalizedText(read?.kind),scope:normalizedText(read?.scope),completed:read?.completed===true,operationId:version(read?.operationId)})});
+    }
+    if(!result?.ok)return unavailableSource(id,repositoryFailureState(result?.error));
+    const projection=result.value??result.snapshot??null;
     const checked=dependencies.validateProjection(projection,{username});
     if(!checked?.ok){
-      const mapped=checked?.status==='not_published'?'missing':checked?.status==='projection_incomplete'?'partial':checked?.status==='transport_error'?'error':'error';
-      return Object.freeze({trainerId:id,state:mapped,complete:false,freshness,pagination:Object.freeze({complete:false,nextCursor:null}),declarations:Object.freeze([])});
+      const mapped=checked?.status==='not_published'?'missing':checked?.status==='projection_incomplete'?'partial':
+        checked?.status==='projection_unsupported'&&checked?.rejectionCounts?.unsupported_version?'obsolete':checked?.status==='projection_unsupported'?'malformed':'error';
+      return unavailableSource(id,mapped);
     }
     const declarations=dependencies.intentEntries(checked.snapshot,'lf');
     const sourceVersion=`public-share:${fingerprint({version:checked.snapshot.version,updatedAt:checked.snapshot.updatedAt,declarations,lists:checked.snapshot.lists})}`;
     return Object.freeze({
-      trainerId:id,state:'complete',complete:true,freshness,snapshotVersion:`public-share-v${checked.snapshot.version}`,sourceVersion,
-      pagination:Object.freeze({complete:true,nextCursor:null}),declarations:Object.freeze(declarations)
+      trainerId:id,state:'complete',complete:true,freshness:'current',snapshotVersion:`public-share-v${checked.snapshot.version}`,sourceVersion,
+      pagination:Object.freeze({complete:true,nextCursor:null}),declarations:Object.freeze(declarations),
+      readEvidence:Object.freeze({kind:'exact-public-share',scope:'whole-projection',completed:true,operationId:version(read.operationId)})
     });
   }
 
@@ -169,9 +194,11 @@
     if(!qualified?.ok)return qualified||failure('qualified_snapshot_required');
     if(!syntax?.safeTransferQuery||!syntax?.serializeQuery)return failure('serializer_required');
     const gameLocale=syntax.localeKey?syntax.localeKey(locale):normalizedText(locale)||'en';
+    const binding=Object.freeze({...qualified.binding,gameLocale});
+    const bindingFingerprint=fingerprint(binding);
     const budget=Math.max(32,Math.min(APPLICATION_CHARACTER_BUDGET,Number(characterBudget)||APPLICATION_CHARACTER_BUDGET));
     if(!qualified.candidateSpecies.length){
-      return Object.freeze({...qualified,status:'empty_candidates',gameLocale,characterBudget:budget,commands:Object.freeze([]),executable:false});
+      return Object.freeze({...qualified,binding,bindingFingerprint,status:'empty_candidates',gameLocale,characterBudget:budget,commands:Object.freeze([]),executable:false});
     }
     const serialize=ids=>syntax.serializeQuery(syntax.safeTransferQuery(ids),gameLocale);
     const groups=[];let pending=[];
@@ -182,7 +209,7 @@
     }
     if(pending.length)groups.push(pending);
     const commands=Object.freeze(groups.map((ids,index)=>Object.freeze({index,species:Object.freeze([...ids]),value:serialize(ids)})));
-    return Object.freeze({...qualified,status:'ready',gameLocale,characterBudget:budget,commands,executable:true});
+    return Object.freeze({...qualified,binding,bindingFingerprint,status:'ready',gameLocale,characterBudget:budget,commands,executable:true});
   }
 
   function bindingMatches(expected,current){
@@ -190,12 +217,12 @@
     const normalized={
       account:{id:version(current.account?.id),version:version(current.account?.version)},
       scope:{id:version(current.scope?.id),version:version(current.scope?.version),kind:normalizedText(current.scope?.kind),selectedIds:Object.freeze([...(current.scope?.selectedIds||[])].map(String))},
-      universeVersion:version(current.universeVersion),sourceVersions:stableObject(current.sourceVersions||{})
+      universeVersion:version(current.universeVersion),sourceVersions:stableObject(current.sourceVersions||{}),gameLocale:normalizedText(current.gameLocale)
     };
     return fingerprint(expected)===fingerprint(normalized);
   }
 
-  function createController({loadSnapshot,plan,currentBinding,copy}={}){
+  function createController({loadSnapshot,plan,currentBinding,copy,revalidateBeforeCopy=false}={}){
     if(typeof loadSnapshot!=='function'||typeof plan!=='function'||typeof currentBinding!=='function'||typeof copy!=='function')throw new TypeError('Safe-transfer controller dependencies are incomplete');
     let generation=0,state=Object.freeze({phase:'idle',request:null,plan:null,error:null,manualCommand:''}),listeners=new Set();
     const publish=next=>{state=Object.freeze(next);for(const listener of listeners)listener(state);return state;};
@@ -222,14 +249,27 @@
       if(!['ready','copy_failed','copied'].includes(active.phase)||!active.plan?.executable)return Object.freeze({ok:false,status:'not_ready'});
       if(!bindingMatches(active.plan.binding,currentBinding())){invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});}
       const command=active.plan.commands[index];if(!command)return Object.freeze({ok:false,status:'missing_part'});
-      publish({...active,phase:'copying',manualCommand:command.value,error:null});
+      const token=++generation;
+      publish({...active,phase:'copying',manualCommand:command.value,error:null,copyOperation:token,copiedPart:index});
+      const stillCurrent=()=>token===generation&&state.copyOperation===token&&state.plan===active.plan&&bindingMatches(active.plan.binding,currentBinding());
+      const stale=()=>{if(token===generation)invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});};
       try{
+        if(revalidateBeforeCopy){
+          const snapshot=await loadSnapshot(active.request,{generation:token,reason:'copy'});
+          if(!stillCurrent())return stale();
+          const refreshed=plan(snapshot,active.request);
+          if(!refreshed?.ok||!refreshed.executable||refreshed.bindingFingerprint!==active.plan.bindingFingerprint||!bindingMatches(refreshed.binding,currentBinding())){
+            if(token===generation)invalidate('copy_revalidation_changed');
+            return Object.freeze({ok:false,status:'stale'});
+          }
+        }
         await copy(command.value);
-        if(active.plan.bindingFingerprint!==state.plan?.bindingFingerprint)return Object.freeze({ok:false,status:'stale'});
-        publish({...active,phase:'copied',manualCommand:command.value,error:null,copiedPart:index});
+        if(!stillCurrent())return stale();
+        publish({...active,phase:'copied',manualCommand:command.value,error:null,copiedPart:index,copyOperation:token});
         return Object.freeze({ok:true,status:'copied',part:index,value:command.value,binding:active.plan.binding});
       }catch(error){
-        publish({...active,phase:'copy_failed',manualCommand:command.value,error:Object.freeze({code:String(error?.code||'copy_failed')}),copiedPart:index});
+        if(!stillCurrent())return stale();
+        publish({...active,phase:'copy_failed',manualCommand:command.value,error:Object.freeze({code:String(error?.code||'copy_failed')}),copiedPart:index,copyOperation:token});
         return Object.freeze({ok:false,status:'copy_failed',part:index,value:command.value});
       }
     }
@@ -238,6 +278,6 @@
 
   root.safeTransferRestoration=Object.freeze({
     CONTRACT_VERSION,SOURCE_STATES,WANT_CATEGORIES,APPLICATION_CHARACTER_BUDGET,
-    normalizedKey,uniqueSpecies,fingerprint,createCatalog,createReviewedUniverse,sourceFromPublicProjection,evaluate,commandPlan,bindingMatches,createController
+    normalizedKey,uniqueSpecies,fingerprint,createCatalog,createReviewedUniverse,sourceFromRepositoryResult,evaluate,commandPlan,bindingMatches,createController
   });
 })(window);
