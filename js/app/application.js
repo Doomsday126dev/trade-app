@@ -511,7 +511,7 @@ function renderCombinedList(model=productDeclarations()){
       body.firstElementChild.textContent=i18nCore.t('workflow.needsPriorityHelp');
     }
     const entries=model.entries.filter(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)===section.key);
-    updateWantsSearch(search,entries,label,{copyLabel:i18nCore.t('workflow.copySection',{section:label})});
+    updateWantsSearch(search,entries,label);
     search.title=i18nCore.t('workflow.fullSection',{section:label});
     active.push(element);nodes.push(...rows);
   }
@@ -903,9 +903,12 @@ function spriteCatalogContext(no,name='',dn='',catalogId=''){
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
+  if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no);
+  if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
   const identity=spriteSemanticIdentity(context.canonicalName||resolvedName,gender,entry?.no);
   if(!identity.exactRequired&&isApprovedRuntimeSpriteUrl(storedUrl))return storedUrl;
@@ -918,10 +921,13 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 // The actual <img> uses spriteFallbackChain() for graceful 404 cascade.
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
+  if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no);
+  if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
   const identity=spriteSemanticIdentity(lookupName,gender,no);
   // 1. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
@@ -975,9 +981,12 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   const urls=[];
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
+  if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return urls;
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no);
+  if(equivalent){push(equivalent);return urls;}
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
@@ -1006,12 +1015,8 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   }
   return urls;
 }
-const REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS=Object.freeze({
-  scatterbug:Object.freeze({no:664,url:`${SPRITE_BASE}664.png`})
-});
 function reviewedEquivalentSpriteOverride(no,name,dn,url){
-  const shared=REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS.scatterbug;
-  return Number.parseInt(no,10)===shared.no&&url===shared.url&&/^Scatterbug(?:\s|\()/i.test(String(name||dn||''));
+  return url===spriteSlugsDomain.verifiedEquivalentSpriteUrl(name||dn,no);
 }
 function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
@@ -7229,7 +7234,7 @@ function renderIntentEntries(query='',model=productDeclarations()){
   }
 }
 function contextualIntentSearchHtml(entries,title,options={}){
-  const plan=searchStringDomain.contextualSearchPlan(entries.filter(e=>e.intent!=='ft').map(entry=>({...entry,backgroundId:'',backgroundLabel:''})),{locale:pokemonGoSearchLocale()});
+  const plan=searchStringDomain.contextualSearchPlan(entries.filter(e=>e.intent!=='ft'),{locale:pokemonGoSearchLocale()});
   return window.PogoUi.stringHtml.contextualSearchHtml(plan,{t:i18nCore.t,title,...options});
 }
 async function editIntentEntry(side,index,field,value){
@@ -12429,7 +12434,7 @@ function renderShareView(username,type,intent){
     html+=`<section class="share-section share-want-section" data-want-section="${escAttr(key)}" aria-labelledby="${id}-title">
       <div class="share-section-hdr">
         <h2 class="share-section-title"><button type="button" id="${id}-title" class="share-section-toggle" data-recipient-section-action="toggle" data-section="${escAttr(key)}" aria-expanded="${!collapsed}" aria-controls="${id}-entries"><span class="share-section-chevron" aria-hidden="true">${collapsed?'›':'⌄'}</span><span class="badge ${priority||'special'}">${escHtml(label)}</span><span class="share-section-count">${escHtml(i18nCore.formatPlural('share.entryCount',entries.length))}</span></button></h2>
-        ${contextualIntentSearchHtml(entries,label,{compact:true,copyLabel:i18nCore.t('workflow.copySection',{section:label})})}
+        ${contextualIntentSearchHtml(entries,label,{compact:true})}
       </div>
       <div class="share-section-content" id="${id}-entries"${collapsed?' hidden':''}><div class="share-pgrid">${(collapsed?[]:sorted.slice(0,limit)).map(e=>{
         const flagsHtml=[

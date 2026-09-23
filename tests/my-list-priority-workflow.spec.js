@@ -71,7 +71,8 @@ test('Combine searches combinations are explicit independent scopes, without rep
   await assertScope(['H','M']);
   await page.locator('[data-wants-scope="LUCKY"]').click();
   await assertScope(['H','M','LUCKY']);
-  await expect(result.locator('.contextual-details')).toBeHidden();
+  await expect(result.locator('.contextual-details')).toBeVisible();
+  await expect(result.locator('.contextual-details')).toContainText('not included');
   await expect(page.locator('#wants-search-scope')).toHaveCount(0);
   await expect(page.locator('[data-wants-scope="H"]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('[data-wants-scope="LUCKY"]')).toHaveAttribute('aria-pressed','true');
@@ -88,8 +89,7 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await expect(page.locator('#combined-list .myrow')).toHaveCount(1);
   await expect(page.locator('#combined-selected-count')).toHaveText('2 selected');
   await page.locator('#combined-search [data-contextual-copy]').click();
-  const expected=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:25}],{locale:pokemonGoSearchLocale()}).parts[0]);
-  expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(expected);
+  expect(await page.evaluate(()=>__priorityReviewCopied)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25');
   await page.locator('#wants-selection-share').click();
   await expect(page.locator('#product-share-scope')).toHaveValue('selected');
   await expect(page.locator('#product-share-preview li')).toHaveCount(2);

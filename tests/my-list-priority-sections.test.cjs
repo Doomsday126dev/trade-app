@@ -59,9 +59,9 @@ test('all section combinations retain exact manual checks and unknown variants i
     const plan=search.contextualSearchPlan(entries,{locale});
     assert.equal(plan.total,4);assert.equal(plan.manual.length,4);assert.equal(plan.unresolved,1);
     assert.equal(plan.speciesOnly,true);assert.equal(plan.manual[3].mod,'Antique');
-    const expected={en:'!traded&25,133',ja:'!こうかん&25,133',es:'!intercambiados&25,133',de:'!getauscht&25,133'};
+    const expected={en:'!4*&!traded&CP-2500&!shadow&!purified&!background&25,133',ja:'!4*&!こうかん&cp-2500&!しゃどう&!らいと&!はいけい&25,133',es:'!4*&!intercambiados&PC-2500&!oscuro&!purificado&!fondo&25,133',de:'!4*&!getauscht&WP-2500&!Crypto&!Erlöst&!hintergrund&25,133'};
     assert.deepEqual(plain(plan.parts),[expected[locale]]);
-    assert.deepEqual(plain(plan.partPolicies),['special-broad']);
+    assert.deepEqual(plain(plan.partPolicies),['section']);
   }
 });
 

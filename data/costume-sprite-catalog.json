@@ -6829,6 +6829,159 @@
       "sha256": {
         "default": "32a1bd6c37dc7dd6ee1c4c0e91af04ddccac92416ad9ed5c76745328f415804d"
       }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 1)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-01.png",
+      "sourceLabel": "Pattern #1",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-01.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-01.png",
+      "sha256": {
+        "default": "fb259dba94713b3b267f6c987fbaac42eef50f50c7971e4ab4f6df049bffeb16"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 2)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-02.png",
+      "sourceLabel": "Pattern #2",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-02.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-02.png",
+      "sha256": {
+        "default": "74e709ab2f67fb1015985e4d516434c0183bd5628a98d95b20d1a0876093861f"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 3)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-03.png",
+      "sourceLabel": "Pattern #3",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-03.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-03.png",
+      "sha256": {
+        "default": "838a62836ca2ce76f5a6d9e41da6c56bac685d986e8701f03b31762fca3a19b6"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 4)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-04.png",
+      "sourceLabel": "Pattern #4",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-04.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-04.png",
+      "sha256": {
+        "default": "a6840015680580b5ee7ad9f784cbeb343ec5017b52e13443a0284036b5548b28"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 5)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-05.png",
+      "sourceLabel": "Pattern #5",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-05.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-05.png",
+      "sha256": {
+        "default": "14c91eaad2dcfca02206df51c6cf3918af0490f27914fd60a7b7bcb658adb9d1"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 6)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-06.png",
+      "sourceLabel": "Pattern #6",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-06.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-06.png",
+      "sha256": {
+        "default": "6490f7293b96f2a270442d1b6242453ef6cc415a00bdd49f72221f4b29d7ad54"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 7)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-07.png",
+      "sourceLabel": "Pattern #7",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-07.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-07.png",
+      "sha256": {
+        "default": "f0bbb903e3c9df36874a50a862b3665e7eb4372746bed042b9d88caabf9d89c2"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Form 8)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-08.png",
+      "sourceLabel": "Pattern #8",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-08.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-08.png",
+      "sha256": {
+        "default": "5e1a2506278f91e3ae6da007341746cdea66e84267fcf8467b217b4607245a76"
+      }
+    },
+    {
+      "no": 327,
+      "names": [
+        "Spinda (Heart)"
+      ],
+      "status": "exact",
+      "sourceFile": "spinda-09.png",
+      "sourceLabel": "Pattern #9",
+      "sourcePage": "https://pokemondb.net/sprites/spinda",
+      "assets": {
+        "default": "assets/sprites/go/spinda-09.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-09.png",
+      "sha256": {
+        "default": "230ecf236aecd1a5bb705d85365243d7aa965d86aa3ed097815141dd24a2edcd"
+      }
     }
   ]
 }

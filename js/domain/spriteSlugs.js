@@ -94,6 +94,40 @@
     'Sandstorm','Savanna','Sun','Tundra'
   ]);
   const publicVivillonPatterns=new Map(PUBLIC_VIVILLON_PATTERNS.map(value=>[normalizeSpriteKey(value),value]));
+  // Pattern labels identify different eventual Vivillon trades. The supported
+  // Scatterbug stage has the same reviewed appearance for each of these IDs.
+  const SCATTERBUG_VISUAL_EQUIVALENTS=Object.freeze([
+    'Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle',
+    'Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm',
+    'Savanna','Sun','Tundra'
+  ]);
+  const scatterbugEquivalentNames=new Set(SCATTERBUG_VISUAL_EQUIVALENTS.map(pattern=>normalizeSpriteKey(`Scatterbug (${pattern})`)));
+  const SCATTERBUG_EQUIVALENT_URL='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png';
+  // Dynamax changes the trade identity and adds the renderer's D badge, but
+  // does not change the underlying species/form artwork. Only entries in the
+  // generated public Max catalog qualify, including in the anonymous shell
+  // (which deliberately does not load the private data.js seed).
+  function reviewedDynamaxBase(name='',no=0){
+    return root.publicPokemonDex?.dynamaxBase?.(name,no)||'';
+  }
+  function isAmbiguousVisibleForm(name='',no=0){
+    // The selectable legacy key omits Single/Rapid Strike style, whose Gmax
+    // artwork differs. Neither style may be guessed from the species number.
+    return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax';
+  }
+  function verifiedEquivalentSpriteUrl(name='',no=0){
+    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return SCATTERBUG_EQUIVALENT_URL;
+    // Own-Tempo Rockruff is a distinct trade/evolution identity, not a
+    // different-looking Rockruff stage.
+    if(Number(no)===744&&normalizeSpriteKey(name)==='rockruff dusk')
+      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png';
+    const dynamaxBase=reviewedDynamaxBase(name,no);
+    if(!dynamaxBase)return'';
+    // Keep real Amped/Low Key and Single/Rapid Strike forms distinct.
+    if(spriteSemanticIdentity(dynamaxBase,'',no).explicitForm)
+      return publicSpriteUrls(dynamaxBase,'',no)[0]||'';
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${Number(no)}.png`;
+  }
   function publicSpriteDisplayName(name=''){
     const raw=String(name||'').normalize('NFKC').trim();
     const pattern=publicVivillonPatterns.get(normalizeSpriteKey(raw));
@@ -146,8 +180,11 @@
   }
   function publicSpriteUrls(name='',gender='',no=0){
     const identity=spriteSemanticIdentity(name,gender,no),display=identity.display,base=identity.base,urls=[];
+    if(isAmbiguousVisibleForm(name,no))return Object.freeze([]);
     const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender});
     if(reviewed?.knownVariant)return reviewed.urls;
+    const equivalent=verifiedEquivalentSpriteUrl(name,no);
+    if(equivalent)return Object.freeze([equivalent]);
     const dex=Number.parseInt(no,10);
     const exactId=PUBLIC_EXACT_FORM_IDS[normalizeSpriteKey(display)];
     const pushPokeapi=(candidateGender='',id=dex)=>{
@@ -191,6 +228,10 @@
     REGIONAL_SLUG_MAP,
     pokemondbSlug,
     PUBLIC_VIVILLON_PATTERNS,
+    SCATTERBUG_VISUAL_EQUIVALENTS,
+    reviewedDynamaxBase,
+    isAmbiguousVisibleForm,
+    verifiedEquivalentSpriteUrl,
     publicSpriteDisplayName,
     publicSpriteBaseName,
     GENDER_DISTINCT_SPECIES_IDS,

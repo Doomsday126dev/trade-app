@@ -37,7 +37,9 @@ test('public Pumpkaboo hyphen forms use pinned exact HOME identities',()=>{
 
 test('semantic fallback never downgrades explicit forms or relevant gender',()=>{
   const explicit=sprites.publicSpriteUrls('Urshifu (Gigantamax)','',892);
-  assert.ok(explicit.length>0);assert.equal(explicit.some(url=>/\/(?:892|urshifu)\.png$/.test(url)),false);
+  assert.deepEqual(Array.from(explicit),[],'legacy Gmax identity does not specify Single/Rapid style; neither may be guessed');
+  assert.equal(sprites.isAmbiguousVisibleForm('Urshifu (Gigantamax)',892),true);
+  assert.equal(explicit.some(url=>/\/(?:892|urshifu)\.png$/.test(url)),false);
   const female=sprites.publicSpriteUrls('Venusaur','f',3);
   assert.ok(female.length>0);assert.equal(female.some(url=>url.endsWith('/other/home/3.png')||url.endsWith('/venusaur.png')),false);
   const ordinary=sprites.publicSpriteUrls('Venusaur','',3);
