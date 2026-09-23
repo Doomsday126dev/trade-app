@@ -80,6 +80,44 @@ test('compact cards wrap long localized labels beside selection and actions',asy
     }
   }
 });
+test('every section copy button shares the grid and List tools right edge',async({page})=>{
+  test.skip(baseline);await installVisualFixture(page);
+  const alignmentMeasurements=[];
+  const cases=[{width:1440,locales:['en']},{width:1920,locales:['en']},{width:390,locales:['en','ja','es','de']},{width:320,locales:['en','ja','es','de']}];
+  for(const {width,locales} of cases)for(const locale of locales){
+    await page.setViewportSize({width,height:width===1920?1080:900});
+    await page.evaluate(async value=>changeInterfaceLocale(value),locale);
+    const measured=await page.evaluate(()=>{
+      const bounds=element=>{const rect=element.getBoundingClientRect();return{x:rect.x,y:rect.y,width:rect.width,height:rect.height,right:rect.right};};
+      const tools=bounds(document.querySelector('#wants-list-tools > summary'));
+      const sections=[...document.querySelectorAll('#combined-list > [data-wants-section]')].filter(section=>section.querySelector('[data-contextual-copy]'));
+      return{tools,sections:sections.map(section=>{
+        const copy=section.querySelector('[data-contextual-copy]'),wrapper=copy.closest('.wants-compact-search'),details=wrapper.querySelector('.contextual-details'),style=getComputedStyle(wrapper);
+        return{key:section.dataset.wantsSection,copy:bounds(copy),grid:bounds(section.querySelector('.mygrid')),
+          wrapper:{display:style.display,columns:style.gridTemplateColumns,columnGap:style.columnGap,paddingRight:style.paddingRight,marginRight:style.marginRight},
+          details:{hidden:details.hidden,display:getComputedStyle(details).display},
+          children:[...wrapper.children].map(child=>({className:child.className,display:getComputedStyle(child).display,gridColumn:getComputedStyle(child).gridColumn}))};
+      })};
+    });
+    alignmentMeasurements.push({width,locale,...measured});
+    expect(measured.sections.length).toBeGreaterThan(0);
+    for(const section of measured.sections){
+      expect(Math.abs(section.copy.right-measured.tools.right),`${width}px ${locale} ${JSON.stringify(section)}`).toBeLessThanOrEqual(1);
+      expect(Math.abs(section.copy.right-section.grid.right),`${width}px ${locale} ${JSON.stringify(section)}`).toBeLessThanOrEqual(1);
+    }
+    const high=page.locator('#combined-list > [data-wants-section="H"] [data-contextual-copy]');
+    await high.scrollIntoViewIfNeeded();
+    if(output&&((width===1920||width===1440||width===390)&&locale==='en')){
+      await expect(page.locator('#toast')).toBeHidden({timeout:5000});
+      await capture(page,`copy-aligned-${width}`);
+    }
+    const before=await high.boundingBox();
+    await high.click();await expect(high).toHaveClass(/is-copied/);
+    const after=await high.boundingBox();
+    expect(after).toEqual(before);
+  }
+  if(output)fs.writeFileSync(path.join(output,'copy-alignment-measurements.json'),JSON.stringify(alignmentMeasurements,null,2));
+});
 test('copy feedback occupies the same footprint in every locale and failures expose recovery',async({page})=>{
   test.setTimeout(90000);
   test.skip(baseline);await installVisualFixture(page);

@@ -2245,7 +2245,8 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 #combined-list .myrow-sprite-wrap{pointer-events:none}
 @media(max-width:600px){#combined-list .myrow-trait.lucky,#combined-list .myrow-trait.shiny{width:auto;min-width:0;max-width:none;font-size:0}#combined-list .myrow-trait.lucky::before,#combined-list .myrow-trait.shiny::before{font-size:12px}}
 @media(min-width:601px){
- .wants-section-search .wants-compact-search{display:grid;grid-template-columns:auto auto;justify-content:end}
+ .wants-section-search .wants-compact-search{display:grid;grid-template-columns:max-content;justify-content:end}
+ .wants-section-search .contextual-copy-actions{justify-self:end}
  .wants-section-search .contextual-unresolved,.wants-section-search .contextual-copy-status{grid-column:1/-1;justify-self:end}
 }
 
