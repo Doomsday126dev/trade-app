@@ -103,7 +103,7 @@ for(const locale of ['en','ja','es','de'])test(`actual Share and legacy exports 
         const width=style==='classic'?(560-12)/3:(560-24-12)/3;
         record.captions.push({name:item.entry.dn||item.entry.name,
           expected:[item.entry.dn||item.entry.name,productShareDescription({...item.entry,name:'',dn:'',p:'',note:''}),publicSharePublicationDomain.publicNoteForDisplay(item.entry.note)].filter(Boolean).join(''),
-          drawn:item.lines.map(line=>line.text).join(''),blankLines:item.lines.filter(line=>line.text==='').length,
+          drawn:item.lines.map(line=>line.text).join(''),lines:item.lines.map(line=>line.text),blankLines:item.lines.filter(line=>line.text==='').length,
           overflow:item.lines.filter(line=>{ctx.font=line.bold?'700 12px sans-serif':'12px sans-serif';return ctx.measureText(line.text).width>width-16+.5;})});
         return caption(ctx,item,x,y,options);
       };
@@ -159,7 +159,7 @@ for(const locale of ['en','ja','es','de'])test(`actual Share and legacy exports 
       for(const caption of render.captions){expect(caption.drawn.replace(/\s/gu,'')).toBe(caption.expected.replace(/\s/gu,''));expect(caption.overflow).toEqual([]);}
       const exact=render.captions.find(caption=>caption.name.includes('7'));
       if(owner!=='LocalTrainer'){expect(exact.blankLines).toBe(1);expect(exact.drawn).toContain('THE END.');}
-      else expect(exact.drawn).toContain('Public note with details for our trade.');
+      else expect(exact.lines.join(' ')).toContain('Public note with details for our trade.');
       expect(render.captions.map(caption=>caption.drawn).join('')).toContain('XXL');
       expect(render.captions.map(caption=>caption.drawn).join('')).toContain('XXS');
       expect(JSON.stringify(render)).not.toContain('PRIVATE_');expect(record.writes).toBe(0);
