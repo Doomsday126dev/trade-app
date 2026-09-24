@@ -2,9 +2,9 @@ const {expect}=require('@playwright/test');
 
 // Actual application, fresh context, no remote services. Only public artwork may
 // load remotely; Firebase imports/requests and service workers are blocked.
-async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)'}={}){
+async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)',allowRemoteArtwork=process.env.SHARE_OFFLINE_ARTWORK!=='1'}={}){
   const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
-  await page.route('**/*',route=>new URL(route.request().url()).origin===origin||route.request().resourceType()==='image'?route.continue():route.abort());
+  await page.route('**/*',route=>new URL(route.request().url()).origin===origin||allowRemoteArtwork&&route.request().resourceType()==='image'?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
   await page.goto('./?local-share-application-test');
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');

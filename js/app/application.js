@@ -6726,7 +6726,7 @@ async function buildProductShareImage(context){
   productShareUi.imageError=false;
   try{
     const state=productShareUi,entries=accountSyncClone(productShareSnapshot);
-    const blob=state.image==='board'?await renderProductShareImage(entries,context.owner):await renderListImage(entries,state.category,context.owner+' · '+i18nCore.t(state.intent==='ft'?'product.ft':'product.lf'),state.image);
+    const blob=state.image==='board'?await renderProductShareImage(entries,context.owner):await renderListImage(entries,state.category,context.owner,state.image,state.intent);
     if(!productShareContextCurrent(context))return;
     state.blob=blob;state.blobUrl=URL.createObjectURL(blob);
     const image=document.createElement('img');image.src=state.blobUrl;image.alt=i18nCore.t('shareUi.preview');image.className='share-image-preview';
@@ -8116,16 +8116,45 @@ function drawListImageCaption(ctx,item,x,y,{dark=false}={}){
     ctx.fillText(line.text,x+8,y+14+index*16);
   });
 }
-async function renderListImage(entries,type,username,style='classic'){
-  if(style==='cards')return renderListImageCards(entries,type,username);
+function listImageHeading(owner,intent='lf'){
+  return i18nCore.t('export.listHeading',{owner,list:i18nCore.t(intent==='ft'?'product.ft':'wants.title')});
+}
+function listImageHeader(ctx,owner,type,intent,style){
+  const dark=style==='cards',width=dark?536:528,titleSize=dark?22:20;
+  // Keep the exact identity and localized context, wrapping rather than shrinking
+  // or clipping the heading. Only the header grows; export cells stay unchanged.
+  const wrap=(text,font)=>{
+    ctx.font=font;const lines=[];let line='';
+    for(const char of String(text)){
+      if(line&&ctx.measureText(line+char).width>width){
+        const space=line.lastIndexOf(' ');
+        if(space>0){lines.push(line.slice(0,space+1));line=line.slice(space+1);}
+        else{lines.push(line);line='';}
+      }
+      line+=char;
+    }
+    lines.push(line);return lines;
+  };
+  const titleFont=`800 ${titleSize}px Space Grotesk, sans-serif`;
+  const contextFont='600 12px Space Grotesk, sans-serif';
+  const title=wrap(listImageHeading(owner,intent),titleFont);
+  const category=i18nCore.t(({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'})[type]||'list.others');
+  const context=wrap(i18nCore.t('export.listCategory',{category}),contextFont);
+  const titleY=dark?30:28,contextY=titleY+(title.length-1)*28+22;
+  const metaY=contextY+(context.length-1)*18+20;
+  return{title,context,titleFont,contextFont,titleY,contextY,metaY,height:metaY+(dark?32:16)};
+}
+async function renderListImage(entries,type,username,style='classic',intent='lf'){
+  if(style==='cards')return renderListImageCards(entries,type,username,intent);
   const W=560,frame=0,pad=6,gap=0,cols=3;
   const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,spriteH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
+  const groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
   const canvas=document.createElement('canvas');
   const measure=canvas.getContext('2d');
+  const header=listImageHeader(measure,username,type,intent,'classic'),headerH=header.height;
   groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
   const H=frame+headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+sectionPad*2+g.rows.reduce((sum,row)=>sum+row.height,0)+sectionGap,0);
   if(H>15000)throw new Error('Image scope is too large');
@@ -8150,13 +8179,15 @@ async function renderListImage(entries,type,username,style='classic'){
   // Accent line below header
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
 
-  const title=`${username}'s ${listLabel(type)} List`;
-  drawCenteredFittedText(ctx,title,W/2,28,W-32,{max:20,min:14,color:'#ffffff'});
+  ctx.textAlign='center';ctx.font=header.titleFont;ctx.fillStyle='#ffffff';
+  header.title.forEach((line,index)=>ctx.fillText(line,W/2,header.titleY+index*28));
+  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
+  header.context.forEach((line,index)=>ctx.fillText(line,W/2,header.contextY+index*18));
   ctx.font='600 11px Space Grotesk, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.6)';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   ctx.textAlign='center';
-  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
+  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,header.metaY);
   ctx.textAlign='left';
 
   // Load with cascading fallback — try PokeAPI → Serebii for each entry
@@ -8239,14 +8270,15 @@ async function renderListImage(entries,type,username,style='classic'){
 // Dark-card style: content-sized grid where each Pokémon sits in its own bordered card
 // with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
 // + trim/scale logic as the classic style, so icons stay consistent across both.
-async function renderListImageCards(entries,type,username){
+async function renderListImageCards(entries,type,username,intent='lf'){
   const W=560,frame=12,pad=0,gap=6,cols=3;
   const cellW=(W-frame*2-(cols-1)*gap)/cols,spriteH=64,sprSize=50;
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=80,groupTitleH=26,sectionGap=12,bottomPad=16;
+  const groupTitleH=26,sectionGap=12,bottomPad=16;
   const canvas=document.createElement('canvas');
   const measure=canvas.getContext('2d');
+  const header=listImageHeader(measure,username,type,intent,'cards'),headerH=header.height;
   groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
   const H=headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+g.rows.reduce((sum,row)=>sum+row.height,0)+(g.rows.length-1)*gap+sectionGap,0);
   if(H>15000)throw new Error('Image scope is too large');
@@ -8264,16 +8296,19 @@ async function renderListImageCards(entries,type,username){
   // Title block (left-aligned, large)
   ctx.textAlign='left';
   ctx.fillStyle='#ffffff';
-  drawFittedText(ctx,`${username}'s ${listLabel(type)} List`,frame,30,W-frame*2,{max:22,min:14,color:'#fff'});
+  ctx.font=header.titleFont;
+  header.title.forEach((line,index)=>ctx.fillText(line,frame,header.titleY+index*28));
+  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
+  header.context.forEach((line,index)=>ctx.fillText(line,frame,header.contextY+index*18));
   ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.font='500 12px Space Grotesk, sans-serif';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,48);
+  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,header.metaY);
   // "PoGo Trades" branding top-right
   ctx.textAlign='right';
   ctx.fillStyle='#a78bfa';
   ctx.font='700 13px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo Trades',W-frame,68);
+  ctx.fillText('PoGo Trades',W-frame,header.metaY+20);
   ctx.textAlign='left';
 
   // Load sprites with cascading fallback (same as classic)
@@ -8366,10 +8401,9 @@ async function exportMyListImage(style='classic'){
   if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   try{
     if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
-    const intentLabel=i18nCore.t(myListIntent==='ft'?'product.ft':'product.lf');
-    const blob=await renderListImage(entries,myListType,cur+' · '+intentLabel,style);
+    const blob=await renderListImage(entries,myListType,cur,style,myListIntent);
     const filename=listImageFilename(cur,myListType,style);
-    const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
+    const delivery=await deliverImageBlob(blob,filename,listImageHeading(cur,myListIntent));
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
     if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));

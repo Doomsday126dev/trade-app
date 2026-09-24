@@ -169,6 +169,7 @@
     ,'contextSearch.copyProtected':'Copiar búsqueda protegida','contextSearch.copyBroad':'Copiar búsqueda amplia especial','contextSearch.mixedHelp':'Los deseos ordinarios usan la búsqueda protegida. Los deseos especiales o exactos usan otra búsqueda amplia por especie para no excluir coincidencias solicitadas.'
     ,"shareUi.disclosure":"Al compartir un enlace, tu lista completa de deseos y tu perfil público estarán disponibles para quien tenga el enlace."
     ,"shareUi.preview":"Vista previa"
+    ,"export.listHeading":"{owner} · {list}","export.listCategory":"Categoría: {category}"
     ,"shareUi.manualLink":"Enlace para copiar"
     ,"shareUi.copyLink":"Copiar enlace"
     ,"shareUi.shareCopy":"Compartir y copiar enlace"

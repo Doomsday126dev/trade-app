@@ -169,6 +169,7 @@
     ,'contextSearch.copyProtected':'Geschützte Suche kopieren','contextSearch.copyBroad':'Breite Spezialsuche kopieren','contextSearch.mixedHelp':'Normale Gesuche verwenden die geschützte Suche. Besondere oder genaue Gesuche verwenden eine getrennte breite Artensuche, damit gewünschte Treffer nicht ausgeschlossen werden.'
     ,"shareUi.disclosure":"Mit einem Link werden deine vollständige Wunschliste und dein öffentliches Profil für alle mit diesem Link zugänglich."
     ,"shareUi.preview":"Vorschau"
+    ,"export.listHeading":"{owner} · {list}","export.listCategory":"Kategorie: {category}"
     ,"shareUi.manualLink":"Link zum Kopieren"
     ,"shareUi.copyLink":"Link kopieren"
     ,"shareUi.shareCopy":"Teilen und Link kopieren"

@@ -664,7 +664,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" role="tab" id="product-share-tab-image" data-share-mode="image" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('image')" data-i18n="product.image">Image</button>
       <button type="button" role="tab" id="product-share-tab-text" data-share-mode="text" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
     </div>
-    <div class="share-body" id="product-share-body" role="tabpanel" aria-labelledby="product-share-tab-link">
+    <div class="share-body" id="product-share-body" role="tabpanel" tabindex="0" aria-labelledby="product-share-tab-link">
       <p class="share-disclosure" id="product-share-disclosure" data-i18n="shareUi.disclosure">Sharing a link makes your full wants list and public profile available to anyone with the link.</p>
       <div class="share-options" id="product-share-options"></div>
       <div class="share-preview-heading"><h4 data-i18n="shareUi.preview">Preview</h4><span id="product-share-count"></span></div>

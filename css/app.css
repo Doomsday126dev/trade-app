@@ -2456,6 +2456,7 @@ html:has(#product-share-modal.open),body:has(#product-share-modal.open){overflow
 #product-share-modal .share-choice:has(input:checked) .choice-mark{visibility:visible}
 #product-share-modal .share-choice:has(input:disabled){opacity:.45;cursor:not-allowed}
 #product-share-modal :is(button,input):focus-visible{outline:2px solid var(--ac2);outline-offset:3px;box-shadow:none}
+#product-share-body:focus-visible{outline:2px solid var(--ac2);outline-offset:-3px}
 #product-share-modal .share-choice:has(input:focus-visible){outline:2px solid var(--ac2);outline-offset:0;border-color:transparent;box-shadow:none}
 #product-share-modal .share-choice input:focus-visible{outline:none}
 #product-share-modal .share-fixed-scope{color:var(--muted);margin:0}

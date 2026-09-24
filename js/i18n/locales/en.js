@@ -515,6 +515,7 @@
     ,'contextSearch.copyProtected':'Copy protected search','contextSearch.copyBroad':'Copy broad special search','contextSearch.mixedHelp':'Ordinary wants use protected discovery. Special or exact wants use a separate broad species search so requested matches are not excluded.'
     ,"shareUi.disclosure":"Sharing a link makes your full wants list and public profile available to anyone with the link."
     ,"shareUi.preview":"Preview"
+    ,"export.listHeading":"{owner} · {list}","export.listCategory":"Category: {category}"
     ,"shareUi.manualLink":"Link to copy"
     ,"shareUi.copyLink":"Copy link"
     ,"shareUi.shareCopy":"Share & copy link"

@@ -168,6 +168,7 @@
     ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
     ,"shareUi.disclosure":"リンクを共有すると、リンクを知っている人は欲しいポケモンの全リストと公開プロフィールを閲覧できます。"
     ,"shareUi.preview":"プレビュー"
+    ,"export.listHeading":"{owner} · {list}","export.listCategory":"カテゴリ：{category}"
     ,"shareUi.manualLink":"コピーするリンク"
     ,"shareUi.copyLink":"リンクをコピー"
     ,"shareUi.shareCopy":"共有してリンクをコピー"
