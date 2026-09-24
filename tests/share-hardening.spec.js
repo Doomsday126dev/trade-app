@@ -3,6 +3,16 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {installShareApplication}=require('./helpers/share-application.cjs');
 const primary=page=>page.locator('#product-share-primary');
+test('pointer-selected radio retains a keyboard continuation point',async({page},testInfo)=>{
+  await installShareApplication(page);await page.evaluate(()=>openProductShare('text'));
+  const states=[];const record=async label=>states.push({label,...await page.evaluate(()=>({id:document.activeElement.id,tag:document.activeElement.tagName,checked:document.activeElement.checked}))});
+  await page.locator('#share-scope-top').click();await record('click');
+  await expect(page.locator('#share-scope-top')).toBeFocused();
+  await page.keyboard.press('Tab');await record('Tab');await expect(page.locator('#share-text-plain')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');await record('Shift+Tab');
+  testInfo.annotations.push({type:'focus-sequence',description:JSON.stringify(states)});
+  await expect(page.locator('#share-scope-top')).toBeFocused();
+});
 async function providerFixture(page){
   await page.addInitScript(()=>{window.__POGO_PROVIDER_CAPABILITIES__={providerPublicWriteSupport:true,providerPublicReadSupport:true};});
   await installShareApplication(page);
@@ -144,7 +154,7 @@ test('current recipient sections retain full protected commands through collapse
 test('native clipboard availability and actual local text copying',async({page,context,browserName,browser},testInfo)=>{
   await installShareApplication(page);
   if(browserName==='chromium')await context.grantPermissions(['clipboard-read','clipboard-write']);
-  await page.evaluate(()=>{delete navigator.clipboard;delete document.execCommand;openProductShare('text');});
+  await page.evaluate(browserName=>{delete navigator.clipboard;delete document.execCommand;allData.users[cur].intentDeclarations[0].note='Native clipboard proof '+browserName+' '+crypto.randomUUID();openProductShare('text');},browserName);
   const available=await page.evaluate(()=>typeof navigator.clipboard?.readText==='function');
   // An engine's permission/user-activation limitations are reported, not mocked
   // into a successful native result. The app's ordinary copy handler is real.

@@ -597,7 +597,7 @@ document.addEventListener('click',event=>{
 function toggleWantsCustomScope(key){if(wantsCustomScopes.has(key))wantsCustomScopes.delete(key);else wantsCustomScopes.add(key);refreshCombinedSearch();}
 function startWantsSelection(){wantsSelectionMode=true;refreshCombinedSearch();}
 function clearWantsSelection(){combinedSelection.clear();wantsSelectionMode=false;renderMyList();}
-function shareWantsSelection(){openProductShare('image','selected');}
+function shareWantsSelection(trigger){openProductShare('image','selected',trigger);}
 function selectCombinedGroup(index,selected){
   const model=productDeclarations(),groups=combinedGroups(model);
   const group=typeof index==='string'?groups.find(g=>combinedKey(g[0])===index):groups[index];
@@ -6635,11 +6635,11 @@ function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
   return scope==='top'?entries.filter(e=>e.intent==='lf'&&e.p==='H'):scope==='selected'?entries.filter(e=>combinedSelection.has(productSelectionKey(e))):entries;
 }
-function openProductShare(mode='link',scope='full'){
+function openProductShare(mode='link',scope='full',returnFocus){
   invalidateProductShare();
   productShareScope=['full','top','selected'].includes(scope)?scope:'full';productShareOwner=cur;
   Object.assign(productShareUi,{mode:['link','image','text'].includes(mode)?mode:'link',text:'plain',image:'board',category:myListType,intent:myListIntent});
-  openModal('product-share-modal',{initialFocus:'[data-share-mode="'+productShareUi.mode+'"]'});
+  openModal('product-share-modal',{initialFocus:'[data-share-mode="'+productShareUi.mode+'"]',returnFocus});
   if(productShareUi.appInert===undefined){productShareUi.appInert=document.getElementById('app').inert;document.getElementById('app').inert=true;}
   refreshProductShare();
 }
@@ -6710,6 +6710,9 @@ function setProductShareOption(name,value){
   if(!allowed[name]?.includes(value))return;
   if(name==='scope')productShareScope=value;else productShareUi[name]=value;
   refreshProductShare();
+  // WebKit pointer activation need not focus a radio before change fires. The
+  // refreshed native input remains the keyboard continuation point either way.
+  document.getElementById('share-'+name+'-'+value)?.focus({preventScroll:true});
 }
 function updateProductShareAction(){
   const state=productShareUi,button=document.getElementById('product-share-primary');if(!button)return;
@@ -10472,6 +10475,16 @@ function openModal(id,options={}){
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
+    if(id==='product-share-modal'){
+      // Keep the dialog's explicit keyboard sequence inside the modal even on
+      // WebKit/macOS configurations that skip controls during native tabbing.
+      // A native radio group contributes its checked (or first) input only;
+      // arrow-key selection remains the browser's native behavior.
+      const controls=[...m.querySelectorAll('button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null);
+      const stops=controls.filter(el=>el.type!=='radio'||el===(controls.find(other=>other.type==='radio'&&other.name===el.name&&other.checked)||controls.find(other=>other.type==='radio'&&other.name===el.name)));
+      if(stops.length){const index=stops.indexOf(document.activeElement),next=index<0?(ev.shiftKey?stops.length-1:0):(index+(ev.shiftKey?-1:1)+stops.length)%stops.length;ev.preventDefault();stops[next].focus();}
+      return;
+    }
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];

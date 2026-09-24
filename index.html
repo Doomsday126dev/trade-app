@@ -445,7 +445,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       </div>
     </form>
     <div class="wants-list-toolbar">
-      <button type="button" class="btn btn-secondary" onclick="openProductShare()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
+      <button type="button" class="btn btn-secondary" onclick="openProductShare('link','full',this)"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
       <button type="button" id="wants-select-toggle" class="btn btn-secondary" onclick="startWantsSelection()" data-i18n="workflow.select">Select</button>
       <details id="wants-list-tools" class="wants-list-tools" ontoggle="resetWantsToolsDisclosure(this)" onkeydown="if(event.key==='Escape'){event.stopPropagation();closeWantsListTools(true)}">
         <summary class="btn btn-secondary"><span data-i18n="workflow.listTools">List tools</span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-down"></use></svg></summary>
@@ -463,7 +463,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     </div>
     <div id="wants-selection-tools" class="wants-selection-context" hidden>
       <span id="combined-selected-count" aria-live="polite"></span><div id="combined-search" hidden></div>
-      <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection()" data-i18n="workflow.shareSelected" hidden>Share selected</button>
+      <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection(this)" data-i18n="workflow.shareSelected" hidden>Share selected</button>
       <button type="button" class="btn btn-secondary" onclick="clearWantsSelection()" data-i18n="workflow.clear">Clear</button>
     </div>
     <div id="combined-list" class="mylist-priority-sections"></div>
