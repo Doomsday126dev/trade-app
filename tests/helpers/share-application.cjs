@@ -2,7 +2,7 @@ const {expect}=require('@playwright/test');
 
 // Actual application, fresh context, no remote services. Only public artwork may
 // load remotely; Firebase imports/requests and service workers are blocked.
-async function installShareApplication(page){
+async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)'}={}){
   const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
   await page.route('**/*',route=>new URL(route.request().url()).origin===origin||route.request().resourceType()==='image'?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
@@ -10,7 +10,7 @@ async function installShareApplication(page){
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');
   await page.evaluate(()=>__pogoEnsureFullApp('local-share-application-test'));
   await page.waitForFunction(()=>typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);
-  await page.evaluate(()=>{
+  await page.evaluate(gmaxName=>{
     managedListenerLifecycle?.deactivateSession?.('share_application_test');
     managedListenerLifecycle?.clearSelectedTrainer?.('share_application_test');
     managedSubscriptions?.unsubscribeByKey?.('public:loginDirectory');managedOwnedDataCoordinator?.reset?.();
@@ -21,7 +21,7 @@ async function installShareApplication(page){
       {entityId:'missing-art',side:'lf',name:'Synthetic Missing Artwork',p:'L',note:'Public note without artwork',no:null},
       {entityId:'independent',side:'lf',name:'Pikachu',p:'',shiny:true,lucky:true,xxl:true,xxs:true,gender:'f',note:'Independent requirements'},
       {entityId:'ordinary',side:'lf',name:'Arrokuda',p:'H'},{entityId:'medium',side:'lf',name:'Flittle',p:'M'}
-    ]}},wishlist:{LocalTrainer:{Relicanth:'H',Snom:'L'}},dynamax:{LocalTrainer:{Bulbasaur:'M'}},gmax:{LocalTrainer:{'Gigantamax Charizard':'H'}},costumes:{LocalTrainer:{}}});
+    ]}},wishlist:{LocalTrainer:{Relicanth:'H',Snom:'L'}},dynamax:{LocalTrainer:{Bulbasaur:'M'}},gmax:{LocalTrainer:{[gmaxName]:'H'}},costumes:{LocalTrainer:{}}});
     _pathLoadState={wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
     activePublicShareHydrationToken=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur}).token;
     for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
@@ -42,7 +42,7 @@ async function installShareApplication(page){
     document.getElementById('my-un').textContent='LocalTrainer';document.getElementById('my-av').textContent='L';document.getElementById('top-un').textContent='LocalTrainer';
     applyTheme('dark');switchTab('mylist',{render:false});renderMyList();updateFcDisplay();
     window.__shareTest.before=JSON.stringify(allData);
-  });
+  },gmaxName);
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(9);
 }
 module.exports={installShareApplication};
