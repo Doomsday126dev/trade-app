@@ -11961,6 +11961,9 @@ async function copyShareLink(){
   const current=()=>attempt===publicLinkAttempt&&productShareContextCurrent(context);
   const ready=()=>publicShareSessionMatches(context.owner)&&managedPublicSharePublication.authorize(context.token,'explicit_share').ok;
   const receipt=productShareUi.receipt;
+  if(receipt&&(receipt.context.runtime!==context.runtime||receipt.context.runtimeGeneration!==context.runtimeGeneration)){
+    clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;
+  }
   // A receipt exists only after verified publication followed by clipboard failure.
   // It is never persisted, and normal actions still use the authorized sharing flow.
   const retry=receipt&&productShareContextCurrent(receipt.context);
@@ -11968,16 +11971,16 @@ async function copyShareLink(){
   productShareUi.busy=true;updateProductShareAction();linkPublicationStatus('shareUi.working');
   try{
     if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
+    const runtime=managedAccountSyncRuntime;
+    if(runtime){
+      const state=await runtime.snapshot();
+      if(!current())return;
+      if(runtime.ownerUid!==context.uid||state.pendingCount||state.blockedCount||state.conflictCount){clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;}
+    }
+    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
     let url;
     if(retry){
       if(!fbOn||!db){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');return;}
-      const runtime=managedAccountSyncRuntime;
-      if(runtime){
-        const state=await runtime.snapshot();
-        if(!current())return;
-        if(runtime!==managedAccountSyncRuntime||runtime.ownerUid!==context.uid||state.pendingCount||state.blockedCount||state.conflictCount){clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;}
-      }
-      if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
       url=receipt.url;
     }else{
       const result=await publishPublicShareNow(context.owner,'explicit_share');
