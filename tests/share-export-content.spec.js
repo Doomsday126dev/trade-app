@@ -112,7 +112,8 @@ test('catalog Gigantamax fixture keeps exact artwork when the approved asset is 
     const urls=exportSpriteFallbackUrls(entry),image=await loadCanvasImageWithFallback(urls);
     return{entry,context:spriteCatalogContext(entry.no,entry.name,entry.dn,entry.catalogId),urls,loaded:!!image,visible:!!image&&canvasImageHasVisiblePixels(image),width:image?.naturalWidth};
   });
-  expect(result.entry.name).toBe('Charizard (Gigantamax)');expect(result.entry.no).toBe(6);expect(result.context.catalogId).toContain(':gmax:');
+  expect(result.entry.name).toBe('Charizard (Gigantamax)');expect(result.entry.no).toBe(6);expect(result.entry.category).toBe('gmax');
+  expect(result.context.canonicalName).toBe('Charizard (Gigantamax)');
   expect(result.urls.length).toBeGreaterThan(0);expect(result.urls.every(url=>url.includes('charizard-gigantamax.png'))).toBe(true);
   expect(transportStatus).toBe(200);expect(result.loaded).toBe(true);expect(result.visible).toBe(true);
   await expect(page.locator('.share-image-preview')).toBeVisible();
