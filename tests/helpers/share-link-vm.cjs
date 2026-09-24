@@ -18,7 +18,7 @@ function shareLinkHarness({entries,publish,copy}){
   Object.assign(c,{cur:'Owner',auth:{currentUser:{uid:'owner'}},open:true,myListType:'wishlist',allData:{users:{Owner:{}}},_sessionTransientGeneration:0,
     productShareUi:{generation:0,mode:'link',category:'wishlist',busy:false,receipt:null,context:{}},productShareScope:'full',productShareSnapshot:[],publicLinkAttempt:0,fbOn:true,db:{},
     location:{origin:'https://example.test',pathname:'/trade/'},document:{getElementById:node},URL:{revokeObjectURL(){}},
-    activePublicShareHydrationToken:token,managedPublicSharePublication:gate,managedAccountSyncRuntime:null,publicSharePublicationDomain:domain,
+    activePublicShareHydrationToken:token,managedPublicSharePublication:gate,managedAccountSyncRuntime:null,accountSyncRuntimeGeneration:0,publicSharePublicationDomain:domain,
     ownerPublicShareReview:{generation:token.generation,status:'valid_complete_projection'},i18nCore:{t:key=>key},statuses:[],
     productDeclarations:()=>({entries:entries()}),publishPublicShareNow:publish,copyText:copy,publicShareSessionMatches:()=>c.auth?.currentUser?.uid==='owner'&&c.cur==='Owner',
     publicSharePublicationCurrent:result=>result?.ok===true&&['published','reconciled'].includes(result.status),

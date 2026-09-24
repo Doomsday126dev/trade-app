@@ -6625,10 +6625,10 @@ function productShareFingerprint(){
 }
 function productShareContext(){
   const selected=productShareScope==='selected'&&(productShareUi.mode==='image'&&productShareUi.image==='board'||productShareUi.mode==='text'&&productShareUi.text==='plain');
-  return{owner:cur,uid:String(auth?.currentUser?.uid||''),session:_sessionTransientGeneration,token:activePublicShareHydrationToken,generation:productShareUi.generation,fingerprint:productShareFingerprint(),selection:selected?JSON.stringify([...combinedSelection].sort()):null};
+  return{owner:cur,uid:String(auth?.currentUser?.uid||''),session:_sessionTransientGeneration,token:activePublicShareHydrationToken,runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,generation:productShareUi.generation,fingerprint:productShareFingerprint(),selection:selected?JSON.stringify([...combinedSelection].sort()):null};
 }
 function productShareContextCurrent(context){
-  try{return productShareIsOpen()&&context.generation===productShareUi.generation&&context.owner===cur&&context.uid===String(auth?.currentUser?.uid||'')&&context.session===_sessionTransientGeneration&&context.token===activePublicShareHydrationToken&&context.fingerprint===productShareFingerprint()&&(context.selection===null||context.selection===JSON.stringify([...combinedSelection].sort()));}catch{return false;}
+  try{return productShareIsOpen()&&context.generation===productShareUi.generation&&context.owner===cur&&context.uid===String(auth?.currentUser?.uid||'')&&context.session===_sessionTransientGeneration&&context.token===activePublicShareHydrationToken&&context.runtime===managedAccountSyncRuntime&&context.runtimeGeneration===accountSyncRuntimeGeneration&&context.fingerprint===productShareFingerprint()&&(context.selection===null||context.selection===JSON.stringify([...combinedSelection].sort()));}catch{return false;}
 }
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
