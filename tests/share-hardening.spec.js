@@ -115,6 +115,22 @@ test('pending provider saves block a fresh action and a clipboard-only retry',as
   expect(await page.evaluate(()=>[__shareTest.transactions.length,__shareTest.copies.length])).toEqual([1,1]);
 });
 
+test('late provider transactions cannot finish a changed format, reopened dialog or account',async({page})=>{
+  await providerFixture(page);await page.evaluate(()=>{__shareTest.holdWrite=true;void copyShareLink();});
+  await expect.poll(()=>page.evaluate(()=>__shareTest.transactions.length)).toBe(1);
+  await page.locator('[data-share-mode=text]').click();await page.evaluate(()=>__shareTest.resolveWrite());
+  await expect.poll(()=>page.evaluate(()=>__shareTest.stored?.shareVersion)).toBe(1);
+  expect(await page.evaluate(()=>__shareTest.copies.length)).toBe(0);await expect(page.locator('#share-link-status')).toBeEmpty();
+  await page.locator('[data-share-mode=link]').click();await primary(page).click();
+  await expect.poll(()=>page.evaluate(()=>__shareTest.transactions.length)).toBe(2);
+  await page.keyboard.press('Escape');await page.evaluate(()=>{openProductShare();__shareTest.resolveWrite();});
+  await expect(page.locator('#share-link-status')).toBeEmpty();expect(await page.evaluate(()=>__shareTest.copies.length)).toBe(0);
+  await primary(page).click();await expect.poll(()=>page.evaluate(()=>__shareTest.transactions.length)).toBe(3);
+  await page.evaluate(()=>{auth.currentUser={uid:'different-synthetic-owner'};_sessionTransientGeneration++;__shareTest.resolveWrite();});
+  await expect(page.locator('#product-share-modal')).toBeHidden();await expect(page.locator('#share-public-url')).toHaveValue('');
+  expect(await page.evaluate(()=>__shareTest.copies.length)).toBe(0);
+});
+
 test('current selection command clears after deselection while row focus remains stable',async({page})=>{
   await installShareApplication(page);
   const result=await page.evaluate(()=>{
@@ -151,20 +167,26 @@ test('current recipient sections retain full protected commands through collapse
   await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',full);
 });
 
-test('native clipboard availability and actual local text copying',async({page,context,browserName,browser},testInfo)=>{
+test('native clipboard availability and actual local text and verified-link copying',async({page,context,browserName,browser},testInfo)=>{
   await installShareApplication(page);
   if(browserName==='chromium')await context.grantPermissions(['clipboard-read','clipboard-write']);
   await page.evaluate(browserName=>{delete navigator.clipboard;delete document.execCommand;allData.users[cur].intentDeclarations[0].note='Native clipboard proof '+browserName+' '+crypto.randomUUID();openProductShare('text');},browserName);
   const available=await page.evaluate(()=>typeof navigator.clipboard?.readText==='function');
   // An engine's permission/user-activation limitations are reported, not mocked
   // into a successful native result. The app's ordinary copy handler is real.
-  await primary(page).click();
-  const result=await page.evaluate(async()=>{
-    let value='',error='';try{value=await Promise.race([navigator.clipboard.readText(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Native paste permission not granted within 1500ms')),1500))]);}catch(e){error=e.name+': '+e.message;}
-    return{value,error,status:document.getElementById('share-link-status').textContent,expected:productShareUi.output};
-  });
+  const results=[];
+  for(const mode of ['text','link']){
+    await page.locator('[data-share-mode='+mode+']').click();await primary(page).click();
+    await expect(primary(page)).toBeEnabled();
+    const result=await page.evaluate(async mode=>{
+      let value='',error='';try{value=await Promise.race([navigator.clipboard.readText(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Native paste permission not granted within 1500ms')),1500))]);}catch(e){error=e.name+': '+e.message;}
+      return{mode,value,error,status:document.getElementById('share-link-status').textContent,expected:mode==='text'?productShareUi.output:location.origin+location.pathname+'?view=LocalTrainer&list=wishlist',writes:__shareTest.writes.length,reads:__shareTest.reads.length};
+    },mode);
+    results.push(result);
+    if(mode==='link'){expect(result.writes).toBe(1);expect(result.reads).toBe(1);}
+    if(browserName==='chromium'){expect(result.error).toBe('');expect(result.value).toBe(result.expected);expect(result.status).toBe('Copied.');}
+    else{testInfo.annotations.push({type:'native-clipboard',description:mode+': '+(result.error||'Native readback matched')});if(!result.error)expect(result.value).toBe(result.expected);}
+  }
   const dir=process.env.SHARE_HARDENING_OUTPUT;
-  if(dir){fs.mkdirSync(path.join(dir,testInfo.project.name),{recursive:true});fs.writeFileSync(path.join(dir,testInfo.project.name,'native-clipboard.json'),JSON.stringify({browser:browser.version(),available,...result},null,2));}
-  if(browserName==='chromium'){expect(result.error).toBe('');expect(result.value).toBe(result.expected);expect(result.status).toBe('Copied.');}
-  else{testInfo.annotations.push({type:'native-clipboard',description:result.error||'Native readback matched'});if(!result.error)expect(result.value).toBe(result.expected);}
+  if(dir){fs.mkdirSync(path.join(dir,testInfo.project.name),{recursive:true});fs.writeFileSync(path.join(dir,testInfo.project.name,'native-clipboard.json'),JSON.stringify({browser:browser.version(),available,results},null,2));}
 });
