@@ -177,26 +177,29 @@ test('legacy editing retains originals and Board PNG consumes the deduplicated u
   if(screenshotDir){mkdirSync(screenshotDir,{recursive:true});writeFileSync(path.join(screenshotDir,'unified-board-export.png'),Buffer.from(result.data.split(',')[1],'base64'));}
 });
 
-test('publication state is persistent and copying never precedes confirmed publication',async({page})=>{
+test('sharing feedback stays practical and copying never precedes verified publication',async({page})=>{
   await page.goto('./?product-publication');await installTrustedFixture(page);
   await page.evaluate(()=>{
     window.__publicationCopies=[];copyText=async value=>{window.__publicationCopies.push(value);};
+    activePublicShareHydrationToken=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur}).token;
+    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
     publishPublicShareNow=()=>new Promise(resolve=>{window.__finishPublish=resolve;});
     openProductShare();void copyShareLink();
   });
-  await expect(page.locator('#share-link-status')).toHaveText('Publishing…');
+  await expect(page.locator('#share-link-status')).toHaveText('Working…');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(0);
   await page.evaluate(()=>window.__finishPublish({ok:false,status:'failed'}));
-  await expect(page.locator('#share-link-status')).toContainText('Not published');
+  await expect(page.locator('#share-link-status')).toContainText('Couldn’t share your list');
   expect(await page.evaluate(()=>Object.keys(allData.wishlist[cur]).length)).toBe(4);
   await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toHaveText('Published and link copied.');
+  await expect(page.locator('#share-link-status')).toHaveText('Copied.');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
   await page.evaluate(()=>{copyText=async()=>{throw new Error('denied');};void copyShareLink();});
   await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toContainText('copying failed');
-  await page.evaluate(()=>{void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
+  await expect(page.locator('#share-link-status')).toContainText('Couldn’t copy the link');
+  await page.evaluate(()=>{closeModal('product-share-modal');openProductShare();void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
+  await expect(page.locator('#product-share-modal')).toBeHidden();
 });
 
 test('empty flag search sets never emit a prefilter-only search block',async({page})=>{

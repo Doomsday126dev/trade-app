@@ -130,16 +130,11 @@ test('every supplemental signed-in legendary has the same anonymous dex identity
 });
 
 test('a declaration edit during publication prevents copying an out-of-date URL as current',async()=>{
-  let declarations=[{name:'Pikachu',intent:'lf'}],copies=0;const statuses=[];
-  const c=vm.createContext({cur:'Owner',auth:{currentUser:{uid:'owner'}},myListType:'wishlist',
-    location:{origin:'https://example.test',pathname:'/'},publicLinkAttempt:0,
-    publicSharePublicationDomain:{publicDeclarations:rows=>rows},productDeclarations:()=>({entries:declarations}),
-    document:{getElementById:()=>null},linkPublicationStatus:key=>statuses.push(key),
-    publishPublicShareNow:async()=>{declarations=[...declarations,{name:'Eevee',intent:'ft'}];return{status:'published'};},
-    publicSharePublicationCurrent:()=>true,copyText:async()=>{copies++;}});
-  vm.runInContext(app.slice(app.indexOf('async function copyShareLink('),app.indexOf('// ── SPECIAL TRADE BOARD')),c);
+  let declarations=[{name:'Pikachu',intent:'lf',category:'wishlist'}],copies=0;
+  const {context:c}=require('./helpers/share-link-vm.cjs').shareLinkHarness({entries:()=>declarations,
+    publish:async()=>{declarations=[...declarations,{name:'Eevee',intent:'lf',category:'wishlist'}];return{ok:true,status:'published'};},copy:async()=>{copies++;}});
   await c.copyShareLink();
-  assert.equal(copies,0);assert.equal(statuses.at(-1),'share.publicationPending');
+  assert.equal(copies,0);assert.equal(c.statuses.at(-1),'shareUi.changed');
 });
 
 test('application Compare consumes public FT/LF and falls back to wanted overlap for v1',()=>{

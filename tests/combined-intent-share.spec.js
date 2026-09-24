@@ -34,18 +34,17 @@ test('share scope controls output, selection persists across filtering and no da
   await page.evaluate(()=>openProductShare());
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   for(const scope of ['top','selected']){
-    await page.locator('#product-share-scope').selectOption(scope);
-    await expect(page.locator('[data-share-mode="link"]')).toBeHidden();
-    await page.evaluate(()=>setProductShareMode('link'));
-    await expect(page.locator('#product-share-link')).toBeHidden();
     await page.locator('[data-share-mode="text"]').click();
-    await page.locator('#product-share-text button').click();
+    await page.locator('#share-scope-'+scope).check();
+    await page.locator('#product-share-primary').click();
     const text=await page.evaluate(()=>__copied);
     expect(text).toContain('Pikachu');
     expect(text).not.toContain('Eevee');
     expect(text).not.toContain('Snom');
+    await page.locator('[data-share-mode="link"]').click();
+    await expect(page.locator('[name="share-scope"]')).toHaveCount(0);
+    await expect(page.locator('.share-public-list')).toContainText('Snom');
   }
-  await page.locator('#product-share-scope').selectOption('full');
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });

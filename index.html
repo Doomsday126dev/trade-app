@@ -655,32 +655,29 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 </div>
 <div class="ov" id="product-share-modal" role="dialog" aria-modal="true" aria-labelledby="product-share-title">
   <div class="modal product-share-modal">
-    <h3 id="product-share-title" data-i18n="product.share">Share</h3>
-    <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
-    <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
-      <option value="full" data-i18n="phase2.full">Full list</option>
-      <option value="top" data-i18n="phase2.top">High</option>
-      <option value="selected" data-i18n="phase2.selected">Selected entries</option>
-    </select>
-    <div id="product-share-preview" class="product-share-preview" aria-live="polite"></div>
-    <div class="intent-tabs" role="group" data-i18n-aria-label="product.share" aria-label="Share">
-      <button type="button" data-share-mode="link" aria-pressed="true" onclick="setProductShareMode('link')" data-i18n="product.link">Link</button>
-      <button type="button" data-share-mode="image" aria-pressed="false" onclick="setProductShareMode('image')" data-i18n="product.image">Image</button>
-      <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
+    <header class="share-head">
+      <h3 id="product-share-title" data-i18n="shareUi.title">Share your wants</h3>
+      <button type="button" class="share-close" onclick="closeModal('product-share-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button>
+    </header>
+    <div class="share-format-tabs" role="tablist" data-i18n-aria-label="shareUi.shareFormat" aria-label="Share format" onkeydown="productShareFormatKeydown(event)">
+      <button type="button" role="tab" id="product-share-tab-link" data-share-mode="link" aria-selected="true" aria-controls="product-share-body" onclick="setProductShareMode('link')" data-i18n="product.link">Link</button>
+      <button type="button" role="tab" id="product-share-tab-image" data-share-mode="image" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('image')" data-i18n="product.image">Image</button>
+      <button type="button" role="tab" id="product-share-tab-text" data-share-mode="text" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
     </div>
-    <section id="product-share-link">
-      <p data-i18n="wants.linkScope">Public link includes your full wants list.</p>
-      <button type="button" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
+    <div class="share-body" id="product-share-body" role="tabpanel" aria-labelledby="product-share-tab-link">
+      <p class="share-disclosure" id="product-share-disclosure" data-i18n="shareUi.disclosure">Sharing a link makes your full wants list and public profile available to anyone with the link.</p>
+      <div class="share-options" id="product-share-options"></div>
+      <div class="share-preview-heading"><h4 data-i18n="shareUi.preview">Preview</h4><span id="product-share-count"></span></div>
+      <div id="product-share-preview" class="product-share-preview"></div>
+    </div>
+    <footer class="share-footer">
       <p id="share-link-status" role="status" aria-live="polite"></p>
-      <input id="share-public-url" class="field-control" readonly data-i18n-aria-label="product.link" aria-label="Link">
-    </section>
-    <section id="product-share-image" hidden class="share-format-actions">
-      <button type="button" class="btn btn-primary" onclick="exportProductShareImage()" data-i18n="specialBoard.export">Export as image</button>
-    </section>
-    <section id="product-share-text" hidden class="share-format-actions">
-      <button type="button" class="btn btn-secondary" onclick="copyProductShareText()" data-i18n="phase2.copyText">Copy text</button>
-    </section>
-    <div class="mact"><button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button></div>
+      <label id="share-manual-link" hidden><span data-i18n="shareUi.manualLink">Link to copy</span><input id="share-public-url" class="field-control" readonly></label>
+      <div class="share-footer-actions">
+        <button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button>
+        <button type="button" id="product-share-primary" class="bpri" onclick="activateProductShare()" data-i18n="shareUi.copyLink">Copy link</button>
+      </div>
+    </footer>
   </div>
 </div>
 
