@@ -8076,17 +8076,56 @@ function _familySort(a,b){
   return String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
 }
 
+// A readable caption is part of the export, not an optional/truncated sprite
+// annotation. Both legacy layouts use the same public description as Share.
+function listImageContentRows(ctx,entries,cols,cellW,spriteH){
+  const wrap=text=>String(text||'').split(/\r\n?|\n|\u2028/u).flatMap(paragraph=>{
+    const lines=[];let line='';
+    for(const word of paragraph.split(/\s+/u).filter(Boolean)){
+      const candidate=line?line+' '+word:word;
+      if(ctx.measureText(candidate).width<=cellW-16){line=candidate;continue;}
+      if(line){lines.push(line);line='';}
+      for(const char of word){
+        if(line&&ctx.measureText(line+char).width>cellW-16){lines.push(line);line='';}
+        line+=char;
+      }
+    }
+    lines.push(line);return lines;
+  });
+  const items=entries.map(entry=>{
+    ctx.font='700 12px sans-serif';
+    const name=wrap(entry.dn||entry.name);
+    ctx.font='12px sans-serif';
+    const details=productShareDescription({...entry,name:'',dn:'',p:'',note:''});
+    const note=publicSharePublicationDomain.publicNoteForDisplay(entry.note);
+    const lines=[...name.map(text=>({text,bold:true})),...(details?wrap(details).map(text=>({text})):[]),...(note?wrap(note).map(text=>({text})):[])];
+    return{entry,lines,height:spriteH+12+lines.length*16};
+  });
+  const rows=[];
+  for(let i=0;i<items.length;i+=cols){const cells=items.slice(i,i+cols);rows.push({cells,height:Math.max(...cells.map(item=>item.height))});}
+  return rows;
+}
+function drawListImageCaption(ctx,item,x,y,{dark=false}={}){
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  item.lines.forEach((line,index)=>{
+    ctx.font=line.bold?'700 12px sans-serif':'12px sans-serif';
+    ctx.fillStyle=dark?(line.bold?'#ffffff':'#d5d5e8'):(line.bold?'#111827':'#334155');
+    ctx.fillText(line.text,x+8,y+14+index*16);
+  });
+}
 async function renderListImage(entries,type,username,style='classic'){
   if(style==='cards')return renderListImageCards(entries,type,username);
-  const W=560,frame=0,pad=6,gap=0,cols=6;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
+  const W=560,frame=0,pad=6,gap=0,cols=3;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,spriteH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
   const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
-  let H=frame+headerH+bottomPad;
-  groups.forEach(g=>{H+=groupTitleH+sectionPad*2+Math.ceil(g.entries.length/cols)*cellH+sectionGap;});
   const canvas=document.createElement('canvas');
+  const measure=canvas.getContext('2d');
+  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
+  const H=frame+headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+sectionPad*2+g.rows.reduce((sum,row)=>sum+row.height,0)+sectionGap,0);
+  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8144,22 +8183,21 @@ async function renderListImage(entries,type,username,style='classic'){
     ctx.font='600 12px Space Grotesk, sans-serif';
     ctx.fillText(`${group.entries.length}`,frame+14+ctx.measureText(group.label).width+8,y+18);
     y+=groupTitleH;
-    const rows=Math.ceil(group.entries.length/cols);
-    const areaH=sectionPad*2+rows*cellH;
+    const contentH=group.rows.reduce((sum,row)=>sum+row.height,0);
+    const areaH=sectionPad*2+contentH;
     // White background with subtle priority tint
     ctx.fillStyle='#ffffff';ctx.fillRect(frame,y,W-frame*2,areaH);
     ctx.fillStyle=priBgColors[group.p]||'rgba(0,0,0,0)';ctx.fillRect(frame,y,W-frame*2,areaH);
     y+=sectionPad;
-    group.entries.forEach((e,i)=>{
-      const col=i%cols,row=Math.floor(i/cols);
-      const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
-      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
+    let rowTop=y;
+    group.rows.forEach(row=>{
+     row.cells.forEach((item,col)=>{
+      const e=item.entry,x=frame+pad+col*(cellW+gap),cy=rowTop;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawScatterbugExportLabel(ctx,e,x,cy,cellW);
-      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
-      // Export is a clean H/M/L view — Lucky/shiny indicators stay omitted; size notes are labeled below the sprite.
+      drawListImageCaption(ctx,item,x,cy+spriteH);
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
@@ -8188,24 +8226,27 @@ async function renderListImage(entries,type,username,style='classic'){
         ctx.textBaseline='alphabetic';
         ctx.textAlign='left';
       }
+     });
+     rowTop+=row.height;
     });
-    y+=rows*cellH+sectionPad+sectionGap;
+    y+=contentH+sectionPad+sectionGap;
   });
   return canvasBlob(canvas);
 }
-// Dark-card style: 8-column grid where each Pokémon sits in its own bordered card
+// Dark-card style: content-sized grid where each Pokémon sits in its own bordered card
 // with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
 // + trim/scale logic as the classic style, so icons stay consistent across both.
 async function renderListImageCards(entries,type,username){
-  const W=560,frame=12,pad=0,gap=6,cols=8;
-  const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
+  const W=560,frame=12,pad=0,gap=6,cols=3;
+  const cellW=(W-frame*2-(cols-1)*gap)/cols,spriteH=64,sprSize=50;
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
-  let H=headerH+bottomPad;
-  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*cellH+(Math.ceil(g.entries.length/cols)-1)*gap+sectionGap;});
-
+  const headerH=80,groupTitleH=26,sectionGap=12,bottomPad=16;
   const canvas=document.createElement('canvas');
+  const measure=canvas.getContext('2d');
+  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
+  const H=headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+g.rows.reduce((sum,row)=>sum+row.height,0)+(g.rows.length-1)*gap+sectionGap,0);
+  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8220,8 +8261,7 @@ async function renderListImageCards(entries,type,username){
   // Title block (left-aligned, large)
   ctx.textAlign='left';
   ctx.fillStyle='#ffffff';
-  ctx.font='800 22px Space Grotesk, sans-serif';
-  ctx.fillText(`${username}'s ${listLabel(type)} List`,frame,30);
+  drawFittedText(ctx,`${username}'s ${listLabel(type)} List`,frame,30,W-frame*2,{max:22,min:14,color:'#fff'});
   ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.font='500 12px Space Grotesk, sans-serif';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
@@ -8230,7 +8270,7 @@ async function renderListImageCards(entries,type,username){
   ctx.textAlign='right';
   ctx.fillStyle='#a78bfa';
   ctx.font='700 13px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo Trades',W-frame,30);
+  ctx.fillText('PoGo Trades',W-frame,68);
   ctx.textAlign='left';
 
   // Load sprites with cascading fallback (same as classic)
@@ -8261,23 +8301,22 @@ async function renderListImageCards(entries,type,username){
     ctx.fillText(`${group.entries.length}`,frame+12+labelW+6,y+18);
     y+=groupTitleH;
 
-    const rows=Math.ceil(group.entries.length/cols);
-    group.entries.forEach((e,i)=>{
-      const col=i%cols,row=Math.floor(i/cols);
-      const x=frame+col*(cellW+gap),cy=y+row*(cellH+gap);
+    let rowTop=y;
+    group.rows.forEach(row=>{
+     row.cells.forEach((item,col)=>{
+      const e=item.entry,x=frame+col*(cellW+gap),cy=rowTop;
       // Card background
       ctx.fillStyle='#1e1e35';
-      roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
+      roundedRect(ctx,x,cy,cellW,row.height,8);ctx.fill();
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
       // Sprite (trimmed + scaled — same logic as classic)
-      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2+1;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2+1;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
-      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH,{dark:true});
+      drawListImageCaption(ctx,item,x,cy+spriteH,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -8305,8 +8344,10 @@ async function renderListImageCards(entries,type,username){
         ctx.fillText(isF?'♀':'♂',bx+5.5,by+6);
         ctx.textBaseline='alphabetic';ctx.textAlign='left';
       }
+     });
+     rowTop+=row.height+gap;
     });
-    y+=rows*cellH+(rows-1)*gap+sectionGap;
+    y=rowTop-gap+sectionGap;
   });
   return canvasBlob(canvas);
 }
