@@ -597,7 +597,7 @@ document.addEventListener('click',event=>{
 function toggleWantsCustomScope(key){if(wantsCustomScopes.has(key))wantsCustomScopes.delete(key);else wantsCustomScopes.add(key);refreshCombinedSearch();}
 function startWantsSelection(){wantsSelectionMode=true;refreshCombinedSearch();}
 function clearWantsSelection(){combinedSelection.clear();wantsSelectionMode=false;renderMyList();}
-function shareWantsSelection(){openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();}
+function shareWantsSelection(trigger){openProductShare('image','selected',trigger);}
 function selectCombinedGroup(index,selected){
   const model=productDeclarations(),groups=combinedGroups(model);
   const group=typeof index==='string'?groups.find(g=>combinedKey(g[0])===index):groups[index];
@@ -630,7 +630,7 @@ async function submitWantsAdd(){
 }
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
-  renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
+  renderCombinedList();openProductShare('image','selected');
 }
 function openCombinedEditor(index){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
@@ -2087,6 +2087,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  closeModal('product-share-modal');
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
@@ -5355,6 +5356,7 @@ async function changeInterfaceLocale(locale){
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
     if(document.getElementById('special-board-modal')?.classList.contains('open'))renderSpecialBoard();
+    if(productShareIsOpen())refreshProductShare();
     renderSafeTransferOutput();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -6600,15 +6602,46 @@ function switchTab(t,opts={}){
   if(opts.render!==false)queueRenderActiveTab(t);
 }
 let productShareScope='full',productShareSnapshot=[],productShareOwner='';
+let productShareUi={generation:0,mode:'link',text:'plain',image:'board',busy:false,receipt:null,blob:null,blobUrl:'',fingerprint:'',category:'wishlist',intent:'lf'};
+function productShareIsOpen(){return document.getElementById('product-share-modal')?.classList.contains('open');}
+function clearProductShareRecovery(){
+  productShareUi.receipt=null;
+  const input=document.getElementById('share-public-url');if(input)input.value='';
+  document.getElementById('share-manual-link')?.setAttribute('hidden','');
+}
+function invalidateProductShare(){
+  productShareUi.generation++;publicLinkAttempt++;productShareUi.busy=false;
+  clearProductShareRecovery();
+  if(productShareUi.blobUrl)URL.revokeObjectURL(productShareUi.blobUrl);
+  productShareUi.blobUrl='';productShareUi.blob=null;productShareUi.imageError=false;
+  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
+}
+function productSharePublicProfile(){
+  const profile=allData.users?.[cur]||{};
+  return{friendCode:String(profile.friendCode||'').slice(0,32),discord:String(profile.discord||'').slice(0,40),bio:String(profile.bio||'').slice(0,120),avatarPokemon:String(profile.avatarPokemon||'').slice(0,80)};
+}
+function productShareFingerprint(){
+  return JSON.stringify([productSharePublicProfile(),publicSharePublicationDomain.publicDeclarations(productDeclarations().entries)]);
+}
+function productShareContext(){
+  const selected=productShareScope==='selected'&&(productShareUi.mode==='image'&&productShareUi.image==='board'||productShareUi.mode==='text'&&productShareUi.text==='plain');
+  return{owner:cur,uid:String(auth?.currentUser?.uid||''),session:_sessionTransientGeneration,token:activePublicShareHydrationToken,runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,generation:productShareUi.generation,fingerprint:productShareFingerprint(),selection:selected?JSON.stringify([...combinedSelection].sort()):null};
+}
+function productShareContextCurrent(context){
+  try{return productShareIsOpen()&&context.generation===productShareUi.generation&&context.owner===cur&&context.uid===String(auth?.currentUser?.uid||'')&&context.session===_sessionTransientGeneration&&context.token===activePublicShareHydrationToken&&context.runtime===managedAccountSyncRuntime&&context.runtimeGeneration===accountSyncRuntimeGeneration&&context.fingerprint===productShareFingerprint()&&(context.selection===null||context.selection===JSON.stringify([...combinedSelection].sort()));}catch{return false;}
+}
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
   return scope==='top'?entries.filter(e=>e.intent==='lf'&&e.p==='H'):scope==='selected'?entries.filter(e=>combinedSelection.has(productSelectionKey(e))):entries;
 }
-function openProductShare(mode='link'){
-  productShareScope='full';productShareOwner=cur;
-  document.getElementById('product-share-scope').value='full';
-  openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
+function openProductShare(mode='link',scope='full',returnFocus){
+  invalidateProductShare();
+  productShareScope=['full','top','selected'].includes(scope)?scope:'full';productShareOwner=cur;
+  Object.assign(productShareUi,{mode:['link','image','text'].includes(mode)?mode:'link',text:'plain',image:'board',category:myListType,intent:myListIntent});
+  openModal('product-share-modal',{initialFocus:'[data-share-mode="'+productShareUi.mode+'"]',returnFocus});
+  if(productShareUi.appInert===undefined){productShareUi.appInert=document.getElementById('app').inert;document.getElementById('app').inert=true;}
+  refreshProductShare();
 }
 function productShareCategoryLabel(entry){
   const category=entry.category||entry.type||entry.ref?.type;
@@ -6622,39 +6655,123 @@ function productShareDescription(entry){
   return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
-  productShareScope=document.getElementById('product-share-scope').value;
-  productShareSnapshot=accountSyncClone(productScopeEntries());
-  document.getElementById('share-link-status').textContent='';
-  document.getElementById('share-public-url').value='';publicLinkAttempt++;
+  if(!productShareIsOpen())return;
+  const focus=document.activeElement?.id;
+  invalidateProductShare();
+  const state=productShareUi,mode=state.mode;
+  const scoped=mode==='image'&&state.image==='board'||mode==='text'&&state.text==='plain';
+  const category=mode==='image'&&state.image!=='board';
+  let entries=category?productDeclarations().entries.filter(e=>e.intent===state.intent&&e.category===state.category):productScopeEntries(scoped?productShareScope:'full');
+  try{
+    // Keep only the established public projection plus catalog display fields. Never copy private profile/provenance into a preview.
+    productShareSnapshot=publicSharePublicationDomain.publicDeclarations(entries).map((entry,index)=>({...entry,dn:entries[index].dn||entry.name,no:entries[index].no||null,catalogId:entries[index].catalogId||entries[index].ref?.catalogId||'',note:publicSharePublicationDomain.publicNoteForDisplay(entry.note)}));
+    state.fingerprint=productShareFingerprint();state.context=productShareContext();
+  }catch{productShareSnapshot=[];state.fingerprint='';state.context=null;}
+  const choices=(name,legend,values,selected,tiles=false)=>`<fieldset class="share-choice-group"><legend>${escHtml(i18nCore.t(legend))}</legend><div class="share-choices ${tiles?'choice-tiles':'choice-segments'}">${values.map(([value,label])=>`<label class="share-choice"><input type="radio" id="share-${name}-${value}" name="share-${name}" value="${value}" ${selected===value?'checked':''} onchange="setProductShareOption('${name}',this.value)"><span class="choice-mark" aria-hidden="true">${uiIconMarkup('check')}</span><span class="choice-label">${escHtml(label)}</span></label>`).join('')}</div></fieldset>`;
+  const t=key=>i18nCore.t(`shareUi.${key}`);
+  let options='';
+  if(scoped)options+=choices('scope','shareUi.include',[['full',t('all')],['top',t('high')],['selected',i18nCore.t('shareUi.selected',{count:productScopeEntries('selected').length})]],productShareScope);
+  else if(mode!=='link')options+=`<p class="share-fixed-scope">${escHtml(category?i18nCore.t('shareUi.category',{category:listLabel(state.category)}):t('fullScope'))}</p>`;
+  if(mode==='image')options+=choices('image','shareUi.layout',[['board',t('board')],['classic',t('classic')],['cards',t('cards')]],state.image,true);
+  if(mode==='text')options+=choices('text','shareUi.format',[['plain',t('plain')],['markdown','Markdown'],['csv','CSV']],state.text);
+  document.getElementById('product-share-options').innerHTML=options;
+  document.getElementById('product-share-disclosure').hidden=mode!=='link';
+  document.getElementById('product-share-count').textContent=i18nCore.t('shareUi.count',{count:productShareSnapshot.length});
+  document.querySelectorAll('[data-share-mode]').forEach(button=>{button.setAttribute('aria-selected',String(button.dataset.shareMode===mode));button.tabIndex=button.dataset.shareMode===mode?0:-1;});
+  document.getElementById('product-share-body').setAttribute('aria-labelledby','product-share-tab-'+mode);
   const preview=document.getElementById('product-share-preview');
-  preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
-  document.querySelector('[data-share-mode="link"]').hidden=productShareScope!=='full';
-  setProductShareMode(productShareScope==='full'?'link':'image');
+  if(mode==='link'){
+    const profile=productSharePublicProfile();
+    preview.innerHTML=`<div class="share-public-profile">${userAvatarHtml(cur,48)}<div><strong>${escHtml(cur)}</strong>${[profile.friendCode,profile.discord,profile.bio].filter(Boolean).map(value=>`<p>${escHtml(value)}</p>`).join('')}</div></div><ul class="share-public-list">${productShareSnapshot.map(entry=>`<li><span>${spriteImg(entry.no,34,'share-sprite',entry.name,entry.gender,entry.dn,{catalogId:entry.catalogId})}</span><div><strong>${escHtml(entry.dn)}</strong><p>${escHtml(productShareDescription({...entry,dn:'',name:''}))}</p></div></li>`).join('')||`<li>${escHtml(t('empty'))}</li>`}</ul>`;
+  }else if(mode==='text'){
+    state.output=state.text==='markdown'?productMarkdownText(productTextRows(productShareSnapshot),productSharePublicProfile(),cur):state.text==='csv'?productCSVText(productTextRows(productShareSnapshot)):[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(entry=>'- '+productShareDescription(entry))].join('\n');
+    preview.innerHTML=`<pre class="share-text-preview">${escHtml(productShareSnapshot.length?state.output:t('empty'))}</pre>`;
+  }else{
+    preview.innerHTML=`<p class="share-preview-message">${escHtml(productShareSnapshot.length?t('building'):t('empty'))}</p>`;
+    if(productShareSnapshot.length&&state.context)buildProductShareImage(state.context);
+  }
+  if(!state.context)linkPublicationStatus('shareUi.invalid');
+  updateProductShareAction();
+  if(focus?.startsWith('share-'))document.getElementById(focus)?.focus({preventScroll:true});
 }
 function setProductShareMode(mode){
-  if(mode==='link'&&productShareScope!=='full')mode='image';
-  for(const name of ['link','image','text']){
-    document.getElementById(`product-share-${name}`).hidden=name!==mode;
-    document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
-  }
+  if(!['link','image','text'].includes(mode)||productShareUi.mode===mode)return;
+  productShareUi.mode=mode;refreshProductShare();
 }
-function productShareSnapshotCurrent(){
-  return productShareOwner===cur&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
+function productShareFormatKeydown(event){
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();
+  const modes=['link','image','text'],index=modes.indexOf(productShareUi.mode);
+  const mode=event.key==='Home'?'link':event.key==='End'?'text':modes[(index+(event.key==='ArrowRight'?1:2))%3];
+  setProductShareMode(mode);document.getElementById('product-share-tab-'+mode).focus({preventScroll:true});
+}
+function setProductShareOption(name,value){
+  const allowed={scope:['full','top','selected'],text:['plain','markdown','csv'],image:['board','classic','cards']};
+  if(!allowed[name]?.includes(value))return;
+  if(name==='scope')productShareScope=value;else productShareUi[name]=value;
+  refreshProductShare();
+  // WebKit pointer activation need not focus a radio before change fires. The
+  // refreshed native input remains the keyboard continuation point either way.
+  document.getElementById('share-'+name+'-'+value)?.focus({preventScroll:true});
+}
+function updateProductShareAction(){
+  const state=productShareUi,button=document.getElementById('product-share-primary');if(!button)return;
+  const firstShare=ownerPublicShareReview.generation===activePublicShareHydrationToken?.generation&&ownerPublicShareReview.status==='missing_projection';
+  const key=state.busy?'working':state.mode==='link'?(firstShare&&!state.receipt?'shareCopy':'copyLink'):state.mode==='image'?(state.imageError?'retryImage':'downloadImage'):state.text==='csv'?'downloadCsv':'copyText';
+  button.textContent=i18nCore.t(`shareUi.${key}`);
+  button.disabled=state.busy||!state.context||state.mode!=='link'&&!productShareSnapshot.length||state.mode==='image'&&!state.blob&&!state.imageError;
+  button.setAttribute('aria-busy',String(state.busy));
+}
+async function buildProductShareImage(context){
+  productShareUi.imageError=false;
+  try{
+    const state=productShareUi,entries=accountSyncClone(productShareSnapshot);
+    const blob=state.image==='board'?await renderProductShareImage(entries,context.owner):await renderListImage(entries,state.category,context.owner,state.image,state.intent);
+    if(!productShareContextCurrent(context))return;
+    state.blob=blob;state.blobUrl=URL.createObjectURL(blob);
+    const image=document.createElement('img');image.src=state.blobUrl;image.alt=i18nCore.t('shareUi.preview');image.className='share-image-preview';
+    document.getElementById('product-share-preview').replaceChildren(image);
+  }catch{
+    if(!productShareContextCurrent(context))return;
+    productShareUi.imageError=true;linkPublicationStatus('shareUi.imageFailed');
+    document.getElementById('product-share-preview').textContent=i18nCore.t('shareUi.imageFailed');
+  }
+  if(productShareContextCurrent(context))updateProductShareAction();
+}
+async function activateProductShare(){
+  if(productShareUi.mode==='link')return copyShareLink();
+  if(productShareUi.mode==='image')return exportProductShareImage();
+  return copyProductShareText();
+}
+async function runProductShareExport(action){
+  if(productShareUi.busy||!productShareSnapshot.length)return;
+  const context=productShareUi.context;
+  if(!context||!productShareContextCurrent(context)){refreshProductShare();linkPublicationStatus('shareUi.changed');return;}
+  productShareUi.busy=true;updateProductShareAction();
+  try{await action(context);}
+  catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.exportFailed');}
+  finally{if(context.generation===productShareUi.generation&&productShareIsOpen()){
+    if(productShareContextCurrent(context)){productShareUi.busy=false;updateProductShareAction();}
+    else if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||''))closeModal('product-share-modal');
+    else{refreshProductShare();linkPublicationStatus('shareUi.changed');}
+  }}
 }
 async function copyProductShareText(){
-  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
-  const text=[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(e=>'- '+productShareDescription(e))].join('\n');
-  try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
+  return runProductShareExport(async context=>{
+    const text=productShareUi.output;
+    if(productShareUi.text==='csv'){downloadBlob(new Blob([text],{type:'text/csv;charset=utf-8'}),`pogo-${safeFilePart(context.owner)}-wants.csv`);linkPublicationStatus('shareUi.downloaded');return;}
+    try{await copyText(text,{isCurrent:()=>productShareContextCurrent(context)});if(productShareContextCurrent(context))linkPublicationStatus('shareUi.copied');}
+    catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.textCopyFailed');}
+  });
 }
 async function exportProductShareImage(){
-  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
-  if(!productShareSnapshot.length){toast(i18nCore.t('export.entriesRequired'));return;}
-  const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope;
-  try{
-    const blob=await renderProductShareImage(entries,owner);
-    if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent())return;
-    await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}.png`,i18nCore.t('product.share'));
-  }catch{toast(i18nCore.t('export.failed'));}
+  if(productShareUi.imageError){refreshProductShare();return;}
+  if(!productShareUi.blob)return;
+  return runProductShareExport(async context=>{
+    const state=productShareUi,filename=state.image==='board'?`pogo-${safeFilePart(context.owner)}-${productShareScope}.png`:listImageFilename(context.owner,state.category,state.image);
+    const result=await deliverImageBlob(state.blob,filename,i18nCore.t('product.share'));
+    if(productShareContextCurrent(context))linkPublicationStatus(result==='cancelled'?'export.cancelled':'shareUi.downloaded');
+  });
 }
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
@@ -7602,6 +7719,9 @@ function waitForMyListRender(){
   return Promise.resolve(true);
 }
 function renderMyList(filterVal,options={}){
+  if(productShareIsOpen()){
+    try{if(productShareUi.fingerprint!==productShareFingerprint()||productShareUi.receipt&&!managedPublicSharePublication.authorize(activePublicShareHydrationToken,'explicit_share').ok)refreshProductShare();}catch{refreshProductShare();}
+  }
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
@@ -7959,17 +8079,85 @@ function _familySort(a,b){
   return String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
 }
 
-async function renderListImage(entries,type,username,style='classic'){
-  if(style==='cards')return renderListImageCards(entries,type,username);
-  const W=560,frame=0,pad=6,gap=0,cols=6;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
+// A readable caption is part of the export, not an optional/truncated sprite
+// annotation. Both legacy layouts use the same public description as Share.
+function listImageContentRows(ctx,entries,cols,cellW,spriteH){
+  const wrap=text=>String(text||'').split(/\r\n?|\n|\u2028/u).flatMap(paragraph=>{
+    const lines=[];let line='';
+    for(const word of paragraph.split(/\s+/u).filter(Boolean)){
+      const candidate=line?line+' '+word:word;
+      if(ctx.measureText(candidate).width<=cellW-16){line=candidate;continue;}
+      if(line){lines.push(line);line='';}
+      for(const char of word){
+        if(line&&ctx.measureText(line+char).width>cellW-16){lines.push(line);line='';}
+        line+=char;
+      }
+    }
+    lines.push(line);return lines;
+  });
+  const items=entries.map(entry=>{
+    ctx.font='700 12px sans-serif';
+    const name=wrap(entry.dn||entry.name);
+    ctx.font='12px sans-serif';
+    const details=productShareDescription({...entry,name:'',dn:'',p:'',note:''});
+    const note=publicSharePublicationDomain.publicNoteForDisplay(entry.note);
+    const lines=[...name.map(text=>({text,bold:true})),...(details?wrap(details).map(text=>({text})):[]),...(note?wrap(note).map(text=>({text})):[])];
+    return{entry,lines,height:spriteH+12+lines.length*16};
+  });
+  const rows=[];
+  for(let i=0;i<items.length;i+=cols){const cells=items.slice(i,i+cols);rows.push({cells,height:Math.max(...cells.map(item=>item.height))});}
+  return rows;
+}
+function drawListImageCaption(ctx,item,x,y,{dark=false}={}){
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  item.lines.forEach((line,index)=>{
+    ctx.font=line.bold?'700 12px sans-serif':'12px sans-serif';
+    ctx.fillStyle=dark?(line.bold?'#ffffff':'#d5d5e8'):(line.bold?'#111827':'#334155');
+    ctx.fillText(line.text,x+8,y+14+index*16);
+  });
+}
+function listImageHeading(owner,intent='lf'){
+  return i18nCore.t('export.listHeading',{owner,list:i18nCore.t(intent==='ft'?'product.ft':'wants.title')});
+}
+function listImageHeader(ctx,owner,type,intent,style){
+  const dark=style==='cards',width=dark?536:528,titleSize=dark?22:20;
+  // Keep the exact identity and localized context, wrapping rather than shrinking
+  // or clipping the heading. Only the header grows; export cells stay unchanged.
+  const wrap=(text,font)=>{
+    ctx.font=font;const lines=[];let line='';
+    for(const char of String(text)){
+      if(line&&ctx.measureText(line+char).width>width){
+        const space=line.lastIndexOf(' ');
+        if(space>0){lines.push(line.slice(0,space+1));line=line.slice(space+1);}
+        else{lines.push(line);line='';}
+      }
+      line+=char;
+    }
+    lines.push(line);return lines;
+  };
+  const titleFont=`800 ${titleSize}px Space Grotesk, sans-serif`;
+  const contextFont='600 12px Space Grotesk, sans-serif';
+  const title=wrap(listImageHeading(owner,intent),titleFont);
+  const category=i18nCore.t(({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'})[type]||'list.others');
+  const context=wrap(i18nCore.t('export.listCategory',{category}),contextFont);
+  const titleY=dark?30:28,contextY=titleY+(title.length-1)*28+22;
+  const metaY=contextY+(context.length-1)*18+20;
+  return{title,context,titleFont,contextFont,titleY,contextY,metaY,height:metaY+(dark?32:16)};
+}
+async function renderListImage(entries,type,username,style='classic',intent='lf'){
+  if(style==='cards')return renderListImageCards(entries,type,username,intent);
+  const W=560,frame=0,pad=6,gap=0,cols=3;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,spriteH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
-  let H=frame+headerH+bottomPad;
-  groups.forEach(g=>{H+=groupTitleH+sectionPad*2+Math.ceil(g.entries.length/cols)*cellH+sectionGap;});
+  const groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
   const canvas=document.createElement('canvas');
+  const measure=canvas.getContext('2d');
+  const header=listImageHeader(measure,username,type,intent,'classic'),headerH=header.height;
+  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
+  const H=frame+headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+sectionPad*2+g.rows.reduce((sum,row)=>sum+row.height,0)+sectionGap,0);
+  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -7991,13 +8179,15 @@ async function renderListImage(entries,type,username,style='classic'){
   // Accent line below header
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
 
-  const title=`${username}'s ${listLabel(type)} List`;
-  drawCenteredFittedText(ctx,title,W/2,28,W-32,{max:20,min:14,color:'#ffffff'});
+  ctx.textAlign='center';ctx.font=header.titleFont;ctx.fillStyle='#ffffff';
+  header.title.forEach((line,index)=>ctx.fillText(line,W/2,header.titleY+index*28));
+  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
+  header.context.forEach((line,index)=>ctx.fillText(line,W/2,header.contextY+index*18));
   ctx.font='600 11px Space Grotesk, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.6)';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   ctx.textAlign='center';
-  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
+  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,header.metaY);
   ctx.textAlign='left';
 
   // Load with cascading fallback — try PokeAPI → Serebii for each entry
@@ -8027,22 +8217,21 @@ async function renderListImage(entries,type,username,style='classic'){
     ctx.font='600 12px Space Grotesk, sans-serif';
     ctx.fillText(`${group.entries.length}`,frame+14+ctx.measureText(group.label).width+8,y+18);
     y+=groupTitleH;
-    const rows=Math.ceil(group.entries.length/cols);
-    const areaH=sectionPad*2+rows*cellH;
+    const contentH=group.rows.reduce((sum,row)=>sum+row.height,0);
+    const areaH=sectionPad*2+contentH;
     // White background with subtle priority tint
     ctx.fillStyle='#ffffff';ctx.fillRect(frame,y,W-frame*2,areaH);
     ctx.fillStyle=priBgColors[group.p]||'rgba(0,0,0,0)';ctx.fillRect(frame,y,W-frame*2,areaH);
     y+=sectionPad;
-    group.entries.forEach((e,i)=>{
-      const col=i%cols,row=Math.floor(i/cols);
-      const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
-      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
+    let rowTop=y;
+    group.rows.forEach(row=>{
+     row.cells.forEach((item,col)=>{
+      const e=item.entry,x=frame+pad+col*(cellW+gap),cy=rowTop;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawScatterbugExportLabel(ctx,e,x,cy,cellW);
-      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
-      // Export is a clean H/M/L view — Lucky/shiny indicators stay omitted; size notes are labeled below the sprite.
+      drawListImageCaption(ctx,item,x,cy+spriteH);
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
@@ -8071,24 +8260,28 @@ async function renderListImage(entries,type,username,style='classic'){
         ctx.textBaseline='alphabetic';
         ctx.textAlign='left';
       }
+     });
+     rowTop+=row.height;
     });
-    y+=rows*cellH+sectionPad+sectionGap;
+    y+=contentH+sectionPad+sectionGap;
   });
   return canvasBlob(canvas);
 }
-// Dark-card style: 8-column grid where each Pokémon sits in its own bordered card
+// Dark-card style: content-sized grid where each Pokémon sits in its own bordered card
 // with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
 // + trim/scale logic as the classic style, so icons stay consistent across both.
-async function renderListImageCards(entries,type,username){
-  const W=560,frame=12,pad=0,gap=6,cols=8;
-  const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
+async function renderListImageCards(entries,type,username,intent='lf'){
+  const W=560,frame=12,pad=0,gap=6,cols=3;
+  const cellW=(W-frame*2-(cols-1)*gap)/cols,spriteH=64,sprSize=50;
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
-  let H=headerH+bottomPad;
-  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*cellH+(Math.ceil(g.entries.length/cols)-1)*gap+sectionGap;});
-
+  const groupTitleH=26,sectionGap=12,bottomPad=16;
   const canvas=document.createElement('canvas');
+  const measure=canvas.getContext('2d');
+  const header=listImageHeader(measure,username,type,intent,'cards'),headerH=header.height;
+  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
+  const H=headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+g.rows.reduce((sum,row)=>sum+row.height,0)+(g.rows.length-1)*gap+sectionGap,0);
+  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8103,17 +8296,19 @@ async function renderListImageCards(entries,type,username){
   // Title block (left-aligned, large)
   ctx.textAlign='left';
   ctx.fillStyle='#ffffff';
-  ctx.font='800 22px Space Grotesk, sans-serif';
-  ctx.fillText(`${username}'s ${listLabel(type)} List`,frame,30);
+  ctx.font=header.titleFont;
+  header.title.forEach((line,index)=>ctx.fillText(line,frame,header.titleY+index*28));
+  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
+  header.context.forEach((line,index)=>ctx.fillText(line,frame,header.contextY+index*18));
   ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.font='500 12px Space Grotesk, sans-serif';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,48);
+  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,header.metaY);
   // "PoGo Trades" branding top-right
   ctx.textAlign='right';
   ctx.fillStyle='#a78bfa';
   ctx.font='700 13px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo Trades',W-frame,30);
+  ctx.fillText('PoGo Trades',W-frame,header.metaY+20);
   ctx.textAlign='left';
 
   // Load sprites with cascading fallback (same as classic)
@@ -8144,23 +8339,22 @@ async function renderListImageCards(entries,type,username){
     ctx.fillText(`${group.entries.length}`,frame+12+labelW+6,y+18);
     y+=groupTitleH;
 
-    const rows=Math.ceil(group.entries.length/cols);
-    group.entries.forEach((e,i)=>{
-      const col=i%cols,row=Math.floor(i/cols);
-      const x=frame+col*(cellW+gap),cy=y+row*(cellH+gap);
+    let rowTop=y;
+    group.rows.forEach(row=>{
+     row.cells.forEach((item,col)=>{
+      const e=item.entry,x=frame+col*(cellW+gap),cy=rowTop;
       // Card background
       ctx.fillStyle='#1e1e35';
-      roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
+      roundedRect(ctx,x,cy,cellW,row.height,8);ctx.fill();
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
       // Sprite (trimmed + scaled — same logic as classic)
-      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2+1;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2+1;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
-      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH,{dark:true});
+      drawListImageCaption(ctx,item,x,cy+spriteH,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -8188,12 +8382,18 @@ async function renderListImageCards(entries,type,username){
         ctx.fillText(isF?'♀':'♂',bx+5.5,by+6);
         ctx.textBaseline='alphabetic';ctx.textAlign='left';
       }
+     });
+     rowTop+=row.height+gap;
     });
-    y+=rows*cellH+(rows-1)*gap+sectionGap;
+    y=rowTop-gap+sectionGap;
   });
   return canvasBlob(canvas);
 }
 
+function listImageFilename(owner,type,style){
+  const styleTag=style==='cards'?'-darkcards':'';
+  return `pogo-${safeFilePart(owner)}-${safeFilePart(listLabel(type))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
+}
 async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
@@ -8201,11 +8401,9 @@ async function exportMyListImage(style='classic'){
   if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   try{
     if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
-    const intentLabel=i18nCore.t(myListIntent==='ft'?'product.ft':'product.lf');
-    const blob=await renderListImage(entries,myListType,cur+' · '+intentLabel,style);
-    const styleTag=style==='cards'?'-darkcards':'';
-    const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
-    const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
+    const blob=await renderListImage(entries,myListType,cur,style,myListIntent);
+    const filename=listImageFilename(cur,myListType,style);
+    const delivery=await deliverImageBlob(blob,filename,listImageHeading(cur,myListIntent));
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
     if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));
@@ -10311,6 +10509,16 @@ function openModal(id,options={}){
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
+    if(id==='product-share-modal'){
+      // Keep the dialog's explicit keyboard sequence inside the modal even on
+      // WebKit/macOS configurations that skip controls during native tabbing.
+      // A native radio group contributes its checked (or first) input only;
+      // arrow-key selection remains the browser's native behavior.
+      const controls=[...m.querySelectorAll('button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null);
+      const stops=controls.filter(el=>el.type!=='radio'||el===(controls.find(other=>other.type==='radio'&&other.name===el.name&&other.checked)||controls.find(other=>other.type==='radio'&&other.name===el.name)));
+      if(stops.length){const index=stops.indexOf(document.activeElement),next=index<0?(ev.shiftKey?stops.length-1:0):(index+(ev.shiftKey?-1:1)+stops.length)%stops.length;ev.preventDefault();stops[next].focus();}
+      return;
+    }
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10323,6 +10531,10 @@ function closeModal(id){
   const options=arguments[1]||{};
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
+  if(id==='product-share-modal'){
+    invalidateProductShare();
+    if(productShareUi.appInert!==undefined){document.getElementById('app').inert=productShareUi.appInert;delete productShareUi.appInert;}
+  }
   document.getElementById(id)?.classList.remove('open');
   if(_modalActiveId!==id)return;
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
@@ -11750,8 +11962,8 @@ function closeExportMenu(){
   document.getElementById('export-menu-btn')?.setAttribute('aria-expanded','false');
   document.removeEventListener('click',_closeExportOnOutside);
 }
-function productTextRows(){
-  return productDeclarations().entries.map(e=>({
+function productTextRows(entries=productDeclarations().entries){
+  return entries.map(e=>({
     intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
@@ -11759,18 +11971,25 @@ function productTextRows(){
 async function exportMyListMarkdown(){
   const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const profile=allData.users?.[cur]||{};
-  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
+  const text=productMarkdownText(entries,profile,cur);
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
-function exportMyListCSV(){
-  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
+function productMarkdownText(entries,profile,username){
+  return ['## '+username,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
+}
+function productCSVText(entries){
+  if(!entries.length)return'';
   const cell=value=>{
     let text=String(value??'');
     if(/^[=+@-]/.test(text))text="'"+text;
     return '"'+text.replace(/"/g,'""')+'"';
   };
   const rows=[Object.keys(entries[0]),...entries.map(e=>Object.values(e))];
-  const csv=rows.map(row=>row.map(cell).join(',')).join('\n');
+  return rows.map(row=>row.map(cell).join(',')).join('\n');
+}
+function exportMyListCSV(){
+  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
+  const csv=productCSVText(entries);
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-wants.csv`;
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -11782,32 +12001,64 @@ function linkPublicationStatus(key,options={}){
   if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
 }
 async function copyShareLink(){
-  if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
-  const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
-  const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
-  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
-  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
-  linkPublicationStatus('product.publishing');
-  const input=document.getElementById('share-public-url');if(input)input.value=url;
+  if(!productShareIsOpen()||productShareUi.mode!=='link'||productShareUi.busy)return;
+  let context;
+  try{context=productShareContext();}catch{clearProductShareRecovery();linkPublicationStatus('shareUi.invalid');return;}
+  const attempt=++publicLinkAttempt;
+  const current=()=>attempt===publicLinkAttempt&&productShareContextCurrent(context);
+  const ready=()=>publicShareSessionMatches(context.owner)&&managedPublicSharePublication.authorize(context.token,'explicit_share').ok;
+  const receipt=productShareUi.receipt;
+  if(receipt&&(receipt.context.runtime!==context.runtime||receipt.context.runtimeGeneration!==context.runtimeGeneration)){
+    clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;
+  }
+  // A receipt exists only after verified publication followed by clipboard failure.
+  // It is never persisted, and normal actions still use the authorized sharing flow.
+  const retry=receipt&&productShareContextCurrent(receipt.context);
+  if(!retry)clearProductShareRecovery();
+  productShareUi.busy=true;updateProductShareAction();linkPublicationStatus('shareUi.working');
   try{
-    const initialDeclarations=declarationState();
-    const result=await publishPublicShareNow(username,'explicit_share');
+    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
+    const runtime=managedAccountSyncRuntime;
+    if(runtime){
+      const state=await runtime.snapshot();
+      if(!current())return;
+      if(runtime.ownerUid!==context.uid||state.pendingCount||state.blockedCount||state.conflictCount){clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;}
+    }
+    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
+    let url;
+    if(retry){
+      if(!fbOn||!db){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');return;}
+      url=receipt.url;
+    }else{
+      const result=await publishPublicShareNow(context.owner,'explicit_share');
+      if(!current())return;
+      if(!publicSharePublicationCurrent(result)){
+        clearProductShareRecovery();linkPublicationStatus(result?.status==='pending'?'shareUi.notSaved':'shareUi.shareFailed');return;
+      }
+      if(!ready()){linkPublicationStatus('shareUi.notReady');return;}
+      url=`${location.origin}${location.pathname}?view=${encodeURIComponent(context.owner)}&list=${productShareUi.category}`;
+    }
     if(!current())return;
-    if(declarationState()!==initialDeclarations){
-      linkPublicationStatus('share.publicationPending');return;
-    }
-    if(!publicSharePublicationCurrent(result)){
-      linkPublicationStatus(result?.status==='pending'?'share.publicationPending':'product.publishFailed');return;
-    }
-    linkPublicationStatus('product.published');
     try{
-      await copyText(url);
-      if(current())linkPublicationStatus('product.publishedCopied');
+      await copyText(url,{isCurrent:()=>current()&&ready()});
+      if(current()&&ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.copied',{state:'product.publishedCopied'});}
     }catch{
-      if(current()){linkPublicationStatus('product.publishedCopyFailed');input?.focus();input?.select();}
+      if(current()&&ready()){
+        productShareUi.receipt={url,context};
+        const input=document.getElementById('share-public-url');input.value=url;
+        document.getElementById('share-manual-link').hidden=false;
+        linkPublicationStatus('shareUi.linkCopyFailed',{state:'product.publishedCopyFailed'});input.focus();input.select();
+      }
     }
-  }catch(error){
-    if(current())linkPublicationStatus('product.publishFailed');
+    if(current()&&!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');}
+  }catch{
+    if(current()){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');}
+  }finally{
+    if(attempt===publicLinkAttempt&&productShareIsOpen()){
+      if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||'')||context.session!==_sessionTransientGeneration||context.token!==activePublicShareHydrationToken)closeModal('product-share-modal');
+      else if(!current()){refreshProductShare();linkPublicationStatus('shareUi.changed');}
+      else{productShareUi.busy=false;updateProductShareAction();}
+    }
   }
 }
 
@@ -14384,7 +14635,7 @@ function maybeStartTour(){
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
   setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,
-  openProductShare,setProductShareMode,toggleBoardSelection,
+  openProductShare,setProductShareMode,setProductShareOption,productShareFormatKeydown,activateProductShare,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,clearTrainerSearch,focusTrainerSearch,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,

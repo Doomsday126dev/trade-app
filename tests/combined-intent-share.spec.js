@@ -34,18 +34,17 @@ test('share scope controls output, selection persists across filtering and no da
   await page.evaluate(()=>openProductShare());
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   for(const scope of ['top','selected']){
-    await page.locator('#product-share-scope').selectOption(scope);
-    await expect(page.locator('[data-share-mode="link"]')).toBeHidden();
-    await page.evaluate(()=>setProductShareMode('link'));
-    await expect(page.locator('#product-share-link')).toBeHidden();
     await page.locator('[data-share-mode="text"]').click();
-    await page.locator('#product-share-text button').click();
+    await page.locator('#share-scope-'+scope).check();
+    await page.locator('#product-share-primary').click();
     const text=await page.evaluate(()=>__copied);
     expect(text).toContain('Pikachu');
     expect(text).not.toContain('Eevee');
     expect(text).not.toContain('Snom');
+    await page.locator('[data-share-mode="link"]').click();
+    await expect(page.locator('[name="share-scope"]')).toHaveCount(0);
+    await expect(page.locator('.share-public-list')).toContainText('Snom');
   }
-  await page.locator('#product-share-scope').selectOption('full');
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
@@ -64,11 +63,17 @@ test('signed-in recipient sections preserve special wants and copy only that tra
   await expect(page.locator('#share-list-out [data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
   await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
   await expect(page.locator('#share-list-out [data-want-section="L"] .contextual-details')).toBeHidden();
-  for(const [key,numbers] of [['H',[25,94]],['M',[133]],['L',[1]],['LUCKY',[25]],['XXL',[143]],['XXS',[595]],['LUCKY+SHINY',[280]],['NEEDS_PRIORITY',[150]]]){
+  // Independent fixture expectations: retain protection except exclusions that
+  // contradict a section's requested shiny/size requirements. Lucky is a trade outcome.
+  const ordinary='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&';
+  const withShiny='!4*&!traded&CP-2500&!shadow&!purified&!background&';
+  for(const [key,count,expected] of [
+    ['H',2,withShiny+'25,94'],['M',1,ordinary+'133'],['L',1,ordinary+'1'],['LUCKY',1,ordinary+'25'],
+    ['XXL',1,ordinary+'xxl&143'],['XXS',1,ordinary+'xxs&595'],['LUCKY+SHINY',1,withShiny+'280'],['NEEDS_PRIORITY',1,ordinary+'150']
+  ]){
     const section=page.locator(`#share-list-out [data-want-section="${key}"]`);
-    await expect(section.locator('.share-pcard')).toHaveCount(numbers.length);
+    await expect(section.locator('.share-pcard')).toHaveCount(count);
     await section.locator('[data-contextual-copy]').click();
-    const expected=await page.evaluate(numbers=>PogoDomain.searchStrings.contextualSearchPlan(numbers.map(no=>({no})),{locale:'en'}).parts[0],numbers);
     expect(await page.evaluate(()=>__copied)).toBe(expected);
   }
   const high=page.locator('#share-list-out [data-want-section="H"]');
@@ -77,7 +82,7 @@ test('signed-in recipient sections preserve special wants and copy only that tra
   await high.locator('[data-recipient-section-action="toggle"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(0);
   await high.locator('[data-contextual-copy]').click();
-  expect(await page.evaluate(()=>__copied)).toBe('!traded&25,94');
+  expect(await page.evaluate(()=>__copied)).toBe(withShiny+'25,94');
   await expect(page.locator('#share-list-out [data-want-section="LUCKY"]')).toContainText('Lucky request');
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
 });
@@ -88,16 +93,24 @@ test('large signed-in recipient sections page cards while preserving the full se
     allData.users.LargeRecipient={specialTradeBoard:{lf:[],ft:[]}};
     allData.wishlist.LargeRecipient=Object.fromEntries(Array.from({length:999},(_,index)=>[`Synthetic ${index}`,'H']));
     allData.wishlist.LargeRecipient.Mewtwo='H';
+    window.__recipientBefore=JSON.stringify(allData);
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__copied=value;}}});
     document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');
     renderShareView('LargeRecipient','wishlist');
   });
   const high=page.locator('#share-list-out [data-want-section="H"]');
+  const expected='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150';
   await expect(high.locator('.share-pcard')).toHaveCount(80);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',expected);
+  await high.locator('[data-contextual-copy]').click();
+  expect(await page.evaluate(()=>__copied)).toBe(expected);
   await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
   await high.locator('[data-recipient-section-action="more"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(160);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',expected);
+  await high.locator('[data-contextual-copy]').click();
+  expect(await page.evaluate(()=>__copied)).toBe(expected);
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
 });
 
 test('wants-only add is one canonical batch, failed save retains the draft',async({page})=>{
@@ -131,7 +144,8 @@ test('unchanged rows retain keyboard focus and an open selection search stays sc
     selectCombinedGroup(0,false);
     return{stable,before,after:document.querySelector('#combined-search [data-wants-copy]')?.dataset.wantsCopy,hidden:document.getElementById('combined-search').hidden};
   });
-  expect(result.stable).toBe(true);expect(result.before).toBe('!traded&25');expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
+  expect(result.stable).toBe(true);expect(result.before).toBe('!4*&!traded&CP-2500&!shadow&!purified&!background&25');expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
 test('a remotely changed declaration blocks a stale editor without submitting mutations',async({page})=>{
   await fixture(page);
