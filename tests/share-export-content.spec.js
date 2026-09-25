@@ -96,32 +96,57 @@ test('long localized public captions remain complete inside their own image cell
   }
 });
 
-test('catalog Gigantamax fixture keeps exact artwork when the approved asset is available',async({page},testInfo)=>{
+test.describe('controlled exact-asset isolation',()=>{
+// Page routing cannot control requests intercepted by a service worker. This
+// opt-out belongs only to the supplied-asset renderer test, never the app or SW suites.
+test.use({serviceWorkers:'block'});
+test('catalog Gigantamax fixture keeps exact artwork when the approved asset is available',async({page,context,browser,serviceWorkers},testInfo)=>{
   test.skip(baseline,'Transport-controlled local-fixture qualification, separate from the unchanged baseline proxy failure.');
   await installShareApplication(page);
   const direct='https://img.pokemondb.net/sprites/home/normal/charizard-gigantamax.png';
-  let transportStatus;
+  const routeEvidence=[];
+  // Installed after the fixture's general route, before opening/rendering Image.
   await page.route('https://images.weserv.nl/**',async route=>{
     if(!route.request().url().includes('charizard-gigantamax.png'))return route.continue();
-    const response=await route.fetch({url:direct});transportStatus=response.status();
+    const evidence={requestedUrl:route.request().url(),upstreamUrl:direct};routeEvidence.push(evidence);
+    const response=await route.fetch({url:direct});evidence.responseStatus=response.status();
     await route.fulfill({response,headers:{...response.headers(),'access-control-allow-origin':'*'}});
   });
+  const workerState=await page.evaluate(async()=>({controller:!!navigator.serviceWorker?.controller,registrations:(await navigator.serviceWorker?.getRegistrations()||[]).length}));
+  expect(serviceWorkers).toBe('block');expect(context.serviceWorkers()).toHaveLength(0);
+  expect(workerState).toEqual({controller:false,registrations:0});
   const result=await page.evaluate(async()=>{
     canvasImageCache.clear();openProductShare('image');
     const entry=productShareSnapshot.find(e=>e.category==='gmax');
     const urls=exportSpriteFallbackUrls(entry),image=await loadCanvasImageWithFallback(urls);
-    return{entry,context:spriteCatalogContext(entry.no,entry.name,entry.dn,entry.catalogId),urls,loaded:!!image,visible:!!image&&canvasImageHasVisiblePixels(image),width:image?.naturalWidth};
+    if(image)await image.decode();
+    return{entry,context:spriteCatalogContext(entry.no,entry.name,entry.dn,entry.catalogId),urls,loaded:!!image,decoded:!!image,visible:!!image&&canvasImageHasVisiblePixels(image),width:image?.naturalWidth,height:image?.naturalHeight};
   });
+  const evidence={transport:'Test-only fulfillment of the existing exact proxy request from the same exact upstream Gmax asset; NOT a product proxy fix.',browser:browser.version(),serviceWorkers,workerState,direct,routeEntered:routeEvidence.length>0,routeEvidence,...result};
+  // Attach before assertions so a real upstream rejection retains its actual status.
+  await testInfo.attach('gmax-controlled-asset',{body:Buffer.from(JSON.stringify(evidence,null,2)),contentType:'application/json'});
   expect(result.entry.name).toBe('Charizard (Gigantamax)');expect(result.entry.no).toBe(6);expect(result.entry.category).toBe('gmax');
   expect(result.context.canonicalName).toBe('Charizard (Gigantamax)');
   expect(result.urls.length).toBeGreaterThan(0);expect(result.urls.every(url=>url.includes('charizard-gigantamax.png'))).toBe(true);
-  expect(transportStatus).toBe(200);expect(result.loaded).toBe(true);expect(result.visible).toBe(true);
-  await expect(page.locator('.share-image-preview')).toBeVisible();
+  expect(routeEvidence.length).toBeGreaterThan(0);
+  for(const request of routeEvidence){
+    expect(result.urls).toContain(request.requestedUrl);expect(request.upstreamUrl).toBe(direct);expect(request.responseStatus).toBe(200);
+  }
+  expect(result.loaded).toBe(true);expect(result.decoded).toBe(true);expect(result.visible).toBe(true);
+  expect(result.width).toBeGreaterThan(0);expect(result.height).toBeGreaterThan(0);
+  const preview=page.locator('#product-share-modal #product-share-preview img.share-image-preview');
+  await expect(page.locator('#product-share-modal [data-share-mode="image"]')).toHaveAttribute('aria-selected','true');
+  await expect(preview).toBeVisible();
+  await expect.poll(()=>preview.evaluate(image=>image.complete&&image.naturalWidth>0&&image.naturalHeight>0)).toBe(true);
+  const previewDimensions=await preview.evaluate(async image=>{await image.decode();return{width:image.naturalWidth,height:image.naturalHeight};});
+  await expect(page.locator('#product-share-primary')).toBeEnabled();
+  await testInfo.attach('gmax-current-preview',{body:Buffer.from(JSON.stringify(previewDimensions,null,2)),contentType:'application/json'});
   const root=process.env.SHARE_HARDENING_OUTPUT;
   if(root){
     const dir=path.join(root,testInfo.project.name);fs.mkdirSync(dir,{recursive:true});
     const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await productShareUi.blob.arrayBuffer())));
     fs.writeFileSync(path.join(dir,'board-controlled-exact-gmax.png'),Buffer.from(bytes));
-    fs.writeFileSync(path.join(dir,'gmax-controlled-asset.json'),JSON.stringify({transport:'Test-only fulfillment of the existing exact proxy request from the same exact upstream Gmax asset; NOT a product proxy fix.',direct,transportStatus,...result},null,2));
+    fs.writeFileSync(path.join(dir,'gmax-controlled-asset.json'),JSON.stringify({...evidence,previewDimensions},null,2));
   }
+});
 });

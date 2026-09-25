@@ -109,10 +109,12 @@ async function expectNoOverflow(page){
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 }
 
-test('approved intent, More and Share paths preserve one canonical declaration view',async({page})=>{
+test('approved intent, More and Share paths preserve one canonical declaration view',async({page},testInfo)=>{
   await page.goto('./?product-intents');await installTrustedFixture(page);
   await page.evaluate(()=>renderInterimProductLabels());
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
+  const declarations=await page.evaluate(()=>JSON.stringify(productDeclarations().entries));
+  const previewEvidence=[],localizedEvidence=[];
   await page.locator('#wants-combine > summary').click();
   await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
   expect(await page.evaluate(()=>productDeclarations().entries.every(e=>e.intent==='lf'))).toBe(true);
@@ -140,7 +142,17 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await expect(page.locator('#tab-more').getByRole('button',{name:'Events',exact:true})).toBeVisible();
     await capture(page,`approved-more-${viewport.width}`);
     await page.locator('#nav-mylist').click();await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();
-    await page.locator('[data-share-mode="image"]').click();await expect(page.locator('#product-share-image')).toBeVisible();
+    const dialog=page.locator('#product-share-modal'),imageTab=dialog.locator('[data-share-mode="image"]');
+    await imageTab.click();await expect(imageTab).toHaveAttribute('aria-selected','true');
+    const preview=dialog.locator('#product-share-preview img.share-image-preview');
+    await expect(preview).toBeVisible();
+    await expect.poll(()=>preview.evaluate(image=>image.complete&&image.naturalWidth>0&&image.naturalHeight>0)).toBe(true);
+    const decoded=await preview.evaluate(async image=>{await image.decode();return{width:image.naturalWidth,height:image.naturalHeight};});
+    expect(decoded.width).toBeGreaterThan(0);expect(decoded.height).toBeGreaterThan(0);
+    const download=dialog.locator('#product-share-primary');
+    await expect(download).toHaveText('Download image');await expect(download).toBeVisible();await expect(download).toBeEnabled();
+    await expect(download).toHaveAttribute('aria-busy','false');
+    previewEvidence.push({viewport,decoded,downloadReady:true});
     await expectNoOverflow(page);await capture(page,`approved-share-${viewport.width}`);
     await page.keyboard.press('Escape');
   }
@@ -149,7 +161,11 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await page.evaluate(value=>changeInterfaceLocale(value),locale);
     await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
     await expectNoOverflow(page);
+    localizedEvidence.push(locale);
   }
+  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(original);
+  expect(await page.evaluate(()=>JSON.stringify(productDeclarations().entries))).toBe(declarations);
+  await testInfo.attach('current-share-preview-journey',{body:Buffer.from(JSON.stringify({previewEvidence,localizedEvidence,sourcePreserved:true},null,2)),contentType:'application/json'});
 });
 
 test('legacy editing retains originals and Board PNG consumes the deduplicated unified selection',async({page})=>{
