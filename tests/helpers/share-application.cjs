@@ -2,14 +2,18 @@ const {expect}=require('@playwright/test');
 
 // Actual application, fresh context, no remote services. Only public artwork may
 // load remotely; Firebase imports/requests and service workers are blocked.
-async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)',allowRemoteArtwork=process.env.SHARE_OFFLINE_ARTWORK!=='1'}={}){
+// Optional phase hook is for the owning controlled-art test; absent hooks leave
+// existing callers' routing/navigation/render behavior unchanged.
+async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)',allowRemoteArtwork=process.env.SHARE_OFFLINE_ARTWORK!=='1',onSetupPhase}={}){
   const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
   await page.route('**/*',route=>new URL(route.request().url()).origin===origin||allowRemoteArtwork&&route.request().resourceType()==='image'?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
+  if(onSetupPhase)await onSetupPhase('routes-ready');
   await page.goto('./?local-share-application-test');
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');
   await page.evaluate(()=>__pogoEnsureFullApp('local-share-application-test'));
   await page.waitForFunction(()=>typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);
+  if(onSetupPhase)await onSetupPhase('application-ready');
   await page.evaluate(gmaxName=>{
     managedListenerLifecycle?.deactivateSession?.('share_application_test');
     managedListenerLifecycle?.clearSelectedTrainer?.('share_application_test');
@@ -44,5 +48,6 @@ async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)',a
     window.__shareTest.before=JSON.stringify(allData);
   },gmaxName);
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(9);
+  if(onSetupPhase)await onSetupPhase('fixture-ready');
 }
 module.exports={installShareApplication};
