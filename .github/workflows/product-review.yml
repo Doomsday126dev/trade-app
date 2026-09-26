@@ -1,7 +1,7 @@
 name: Changed-area product contracts
 on:
   pull_request:
-    branches: [main]
+    branches: [main, auth/google-onboarding-readiness]
     types: [opened, synchronize, reopened, ready_for_review]
 permissions:
   contents: read

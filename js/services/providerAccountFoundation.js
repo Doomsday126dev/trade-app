@@ -146,7 +146,12 @@
         foundation.normalizedTrainerName===operation.normalizedTrainerName&&foundation.handleKey===operation.handleKey;
     }
     async function reconcile(operation){
-      const result=await read();
+      const expected=lifecycle(),digest=await uidDigest(expected.uid);current(expected);
+      if(operation.uidDigest!==digest)fail('provider-account/operation-owner-mismatch','canceled');
+      const result=await read();current(expected);
+      const stored=loadOperation();
+      if(!stored||stored.uidDigest!==operation.uidDigest||stored.requestId!==operation.requestId||
+        stored.idempotencyFingerprint!==operation.idempotencyFingerprint)fail('provider-account/request-superseded','canceled');
       if(exactFoundation(result,operation)){
         saveOperation({...operation,phase:'complete'});
         return Object.freeze({status:'account-ready',code:'RECONCILED',foundation:result.foundation});
