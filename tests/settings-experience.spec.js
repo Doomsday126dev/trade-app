@@ -59,11 +59,15 @@ test('provider-only account cannot reveal PIN; capability and collision presenta
 
 test('sync status follows real runtime pending, offline and recovered saved states; tools remain on their owning paths',async({page})=>{
   await install(page);await open(page,'data');await expect(page.locator('#trainer-sync-local-status')).toContainText('Saved');
-  await page.evaluate(()=>{__editorFixture.offline=true;return addManagedIntentEntries('lf',[{name:'Bulbasaur',p:'H'}]);});
+  await page.locator('.settings-modal-close').click();await page.locator('#nav-mylist').click();
+  await page.evaluate(()=>{__editorFixture.offline=true;});
+  await page.locator('#wants-add-name').fill('Bulbasaur');await page.locator('[data-wants-add-priority="H"]').click();await page.locator('.wants-add-form [type="submit"]').click();
+  await page.locator('#nav-more').click();await open(page,'data');
   await expect.poll(()=>page.evaluate(()=>accountSyncUiState.state)).not.toBe('saved');
   await expect(page.locator('#trainer-sync-local-status')).not.toContainText('No changes waiting');
   await capture(page,'sync-pending');
-  await page.evaluate(async()=>{__editorFixture.offline=false;await requestAccountSyncRecovery();});await settled(page);
+  await page.evaluate(()=>{__editorFixture.offline=false;__editorFixture.failListeners();});
+  await expect(page.locator('#trainer-sync-recovery')).toBeVisible();page.once('dialog',dialog=>dialog.accept());await page.locator('#trainer-sync-recovery').click();await settled(page);
   await expect(page.locator('#trainer-sync-local-status')).toContainText('Saved');
   await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(0);
   await expect(page.locator('#settings-health')).toBeVisible();await page.locator('#settings-health').click();await expect(page.locator('#login-health-modal')).toBeVisible();
@@ -90,9 +94,15 @@ test('Help installation reflects unavailable, browser-offered and standalone cap
 for(const width of [1440,390,320])for(const locale of ['en','ja','es','de'])test(`Settings actual controls ${locale} ${width}px reflow and keyboard`,async({page})=>{
   await page.setViewportSize({width,height:900});await install(page);await pinAccount(page);await open(page,'language');
   await page.locator('#settings-language').selectOption(locale);await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe(locale);
+  await expect(page.locator('.settings-modal-close')).toHaveAccessibleName(await page.evaluate(()=>i18nCore.t('account.closeSettings')));
+  await expect(page.locator('.settings-modal-close svg path')).toHaveAttribute('d','m6 6 12 12M18 6 6 18');
   for(const section of ['language','security','data']){
     if(width<768&&section!=='language')await page.locator('.settings-mobile-back').click();
     if(section!=='language'){await page.locator(`[data-settings-target="${section}"]`).click();await expect(page.locator(`[data-settings-section="${section}"] h2`)).toBeFocused();}
+    if(section==='security'){
+      const copy={en:'Sign in with your trainer name and PIN.',ja:'トレーナー名とPINでログインします。',es:'Inicia sesión con tu nombre de Entrenador y PIN.',de:'Melde dich mit deinem Trainernamen und deiner PIN an.'};
+      await expect(page.locator('[data-provider="username-pin"] [data-provider-detail]')).toHaveText(copy[locale]);
+    }
     const measurements=await page.locator(`[data-settings-section="${section}"]`).evaluate(panel=>({width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,controls:[...panel.querySelectorAll('button,select,input')].filter(el=>el.getClientRects().length&&!el.hidden).map(el=>({id:el.id,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,inside:el.getBoundingClientRect().left>=0&&el.getBoundingClientRect().right<=innerWidth+1,contentFits:el.scrollWidth<=el.clientWidth+1}))}));
     expect(measurements.overflow).toBe(false);expect(measurements.controls.every(c=>c.inside&&c.contentFits&&c.height>=44)).toBe(true);
     await capture(page,`${section}-${locale}-${width}`);
@@ -109,10 +119,25 @@ for(const width of [1440,390,320])for(const locale of ['en','ja','es','de'])test
 
 test('legacy Tools route returns keyboard focus to the mobile section list',async({page})=>{
   await page.setViewportSize({width:390,height:700});await install(page);await page.locator('#more-settings').click();
-  await page.evaluate(()=>selectSettingsSection('tools'));await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+  await page.goto(page.url().split('#')[0]+'#settings/tools');await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
   await page.locator('.settings-mobile-back').click();await expect(page).toHaveURL(/#settings$/);
   await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();await page.keyboard.press('Enter');
   await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+});
+
+test('mobile detail Back and Close settings have distinct labels, history and draft-safe outcomes',async({page})=>{
+  await page.setViewportSize({width:390,height:700});await install(page);await open(page,'profile');
+  await page.locator('#prof-bio').fill('Keep this unsaved synthetic draft');
+  const back=page.getByRole('button',{name:'Back to Settings',exact:true});
+  const close=page.getByRole('button',{name:'Close settings',exact:true});
+  await expect(back).toBeVisible();await expect(close).toBeVisible();
+  await back.click();await expect(page).toHaveURL(/#settings$/);await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();
+  await page.keyboard.press('Enter');await expect(page.locator('#prof-bio')).toHaveValue('Keep this unsaved synthetic draft');
+  await page.keyboard.press('Escape');await expect(page).toHaveURL(/#settings$/);
+  await page.keyboard.press('Escape');await expect(page.locator('#settings-modal')).toBeHidden();await expect(page.locator('#more-settings')).toBeFocused();
+  await open(page,'profile');await expect(page.locator('#prof-bio')).toHaveValue('Keep this unsaved synthetic draft');
+  await close.click();await expect(page.locator('#settings-modal')).toBeHidden();await expect(page.locator('#more-settings')).toBeFocused();
+  expect(await page.evaluate(()=>allData.users[cur].bio||'')).toBe('');
 });
 
 test('German enlarged text and short mobile viewport retain PIN actions and one scrolling detail',async({page})=>{
