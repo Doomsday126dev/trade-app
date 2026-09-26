@@ -157,6 +157,7 @@ html:has(#combined-editor-modal.open),body:has(#combined-editor-modal.open){over
 #combined-editor-modal label{margin:0;min-width:0}
 #combined-editor-modal label>span:first-child{display:block;margin-bottom:6px}
 #combined-editor-modal .field-control{font:inherit;min-height:44px;max-width:100%}
+#combined-editor-modal select.field-control{height:auto;min-height:calc(1.4em + 22px)}
 #combined-editor-modal .want-editor-identity{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border2);border-radius:8px;background:var(--bg2);overflow-wrap:anywhere}
 #combined-editor-modal .want-editor-identity[hidden],#combined-editor-modal [hidden]{display:none!important}
 #combined-editor-modal .want-editor-identity-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(144px,.5fr);gap:12px}
