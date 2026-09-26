@@ -123,6 +123,7 @@ test('a completed journal write cannot close or reset a subsequently opened edit
   await page.keyboard.press('Escape');await addDialog(page,'Eevee');await page.locator('#combined-shiny').check();
   await page.evaluate(()=>__releaseEditorCommit());await settled(page);
   expect((await declarations(page)).find(e=>e.name==='Rotom')).toMatchObject({p:'H'});await expect(page.locator('#combined-editor-title')).toHaveText('Add want');await expect(page.locator('#combined-name')).toHaveValue('Eevee');await expect(page.locator('#combined-shiny')).toBeChecked();await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).toBeEmpty();expect((await declarations(page)).some(e=>e.name==='Eevee')).toBe(false);
+  await page.keyboard.press('Escape');await expect(page.locator('.add-advanced-toggle')).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
 });
 
 test('keyboard stays contained, native radio and checkbox selection work, Escape restores the trigger',async({page})=>{
@@ -136,6 +137,37 @@ test('keyboard stays contained, native radio and checkbox selection work, Escape
   while(!(await page.evaluate(()=>document.activeElement.tagName==='SUMMARY')))await page.keyboard.press('Tab');await page.keyboard.press('Enter');await page.keyboard.press('Tab');await expect(page.locator('#combined-note')).toBeFocused();await page.keyboard.type('Keyboard draft');
   await page.keyboard.press('Escape');await expect(trigger).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
   await trigger.press('Enter');await expect(page.locator('#combined-note')).toHaveValue('');await expect(page.locator('#combined-shiny')).not.toBeChecked();
+});
+
+for(const activation of ['pointer','keyboard','simulated non-focusing pointer'])test(`${activation} editor invocation restores the actual row-name, edit or Flags & details trigger`,async({page},info)=>{
+  await install(page);const before=await entities(page),observations=[];
+  const entries=[['row-name','.wants-row[data-name="Rotom"] .myrow-name','cancel'],['edit','.wants-row[data-name="Rotom"] .myrow-edit','close'],['Flags & details','.add-advanced-toggle','escape']];
+  for(const [entry,selector,dismissal]of entries){
+    const trigger=page.locator(selector);
+    // Pointer paths never focus the trigger first. Preventing pointerdown's
+    // default is a deterministic simulation, not a native Safari/device claim.
+    await page.locator('#wants-add-name').focus();
+    if(activation==='simulated non-focusing pointer')await trigger.evaluate(el=>el.addEventListener('pointerdown',event=>{event.preventDefault();window.__editorPointerFocus=document.activeElement.id;},{once:true}));
+    if(activation==='keyboard'){await trigger.focus();await page.keyboard.press('Enter');}else await trigger.click();
+    await expect(page.locator(entry==='Flags & details'?'#combined-name':'#combined-close')).toBeFocused();
+    if(dismissal==='escape')await page.keyboard.press('Escape');else await page.locator(dismissal==='close'?'#combined-close':'#combined-cancel').click();
+    const observation={activation,entry,dismissal,...await page.evaluate(()=>({activeId:document.activeElement.id,activeClass:document.activeElement.className,simulatedPointerFocus:window.__editorPointerFocus||null,inert:document.getElementById('app').inert}))};
+    observations.push(observation);fs.writeFileSync(info.outputPath('focus.json'),JSON.stringify(observations,null,2));await info.attach(`focus-${entry}`,{body:JSON.stringify(observation,null,2),contentType:'application/json'});
+    await expect(trigger).toBeFocused();expect(observation.inert).toBe(false);
+    if(activation==='simulated non-focusing pointer')expect(observation.simulatedPointerFocus).toBe('wants-add-name');
+  }
+  expect(await entities(page)).toEqual(before);
+});
+
+test('editor focus survives row replacement/removal and programmatic or keyboard quick-add',async({page})=>{
+  await install(page);
+  await edit(page,'Rotom');await priority(page,'H');await save(page);await expect(page.locator('#wants-add-name')).toBeFocused();
+  await edit(page,'Rotom');await page.locator('#wants-remove').click();await expect(page.locator(modal)).toBeHidden();await settled(page);await expect(page.locator('#wants-add-name')).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
+  await page.locator('#wants-add-name').fill('Squirtle');await page.locator('[data-wants-add-priority="M"]').click();await page.locator('#wants-add-name').focus();await page.keyboard.press('Enter');
+  await expect(page.locator(modal)).toBeHidden();await settled(page);await expect(page.locator('#wants-add-name')).toBeFocused();
+  await page.locator('#wants-add-name').fill('Eevee');await page.evaluate(()=>submitWantsAdd());await settled(page);await expect(page.locator(modal)).toBeHidden();await expect(page.locator('#wants-add-name')).toBeFocused();
+  expect((await declarations(page)).filter(e=>['Squirtle','Eevee'].includes(e.name)).map(e=>[e.name,e.p]).sort()).toEqual([['Eevee','M'],['Squirtle','M']]);
+  await edit(page,'Pikachu');await page.evaluate(()=>openWantsAddEditor(document.querySelector('.add-advanced-toggle')));await page.keyboard.press('Escape');await expect(page.locator('.add-advanced-toggle')).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
 });
 
 test('localized Add and populated Edit fit desktop, narrow, short and enlarged-text layouts',async({page},info)=>{

@@ -441,7 +441,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <button type="button" class="pb" data-wants-add-priority="L" title="Low" data-i18n-title="priority.low" aria-pressed="false" onclick="setWantsAddPriority('L')">L</button>
         </div>
         <div class="add-actions"><button type="submit" class="bsave" data-i18n="myList.addAction">Add</button></div>
-        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor()"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span><span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor(this)"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span><span class="caret">▾</span></button>
       </div>
     </form>
     <div class="wants-list-toolbar">

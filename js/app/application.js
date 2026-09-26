@@ -491,8 +491,8 @@ function renderCombinedList(model=productDeclarations()){
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
       <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${uiIconMarkup('trash','ui-icon ui-icon-sm')}</button></div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
@@ -611,8 +611,8 @@ function prepareWantsCatalog(){
   const options=document.getElementById('combined-catalog');
   if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
 }
-function openWantsAddEditor(){
-  openCombinedEditor();
+function openWantsAddEditor(invoker){
+  openCombinedEditor(undefined,invoker);
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
   setCombinedEditorPriority(document.getElementById('wants-add-priority').value);
 }
@@ -625,7 +625,7 @@ async function submitWantsAdd(){
   const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
   button.disabled=true;
   try{
-    openWantsAddEditor();await saveCombinedEditor();
+    openWantsAddEditor(input);await saveCombinedEditor();
     if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
   }finally{button.disabled=false;}
 }
@@ -641,10 +641,12 @@ function combinedEditorSessionCurrent(draft){
   return draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&
     draft.sessionGeneration===_sessionTransientGeneration&&draft.runtimeGeneration===accountSyncRuntimeGeneration&&draft.runtime===managedAccountSyncRuntime;
 }
-function openCombinedEditor(index){
+function openCombinedEditor(index,invoker){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  const opener=document.activeElement,previousInert=combinedEditor?.appInert??document.getElementById('app').inert;
+  const modal=document.getElementById('combined-editor-modal'),focused=document.activeElement;
+  const opener=invoker?.isConnected?invoker:modal.contains(focused)?_modalPrevFocus:focused;
+  const previousInert=combinedEditor?.appInert??document.getElementById('app').inert;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries),runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,sessionGeneration:_sessionTransientGeneration,appInert:previousInert};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
   input.value=entry.name||'';input.readOnly=!!entries?.length;
@@ -668,6 +670,9 @@ function openCombinedEditor(index){
   document.getElementById('wants-remove').disabled=false;
   document.getElementById('wants-remove').hidden=!entries?.length;
   document.getElementById('app').inert=true;
+  // A replacement editor draft owns its explicit invoker even while this same
+  // modal is already open. Do not change other modals' return-focus behavior.
+  if(_modalActiveId==='combined-editor-modal')_modalPrevFocus=opener;
   openModal('combined-editor-modal',{initialFocus:editing?'#combined-close':'#combined-name',returnFocus:opener});
   document.querySelector('#combined-editor-modal .want-editor-body').scrollTop=0;
 }

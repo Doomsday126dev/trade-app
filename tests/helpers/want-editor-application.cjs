@@ -44,7 +44,7 @@ async function install(page,saved=null){
   expect((await page.evaluate(seedWantEditor,saved)).ok).toBe(true);await settled(page);
 }
 async function settled(page){await expect.poll(()=>page.evaluate(async()=>{await managedAccountSyncRuntime.controller.drain();return(await managedAccountSyncRuntime.snapshot()).state;})).toBe('saved');}
-async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form button[onclick="openWantsAddEditor()"] ').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
+async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
 async function edit(page,name){await page.locator('#combined-list .wants-row').filter({has:page.locator(`.wants-name[data-group]`,{hasText:new RegExp(`^${name}$`)})}).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');}
 async function priority(page,value){await page.locator(`#combined-priorities input[value="${value}"]`).check();}
 async function entities(page){return page.evaluate(()=>structuredClone(accountSyncCanonicalEntities));}
