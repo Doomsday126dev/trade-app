@@ -67,7 +67,7 @@ test('About searches is optional and Import still opens the existing preview flo
   await expect(page.locator('#wants-about-searches')).toBeVisible();await expect(page.locator('#wants-about-searches')).toContainText('species');
   await expect(page.locator('#wants-about-searches')).toContainText('in Pokémon GO');
   await page.keyboard.press('Escape');await toolsMenu(page).click();await expect(page.locator('#wants-about-searches')).toBeHidden();
-  await page.locator('#wants-list-tools button[onclick*="openImport"]').click();
+  await page.locator('#wants-import').click();
   await expect(page.locator('#import-modal')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData)===__simplificationBefore)).toBe(true);
 });

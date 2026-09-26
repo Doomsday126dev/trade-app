@@ -23,7 +23,7 @@ async function installPriorityReviewFixture(page,{theme='dark',large=false}={}){
     managedOwnedDataCoordinator?.reset?.();
     db=null;fbOn=false;managedFirebaseClient=null;managedAccountSyncRuntime=null;accountSyncUiState=null;
     localStorage.clear();sessionStorage.clear();
-    cur='Avery';auth={currentUser:{uid:'synthetic-priority-review-avery'}};
+    cur='Avery';auth={currentUser:{uid:'synthetic-priority-review-avery'}};currentAuthUid=auth.currentUser.uid;
     // The synthetic want must have the same canonical source metadata as an
     // admitted catalog entry. This base species is absent from the seed list.
     if(!DB.wishlist.some(entry=>entry.name==='Dragonite'))DB.wishlist.push({name:'Dragonite',displayName:'Dragonite',no:PogoI18n.pokemonNames.speciesIdByEnglishName('Dragonite'),users:{}});
