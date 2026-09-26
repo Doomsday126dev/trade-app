@@ -899,10 +899,13 @@ test.describe('visual smoke', () => {
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const surface of surfaces){
       for(const locale of locales){
+        // One startup per surface/locale, then exercise every responsive state.
+        // Rebooting all application scripts 72 times exhausted the shared test
+        // budget on CI; this keeps all 72 layout/action assertions unchanged.
+        await page.goto(`./?public-settings=${surface}-${locale}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+        await waitForSettingsStartupReady(page);
         for(const [width,height] of viewports){
           await page.setViewportSize({width,height});
-          await page.goto(`./?public-settings=${surface}-${locale}-${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
-          await waitForSettingsStartupReady(page);
           await page.evaluate(({surface,locale})=>{
             cur='';
             changeInterfaceLocale(locale);
@@ -2710,6 +2713,10 @@ test.describe('visual smoke', () => {
   });
 
   test('Events timeline keeps chronology compact and distinguishes loading empty filter and error states',async({page})=>{
+    // The compact Raid Hour fixture is same-day, independent of runner time.
+    // A wall-clock start near midnight changed it into a multi-day date range.
+    const fixtureNow=new Date('2026-09-21T12:00:00Z');
+    await page.clock.setFixedTime(fixtureNow);
     await page.goto(`./?events-timeline=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await isolateAuthenticatedMyListFixture(page,{username:'EventsFixtureTester',uid:'uid-events-fixture'});
     await page.evaluate(()=>switchTab('schedule'));
@@ -2729,7 +2736,7 @@ test.describe('visual smoke', () => {
     await page.setViewportSize({width:1440,height:900});
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
-    await expect(page.locator('.event-card-date').first()).toContainText(String(new Date().getFullYear()));
+    await expect(page.locator('.event-card-date').first()).toContainText(String(fixtureNow.getUTCFullYear()));
     await expect(page.locator('.event-current-badge')).not.toContainText('●');
     await expect(page.locator('.event-filter[data-type="spotlight"]')).toBeVisible();
     await expect(page.locator('.events-context-rail')).toBeVisible();
