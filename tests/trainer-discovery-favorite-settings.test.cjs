@@ -207,7 +207,7 @@ test('Settings keeps language behavior, provider rows inert, and local-only data
   const security=html.slice(html.indexOf('id="settings-account-security"'),html.indexOf('</section>',html.indexOf('id="settings-account-security"')));
   assert.doesNotMatch(security,/linkWithPopup|linkWithRedirect|data-action=/);
   assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);
-  assert.match(html,/id="settings-install" onclick="triggerInstall\(\)"/);
+  assert.match(html,/id="settings-install"[^>]*onclick="triggerInstall\(\)"/);
   assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
 });
 
