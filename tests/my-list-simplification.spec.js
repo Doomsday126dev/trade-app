@@ -13,7 +13,8 @@ test('48 variant-heavy High wants have direct copies and optional tools at deskt
     await page.setViewportSize({width,height:900});
     await expect(page.locator('#combined-filter')).toBeHidden();
     await expect(page.locator('#wants-select-toggle')).toBeVisible();
-    await expect(page.locator('.wants-list-toolbar > button[onclick="openProductShare()"]')).toBeVisible();
+    const shareLabel=await page.evaluate(()=>i18nCore.t('product.share'));
+    await expect(page.locator('.wants-list-toolbar').getByRole('button',{name:shareLabel,exact:true})).toBeVisible();
     await expect(section(page,'H').locator('[data-contextual-copy]')).toBeVisible();
     await expect(page.locator('[data-manual-check-count],.contextual-manual-review,#legacy-list-tools')).toHaveCount(0);
     await expect(page.locator('#combined-list .contextual-details:visible')).toHaveCount(0);
@@ -22,6 +23,22 @@ test('48 variant-heavy High wants have direct copies and optional tools at deskt
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.keyboard.press('Escape');await expect(toolsMenu(page)).toBeFocused();
   }
+});
+
+test('localized Share trigger opens and restores focus independently of optional-details diagnostics',async({page})=>{
+  await installSimplificationFixture(page);
+  for(const width of [1440,390,320])for(const locale of ['en','ja','es','de']){
+    await page.setViewportSize({width,height:900});
+    await page.evaluate(locale=>changeInterfaceLocale(locale),locale);
+    const shareLabel=await page.evaluate(()=>i18nCore.t('product.share'));
+    const trigger=page.locator('.wants-list-toolbar').getByRole('button',{name:shareLabel,exact:true});
+    await expect(trigger).toBeVisible();await trigger.click();
+    await expect(page.locator('#product-share-modal')).toBeVisible();
+    await expect(page.locator('#product-share-tab-link')).toHaveAttribute('aria-selected','true');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#product-share-modal')).toBeHidden();await expect(trigger).toBeFocused();
+  }
+  expect(await page.evaluate(()=>JSON.stringify(allData)===__simplificationBefore)).toBe(true);
 });
 
 test('Find opens focused, preserves full copies through no matches and collapse, and closes without hidden filtering',async({page})=>{

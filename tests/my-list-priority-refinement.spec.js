@@ -30,7 +30,7 @@ test('Share selected localizes at desktop and mobile; only existing owner legacy
     await page.evaluate(locale=>changeInterfaceLocale(locale),locale);
     const labels=await page.evaluate(()=>({selected:i18nCore.t('workflow.shareSelected'),share:i18nCore.t('product.share'),owner:i18nCore.t('workflow.needsPriority'),recipient:i18nCore.t('workflow.priorityNotSet')}));
     await expect(page.locator('#wants-selection-share')).toHaveText(labels.selected);
-    await expect(page.locator('.wants-list-toolbar > button[onclick="openProductShare()"]')).toHaveText(labels.share);
+    await expect(page.locator('.wants-list-toolbar').getByRole('button',{name:labels.share,exact:true})).toHaveText(labels.share);
     await expect(section(page,'NEEDS_PRIORITY').locator('.wants-section-title')).toHaveText(labels.owner);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.evaluate(()=>openCombinedEditor());
