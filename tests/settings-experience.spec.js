@@ -7,7 +7,12 @@ test.use({serviceWorkers:'block'});
 test.beforeEach(async({page})=>{
   await page.route('**/*',route=>['localhost','127.0.0.1'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
 });
-async function open(page,section){await page.locator('#more-settings').click();await page.locator(`[data-settings-target="${section}"]`).click();}
+async function open(page,section){
+  await page.locator('#more-settings').click();await page.locator(`[data-settings-target="${section}"]`).click();
+  // Section navigation focuses its heading on the next frame. Wait for that
+  // actual keyboard destination before native WebKit text input can race it.
+  await expect(page.locator(`[data-settings-section="${section}"] h2`)).toBeFocused();
+}
 async function pinAccount(page){await page.evaluate(()=>{auth.currentUser.providerData=[{providerId:'password'}];allData.users[cur].pin='synthetic-hash';allData.users[cur].pinHashed=true;});}
 const prefs=page=>page.evaluate(()=>({preference:pokemonGoSearchLanguagePreference(),resolved:pokemonGoSearchLocale(),override:lsGet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,false),locale:lsGet(POGO_SEARCH_LANGUAGE_KEY,null)}));
 async function capture(page,name){if(!process.env.SETTINGS_REVIEW_DIR)return;mkdirSync(process.env.SETTINGS_REVIEW_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.SETTINGS_REVIEW_DIR,name+'.png'),animations:'disabled'});}
@@ -128,6 +133,8 @@ test('legacy Tools route returns keyboard focus to the mobile section list',asyn
 test('mobile detail Back and Close settings have distinct labels, history and draft-safe outcomes',async({page})=>{
   await page.setViewportSize({width:390,height:700});await install(page);await open(page,'profile');
   await page.locator('#prof-bio').fill('Keep this unsaved synthetic draft');
+  await expect(page.locator('#prof-bio')).toHaveValue('Keep this unsaved synthetic draft');
+  await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
   const back=page.getByRole('button',{name:'Back to Settings',exact:true});
   const close=page.getByRole('button',{name:'Close settings',exact:true});
   await expect(back).toBeVisible();await expect(close).toBeVisible();

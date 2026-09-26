@@ -34,10 +34,12 @@ async function establishAccount(page){
 async function openProfile(page){
   await page.locator('#account-trigger').click();await page.locator('#account-settings-action').click();
   await page.locator('[data-settings-target="profile"]').click();
+  await expect(page.locator('#settings-profile-heading')).toBeFocused();
 }
 async function section(page,name){
   if(await page.locator('.settings-mobile-back').isVisible())await page.locator('.settings-mobile-back').click();
   await page.locator('[data-settings-target="'+name+'"]').click();
+  await expect(page.locator(`[data-settings-section="${name}"] h2`)).toBeFocused();
 }
 async function changeProfileLocale(page,locale){await section(page,'language');await page.locator('#settings-language').selectOption(locale);await section(page,'profile');}
 
@@ -151,6 +153,8 @@ test('dirty Profile status survives reopening and interface translation',async({
   await page.goto('./?settings-dirty-translation');await waitForApp(page);await establishAccount(page);
   await openProfile(page);
   await page.locator('#prof-bio').fill('A draft that is still unsaved');
+  await expect(page.locator('#prof-bio')).toHaveValue('A draft that is still unsaved');
+  await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
   await page.locator('.settings-modal-close').click();
   await openProfile(page);
   await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
