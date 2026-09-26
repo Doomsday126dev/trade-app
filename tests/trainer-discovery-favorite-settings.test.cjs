@@ -193,7 +193,7 @@ test('Settings exposes six semantic sections with desktop and mobile navigation'
   assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
-  for(const tool of ['import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
+  for(const tool of ['import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}',this\\)`));
   assert.doesNotMatch(html,/openSettingsTool\('inventory'\)/);
   assert.doesNotMatch(html,/openSettingsTool\('restore'\)/);
   assert.match(html,/settings-admin-only[^>]+hidden/);

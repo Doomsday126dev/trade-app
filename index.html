@@ -291,13 +291,31 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <button class="tab" data-tab="admin" data-short="Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-shield"></use></svg></span><span class="tab-label">Admin</span><span class="tab-short-label" aria-hidden="true">Admin</span><span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
-  <div class="page" id="tab-more">
+  <div class="page ui-container ui-container-wide more-hub" id="tab-more">
     <h2 data-i18n="product.more">More</h2>
-    <div class="more-destinations">
-      <button type="button" class="btn btn-secondary" onclick="switchTab('schedule')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-calendar"></use></svg><span data-i18n="nav.events">Events</span></button>
-      <button type="button" class="btn btn-secondary" onclick="openSettingsPanel('account',{section:'profile'})"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span data-i18n="settings.sectionProfile">Profile</span></button>
-      <button type="button" class="btn btn-secondary" onclick="openSettingsPanel('account')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-sliders"></use></svg><span data-i18n="settings.title">Settings</span></button>
-      <button type="button" class="btn btn-secondary" id="more-admin-link" hidden onclick="switchTab('admin')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="nav.admin">Admin</span></button>
+    <p class="more-intro" data-i18n="discovery.intro">Trading tools and your app.</p>
+    <div class="more-groups">
+      <section class="more-group" aria-labelledby="more-trading-title">
+        <h3 id="more-trading-title" data-i18n="discovery.trading">Trading</h3>
+        <div class="more-rows">
+          <button type="button" id="more-events" class="more-destination" onclick="openMoreDestination('events',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-calendar"></use></svg><span><strong data-i18n="nav.events">Events</strong><small data-i18n="discovery.eventsHelp">Upcoming dates and event details.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" id="more-transfer" class="more-destination" onclick="openTaskTool('transfer',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span><strong data-i18n="discovery.transfer">Transfer review</strong><small data-i18n="discovery.transferHelp">Review shared wants from trainers you select.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" id="more-share" class="more-destination" onclick="openTaskTool('share',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span><strong data-i18n="product.share">Share</strong><small data-i18n="discovery.shareHelp">A public link, image or text of your wants.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" id="more-import" class="more-destination" onclick="openTaskTool('import',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-download"></use></svg><span><strong data-i18n="myList.importAction">Import string</strong><small data-i18n="discovery.importHelp">Preview a Pokémon GO search string before adding wants.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+        </div>
+      </section>
+      <section class="more-group" aria-labelledby="more-app-title">
+        <h3 id="more-app-title" data-i18n="discovery.yourApp">Your app</h3>
+        <div class="more-rows">
+          <button type="button" id="more-profile" class="more-destination" onclick="openMoreDestination('profile',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span><strong data-i18n="settings.sectionProfile">Profile</strong><small data-i18n="discovery.profileHelp">Your trainer identity and shared details.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" id="more-settings" class="more-destination" onclick="openMoreDestination('settings',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-settings"></use></svg><span><strong data-i18n="settings.title">Settings</strong><small data-i18n="discovery.settingsHelp">Language, appearance, account and sync.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" id="more-help" class="more-destination" onclick="openTaskTool('help',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span><strong data-i18n="discovery.help">Help &amp; shortcuts</strong><small data-i18n="discovery.helpDescription">Get around the app with your keyboard.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+        </div>
+      </section>
+      <section class="more-group more-admin" id="more-admin-group" hidden aria-labelledby="more-admin-title">
+        <h3 id="more-admin-title" data-i18n="nav.admin">Admin</h3>
+        <div class="more-rows"><button type="button" class="more-destination" id="more-admin-link" hidden onclick="openMoreDestination('admin',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span><strong data-i18n="nav.admin">Admin</strong></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button></div>
+      </section>
     </div>
   </div>
   <!-- BROWSE -->
@@ -382,6 +400,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     </section>
     <section class="trainer-discovery-panel" id="trainer-panel-favorites" role="tabpanel" aria-labelledby="trainer-mode-favorites" data-discovery-panel="favorites" hidden>
     <section id="favorite-trainers" class="trainer-quick-section">
+      <div class="discovery-transfer-context"><button type="button" class="btn btn-secondary" id="trainer-transfer-review" onclick="openTaskTool('transfer',this)"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span data-i18n="discovery.transfer">Transfer review</span></button><p data-i18n="discovery.transferHelp">Review shared wants from trainers you select.</p></div>
       <div id="favorite-trainers-controls"></div>
     <div class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"><span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span><input class="app-search-input field-control" id="favorite-trainer-search" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" data-i18n-aria-label="organizer.searchFavorites" aria-label="Search favorites"><button type="button" class="trainer-search-clear" id="favorite-trainer-search-clear" onclick="clearFavoriteSearch()" data-i18n-aria-label="trainer.clearSearch" aria-label="Clear search" hidden>×</button></div>
       <div id="favorite-trainers-list"></div>
@@ -451,7 +470,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <summary class="btn btn-secondary"><span data-i18n="workflow.listTools">List tools</span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-down"></use></svg></summary>
         <div class="wants-list-menu">
           <button type="button" class="btn btn-ghost" onclick="setWantsFindOpen(true)" data-i18n="workflow.findInList">Find in list</button>
-          <button type="button" class="btn btn-ghost" onclick="closeWantsListTools(true);openImport()" data-i18n="myList.importAction">Import string</button>
+          <button type="button" id="wants-import" class="btn btn-ghost" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button>
           <button type="button" class="btn btn-ghost" id="wants-about-searches-toggle" aria-expanded="false" aria-controls="wants-about-searches" onclick="toggleWantsSearchHelp()" data-i18n="workflow.aboutSearches">About searches</button>
           <p id="wants-about-searches" hidden data-i18n="workflow.searchHelp">Searches find candidate Pokémon by species. Check exact forms and requirements in Pokémon GO.</p>
         </div>
@@ -466,6 +485,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection(this)" data-i18n="workflow.shareSelected" hidden>Share selected</button>
       <button type="button" class="btn btn-secondary" onclick="clearWantsSelection()" data-i18n="workflow.clear">Clear</button>
     </div>
+    <aside id="wants-empty-import" class="discovery-empty-import" hidden><p data-i18n="discovery.emptyImport">Have a Pokémon GO search string? Preview it to start your wants list.</p><button type="button" class="btn btn-secondary" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button></aside>
     <div id="combined-list" class="mylist-priority-sections"></div>
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div id="intent-review" class="intent-review" hidden></div>
@@ -524,7 +544,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <span class="stb-section-actions">
             <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(true)" data-i18n="common.selectAll">Select all</button>
             <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(false)" data-i18n="common.clear">Clear</button>
-            <button class="stb-link-btn" onclick="saveSafeTransferAsDefault()" data-i18n="safeTransfer.saveDefault" data-i18n-title="safeTransfer.saveDefaultHelp" title="Save the current selection as the default next time you open this">Save as default</button>
+            <button class="stb-link-btn" id="stb-save-default" onclick="saveSafeTransferAsDefault()" data-i18n="safeTransfer.saveDefault" data-i18n-title="safeTransfer.saveDefaultHelp" title="Save the current selection as the default next time you open this">Save as default</button>
           </span>
         </div>
         <div class="stb-trainer-grid" id="stb-trainer-grid"></div>
@@ -804,12 +824,12 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <button class="settings-tool" id="settings-logout" onclick="logout()"><span aria-hidden="true">↪</span><span data-i18n="settings.logoutAction">Sign out</span></button>
           </section>
           <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
-            <button class="settings-tool" onclick="openSettingsTool('import')"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
-            <button class="settings-tool" onclick="openSettingsTool('export')"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
-            <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Scoped transfer-review search</span></button>
-            <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
-            <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health')"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
-            <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
+            <button class="settings-tool" id="settings-import" onclick="openSettingsTool('import',this)"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
+            <button class="settings-tool" id="settings-export" onclick="openSettingsTool('export',this)"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
+            <button class="settings-tool" id="settings-transfer" onclick="openSettingsTool('safe-transfer',this)"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Scoped transfer-review search</span></button>
+            <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts',this)"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
+            <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health',this)"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
+            <button class="settings-tool settings-admin-only" id="settings-backup" onclick="openSettingsTool('backup',this)" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
           </div></section>
           <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">App &amp; Data</h2></div><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><p class="trainer-sync-diagnostic" id="trainer-sync-diagnostic" hidden></p><div class="trainer-sync-preserved-review" id="trainer-sync-preserved-review" hidden><strong data-i18n="accountSync.preservedReviewTitle">Choose the account copy for this device</strong><p id="trainer-sync-preserved-review-count"></p><button class="settings-tool trainer-sync-review-action" id="trainer-sync-preserved-review-action" type="button" onclick="useSavedAccountCopyForPreservedReview()" aria-describedby="trainer-sync-preserved-review-count"><span aria-hidden="true">✓</span><span data-i18n="accountSync.useSavedAccountCopy">Use saved account copy</span></button></div><button class="settings-tool trainer-sync-recovery" id="trainer-sync-recovery" type="button" onclick="requestAccountSyncRecovery()" hidden><span aria-hidden="true">↻</span><span id="trainer-sync-recovery-label"></span></button><button class="settings-tool" id="settings-install" onclick="triggerInstall()"><span aria-hidden="true">⬇</span><span data-i18n="app.install">Install</span></button><p class="settings-release" id="settings-release-id"></p></section>
         </div>
@@ -833,9 +853,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="shortcut-row"><kbd>/</kbd><span data-i18n="shortcuts.focusSearch">Focus search on the current section</span></div>
       <div class="shortcut-row"><kbd>?</kbd><span data-i18n="shortcuts.showHelp">Show this shortcut list</span></div>
       <div class="shortcut-row"><kbd>Esc</kbd><span data-i18n="shortcuts.closeDialog">Close the open dialog</span></div>
-      <div class="shortcut-section-hdr" data-i18n="shortcuts.rowEditing">Editing a row</div>
-      <div class="shortcut-row"><kbd data-i18n="shortcuts.click">Click</kbd><span data-i18n="shortcuts.editQuantity">Type a new quantity directly</span></div>
-      <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="shortcuts.commit">Save the edit; Esc cancels it</span></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-top:8px" data-i18n="shortcuts.typingDisabled">Shortcuts are disabled while you type in a field.</div>
     <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')" data-i18n="common.gotIt">Got it</button></div>

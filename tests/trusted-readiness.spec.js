@@ -139,7 +139,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await capture(page,`approved-entries-${viewport.width}`);
     if(viewport.width<700)expect(await page.locator('#nav-more .tab-label').evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(10);
     await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
-    await expect(page.locator('#tab-more').getByRole('button',{name:'Events',exact:true})).toBeVisible();
+    await expect(page.locator('#more-events')).toBeVisible();await expect(page.locator('#more-events strong')).toHaveText('Events');
     await capture(page,`approved-more-${viewport.width}`);
     await page.locator('#nav-mylist').click();await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();
     const dialog=page.locator('#product-share-modal'),imageTab=dialog.locator('[data-share-mode="image"]');
