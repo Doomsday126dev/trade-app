@@ -92,13 +92,27 @@ for(const width of [1440,390,320])for(const locale of ['en','ja','es','de'])test
   await page.locator('#settings-language').selectOption(locale);await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe(locale);
   for(const section of ['language','security','data']){
     if(width<768&&section!=='language')await page.locator('.settings-mobile-back').click();
-    if(section!=='language')await page.locator(`[data-settings-target="${section}"]`).click();
+    if(section!=='language'){await page.locator(`[data-settings-target="${section}"]`).click();await expect(page.locator(`[data-settings-section="${section}"] h2`)).toBeFocused();}
     const measurements=await page.locator(`[data-settings-section="${section}"]`).evaluate(panel=>({width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,controls:[...panel.querySelectorAll('button,select,input')].filter(el=>el.getClientRects().length&&!el.hidden).map(el=>({id:el.id,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,inside:el.getBoundingClientRect().left>=0&&el.getBoundingClientRect().right<=innerWidth+1,contentFits:el.scrollWidth<=el.clientWidth+1}))}));
     expect(measurements.overflow).toBe(false);expect(measurements.controls.every(c=>c.inside&&c.contentFits&&c.height>=44)).toBe(true);
     await capture(page,`${section}-${locale}-${width}`);
     if(process.env.SETTINGS_REVIEW_DIR)writeFileSync(path.join(process.env.SETTINGS_REVIEW_DIR,`${section}-${locale}-${width}.json`),JSON.stringify(measurements,null,2));
   }
   await page.locator('.settings-modal-close').focus();await page.keyboard.press('Shift+Tab');expect(await page.evaluate(()=>!!document.activeElement.closest('#settings-modal'))).toBe(true);
+  await page.locator('.settings-modal-close').click();await expect(page.locator('#more-settings')).toBeFocused();
+  await page.locator('#more-help').click();await page.locator('#help-install summary').click();await page.locator('#help-about summary').click();
+  await page.locator('#help-about summary').focus();await page.keyboard.press('Tab');await expect(page.locator('#help-about button')).toBeFocused();
+  await page.keyboard.press('Tab');await expect(page.locator('#help-about a')).toBeFocused();await page.keyboard.press('Tab');
+  await expect(page.locator('#shortcuts-modal .mact button')).toBeFocused();await expect(page.locator('#shortcuts-modal .mact button')).toBeInViewport();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('legacy Tools route returns keyboard focus to the mobile section list',async({page})=>{
+  await page.setViewportSize({width:390,height:700});await install(page);await page.locator('#more-settings').click();
+  await page.evaluate(()=>selectSettingsSection('tools'));await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+  await page.locator('.settings-mobile-back').click();await expect(page).toHaveURL(/#settings$/);
+  await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();await page.keyboard.press('Enter');
+  await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
 });
 
 test('German enlarged text and short mobile viewport retain PIN actions and one scrolling detail',async({page})=>{

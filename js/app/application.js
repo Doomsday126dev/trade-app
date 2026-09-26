@@ -2071,7 +2071,7 @@ function syncPokemonGoSearchLanguageControl(){
   const select=document.getElementById('settings-search-language');
   if(select){select.disabled=false;select.value=preference;}
   const help=document.getElementById('settings-search-language-help');
-  if(help)help.textContent=i18nCore.t(override?'settings.searchFixed':'settings.searchFollows',{language:i18nCore.t('locale.'+pokemonGoSearchLocale())});
+  if(help)help.textContent=i18nCore.t(override?'settings.searchFixed':'settings.searchFollows',{language:i18nCore.t(`locale.${pokemonGoSearchLocale()}`)});
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
@@ -10468,7 +10468,7 @@ function showSettingsSectionList(options={}){
   document.getElementById('settings-layout')?.classList.add('mobile-list');
   if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
   if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
-  requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
+  requestAnimationFrame(()=>(document.querySelector(`[data-settings-target="${_settingsSection}"]`)||document.querySelector('[data-settings-target="profile"]'))?.focus({preventScroll:true}));
 }
 function settingsDetailIsOpenOnMobile(){return!matchMedia(SETTINGS_DESKTOP_QUERY).matches&&!document.getElementById('settings-layout')?.classList.contains('mobile-list')&&_settingsContext==='account';}
 function openSettingsPanel(context='public',options={}){
