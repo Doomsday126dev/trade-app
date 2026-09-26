@@ -731,7 +731,9 @@ async function saveCombinedEditor(remove=false){
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
-    if(!combinedEditorSessionCurrent(draft)||!accountSyncAuthorityCurrent(authority))return;
+    // A durable queued mutation is already accepted, even if transport readiness
+    // changes immediately afterward. Only a superseded draft/session may not finish.
+    if(!combinedEditorSessionCurrent(draft))return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
     renderMyList();
     if(!_modalPrevFocus?.isConnected)_modalPrevFocus=document.getElementById('wants-add-name');

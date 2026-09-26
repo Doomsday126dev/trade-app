@@ -103,6 +103,17 @@ test('account change rejects an in-flight Add; offline save retains the existing
   await page.evaluate(()=>{__editorFixture.offline=false;});await settled(page);expect((await declarations(page)).filter(e=>e.name==='Squirtle')).toHaveLength(1);
 });
 
+test('a completed journal write cannot close or reset a subsequently opened editor',async({page})=>{
+  await install(page);await edit(page,'Rotom');await priority(page,'H');
+  // Hold only delivery of the real IndexedDB commit-complete callback. The
+  // transaction actually commits; cancellation must not pretend to undo it.
+  await page.evaluate(()=>{const descriptor=Object.getOwnPropertyDescriptor(IDBTransaction.prototype,'oncomplete');Object.defineProperty(IDBTransaction.prototype,'oncomplete',{...descriptor,set(handler){const transaction=this;descriptor.set.call(this,event=>{if(transaction.mode==='readwrite'&&transaction.objectStoreNames.contains('operations')&&transaction.objectStoreNames.contains('entities')){Object.defineProperty(IDBTransaction.prototype,'oncomplete',descriptor);window.__releaseEditorCommit=()=>handler.call(transaction,event);}else handler.call(transaction,event);});}});});
+  await page.locator('#combined-save').click();await expect.poll(()=>page.evaluate(()=>typeof __releaseEditorCommit)).toBe('function');
+  await page.keyboard.press('Escape');await addDialog(page,'Eevee');await page.locator('#combined-shiny').check();
+  await page.evaluate(()=>__releaseEditorCommit());await settled(page);
+  expect((await declarations(page)).find(e=>e.name==='Rotom')).toMatchObject({p:'H'});await expect(page.locator('#combined-editor-title')).toHaveText('Add want');await expect(page.locator('#combined-name')).toHaveValue('Eevee');await expect(page.locator('#combined-shiny')).toBeChecked();await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).toBeEmpty();expect((await declarations(page)).some(e=>e.name==='Eevee')).toBe(false);
+});
+
 test('keyboard stays contained, native radio and checkbox selection work, Escape restores the trigger',async({page})=>{
   await install(page);await page.setViewportSize({width:390,height:520});
   const trigger=page.locator('.wants-row[data-name="Rotom"] .myrow-edit');await trigger.focus();await page.keyboard.press('Enter');await expect(page.locator('#combined-close')).toBeFocused();
