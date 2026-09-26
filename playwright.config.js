@@ -23,7 +23,9 @@ module.exports = defineConfig({
     timeout: 10_000
   } : undefined,
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // Supported full Chromium/new-headless: candidate mitigation for the observed
+    // headless-shell context crashes, not an established root-cause fix.
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: 'chromium', viewport: { width: 1440, height: 900 } } },
     {
       name: 'mobile',
       use: {

@@ -61,6 +61,8 @@ test('evidence reporter is opt-in and does not change test retry, trace or viewp
   assert.equal(config.use.trace,'retain-on-failure');assert.equal(config.use.screenshot,'only-on-failure');
   assert.deepEqual(config.projects.map(project=>project.name),['desktop','mobile']);
   assert.deepEqual(config.projects[0].use.viewport,{width:1440,height:900});
+  assert.equal(config.projects[0].use.channel,'chromium');
+  assert.equal(config.projects[1].use.channel,undefined,'mobile contract is unchanged');
   const child=spawnSync(process.execPath,['-e',"console.log(JSON.stringify(require('./playwright.config.js').reporter))"],{cwd:root,env:{...process.env,PRODUCT_CI_EVIDENCE:'1'},encoding:'utf8'});
   assert.equal(child.status,0,child.stderr);
   assert.deepEqual(JSON.parse(child.stdout),[['list'],['json',{outputFile:'product-ci-artifacts/browser-results.json'}]]);
