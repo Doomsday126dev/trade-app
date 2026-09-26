@@ -8,7 +8,9 @@ module.exports = defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  reporter: [['list']],
+  reporter: process.env.PRODUCT_CI_EVIDENCE === '1'
+    ? [['list'], ['json', { outputFile: 'product-ci-artifacts/browser-results.json' }]]
+    : [['list']],
   use: {
     baseURL,
     trace: 'retain-on-failure',
