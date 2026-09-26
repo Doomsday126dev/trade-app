@@ -204,6 +204,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <div class="provider-login-option" id="google-login-option" hidden>
       <div class="provider-login-divider"><span data-i18n="login.or">or</span></div>
       <button type="button" class="provider-login-button btn" id="google-login-button" onclick="continueWithGoogle()" data-i18n="login.continueGoogle" disabled data-bootstrap-disabled="true">Continue with Google</button>
+      <p data-i18n="login.existingGoogleHelp">Already have a trainer account? Sign in with your username and PIN first, then use Settings → Connected Accounts → Connect Google.</p>
     </div>
     <div class="err" id="login-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
     <section class="provider-onboarding" id="google-onboarding" aria-labelledby="google-onboarding-title" hidden>
@@ -996,10 +997,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     de:Object.freeze({'app.preparing':'Deine Tauschliste wird vorbereitet','app.preparingDetail':'Dieses Gerät und deine Anmeldung werden sicher geprüft. Deine Kontodaten bleiben bis zum Abschluss der Prüfung verborgen.','account.language':'Sprache','account.languageSettings':'Spracheinstellungen','login.subtitle':'NYC-Community-Tauschliste','login.disclaimer':'Inoffizielles Community-Werkzeug. Keine Verbindung zu Niantic, Nintendo oder The Pokémon Company.','login.username':'Trainername','login.usernamePlaceholder':'Trainername eingeben oder auswählen…','login.usernameSuggestions':'Vorschläge für Trainernamen','login.pin':'PIN','login.pinPlaceholder':'6-stellige PIN','login.signIn':'Anmelden','login.newUserHelp':'Neu hier? Beantrage zuerst Zugang. Nach der Freigabe erhältst du von der Administration eine sechsstellige Erst-PIN.','login.existingUserHelp':'Bereits freigeschaltet? Bitte bei Bedarf um eine identitätserhaltende PIN-Zurücksetzung.','login.trouble':'Probleme bei der Anmeldung?','login.requestAccess':'Zugang beantragen','legal.footer':'Inoffizielles Fan-Projekt · Rechtliches & Danksagungen','legal.title':'Rechtliches & Danksagungen','legal.sourcesTitle':'Daten- und Ressourcennachweise','legal.sourceUse':'PokéAPI liefert Arten-, Form- und Sprite-Repository-Daten. Pokémon Database liefert ausgewählte visuelle Fallbacks für Pokémon HOME und Pokémon GO.','legal.referenceUse':'PokeMiners, Serebii, Pokémon GO Hub und offizielle Pokémon-GO-Ankündigungen dienen nur der Katalogrecherche; deren Grafiken werden nicht von PoGo Trades ausgeliefert.','legal.backgroundUse':'Hintergründe werden als Kennzeichnung angezeigt, sofern keine exakt passende, freigegebene Grafik vorliegt.','legal.rights':'Pokémon, Pokémon GO, Charakternamen, Bilder und zugehörige Marken sind Eigentum ihrer jeweiligen Rechteinhaber.','legal.unofficial':'PoGo Trades ist ein inoffizielles Fan-Projekt und ist weder mit den Rechteinhabern verbunden noch von ihnen unterstützt oder gesponsert.','common.close':'Schließen','common.done':'Fertig'})
   });
   const GOOGLE_SHELL_LOCALES=Object.freeze({
-    en:Object.freeze({'login.or':'or','login.continueGoogle':'Continue with Google'}),
-    ja:Object.freeze({'login.or':'または','login.continueGoogle':'Google で続行'}),
-    es:Object.freeze({'login.or':'o','login.continueGoogle':'Continuar con Google'}),
-    de:Object.freeze({'login.or':'oder','login.continueGoogle':'Mit Google fortfahren'})
+    en:Object.freeze({'login.or':'or','login.continueGoogle':'Continue with Google','login.existingGoogleHelp':'Already have a trainer account? Sign in with your username and PIN first, then use Settings → Connected Accounts → Connect Google.'}),
+    ja:Object.freeze({'login.or':'または','login.continueGoogle':'Google で続行','login.existingGoogleHelp':'既存のトレーナーアカウントがある場合は、先にトレーナー名と PIN でログインし、設定 → 接続済みアカウント → Google に接続を選んでください。'}),
+    es:Object.freeze({'login.or':'o','login.continueGoogle':'Continuar con Google','login.existingGoogleHelp':'¿Ya tienes una cuenta de Entrenador? Entra primero con tu nombre y PIN; después ve a Ajustes → Cuentas conectadas → Conectar Google.'}),
+    de:Object.freeze({'login.or':'oder','login.continueGoogle':'Mit Google fortfahren','login.existingGoogleHelp':'Du hast bereits ein Trainerkonto? Melde dich zuerst mit Trainername und PIN an. Wähle dann Einstellungen → Verbundene Konten → Google verbinden.'})
   });
   const loadedScripts=new Set();
   let shellLocalePromise=null;
