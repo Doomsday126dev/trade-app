@@ -15,6 +15,9 @@ async function currentLocale(page,locale){await page.locator('#account-trigger')
 async function openSyntheticPublic(page,username,lists){
   await page.evaluate(({username,lists})=>{
     __editorFixture.remote.publicShares||={};__editorFixture.remote.publicShares[username]={version:1,username,profile:{lastUpdated:1},lists:{wishlist:{},dynamax:{},gmax:{},costumes:{},...lists},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:1};
+    // Startup can already have constructed this repository (notably Firefox).
+    // Bind the real repository to the same synthetic client as owned reads.
+    managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(managedFirebaseClient);
     if(!__editorFixture.ownedSubscriptions){
       managedOwnedDataCoordinator?.reset();
       managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
@@ -2192,7 +2195,7 @@ test.describe('visual smoke', () => {
     await capturePass3(page,'trainer-discovery-profile-320x568');
   });
 
-  test('comparison copy activates each exact section once, preserves the dialog, and recovers clipboard denial',async({page})=>{
+  test('comparison copy activates each exact section once, preserves the dialog, and recovers clipboard denial',async({page,browserName})=>{
     await currentList(page,{wishlist:{Pikachu:'H',Eevee:'M'}});
     await openSyntheticPublic(page,'ComparisonPartner',{wishlist:{Pikachu:'L',Squirtle:'H'}});
     const trigger=page.getByRole('button',{name:/Compare with My List/i});
@@ -2209,6 +2212,9 @@ test.describe('visual smoke', () => {
       for(const id of ['app','share-view'])document.getElementById(id).addEventListener('click',()=>__comparisonProbe.backgroundClicks++);
     });
     const protection='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&';
+    // Match the existing cross-browser native button navigation convention;
+    // WebKit's Option-Tab includes buttons without changing browser preferences.
+    const keyboardTab=browserName==='webkit'?'Alt+Tab':'Tab';
     const expected=[];
     for(const [section,dex]of [['both','25'],['mine','133'],['theirs','7']]){
       const panel=modal.locator('.diff-match-box.'+section),button=panel.locator('[data-contextual-copy]');
@@ -2220,7 +2226,7 @@ test.describe('visual smoke', () => {
         else if(activation==='text')await button.locator('.contextual-copy-label').click();
         else{
           // Reach the real native button through the modal's Tab order.
-          for(let i=0;i<8&&!await button.evaluate(el=>el===document.activeElement);i++)await page.keyboard.press('Tab');
+          for(let i=0;i<8&&!await button.evaluate(el=>el===document.activeElement);i++)await page.keyboard.press(keyboardTab);
           await expect(button).toBeFocused();await page.keyboard.press(activation);
         }
         expected.push(command);
