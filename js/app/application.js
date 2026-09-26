@@ -445,6 +445,7 @@ function combinedGroups(model=productDeclarations()){
 }
 const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
+  if(combinedEditor&&combinedEditor.owner!==cur)closeModal('combined-editor-modal');
   if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
@@ -490,8 +491,8 @@ function renderCombinedList(model=productDeclarations()){
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
       <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${uiIconMarkup('trash','ui-icon ui-icon-sm')}</button></div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
@@ -610,10 +611,10 @@ function prepareWantsCatalog(){
   const options=document.getElementById('combined-catalog');
   if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
 }
-function openWantsAddEditor(){
-  openCombinedEditor();
+function openWantsAddEditor(invoker){
+  openCombinedEditor(undefined,invoker);
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
-  document.getElementById('combined-priority').value=document.getElementById('wants-add-priority').value;
+  setCombinedEditorPriority(document.getElementById('wants-add-priority').value);
 }
 function setWantsAddPriority(priority){
   const input=document.getElementById('wants-add-priority');input.value=input.value===priority?'':priority;
@@ -624,7 +625,7 @@ async function submitWantsAdd(){
   const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
   button.disabled=true;
   try{
-    openWantsAddEditor();await saveCombinedEditor();
+    openWantsAddEditor(input);await saveCombinedEditor();
     if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
   }finally{button.disabled=false;}
 }
@@ -632,22 +633,48 @@ function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image','selected');
 }
-function openCombinedEditor(index){
+function setCombinedEditorPriority(value){
+  document.getElementById('combined-priority').value=value;
+  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
+}
+function combinedEditorSessionCurrent(draft){
+  return draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&
+    draft.sessionGeneration===_sessionTransientGeneration&&draft.runtimeGeneration===accountSyncRuntimeGeneration&&draft.runtime===managedAccountSyncRuntime;
+}
+function openCombinedEditor(index,invoker){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  const modal=document.getElementById('combined-editor-modal'),focused=document.activeElement;
+  const opener=invoker?.isConnected?invoker:modal.contains(focused)?_modalPrevFocus:focused;
+  const previousInert=combinedEditor?.appInert??document.getElementById('app').inert;
+  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries),runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,sessionGeneration:_sessionTransientGeneration,appInert:previousInert};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
   input.value=entry.name||'';input.readOnly=!!entries?.length;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
-  document.getElementById('combined-priority').value=[...priorities][0]||'';
+  setCombinedEditorPriority([...priorities][0]||'');
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
+  const editing=!!entries?.length,titleKey=editing?'wantEditor.edit':'wantEditor.add',saveKey=editing?'wantEditor.save':'wantEditor.add';
+  for(const [id,key]of [['combined-editor-title',titleKey],['combined-save',saveKey]]){
+    const node=document.getElementById(id);node.dataset.i18n=key;node.textContent=i18nCore.t(key);
+  }
+  document.getElementById('combined-name-field').hidden=editing;
+  const identity=document.getElementById('combined-identity');identity.hidden=!editing;
+  identity.innerHTML=editing?`<strong>${escHtml([entry.dn||entry.name,productShareCategoryLabel(entry)].filter(Boolean).join(' · '))}</strong>`:'';
+  document.getElementById('combined-note-details').open=Boolean(entry.note);
+  combinedEditor.initialFields=Object.fromEntries(['mod','note','gender'].map(field=>[field,document.getElementById('combined-'+field).value]));
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
   document.getElementById('combined-save').disabled=false;
+  document.getElementById('wants-remove').disabled=false;
   document.getElementById('wants-remove').hidden=!entries?.length;
-  openModal('combined-editor-modal');
+  document.getElementById('app').inert=true;
+  // A replacement editor draft owns its explicit invoker even while this same
+  // modal is already open. Do not change other modals' return-focus behavior.
+  if(_modalActiveId==='combined-editor-modal')_modalPrevFocus=opener;
+  openModal('combined-editor-modal',{initialFocus:editing?'#combined-close':'#combined-name',returnFocus:opener});
+  document.querySelector('#combined-editor-modal .want-editor-body').scrollTop=0;
 }
 function combinedSourceEntity(entry){
   const ref=entry.ref;if(ref?.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
@@ -658,8 +685,8 @@ function combinedSourceEntity(entry){
 }
 async function saveCombinedEditor(remove=false){
   const draft=combinedEditor,error=document.getElementById('combined-error'),button=document.getElementById('combined-save');
-  if(!draft||button.disabled)return;
-  const fail=key=>{error.textContent=i18nCore.t(key);button.disabled=false;};
+  if(!draft||draft.busy||button.disabled)return;
+  const fail=key=>{if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;error.textContent=i18nCore.t(key);button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -672,10 +699,11 @@ async function saveCombinedEditor(remove=false){
   const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
-  button.disabled=true;
+  button.disabled=true;draft.busy=true;document.getElementById('wants-remove').disabled=true;
   try{
+    if(!combinedEditorSessionCurrent(draft))return fail('phase2.changed');
     const authority=await accountSyncMutationAuthority();
-    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
+    if(!combinedEditorSessionCurrent(draft)||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
     for(const side of ['lf']){
@@ -689,7 +717,7 @@ async function saveCombinedEditor(remove=false){
           for(const [field,value] of Object.entries(changes)){
             const empty=['shiny','lucky','xxl','xxs'].includes(field)?false:'';
             // A priority-only edit must not overwrite differing saved notes or flags.
-            if(value!==(draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
+            if(value!==(draft.initialFields?.[field]??draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
           }
           if(side==='lf'&&priority!=='mixed'&&priority!==entry.p)patch.priority=priority;
           // Keep the existing list encoder's gender representation coherent.
@@ -708,11 +736,15 @@ async function saveCombinedEditor(remove=false){
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
-    if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+    // A durable queued mutation is already accepted, even if transport readiness
+    // changes immediately afterward. Only a superseded draft/session may not finish.
+    if(!combinedEditorSessionCurrent(draft))return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
-    closeModal('combined-editor-modal');renderMyList();
+    renderMyList();
+    if(!_modalPrevFocus?.isConnected)_modalPrevFocus=document.getElementById('wants-add-name');
+    closeModal('combined-editor-modal');
   }catch(error){fail(accountSyncEditFailureKey(error?.code));}
-  finally{button.disabled=false;}
+  finally{if(draft===combinedEditor){button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;}}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
@@ -2088,6 +2120,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   closeModal('product-share-modal');
+  closeModal('combined-editor-modal');
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
@@ -10509,12 +10542,12 @@ function openModal(id,options={}){
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
-    if(id==='product-share-modal'){
+    if(id==='product-share-modal'||id==='combined-editor-modal'){
       // Keep the dialog's explicit keyboard sequence inside the modal even on
       // WebKit/macOS configurations that skip controls during native tabbing.
       // A native radio group contributes its checked (or first) input only;
       // arrow-key selection remains the browser's native behavior.
-      const controls=[...m.querySelectorAll('button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null);
+      const controls=[...m.querySelectorAll(id==='combined-editor-modal'?'button,input,select,textarea,summary,[tabindex]':'button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null&&(id!=='combined-editor-modal'||(el.getClientRects().length>0&&(!el.closest('details:not([open])')||el.tagName==='SUMMARY'))));
       const stops=controls.filter(el=>el.type!=='radio'||el===(controls.find(other=>other.type==='radio'&&other.name===el.name&&other.checked)||controls.find(other=>other.type==='radio'&&other.name===el.name)));
       if(stops.length){const index=stops.indexOf(document.activeElement),next=index<0?(ev.shiftKey?stops.length-1:0):(index+(ev.shiftKey?-1:1)+stops.length)%stops.length;ev.preventDefault();stops[next].focus();}
       return;
@@ -10529,6 +10562,10 @@ function openModal(id,options={}){
 }
 function closeModal(id){
   const options=arguments[1]||{};
+  if(id==='combined-editor-modal'){
+    if(combinedEditor?.appInert!==undefined)document.getElementById('app').inert=combinedEditor.appInert;
+    combinedEditor=null;
+  }
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
   if(id==='product-share-modal'){

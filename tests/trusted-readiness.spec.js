@@ -253,7 +253,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   const addedId=await page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').ref.entityId);
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('L');
   await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
-  await page.locator('#combined-priority').selectOption('M');
+  await page.locator('#combined-priorities input[value="M"]').check();
   await page.locator('#combined-save').click();
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('M');
 

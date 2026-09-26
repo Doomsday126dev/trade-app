@@ -145,6 +145,45 @@ input,select,textarea{font-family:var(--font);outline:none}
 .tab.active{color:var(--ac2);border-bottom-color:var(--ac2)}
 .combined-checks,.combined-selection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .combined-editor{width:560px;max-width:calc(100vw - 24px)}.combined-editor label{display:block;margin:10px 0}.combined-editor .field-control{width:100%;min-width:0}.combined-checks label{display:flex;align-items:center;gap:6px;min-height:44px}.combined-editor summary,#wants-combine>summary{min-height:44px;padding:12px 0;cursor:pointer}
+/* The want editor owns one scroll body; other modals and My List stay unchanged. */
+html:has(#combined-editor-modal.open),body:has(#combined-editor-modal.open){overflow:hidden}
+#combined-editor-modal{padding:12px;overflow:hidden}
+#combined-editor-modal .combined-editor{display:flex;flex-direction:column;width:560px;max-width:100%;max-height:calc(100dvh - 24px);padding:0;overflow:hidden;min-height:0}
+#combined-editor-modal .want-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px 12px;flex:none}
+#combined-editor-modal h3{margin:0;align-self:center;overflow-wrap:anywhere}
+#combined-editor-modal :is(h3,label,legend,summary,button,strong){line-height:1.4}
+#combined-editor-modal #combined-close{flex:none;min-width:44px;min-height:44px;border:1px solid var(--border2);border-radius:8px;background:transparent;color:var(--text);font-size:1.3rem;cursor:pointer}
+#combined-editor-modal .want-editor-body{overflow:auto;overscroll-behavior:contain;min-height:0;padding:4px 24px 20px;display:grid;gap:18px;container:want-editor / inline-size}
+#combined-editor-modal label{margin:0;min-width:0}
+#combined-editor-modal label>span:first-child{display:block;margin-bottom:6px}
+#combined-editor-modal .field-control{font:inherit;min-height:44px;max-width:100%}
+#combined-editor-modal select.field-control{height:auto;min-height:calc(1.4em + 22px)}
+#combined-editor-modal .want-editor-identity{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border2);border-radius:8px;background:var(--bg2);overflow-wrap:anywhere}
+#combined-editor-modal .want-editor-identity[hidden],#combined-editor-modal [hidden]{display:none!important}
+#combined-editor-modal .want-editor-identity-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(144px,.5fr);gap:12px}
+#combined-editor-modal fieldset{min-width:0;margin:0;padding:0;border:0}
+#combined-editor-modal legend{font:inherit;font-weight:600;padding:0;margin-bottom:8px}
+#combined-editor-modal .want-priority-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+#combined-editor-modal .want-requirements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#combined-editor-modal .want-choice{display:flex;align-items:center;gap:8px;position:relative;min-height:48px;border:1px solid var(--border2);border-radius:7px;padding:10px;background:var(--bg2);cursor:pointer}
+#combined-editor-modal .want-choice span{margin:0;min-width:0;overflow-wrap:anywhere}
+#combined-editor-modal .want-choice input{flex:none;width:16px;height:16px;margin:0;accent-color:var(--accent);outline:none;box-shadow:none}
+#combined-editor-modal .want-choice:has(input:checked){background:var(--surface-hover);border-color:var(--ac2)}
+#combined-editor-modal .want-choice:has(input:focus-visible){outline:2px solid var(--ac2);outline-offset:2px}
+#combined-editor-modal .want-choice:hover{border-color:var(--ac2)}
+#combined-editor-modal details{border-top:1px solid var(--border2)}
+#combined-editor-modal summary{font-weight:600}
+#combined-editor-modal textarea{resize:vertical;min-height:104px}
+#combined-editor-modal #combined-error{color:var(--danger);margin:0;overflow-wrap:anywhere}
+#combined-editor-modal #combined-error:empty{display:none}
+#combined-editor-modal .want-editor-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid var(--border2);flex:none}
+#combined-editor-modal .want-editor-footer button{min-height:44px;white-space:normal;overflow-wrap:anywhere}
+#combined-editor-modal #wants-remove{margin-right:auto;color:var(--danger)}
+@container want-editor (max-width:28rem){#combined-editor-modal .want-priority-choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container want-editor (max-width:28rem){#combined-editor-modal .want-editor-identity-fields{grid-template-columns:minmax(0,1fr)}}
+@container want-editor (max-width:13rem){#combined-editor-modal .want-requirements,#combined-editor-modal .want-priority-choices{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){#combined-editor-modal .want-editor-head{padding:12px 16px 8px}#combined-editor-modal .want-editor-body{padding:4px 16px 16px}#combined-editor-modal .want-editor-footer{padding:12px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#combined-editor-modal #combined-save{grid-column:1/-1;grid-row:1}#combined-editor-modal #wants-remove{margin:0}#combined-editor-modal #wants-remove[hidden]+#combined-cancel{grid-column:1/-1}}
+@media(max-height:480px){#combined-editor-modal .want-editor-head{padding-block:8px 4px}#combined-editor-modal .want-editor-footer{padding-block:8px}}
 .product-share-preview{max-height:320px;overflow:auto;margin:12px 0;border-block:1px solid var(--border)}.product-share-preview ul{padding-left:20px}.product-share-preview li{overflow-wrap:anywhere}.product-share-modal [hidden]{display:none!important}
 @media(max-width:700px){#app>.tabs .desktop-events-tab{display:none}}
 .tab:hover{color:var(--text)}

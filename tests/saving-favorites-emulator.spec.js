@@ -83,7 +83,7 @@ test('returning ordinary login migrates wants, preserves Favorite evidence and p
   await page.evaluate(()=>{switchTab('trainers');focusTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});
   await expect(page.locator('[data-preserved-favorites]')).toContainText(fixture.other);await expect(page.locator('[data-preserved-favorites]')).toContainText('Nearby');
   await page.evaluate(()=>{switchTab('mylist');openCombinedEditor(combinedGroups().findIndex(group=>group[0].name==='Pikachu'));});
-  await page.locator('#combined-priority').selectOption('M');await page.locator('#combined-save').click();await settled(page);
+  await page.locator('#combined-priorities input[value="M"]').check();await page.locator('#combined-save').click();await settled(page);
   await expect(page.locator('#combined-editor-modal')).toBeHidden();
   expect(Object.values((await account(fixture)).tradeEntries).find(e=>!e.deleted).values.priority).toBe('M');
   await page.reload();
@@ -102,7 +102,7 @@ test('pending journal survives a page restart and ordinary listener recovery whi
   const fixture=await seed();await routeEmulators(page,fixture);await login(page,fixture);await settled(page);
   const migrations=Object.keys((await account(fixture)).migrations);
   await page.evaluate(()=>{window.__incidentRejectWrites=true;switchTab('mylist');openCombinedEditor(combinedGroups().findIndex(group=>group[0].name==='Pikachu'));});
-  await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();
+  await page.locator('#combined-priorities input[value="L"]').check();await page.locator('#combined-save').click();
   await expect(page.locator('#combined-editor-modal')).toBeHidden();
   await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).pendingCount)).toBe(1);
   expect(Object.values((await account(fixture)).tradeEntries)[0].values.priority).toBe('H');
@@ -130,7 +130,7 @@ test('new Favorites fail under real own-account reads without creating a local s
 test('retryable admission and App Check failures retain the open draft until an acknowledged retry',async({page})=>{
   const fixture=await seed();await routeEmulators(page,fixture);await login(page,fixture);await settled(page);
   await page.evaluate(()=>{switchTab('mylist');openCombinedEditor(combinedGroups().findIndex(group=>group[0].name==='Pikachu'));window.__incidentGet=get;get=async()=>{throw Object.assign(new Error('transport unavailable'),{code:'account-sync/network-failed'});};});
-  await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();
+  await page.locator('#combined-priorities input[value="L"]').check();await page.locator('#combined-save').click();
   await expect(page.locator('#combined-error')).toContainText('draft is still here');await expect(page.locator('#combined-priority')).toHaveValue('L');
   expect(Object.values((await account(fixture)).tradeEntries)[0].values.priority).toBe('H');
   await page.evaluate(()=>{get=window.__incidentGet;});await page.locator('#combined-save').click();await settled(page);
@@ -171,7 +171,7 @@ test('full browser process restart restores Auth and acknowledges retained pendi
     let page=context.pages()[0]||await context.newPage();await routeEmulators(page,fixture);await login(page,fixture);await settled(page);
     const migrations=Object.keys((await account(fixture)).migrations);
     await page.evaluate(()=>{window.__incidentRejectWrites=true;switchTab('mylist');openCombinedEditor(combinedGroups().findIndex(group=>group[0].name==='Pikachu'));});
-    await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();
+    await page.locator('#combined-priorities input[value="L"]').check();await page.locator('#combined-save').click();
     await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).pendingCount)).toBe(1);
     expect(Object.values((await account(fixture)).tradeEntries)[0].values.priority).toBe('H');
     await context.close();

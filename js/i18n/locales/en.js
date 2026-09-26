@@ -551,5 +551,6 @@
     ,"shareUi.notSaved":"Your latest changes haven’t saved yet. Try again."
     ,"shareUi.shareFailed":"Couldn’t share your list. Check your connection and try again."
     ,"shareUi.title":"Share your wants","shareUi.shareFormat":"Share format"
+    ,"wantEditor.add":"Add want","wantEditor.edit":"Edit want","wantEditor.save":"Save changes","wantEditor.pokemon":"Pokémon","wantEditor.anyGender":"Any","wantEditor.noPriority":"No priority","wantEditor.requirements":"Requirements","wantEditor.note":"Public note"
   });
 })(window);

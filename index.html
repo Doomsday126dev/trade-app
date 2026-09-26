@@ -441,7 +441,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <button type="button" class="pb" data-wants-add-priority="L" title="Low" data-i18n-title="priority.low" aria-pressed="false" onclick="setWantsAddPriority('L')">L</button>
         </div>
         <div class="add-actions"><button type="submit" class="bsave" data-i18n="myList.addAction">Add</button></div>
-        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor()"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span><span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor(this)"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span><span class="caret">▾</span></button>
       </div>
     </form>
     <div class="wants-list-toolbar">
@@ -683,19 +683,29 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <div class="ov" id="combined-editor-modal" role="dialog" aria-modal="true" aria-labelledby="combined-editor-title">
   <form class="modal combined-editor" onsubmit="event.preventDefault();saveCombinedEditor()">
-    <h3 id="combined-editor-title" data-i18n="phase2.edit">Trade intent</h3>
-    <label><span data-i18n="myList.searchPlaceholder">Pokémon</span><input class="field-control" id="combined-name" list="combined-catalog" required autocomplete="off"></label>
+    <header class="want-editor-head"><h3 id="combined-editor-title" data-i18n="wantEditor.add">Add want</h3><button type="button" id="combined-close" onclick="closeModal('combined-editor-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button></header>
+    <div class="want-editor-body">
+    <div id="combined-identity" class="want-editor-identity" hidden></div>
+    <label id="combined-name-field"><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" list="combined-catalog" required autocomplete="off"></label>
     <datalist id="combined-catalog"></datalist>
-    <label><span data-i18n="myList.priority">Priority</span><select class="field-control" id="combined-priority"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select></label>
-    <div class="wants-special-fields"><span class="add-pri-label" data-i18n="workflow.specialRequirement">Special requirement</span><div class="combined-checks"><label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div></div>
-    <details><summary data-i18n="myList.flagsAndDetails">Flags &amp; details</summary>
+    <div class="want-editor-identity-fields">
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160"></label>
-      <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender"><option value="">—</option><option value="f">♀</option><option value="m">♂</option></select></label>
-
-      <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
-    </details>
+      <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender"><option value="" data-i18n="wantEditor.anyGender">Any</option><option value="f">♀</option><option value="m">♂</option></select></label>
+    </div>
+    <select id="combined-priority" hidden aria-hidden="true" tabindex="-1"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select>
+    <fieldset id="combined-priorities"><legend data-i18n="myList.priority">Priority</legend><div class="want-priority-choices">
+      <label class="want-choice"><input type="radio" name="want-priority" value="H" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.high">High</span></label>
+      <label class="want-choice"><input type="radio" name="want-priority" value="M" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.medium">Medium</span></label>
+      <label class="want-choice"><input type="radio" name="want-priority" value="L" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.low">Low</span></label>
+      <label class="want-choice"><input type="radio" name="want-priority" value="" onchange="setCombinedEditorPriority(this.value)"><span id="combined-no-priority" data-i18n="wantEditor.noPriority">No priority</span></label>
+    </div></fieldset>
+    <fieldset><legend data-i18n="wantEditor.requirements">Requirements</legend><div class="want-requirements">
+      <label class="want-choice"><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label class="want-choice"><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label class="want-choice"><input type="checkbox" id="combined-xxl"><span>XXL</span></label><label class="want-choice"><input type="checkbox" id="combined-xxs"><span>XXS</span></label>
+    </div></fieldset>
+    <details id="combined-note-details"><summary data-i18n="wantEditor.note">Public note</summary><label class="want-note-field"><span class="sr-only" data-i18n="wantEditor.note">Public note</span><textarea class="field-control" id="combined-note" maxlength="160" rows="3"></textarea></label></details>
     <p id="combined-error" role="alert"></p>
-    <div class="mact"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.close">Close</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="common.save">Save</button></div>
+    </div>
+    <footer class="want-editor-footer"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" id="combined-cancel" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.cancel">Cancel</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="wantEditor.add">Add want</button></footer>
   </form>
 </div>
 <!-- READ-ONLY SHARE VIEW (#9) -->

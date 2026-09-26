@@ -205,5 +205,6 @@
     ,"shareUi.notSaved":"Deine letzten Änderungen sind noch nicht gespeichert. Versuche es erneut."
     ,"shareUi.shareFailed":"Deine Liste konnte nicht geteilt werden. Prüfe deine Verbindung und versuche es erneut."
     ,"shareUi.title":"Gesuchte Pokémon teilen","shareUi.shareFormat":"Format zum Teilen"
+    ,"wantEditor.add":"Gesuch hinzufügen","wantEditor.edit":"Gesuch bearbeiten","wantEditor.save":"Änderungen speichern","wantEditor.pokemon":"Pokémon","wantEditor.anyGender":"Beliebig","wantEditor.noPriority":"Keine Priorität","wantEditor.requirements":"Anforderungen","wantEditor.note":"Öffentliche Notiz"
   });
 })(window);
