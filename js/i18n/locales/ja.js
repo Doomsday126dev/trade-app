@@ -204,5 +204,6 @@
     ,"shareUi.notSaved":"最新の変更がまだ保存されていません。再試行してください。"
     ,"shareUi.shareFailed":"リストを共有できませんでした。接続を確認して再試行してください。"
     ,"shareUi.title":"ほしいポケモンを共有","shareUi.shareFormat":"共有形式"
+    ,"wantEditor.add":"欲しいポケモンを追加","wantEditor.edit":"欲しいポケモンを編集","wantEditor.save":"変更を保存","wantEditor.pokemon":"ポケモン","wantEditor.anyGender":"指定なし","wantEditor.noPriority":"優先度なし","wantEditor.requirements":"条件","wantEditor.note":"公開メモ"
   });
 })(window);

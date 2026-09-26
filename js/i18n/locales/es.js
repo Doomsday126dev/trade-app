@@ -205,5 +205,6 @@
     ,"shareUi.notSaved":"Tus últimos cambios aún no se han guardado. Inténtalo de nuevo."
     ,"shareUi.shareFailed":"No se pudo compartir tu lista. Comprueba tu conexión e inténtalo de nuevo."
     ,"shareUi.title":"Comparte tus Pokémon buscados","shareUi.shareFormat":"Formato para compartir"
+    ,"wantEditor.add":"Añadir deseo","wantEditor.edit":"Editar deseo","wantEditor.save":"Guardar cambios","wantEditor.pokemon":"Pokémon","wantEditor.anyGender":"Cualquiera","wantEditor.noPriority":"Sin prioridad","wantEditor.requirements":"Requisitos","wantEditor.note":"Nota pública"
   });
 })(window);
