@@ -2106,8 +2106,28 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 .intent-review{padding:12px 0;border-block:1px solid var(--border);font-size:14px;overflow-wrap:anywhere}
 .intent-review summary{min-height:44px;padding:12px 0}
 .intent-for-trade #mylist-out,.intent-for-trade #mylist-reorder-toggle{display:none}
-.more-destinations,.share-format-actions{display:flex;gap:12px;flex-wrap:wrap}
-.more-destinations .btn{min-height:52px;justify-content:flex-start}
+.share-format-actions{display:flex;gap:12px;flex-wrap:wrap}
+/* Task discovery is local to More; other pages keep their accepted surfaces. */
+#tab-more.more-hub{max-width:var(--container-wide);background:var(--surface-canvas)}
+.more-hub>h2{margin:0 0 8px;font-size:1.5rem}
+.more-intro{margin:0 0 28px;color:var(--muted);font-size:.9375rem;line-height:1.5}
+.more-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.more-group{min-width:0}.more-group>h3{margin:0 0 10px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.more-rows{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}
+.more-destination{display:grid;grid-template-columns:24px minmax(0,1fr) 16px;align-items:center;gap:14px;box-sizing:border-box;width:100%;min-height:80px;padding:14px 16px;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;border-radius:0}
+.more-destination:first-child{border-radius:var(--radius-md) var(--radius-md) 0 0}.more-destination:last-child{border-bottom:0;border-radius:0 0 var(--radius-md) var(--radius-md)}
+.more-destination:only-child{border-radius:var(--radius-md)}
+.more-destination>span{min-width:0}.more-destination strong{display:block;font-size:.9375rem;line-height:1.4;overflow-wrap:anywhere}
+.more-destination small{display:block;margin-top:3px;color:var(--muted);font-size:.8125rem;line-height:1.5;overflow-wrap:anywhere}
+.more-destination>.ui-icon{color:var(--ac2)}.more-destination>.ui-icon:last-child{color:var(--muted)}
+.more-destination:hover,.more-destination:active{background:var(--surface-hover)}
+.more-destination:focus-visible{outline:2px solid var(--ac2);outline-offset:3px;position:relative;z-index:1}
+.more-admin[hidden],.more-destination[hidden],.discovery-empty-import[hidden]{display:none}
+.discovery-transfer-context{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin:0 0 16px}
+.discovery-transfer-context p,.discovery-empty-import p{margin:0;color:var(--muted);font-size:.875rem;line-height:1.5;overflow-wrap:anywhere}
+.discovery-empty-import{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px;margin:0 0 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}
+.discovery-empty-import p{flex:1 1 240px}.discovery-empty-import .btn,.discovery-transfer-context .btn{min-height:48px;white-space:normal}
+@media(max-width:767px){.more-groups{grid-template-columns:minmax(0,1fr);gap:24px}.more-destination{min-height:76px;padding:12px;gap:12px}.more-intro{margin-bottom:24px}}
 .share-format-actions[hidden],#product-share-link[hidden]{display:none}
 .product-share-modal{width:560px;max-width:calc(100vw - 24px)}
 .product-share-modal section{padding:12px 0;overflow-wrap:anywhere}

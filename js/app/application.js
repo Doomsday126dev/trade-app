@@ -2119,6 +2119,8 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  if(typeof taskToolOrigin!=='undefined'&&taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
+  for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.setAttribute('hidden','');
   closeModal('product-share-modal');
   closeModal('combined-editor-modal');
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
@@ -6615,6 +6617,7 @@ function refreshBadgesAndLightChrome(){
   checkWhatsNew();
 }
 function switchTab(t,opts={}){
+  if(taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
   if(t==='have')t='mylist';
   const previous=activeTabName();
   if(t!=='admin')closeExistingPinReset();
@@ -6630,7 +6633,7 @@ function switchTab(t,opts={}){
   if(!page)return;
   if(tabBtn){tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');}
   page.classList.add('active');
-  if(t==='more')document.getElementById('more-admin-link')?.toggleAttribute('hidden',!protectedOwnerSession());
+  if(t==='more')for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.toggleAttribute('hidden',!protectedOwnerSession());
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
 }
@@ -7763,6 +7766,17 @@ function renderMyList(filterVal,options={}){
   // One fresh model drives both the visible wants and their copy action.
   const declarations=productDeclarations();
   renderCombinedList(declarations);
+  // Empty-account guidance uses the unfiltered model and proven owned hydration.
+  // Merely looking at this state must not subscribe, publish, or start a write.
+  const activeOwner=managedSessionCache?.snapshot?.().activeOwner;
+  const owned=!!cur&&!!auth?.currentUser?.uid&&activeOwner?.uid===auth.currentUser.uid&&activeOwner?.username===cur;
+  const hydrated=owned&&(accountSyncProjectionReady()||_firstSyncDone&&['users',...OWNED_MY_LIST_TYPES].every(type=>_pathLoadState[type]==='loaded'));
+  const emptyImport=document.getElementById('wants-empty-import');
+  if(emptyImport){
+    const hide=!hydrated||declarations.entries.length!==0;
+    if(hide&&emptyImport.contains(document.activeElement))document.getElementById('wants-add-name')?.focus();
+    emptyImport.hidden=hide;
+  }
   renderIntentEntries('',declarations);
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',declarations.entries.length>0);
   if(options.reason!=='filter'){
@@ -10452,13 +10466,15 @@ function settingsDetailIsOpenOnMobile(){return!matchMedia(SETTINGS_DESKTOP_QUERY
 function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
   const route=parseSettingsRoute();
-  if(accountContext&&route.section)_settingsSection=route.section;
+  const requestedSection=accountContext&&SETTINGS_SECTIONS.includes(options.section)?options.section:null;
+  if(requestedSection)_settingsSection=requestedSection;
+  else if(accountContext&&route.section)_settingsSection=route.section;
   const returnFocus=options.returnFocus||(accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null));
   closeAccountMenu(false);renderInterimProductLabels();configureSettingsPanel(accountContext?'account':'public');
-  if(accountContext&&route.valid&&route.section&&!settingsUsesPageMode())selectSettingsSection(route.section,{focus:false,updateHistory:false});
+  if(requestedSection||accountContext&&route.valid&&route.section&&!settingsUsesPageMode())selectSettingsSection(requestedSection||route.section,{focus:false,updateHistory:false});
   const modal=document.getElementById('settings-modal');
   if(!modal?.classList.contains('open')&&options.captureScroll!==false)captureSettingsScrollSnapshot();
-  const section=accountContext&&(settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
+  const section=accountContext&&(requestedSection||settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
   const target=settingsRouteUrl(true,section);
   if(options.updateHistory!==false)writeSettingsRoute(section);
   else if(route.matches&&(!route.valid||!accountContext&&route.section||accountContext&&settingsUsesPageMode()&&!route.section))writeSettingsRoute(section,{mode:'replace'});
@@ -10476,6 +10492,7 @@ function closeSettingsRoute(){
   return false;
 }
 function syncSettingsRoute(options={}){
+  if(taskToolOrigin?.settings&&taskToolOrigin.route!==location.href)closeModal(taskToolOrigin.modal,{restoreTool:false});
   const modal=document.getElementById('settings-modal');if(!modal)return;
   const route=parseSettingsRoute();
   if(route.valid&&route.section&&!_authStateKnown&&!cur){
@@ -10501,18 +10518,41 @@ function syncPendingSettingsRouteAfterAuth(){
   if(!_pendingSettingsRouteSection&&!parseSettingsRoute().matches)return;
   setTimeout(()=>syncSettingsRoute({captureScroll:false}),0);
 }
-function openSettingsTool(tool){
-  if(!cur)return;
-  closeModal('settings-modal',{route:false});
-  if(parseSettingsRoute().matches)history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
-  setTimeout(()=>{
-    if(tool==='health')openLoginHealthCheck();
-    else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
-    else if(tool==='import')openImport();
-    else if(tool==='export'){switchTab('mylist');requestAnimationFrame(()=>document.getElementById('export-menu-btn')?.click());}
-    else if(tool==='safe-transfer')openSafeTransferModal();
-    else if(tool==='backup'&&protectedOwnerSession())exportData();
-  },0);
+let taskToolOrigin=null;
+function taskNavigationIdentity(){return cur&&auth?.currentUser?.uid&&currentAuthUid===auth.currentUser.uid?{owner:cur,uid:auth.currentUser.uid,generation:_sessionTransientGeneration}:null;}
+function taskNavigationCurrent(origin){
+  const identity=taskNavigationIdentity();
+  return !!identity&&identity.owner===origin.owner&&identity.uid===origin.uid&&identity.generation===origin.generation&&origin.tab===activeTabName()&&origin.route===location.href;
+}
+function openMoreDestination(destination,invoker){
+  if(!taskNavigationIdentity())return false;
+  if(destination==='profile'||destination==='settings')openSettingsPanel('account',{returnFocus:invoker,...(destination==='profile'?{section:'profile'}:{})});
+  else if(destination==='events'){switchTab('schedule');const heading=document.getElementById('events-title');heading.tabIndex=-1;heading.focus();}
+  else if(destination==='admin'&&protectedOwnerSession()){switchTab('admin');document.querySelector('.tab[data-tab="more"]')?.focus();}
+  else return false;
+  return true;
+}
+function openTaskTool(tool,invoker,options={}){
+  const identity=taskNavigationIdentity();if(!identity)return false;
+  const modal={import:'import-modal',share:'product-share-modal',export:'product-share-modal',transfer:'safe-transfer-modal',help:'shortcuts-modal',health:'login-health-modal'}[tool];
+  if(!modal||tool==='health'&&!options.settings)return false;
+  if(taskToolOrigin||anyOpenModal()&&!options.settings)return false;
+  const origin={...identity,modal,invoker:invoker||document.activeElement,tab:activeTabName(),route:location.href,settings:options.settings===true,section:_settingsSection,settingsReturnFocus:_modalPrevFocus,appInert:document.getElementById('app').inert};
+  if(origin.settings){closeModal('settings-modal',{route:false});origin.appInert=document.getElementById('app').inert;}
+  if(!taskNavigationCurrent(origin))return false;
+  // Dispatch synchronously. There is no timer carrying an old account or route.
+  if(tool==='import')openImport(origin.invoker);
+  else if(tool==='share'||tool==='export')openProductShare(tool==='export'?'image':'link','full',origin.invoker);
+  else if(tool==='transfer')openSafeTransferModal({returnFocus:origin.invoker,explicitSelection:true});
+  else if(tool==='help')openModal(modal,{returnFocus:origin.invoker});
+  else if(tool==='health')void openLoginHealthCheck();
+  if(_modalActiveId!==modal)return false;
+  taskToolOrigin=origin;document.getElementById('app').inert=true;return true;
+}
+function openSettingsTool(tool,invoker){
+  if(!taskNavigationIdentity()||!document.getElementById('settings-modal')?.classList.contains('open'))return false;
+  if(tool==='backup')return protectedOwnerSession()?exportData():false;
+  return openTaskTool({'safe-transfer':'transfer',shortcuts:'help'}[tool]||tool,invoker,{settings:true});
 }
 function openModal(id,options={}){
   const m=document.getElementById(id);if(!m)return;
@@ -10562,6 +10602,8 @@ function openModal(id,options={}){
 }
 function closeModal(id){
   const options=arguments[1]||{};
+  const toolOrigin=taskToolOrigin?.modal===id?taskToolOrigin:null;
+  if(toolOrigin){taskToolOrigin=null;document.getElementById('app').inert=toolOrigin.appInert;}
   if(id==='combined-editor-modal'){
     if(combinedEditor?.appInert!==undefined)document.getElementById('app').inert=combinedEditor.appInert;
     combinedEditor=null;
@@ -10578,7 +10620,15 @@ function closeModal(id){
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
   if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
-  const returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  const toolReturn=toolOrigin&&options.restoreTool!==false&&taskNavigationCurrent(toolOrigin);
+  let returnFocus=toolOrigin?(toolReturn?toolOrigin.invoker:null):_modalPrevFocus;_modalPrevFocus=null;
+  if(toolReturn&&toolOrigin.settings){
+    openSettingsPanel('account',{section:toolOrigin.section,returnFocus:toolOrigin.settingsReturnFocus,updateHistory:false,captureScroll:false});
+  }
+  // Import clicks dismiss the background disclosure through its existing
+  // outside-click handler. Restore it before focusing the actual launcher.
+  if(toolReturn&&returnFocus?.closest('#wants-list-tools'))document.getElementById('wants-list-tools').open=true;
+  if(toolReturn&&returnFocus?.closest('#wants-empty-import')&&!returnFocus.getClientRects().length)returnFocus=document.getElementById('wants-add-name');
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
 }
@@ -10936,14 +10986,15 @@ function _safeTransferSelectedMembers(model=_safeTransferScopeModel()){
   return model.members.filter(item=>selected.has(_safeTransferMemberKey(item)));
 }
 function _safeTransferAllTrainers(){return _safeTransferScopeModel().members.map(item=>item.displayName);}
-function openSafeTransferModal(){
+function openSafeTransferModal(options={}){
   const model=_safeTransferScopeModel(),active=new Set(model.members.map(_safeTransferMemberKey));
   if(!_safeTransferSelected){
-    const saved=_loadSafeTransferDefault();
-    _safeTransferSelected=saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
+    const saved=options.explicitSelection?null:_loadSafeTransferDefault();
+    _safeTransferSelected=options.explicitSelection?new Set():saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
   }
   [..._safeTransferSelected].forEach(key=>{if(!active.has(key))_safeTransferSelected.delete(key);});
-  openModal('safe-transfer-modal');
+  document.getElementById('stb-save-default').hidden=options.explicitSelection===true;
+  openModal('safe-transfer-modal',{returnFocus:options.returnFocus});
   const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox){checkbox.checked=true;checkbox.disabled=true;}
   renderSafeTransferTrainers();renderSafeTransferOutput();
 }
@@ -10953,7 +11004,7 @@ function renderSafeTransferTrainers(){
   if(!model.members.length){grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;return;}
   grid.innerHTML=model.members.map(item=>{
     const key=_safeTransferMemberKey(item),on=_safeTransferSelected.has(key);
-    return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
+    return`<button type="button" class="stb-trainer-chip${on?' on':''}" aria-pressed="${on}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
   }).join('');
 }
 document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
@@ -14416,7 +14467,7 @@ function showConflictModal(conflicts,onLocal,onRemote,{savedOnly=false}={}){
 let importPri='M';
 let importMatches=[];
 
-function openImport(){
+function openImport(invoker){
   importPri='M';importMatches=[];
   document.getElementById('import-category').value=myListType;
   document.getElementById('import-str-input').value='';
@@ -14429,7 +14480,7 @@ function openImport(){
     b.classList.remove('sel','H','M','L');
     if(b.dataset.pri==='M')b.classList.add('sel','M');
   });
-  openModal('import-modal');
+  openModal('import-modal',{returnFocus:invoker});
 }
 
 function setImportPri(p){
@@ -14603,12 +14654,12 @@ function _handleGlobalShortcut(ev){
   switch(ev.key.toLowerCase()){
     case'b':switchTab('find');ev.preventDefault();break;
     case'm':switchTab('mylist');ev.preventDefault();break;
-    case's':switchTab('mylist');setTimeout(()=>document.getElementById('my-strings-out')?.scrollIntoView({behavior:'smooth'}),0);ev.preventDefault();break;
+    case's':switchTab('mylist',{render:false});renderMyList();document.querySelector('#combined-list [data-wants-copy]')?.focus();ev.preventDefault();break;
     case'h':case'i':switchTab('have');ev.preventDefault();break;
     case'c':switchTab('schedule');ev.preventDefault();break;
     case'n':
       switchTab('mylist');
-      setTimeout(()=>document.getElementById('ac-input')?.focus(),60);
+      document.getElementById('wants-add-name')?.focus();
       ev.preventDefault();break;
     case'/':
       ev.preventDefault();

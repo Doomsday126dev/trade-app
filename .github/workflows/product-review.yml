@@ -42,9 +42,24 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
       - name: Syntax, hygiene and changed-area contracts
-        run: node scripts/select-product-checks.cjs
+        run: node scripts/ci/product-evidence.cjs node
       - if: steps.selection.outputs.browser == 'true'
         run: npx playwright install --with-deps chromium webkit
       - name: Affected browser journeys
         if: steps.selection.outputs.browser == 'true'
-        run: node scripts/select-product-checks.cjs --browser
+        run: node scripts/ci/product-evidence.cjs browser
+      - name: Sanitize isolated test evidence
+        id: evidence
+        if: always()
+        run: python3 scripts/ci/sanitize-product-evidence.py
+      - name: Retain product qualification evidence
+        if: always() && steps.evidence.outcome == 'success'
+        # actions/upload-artifact v4.6.2; never upload profiles or the workspace.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: product-contracts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            product-ci-artifacts/
+            test-results/
+          if-no-files-found: error
+          retention-days: 30
