@@ -87,6 +87,7 @@ test('More native Tab order, focus ring and repeated Help dismissal stay on the 
   }
   for(let i=0;i<3;i++){
     await page.keyboard.press('Enter');await expect(page.locator('#shortcuts-modal')).toBeVisible();
+    await expect(page.locator('#shortcuts-modal .bpri')).toBeFocused();
     await page.keyboard.press('Tab');expect(await page.evaluate(()=>!!document.activeElement.closest('#shortcuts-modal'))).toBe(true);
     await page.keyboard.press('Escape');await expect(page.locator('#more-help')).toBeFocused();
   }
