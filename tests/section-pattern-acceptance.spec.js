@@ -152,7 +152,7 @@ test('prospective Lucky wants retain tradeability and localized generic section 
     await page.evaluate(()=>openSettingsPanel('account'));
     await page.locator('[data-settings-target="language"]').click();
     await page.locator('#settings-language').selectOption(locale);
-    await page.locator('#settings-search-language-override').check();
+
     await page.locator('#settings-search-language').selectOption(locale);
     await page.locator('.settings-modal-close').click();
     await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe(locale);

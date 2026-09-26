@@ -2068,12 +2068,10 @@ function syncPokemonGoSearchLanguageControl(){
   const override=preference!=='follow-app';
   if(override)_pokemonGoSearchOverrideDraft=preference;
   else if(!pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(_pokemonGoSearchOverrideDraft))_pokemonGoSearchOverrideDraft=pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());
-  const checkbox=document.getElementById('settings-search-language-override');
-  const row=document.getElementById('settings-search-language-override-row');
   const select=document.getElementById('settings-search-language');
-  if(checkbox){checkbox.checked=override;checkbox.setAttribute('aria-expanded',String(override));}
-  if(row)row.hidden=!override;
-  if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
+  if(select){select.disabled=false;select.value=preference;}
+  const help=document.getElementById('settings-search-language-help');
+  if(help)help.textContent=i18nCore.t(override?'settings.searchFixed':'settings.searchFollows',{language:i18nCore.t('locale.'+pokemonGoSearchLocale())});
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
@@ -9967,6 +9965,14 @@ async function saveProfile(event){
   refreshAll();
   toast(i18nCore.t('profile.saved'));
 }
+function toggleSettingsPinForm(open,restoreFocus=false){
+  const form=document.getElementById('settings-pin-form'),button=document.getElementById('settings-pin-toggle'),panel=document.getElementById('settings-security-pin-panel');
+  if(!form||!button)return;
+  const show=usernamePinAccessUsable()&&(open===undefined?form.hidden:open===true);
+  form.hidden=!show;if(panel)panel.hidden=!show;button.setAttribute('aria-expanded',String(show));
+  if(show)document.getElementById('np1')?.focus();
+  else{for(const id of ['np1','np2']){const input=document.getElementById(id);if(input)input.value='';}const error=document.getElementById('pin-err');if(error)error.textContent='';if(restoreFocus&&!button.hidden)button.focus();}
+}
 async function savePinSettings(){
   const p1=document.getElementById('np1')?.value||'',p2=document.getElementById('np2')?.value||'',err=document.getElementById('pin-err');if(err)err.textContent='';
   if(!isSixDigitPin(p1)){if(err)err.textContent=i18nCore.t('validation.pinSixDigits');return;}
@@ -9976,7 +9982,7 @@ async function savePinSettings(){
     try{await updatePassword(auth.currentUser,p1);}catch(e){if(err)err.textContent=e.code==='auth/requires-recent-login'?i18nCore.t('profile.reauthenticate'):i18nCore.t('profile.pinUpdateFailed');return;}
   }
   await writeUser(cur,{pin:await hashPin(p1),pinHashed:true});
-  document.getElementById('np1').value='';document.getElementById('np2').value='';toast(i18nCore.t('settings.pinSaved'));
+  toggleSettingsPinForm(false,true);toast(i18nCore.t('settings.pinSaved'));
 }
 async function saveAppearance(){
   const wallpaper=document.getElementById('prof-wallpaper')?.value||'mono';await writeUser(cur,{wallpaper});applyWallpaperForTheme(wallpaper);toast(i18nCore.t('settings.appearanceSaved'));
@@ -10381,10 +10387,12 @@ function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
   const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','prepared','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
   const usernamePinAvailable=usernamePinAccessUsable();
-  const pinPanel=document.getElementById('settings-security-pin-panel');if(pinPanel)pinPanel.hidden=!usernamePinAvailable;
+  const pinToggle=document.getElementById('settings-pin-toggle');if(pinToggle)pinToggle.hidden=!usernamePinAvailable;
+  if(!usernamePinAvailable)toggleSettingsPinForm(false);
   const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable,operationStates}):[
     {key:'username-pin',visible:true,state:usernamePinAvailable?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
   ];
+  const notice=document.querySelector('#settings-account-security .account-security-notice');if(notice)notice.hidden=methods.some(method=>method.key!=='username-pin'&&method.visible);
   for(const method of methods){
     const row=document.querySelector(`#settings-account-security [data-provider="${method.key}"]`);if(!row)continue;
     const presentation=method.key==='google'?googleProviderPresentation(method,controllerState):Object.freeze({state:method.state,labelKey:PROVIDER_LINKING_STATUS_KEYS[method.state],detailKey:method.key==='username-pin'&&!usernamePinAvailable?'security.usernamePinNotConfigured':method.detailKey,action:'',actionKey:'',disabled:true});
@@ -10556,6 +10564,7 @@ function openSettingsTool(tool,invoker){
 }
 function openModal(id,options={}){
   const m=document.getElementById(id);if(!m)return;
+  if(id==='shortcuts-modal'){renderHelpAppInformation();options={initialFocus:'.mact button',...options};}
   if(_modalActiveId&&_modalActiveId!==id){
     const active=document.getElementById(_modalActiveId);
     if(_modalActiveId==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(_modalActiveId,{route:false});
@@ -10579,6 +10588,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
+    // Help can open the existing native Legal dialog; its own focus/escape
+    // handling takes precedence until it returns focus to the Help invoker.
+    if(id==='shortcuts-modal'&&document.getElementById('legal-dialog')?.open)return;
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
@@ -10608,6 +10620,7 @@ function closeModal(id){
     if(combinedEditor?.appInert!==undefined)document.getElementById('app').inert=combinedEditor.appInert;
     combinedEditor=null;
   }
+  if(id==='settings-modal')toggleSettingsPinForm(false);
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
   if(id==='product-share-modal'){
@@ -11670,14 +11683,25 @@ function reloadForUpdate(){
 
 // ── PWA INSTALL PROMPT (#1) ──────────────────────────────────
 let _deferredInstallPrompt=null;
+function renderHelpAppInformation(){
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const safari=ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  const key=standalone?'settings.installStandalone':_deferredInstallPrompt?'settings.installAvailable':safari?'settings.installSafari':'settings.installUnavailable';
+  const status=document.getElementById('help-install-status');if(status)status.textContent=i18nCore.t(key);
+  const button=document.getElementById('settings-install');if(button)button.hidden=standalone||!_deferredInstallPrompt;
+  const release=document.getElementById('settings-release-id');if(release)release.textContent=i18nCore.t('settings.release',{release:clientReleaseDomain.RELEASE_ID});
+}
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   _deferredInstallPrompt=e;
   document.getElementById('install-btn')?.classList.add('show');
+  renderHelpAppInformation();
 });
 window.addEventListener('appinstalled',()=>{
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
+  renderHelpAppInformation();
   toast(i18nCore.t('install.installed'));
 });
 async function triggerInstall(){
@@ -11687,6 +11711,7 @@ async function triggerInstall(){
   if(outcome==='accepted'){toast(i18nCore.t('install.installing'));}
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
+  renderHelpAppInformation();
 }
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────

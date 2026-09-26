@@ -185,8 +185,10 @@ test('inline tag creation selects new or normalized-existing tags and has scoped
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
 
-test('Settings exposes six semantic sections with desktop and mobile navigation',()=>{
-  for(const section of ['profile','language','appearance','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+test('Settings exposes five destinations and retains the legacy Tools deep link',()=>{
+  for(const section of ['profile','language','appearance','security','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+  assert.doesNotMatch(html,/data-settings-target="tools"/);
+  assert.match(html,/data-settings-section="tools"/);
   assert.match(html,/function selectSettingsSection/);assert.match(html,/function showSettingsSectionList/);
   assert.match(html,/settings-layout\.mobile-list \.settings-detail\{display:none\}/);
   assert.match(html,/settingsDetailIsOpenOnMobile/);

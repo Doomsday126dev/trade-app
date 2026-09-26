@@ -615,11 +615,11 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#settings-modal')).not.toHaveAttribute('role','dialog');
     await expect(page.locator('.settings-nav')).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
-    await page.locator('[data-settings-target="tools"]').click();
+    await page.evaluate(()=>selectSettingsSection('tools'));
     await expect(page).toHaveURL(/#settings\/tools$/);
     await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"]')).toBeHidden();
-    await expect(page.locator('[data-settings-target="tools"]')).toHaveAttribute('aria-current','page');
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(0); // Compatibility deep link only; normal tools live in More.
     await expect(page.getByRole('button',{name:'Export backup'})).toBeHidden();
     await expect(page.getByRole('button',{name:'Restore backup'})).toBeHidden();
 
@@ -654,7 +654,7 @@ test.describe('visual smoke', () => {
     });
     await expect(page.locator('#settings-modal')).toHaveClass(/settings-page-mode/);
     await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
-    await expect(page.locator('[data-settings-target="tools"]')).toHaveAttribute('aria-current','page');
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(0); // Compatibility deep link only; normal tools live in More.
 
     await page.evaluate(()=>{history.replaceState({},'',`${location.pathname}${location.search}#settings/not-a-section`);syncSettingsRoute({captureScroll:false});});
     await expect(page).toHaveURL(/#settings\/profile$/);
@@ -805,7 +805,9 @@ test.describe('visual smoke', () => {
     for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])await expect(page.locator(`[data-i18n="${key}"]`)).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"] #np1')).toHaveCount(0);await expect(page.locator('[data-settings-section="profile"] #wp-picker')).toHaveCount(0);
     await page.locator('[data-settings-target="security"]').click();
-    await expect(page.locator('#settings-security-name')).toHaveText('AppearanceTrainer');await expect(page.locator('#np1')).toBeVisible();await expect(page.locator('#np2')).toBeVisible();
+    await expect(page.locator('#settings-security-name')).toHaveText('AppearanceTrainer');await expect(page.locator('#settings-pin-form')).toBeHidden();
+    await page.evaluate(()=>{auth={currentUser:{uid:'appearance-local',providerData:[{providerId:'password'}]}};allData.users[cur]={...allData.users[cur],authUid:'appearance-local',pin:'synthetic-hash'};renderConnectedAccounts();});
+    await page.locator('#settings-pin-toggle').click();await expect(page.locator('#np1')).toBeVisible();await expect(page.locator('#np2')).toBeVisible();
 
     await page.setViewportSize({width:390,height:420});
     await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
@@ -856,7 +858,7 @@ test.describe('visual smoke', () => {
     }
   });
 
-  test('language Settings keeps the search-language override subordinate, responsive, and device-local',async({page})=>{
+  test('language Settings keeps automatic and explicit search language aligned, responsive, and device-local',async({page})=>{
     const viewports=[[320,568],[375,812],[390,844],[430,932],[768,800],[1024,800],[1440,900],[1728,1000]];
     for(const [width,height] of viewports){
       await page.setViewportSize({width,height});
@@ -868,22 +870,21 @@ test.describe('visual smoke', () => {
         changeInterfaceLocale('ja');
         openSettingsPanel('public');
       });
-      const override=page.locator('#settings-search-language-override');
-      const row=page.locator('#settings-search-language-override-row');
+      const row=page.locator('.language-search-row');
       const searchLanguage=page.locator('#settings-search-language');
-      await expect(override).not.toBeChecked();
-      await expect(row).toBeHidden();
-      await expect(searchLanguage).toBeDisabled();
+      await expect(searchLanguage).toHaveValue('follow-app');
+      await expect(row).toBeVisible();
+      await expect(searchLanguage).toBeEnabled();
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('ja');
 
-      await override.check();
+      await searchLanguage.selectOption('ja'); // Explicit equal choice remains distinct from automatic.
       await expect(row).toBeVisible();
       await expect(searchLanguage).toBeEnabled();
       await searchLanguage.selectOption('en');
       await page.locator('#settings-language').selectOption('de');
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('en');
-      await override.uncheck();
-      await expect(row).toBeHidden();
+      await searchLanguage.selectOption('follow-app');
+      await expect(row).toBeVisible();
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('de');
 
       const geometry=await page.evaluate(()=>{
@@ -892,8 +893,7 @@ test.describe('visual smoke', () => {
         const detail=document.getElementById('settings-detail');
         const primaryLabel=document.querySelector('.language-primary-row>span');
         const primarySelect=document.getElementById('settings-language');
-        const checkbox=document.getElementById('settings-search-language-override');
-        const label=checkbox.closest('label');
+        const label=document.querySelector('.language-search-row');
         const detailRect=detail.getBoundingClientRect();
         const panelRect=panel.getBoundingClientRect();
         const labelRect=primaryLabel.getBoundingClientRect();
@@ -915,9 +915,9 @@ test.describe('visual smoke', () => {
       expect(geometry.touchHeight).toBeGreaterThanOrEqual(48);
       expect(geometry.panelRight).toBeLessThanOrEqual(geometry.viewport+1);
       expect(geometry.publicMode).toBe(true);
-      expect(geometry.panelWidth).toBeGreaterThanOrEqual(geometry.detailWidth-42);
-      expect(geometry.labelWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-42));
-      expect(geometry.selectWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-42));
+      expect(geometry.panelWidth).toBeGreaterThanOrEqual(geometry.detailWidth-76);
+      expect(geometry.labelWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-76));
+      expect(geometry.selectWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-76));
       expect(geometry.selectHeight).toBeGreaterThanOrEqual(48);
       await expect(page.locator('.settings-nav')).toBeHidden();
       await expect(page.locator('.settings-mobile-back')).toBeHidden();
@@ -931,7 +931,7 @@ test.describe('visual smoke', () => {
     await page.reload({waitUntil:'domcontentloaded'});
     await waitForSettingsStartupReady(page);
     await page.evaluate(()=>openSettingsPanel('public'));
-    await expect(page.locator('#settings-search-language-override')).not.toBeChecked();
+    await expect(page.locator('#settings-search-language')).toHaveValue('follow-app');
     expect(await page.evaluate(()=>localStorage.getItem('pogoPokemonGoSearchLocale:v1'))).toBeNull();
     await page.evaluate(()=>{
       localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en'));
@@ -940,7 +940,7 @@ test.describe('visual smoke', () => {
     await page.reload({waitUntil:'domcontentloaded'});
     await waitForSettingsStartupReady(page);
     await page.evaluate(()=>openSettingsPanel('public'));
-    await expect(page.locator('#settings-search-language-override')).toBeChecked();
+    expect(await page.evaluate(()=>lsGet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,false))).toBe(true);
     await expect(page.locator('#settings-search-language')).toHaveValue('en');
   });
 
@@ -988,17 +988,17 @@ test.describe('visual smoke', () => {
           });
           expect(off.noOverflow).toBe(true);
           expect(off.detailWidth).toBeGreaterThanOrEqual(off.modalWidth-2);
-          expect(off.labelWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-42));
-          expect(off.selectWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-42));
+          expect(off.labelWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-76));
+          expect(off.selectWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-76));
           expect(off.selectHeight).toBeGreaterThanOrEqual(48);
           expect(off.closeWidth).toBeGreaterThanOrEqual(48);
           expect(off.closeHeight).toBeGreaterThanOrEqual(48);
-          await page.locator('#settings-search-language-override').check();
-          await expect(page.locator('#settings-search-language-override-row')).toBeVisible();
+          await page.locator('#settings-search-language').selectOption('de');
+          await expect(page.locator('.language-search-row')).toBeVisible();
           expect(await page.evaluate(()=>{
-            const row=document.getElementById('settings-search-language-override-row');
+            const row=document.querySelector('.language-search-row');
             const select=document.getElementById('settings-search-language');
-            return row.scrollWidth<=row.clientWidth&&select.getBoundingClientRect().width>=Math.min(260,document.getElementById('settings-detail').getBoundingClientRect().width-42)&&select.getBoundingClientRect().height>=48;
+            return row.scrollWidth<=row.clientWidth&&select.getBoundingClientRect().width>=Math.min(260,document.getElementById('settings-detail').getBoundingClientRect().width-76)&&select.getBoundingClientRect().height>=48;
           })).toBe(true);
           await page.keyboard.press('Escape');
           await expect(page.locator('#settings-modal')).toBeHidden();

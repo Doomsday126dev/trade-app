@@ -43,7 +43,7 @@ test('Profile is deterministic after Language/Security; Settings keeps drafts, n
 test('Settings compatibility tools use one dialog and restore the originating tool without extra history',async({page})=>{
   await install(page);await page.locator('#more-settings').click();
   const initialRoute=page.url(),pageMode=await page.evaluate(()=>settingsUsesPageMode());
-  await page.locator('[data-settings-target="tools"]').click();
+  await page.evaluate(()=>selectSettingsSection('tools'));
   const history=await page.evaluate(()=>history.length),before=await snapshot(page);
   for(const [id,modal]of [['settings-import','import-modal'],['settings-export','product-share-modal'],['settings-transfer','safe-transfer-modal'],['settings-shortcuts','shortcuts-modal']]){
     const invoker=page.locator('#'+id);await invoker.focus();await page.keyboard.press('Enter');await expect(page.locator('#'+modal)).toBeVisible();await oneModal(page);

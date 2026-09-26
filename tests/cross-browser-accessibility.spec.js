@@ -184,9 +184,9 @@ test.describe('audit cross-browser contracts',()=>{
       expect(geometry.outlineStyle).not.toBe('none');
       expect(geometry.outlineWidth).toBeGreaterThanOrEqual(2.5);
       expect(geometry.outlineOffset).toBeGreaterThanOrEqual(1.5);
-      await page.locator('#settings-search-language-override').check();
+
       expect((await page.locator('#settings-search-language').boundingBox())?.height).toBeGreaterThanOrEqual(47.5);
-      for(const selector of ['.settings-modal-close','.language-override-toggle','.settings-mobile-back']){
+      for(const selector of ['.settings-modal-close','#settings-search-language','.settings-mobile-back']){
         const box=await page.locator(selector).boundingBox();
         if(box){expect(box.width,selector).toBeGreaterThanOrEqual(47.5);expect(box.height,selector).toBeGreaterThanOrEqual(47.5);}
       }
