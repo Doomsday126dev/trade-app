@@ -5887,16 +5887,17 @@ async function trainerSearchKeydown(event){
   }
   if(event.key==='Enter'){
     event.preventDefault();clearTimeout(trainerSuggestionTimer);
+    const input=event.currentTarget;
     let best;
     try{
-      let lookup=event.currentTarget.value;
+      let lookup=input.value;
       try{const parsed=new URL(String(lookup||''),location.href);lookup=parsed.searchParams.get('view')||lookup;}catch{}
       await ensureProviderTrainerDirectory(lookup);
-      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),event.currentTarget.value,trainerSuggestionOptions());
+      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),input.value,trainerSuggestionOptions());
     }
     catch(error){showTrainerSearchError();return;}
-    if(best){event.currentTarget.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
-    else openTrainerPublicShare(event.currentTarget.value);
+    if(best){input.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
+    else openTrainerPublicShare(input.value);
     return;
   }
   if(event.key==='Escape'){event.preventDefault();closeTrainerSuggestions();}

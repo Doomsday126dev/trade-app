@@ -15,9 +15,6 @@ async function currentLocale(page,locale){await page.locator('#account-trigger')
 async function openSyntheticPublic(page,username,lists){
   await page.evaluate(({username,lists})=>{
     __editorFixture.remote.publicShares||={};__editorFixture.remote.publicShares[username]={version:1,username,profile:{lastUpdated:1},lists:{wishlist:{},dynamax:{},gmax:{},costumes:{},...lists},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:1};
-    // Startup can already have constructed this repository (notably Firefox).
-    // Bind the real repository to the same synthetic client as owned reads.
-    managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(managedFirebaseClient);
     if(!__editorFixture.ownedSubscriptions){
       managedOwnedDataCoordinator?.reset();
       managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
@@ -2226,7 +2223,8 @@ test.describe('visual smoke', () => {
         else if(activation==='text')await button.locator('.contextual-copy-label').click();
         else{
           // Reach the real native button through the modal's Tab order.
-          for(let i=0;i<8&&!await button.evaluate(el=>el===document.activeElement);i++)await page.keyboard.press(keyboardTab);
+          const cycle=await modal.locator('button,summary,textarea').count();
+          for(let i=0;i<=cycle&&!await button.evaluate(el=>el===document.activeElement);i++)await page.keyboard.press(keyboardTab);
           await expect(button).toBeFocused();await page.keyboard.press(activation);
         }
         expected.push(command);
