@@ -2192,6 +2192,71 @@ test.describe('visual smoke', () => {
     await capturePass3(page,'trainer-discovery-profile-320x568');
   });
 
+  test('comparison copy activates each exact section once, preserves the dialog, and recovers clipboard denial',async({page})=>{
+    await currentList(page,{wishlist:{Pikachu:'H',Eevee:'M'}});
+    await openSyntheticPublic(page,'ComparisonPartner',{wishlist:{Pikachu:'L',Squirtle:'H'}});
+    const trigger=page.getByRole('button',{name:/Compare with My List/i});
+    await trigger.focus();await page.keyboard.press('Enter');
+    const modal=page.locator('#trade-match-modal'),close=modal.locator('.diff-hdr-close');
+    await expect(close).toBeFocused();
+    const before=await page.evaluate(()=>({remote:structuredClone(__editorFixture.remote),writes:[...__editorFixture.writes],share:_activeShareView.username}));
+    await page.evaluate(()=>{
+      window.__comparisonProbe={calls:[],deny:false,backgroundClicks:0};
+      Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{
+        __comparisonProbe.calls.push(value);
+        if(__comparisonProbe.deny)throw new DOMException('Synthetic clipboard denial','NotAllowedError');
+      }}});
+      for(const id of ['app','share-view'])document.getElementById(id).addEventListener('click',()=>__comparisonProbe.backgroundClicks++);
+    });
+    const protection='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&';
+    const expected=[];
+    for(const [section,dex]of [['both','25'],['mine','133'],['theirs','7']]){
+      const panel=modal.locator('.diff-match-box.'+section),button=panel.locator('[data-contextual-copy]');
+      const command=protection+dex;
+      await expect(button).toHaveAttribute('data-contextual-copy',command);
+      for(const activation of ['button','icon','text','Enter','Space']){
+        if(activation==='button')await button.click();
+        else if(activation==='icon')await button.locator('svg').click();
+        else if(activation==='text')await button.locator('.contextual-copy-label').click();
+        else{
+          // Reach the real native button through the modal's Tab order.
+          for(let i=0;i<8&&!await button.evaluate(el=>el===document.activeElement);i++)await page.keyboard.press('Tab');
+          await expect(button).toBeFocused();await page.keyboard.press(activation);
+        }
+        expected.push(command);
+        await expect(panel.locator('.contextual-copy-status')).toHaveClass(/is-success/);
+        expect(await page.evaluate(()=>__comparisonProbe.calls)).toEqual(expected);
+        await expect(modal).toBeVisible();await expect(page.locator('#combined-editor-modal')).toBeHidden();
+      }
+      // Denial is a real rejected clipboard promise: exact manual text and focus,
+      // not a forged status or a direct invocation of the shared handler.
+      await page.evaluate(()=>{__comparisonProbe.deny=true;});await button.locator('svg').click();expected.push(command);
+      const field=panel.locator('textarea');
+      await expect(panel.locator('.contextual-copy-status')).toHaveClass(/is-error/);
+      await expect(panel.locator('.contextual-copy-status')).toHaveText('Copy failed. Select the text manually.');
+      await expect(field).toBeVisible();await expect(field).toHaveValue(command);await expect(field).toBeFocused();
+      expect(await field.evaluate(el=>({start:el.selectionStart,end:el.selectionEnd}))).toEqual({start:0,end:command.length});
+      expect(await page.evaluate(()=>__comparisonProbe.calls)).toEqual(expected);
+      await page.evaluate(()=>{__comparisonProbe.deny=false;});await button.click();expected.push(command);
+      await expect(panel.locator('.contextual-copy-status')).toHaveClass(/is-success/);
+      expect(await page.evaluate(()=>__comparisonProbe.calls)).toEqual(expected);
+      await expect(modal).toBeVisible();
+    }
+    await modal.locator('#trade-match-title').click();await expect(modal).toBeVisible();
+    expect(await page.evaluate(()=>__comparisonProbe.backgroundClicks)).toBe(0);
+    expect(await page.evaluate(()=>({remote:structuredClone(__editorFixture.remote),writes:[...__editorFixture.writes],share:_activeShareView.username}))).toEqual(before);
+    // Wrapping Tab/Shift+Tab stays within this dialog.
+    await close.click();await expect(modal).toHaveCount(0);await expect(trigger).toBeFocused();
+    await page.keyboard.press('Enter');await expect(close).toBeFocused();await page.keyboard.press('Shift+Tab');
+    await expect(modal.getByRole('button',{name:'Edit My List',exact:true})).toBeFocused();await page.keyboard.press('Tab');await expect(close).toBeFocused();
+    await page.keyboard.press('Escape');await expect(modal).toHaveCount(0);await expect(trigger).toBeFocused();
+    await page.keyboard.press('Enter');await expect(close).toBeFocused();
+    const backdropPoint={x:2,y:2};
+    expect(await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.id,backdropPoint)).toBe('trade-match-modal');
+    await page.mouse.click(backdropPoint.x,backdropPoint.y);await expect(modal).toHaveCount(0);await expect(trigger).toBeFocused();
+    expect(await page.evaluate(()=>__comparisonProbe.backgroundClicks)).toBe(2); // Only the two deliberate trigger reopens.
+  });
+
   test('wanted-list comparison preserves qualifiers, rejects gender mismatch, and refreshes after My List edits',async({page})=>{
     await page.setViewportSize({width:390,height:844});
     const them='TrainerWithAnExceptionallyLongHandle123',nyc='location-gofestnewyorkcity',osaka='location-gofestosaka';
@@ -2221,12 +2286,29 @@ test.describe('visual smoke', () => {
     await page.getByRole('button',{name:'Return to comparison'}).click();await expect(modal.locator('.diff-match-box.both')).toContainText('Heracross');await expect(modal.locator('.diff-match-box.both .diff-match-count')).toHaveText('2');
     expect(await page.evaluate(()=>__editorFixture.remote.users.LocalTrainer.specialTradeBoard)).toEqual(legacy);
     expect(await page.evaluate(()=>allData.wishlist.LocalTrainer.Mewtwo)).toContain('[bg:'+nyc+']');
-    const names=['Bulbasaur','Ivysaur','Venusaur','Charmander','Charmeleon','Charizard','Squirtle','Wartortle','Blastoise','Caterpie','Metapod','Butterfree','Weedle','Kakuna','Beedrill','Pidgey'];
+    // Use selectable entries for expansion rather than assuming a complete
+    // national-dex Add catalog (Kakuna correctly left validation open).
+    const names=['Bulbasaur','Ivysaur','Venusaur','Charmander','Charmeleon','Charizard','Squirtle','Wartortle','Blastoise','Caterpie','Metapod','Butterfree','Weedle','Relicanth','Arrokuda','Pidgey'];
     await page.getByRole('button',{name:'Edit My List'}).click();
-    for(const name of names){await page.locator('#wants-add-name').fill(name);if(await page.locator('[data-wants-add-priority=H]').getAttribute('aria-pressed')!=='true')await page.locator('[data-wants-add-priority=H]').click();await page.locator('.wants-add-form').getByRole('button',{name:'Add',exact:true}).click();await editorFixture.settled(page);}
-    // Change only the synthetic public service, then reopen via the actual search.
-    await openSyntheticPublic(page,them,{wishlist:{...theirs,...Object.fromEntries(names.map(name=>[name,'H']))}});await page.getByRole('button',{name:/Compare with My List/i}).click();
+    for(const name of names){
+      await page.locator('#wants-add-name').fill(name);
+      if(await page.locator('[data-wants-add-priority=H]').getAttribute('aria-pressed')!=='true')await page.locator('[data-wants-add-priority=H]').click();
+      await page.locator('.wants-add-form').getByRole('button',{name:'Add',exact:true}).click();
+      await expect(page.locator('#combined-editor-modal')).toBeHidden();await expect(page.locator('#wants-add-name')).toHaveValue('');await editorFixture.settled(page);
+    }
+    // Add resolves these names to their actual catalog categories, including
+    // Max entries. The other trainer's synthetic public lists must describe
+    // those same identities, not silently recast every name as ordinary.
+    const added=await page.evaluate(names=>productDeclarations().entries.filter(entry=>names.includes(entry.name)).map(({name,type,p})=>({name,type,p})),names);
+    expect(added.map(entry=>entry.name).sort()).toEqual([...names].sort());expect(added.every(entry=>entry.p==='H')).toBe(true);
+    const publicLists={wishlist:{...theirs},dynamax:{},gmax:{},costumes:{}};
+    for(const entry of added)publicLists[entry.type][entry.name]='H';
+    // Change only the synthetic public service, then reopen via actual search.
+    await openSyntheticPublic(page,them,publicLists);await page.getByRole('button',{name:/Compare with My List/i}).click();
     await expect(modal.locator('.diff-match-box.both .diff-match-count')).toHaveText('18');await expect(modal.locator('.diff-match-box.both .diff-match-more')).toBeVisible();
+    const more=modal.locator('.diff-match-box.both .diff-match-more');
+    await expect(more).toHaveAttribute('aria-expanded','false');await more.click();await expect(more).toHaveAttribute('aria-expanded','true');
+    await expect(modal.locator('.diff-match-box.both article.diff-match-chip:visible')).toHaveCount(18);await expect(modal).toBeVisible();
     for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:375,height:812},{width:320,height:568}]){
       await page.setViewportSize(viewport);await expect(modal).toBeVisible();await noOverflow(page);
       for(const button of await modal.locator('button').all()){const box=await button.boundingBox();if(box)expect(box.height).toBeGreaterThanOrEqual(44);}
