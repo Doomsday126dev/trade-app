@@ -92,6 +92,17 @@ test('exact form, background and multiline legacy notes survive no-op and only r
   await edit(page,'Psyduck');await save(page);await edit(page,'Psyduck');await page.locator('#combined-mod').fill('Retained legacy details');await save(page);expect((await declarations(page)).find(e=>e.name==='Psyduck')).toMatchObject({p:'',mod:'Retained legacy details'});
 });
 
+test('Max edit identity shows its localized category without changing the exact catalog entity',async({page})=>{
+  await install(page);
+  const rows=[];for(const category of ['dynamax','gmax']){rows.push(await page.evaluate(async category=>{const entry=listSource(category)[0],catalog=accountSyncCatalogIdentity(category,entry.name,entry),identity={surface:'my-list',lane:category,catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity),authority=await accountSyncMutationAuthority();const result=await applyAccountSyncTradeMutations([{kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues({p:'H'})}],authority.controller);if(!result.ok)throw Error(JSON.stringify(result));return{category,name:entry.name,entityId};},category));await settled(page);}
+  const before=await entities(page);
+  for(const locale of ['en','ja','es','de']){
+    await page.evaluate(locale=>changeInterfaceLocale(locale),locale);
+    for(const row of rows){await page.locator(`.wants-row[data-name="${row.name}"] .myrow-edit`).first().click();const expected=await page.evaluate(category=>i18nCore.t(category==='dynamax'?'list.dynamax':'list.gigantamax'),row.category);const exactFormMarker=row.category==='gmax'?'Gigantamax|Gmax|キョダイマックス':'Dynamax|Dmax|ダイマックス';await expect(page.locator('#combined-identity')).toContainText(new RegExp(`${expected}|${exactFormMarker}`,'i'));await expect(page.locator('#combined-name')).toHaveValue(row.name);await page.keyboard.press('Escape');}
+  }
+  expect(await entities(page)).toEqual(before);
+});
+
 test('account change rejects an in-flight Add; offline save retains the existing durable pending boundary',async({page})=>{
   await install(page);await addDialog(page,'Squirtle');await priority(page,'H');const before=await entities(page);
   await page.evaluate(()=>{__editorFixture.holdReads=true;});await page.locator('#combined-save').click();await expect.poll(()=>page.evaluate(()=>__editorFixture.readWaiters.length)).toBeGreaterThan(0);

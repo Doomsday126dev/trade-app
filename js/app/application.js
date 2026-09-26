@@ -660,7 +660,7 @@ function openCombinedEditor(index){
   }
   document.getElementById('combined-name-field').hidden=editing;
   const identity=document.getElementById('combined-identity');identity.hidden=!editing;
-  identity.innerHTML=editing?`<strong>${escHtml(entry.dn||entry.name)}</strong>`:'';
+  identity.innerHTML=editing?`<strong>${escHtml([entry.dn||entry.name,productShareCategoryLabel(entry)].filter(Boolean).join(' · '))}</strong>`:'';
   document.getElementById('combined-note-details').open=Boolean(entry.note);
   combinedEditor.initialFields=Object.fromEntries(['mod','note','gender'].map(field=>[field,document.getElementById('combined-'+field).value]));
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
