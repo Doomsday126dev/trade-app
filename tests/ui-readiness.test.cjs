@@ -30,15 +30,13 @@ test('manual language selection is device-local and exposes all four supported l
   assert.doesNotMatch(html,/changeInterfaceLocale[\s\S]{0,300}(userPreferences|shareAccess|managedTrainerPreferencesRepository)/);
 });
 
-test('Settings presents one primary language with an accessible optional search-language override',()=>{
+test('Settings presents aligned app and search language controls with an explicit automatic choice',()=>{
   assert.match(html,/class="settings-section language-settings-panel"/);
-  assert.match(html,/id="settings-search-language-automatic"[^>]+data-i18n="settings\.searchLanguageAutomatic"/);
-  assert.match(html,/id="settings-search-language-override"[^>]+aria-controls="settings-search-language-override-row"[^>]+aria-describedby="settings-search-language-override-help"/);
-  assert.match(html,/id="settings-search-language-override-row" hidden/);
-  assert.match(html,/id="settings-search-language"[^>]+disabled[^>]+aria-describedby="settings-search-language-override-help"/);
+  assert.match(html,/option value="follow-app" data-i18n="settings.sameAsApp"/);
+  assert.match(html,/id="settings-search-language"[^>]+aria-describedby="settings-search-language-help"/);
+  assert.match(html,/id="settings-search-language-help"/);
   assert.match(html,/\.language-field select\{[^}]*min-height:48px/);
-  assert.match(html,/\.language-override-toggle\{[^}]*min-height:48px/);
-  assert.match(html,/\.language-primary-row select,\.language-override-row select\{min-height:48px\}/);
+  assert.match(html,/\.language-primary-row select\{min-height:48px/);
 });
 
 test('Settings is removed from primary navigation and uses routed desktop plus dialog presentation',()=>{
@@ -189,7 +187,9 @@ test('Account & Security keeps production providers hidden while development act
   assert.match(panel,/data-provider="discord" hidden/);
   assert.doesNotMatch(panel,/data-provider="(?:email|legacy-pin)"/);
   const primary=methods.slice(methods.indexOf('data-provider="username-pin"'),methods.indexOf('data-provider="google"'));
-  assert.doesNotMatch(primary,/<button|onclick=|href=|data-action=/);
+  assert.match(primary,/id="settings-pin-toggle"[^>]+onclick="toggleSettingsPinForm\(\)"[^>]+hidden/);
+  assert.match(primary,/id="settings-pin-form" hidden[^>]+savePinSettings/);
+  assert.doesNotMatch(primary,/href=|data-provider-action|handleGoogleAccountAction|linkWithPopup/);
   assert.match(methods,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+hidden/);
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);

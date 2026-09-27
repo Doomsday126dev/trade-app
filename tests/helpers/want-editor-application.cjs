@@ -12,11 +12,16 @@ async function seedWantEditor(saved){
   const listeners=new Set(),writes=[],reads=[],clone=v=>v==null?null:structuredClone(v);
   const read=path=>path.split('/').reduce((v,k)=>v?.[k],remote)??null;
   const snapshot=path=>({val:()=>clone(read(path)),exists:()=>read(path)!=null});
-  const put=(path,value)=>{const parts=path.split('/'),last=parts.pop();let parent=remote;for(const part of parts)parent=parent[part]??={};parent[last]=clone(value);};
+  const put=(path,value)=>{const parts=path.split('/'),last=parts.pop();let parent=remote;for(const part of parts)parent=parent[part]??={};if(value===null)delete parent[last];else parent[last]=clone(value);};
   window.__editorFixture={remote,writes,reads,original,holdReads:false,readWaiters:[],offline:false};
+  // A server multi-path PATCH is atomic and null removes a key, just as RTDB
+  // does. Never expose an intermediate Favorite/slot state to the controller.
+  __editorFixture.receive=changes=>{for(const [path,value]of Object.entries(changes))put(path,value);for(const item of listeners)item.onData(snapshot(item.path));};
   ref=(_db,path)=>path;serverTimestamp=()=>Date.now();
   get=async path=>{reads.push(path);if(__editorFixture.holdReads)await new Promise(resolve=>__editorFixture.readWaiters.push(resolve));return snapshot(path);};
-  onValue=(path,onData)=>{const item={path,onData};listeners.add(item);queueMicrotask(()=>onData(snapshot(path)));return()=>listeners.delete(item);};
+  onValue=(path,onData,onError)=>{const item={path,onData,onError};listeners.add(item);queueMicrotask(()=>onData(snapshot(path)));return()=>listeners.delete(item);};
+  // A service-side listener failure, not a forged runtime/UI status.
+  __editorFixture.failListeners=()=>{for(const item of [...listeners])item.onError?.(Object.assign(Error('Synthetic listener disconnect'),{code:'NETWORK_ERROR'}));};
   runTransaction=async(path,fn,options)=>{
     if(!path.startsWith(`accountSync/${uid}/`)&&!path.startsWith(`authIndex/${uid}/accountSyncRecoveryReviews/`))throw Error(`Unexpected transaction: ${path}`);
     if(options?.applyLocally!==false)throw Error('Unverified local transaction');
@@ -27,6 +32,10 @@ async function seedWantEditor(saved){
   set=async(path,value)=>{if(path!==`publicShares/${username}`)throw Error(`Unexpected write: ${path}`);writes.push(path);put(path,value);};
   update=async()=>{throw Error('Unexpected legacy update');};
   auth={currentUser:{uid}};cur=username;currentAuthUid=uid;_authStateKnown=true;firebaseDataProtectionReady=true;db={};fbOn=true;activeCanonicalIdentity=null;
+  // Reads and subscriptions must describe the same synthetic server. Keeping
+  // the startup client here would deliver unrelated real-SDK null snapshots.
+  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
+  window.__installSyntheticFavoriteTransport?.();
   activateOwnedSession(uid,username);
   if(!saved){allData=normalizeData(clone(remote));saveLocal(allData);}
   for(const surface of publicSharePublicationDomain.REQUIRED_SOURCE_SURFACES)managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
@@ -35,7 +44,8 @@ async function seedWantEditor(saved){
   document.getElementById('my-un').textContent=username;switchTab('mylist',{render:false});
   const started=await ensureAccountSyncRuntime();renderMyList();setSyncStatus('online');return started;
 }
-async function install(page,saved=null){
+async function install(page,saved=null,{favoriteTransport=false}={}){
+  if(favoriteTransport)await page.addInitScript(require('./favorite-transport.cjs').prepareFavoriteTransport);
   await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firestore\.googleapis\.com)/,r=>r.abort());
   await page.goto('./?want-editor-local');
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
@@ -43,7 +53,17 @@ async function install(page,saved=null){
   await page.waitForFunction(()=>typeof ensureAccountSyncRuntime==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
   expect((await page.evaluate(seedWantEditor,saved)).ok).toBe(true);await settled(page);
 }
-async function settled(page){await expect.poll(()=>page.evaluate(async()=>{await managedAccountSyncRuntime.controller.drain();return(await managedAccountSyncRuntime.snapshot()).state;})).toBe('saved');}
+async function settled(page){
+  await expect.poll(()=>page.evaluate(async()=>{
+    // Recovery disposes the old runtime before asynchronously starting its
+    // replacement. Observe that boundary; never drain a missing/stale runtime.
+    const runtime=managedAccountSyncRuntime;
+    if(!runtime)return 'starting';
+    await runtime.controller.drain();
+    const snapshot=await runtime.snapshot();
+    return runtime===managedAccountSyncRuntime?snapshot.state:'restarting';
+  })).toBe('saved');
+}
 async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
 async function edit(page,name){await page.locator('#combined-list .wants-row').filter({has:page.locator(`.wants-name[data-group]`,{hasText:new RegExp(`^${name}$`)})}).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');}
 async function priority(page,value){await page.locator(`#combined-priorities input[value="${value}"]`).check();}
