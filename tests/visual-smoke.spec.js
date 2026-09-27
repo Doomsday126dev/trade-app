@@ -1930,7 +1930,9 @@ test.describe('visual smoke', () => {
       await page.setViewportSize({width,height:900});await editorFixture.addDialog(page,'Rotom');await page.locator('#combined-close').focus();await page.mouse.move(0,0);
       const details=page.locator('#combined-mod'),reference=page.locator('#combined-name');await expect(details).toHaveClass(/field-control/);
       const styles=async locator=>locator.evaluate(el=>{const s=getComputedStyle(el);return{background:s.backgroundColor,color:s.color,border:s.borderColor,radius:s.borderRadius,minHeight:s.minHeight};});
-      await expect.poll(async()=>JSON.stringify(await styles(details))).toBe(JSON.stringify(await styles(reference)));await details.fill('winter costume');await expect(details).toHaveValue('winter costume');
+      // Compare both current states; freezing the reference during its blur
+      // transition makes the expected color an unreachable intermediate value.
+      await expect.poll(async()=>JSON.stringify(await styles(details))===JSON.stringify(await styles(reference))).toBe(true);await details.fill('winter costume');await expect(details).toHaveValue('winter costume');
       for(const input of [details,reference]){await input.focus();await expect(input).toBeFocused();await expect.poll(()=>input.evaluate(el=>getComputedStyle(el).boxShadow)).not.toBe('none');}
       await noOverflow(page);await page.keyboard.press('Escape');
     }
