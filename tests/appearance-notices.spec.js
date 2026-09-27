@@ -17,6 +17,7 @@ test('neutral default is the coherent dark canvas and a clear Settings choice',a
   await page.setViewportSize({width:1440,height:900});await install(page);
   await page.evaluate(()=>applyTheme('dark'));
   expect(await page.evaluate(()=>({wallpaper:allData.users[cur].wallpaper||null,background:getComputedStyle(document.body).backgroundColor,canvas:getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()}))).toMatchObject({wallpaper:null,background:'rgb(17, 19, 22)'});
+  expect(await page.evaluate(async()=>({splash:(await(await fetch('manifest.json')).json()).background_color,chrome:document.querySelector('meta[name="theme-color"]').content}))).toEqual({splash:'#111316',chrome:'#111316'});
   await page.locator('#more-settings').click();await page.locator('[data-settings-target="appearance"]').click();
   await expect(page.locator('#wp-picker .mono')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('#wp-picker .mono')).toHaveAttribute('aria-label','Neutral');
