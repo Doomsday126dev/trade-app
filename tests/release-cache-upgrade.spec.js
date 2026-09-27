@@ -116,7 +116,14 @@ test('populated .123 cache upgrades on one origin without losing protected local
     });
     const workerState=await refreshPage.evaluate(async()=>({active:(await navigator.serviceWorker.getRegistration())?.active?.scriptURL,
       controller:navigator.serviceWorker.controller?.scriptURL}));
-    fs.writeFileSync(path.join(builds.run,'cache-observation.json'),JSON.stringify({candidateHead:builds.head,caches:upgraded.caches,
+    const cleanPage=await clean.newPage();
+    await cleanPage.goto(`${server.origin}/trade-app/?clean-client`);
+    await waitForShell(cleanPage,NEW_ID);
+    const cleanClient={release:await cleanPage.evaluate(()=>window.__POGO_RELEASE_ID),
+      caches:await cleanPage.evaluate(()=>caches.keys())};
+    fs.writeFileSync(path.join(builds.run,'cache-observation.json'),JSON.stringify({candidateHead:builds.head,
+      artifactDigest:builds.built.artifact_digest,oldTag:OLD_TAG,oldSha:OLD_SHA,
+      dismissedOldPage:true,upgrade:upgraded,cleanClient,
       oldShellEntryCount:oldShellEntries.length,oldShellEntries,workerState},null,2));
     expect(upgraded.release).toBe(NEW_ID);expect(upgraded.client).toBe(NEW_ID);
     expect(upgraded.css).toContain(`v=${NEW_ID}`);
@@ -124,11 +131,8 @@ test('populated .123 cache upgrades on one origin without losing protected local
     expect(upgraded.local).toEqual(seeded);
     expect(upgraded.caches).toContain(`shell-pogo-trades-${NEW_ID}`);
     expect(upgraded.caches).not.toContain('shell-pogo-trades-2026-09-23.123');
-    const cleanPage=await clean.newPage();
-    await cleanPage.goto(`${server.origin}/trade-app/?clean-client`);
-    await waitForShell(cleanPage,NEW_ID);
-    expect(await cleanPage.evaluate(()=>window.__POGO_RELEASE_ID)).toBe(NEW_ID);
-    expect(await cleanPage.evaluate(()=>caches.keys())).not.toContain('shell-pogo-trades-2026-09-23.123');
+    expect(cleanClient.release).toBe(NEW_ID);
+    expect(cleanClient.caches).not.toContain('shell-pogo-trades-2026-09-23.123');
     fs.writeFileSync(path.join(builds.run,'upgrade-result.json'),JSON.stringify({oldTag:OLD_TAG,oldSha:OLD_SHA,
       candidateHead:builds.head,artifactDigest:builds.built.artifact_digest,releaseId:NEW_ID,
       sameOrigin:server.origin,upgrade:upgraded,cleanClient:true},null,2));
