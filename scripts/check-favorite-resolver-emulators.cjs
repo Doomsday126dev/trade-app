@@ -10,7 +10,7 @@ async function command(args,env){return new Promise((resolve,reject)=>{const chi
  const server=spawn('python3',['-m','http.server','4188','--bind','127.0.0.1'],{stdio:'ignore'});
  try{
   for(let i=0;i<40;i++){try{if((await fetch('http://127.0.0.1:4188/index.html')).ok)break;}catch{}await new Promise(resolve=>setTimeout(resolve,100));}
-  const specs=['tests/favorite-addition-emulator.spec.js',...(require('node:fs').existsSync('tests/favorite-picker-emulator.spec.js')?['tests/favorite-picker-emulator.spec.js']:[])];
+  const specs=['tests/favorite-addition-emulator.spec.js','tests/saving-favorites-emulator.spec.js',...(require('node:fs').existsSync('tests/favorite-picker-emulator.spec.js')?['tests/favorite-picker-emulator.spec.js']:[])];
   await command([path.join(require.resolve('@playwright/test/package.json'),'../cli.js'),'test',...specs,'--project=desktop','--workers=1'],{POGO_SAVING_EMULATORS:'1',PLAYWRIGHT_BASE_URL:'http://localhost:4188'});
  }finally{server.kill('SIGTERM');await handler.close();}
 })().catch(error=>{console.error(error.message);process.exitCode=1;});

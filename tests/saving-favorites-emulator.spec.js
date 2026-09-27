@@ -1,6 +1,7 @@
 const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
 const path=require('node:path');
+const {routeEmulators:routeResolverEmulators}=require('./support/favoriteBrowserFixtures.cjs');
 const root=process.env.INCIDENT_SOURCE_ROOT||path.join(__dirname,'..');
 const project='demo-pogo-saving-incident',database='http://127.0.0.1:9500',authHost='http://127.0.0.1:9599';
 const namespace=`${project}-default-rtdb`;
@@ -116,14 +117,18 @@ test('pending journal survives a page restart and ordinary listener recovery whi
   expect(Object.keys((await account(fixture)).migrations)).toEqual(migrations);
 });
 
-test('new Favorites fail under real own-account reads without creating a local success or private read',async({page})=>{
-  const fixture=await seed();await routeEmulators(page,fixture);await login(page,fixture);await settled(page);
-  await page.evaluate(other=>toggleTrainerFavorite(other),fixture.other);
-  await expect(page.locator('#toast')).toContainText('account identity is unavailable');
+test('an unbound public trainer cannot become a Favorite through the resolver or private reads',async({page})=>{
+  const fixture=await seed(),unbound=`Unbound${Date.now().toString(36)}`;
+  expect((await adminData('PUT',`publicShares/${unbound}`,{version:1,username:unbound,profile:{bio:'Public-only fixture'},lists:{wishlist:{Eevee:'L'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:1})).status).toBe(200);
+  await routeResolverEmulators(page,fixture,{candidate:true});await login(page,fixture);await settled(page);
+  await page.evaluate(other=>toggleTrainerFavorite(other),unbound);
+  await expect.poll(()=>page.evaluate(async()=>{const rows=(await managedFavoriteAdditions.snapshot()).rows;return rows.at(-1)?.code;})).toBe('favorite/identity-unavailable');
+  await expect(page.locator('#toast')).toContainText('could not be securely identified');
   expect((await account(fixture)).favorites||{}).toEqual({});
-  expect(await page.evaluate(other=>ensureTrainerHistoryStore().isFavorite(other),fixture.other)).toBe(false);
+  expect(await page.evaluate(other=>ensureTrainerHistoryStore().isFavorite(other),unbound)).toBe(false);
   // Shared-list action calls the same mutation; public content is not identity proof.
-  await page.evaluate(other=>{_activeShareView={username:other,type:'wishlist'};return toggleTrainerFavorite(other);},fixture.other);
+  await page.evaluate(other=>{_activeShareView={username:other,type:'wishlist'};return toggleTrainerFavorite(other);},unbound);
+  await expect.poll(()=>page.evaluate(async()=>{const rows=(await managedFavoriteAdditions.snapshot()).rows;return rows.at(-1)?.code;})).toBe('favorite/identity-unavailable');
   expect((await account(fixture)).favorites||{}).toEqual({});
 });
 
@@ -150,10 +155,18 @@ for(const entryPoint of ['Trainers','shared list'])test(`existing canonical Favo
   expect(operation.ok).toBe(true);
   const entity=window.PogoDomain.accountSyncMerge.mergeOperation(null,operation.value,{acceptedAt:1}).value;
   expect((await adminData('PUT',`accountSync/${fixture.uid}/favorites/${fixture.targetUid}`,entity)).status).toBe(200);
-  await routeEmulators(page,fixture,{legacy:false});await login(page,fixture);await settled(page);
+  await routeResolverEmulators(page,fixture,{candidate:true,legacy:false});await login(page,fixture);await settled(page);
   expect(await page.evaluate(other=>ensureTrainerHistoryStore().isFavorite(other),fixture.other)).toBe(true);
   page.on('dialog',dialog=>dialog.accept());
-  await page.evaluate(({other,entryPoint})=>{if(entryPoint==='shared list')_activeShareView={username:other,type:'wishlist'};else switchTab('trainers');return toggleTrainerFavorite(other);},{other:fixture.other,entryPoint});
+  if(entryPoint==='Trainers'){
+    await page.evaluate(()=>{switchTab('find');focusTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});
+    const card=page.locator('#favorite-trainers-list .favorite-card-shell').filter({hasText:fixture.other});
+    await card.locator('.favorite-card-more[data-favorite-action="toggle-menu"]').click();
+    await card.locator('[data-trainer-action="remove"]').click();
+  }else{
+    await page.evaluate(other=>openTrainerPublicShare(other),fixture.other);
+    await page.locator('#share-hdr [data-share-action="favorite-remove"]').click();
+  }
   await settled(page);expect((await account(fixture)).favorites[fixture.targetUid].deleted).toBe(true);
   await page.reload();await expect.poll(()=>page.evaluate(()=>typeof managedAccountSyncRuntime!=='undefined'&&managedAccountSyncRuntime?.projectionReady),{timeout:30000}).toBe(true);
   expect(await page.evaluate(other=>ensureTrainerHistoryStore().isFavorite(other),fixture.other)).toBe(false);
