@@ -476,10 +476,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         </div>
       </details>
     </div>
-    <aside id="wants-share-guide" class="discovery-share-guide" hidden>
-      <div class="discovery-guide-copy"><strong data-i18n="discovery.shareGuideTitle">Share your wants when you're ready</strong><p data-i18n="discovery.shareGuideBody">Create a link, image or text copy from Share.</p></div>
-      <div class="discovery-guide-actions"><button type="button" class="btn btn-secondary" onclick="openProductShare('link','full',this)" data-i18n="product.share">Share</button><button type="button" class="btn btn-ghost" onclick="dismissWantsShareGuide()" data-i18n="discovery.dismissGuide">Dismiss</button></div>
-    </aside>
     <div id="wants-find" class="wants-find" hidden>
       <input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="workflow.findInList" data-i18n-aria-label="workflow.findInList" aria-label="Find in list" oninput="scheduleMyListFilter(this.value)" onkeydown="if(event.key==='Escape'){event.stopPropagation();setWantsFindOpen(false)}">
       <button type="button" class="btn btn-secondary" onclick="setWantsFindOpen(false)" data-i18n="common.close" data-i18n-aria-label="workflow.closeFind" aria-label="Close find in list">Close</button>
