@@ -11426,7 +11426,7 @@ function pokeballLoader(text=''){
 
 // ── WALLPAPER (#32) ───────────────────────────────────────────
 const WALLPAPERS=[
-  {key:'mono',label:'Default'},
+  {key:'mono',label:'Neutral'},
   {key:'aurora',label:'Aurora'},
   {key:'ocean',label:'Ocean'},
   {key:'forest',label:'Forest'},
