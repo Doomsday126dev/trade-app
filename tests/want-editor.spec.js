@@ -53,12 +53,40 @@ test('validation, durable-write failure and retry preserve the editable draft; r
   await page.locator('#combined-xxs').uncheck();
   await page.evaluate(()=>{const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='operations'){IDBObjectStore.prototype.put=put;throw new DOMException('Synthetic journal full','QuotaExceededError');}return put.apply(this,args);};});
   await page.locator('#combined-save').click();await expect(page.locator('#combined-error')).not.toBeEmpty();await expect(page.locator(modal)).toBeVisible();await expect(page.locator('#combined-save')).toBeEnabled();expect(await entities(page)).toEqual(before);
-  // A real journal failure puts the existing runtime into sync-error. Its
-  // established recovery boundary is a restarted runtime, not a fake success.
-  await page.keyboard.press('Escape');await page.evaluate(async()=>{await stopAccountSyncRuntime();await ensureAccountSyncRuntime();});await settled(page);
-  await addDialog(page,'Squirtle');await page.locator('#combined-xxl').check();await save(page);await edit(page,'Squirtle');await page.locator('#wants-remove').click();await expect(page.locator(modal)).toBeHidden();await settled(page);expect((await declarations(page)).some(e=>e.name==='Squirtle')).toBe(false);
+  expect(await page.evaluate(async()=>{const state=await managedAccountSyncRuntime.snapshot();return[state.lastError,state.lastErrorCategory,state.pendingCount,state.blockedCount];})).toEqual(['account-sync/journal-write-failed','journal',0,0]);
+  expect(await page.evaluate(()=>{
+    const state=accountSyncUiState,eligible=accountSyncEligibleUid,ready=accountSyncJournalRetryReady();
+    accountSyncUiState={...state,pendingCount:1};const pending=accountSyncJournalRetryReady();
+    accountSyncUiState={...state,listenerHealthy:false};const listener=accountSyncJournalRetryReady();
+    accountSyncUiState=state;accountSyncEligibleUid='another-synthetic-owner';const owner=accountSyncJournalRetryReady();
+    accountSyncEligibleUid=eligible;return{ready,pending,listener,owner};
+  })).toEqual({ready:true,pending:false,listener:false,owner:false});
+  // The one-shot IndexedDB failure has ended. Retry the still-open draft in
+  // the same authenticated runtime; a restart is not an immediate retry.
+  await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();await settled(page);
+  expect((await declarations(page)).find(e=>e.name==='Squirtle')).toMatchObject({xxl:true});
+  await edit(page,'Squirtle');await page.locator('#wants-remove').click();await expect(page.locator(modal)).toBeHidden();await settled(page);expect((await declarations(page)).some(e=>e.name==='Squirtle')).toBe(false);
+  const afterRemoval=await entities(page);
+  expect(afterRemoval.filter(entity=>!entity.identity.catalogId.includes('Squirtle'))).toEqual(before);
+  expect(afterRemoval.filter(entity=>entity.identity.catalogId.includes('Squirtle'))).toMatchObject([{deletedAt:expect.any(Number)}]);
+  expect(await page.evaluate(()=>auth.currentUser.uid)).toBe('want-editor-local-uid');
   page.once('dialog',dialog=>dialog.dismiss());await page.locator('.wants-row[data-name="Rotom"] .myrow-remove').click();expect((await declarations(page)).some(e=>e.name==='Rotom')).toBe(true);
   page.once('dialog',dialog=>dialog.accept());await page.locator('.wants-row[data-name="Rotom"] .myrow-remove').click();await settled(page);await expect(page.locator('.wants-row[data-name="Rotom"]')).toHaveCount(0);
+});
+
+test('untyped legacy board alias stays in review without guessing a Max identity or changing saved data',async({page})=>{
+  const uid='want-editor-local-uid',username='LocalTrainer';
+  const remote={authIndex:{[uid]:{username}},users:{[username]:{authUid:uid,specialTradeBoard:{lf:[{name:'Pikachu',no:25,qty:1}],ft:[{name:'Eevee',no:133,qty:2,note:'Untouched offering'}]}}},wishlist:{[username]:{Pikachu:'H',Psyduck:'',Rotom:'M'}},dynamax:{[username]:{}},gmax:{[username]:{}},costumes:{[username]:{}}};
+  await install(page,remote);
+  const before=await entities(page),saved=await page.evaluate(()=>structuredClone(__editorFixture.remote));
+  await page.locator('.wants-row[data-name="Pikachu"] .myrow-edit').last().click();
+  await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');
+  await priority(page,'M');await page.locator('#combined-save').click();
+  await expect(page.locator(modal)).toBeVisible();await expect(page.locator('#combined-error')).toContainText('awaiting review');
+  await expect(page.locator('#combined-priority')).toHaveValue('M');
+  expect(await entities(page)).toEqual(before);
+  expect(await page.evaluate(()=>structuredClone(__editorFixture.remote))).toEqual(saved);
+  expect(await page.evaluate(()=>auth.currentUser.uid)).toBe(uid);
 });
 
 test('cancel, stale runtime/session and repeated activation cannot commit the wrong draft',async({page})=>{

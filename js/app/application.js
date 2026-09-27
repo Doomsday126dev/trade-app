@@ -3395,7 +3395,7 @@ async function accountSyncMutationAuthority(){
   try{
     const started=await ensureAccountSyncRuntime();
     const runtime=managedAccountSyncRuntime;
-    if(started?.ok&&accountSyncProjectionReady()&&runtime?.ownerUid===uid&&runtime?.controller){
+    if(((started?.ok&&accountSyncProjectionReady())||accountSyncJournalRetryReady())&&runtime?.ownerUid===uid&&runtime?.controller){
       return Object.freeze({mode:'canonical',uid,username,runtime,controller:runtime.controller});
     }
     const code=String(started?.status||'account-sync/not-ready');accountSyncMarkMutationBlocked(code);return Object.freeze({mode:'blocked',code});
@@ -3407,8 +3407,18 @@ function accountSyncAuthorityCurrent(authority){
   return authority?.mode!=='canonical'||(
     authority.uid===auth?.currentUser?.uid&&authority.username===cur&&
     authority.runtime===managedAccountSyncRuntime&&authority.runtime?.ownerUid===authority.uid&&
-    authority.controller===authority.runtime?.controller&&accountSyncProjectionReady()
+    authority.controller===authority.runtime?.controller&&(accountSyncProjectionReady()||accountSyncJournalRetryReady())
   );
+}
+// A failed local journal transaction admitted no operation or optimistic entity.
+// Permit the user's explicit retry against the same hydrated owner and healthy
+// listener; the controller still journals atomically before showing success.
+function accountSyncJournalRetryReady(){
+  const runtime=managedAccountSyncRuntime,state=accountSyncUiState,uid=auth?.currentUser?.uid;
+  return!!uid&&accountSyncEligibleUid===uid&&runtime?.ownerUid===uid&&runtime.projectionReady===true&&runtime.profileReady===true&&
+    state?.state==='sync-error'&&state.lastError==='account-sync/journal-write-failed'&&state.lastErrorCategory==='journal'&&
+    state.active===true&&state.listenerState==='healthy'&&state.listenerHealthy===true&&
+    !Number(state.pendingCount)&&!Number(state.blockedCount)&&!Number(state.conflictCount)&&!Number(state.unsafeBlockedCount)&&!Number(state.recoveryCandidateCount);
 }
 async function accountSyncFavoriteReviewAuthority(){
   if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return Object.freeze({mode:'legacy'});
