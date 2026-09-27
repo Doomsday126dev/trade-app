@@ -2776,6 +2776,9 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-calendar-desktop')).toBeHidden();
     await expect(page.locator('.event-calendar-disclosure')).not.toHaveAttribute('open','');
     await expect(page.locator('.event-up-next')).toBeVisible();
+    // Native resize dispatch follows viewport/style geometry in WebKit. The
+    // owning handler must finish updating its edge cue before measuring it.
+    await expect(page.locator('.event-filter-scroll')).not.toHaveClass(/is-at-end/);
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
     expect(filterGeometry.scrollWidth).toBeGreaterThan(filterGeometry.clientWidth);
     expect(filterGeometry.tabIndex).toBe(0);
