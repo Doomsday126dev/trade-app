@@ -122,12 +122,49 @@ for(const width of [1440,390,320])for(const locale of ['en','ja','es','de'])test
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('legacy Tools route returns keyboard focus to the mobile section list',async({page})=>{
+test('legacy Tools route normalizes the remembered mobile section before close and reopen',async({page})=>{
   await page.setViewportSize({width:390,height:700});await install(page);await page.locator('#more-settings').click();
   await page.goto(page.url().split('#')[0]+'#settings/tools');await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
-  await page.locator('.settings-mobile-back').click();await expect(page).toHaveURL(/#settings$/);
-  await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();await page.keyboard.press('Enter');
+  await page.locator('.settings-mobile-back').focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/#settings$/);
+  await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();
+  expect(await page.evaluate(()=>_settingsSection)).toBe('profile');
+  await expect(page.locator('[data-settings-target="profile"]')).toHaveAttribute('aria-current','page');
+  await expect(page.locator('[data-settings-section="profile"]')).not.toHaveAttribute('hidden');
+  await page.goForward();await expect(page).toHaveURL(/#settings\/tools$/);
+  await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+  expect(await page.evaluate(()=>_settingsSection)).toBe('tools');
+  await page.goBack();await expect(page).toHaveURL(/#settings$/);
+  expect(await page.evaluate(()=>_settingsSection)).toBe('profile');
+  await expect(page.locator('[data-settings-target="profile"]')).toHaveAttribute('aria-current','page');
+  await page.locator('.settings-modal-close').click();await expect(page.locator('#settings-modal')).toBeHidden();await expect(page.locator('#more-settings')).toBeFocused();
+  await page.locator('#more-settings').click();await expect(page.locator('#settings-layout')).toHaveClass(/mobile-list/);
+  expect(await page.evaluate(()=>_settingsSection)).toBe('profile');
+  await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();
+  await page.keyboard.press('Enter');await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+  await page.locator('.settings-mobile-back').click();await page.setViewportSize({width:1440,height:900});
   await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+  await expect(page.locator('[data-settings-target="profile"]')).toHaveAttribute('aria-current','page');
+  expect(await page.evaluate(()=>_settingsSection)).toBe('profile');
+  await page.locator('.settings-modal-close').click();await expect(page.locator('#more-settings')).toBeFocused();
+  await page.locator('#more-settings').click();await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+  await expect(page.locator('[data-settings-target="profile"]')).toHaveAttribute('aria-current','page');
+});
+
+test('ordinary remembered section and unsaved Profile draft survive mobile list returns',async({page})=>{
+  await page.setViewportSize({width:390,height:700});await install(page);const writes=await page.evaluate(()=>[...__editorFixture.writes]);
+  await open(page,'language');await page.locator('.settings-mobile-back').click();
+  expect(await page.evaluate(()=>_settingsSection)).toBe('language');
+  await expect(page.locator('[data-settings-target="language"]')).toHaveAttribute('aria-current','page');
+  await expect(page.locator('[data-settings-target="language"]')).toBeFocused();
+  await page.locator('.settings-modal-close').click();await page.locator('#more-settings').click();
+  await expect(page.locator('[data-settings-target="language"]')).toBeFocused();
+  await page.locator('[data-settings-target="profile"]').click();await page.locator('#prof-bio').fill('Unsaved synthetic draft');
+  await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
+  await page.locator('.settings-mobile-back').click();await page.locator('.settings-modal-close').click();
+  await expect(page.locator('#more-settings')).toBeFocused();await page.locator('#more-settings').click();
+  await expect(page.locator('[data-settings-target="profile"]')).toBeFocused();await page.keyboard.press('Enter');
+  await expect(page.locator('#prof-bio')).toHaveValue('Unsaved synthetic draft');
+  expect(await page.evaluate(()=>__editorFixture.writes)).toEqual(writes);
 });
 
 test('mobile detail Back and Close settings have distinct labels, history and draft-safe outcomes',async({page})=>{

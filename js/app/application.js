@@ -10467,6 +10467,10 @@ function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
   const route=parseSettingsRoute();
   document.getElementById('settings-layout')?.classList.add('mobile-list');
+  // The supported legacy Tools route has a detail panel but no section-list
+  // destination. Normalize the remembered selection along with the fallback
+  // focus so a later reopen or desktop resize cannot revive that panel.
+  if(!document.querySelector(`[data-settings-target="${_settingsSection}"]`))selectSettingsSection('profile',{focus:false,keepList:true,updateHistory:false});
   if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
   if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
   requestAnimationFrame(()=>(document.querySelector(`[data-settings-target="${_settingsSection}"]`)||document.querySelector('[data-settings-target="profile"]'))?.focus({preventScroll:true}));
