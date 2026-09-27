@@ -53,7 +53,17 @@ async function install(page,saved=null,{favoriteTransport=false}={}){
   await page.waitForFunction(()=>typeof ensureAccountSyncRuntime==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
   expect((await page.evaluate(seedWantEditor,saved)).ok).toBe(true);await settled(page);
 }
-async function settled(page){await expect.poll(()=>page.evaluate(async()=>{await managedAccountSyncRuntime.controller.drain();return(await managedAccountSyncRuntime.snapshot()).state;})).toBe('saved');}
+async function settled(page){
+  await expect.poll(()=>page.evaluate(async()=>{
+    // Recovery disposes the old runtime before asynchronously starting its
+    // replacement. Observe that boundary; never drain a missing/stale runtime.
+    const runtime=managedAccountSyncRuntime;
+    if(!runtime)return 'starting';
+    await runtime.controller.drain();
+    const snapshot=await runtime.snapshot();
+    return runtime===managedAccountSyncRuntime?snapshot.state:'restarting';
+  })).toBe('saved');
+}
 async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
 async function edit(page,name){await page.locator('#combined-list .wants-row').filter({has:page.locator(`.wants-name[data-group]`,{hasText:new RegExp(`^${name}$`)})}).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');}
 async function priority(page,value){await page.locator(`#combined-priorities input[value="${value}"]`).check();}
