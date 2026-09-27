@@ -476,6 +476,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         </div>
       </details>
     </div>
+    <aside id="wants-share-guide" class="discovery-share-guide" hidden>
+      <div class="discovery-guide-copy"><strong data-i18n="discovery.shareGuideTitle">Share your wants when you're ready</strong><p data-i18n="discovery.shareGuideBody">Create a link, image or text copy from Share.</p></div>
+      <div class="discovery-guide-actions"><button type="button" class="btn btn-secondary" onclick="openProductShare('link','full',this)" data-i18n="product.share">Share</button><button type="button" class="btn btn-ghost" onclick="dismissWantsShareGuide()" data-i18n="discovery.dismissGuide">Dismiss</button></div>
+    </aside>
     <div id="wants-find" class="wants-find" hidden>
       <input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="workflow.findInList" data-i18n-aria-label="workflow.findInList" aria-label="Find in list" oninput="scheduleMyListFilter(this.value)" onkeydown="if(event.key==='Escape'){event.stopPropagation();setWantsFindOpen(false)}">
       <button type="button" class="btn btn-secondary" onclick="setWantsFindOpen(false)" data-i18n="common.close" data-i18n-aria-label="workflow.closeFind" aria-label="Close find in list">Close</button>
@@ -485,7 +489,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection(this)" data-i18n="workflow.shareSelected" hidden>Share selected</button>
       <button type="button" class="btn btn-secondary" onclick="clearWantsSelection()" data-i18n="workflow.clear">Clear</button>
     </div>
-    <aside id="wants-empty-import" class="discovery-empty-import" hidden><p data-i18n="discovery.emptyImport">Have a Pokémon GO search string? Preview it to start your wants list.</p><button type="button" class="btn btn-secondary" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button></aside>
+    <aside id="wants-empty-import" class="discovery-empty-import" hidden><div class="discovery-guide-copy"><strong data-i18n="discovery.emptyTitle">Start with a Pokémon you want</strong><p data-i18n="discovery.emptyImport">Search above to add one, or import a Pokémon GO search string.</p></div><button type="button" class="btn btn-secondary" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button></aside>
     <div id="combined-list" class="mylist-priority-sections"></div>
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div id="intent-review" class="intent-review" hidden></div>

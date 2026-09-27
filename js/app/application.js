@@ -7776,12 +7776,23 @@ function renderMyList(filterVal,options={}){
     if(hide&&emptyImport.contains(document.activeElement))document.getElementById('wants-add-name')?.focus();
     emptyImport.hidden=hide;
   }
+  const shareGuide=document.getElementById('wants-share-guide');
+  if(shareGuide){
+    const dismissed=lsGet(`pogoShareGuideDismissed:v1:${auth?.currentUser?.uid||''}`,false);
+    const hide=!hydrated||declarations.entries.length===0||dismissed;
+    if(hide&&shareGuide.contains(document.activeElement))document.querySelector('.wants-list-toolbar button')?.focus();
+    shareGuide.hidden=hide;
+  }
   renderIntentEntries('',declarations);
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',declarations.entries.length>0);
   if(options.reason!=='filter'){
     renderTradeComparisonReturn();
     renderOwnerShareRepublishNotice();
   }
+}
+function dismissWantsShareGuide(){
+  if(auth?.currentUser?.uid)lsSet(`pogoShareGuideDismissed:v1:${auth.currentUser.uid}`,true);
+  renderMyList();
 }
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
@@ -11426,7 +11437,7 @@ function pokeballLoader(text=''){
 
 // ── WALLPAPER (#32) ───────────────────────────────────────────
 const WALLPAPERS=[
-  {key:'mono',label:'Default'},
+  {key:'mono',label:'Neutral'},
   {key:'aurora',label:'Aurora'},
   {key:'ocean',label:'Ocean'},
   {key:'forest',label:'Forest'},
