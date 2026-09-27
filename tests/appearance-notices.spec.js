@@ -51,8 +51,8 @@ test('hydrated first-use guidance is inline, localized, and never mistaken for l
   await expect(page.locator('#wants-empty-import')).toBeHidden();await expect(page.locator('#wants-share-guide')).toBeHidden();
   await page.evaluate(async()=>{__editorFixture.holdReads=false;__editorFixture.readWaiters.splice(0).forEach(resolve=>resolve());await __pendingAppearanceHydration;renderMyList();});await settled(page);
   await expect(page.locator('#wants-empty-import')).toBeVisible();
-  for(const locale of ['ja','es','de']){
-    await localeThroughSettings(page,locale);await expect(page.locator('#wants-empty-import strong')).not.toBeEmpty();
+  for(const [locale,title] of [['ja','欲しいポケモンから始めましょう'],['es','Empieza con un Pokémon que quieras'],['de','Beginne mit einem Pokémon, das du suchst']]){
+    await localeThroughSettings(page,locale);await expect(page.locator('#wants-empty-import strong')).toHaveText(title);
     expect(await noOverflow(page)).toBe(true);
   }
   await page.setViewportSize({width:320,height:650});await page.evaluate(()=>document.documentElement.style.fontSize='200%');
@@ -69,6 +69,11 @@ test('returning guidance uses owned hydration, preserves operational and history
     await expect(page.locator('#wants-share-guide')).toBeVisible();await expect(page.locator('#wants-empty-import')).toBeHidden();
     expect(await noOverflow(page)).toBe(true);await capture(page,`returning-${width}`);
   }
+  for(const [locale,title] of [['ja','準備ができたら希望リストを共有'],['es','Comparte tus deseos cuando quieras'],['de','Teile deine Wünsche, wenn du bereit bist']]){
+    await localeThroughSettings(page,locale);await expect(page.locator('#wants-share-guide strong')).toHaveText(title);
+    expect(await noOverflow(page)).toBe(true);
+  }
+  await capture(page,'returning-390-de');await localeThroughSettings(page,'en');
   await page.evaluate(()=>applyTheme('dark'));await capture(page,'returning-dark-390');
   const before=await page.evaluate(()=>({writes:[...__editorFixture.writes],seen:localStorage.getItem('pogoWhatsNewSeen'),tour:localStorage.getItem('pogoTourSeen')}));
   await page.locator('#wants-share-guide .btn-secondary').click();await expect(page.locator('#product-share-modal')).toBeVisible();
