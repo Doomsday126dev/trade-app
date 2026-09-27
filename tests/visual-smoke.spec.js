@@ -518,6 +518,9 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#login-language-trigger')).toBeEnabled();
     await expect(page.locator('#account-trigger')).toBeHidden();
     await page.locator('#login-language-trigger').click();
+    // Keep the real lazy-load entry, then let the initial anonymous-session
+    // boundary settle before testing the resulting Settings dialog's keyboard.
+    await waitForSettingsStartupReady(page);
     await expect(page.locator('#settings-modal')).toBeVisible();
     await expect(page.locator('#settings-language')).toBeVisible();
     await expect(page.locator('#settings-language')).toBeFocused();
