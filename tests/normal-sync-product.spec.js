@@ -21,14 +21,14 @@ async function install(page,state=null){
     const put=(path,value)=>{const parts=path.split('/'),last=parts.pop();let parent=remote;for(const part of parts)parent=parent[part]??={};parent[last]=clone(value);};
     ref=(_db,path)=>path;get=async path=>{reads.push(path);return snapshot(path);};serverTimestamp=()=>Date.now();
     onValue=(path,onData)=>{const item={path,onData};listeners.add(item);queueMicrotask(()=>onData(snapshot(path)));return()=>listeners.delete(item);};
-    const notify=()=>{for(const {path,onData} of listeners)onData(snapshot(path));};
+    const notify=changedPath=>{for(const {path,onData} of listeners)if(path===changedPath||changedPath.startsWith(`${path}/`)||path.startsWith(`${changedPath}/`))onData(snapshot(path));};
     runTransaction=async(path,fn,options)=>{
-      if(!path.startsWith(`accountSync/${uid}/`)&&!path.startsWith(`authIndex/${uid}/accountSyncRecoveryReviews/`))throw new Error(`Unexpected transaction: ${path}`);
+      if(!path.startsWith(`accountSync/${uid}/`)&&!path.startsWith(`authIndex/${uid}/accountSyncRecoveryReviews/`)&&path!==`publicShares/${username}`)throw new Error(`Unexpected transaction: ${path}`);
       if(options?.applyLocally!==false)throw new Error('Unverified local transaction');
       const next=fn(clone(read(path)));if(next===undefined)return{committed:false,snapshot:snapshot(path)};
-      writes.push(path);put(path,next);notify();return{committed:true,snapshot:snapshot(path)};
+      writes.push(path);put(path,next);notify(path);return{committed:true,snapshot:snapshot(path)};
     };
-    set=async(path,value)=>{if(path!==`publicShares/${username}`)throw new Error(`Legacy or identity write: ${path}`);writes.push(path);put(path,value);};
+    set=async path=>{throw new Error(`Non-transactional write: ${path}`);};
     update=async()=>{throw new Error('Unexpected legacy update');};
     auth={currentUser:{uid}};cur=username;currentAuthUid=uid;_authStateKnown=true;firebaseDataProtectionReady=true;db={};fbOn=true;activeCanonicalIdentity=null;
     activateOwnedSession(uid,username);
@@ -46,7 +46,7 @@ async function settled(page){
   await expect.poll(()=>page.evaluate(async()=>{await managedAccountSyncRuntime.controller.drain();return(await managedAccountSyncRuntime.snapshot()).state;})).toBe('saved');
 }
 
-test('legacy account preserves inert FT while wants edits and publication survive IndexedDB reopen',async({page,context})=>{
+test('legacy account preserves inert FT while first Share and publication survive IndexedDB reopen',async({page,context})=>{
   const result=await install(page);expect(result.canary).toBe(false);expect(result.started.ok).toBe(true);expect(result.authority).toBe('canonical');await settled(page);
   expect(await page.evaluate(()=>accountSyncCanonicalEntities.filter(e=>!e.deleted).length)).toBe(2);
   const inert=await page.evaluate(()=>JSON.stringify(accountSyncCanonicalEntities.filter(e=>e.identity.lane==='for-trade'||e.identity.lane==='offering')));
@@ -69,8 +69,16 @@ test('legacy account preserves inert FT while wants edits and publication surviv
   });
   expect(before.remote.users.NormalProduct.specialTradeBoard).toEqual(before.original);
   expect(before.remote.wishlist.NormalProduct).toEqual({Pikachu:'H'});
-  expect(before.writes.every(path=>path.startsWith('accountSync/normal-product-uid/')||path==='publicShares/NormalProduct')).toBe(true);
-  const declarations=before.remote.publicShares.NormalProduct.declarations;
+  expect(before.remote.publicShares?.NormalProduct).toBeUndefined();
+  expect(before.writes.every(path=>path.startsWith('accountSync/normal-product-uid/'))).toBe(true);
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.evaluate(()=>openProductShare('link'));
+  await expect(page.locator('#product-share-disclosure')).toBeVisible();
+  await page.locator('#product-share-primary').click();
+  await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopied');
+  const published=await page.evaluate(()=>({remote:structuredClone(__normal.remote),writes:[...__normal.writes]}));
+  expect(published.writes.filter(path=>path==='publicShares/NormalProduct')).toHaveLength(1);
+  const declarations=published.remote.publicShares.NormalProduct.declarations;
   expect(declarations.some(e=>e.name==='Bulbasaur'&&e.intent==='lf'&&e.p==='')).toBe(true);
   expect(declarations.some(e=>e.name==='Squirtle'&&e.intent==='lf'&&e.p==='H'&&e.gender==='m'&&!e.shiny)).toBe(true);
   expect(declarations.every(e=>e.intent==='lf')).toBe(true);
@@ -78,7 +86,7 @@ test('legacy account preserves inert FT while wants edits and publication surviv
   expect(declarations.some(e=>e.name==='Charmander')).toBe(false);
   await page.evaluate(()=>stopAccountSyncRuntime());
   await page.close();
-  const reopened=await context.newPage(),resumed=await install(reopened,before.remote);expect(resumed.authority).toBe('canonical');await settled(reopened);
+  const reopened=await context.newPage(),resumed=await install(reopened,published.remote);expect(resumed.authority).toBe('canonical');await settled(reopened);
   expect(await reopened.evaluate(()=>accountSyncCanonicalEntities)).toEqual(before.entities);
   expect(await reopened.evaluate(()=>__normal.writes.filter(path=>path.startsWith('accountSync/')))).toEqual([]);
   expect(await reopened.evaluate(()=>__normal.reads.some(path=>/^wishlist\//.test(path)))).toBe(false);
