@@ -271,6 +271,16 @@ test('a transient provider profile edit remains durable and retries once after P
   assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Retry after restart');assert.equal(repositoryState.profile.revision,2);assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(repositoryState.calls.writeProfile,2);
 });
 
+test('an unpublished background result is not reported as a confirmed publication',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const runtime=createRuntime(window,h,runtimeRepository(window,h),h.createMemoryJournalState(),undefined,()=>{},()=>{},async()=>({ok:true,status:'unpublished'}),{initializationKind:'provider-only'});
+  await runtime.start();
+  const state=await runtime.snapshot();
+  assert.equal(state.lastProjectionError,'');
+  const result=await runtime.publishCurrentProjection('explicit_share');
+  assert.deepEqual({ok:result.ok,status:result.status},{ok:true,status:'unpublished'});
+});
+
 test('provider public projection failure remains owner-durable and retries on authenticated restart',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
   let attempts=0;

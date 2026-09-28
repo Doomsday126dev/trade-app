@@ -222,7 +222,7 @@
         if(!execution.started||!execution.current)throw listenerAuthorityError();
         if(execution.error)throw execution.error;
         if(execution.value?.ok===false||['pending','queued','deferred'].includes(execution.value?.status))throw new Error('account-sync/public-projection-not-confirmed');
-        lastProjectionError='';return Object.freeze({ok:true,status:'published',count:projection.length});
+        lastProjectionError='';return Object.freeze({ok:true,status:execution.value?.status==='unpublished'?'unpublished':'published',count:projection.length});
       }catch(error){lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit();return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
     }
     function handleListenerData(value,epoch){

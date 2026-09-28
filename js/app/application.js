@@ -1480,7 +1480,21 @@ async function flushSyncQueue(){
       continue;
     }
     try{
-      if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
+      if(path.startsWith('publicShares/')||String(item?.path||'').startsWith('publicShares/')){
+        // A retained queue is untrusted across sessions. Never let a stale or
+        // malformed key reach the generic set() branch under another owner.
+        if(path!==`publicShares/${cur}`||item.path!==path){
+          if(queueItemIsCurrent(path,item))delete syncQueue[path];
+          saveSyncQueue();refreshSyncUi();
+          continue;
+        }
+        // Old background queue entries are never authority to create a first
+        // public share. Rebuild from fully hydrated current owner data and only
+        // update a public projection that still exists at the write boundary.
+        const built=publicShareSnapshotForUser(cur,getLocal(),'owned_list_edit');
+        if(!built.ok)continue;
+        await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot,{create:false});
+      }else if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
       else await set(ref(db,item.path),item.data??null);
       if(queueItemIsCurrent(path,item))delete syncQueue[path];
       saveSyncQueue();
@@ -2709,38 +2723,57 @@ function notePublicSharePublicationBlocked(result,trigger){
 function publicSharePublicationCurrent(result){
   return result?.ok===true&&(result.status==='published'||result.status==='reconciled');
 }
+async function observePublicShareForConditionalWrite(target){
+  // RTDB transactions begin from the local sync tree. A preceding get() does
+  // not populate that tree, so an unobserved established share appears null
+  // and a safe update would abort. Keep an exact listener through the write.
+  let unsubscribe;
+  try{
+    const observed=await withTimeout(new Promise((resolve,reject)=>{
+      unsubscribe=onValue(target,resolve,reject);
+    }),8000,'Checking shared list timed out','db/public-share-timeout');
+    return{observed,close:()=>unsubscribe?.()};
+  }catch(error){unsubscribe?.();throw error;}
+}
 async function writeProviderPublicShareSnapshot(session,snapshot){
   if(!providerPublicProjectionSessionMatches(session)||!db)throw providerFailure('provider-public/session-changed');
   const path=`trainerShares/${session.uid}`;
   const target=ref(db,path);let transaction=null,transactionError=null,exactAbort=false;
+  const observation=session.explicit===true?null:await observePublicShareForConditionalWrite(target);
   try{
-    transaction=await withTimeout(runTransaction(target,current=>{
-      if(!providerPublicProjectionSessionMatches(session))return;
-      if(current!=null&&providerPublicProjectionDomain.projectionContentMatches(snapshot,current,{trainerName:session.username})){
-        exactAbort=true;return;
-      }
-      return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
-    }),8000,'Publishing provider share timed out','provider-public/write-timeout');
-  }catch(error){transactionError=error;}
-  if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
-  let remote;
-  try{
-    const readback=await withTimeout(get(target),8000,'Reconciling provider share timed out','provider-public/readback-timeout');
     if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
-    remote=readback.exists()?readback.val():null;
-  }catch(error){throw transactionError||error;}
-  const status=providerPublicProjectionDomain.storedProjectionStatus(remote,{trainerName:session.username});
-  if(!status.ok||!providerPublicProjectionDomain.projectionContentMatches(snapshot,remote,{trainerName:session.username})){
-    throw transactionError||providerFailure('provider-public/reconciliation-failed');
-  }
-  if(!transaction?.committed&&!exactAbort&&transactionError==null){
-    throw providerFailure('provider-public/transaction-aborted');
-  }
-  delete syncQueue[`publicShares/${session.username}`];
-  delete syncQueue[path];
-  saveSyncQueue();
-  if(!Object.keys(syncQueue).length)showSyncDot(false);
-  return{ok:true,status:transaction?.committed?'published':'reconciled',source:'provider',shareVersion:remote.shareVersion};
+    if(observation&&!observation.observed.exists())return{ok:true,status:'unpublished',source:'provider'};
+    try{
+      transaction=await withTimeout(runTransaction(target,current=>{
+        if(!providerPublicProjectionSessionMatches(session))return;
+        if(current==null&&session.explicit!==true)return;
+        if(current!=null&&providerPublicProjectionDomain.projectionContentMatches(snapshot,current,{trainerName:session.username})){
+          exactAbort=true;return;
+        }
+        return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
+      }),8000,'Publishing provider share timed out','provider-public/write-timeout');
+    }catch(error){transactionError=error;}
+    if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
+    let remote;
+    try{
+      const readback=await withTimeout(get(target),8000,'Reconciling provider share timed out','provider-public/readback-timeout');
+      if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
+      remote=readback.exists()?readback.val():null;
+    }catch(error){throw transactionError||error;}
+    if(remote==null&&session.explicit!==true)return{ok:true,status:'unpublished',source:'provider'};
+    const status=providerPublicProjectionDomain.storedProjectionStatus(remote,{trainerName:session.username});
+    if(!status.ok||!providerPublicProjectionDomain.projectionContentMatches(snapshot,remote,{trainerName:session.username})){
+      throw transactionError||providerFailure('provider-public/reconciliation-failed');
+    }
+    if(!transaction?.committed&&!exactAbort&&transactionError==null){
+      throw providerFailure('provider-public/transaction-aborted');
+    }
+    delete syncQueue[`publicShares/${session.username}`];
+    delete syncQueue[path];
+    saveSyncQueue();
+    if(!Object.keys(syncQueue).length)showSyncDot(false);
+    return{ok:true,status:transaction?.committed?'published':'reconciled',source:'provider',shareVersion:remote.shareVersion};
+  }finally{observation?.close();}
 }
 function queueHydratedPublicShareSnapshot(source,username,trigger){
   if(!fbOn||!db||!username||!auth?.currentUser){
@@ -2803,23 +2836,45 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
     }
     const built=publicShareSnapshotForUser(username,allData,trigger);
     if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
-    await writeVerifiedLegacyPublicSnapshot(username,built.snapshot);
+    const result=await writeVerifiedLegacyPublicSnapshot(username,built.snapshot,{create:trigger==='explicit_share'});
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
-    return{ok:true,status:'published'};
+    return result;
   }
   return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
 }
-async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
+async function writeVerifiedLegacyPublicSnapshot(username,snapshot,{create=false}={}){
   const token=activePublicShareHydrationToken;
   if(!publicShareSessionMatches(username))throw new Error('share-publication/session-changed');
   const target=ref(db,`publicShares/${username}`);
-  await withTimeout(set(target,snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
+  // The domain keeps prototype-free maps while sanitizing dynamic Pokémon
+  // names. Firebase's serializer requires ordinary JSON data at this edge.
+  const normalizedInput=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
+  if(!normalizedInput.ok)throw new Error('share-publication/projection-invalid');
+  const transport=JSON.parse(JSON.stringify(normalizedInput.snapshot));
+  const observation=create?null:await observePublicShareForConditionalWrite(target);
+  try{
+    if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username))throw new Error('share-publication/session-changed');
+    if(observation&&!publicSharePublicationDomain.publicShareProjectionStatus(observation.observed.exists()?observation.observed.val():null,{username}).ok)return{ok:true,status:'unpublished'};
+    const transaction=await withTimeout(runTransaction(target,current=>{
+      if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username))return;
+      // Only an explicit Share action may create an absent public child.
+      // Deletion or a malformed record during an in-flight background update
+      // aborts atomically instead of silently republishing private data.
+      if(!create&&!publicSharePublicationDomain.publicShareProjectionStatus(current,{username}).ok)return;
+      return transport;
+    },{applyLocally:false}),8000,'Publishing share link timed out','db/public-share-timeout');
+    if(!transaction.committed){
+      if(create)throw new Error('share-publication/transaction-aborted');
+      return{ok:true,status:'unpublished'};
+    }
+  }finally{observation?.close();}
   const readback=await withTimeout(get(target),8000,'Confirming share link timed out','db/public-share-timeout');
   const normalized=publicSharePublicationDomain.publicShareProjectionStatus(readback.exists()?readback.val():null,{username});
-  const expected=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
+  const expected=publicSharePublicationDomain.publicShareProjectionStatus(transport,{username});
   if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username)||!normalized.ok||!expected.ok||accountSyncModel.canonicalJson(normalized.snapshot)!==accountSyncModel.canonicalJson(expected.snapshot))throw new Error('share-publication/not-current');
+  return{ok:true,status:'published'};
 }
 
 function ownerShareNoticeKey(status){
@@ -2832,7 +2887,7 @@ function ownerShareNoticeKey(status){
 function renderOwnerShareRepublishNotice(){
   const el=document.getElementById('owner-share-notice');if(!el)return;
   const state=ownerPublicShareReview;
-  if(!cur||!state.republishRequired){el.classList.remove('visible');el.innerHTML='';return;}
+  if(!cur||!state.republishRequired||['missing_projection','transport_error'].includes(state.status)){el.classList.remove('visible');el.innerHTML='';return;}
   el.classList.add('visible');
   el.innerHTML=`<div class="owner-share-notice-copy"><div class="owner-share-notice-title">${escHtml(i18nCore.t('share.ownerTitle'))}</div><div class="owner-share-notice-body">${escHtml(i18nCore.t(ownerShareNoticeKey(state.status)))} ${escHtml(i18nCore.t('share.ownerPrivateSafe'))}</div></div><button class="bsave" onclick="republishOwnPublicShare()" ${state.busy?'disabled':''}>${escHtml(i18nCore.t(state.busy?'share.ownerRepublishing':'share.ownerRepublishAction'))}</button>`;
 }
@@ -3672,12 +3727,13 @@ function providerAccountSyncPublicSnapshot(acceptedRows,session){
   if(!strict.ok)throw providerFailure('provider-public/projection-invalid');
   return strict.snapshot;
 }
-async function publishAccountSyncProjection(acceptedRows){
+async function publishAccountSyncProjection(acceptedRows,operation={}){
+  const explicit=operation?.kind==='explicit_share';
   if(providerOnlyIdentityActive()){
     const session=providerPublicProjectionSession(cur);
     if(!session)throw providerFailure('provider-public/projection-disabled');
     const snapshot=providerAccountSyncPublicSnapshot(acceptedRows,session);
-    return await writeProviderPublicShareSnapshot(session,snapshot);
+    return await writeProviderPublicShareSnapshot({...session,explicit},snapshot);
   }
   const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
   if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
@@ -3687,10 +3743,9 @@ async function publishAccountSyncProjection(acceptedRows){
     source[type][cur]=accountSyncClone(projected.lists[type]);
   }
   source.users[cur]={...source.users[cur],specialTradeBoard:accountSyncClone(projected.board),intentDeclarations:accountSyncClone(projected.intentDeclarations)};
-  const built=publicShareSnapshotForUser(cur,source,'owned_list_edit');
+  const built=publicShareSnapshotForUser(cur,source,explicit?'explicit_share':'owned_list_edit');
   if(!built.ok)throw Object.assign(new Error('Public projection is pending or unavailable'),{code:built.error?.code||'account-sync/public-projection-failed'});
-  await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot);
-  return{ok:true,status:'published'};
+  return await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot,{create:explicit});
 }
 function retireMigratedLegacyListQueue(){
   let changed=false;const nextQueue={...syncQueue};
@@ -3772,7 +3827,7 @@ async function ensureAccountSyncRuntime(){
       onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();managedFavoriteAdditions?.refresh().catch(()=>{});}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
       onProviderProfile:profile=>currentSession()?applyAccountSyncProviderProfile(profile):false,
-      onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
+      onPublicProjection:(acceptedRows,operation)=>currentSession()?publishAccountSyncProjection(acceptedRows,operation):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
       onMigrationState:detail=>{if(currentSession()){accountSyncMigrationState=detail.state;refreshSyncUi();}}
     });
     managedAccountSyncRuntime=runtime;

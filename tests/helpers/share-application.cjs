@@ -35,8 +35,16 @@ async function installShareApplication(page,{gmaxName='Charizard (Gigantamax)',a
     // the RTDB and clipboard I/O boundaries with a synthetic in-memory store.
     db={synthetic:true};fbOn=true;
     ref=(_db,path)=>{if(path!=='publicShares/LocalTrainer')throw Error('Unexpected service path: '+path);return path;};
-    set=async(path,value)=>{__shareTest.writes.push({path,value:structuredClone(value)});if(__shareTest.holdWrite)await new Promise(resolve=>__shareTest.resolveWrite=resolve);if(__shareTest.writeFails)throw Error('Synthetic write failure');__shareTest.stored=structuredClone(value);};
-    get=async path=>{__shareTest.reads.push(path);return{exists:()=>true,val:()=>__shareTest.readbackMismatch?{broken:true}:structuredClone(__shareTest.stored)};};
+    runTransaction=async(path,update)=>{
+      const value=update(__shareTest.stored);
+      if(value===undefined)return{committed:false};
+      __shareTest.writes.push({path,value:structuredClone(value)});
+      if(__shareTest.holdWrite)await new Promise(resolve=>__shareTest.resolveWrite=resolve);
+      if(__shareTest.writeFails)throw Error('Synthetic write failure');
+      __shareTest.stored=structuredClone(value);return{committed:true};
+    };
+    onValue=(path,onData)=>{queueMicrotask(()=>onData({exists:()=>__shareTest.stored!=null,val:()=>structuredClone(__shareTest.stored)}));return()=>{};};
+    get=async path=>{__shareTest.reads.push(path);return{exists:()=>__shareTest.stored!=null,val:()=>__shareTest.readbackMismatch?{broken:true}:structuredClone(__shareTest.stored)};};
     Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{
       __shareTest.copies.push(value);if(__shareTest.holdClipboard)await new Promise((resolve,reject)=>{__shareTest.resolveClipboard=resolve;__shareTest.rejectClipboard=reject;});
       if(__shareTest.clipboardFails)throw Error('Synthetic clipboard denial');
