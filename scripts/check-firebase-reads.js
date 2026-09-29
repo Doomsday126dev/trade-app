@@ -18,7 +18,8 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // hashes, paths, gates and call counts still match it exactly.
 const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
-const inventory=reconcileReadSites(collectReadSites(root),SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
+const actualReadSites=collectReadSites(root);
+const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
 const repositoryInventory=collectReadSites(root,{repository:true});
 assert.deepEqual(repositoryInventory.map(site=>[site.file,expressionKey(site.expression)]),
   Array.from(SOURCE_CALL_CONTRACT.repositoryCalls,site=>[site.file,expressionKey(site.expression)]),
@@ -47,7 +48,9 @@ for(const entry of READ_SURFACES){
 }
 
 function directCallCount(name){
-  return[...indexSource.matchAll(new RegExp(`(^|[^\\w$.])${name}\\s*\\(`,'gm'))].length;
+  // Count parsed calls, not comment or string text such as the reviewed
+  // conditional-publication explanation mentioning get().
+  return actualReadSites.filter(site=>site.operation===name).length;
 }
 function occurrenceCount(needle){return indexSource.split(needle).length-1;}
 function sourceBetween(start,end){

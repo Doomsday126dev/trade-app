@@ -36,6 +36,7 @@
     {id:'candidate_share_mode_read',path:'shareVisibility/{ownerUid}/mode',method:'get',breadth:'exact',ownerScope:'selectedTrainer',audience:'authenticated',consumers:['future_share_visibility'],status:'candidate_inactive'},
     {id:'candidate_trainer_share_read',path:'trainerShares/{ownerUid}',method:'get',breadth:'exact',ownerScope:'selectedTrainer',audience:'visibility_authorized',consumers:['future_share_visibility'],status:'candidate_inactive'},
     {id:'candidate_trainer_share_live',path:'trainerShares/{ownerUid}',method:'onValue',breadth:'exact',ownerScope:'selectedTrainer',audience:'visibility_authorized',consumers:['future_share_visibility'],status:'candidate_inactive'},
+    {id:'conditional_publication_observation',path:'publicShares/{currentUsername} | trainerShares/{currentUid}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['legacy_publication','provider_publication_reconciliation'],status:'retained'},
     {id:'candidate_preference_metadata_live',path:'userPreferences/{viewerUid}/metadata',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
     {id:'candidate_preference_favorites_live',path:'userPreferences/{viewerUid}/favoriteTrainers',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
     {id:'candidate_preference_trainer_metadata_live',path:'userPreferences/{viewerUid}/trainerMetadata',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
@@ -58,6 +59,7 @@
   const profiles={
     provider:{audience:'owner',ownerScope:'session',status:'candidate_inactive',featureGate:'Google/provider capability and current authenticated UID; publicly disabled',executionSurface:'provider sign-in',consumer:'provider_identity_resolution'},
     providerShare:{audience:'owner',ownerScope:'session',status:'candidate_inactive',featureGate:'providerPublicWriteSupport and provider-only identity/session match; publicly disabled',executionSurface:'provider publication',consumer:'provider_publication_reconciliation'},
+    conditionalPublish:{audience:'owner',ownerScope:'session',status:'retained',featureGate:'current hydrated owner/session and non-create publication; provider path additionally requires providerPublicWriteSupport',executionSurface:'bounded conditional public-share write',consumer:'publication_confirmation'},
     publish:{audience:'owner',ownerScope:'session',status:'retained',featureGate:'publicShareSessionMatches and hydrated current session',executionSurface:'Share or canonical projection publication',consumer:'publication_confirmation'},
     admin:{audience:'admin',ownerScope:'legacyAdmin',status:'transitional',featureGate:'retained Admin action; Firebase Rules authorize current administrator',executionSurface:'Admin account maintenance',consumer:'account_verification'},
     community:{audience:'owner/admin',ownerScope:'legacyAdmin',status:'planned_retirement',featureGate:'owner community tools and selected community enrollment',executionSurface:'Admin community maintenance',consumer:'community_verification'},
@@ -68,8 +70,8 @@
     public:{audience:'anonymous',ownerScope:'selectedTrainer',status:'retained',featureGate:'valid public trainer link; no private fallback',executionSurface:'public v1/v2 trainer share',consumer:'share_view'},
     health:{audience:'anonymous or authenticated; broad protected path requires Rules authorization',ownerScope:'screen',status:'transitional',featureGate:'explicit login-health diagnostic; signed-in status selects protected versus public path',executionSurface:'Having trouble signing in',consumer:'health_check'}
   };
-  const site=(handler,expression,normalizedPath,surfaceId,profile,classification,justification)=>Object.freeze({
-    file:'js/app/application.js',handler,expression,normalizedPath,surfaceId,operation:'get',
+  const site=(handler,expression,normalizedPath,surfaceId,profile,classification,justification,operation='get')=>Object.freeze({
+    file:'js/app/application.js',handler,expression,normalizedPath,surfaceId,operation,
     ...profiles[profile],classification,justification,decision:'retained',redundant:false,
     activeInProduct:profiles[profile].status!=='candidate_inactive',canRemoveSafely:false,
     legacyOnly:!['provider','providerShare'].includes(profile),
@@ -79,6 +81,7 @@
   const directReadSites=Object.freeze([
     site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','One exact reciprocal check serves migrated and unmigrated legacy accounts after an authoritative canonical read; never an error fallback.'),
     site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Verify the exact reverse UID binding and healthy record before existing-account activation; no identity writes or migration required.'),
+    site('observePublicShareForConditionalWrite','onValue(target,resolve,reject)','publicShares/{currentUsername} | trainerShares/{currentUid}','conditional_publication_observation','conditionalPublish','D','Observe only the exact current-owner share during a non-create legacy or gated provider publication; callers bind target to the owner identity and always unsubscribe after the write or failed observation.','onValue'),
     site('writeProviderPublicShareSnapshot','get(target)','trainerShares/{currentUid}','provider_public_readback','providerShare','D','New post-transaction readback distinguishes committed/reconciled content from timeout or conflict; earlier transaction evidence is not equivalent.'),
     site('writeVerifiedLegacyPublicSnapshot','get(target)','publicShares/{currentUsername}','legacy_public_readback','publish','C','New post-write content and hydration-token verification prevents reporting publication or copying a link before the matching projection is confirmed.'),
     site('repairMemberAccount','get(ref(db,`users/${username}`))','users/{username}','admin_verification_reads','admin','A','Verify intentionally retained Admin metadata repair; established UID replacement remains blocked before this path.'),
@@ -107,8 +110,9 @@
     directReadSites,
     readHandlerHashes:Object.freeze({
       resolveGoogleAccountBinding:"89f818b5c45d027385158681964726ae0916176e430dba5781683551dae1df9e",
-      writeProviderPublicShareSnapshot:'5835654f0e125a398c6931e97cf905549b5dc741c534fbd16572257bfa1914e6',
-      writeVerifiedLegacyPublicSnapshot:'d50329ae64c23791516ca3b0d2d800ecc0c33b903c27f4b26969b049570cb62c',
+      observePublicShareForConditionalWrite:'8d22f0c357d4962cc55a7832bb45b20dd53c41f89a56efb7979caca5778827c4',
+      writeProviderPublicShareSnapshot:'d73761c51a6438632d96cd2f993d514ecc5ccc51ac43278aa0268fb2653f1d23',
+      writeVerifiedLegacyPublicSnapshot:'e9ab6c60e53a1e3327e3a96938c999023f02d5042b9cad87a3e50c077533606a',
       repairMemberAccount:'c9fc61723b6999aba4ad01dfa036025c570ecbbd7d3b9414e67f4ca2b0917f0a',
       createMemberNow:'3e7836dc7bc8bf1d3cfb0db1b8b02ee07bfd2d30c7d6dd8123afbdf218d6cc48',
       readLegacyProvisioningFreeze:'205cf1dddbfab5c8356c518ae48493f7620218549bf93ae282c9a2e99cfb5ca8',
@@ -121,7 +125,7 @@
       prepareDefaultCommunity:'97ca74b9ea44fb53ecbeed39052a4f00ba827c5945f33c0a0af45d295bc1699a',
       prepareNonDefaultCommunity:'afe3eadfa54c591c16fbbd02f0e6a91ec70deeb0b5a617e40f1f09e498f4a983'
     }),
-    directOnValueCount:0,
+    directOnValueCount:1,
     managedListenCount:1,
     repositoryFiles:Object.freeze([
       'js/app/publicShareApp.js',
@@ -155,6 +159,7 @@
     ]),
     needles:Object.freeze([
       Object.freeze({text:'get(ref(db,`users/${username}`))',count:4}),
+      Object.freeze({text:'onValue(target,resolve,reject)',count:1}),
       Object.freeze({text:'get(ref(db,`loginDirectory/${username}`))',count:2}),
       Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:1}),
       Object.freeze({text:'get(target)',count:2}),
@@ -183,18 +188,29 @@
     site('resolveGoogleAccountBinding','get(ref(db,`authIndex/${expectedUid}`))','authIndex/{currentUid}','provider_account_resolution_reads','provider','A','Reviewed missing-foundation branch distinguishes unlinked from migration-required legacy accounts.'),
     site('resolveGoogleAccountBinding','get(ref(db,`users/${username}`))','users/{resolvedUsername}','provider_account_resolution_reads','provider','A','Reviewed missing-foundation branch checks reverse ownership before failing closed.')
   ]);
-  const LEGACY_SOURCE_CALL_CONTRACT=Object.freeze({
+  const LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT=Object.freeze({
     ...SOURCE_CALL_CONTRACT,
-    directGetCount:25,
-    directReadSites:Object.freeze([...legacyGoogleResolverSites,...directReadSites.slice(2)]),
+    directReadSites:Object.freeze(directReadSites.filter(item=>item.handler!=='observePublicShareForConditionalWrite')),
+    directOnValueCount:0,
     readHandlerHashes:Object.freeze({...SOURCE_CALL_CONTRACT.readHandlerHashes,
+      writeProviderPublicShareSnapshot:'5835654f0e125a398c6931e97cf905549b5dc741c534fbd16572257bfa1914e6',
+      writeVerifiedLegacyPublicSnapshot:'d50329ae64c23791516ca3b0d2d800ecc0c33b903c27f4b26969b049570cb62c'}),
+    needles:Object.freeze(SOURCE_CALL_CONTRACT.needles.filter(item=>item.text!=='onValue(target,resolve,reject)'))
+  });
+  const LEGACY_SOURCE_CALL_CONTRACT=Object.freeze({
+    ...LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
+    directGetCount:25,
+    directReadSites:Object.freeze([...legacyGoogleResolverSites,...LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT.directReadSites.slice(2)]),
+    readHandlerHashes:Object.freeze({...LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT.readHandlerHashes,
       resolveGoogleAccountBinding:'f3e431d7873b3e6e52ab7996ded83d92e7e4c61d4b70ee0e2f0623f8e7f37c7d'}),
-    needles:Object.freeze(Array.from(SOURCE_CALL_CONTRACT.needles,item=>Object.freeze({...item,
+    needles:Object.freeze(Array.from(LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT.needles,item=>Object.freeze({...item,
       count:item.text==='get(ref(db,`users/${username}`))'?5:
         item.text==='get(ref(db,`authIndex/${expectedUid}`))'?2:item.count})))
   });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
-    '4614e1e4345befbb7c1b1a75fa3230e57e8e94a4':SOURCE_CALL_CONTRACT,
+    '62482523588e5f7a3065936c93bfa043d4d31fb5':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
+    'f585cb2523ad65f2bbdcbe15ff8b5837a0366269':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
+    '4614e1e4345befbb7c1b1a75fa3230e57e8e94a4':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     'df20ddbc5a273b8fef0832c4e38b3de86b69a2dd':LEGACY_SOURCE_CALL_CONTRACT,
     '384d6bea6664c0e20a69b08c5623ec21563f80a4':LEGACY_SOURCE_CALL_CONTRACT,
     '671579c07e8c14c2f1c7d5c6c149332c550a225c':LEGACY_SOURCE_CALL_CONTRACT
