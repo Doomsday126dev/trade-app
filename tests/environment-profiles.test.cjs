@@ -1,9 +1,19 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm');
+const {execFileSync}=require('node:child_process');
 const {configuration,validateConfiguration,configBlock,replaceConfiguration}=require('../scripts/environments/configuration.cjs');
-const {buildProfile,compareProfiles,CONTROL_SHA}=require('../scripts/environments/build-profile.cjs');
+const {buildProfile,compareProfiles,assertControlCheckout,CONTROL_SHA}=require('../scripts/environments/build-profile.cjs');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const clone=value=>JSON.parse(JSON.stringify(value));
+const git=(directory,...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+function checkout(t,ref=CONTROL_SHA){
+  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'pogo-control-'));
+  t.after(()=>fs.rmSync(temp,{recursive:true,force:true}));
+  git(temp,'clone','--quiet','--shared','--no-checkout',root,'checkout');
+  const directory=path.join(temp,'checkout');git(directory,'checkout','--quiet','--detach',ref);
+  return directory;
+}
+function buildOptions(source,controlRoot,output){return{source,controlRoot,output,runtimeSourceSha:git(source,'rev-parse','HEAD'),sourceTree:git(source,'rev-parse','HEAD^{tree}'),runtimeReleaseId:'2026-09-27.124',runtimeReleaseTag:'release-2026-09-27.124',dispatcherSha:'fe32497866cb09f5fbef2df23d4918c00241c64d',controlSelectorTag:'release-pages-control-fe32497866cb09f5fbef2df23d4918c00241c64d',controlWorkflowSha:CONTROL_SHA,githubRunId:'0',profile:'production'};}
 for(const profile of ['production','staging']){
   test(`${profile} rejects missing, cross-project and cross-profile runtime identities`,()=>{
     const original=configuration(profile),other=configuration(profile==='production'?'staging':'production');
@@ -47,13 +57,44 @@ test('reviewed source retains production values and both App Check consumers use
 });
 test('explicit profiles preserve all application bytes outside configuration and provenance',t=>{
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'pogo-profiles-'));t.after(()=>fs.rmSync(temp,{recursive:true,force:true}));
-  const common={source:root,controlRoot:root,runtimeSourceSha:'a'.repeat(40),sourceTree:'b'.repeat(40),runtimeReleaseId:'2026-09-27.124',runtimeReleaseTag:'release-2026-09-27.124',
-    dispatcherSha:'fe32497866cb09f5fbef2df23d4918c00241c64d',controlSelectorTag:'release-pages-control-fe32497866cb09f5fbef2df23d4918c00241c64d',controlWorkflowSha:CONTROL_SHA,githubRunId:'0'};
+  const control=checkout(t),common=buildOptions(root,control,temp);
   const p=path.join(temp,'production'),s=path.join(temp,'staging');
   const a=buildProfile({...common,output:p,profile:'production'}),b=buildProfile({...common,output:s,profile:'staging'});
   assert.notEqual(a.artifact_digest,b.artifact_digest);assert.equal(a.environment_profile,'production');assert.equal(b.environment_profile,'staging');
-  const result=compareProfiles(p,s,root);assert.equal(result.applicationBytesEquivalent,true);assert.deepEqual(result.differenceFiles,['deployment-manifest.json','index.html']);
-  fs.appendFileSync(path.join(s,'js/app/application.js'),'\n/* unexpected change */');assert.throws(()=>compareProfiles(p,s,root),/Application\/runtime bytes differ/);
+  const result=compareProfiles(p,s,control);assert.equal(result.applicationBytesEquivalent,true);assert.deepEqual(result.differenceFiles,['deployment-manifest.json','index.html']);
+  fs.appendFileSync(path.join(s,'js/app/application.js'),'\n/* unexpected change */');assert.throws(()=>compareProfiles(p,s,control),/Application\/runtime bytes differ/);
+});
+test('exact clean immutable control succeeds',t=>{assert.doesNotThrow(()=>assertControlCheckout(checkout(t)));});
+for(const staged of [false,true])test(`${staged?'staged/index':'tracked worktree'} control tampering fails before builder execution`,t=>{
+  const control=checkout(t),marker=path.join(control,'executed-marker'),builder=path.join(control,'scripts/pages/build-artifact.cjs');
+  fs.writeFileSync(builder,`require('node:fs').writeFileSync(${JSON.stringify(marker)},'executed');throw Error('Tampered builder executed');\n`);
+  if(staged)git(control,'add','scripts/pages/build-artifact.cjs');
+  assert.throws(()=>buildProfile(buildOptions(root,control,path.join(control,'output'))),/Immutable control checkout must be clean/);
+  assert.equal(fs.existsSync(marker),false);
+});
+test('wrong immutable control SHA still fails',t=>{
+  const control=checkout(t,git(root,'rev-parse','HEAD'));
+  assert.throws(()=>buildProfile(buildOptions(root,control,path.join(control,'output'))),/exact reviewed SHA/);
+});
+test('source checkout cleanliness remains enforced before configuration or build',t=>{
+  const source=checkout(t,git(root,'rev-parse','HEAD')),control=checkout(t),options=buildOptions(source,control,path.join(source,'output'));
+  fs.appendFileSync(path.join(source,'index.html'),'\n<!-- tracked source mutation -->');
+  assert.throws(()=>buildProfile(options),/Source checkout must be clean/);
+  git(source,'add','index.html');assert.throws(()=>buildProfile(options),/Source checkout must be clean/);
+  assert.equal(fs.existsSync(options.output),false);
+});
+test('profile comparison rejects dirty control before consuming its builder',t=>{
+  const control=checkout(t),marker=path.join(control,'executed-marker');
+  fs.writeFileSync(path.join(control,'scripts/pages/build-artifact.cjs'),`require('node:fs').writeFileSync(${JSON.stringify(marker)},'executed');\n`);
+  assert.throws(()=>compareProfiles('not-read-production','not-read-staging',control),/Immutable control checkout must be clean/);
+  assert.equal(fs.existsSync(marker),false);
+});
+test('generic control guard rejects another tracked input and untracked executable',t=>{
+  const control=checkout(t);fs.appendFileSync(path.join(control,'scripts/pages/frontend-files.json'),'\n ');
+  assert.throws(()=>assertControlCheckout(control),/must be clean/);
+  git(control,'restore','scripts/pages/frontend-files.json');
+  fs.writeFileSync(path.join(control,'scripts/pages/unreviewed.cjs'),'throw Error("unreviewed");');
+  assert.throws(()=>assertControlCheckout(control),/must be clean/);
 });
 test('configuration block replacement rejects missing or duplicated boundaries',()=>{
   assert.throws(()=>replaceConfiguration('<html></html>',configuration('staging')));

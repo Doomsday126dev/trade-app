@@ -3,8 +3,18 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
 const {configuration,validateConfiguration,configBlock,replaceConfiguration,configurationDigest}=require('./configuration.cjs');
 const CONTROL_SHA='6f58a1a39065c6d1b6070c9ed8fc4fd25efdab43';
+function assertCleanCheckout(directory,expectedSha,{untracked=false,label='Source'}={}){
+  const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8'}).trim();
+  assert.equal(git('rev-parse','HEAD'),expectedSha,`${label} checkout must resolve to the exact reviewed SHA`);
+  assert.equal(git('status','--porcelain=v1',`--untracked-files=${untracked?'all':'no'}`),'',`${label} checkout must be clean before consuming its files`);
+}
+function assertControlCheckout(controlRoot){
+  assertCleanCheckout(path.resolve(controlRoot),CONTROL_SHA,{untracked:true,label:'Immutable control'});
+}
 function buildProfile(options){
   const source=path.resolve(options.source),output=path.resolve(options.output),control=path.resolve(options.controlRoot);
+  assertControlCheckout(control);
+  assertCleanCheckout(source,options.runtimeSourceSha);
   const profile=options.profile,config=configuration(profile,source);
   assert.match(options.sourceTree||'',/^[0-9a-f]{40}$/,'Source tree must be exact');
   const sourceConfig=configBlock(fs.readFileSync(path.join(source,'index.html'),'utf8')).value;
@@ -24,6 +34,7 @@ function buildProfile(options){
   return{...manifest,file_count:result.file_count};
 }
 function compareProfiles(production,staging,controlRoot){
+  assertControlCheckout(controlRoot);
   const {walk}=require(path.join(path.resolve(controlRoot),'scripts/pages/build-artifact.cjs'));
   const p=walk(production).sort(),s=walk(staging).sort();assert.deepEqual(s,p,'Artifact file sets differ');
   const differences=[];
@@ -50,14 +61,12 @@ function compareProfiles(production,staging,controlRoot){
 if(require.main===module){
   try{
     const source=path.resolve(process.env.SOURCE_DIR||process.cwd()),control=path.resolve(process.env.PAGES_CONTROL_ROOT||'');
-    assert.equal(execFileSync('git',['rev-parse','HEAD'],{cwd:control,encoding:'utf8'}).trim(),CONTROL_SHA);
     const sha=execFileSync('git',['rev-parse','HEAD'],{cwd:source,encoding:'utf8'}).trim();
-    assert.equal(execFileSync('git',['status','--porcelain','--untracked-files=no'],{cwd:source,encoding:'utf8'}).trim(),'','Commit the candidate before building');
-    assert.equal(sha,process.env.RUNTIME_SOURCE_SHA);
+    assertCleanCheckout(source,process.env.RUNTIME_SOURCE_SHA);
     console.log(JSON.stringify(buildProfile({source,output:process.env.ARTIFACT_DIR,profile:process.env.ENVIRONMENT_PROFILE,controlRoot:control,
       runtimeSourceSha:sha,sourceTree:execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:source,encoding:'utf8'}).trim(),
       runtimeReleaseId:process.env.RUNTIME_RELEASE_ID,runtimeReleaseTag:process.env.RUNTIME_RELEASE_TAG,dispatcherSha:process.env.DISPATCHER_SHA,
       controlSelectorTag:process.env.CONTROL_SELECTOR_TAG,controlWorkflowSha:CONTROL_SHA,githubRunId:'0'})));
   }catch(error){console.error(error.message);process.exitCode=1;}
 }
-module.exports={CONTROL_SHA,buildProfile,compareProfiles};
+module.exports={CONTROL_SHA,assertControlCheckout,buildProfile,compareProfiles};

@@ -25,7 +25,11 @@ The comparison rejects any other byte or provenance difference.
 Build both profiles from one clean committed source using explicit SOURCE_DIR,
 ARTIFACT_DIR, ENVIRONMENT_PROFILE, PAGES_CONTROL_ROOT, RUNTIME_SOURCE_SHA,
 RUNTIME_RELEASE_ID, RUNTIME_RELEASE_TAG, DISPATCHER_SHA and CONTROL_SELECTOR_TAG.
-The control checkout must be the exact reviewed control SHA. These local builds
+Before loading any control code/data, both building and comparison require the
+exact reviewed control SHA and a clean Git index/worktree (including untracked
+control files). One shared guard rejects any modified control input. Source
+tracked/index cleanliness remains enforced before its configuration is read.
+These local builds
 use run ID 0 and do not create a runtime tag or deploy anything.
 
 The fixed staging profile targets only project `trainer-hub-staging-37ib4wct`,
