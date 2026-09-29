@@ -35,7 +35,7 @@ async function providerFixture(page){
         const session=providerPublicProjectionSession();
         if(!session)throw Error('Provider publication is not enabled');
         const built=publicShareSnapshotForUser(cur);if(!built.ok)return built;
-        try{return await writeProviderPublicShareSnapshot(session,built.snapshot);}
+        try{return await writeProviderPublicShareSnapshot({...session,explicit:true},built.snapshot);}
         catch(error){__shareTest.providerError={message:error.message,code:error.code,snapshot:built.snapshot,capabilities:PROVIDER_CAPABILITIES};throw error;}
       }};
     openProductShare();
@@ -64,6 +64,22 @@ test('provider frontend verifies UID-rooted readback and recovery retries copy o
   await expect(page.locator('#share-public-url')).toHaveValue('');
   expect(await page.evaluate(()=>__shareTest.copies.length)).toBe(3);
   expect(await page.evaluate(()=>JSON.stringify(__shareTest.stored))).not.toContain('PRIVATE_');
+});
+
+test('provider publication adapter does not first-create from background work but refreshes an established share',async({page})=>{
+  await providerFixture(page);
+  const background=async()=>page.evaluate(async()=>{
+    const session=providerPublicProjectionSession(),built=publicShareSnapshotForUser(cur,allData,'owned_list_edit');
+    return writeProviderPublicShareSnapshot({...session,explicit:false},built.snapshot);
+  });
+  expect((await background()).status).toBe('unpublished');
+  expect(await page.evaluate(()=>[__shareTest.transactions.length,__shareTest.stored])).toEqual([0,null]);
+  await primary(page).click();
+  await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopied');
+  expect(await page.evaluate(()=>__shareTest.stored?.shareVersion)).toBe(1);
+  await page.evaluate(()=>{allData.users[cur].bio='Updated only after explicit sharing';});
+  expect((await background()).status).toBe('published');
+  expect(await page.evaluate(()=>[__shareTest.stored?.shareVersion,__shareTest.stored?.profile.bio])).toEqual([2,'Updated only after explicit sharing']);
 });
 
 test('provider runtime replacement during a requested publication rejects the old continuation',async({page})=>{

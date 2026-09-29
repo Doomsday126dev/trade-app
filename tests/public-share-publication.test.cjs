@@ -222,6 +222,8 @@ test('actual login ordering never republishes from writeUserNow before exact hyd
 test('owner republish prompt reads only the owner projection and clears after verified explicit success',()=>{
   const inspect=between('async function inspectOwnPublicShareAfterHydration','async function republishOwnPublicShare');
   const republish=between('async function republishOwnPublicShare','async function writeUser(u,data)');
+  const prompt=between('function renderOwnerShareRepublishNotice','async function inspectOwnPublicShareAfterHydration');
+  assert.match(prompt,/\['missing_projection','transport_error'\]\.includes\(state\.status\)/);
   assert.match(inspect,/managedPublicSharePublication\.authorize\(token,'explicit_share'\)/);
   assert.match(inspect,/managedPublicShareRepository\.read\(token\.username\)/);
   assert.doesNotMatch(inspect,/wishlist\/|dynamax\/|gmax\/|costumes\/|users\//);
@@ -237,9 +239,9 @@ test('only confirmed list and profile changes request automatic publication',()=
   const profile=between('async function saveProfile(event){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
-  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit'\)/);
+  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,explicit\?'explicit_share':'owned_list_edit'\)/);
   assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
-  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot\)/);
+  assert.match(canonicalAck,/writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot,\{create:explicit\}\)/);
   assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
   assert.match(profile,/requestPublicSharePublication\('share_profile_update'/);
 });
@@ -253,7 +255,22 @@ test('publication is constrained to the active trainer public-share path',()=>{
   assert.match(sessionMatch,/activePublicShareHydrationToken\.username===username/);
   assert.match(queue,/queueSync\(`publicShares\/\$\{username\}`/);
   assert.match(publish,/const target=ref\(db,`publicShares\/\$\{username\}`\)/);
-  assert.match(publish,/await withTimeout\(set\(target,snapshot\)/);
+  assert.match(publish,/runTransaction\(target,current=>/);
+  assert.match(publish,/if\(!create&&!publicSharePublicationDomain\.publicShareProjectionStatus\(current,\{username\}\)\.ok\)return/);
+  assert.match(publish,/JSON\.parse\(JSON\.stringify\(normalizedInput\.snapshot\)\)/);
   assert.match(publish,/await withTimeout\(get\(target\)/);
   assert.doesNotMatch(`${queue}\n${publish}`,/wishlist\/\$\{username\}|have\/\$\{username\}|users\/\$\{username\}/);
+});
+
+test('every background writer preserves an absent or removed public child',()=>{
+  const flush=between('async function flushSyncQueue','function showSyncDot');
+  const provider=between('async function writeProviderPublicShareSnapshot','function queueHydratedPublicShareSnapshot');
+  const canonical=between('async function publishAccountSyncProjection','function retireMigratedLegacyListQueue');
+  assert.match(flush,/path\.startsWith\('publicShares\/'\)\|\|String\(item\?\.path\|\|''\)\.startsWith\('publicShares\/'\)/);
+  assert.match(flush,/path!==`publicShares\/\$\{cur\}`\|\|item\.path!==path/);
+  assert.match(flush,/writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot,\{create:false\}\)/);
+  assert.match(provider,/if\(current==null&&session\.explicit!==true\)return/);
+  assert.match(canonical,/const explicit=operation\?\.kind==='explicit_share'/);
+  assert.match(canonical,/writeProviderPublicShareSnapshot\(\{\.\.\.session,explicit\},snapshot\)/);
+  assert.match(canonical,/writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot,\{create:explicit\}\)/);
 });

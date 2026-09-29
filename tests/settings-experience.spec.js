@@ -88,7 +88,7 @@ test('Help installation reflects unavailable, browser-offered and standalone cap
   await expect(page.locator('#settings-install')).toBeHidden();await expect(page.locator('#toast')).not.toContainText('Installing');
   await page.evaluate(()=>{const original=matchMedia;window.matchMedia=query=>query==='(display-mode: standalone)'?{matches:true}:original(query);renderHelpAppInformation();});
   await expect(page.locator('#help-install-status')).toContainText('standalone');await expect(page.locator('#settings-install')).toBeHidden();
-  await page.locator('#help-about summary').click();await expect(page.locator('#settings-release-id')).toContainText('2026-09-23.123');
+  await page.locator('#help-about summary').click();await expect(page.locator('#settings-release-id')).toContainText('2026-09-27.124');
   await expect(page.locator('#help-about a')).toHaveAttribute('href','?legal=privacy');
   const legal=page.locator('#help-about button');await legal.click();await expect(page.locator('#legal-dialog')).toBeVisible();
   await page.keyboard.press('Tab');expect(await page.evaluate(()=>!!document.activeElement.closest('#legal-dialog'))).toBe(true);

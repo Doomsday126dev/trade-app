@@ -56,9 +56,11 @@ test('default checker validates the control checkout without downgrading identif
   const dir=fixture(t,controlRoot);
   const local=checkWithoutRuntimeSha(dir);
   assert.equal(local.status,0,local.stderr);
-  assert.equal(JSON.parse(local.stdout).directReads.length,23);
+  const localHasConditionalObservation=collectReadSites(controlRoot).some(site=>site.handler==='observePublicShareForConditionalWrite');
+  assert.equal(JSON.parse(local.stdout).directReads.length,localHasConditionalObservation?24:23);
   const identified=check(dir,'a'.repeat(40));
-  assert.notEqual(identified.status,0,'an explicit new-runtime SHA must not select the local .123 contract');
+  if(localHasConditionalObservation)assert.equal(identified.status,0,identified.stderr);
+  else assert.notEqual(identified.status,0,'an explicit new-runtime SHA must not select the local .123 contract');
   change(dir,'js/app/application.js','const path=`trainerShares/${session.uid}`;','const path=`users/${session.uid}`;');
   assert.match(checkWithoutRuntimeSha(dir).stderr,/path bindings or execution semantics changed/);
 });

@@ -1,7 +1,7 @@
 (function(global){
   'use strict';
   const root=global.PogoServices=global.PogoServices||{};
-  const DATABASE='https://trade-list-a4297-default-rtdb.firebaseio.com/.json';
+  const DATABASE=`${global.__POGO_FIREBASE_CONFIG.databaseURL.replace(/\/$/,'')}/.json`;
   // REST PATCH avoids SDK update() latency-compensation events being mistaken
   // for canonical server snapshots. Every write still uses the ordinary user's
   // ID token, App Check and the same RTDB Rules; this is not an admin endpoint.

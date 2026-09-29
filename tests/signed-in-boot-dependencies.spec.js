@@ -4,7 +4,7 @@ const identity={uid:'boot-qualification-uid',username:'BootQualification'};
 
 // Fake only Firebase SDK/transport, never the application login or session code.
 // Every credential and record here is synthetic; no production endpoint is used.
-async function installLoginTransport(page){
+async function installLoginTransport(page,{databaseGate}={}){
   await page.route('**/*',route=>{
     const url=new URL(route.request().url());
     if(['127.0.0.1','localhost'].includes(url.hostname))return route.continue();
@@ -57,6 +57,7 @@ async function installLoginTransport(page){
   `));
   // Exercise the real readiness boundary instead of relying on local SDK speed.
   await page.route('https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js',async route=>{
+    if(databaseGate?.active)await databaseGate.wait();
     await new Promise(resolve=>setTimeout(resolve,150));
     await route.fallback();
   });
@@ -67,6 +68,84 @@ async function assertReducedRuntime(page,expected){
   expect(scripts.length).toBe(expected);
   expect(await page.evaluate(()=>({registry:typeof PogoData.firebaseReadRegistry,sync:typeof PogoDomain.trainerPreferenceSync,repository:typeof PogoData.trainerPreferencesRepository,queue:typeof PogoData.trainerPreferenceSyncQueue,tagPanel:typeof window.PogoUI?.trainerTagPanel,publicApp:typeof __pogoStartPublicShare}))).toEqual({registry:'undefined',sync:'undefined',repository:'undefined',queue:'undefined',tagPanel:'undefined',publicApp:'undefined'});
 }
+
+for(const dismissal of ['Close','Escape'])test(`direct-route Settings ${dismissal} during delayed session settlement stays dismissed`,async({page})=>{
+  await page.setViewportSize({width:390,height:700});
+  let releaseDatabase;
+  const databasePending=new Promise(resolve=>{releaseDatabase=resolve;});
+  const databaseGate={active:true,wait:()=>databasePending};
+  await installLoginTransport(page,{databaseGate});
+  try{
+    await page.goto(`./?cold-settings-${dismissal.toLowerCase()}#settings/tools`,{waitUntil:'domcontentloaded'});
+    await page.evaluate(()=>window.__pogoEnsureFullApp('cold-settings-test'));
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.evaluate(()=>{
+      // A synthetic retained account is visible while the real auth observer
+      // is still awaiting the deliberately delayed database module.
+      cur='ColdSettingsTrainer';
+      allData.users[cur]={};
+      document.getElementById('login-pg').style.display='none';
+      document.getElementById('app').style.display='flex';
+      syncSettingsRoute();
+    });
+    await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+    expect(await page.evaluate(()=>window.__pogoStartup.firebaseStartupSettledAt)).toBeNull();
+    if(dismissal==='Close')await page.locator('.settings-modal-close').click();
+    else{
+      await page.keyboard.press('Escape');
+      await expect(page.locator('.settings-nav')).toBeVisible();
+      await page.keyboard.press('Escape');
+    }
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page).not.toHaveURL(/#settings/);
+    releaseDatabase();databaseGate.active=false;
+    await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null);
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page).not.toHaveURL(/#settings/);
+    expect(await page.evaluate(()=>({focusInModal:!!document.activeElement?.closest?.('#settings-modal'),inert:document.getElementById('app').inert}))).toEqual({focusInModal:false,inert:false});
+    await expect(page.locator('#login-pg')).toBeVisible();
+  }finally{releaseDatabase();}
+});
+
+test('retained-account Profile draft survives Close before delayed startup settles',async({page})=>{
+  await page.setViewportSize({width:390,height:700});
+  await page.addInitScript(({uid,username})=>{
+    localStorage.setItem('__bootMockAuthenticated','true');
+    localStorage.setItem('pgu',username);
+    localStorage.setItem('pguts',Date.now().toString());
+    localStorage.setItem('pogoSessionCache_v2',JSON.stringify({schemaVersion:2,public:{loginDirectory:{}},
+      protected:{owner:{uid,username},data:{users:{[username]:{authUid:uid,bio:'Original bio'}},wishlist:{[username]:{Pikachu:'H'}}}}}));
+    localStorage.setItem('__bootMockRemote',JSON.stringify({loginDirectory:{[username]:{authReady:true,authVersion:1}},
+      authIndex:{[uid]:{username}},users:{[username]:{authUid:uid,authVersion:1,pinHashed:true,bio:'Original bio'}},
+      wishlist:{[username]:{Pikachu:'H'}},dynamax:{[username]:{}},gmax:{[username]:{}},costumes:{[username]:{}}}));
+  },identity);
+  let releaseDatabase;
+  const databasePending=new Promise(resolve=>{releaseDatabase=resolve;});
+  await installLoginTransport(page,{databaseGate:{active:true,wait:()=>databasePending}});
+  try{
+    await page.goto('./?cold-profile-draft#settings/profile',{waitUntil:'domcontentloaded'});
+    await page.evaluate(()=>window.__pogoEnsureFullApp('cold-profile-draft'));
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.evaluate(username=>{
+      cur=username;allData.users[username]={authUid:'boot-qualification-uid',bio:'Original bio'};
+      document.getElementById('login-pg').style.display='none';
+      document.getElementById('app').style.display='flex';
+      updateFcDisplay();syncSettingsRoute();
+    },identity.username);
+    await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+    await page.locator('#prof-bio').fill('Unsaved synthetic draft');
+    await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
+    expect(await page.evaluate(()=>window.__pogoStartup.firebaseStartupSettledAt)).toBeNull();
+    await page.locator('.settings-modal-close').click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    releaseDatabase();
+    await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null);
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page).not.toHaveURL(/#settings/);
+    await expect(page.locator('#prof-bio')).toHaveValue('Unsaved synthetic draft');
+    expect(await page.evaluate(()=>allData.users[cur]?.bio)).toBe('Original bio');
+  }finally{releaseDatabase();}
+});
 
 test('fresh Username/PIN login and restored authenticated session use the reduced graph',async({page})=>{
   const errors=[];page.on('pageerror',error=>errors.push(error.message));

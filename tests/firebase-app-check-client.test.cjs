@@ -68,7 +68,8 @@ test('App Check starts after paint and activates the RTDB client only after succ
   assert.match(html,/function activateFirebaseDataClient\(\)[\s\S]+db=firebaseDatabaseHandle[\s\S]+firebaseDataProtectionReady=true;\s*fbOn=true/);
   assert.match(html,/function startManagedSnapshotListener[\s\S]+if\(!firebaseDataProtectionReady\)/);
   assert.doesNotMatch(html,/setupFirebase\(url=FIREBASE_URL\)[\s\S]{0,260}startFirebaseAppCheck\(fbApp\)/);
-  assert.match(html,/const FIREBASE_APP_CHECK_SITE_KEY="6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz";/);
+  assert.match(html,/const FIREBASE_APP_CHECK_SITE_KEY=window\.__POGO_ENVIRONMENT\.appCheckSiteKey;/);
+  assert.equal(require('../scripts/environments/configuration.cjs').configuration('production').appCheckSiteKey,'6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz');
   assert.match(html,/state\.sdkPromise=Promise\.all\(\[import\(base\+'\/firebase-app\.js'\),import\(base\+'\/firebase-auth\.js'\)\]\)/);
   assert.match(html,/firebaseSdkPromise=Promise\.all\(\[[\s\S]+startPogoEarlyAuth\(\)[\s\S]+firebase-database\.js[\s\S]+\]\)/);
   // The approved owner PIN reset uses a callable after explicit interaction.
