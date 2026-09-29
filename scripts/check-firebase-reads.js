@@ -16,9 +16,16 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // Known rollback revisions select their reviewed historical contract. A future
 // runtime may use the current contract only when its parsed reads, handler
 // hashes, paths, gates and call counts still match it exactly.
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||defaultSourceCallContract;
+// Without a Pages runtime SHA, validate the control checkout's own .123 app
+// against its reviewed .123 contract. Pages always supplies the target SHA;
+// this local-only selection must not downgrade an explicitly identified target.
+const localReleaseSource=runtimeSourceSha?'':readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
+const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-09-23\.123';/.test(localReleaseSource)
+  ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
-const inventory=reconcileReadSites(collectReadSites(root),SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
+const actualReadSites=collectReadSites(root);
+const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
 const repositoryInventory=collectReadSites(root,{repository:true});
 assert.deepEqual(repositoryInventory.map(site=>[site.file,expressionKey(site.expression)]),
   Array.from(SOURCE_CALL_CONTRACT.repositoryCalls,site=>[site.file,expressionKey(site.expression)]),
@@ -47,7 +54,9 @@ for(const entry of READ_SURFACES){
 }
 
 function directCallCount(name){
-  return[...indexSource.matchAll(new RegExp(`(^|[^\\w$.])${name}\\s*\\(`,'gm'))].length;
+  // Count parsed calls, not comment or string text such as the reviewed
+  // conditional-publication explanation mentioning get().
+  return actualReadSites.filter(site=>site.operation===name).length;
 }
 function occurrenceCount(needle){return indexSource.split(needle).length-1;}
 function sourceBetween(start,end){
