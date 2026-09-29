@@ -2,7 +2,7 @@
   'use strict';
 
   const FIREBASE_SDK='https://www.gstatic.com/firebasejs/10.12.2';
-  const APP_CHECK_SITE_KEY='6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz';
+  const APP_CHECK_SITE_KEY=global.__POGO_ENVIRONMENT.appCheckSiteKey;
   const LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
   const LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
   const SECTION_PAGE_SIZE=80;

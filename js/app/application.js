@@ -315,7 +315,7 @@ const FIREBASE_MESSAGING_SENDER_ID=window.__POGO_FIREBASE_CONFIG.messagingSender
 const FIREBASE_APP_ID=window.__POGO_FIREBASE_CONFIG.appId;
 const FIREBASE_MEASUREMENT_ID=window.__POGO_FIREBASE_CONFIG.measurementId;
 // Public reCAPTCHA Enterprise configuration; populated only after provider registration is approved.
-const FIREBASE_APP_CHECK_SITE_KEY="6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz";
+const FIREBASE_APP_CHECK_SITE_KEY=window.__POGO_ENVIRONMENT.appCheckSiteKey;
 const priorityDomain=window.PogoDomain?.priorities;
 if(!priorityDomain)throw new Error('Priority helpers failed to load');
 const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel,sortEntries}=priorityDomain;
@@ -4188,6 +4188,7 @@ function withTimeout(promise,ms,message,code='timeout'){
 }
 function firebaseAuthConfigured(){return!!FIREBASE_API_KEY&&FIREBASE_API_KEY.startsWith('AIza');}
 function firebaseConfig(url=FIREBASE_URL){
+  if(window.__POGO_ENVIRONMENT.profile==='staging'&&url!==FIREBASE_URL)throw new Error('Staging Firebase database configuration mismatch');
   const cfg={databaseURL:url,projectId:FIREBASE_PROJECT_ID};
   if(firebaseAuthConfigured()){
     cfg.apiKey=FIREBASE_API_KEY;
@@ -4200,6 +4201,7 @@ function firebaseConfig(url=FIREBASE_URL){
   return cfg;
 }
 function setupFirebase(url=FIREBASE_URL){
+  if(window.__POGO_ENVIRONMENT.profile==='staging'&&url!==FIREBASE_URL)throw new Error('Staging Firebase database configuration mismatch');
   if(fbApp)return fbApp;
   if(!firebaseSdkReady())throw new Error('Firebase SDK is still loading');
   const early=window.__pogoEarlyAuth;

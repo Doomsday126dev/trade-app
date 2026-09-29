@@ -38,7 +38,7 @@ async function routeEmulators(page,fixture,{legacy=true,candidate=false,picker=f
     expect((await adminData('PUT','.settings/rules',JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/database.rules.favorite-resolver.json'),'utf8')))).status).toBe(200);
     await page.route('**/js/services/favoriteWriteTransport.js*',route=>{
       let source=fs.readFileSync(path.join(root,'js/services/favoriteWriteTransport.js'),'utf8');
-      source=source.replace('https://trade-list-a4297-default-rtdb.firebaseio.com/.json','http://127.0.0.1:9500/.json?ns=demo-pogo-saving-incident-default-rtdb');
+      source=source.replace(/^  const DATABASE=.*;$/m,"  const DATABASE='http://127.0.0.1:9500/.json?ns=demo-pogo-saving-incident-default-rtdb';");
       source=source.replace('const response=await fetch(url.href,',"if(window.__incidentRejectWrites)throw failure('account-sync/network-failed');const response=await fetch(url.href,");
       return route.fulfill({contentType:'text/javascript',body:source});
     });

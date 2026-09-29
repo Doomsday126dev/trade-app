@@ -23,16 +23,28 @@ window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
 });
 window.__POGO_LEGACY_PROVISIONING_ENFORCEMENT__=false;
 window.__pogoStartup=window.__pogoStartup||{documentStartAt:performance.now(),preAuthMarkupReady:null,preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:null,shellInteractiveAt:null,featureLoadStartedAt:null,featureScriptsReadyAt:null,protectedRequestedAt:null,appCheckStartedAt:null,appCheckReadyAt:null,protectedReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
-window.__POGO_FIREBASE_CONFIG=Object.freeze({
-  apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
-  authDomain:'trade-list-a4297.firebaseapp.com',
-  databaseURL:'https://trade-list-a4297-default-rtdb.firebaseio.com',
-  projectId:'trade-list-a4297',
-  storageBucket:'trade-list-a4297.firebasestorage.app',
-  messagingSenderId:'1053781218847',
-  appId:'1:1053781218847:web:378b312470943152d9a72a',
-  measurementId:'G-0ZFL5NDQFP'
-});
+/* POGO_ENVIRONMENT_CONFIG_BEGIN */
+const pogoEnvironment={
+  "schemaVersion":1,
+  "profile":"production",
+  "firebase":{
+    "apiKey":"AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU",
+    "authDomain":"trade-list-a4297.firebaseapp.com",
+    "databaseURL":"https://trade-list-a4297-default-rtdb.firebaseio.com",
+    "projectId":"trade-list-a4297",
+    "storageBucket":"trade-list-a4297.firebasestorage.app",
+    "messagingSenderId":"1053781218847",
+    "appId":"1:1053781218847:web:378b312470943152d9a72a",
+    "measurementId":"G-0ZFL5NDQFP"
+  },
+  "appCheckSiteKey":"6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz"
+};
+/* POGO_ENVIRONMENT_CONFIG_END */
+if(pogoEnvironment.schemaVersion!==1||!['production','staging'].includes(pogoEnvironment.profile)||
+  !pogoEnvironment.firebase||['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId'].some(key=>typeof pogoEnvironment.firebase[key]!=='string'||!pogoEnvironment.firebase[key])||
+  typeof pogoEnvironment.appCheckSiteKey!=='string'||!pogoEnvironment.appCheckSiteKey)throw new Error('Application environment configuration is incomplete');
+window.__POGO_ENVIRONMENT=Object.freeze({...pogoEnvironment,firebase:Object.freeze(pogoEnvironment.firebase)});
+window.__POGO_FIREBASE_CONFIG=window.__POGO_ENVIRONMENT.firebase;
 function parsePogoPublicShareRequest(){
   var params=new URLSearchParams(location.search),raw=params.get('view');
   if(raw===null)return null;

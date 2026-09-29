@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "profile": "staging",
+  "firebase": {
+    "apiKey": "AIzaSyB4bNx1smbZOTsldMG8WMYb1mdEOSEzi1U",
+    "authDomain": "trainer-hub-staging-37ib4wct.firebaseapp.com",
+    "databaseURL": "https://trainer-hub-staging-37ib4wct-share124.firebaseio.com",
+    "projectId": "trainer-hub-staging-37ib4wct",
+    "storageBucket": "trainer-hub-staging-37ib4wct.firebasestorage.app",
+    "messagingSenderId": "391359988648",
+    "appId": "1:391359988648:web:d5455df9a12624d3f8d39d",
+    "measurementId": ""
+  },
+  "appCheckSiteKey": "6LeC-n0tAAAAAFRXDuCnTVeMSiHZNcByWKzgAzvR"
+}
