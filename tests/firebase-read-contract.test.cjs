@@ -24,6 +24,11 @@ function fixture(t){
   return dir;
 }
 function check(dir,runtimeSourceSha=current){return spawnSync(process.execPath,[path.join(controlRoot,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env:{...process.env,FIREBASE_READ_SOURCE_DIR:dir,PAGES_RUNTIME_SOURCE_SHA:runtimeSourceSha}});}
+function checkWithoutRuntimeSha(dir){
+  const env={...process.env,FIREBASE_READ_SOURCE_DIR:dir};
+  delete env.PAGES_RUNTIME_SOURCE_SHA;
+  return spawnSync(process.execPath,[path.join(controlRoot,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env});
+}
 function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
@@ -46,6 +51,18 @@ test('parsed runtime inventory matches its exact reviewed contract',()=>{
   assert.equal(newContract.directOnValueCount,1);
   assert.ok(inventory.every(site=>site.normalizedPath&&site.justification&&site.featureGate));
   assert.ok(!contract.needles.some(item=>item.text.includes('loginDirectory/${handle}')));
+});
+test('default checker validates the control checkout without downgrading identified runtimes',t=>{
+  const dir=fixture(t);
+  const local=checkWithoutRuntimeSha(dir);
+  assert.equal(local.status,0,local.stderr);
+  assert.equal(JSON.parse(local.stdout).directReads.length,hasConditionalObservation?24:23);
+  if(!hasConditionalObservation){
+    const identified=check(dir,'a'.repeat(40));
+    assert.notEqual(identified.status,0,'an explicit new-runtime SHA must not select the local .123 contract');
+  }
+  change(dir,'js/app/application.js','const path=`trainerShares/${session.uid}`;','const path=`users/${session.uid}`;');
+  assert.match(checkWithoutRuntimeSha(dir).stderr,/path bindings or execution semantics changed/);
 });
 test('conditional publication callers keep exact owner paths',t=>{
   const dir=fixture(t);

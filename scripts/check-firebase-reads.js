@@ -16,7 +16,13 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // Known rollback revisions select their reviewed historical contract. A future
 // runtime may use the current contract only when its parsed reads, handler
 // hashes, paths, gates and call counts still match it exactly.
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||defaultSourceCallContract;
+// Without a Pages runtime SHA, validate the control checkout's own .123 app
+// against its reviewed .123 contract. Pages always supplies the target SHA;
+// this local-only selection must not downgrade an explicitly identified target.
+const localReleaseSource=runtimeSourceSha?'':readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
+const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-09-23\.123';/.test(localReleaseSource)
+  ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
