@@ -249,3 +249,33 @@ test('provider client contains no direct Firestore or RTDB identity writer',()=>
   assert.match(source,/createE1ProviderAccountFoundation/u);
   assert.match(source,/limitedUseAppCheckTokens:true/u);
 });
+
+test('pending creation reconciliation cannot adopt evidence from another Firebase UID',async()=>{
+  const unavailable=Object.assign(new Error('lost'),{code:'functions/unavailable'});
+  const h=harness({responses:[unavailable,{code:'FOUNDATION_NOT_INITIALIZED'},{code:'SUCCESS',foundation:readFoundation()}]});
+  await assert.rejects(h.client.create({requestedHandle:'TrainerNew'}));
+  const before=h.store.getItem(h.service.STORAGE_KEY),calls=h.calls.length;
+  h.auth.currentUser.uid='uid-other';h.setLifecycle({uid:'uid-other',lifecycleId:'auth-3'});
+  await assert.rejects(h.client.reconcilePending(),{code:'provider-account/operation-owner-mismatch'});
+  assert.equal(h.calls.length,calls);assert.equal(h.store.getItem(h.service.STORAGE_KEY),before);
+});
+test('same owner may reconcile a lost creation after a fresh login without resending creation',async()=>{
+  const unavailable=Object.assign(new Error('lost'),{code:'functions/unavailable'});
+  const h=harness({responses:[unavailable,{code:'FOUNDATION_NOT_INITIALIZED'},{code:'SUCCESS',foundation:readFoundation()}]});
+  await assert.rejects(h.client.create({requestedHandle:'TrainerNew'}));
+  h.setLifecycle({uid:'uid-new',lifecycleId:'auth-3'});
+  assert.equal((await h.client.reconcilePending()).status,'account-ready');
+  assert.equal(h.calls.filter(call=>call.name===h.service.CREATE_CALLABLE).length,1);
+});
+
+test('late reconciliation cannot overwrite a newer pending operation from another tab',async()=>{
+  const unavailable=Object.assign(new Error('lost'),{code:'functions/unavailable'});
+  const h=harness({responses:[unavailable,{code:'FOUNDATION_NOT_INITIALIZED'},()=>{
+    const newer={...h.client.pending(),requestId:'newer-request-0002'};
+    h.store.setItem(h.service.STORAGE_KEY,JSON.stringify(newer));
+    return{code:'SUCCESS',foundation:readFoundation()};
+  }]});
+  await assert.rejects(h.client.create({requestedHandle:'TrainerNew'}));
+  await assert.rejects(h.client.reconcilePending(),{code:'provider-account/request-superseded'});
+  assert.equal(h.client.pending().requestId,'newer-request-0002');assert.equal(h.client.pending().phase,'ambiguous');
+});

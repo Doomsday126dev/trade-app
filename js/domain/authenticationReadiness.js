@@ -91,6 +91,8 @@
     const expected=[...fields].sort();return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
   }
   function validLegacyFreeze(value){
+    // RTDB drops null children; retain the same strict canonical active-freeze contract.
+    if(value?.state==='active'&&!Object.prototype.hasOwnProperty.call(value,'releasedAt'))value={...value,releasedAt:null};
     return exactFields(value,LEGACY_FREEZE_FIELDS)&&value.schemaVersion===1&&['active','released'].includes(value.state)&&
       value.provisioningModel===LEGACY_FREEZE_MODEL&&LEGACY_FREEZE_ID.test(value.freezeId||'')&&
       SHA256.test(value.provisioningContractDigest||'')&&Number.isSafeInteger(value.activatedAt)&&value.activatedAt>=0&&
