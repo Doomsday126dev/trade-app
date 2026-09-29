@@ -8,7 +8,8 @@ const vm=require('node:vm');
 const {collectReadSites,reconcileReadSites}=require('../scripts/lib/firebase-read-sites.cjs');
 const root=path.join(__dirname,'..');
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
-const current='4614e1e4345befbb7c1b1a75fa3230e57e8e94a4';
+const current='a'.repeat(40);
+const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
@@ -24,15 +25,44 @@ function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
-test('parsed .116 inventory accounts for 23 reviewed sites',()=>{
+test('parsed .124 inventory accounts for 24 reviewed sites including one exact conditional listener',()=>{
   const actual=collectReadSites(root);
-  assert.equal(actual.length,23);
+  assert.equal(actual.length,24);
   const inventory=reconcileReadSites(actual,contract.directReadSites,contract.readHandlerHashes);
   assert.equal(inventory.filter(site=>site.classification==='A').length,16);
-  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,7);
-  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,23);
+  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,8);
+  assert.equal(inventory.filter(site=>site.operation==='get').length,23);
+  assert.equal(inventory.filter(site=>site.operation==='onValue').length,1);
+  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,24);
+  const observation=inventory.find(site=>site.operation==='onValue');
+  assert.equal(observation.handler,'observePublicShareForConditionalWrite');
+  assert.equal(observation.normalizedPath,'publicShares/{currentUsername} | trainerShares/{currentUid}');
+  assert.equal(observation.ownerScope,'session');
+  assert.equal(observation.audience,'owner');
+  assert.equal(observation.activeInProduct,true);
+  assert.equal(contract.directOnValueCount,1);
   assert.ok(inventory.every(site=>site.normalizedPath&&site.justification&&site.featureGate));
   assert.ok(!contract.needles.some(item=>item.text.includes('loginDirectory/${handle}')));
+});
+test('conditional publication callers keep exact owner paths',t=>{
+  const dir=fixture(t);
+  assert.equal(check(dir).status,0);
+  change(dir,'js/app/application.js','const path=`trainerShares/${session.uid}`;','const path=`users/${session.uid}`;');
+  assert.match(check(dir).stderr,/path bindings or execution semantics changed/);
+  const legacy=fixture(t);
+  change(legacy,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
+  assert.match(check(legacy).stderr,/path bindings or execution semantics changed/);
+});
+test('conditional publication listener cannot become broad or outlive the write',t=>{
+  const dir=fixture(t);
+  change(dir,'js/app/application.js','unsubscribe=onValue(target,resolve,reject);',"unsubscribe=onValue(ref(db,'users'),resolve,reject);");
+  assert.match(check(dir).stderr,/expression changed/);
+  const bounded=fixture(t);
+  change(bounded,'js/app/application.js','}finally{observation?.close();}','}finally{}');
+  assert.match(check(bounded).stderr,/path bindings or execution semantics changed/);
+  const failed=fixture(t);
+  change(failed,'js/app/application.js','}catch(error){unsubscribe?.();throw error;}','}catch(error){throw error;}');
+  assert.match(check(failed).stderr,/path bindings or execution semantics changed/);
 });
 test('trusted control validates the unchanged immutable .87 runtime and ignores its stale validation metadata',t=>{
   const dir=fixture(t);
@@ -86,6 +116,15 @@ test('static read validation uses the trusted registry even when the target neve
   fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/<script src="js\/data\/firebaseReadRegistry\.js\?v=[^"]+"><\/script>\n/g,''));
   fs.writeFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'throw new Error("target registry must never execute during validation");');
   const result=check(dir,current);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,24);
+});
+
+test('trusted control accepts exact immutable .123 rollback without the .124 listener',t=>{
+  const dir=fixture(t);
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js']){
+    fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${productionRollback}:${file}`],{cwd:process.env.PAGES_RUNTIME_ROOT||root}));
+  }
+  const result=check(dir,productionRollback);assert.equal(result.status,0,result.stderr);
   assert.equal(JSON.parse(result.stdout).directReads.length,23);
 });
 
