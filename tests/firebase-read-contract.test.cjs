@@ -6,43 +6,63 @@ const path=require('node:path');
 const {spawnSync,execFileSync}=require('node:child_process');
 const vm=require('node:vm');
 const {collectReadSites,reconcileReadSites}=require('../scripts/lib/firebase-read-sites.cjs');
-const root=path.join(__dirname,'..');
+const controlRoot=path.join(__dirname,'..');
+const root=path.resolve(process.env.PAGES_RUNTIME_ROOT||controlRoot);
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
-const current='a'.repeat(40);
+const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
+const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
+if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
+const current=requestedRuntimeSha||(hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
-vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
-const contract=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACT;
-function fixture(t){
+vm.runInNewContext(fs.readFileSync(path.join(controlRoot,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
+const newContract=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACT;
+const contract=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS[current]||newContract;
+function fixture(t,sourceRoot=root){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'firebase-read-contract-'));
-  for(const file of ['index.html','css','js'])fs.cpSync(path.join(root,file),path.join(dir,file),{recursive:true});
+  for(const file of ['index.html','css','js'])fs.cpSync(path.join(sourceRoot,file),path.join(dir,file),{recursive:true});
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
   return dir;
 }
-function check(dir,runtimeSourceSha=current){return spawnSync(process.execPath,[path.join(root,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env:{...process.env,FIREBASE_READ_SOURCE_DIR:dir,PAGES_RUNTIME_SOURCE_SHA:runtimeSourceSha}});}
+function check(dir,runtimeSourceSha=current){return spawnSync(process.execPath,[path.join(controlRoot,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env:{...process.env,FIREBASE_READ_SOURCE_DIR:dir,PAGES_RUNTIME_SOURCE_SHA:runtimeSourceSha}});}
+function checkWithoutRuntimeSha(dir){
+  const env={...process.env,FIREBASE_READ_SOURCE_DIR:dir};
+  delete env.PAGES_RUNTIME_SOURCE_SHA;
+  return spawnSync(process.execPath,[path.join(controlRoot,'scripts/check-firebase-reads.js'),'--inventory'],{encoding:'utf8',env});
+}
 function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
-test('parsed .124 inventory accounts for 24 reviewed sites including one exact conditional listener',()=>{
+test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);
-  assert.equal(actual.length,24);
+  assert.equal(actual.length,contract.directReadSites.length);
   const inventory=reconcileReadSites(actual,contract.directReadSites,contract.readHandlerHashes);
-  assert.equal(inventory.filter(site=>site.classification==='A').length,16);
-  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,8);
-  assert.equal(inventory.filter(site=>site.operation==='get').length,23);
-  assert.equal(inventory.filter(site=>site.operation==='onValue').length,1);
-  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,24);
-  const observation=inventory.find(site=>site.operation==='onValue');
+  assert.equal(inventory.filter(site=>site.operation==='get').length,contract.directGetCount);
+  assert.equal(inventory.filter(site=>site.operation==='onValue').length,contract.directOnValueCount);
+  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,actual.length);
+  const observation=newContract.directReadSites.find(site=>site.operation==='onValue');
   assert.equal(observation.handler,'observePublicShareForConditionalWrite');
   assert.equal(observation.normalizedPath,'publicShares/{currentUsername} | trainerShares/{currentUid}');
   assert.equal(observation.ownerScope,'session');
   assert.equal(observation.audience,'owner');
   assert.equal(observation.activeInProduct,true);
-  assert.equal(contract.directOnValueCount,1);
+  assert.equal(newContract.directOnValueCount,1);
   assert.ok(inventory.every(site=>site.normalizedPath&&site.justification&&site.featureGate));
   assert.ok(!contract.needles.some(item=>item.text.includes('loginDirectory/${handle}')));
+});
+test('default checker validates the control checkout without downgrading identified runtimes',t=>{
+  const dir=fixture(t,controlRoot);
+  const local=checkWithoutRuntimeSha(dir);
+  assert.equal(local.status,0,local.stderr);
+  const localHasConditionalObservation=collectReadSites(controlRoot).some(site=>site.handler==='observePublicShareForConditionalWrite');
+  assert.equal(JSON.parse(local.stdout).directReads.length,localHasConditionalObservation?24:23);
+  const identified=check(dir,'a'.repeat(40));
+  if(localHasConditionalObservation)assert.equal(identified.status,0,identified.stderr);
+  else assert.notEqual(identified.status,0,'an explicit new-runtime SHA must not select the local .123 contract');
+  change(dir,'js/app/application.js','const path=`trainerShares/${session.uid}`;','const path=`users/${session.uid}`;');
+  assert.match(checkWithoutRuntimeSha(dir).stderr,/path bindings or execution semantics changed/);
 });
 test('conditional publication callers keep exact owner paths',t=>{
   const dir=fixture(t);
@@ -54,6 +74,12 @@ test('conditional publication callers keep exact owner paths',t=>{
   assert.match(check(legacy).stderr,/path bindings or execution semantics changed/);
 });
 test('conditional publication listener cannot become broad or outlive the write',t=>{
+  if(!hasConditionalObservation){
+    assert.equal(newContract.directOnValueCount,1);
+    assert.equal(newContract.directReadSites.filter(site=>site.operation==='onValue').length,1);
+    assert.equal(contract.directOnValueCount,0);
+    return;
+  }
   const dir=fixture(t);
   change(dir,'js/app/application.js','unsubscribe=onValue(target,resolve,reject);',"unsubscribe=onValue(ref(db,'users'),resolve,reject);");
   assert.match(check(dir).stderr,/expression changed/);
@@ -105,7 +131,7 @@ test('computed repository reads cannot evade the call inventory',t=>{
   assert.match(check(dir).stderr,/Repository read sites changed/);
 });
 test('Pages invokes the trusted checker against target bytes, never the historical target checker',()=>{
-  const workflow=fs.readFileSync(path.join(root,'.github/workflows/pages-release-control.yml'),'utf8');
+  const workflow=fs.readFileSync(path.join(controlRoot,'.github/workflows/pages-release-control.yml'),'utf8');
   assert.ok(workflow.includes('FIREBASE_READ_SOURCE_DIR=target node control/scripts/check-firebase-reads.js'));
   assert.ok(!workflow.includes('node target/scripts/check-firebase-reads.js'));
 });
@@ -116,7 +142,7 @@ test('static read validation uses the trusted registry even when the target neve
   fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/<script src="js\/data\/firebaseReadRegistry\.js\?v=[^"]+"><\/script>\n/g,''));
   fs.writeFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'throw new Error("target registry must never execute during validation");');
   const result=check(dir,current);assert.equal(result.status,0,result.stderr);
-  assert.equal(JSON.parse(result.stdout).directReads.length,24);
+  assert.equal(JSON.parse(result.stdout).directReads.length,contract.directReadSites.length);
 });
 
 test('trusted control accepts exact immutable .123 rollback without the .124 listener',t=>{
@@ -151,8 +177,8 @@ test('trusted control accepts the exact .115 rollback read contract',t=>{
   assert.equal(JSON.parse(result.stdout).directReads.length,25);
 });
 
-test('future runtime SHAs retain the exact current read contract',t=>{
-  const dir=fixture(t),future='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+test('selected runtime retains its exact read contract',t=>{
+  const dir=fixture(t),future=current;
   const result=check(dir,future);assert.equal(result.status,0,result.stderr);
   change(dir,'js/app/application.js','async function doLogin(){','async function doLogin(){get(ref(db,"unregistered"));');
   assert.match(check(dir,future).stderr,/inventory changed/);
