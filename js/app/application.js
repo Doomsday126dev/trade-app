@@ -3629,6 +3629,8 @@ function providerAccountSyncPublicSnapshot(acceptedRows,session){
   return strict.snapshot;
 }
 async function publishAccountSyncProjection(acceptedRows,operation,activity){
+  const username=cur,token=activePublicShareHydrationToken,uid=auth?.currentUser?.uid;
+  const currentSession=()=>activePublicShareHydrationToken===token&&auth?.currentUser?.uid===uid&&publicShareSessionMatches(username);
   if(providerOnlyIdentityActive()){
     const session=providerPublicProjectionSession(cur);
     if(!session)throw providerFailure('provider-public/projection-disabled');
@@ -3640,26 +3642,31 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
   const source=accountSyncClone(getLocal());
   for(const type of OWNED_MY_LIST_TYPES){
     if(!source[type])source[type]={};
-    source[type][cur]=accountSyncClone(projected.lists[type]);
+    source[type][username]=accountSyncClone(projected.lists[type]);
   }
-  source.users[cur]={...source.users[cur],specialTradeBoard:accountSyncClone(projected.board),intentDeclarations:accountSyncClone(projected.intentDeclarations)};
-  const built=publicShareSnapshotForUser(cur,source,'owned_list_edit',true);
-  if(built.ok&&activity&&Number(activity.updatedAt)>=0){
+  source.users[username]={...source.users[username],specialTradeBoard:accountSyncClone(projected.board),intentDeclarations:accountSyncClone(projected.intentDeclarations)};
+  const built=publicShareSnapshotForUser(username,source,'owned_list_edit',true);
+  if(built.ok&&activity&&Number(activity.updatedAt)>=0)try{
     built.snapshot.profile.lastUpdated=Number(activity.updatedAt);
     const summary={schemaVersion:1,updatedAt:Number(activity.updatedAt),listed:built.snapshot.declarations.length};
-    const target=ref(db,`users/${cur}/canonicalListActivity`);
+    const target=ref(db,`users/${username}/canonicalListActivity`);
     const result=await withTimeout(runTransaction(target,current=>{
-      if(!publicShareSessionMatches(cur))return;
+      if(!currentSession())return;
       if(current?.schemaVersion===1&&Number(current.updatedAt)>summary.updatedAt)return;
       return summary;
     },{applyLocally:false}),8000,'Saving activity summary timed out','db/activity-timeout');
-    if(!publicShareSessionMatches(cur))throw new Error('share-publication/activity-not-current');
+    if(!currentSession())throw new Error('share-publication/activity-not-current');
     const confirmed=result.snapshot?.val();
     if(!confirmed||confirmed.schemaVersion!==1||Number(confirmed.updatedAt)<summary.updatedAt)throw new Error('share-publication/activity-not-current');
-    const local=getLocal();local.users[cur]={...local.users[cur],canonicalListActivity:confirmed};saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
+    const local=getLocal();local.users[username]={...local.users[username],canonicalListActivity:confirmed};saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
+  }catch(error){
+    if(!currentSession())throw new Error('share-publication/session-changed');
+    console.warn('Canonical activity summary remains unavailable',String(error?.code||'activity/write-failed'));
   }
   if(!built.ok)throw Object.assign(new Error('Public projection is pending or unavailable'),{code:built.error?.code||'account-sync/public-projection-failed'});
-  await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot);
+  if(!currentSession())throw new Error('share-publication/session-changed');
+  await writeVerifiedLegacyPublicSnapshot(username,built.snapshot);
+  if(!currentSession())throw new Error('share-publication/session-changed');
   return{ok:true,status:'published'};
 }
 function retireMigratedLegacyListQueue(){
