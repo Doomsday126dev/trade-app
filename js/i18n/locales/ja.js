@@ -1,6 +1,12 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
-  root.ja=Object.freeze({...root.en,"who.title":"これを欲しい人は？","who.scope":"トレーナー","who.variant":"希望するバリエーション","who.broad":"すべてのバリエーション","who.broadNote":"種単位の結果です。各バリエーションを確認してください。","who.exact":"公開されたバリエーションと構造化された条件が一致します。メモを確認してください。交換可能性は保証しません。","who.missing":"選択したバリエーションは現在利用できません","who.noMatch":"選択に一致する閲覧可能な希望はありません。","who.search":"この希望を検索","groups.dateUnknown":"公開日時不明","groups.favorites":"すべてのお気に入り","groups.newSince":"前回の確認以降の追加・変更","groups.newTop":"新しい優先度「高」の希望","groups.first":"初回確認","groups.updated":"更新あり · 新規 {count}件 · 新しい優先度「高」の希望 {top}件","groups.unchanged":"変更なし","groups.aged":"古い公開情報","groups.checked":"確認済みにする","groups.checkedAll":"閲覧可能なトレーナーを確認済みにする","groups.historyLocal":"この端末で前回確認済みにした時点との差分です。初回は比較対象がありません。",
+  root.ja=Object.freeze({
+    "accountSync.publicationPending":"保存済み・共有待ち",
+    "accountSync.publicationPendingDetail":"非公開の変更は保存済みです。共有リストを更新できませんでした。タップして再試行してください。",
+    "admin.canonicalEntries":"希望 {count} 件",
+    "admin.legacyEntries":"旧データ {count} 件",
+    "admin.legacyUpdated":"旧データの更新 {time}",
+...root.en,"who.title":"これを欲しい人は？","who.scope":"トレーナー","who.variant":"希望するバリエーション","who.broad":"すべてのバリエーション","who.broadNote":"種単位の結果です。各バリエーションを確認してください。","who.exact":"公開されたバリエーションと構造化された条件が一致します。メモを確認してください。交換可能性は保証しません。","who.missing":"選択したバリエーションは現在利用できません","who.noMatch":"選択に一致する閲覧可能な希望はありません。","who.search":"この希望を検索","groups.dateUnknown":"公開日時不明","groups.favorites":"すべてのお気に入り","groups.newSince":"前回の確認以降の追加・変更","groups.newTop":"新しい優先度「高」の希望","groups.first":"初回確認","groups.updated":"更新あり · 新規 {count}件 · 新しい優先度「高」の希望 {top}件","groups.unchanged":"変更なし","groups.aged":"古い公開情報","groups.checked":"確認済みにする","groups.checkedAll":"閲覧可能なトレーナーを確認済みにする","groups.historyLocal":"この端末で前回確認済みにした時点との差分です。初回は比較対象がありません。",
     "groups.manage":"グループ管理","groups.memberCount":"トレーナー {count}人","groups.updatedTrainers":"更新 {count}人","groups.review":"トレーナーの更新",
     'groups.title':"グループ",'groups.new':'新しいグループ名','groups.name':'グループ名','groups.create':'グループ作成','groups.open':'グループ','groups.choose':"お気に入りまたはグループを選択",'groups.rename':'名前変更','groups.delete':'グループ削除','groups.confirmDelete':'このグループを削除しますか？お気に入りや希望リストは削除されません。','groups.members':'メンバー','groups.noFavorites':'まずトレーナーをお気に入りに追加してください。','groups.all':"すべての欲しいポケモン",'groups.refresh':'希望を更新','groups.available':'利用可能','groups.stale':'利用不可：情報が古い','groups.loading':'確認中…','groups.unavailable':'利用不可','groups.freshness':"公開日時が古くても公開中の希望を含みます。5分後にアクセスを再確認してください。",'groups.empty':'メンバーはいません。','groups.noWants':'利用可能な希望はありません。','groups.search':'グループの希望を検索','groups.more':'もっと表示','groups.synced':'非公開 · アカウント同期','groups.local':'非公開 · この端末',
     "workflow.listTools":"リストツール",
@@ -166,10 +172,5 @@
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
     ,'safeTransfer.candidate.scope':'選択範囲：{trainers}','safeTransfer.candidate.loading':'サーバーで確認済みの共有希望を確認中…','safeTransfer.candidate.blocked':'検索を作成するには、完全で最新の選択範囲スナップショットが必要です。','safeTransfer.candidate.ready':'希望する{protected}種を保護した後の候補は{candidates}種です。','safeTransfer.candidate.empty':'この選択範囲のスナップショットには候補種が残っていません。','safeTransfer.candidate.copy':'{total}個中{part}個目をコピー','safeTransfer.candidate.copied':'コピーしました。','safeTransfer.candidate.copyFailed':'コピーできませんでした。現在の検索文字列を手動コピー用に下に残しました。'
     ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
-    ,"accountSync.publicationPending":"保存済み・共有待ち"
-    ,"accountSync.publicationPendingDetail":"非公開の変更は保存済みです。共有リストを更新できませんでした。タップして再試行してください。"
-    ,"admin.canonicalEntries":"希望 {count} 件"
-    ,"admin.legacyEntries":"旧データ {count} 件"
-    ,"admin.legacyUpdated":"旧データの更新 {time}"
   });
 })(window);
