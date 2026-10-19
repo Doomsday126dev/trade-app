@@ -277,8 +277,8 @@ The .126 runtime is selected independently from this control correction and
 does not include undeployed main UI or sprite changes.
 
 
-Focused .127 (`e5018c18567d25ff2b2bf572143a4f89eb881a33`) excludes derived
-activity from ordinary profile writes/replay/overlays. It keeps the same 23
+Focused .127 (`76c0fd1cf9f5cd6295c2be5037f7c933af3a9e6b`) excludes derived
+activity from ordinary profile writes/replay/overlays and auth-binding profile updates. It keeps the same 23
 reviewed reads and gets an exact-SHA registration with unchanged path/hash
 checks. The runtime is selected separately from the integration/control commits.
 Local no-SHA validation recognizes .127; unknown explicit SHAs remain rejected.
