@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-09-23.123';
+const RELEASE='2026-10-19.125';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
@@ -297,8 +297,11 @@ function cacheFirst(req,event){
   });
   keepCacheWorkAlive(event,result.then(({cache,response,cacheable})=>{
     if(!cacheable)return;
+    // Clone before waiting for earlier cache writes: the browser may consume
+    // the original response while this mutation is queued.
+    const cacheResponse=response.clone();
     return queueSpriteCacheMutation(async()=>{
-      await cache.put(req,response.clone());
+      await cache.put(req,cacheResponse);
       await trimCache(SPRITE_CACHE,SPRITE_CACHE_LIMIT);
     });
   }));

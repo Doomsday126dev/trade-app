@@ -211,6 +211,13 @@
       const allowed=validateTrigger(trigger);if(!allowed.ok)return allowed;
       return readiness(value);
     }
+    function authorizeCanonical(value,trigger){
+      const allowed=validateTrigger(trigger);if(!allowed.ok)return allowed;
+      const session=validateToken(value);if(!session.ok)return session;
+      // Canonical rows replace all legacy lists. Only profile hydration remains required.
+      if(surfaceState.get('profile')!=='loaded')return errorResult('share-publication/profile-not-ready','The public profile has not loaded');
+      return{ok:true,status:'ready'};
+    }
     function consumePending(value){
       const state=readiness(value);if(!state.ok)return state;
       const trigger=TRIGGER_PRIORITY.find(item=>pendingTriggers.has(item))||null;
@@ -233,12 +240,12 @@
         pendingTriggers:Object.freeze([...pendingTriggers])
       });
     }
-    return Object.freeze({activate,markLoaded,markFailed,request,authorize,consumePending,invalidate,snapshot});
+    return Object.freeze({activate,markLoaded,markFailed,request,authorize,authorizeCanonical,consumePending,invalidate,snapshot});
   }
 
-  function buildPublicShareSnapshot({gate,token,trigger,username,source,declarations,now=Date.now()}={}){
+  function buildPublicShareSnapshot({gate,token,trigger,username,source,declarations,canonical=false,now=Date.now()}={}){
     if(!gate||typeof gate.authorize!=='function')throw new TypeError('Public-share snapshot requires a publication gate');
-    const authorization=gate.authorize(token,trigger);if(!authorization.ok)return authorization;
+    const authorization=canonical?gate.authorizeCanonical(token,trigger):gate.authorize(token,trigger);if(!authorization.ok)return authorization;
     const cleanUsername=String(username||'').trim();
     if(!cleanUsername||token?.username!==cleanUsername){
       return errorResult('share-publication/username-mismatch','Public-share username does not match the hydrated session');

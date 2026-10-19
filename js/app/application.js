@@ -2663,7 +2663,7 @@ function publicShareSessionMatches(username){
     activePublicShareHydrationToken.uid===auth.currentUser.uid&&
     activePublicShareHydrationToken.username===username);
 }
-function publicShareSnapshotForUser(username,source=allData,trigger='explicit_share'){
+function publicShareSnapshotForUser(username,source=allData,trigger='explicit_share',canonical=false){
   if(!publicShareSessionMatches(username)){
     return{ok:false,error:{code:'share-publication/session-mismatch',message:'Public-share session identity changed'}};
   }
@@ -2672,7 +2672,7 @@ function publicShareSnapshotForUser(username,source=allData,trigger='explicit_sh
   return publicSharePublicationDomain.buildPublicShareSnapshot({
     gate:managedPublicSharePublication,
     token:activePublicShareHydrationToken,
-    trigger,username,source,declarations:productDeclarations(username,source).entries
+    trigger,username,source,canonical,declarations:productDeclarations(username,source).entries
   });
 }
 function applyPublicShareSnapshot(s,snapshot){
@@ -3662,7 +3662,7 @@ function providerAccountSyncPublicSnapshot(acceptedRows,session){
   if(!strict.ok)throw providerFailure('provider-public/projection-invalid');
   return strict.snapshot;
 }
-async function publishAccountSyncProjection(acceptedRows){
+async function publishAccountSyncProjection(acceptedRows,operation,activity){
   if(providerOnlyIdentityActive()){
     const session=providerPublicProjectionSession(cur);
     if(!session)throw providerFailure('provider-public/projection-disabled');
@@ -3677,7 +3677,21 @@ async function publishAccountSyncProjection(acceptedRows){
     source[type][cur]=accountSyncClone(projected.lists[type]);
   }
   source.users[cur]={...source.users[cur],specialTradeBoard:accountSyncClone(projected.board),intentDeclarations:accountSyncClone(projected.intentDeclarations)};
-  const built=publicShareSnapshotForUser(cur,source,'owned_list_edit');
+  const built=publicShareSnapshotForUser(cur,source,'owned_list_edit',true);
+  if(built.ok&&activity&&Number(activity.updatedAt)>=0){
+    built.snapshot.profile.lastUpdated=Number(activity.updatedAt);
+    const summary={schemaVersion:1,updatedAt:Number(activity.updatedAt),listed:built.snapshot.declarations.length};
+    const target=ref(db,`users/${cur}/canonicalListActivity`);
+    const result=await withTimeout(runTransaction(target,current=>{
+      if(!publicShareSessionMatches(cur))return;
+      if(current?.schemaVersion===1&&Number(current.updatedAt)>summary.updatedAt)return;
+      return summary;
+    },{applyLocally:false}),8000,'Saving activity summary timed out','db/activity-timeout');
+    if(!publicShareSessionMatches(cur))throw new Error('share-publication/activity-not-current');
+    const confirmed=result.snapshot?.val();
+    if(!confirmed||confirmed.schemaVersion!==1||Number(confirmed.updatedAt)<summary.updatedAt)throw new Error('share-publication/activity-not-current');
+    const local=getLocal();local.users[cur]={...local.users[cur],canonicalListActivity:confirmed};saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
+  }
   if(!built.ok)throw Object.assign(new Error('Public projection is pending or unavailable'),{code:built.error?.code||'account-sync/public-projection-failed'});
   await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot);
   return{ok:true,status:'published'};
@@ -3762,7 +3776,7 @@ async function ensureAccountSyncRuntime(){
       onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();managedFavoriteAdditions?.refresh().catch(()=>{});}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
       onProviderProfile:profile=>currentSession()?applyAccountSyncProviderProfile(profile):false,
-      onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
+      onPublicProjection:(acceptedRows,operation,activity)=>currentSession()?publishAccountSyncProjection(acceptedRows,operation,activity):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
       onMigrationState:detail=>{if(currentSession()){accountSyncMigrationState=detail.state;refreshSyncUi();}}
     });
     managedAccountSyncRuntime=runtime;
@@ -4508,6 +4522,7 @@ function _onOwnedDataSnapshot({surface,path,value}){
   if(canonicalActive)applyAccountSyncCanonicalEntities(accountSyncCanonicalEntities);
   if((surface==='profile'||PUBLIC_SHARE_TYPES.includes(surface))&&activePublicShareHydrationToken){
     const marked=managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
+    if(marked.ok&&surface==='profile')managedAccountSyncRuntime?.retryPublicProjection?.().catch(()=>{});
     if(marked.ok&&marked.ready){
       const pendingPublication=flushPendingPublicSharePublication();
       if(typeof pendingPublication?.then==='function'){
@@ -9484,8 +9499,10 @@ function adminUserRows(){
   return Object.entries(allData.users||{}).sort((a,b)=>
     lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
   ).map(([u,d])=>{
-    const listed=Object.keys(allData.wishlist?.[u]||{}).length;
-    const updated=d.lastUpdated,viewed=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
+    const activity=d.canonicalListActivity;
+    const canonical=activity?.schemaVersion===1&&Number.isSafeInteger(activity.updatedAt)&&activity.updatedAt>=0&&Number.isSafeInteger(activity.listed)&&activity.listed>=0;
+    const listed=canonical?activity.listed:Object.keys(allData.wishlist?.[u]||{}).length;
+    const updated=canonical?activity.updatedAt:d.lastUpdated,viewed=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
     const dir=allData.loginDirectory?.[u]||{};
     const authOk=!!(d.authUid&&d.authEmail&&dir.authReady);
     const authIssues=[
@@ -9495,7 +9512,7 @@ function adminUserRows(){
     ].filter(Boolean);
     const owner=u===OWNER||d.isOwner;
     const admin=d.isAdmin&&!owner;
-    return{u,d,listed,updated,viewed,authOk,authIssues,owner,admin,canChangeRole:iAmOwner&&u!==cur&&u!==OWNER,canMaintain:iAmOwner||(cur!==OWNER&&!admin&&!owner),established:!!d.authUid};
+    return{u,d,listed,updated,viewed,canonical,authOk,authIssues,owner,admin,canChangeRole:iAmOwner&&u!==cur&&u!==OWNER,canMaintain:iAmOwner||(cur!==OWNER&&!admin&&!owner),established:!!d.authUid};
   });
 }
 function adminUserAction(event){
@@ -9534,7 +9551,7 @@ function renderAdmin(){
     return`<article class="admin-member-row">
       <div class="admin-member-identity"><div class="av" style="width:36px;height:36px;font-size:11px;border:2px solid ${activityColor}">${escHtml(user.u.slice(0,2).toUpperCase())}</div><div class="admin-member-copy"><div class="admin-member-name">${escHtml(user.u)}</div>${user.d.friendCode?`<div class="admin-member-friend">${escHtml(user.d.friendCode)}</div>`:''}</div></div>
       <div class="admin-member-status"><span class="acct-pill ${user.authOk?'ok':'warn'}">${escHtml(i18nCore.t(user.authOk?'admin.loginReady':'admin.needsRepair'))}</span>${user.authIssues.length?`<span class="type-meta">${escHtml(user.authIssues.join(' · '))}</span>`:''}</div>
-      <div class="admin-member-meta"><span>${escHtml(i18nCore.t('admin.listEntries',{count:i18nCore.formatNumber(user.listed)}))}</span><span>${escHtml(i18nCore.t('admin.updated',{time:adminRelativeTime(user.updated)}))}</span><span>${escHtml(i18nCore.t('admin.viewed',{time:adminRelativeTime(user.viewed)}))}</span></div>
+      <div class="admin-member-meta"><span>${escHtml(i18nCore.t(user.canonical?'admin.canonicalEntries':'admin.legacyEntries',{count:i18nCore.formatNumber(user.listed)}))}</span><span>${escHtml(i18nCore.t(user.canonical?'admin.updated':'admin.legacyUpdated',{time:adminRelativeTime(user.updated)}))}</span><span>${escHtml(i18nCore.t('admin.viewed',{time:adminRelativeTime(user.viewed)}))}</span></div>
       <span class="admin-role-badge${roleClass}">${escHtml(i18nCore.t(roleKey))}</span>
     </article>`;
   }).join(''):emptyHtml(i18nCore.t('admin.noMembers'),i18nCore.t('admin.membersHelp'),'users');
@@ -9998,7 +10015,8 @@ function accountSyncPresentation(){
   const state=String(accountSyncUiState.state||'sync-error');
   const count=Math.max(0,Number(accountSyncUiState.pendingCount)||0)+Math.max(0,Number(accountSyncUiState.blockedCount)||0)+Math.max(0,Number(accountSyncUiState.conflictCount)||0)+Math.max(0,Number(accountSyncUiState.recoveryCandidateCount)||0);
   const recoveryState=accountSyncEffectiveRecoveryState(),plan=accountSyncCurrentRecoveryPlan(),running=recoveryState.status==='running';
-  const presentation=running?{className:'syncing',labelKey:'accountSync.recoveryRunning',detailKey:'accountSync.recoveryRunningDetail'}:{
+  const publicationPending=state==='saved'&&!!accountSyncUiState.lastProjectionError;
+  const presentation=publicationPending?{className:'offline',labelKey:'accountSync.publicationPending',detailKey:'accountSync.publicationPendingDetail'}:running?{className:'syncing',labelKey:'accountSync.recoveryRunning',detailKey:'accountSync.recoveryRunningDetail'}:{
     saved:{className:'online',labelKey:'accountSync.saved',detailKey:'accountSync.savedDetail'},
     'pending-sync':{className:'syncing',labelKey:'accountSync.saving',detailKey:'accountSync.savingDetail'},
     offline:{className:'offline',labelKey:'accountSync.offline',detailKey:'accountSync.offlineDetail'},
@@ -10011,7 +10029,7 @@ function accountSyncPresentation(){
     'restart-runtime':'accountSync.restartSync',
     'review-conflict':'accountSync.reviewConflict'
   }[plan.action]||'';
-  return Object.freeze({...presentation,state,count,plan,actionKey,running});
+  return Object.freeze({...presentation,state,count,plan,actionKey,running,publicationPending});
 }
 function syncLabelForStatus(s){
   const account=accountSyncPresentation();
@@ -10142,9 +10160,18 @@ async function reconnectAuth(){
     toast(i18nCore.t('saveStatus.reconnectFailed'),4500);
   }
 }
+async function retryAccountPublicPublication(){
+  const runtime=managedAccountSyncRuntime,uid=auth?.currentUser?.uid;
+  if(!runtime||runtime.ownerUid!==uid)return;
+  try{await runtime.retryPublicProjection();}catch{}
+  if(runtime!==managedAccountSyncRuntime||auth?.currentUser?.uid!==uid)return;
+  accountSyncUiState=await runtime.snapshot();refreshSyncUi();
+  toast(i18nCore.t(accountSyncUiState.lastProjectionError?'accountSync.publicationPendingDetail':'share.publicationUpdated'),4500);
+}
 async function openSyncDetail(){
   const account=accountSyncPresentation();
   if(account){
+    if(account.publicationPending){await retryAccountPublicPublication();return;}
     if(account.plan.action==='review-conflict'){await reviewAccountSyncConflicts();return;}
     if(account.plan.action!=='none'){await requestAccountSyncRecovery();return;}
     if(account.state==='review-required'){openAccountSettingsSection('data');return;}

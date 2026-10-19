@@ -870,3 +870,11 @@ for(const failure of ['session','listener'])test(`receipt retry stops after a re
   const runtime=createRuntime(window,h,repositoryState,journalState,async()=>({...source('device-receipt-authority'),favorites:[{displayName:'Unresolved',tagIds:[]}]}),()=>{},()=>{},async()=>({ok:true}),{sessionCurrent:()=>current,listenerReadyTimeoutMs:10});
   await assert.rejects(runtime.start());assert.equal(repositoryState.calls.readRecoveryReviewAcceptance,1);assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,0);assert.equal(runtime.projectionReady,false);assert.equal(journalState.recoveryCandidates.size,1);await runtime.stop();
 });
+
+
+test('legacy publication failure is retried from current accepted canonical rows',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);let ready=false,calls=0,published=[];
+  const runtime=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-public-retry',{remote:{Pikachu:'H'}}),()=>{},()=>{},async rows=>{calls++;if(!ready)throw Object.assign(new Error('profile not ready'),{code:'share-publication/profile-not-ready'});published=rows;return{ok:true,status:'published'};});
+  await runtime.start();assert.ok((await runtime.snapshot()).lastProjectionError);assert.equal(calls,1);
+  ready=true;assert.equal((await runtime.retryPublicProjection()).status,'published');assert.equal(calls,2);assert.equal(published.length,1);assert.equal((await runtime.snapshot()).lastProjectionError,'');await runtime.stop();
+});

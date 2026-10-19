@@ -218,11 +218,11 @@
       if(!active||!eligible||projectionAllowed()!==true||typeof onProjection!=='function')return Object.freeze({ok:true,status:'deferred'});
       try{
         const projection=await serializeCanonical(()=>{if(!listenerAuthorityCurrent(authority))throw listenerAuthorityError();return model.publicTradeProjection([...acceptedEntities.values()]);});
-        const execution=await executeAuthorizedMutation(()=>onProjection(projection,operation),authority);
+        const execution=await executeAuthorizedMutation(()=>onProjection(projection,operation,Object.freeze({updatedAt:Math.max(0,...[...acceptedEntities.values()].filter(entity=>entity.entityType==='tradeEntry').map(entity=>Number(entity.updatedAt)||0))})),authority);
         if(!execution.started||!execution.current)throw listenerAuthorityError();
         if(execution.error)throw execution.error;
         if(execution.value?.ok===false||['pending','queued','deferred'].includes(execution.value?.status))throw new Error('account-sync/public-projection-not-confirmed');
-        lastProjectionError='';return Object.freeze({ok:true,status:'published',count:projection.length});
+        if(lastProjectionError){lastProjectionError='';emit();}return Object.freeze({ok:true,status:'published',count:projection.length});
       }catch(error){lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit();return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
     }
     function handleListenerData(value,epoch){
