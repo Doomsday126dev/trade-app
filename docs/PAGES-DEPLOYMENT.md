@@ -265,3 +265,13 @@ The first .125 deployment (run 39298948385) stopped before artifact deployment
 because the prior control default expected 24 read sites for unknown SHAs.
 This source-only compatibility registration and dispatcher repin preserve the
 immutable .125 runtime tag and all production access/rules/billing settings.
+
+
+The .125 deployment was held before approval after regression review found
+that a rejected legacy activity summary could block an otherwise permitted
+public update and that a publication crossing an account switch needed an
+original-session guard. The corrected focused .126 runtime is
+`aa7a3ec6629b9c77868dd8764c9d12ce9e92b5d7`. It retains the same reviewed 23-read
+topology and has its own exact-SHA registration. Neither runtime tag is moved.
+The .126 runtime is selected independently from this control correction and
+does not include undeployed main UI or sprite changes.
