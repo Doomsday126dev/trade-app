@@ -3648,9 +3648,15 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
     built.snapshot.profile.lastUpdated=Number(activity.updatedAt);
     const summary={schemaVersion:1,updatedAt:Number(activity.updatedAt),listed:built.snapshot.declarations.length};
     const target=ref(db,`users/${cur}/canonicalListActivity`);
-    await withTimeout(set(target,summary),8000,'Saving activity summary timed out','db/activity-timeout');
+    const result=await withTimeout(runTransaction(target,current=>{
+      if(!publicShareSessionMatches(cur))return;
+      if(current?.schemaVersion===1&&Number(current.updatedAt)>summary.updatedAt)return;
+      return summary;
+    },{applyLocally:false}),8000,'Saving activity summary timed out','db/activity-timeout');
     if(!publicShareSessionMatches(cur))throw new Error('share-publication/activity-not-current');
-    const local=getLocal();local.users[cur]={...local.users[cur],canonicalListActivity:summary};saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
+    const confirmed=result.snapshot?.val();
+    if(!confirmed||confirmed.schemaVersion!==1||Number(confirmed.updatedAt)<summary.updatedAt)throw new Error('share-publication/activity-not-current');
+    const local=getLocal();local.users[cur]={...local.users[cur],canonicalListActivity:confirmed};saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
   }
   if(!built.ok)throw Object.assign(new Error('Public projection is pending or unavailable'),{code:built.error?.code||'account-sync/public-projection-failed'});
   await writeVerifiedLegacyPublicSnapshot(cur,built.snapshot);

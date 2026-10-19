@@ -21,12 +21,12 @@ async function install(page,state=null,{profileOnly=false,emulator=''}={}){
     const put=(path,value)=>{const parts=path.split('/'),last=parts.pop();let parent=remote;for(const part of parts)parent=parent[part]??={};parent[last]=clone(value);};
     ref=(_db,path)=>path;get=async path=>{reads.push(path);return snapshot(path);};serverTimestamp=()=>Date.now();
     onValue=(path,onData)=>{const item={path,onData};listeners.add(item);queueMicrotask(()=>onData(snapshot(path)));return()=>listeners.delete(item);};
-    const notify=()=>{for(const {path,onData} of listeners)onData(snapshot(path));};
+    const notify=changed=>{for(const {path,onData} of listeners)if(path===changed||changed.startsWith(path+'/')||path.startsWith(changed+'/'))onData(snapshot(path));};
     runTransaction=async(path,fn,options)=>{
-      if(!path.startsWith(`accountSync/${uid}/`)&&!path.startsWith(`authIndex/${uid}/accountSyncRecoveryReviews/`))throw new Error(`Unexpected transaction: ${path}`);
+      if(!path.startsWith(`accountSync/${uid}/`)&&!path.startsWith(`authIndex/${uid}/accountSyncRecoveryReviews/`)&&path!==`users/${username}/canonicalListActivity`)throw new Error(`Unexpected transaction: ${path}`);
       if(options?.applyLocally!==false)throw new Error('Unverified local transaction');
       const next=fn(clone(read(path)));if(next===undefined)return{committed:false,snapshot:snapshot(path)};
-      writes.push(path);put(path,next);notify();return{committed:true,snapshot:snapshot(path)};
+      writes.push(path);put(path,next);notify(path);return{committed:true,snapshot:snapshot(path)};
     };
     set=async(path,value)=>{if(window.__normal?.failPublication&&path===`publicShares/${username}`)throw Object.assign(new Error('simulated disconnect'),{code:'db/public-share-timeout'});if(path!==`publicShares/${username}`&&path!==`users/${username}/canonicalListActivity`)throw new Error(`Legacy or identity write: ${path}`);writes.push(path);put(path,value);};
     update=async()=>{throw new Error('Unexpected legacy update');};
@@ -44,7 +44,7 @@ async function install(page,state=null,{profileOnly=false,emulator=''}={}){
         if(options?.applyLocally!==false)throw new Error('Unverified local transaction');
         const current=await readServer(path),next=fn(clone(current.value));if(next===undefined)return{committed:false,snapshot:{val:()=>current.value}};
         const response=await fetch(endpoint(path),{method:'PUT',headers:{'content-type':'application/json','if-match':current.etag},body:JSON.stringify(next)});if(!response.ok)throw new Error('Emulator transaction rejected: '+response.status);
-        const value=await response.json();put(path,value);writes.push(path);notify();return{committed:true,snapshot:snapshot(path)};
+        const value=await response.json();put(path,value);writes.push(path);notify(path);return{committed:true,snapshot:snapshot(path)};
       };
       set=async(path,value)=>{
         if(window.__normal?.failPublication&&path===`publicShares/${username}`)throw Object.assign(new Error('simulated disconnect'),{code:'db/public-share-timeout'});
