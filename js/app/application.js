@@ -2942,9 +2942,9 @@ async function writeUserStrict(u,data){
 }
 async function bindAuthUserNow(username,authUpdate){
   const s=getLocal();
-  const next=normalizedUserRecord(username,s.users[username],authUpdate);
+  const next=normalizedUserRecord(username,s.users[username],ordinaryProfileFields(authUpdate));
   if(fbOn&&db){
-    await withTimeout(set(ref(db,`users/${username}`),next),8000,'Linking login timed out','auth/bind-timeout');
+    await withTimeout(update(ref(db,`users/${username}`),ordinaryProfileFields(next)),8000,'Linking login timed out','auth/bind-timeout');
     const dirNext=normalizedLoginDirectoryRecord(username,next,{...(s.loginDirectory?.[username]||{}),authReady:true});
     await withTimeout(set(ref(db,`loginDirectory/${username}`),dirNext),8000,'Linking login directory timed out','auth/directory-timeout');
     delete syncQueue[`users/${username}`];

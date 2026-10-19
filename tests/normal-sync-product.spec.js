@@ -262,3 +262,24 @@ test('stale offline profile edit and old queued replay cannot overwrite canonica
   expect(result.remaining).toEqual([]);
   await page.evaluate(()=>stopAccountSyncRuntime());
 });
+
+
+test('auth binding preserves the newer server activity summary',async({page})=>{
+  const emulator=process.env.POGO_DATABASE_EMULATOR||'';
+  await install(page,null,{emulator});await settled(page);
+  const result=await page.evaluate(async emulator=>{
+    const fresh={schemaVersion:1,updatedAt:Date.now()+2000,listed:12};
+    if(emulator)await runTransaction(ref(db,`users/${cur}/canonicalListActivity`),()=>fresh,{applyLocally:false});
+    else __normal.remote.users[cur].canonicalListActivity=fresh;
+    const apply=(path,value)=>{const parts=path.split('/'),key=parts.pop();let node=__normal.remote;for(const part of parts)node=node[part]??={};node[key]=structuredClone(value);};
+    // Auth-directory provisioning is outside this synthetic member fixture; the profile write and read use real emulator rules.
+    const serverSet=set;
+    set=async(path,value)=>{if(path.startsWith('loginDirectory/'))return apply(path,value);if(emulator)return serverSet(path,value);apply(path,value);};
+    if(!emulator)update=async(path,fields)=>{for(const [field,value]of Object.entries(fields))apply(path+'/'+field,value);};
+    await bindAuthUserNow(cur,{authUid:'normal-product-uid'});
+    return{fresh,remote:emulator?(await get(ref(db,`users/${cur}`))).val():__normal.remote.users[cur]};
+  },emulator);
+  expect(result.remote.canonicalListActivity).toEqual(result.fresh);
+  expect(result.remote.authUid).toBe('normal-product-uid');
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
