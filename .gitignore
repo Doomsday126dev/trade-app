@@ -1,6 +1,7 @@
 node_modules/
 test-results/
 playwright-report/
+product-ci-artifacts/
 .firebase-local/
 database-debug.log
 firebase-debug*.log

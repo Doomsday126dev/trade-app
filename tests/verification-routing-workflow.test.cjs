@@ -38,8 +38,12 @@ test('PR planning precedes dependency setup and executes the same changed-area s
   const steps=YAML.parse(read('.github/workflows/product-review.yml')).jobs['public-share'].steps;
   const plan=steps.findIndex(step=>step.run==='node scripts/select-product-checks.cjs --plan');
   const deps=steps.findIndex(step=>step.run==='npm ci --prefix functions --ignore-scripts');
-  const run=steps.findIndex(step=>step.run==='node scripts/select-product-checks.cjs');
+  const run=steps.findIndex(step=>step.run==='node scripts/ci/product-evidence.cjs node');
   assert.ok(plan>=0&&plan<deps&&deps<run);
   assert.match(steps[deps].if,/selection.outputs.functions == 'true'/);
   assert.equal(steps.find(step=>step.uses?.startsWith('actions/checkout@')).with['fetch-depth'],0);
+  const {stageArgs}=require('../scripts/ci/product-evidence.cjs');
+  assert.deepEqual(stageArgs('node'),['scripts/select-product-checks.cjs']);
+  assert.deepEqual(stageArgs('browser'),['scripts/select-product-checks.cjs','--browser']);
+  assert.equal(steps.find(step=>step.name==='Affected browser journeys').run,'node scripts/ci/product-evidence.cjs browser');
 });

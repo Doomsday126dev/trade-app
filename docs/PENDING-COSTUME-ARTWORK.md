@@ -1,5 +1,16 @@
 # Pending Costume Artwork
 
+## October 19, 2026 freshness review
+
+The scheduled run [39285537441](https://github.com/Doomsday126dev/trade-app/actions/runs/39285537441) required maintenance: September 22 reviews had expired, and Astronaut Pikachu's October 4 debut was no longer upcoming. All 128 accepted galleries were retrieved and compared; no filenames or labels changed, and all 25 prior candidate dispositions remain valid. The source snapshot and pending review dates now reflect that completed review.
+
+The official [World Space Week announcement](https://pokemongo.com/news/world-space-week-2026) confirms Astronaut Pikachu. The [Singapore announcement](https://pokemongo.com/news/event-singapore-30th-anniversary-2026) also says the Blue PokéXciting Pikachu cross-region stamp encounter is already live; October 19 records confirmed availability, not an inferred first debut or the November 7 dedicated-event start. Both identities now fail closed with unavailable artwork, bringing the catalog to 391 records: 364 exact and 27 pending. No images were downloaded or promoted.
+
+Public News discovery also queued the October 27 Halloween debuts: Pikachu wearing a hat and capelet, Zubat wearing a top hat, and Sinistea wearing a bow. Before those debuts, review their exact identities and accepted galleries (including Sinistea if not already monitored). Batik's announced October event has elapsed and is recorded as released; existing artwork stays unchanged. Festival of Lights and Fall Marathon announcements reuse already recorded costume identities. Events remains gated by sign-in; this bounded News review is not exhaustive discovery. Retrieval times and SHA-256 evidence are recorded in the release and pending registers.
+
+Review discovery expires after seven days and artwork/pending reviews after fourteen days. Future alerts still require actual review; no threshold or workflow failure behavior was relaxed. The older sections below retain historical review context.
+
+
 Reviewed 2026-09-06 against production `2026-09-06.95`, main `1521b742819c574a12b346a6b9f7e3d1f4f04543`.
 
 Before and after this audit: **376 canonical records, 355 exact, 21 unsupported**; 402 exact active costume rows and 21 excluded rows. No new art was accepted. Unsupported identities are excluded from active selectors; historical stored rows remain readable with honest unavailable artwork, never base-species substitutions. Backgrounds remain outside the active product. No identity migration or user-data change is part of this work.

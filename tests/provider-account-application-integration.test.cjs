@@ -64,7 +64,9 @@ test('provider-only account sync uses explicit initialization and canonical publ
 
 test('Google-only Settings hides PIN controls and labels legacy access as not configured',()=>{
   assert.match(html,/id="settings-security-pin-panel"/);
-  assert.match(app,/pinPanel\.hidden=!usernamePinAvailable/);
+  assert.match(app,/pinToggle\.hidden=!usernamePinAvailable/);
+  assert.match(app,/if\(!usernamePinAvailable\)toggleSettingsPinForm\(false\)/);
+  assert.match(app,/const show=usernamePinAccessUsable\(\)&&/);
   assert.match(app,/security\.usernamePinNotConfigured/);
 });
 
