@@ -208,3 +208,12 @@ test('focused .126 uses its exact reviewed legacy publication contract',t=>{
   change(dir,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
   assert.match(check(dir,sha).stderr,/path bindings or execution semantics changed/);
 });
+
+test('focused .127 uses its exact reviewed legacy publication contract',t=>{
+  const sha='e5018c18567d25ff2b2bf572143a4f89eb881a33',dir=fixture(t);
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js'])fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${sha}:${file}`],{cwd:root}));
+  const result=check(dir,sha);assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,23);
+  assert.notEqual(check(dir,'b'.repeat(40)).status,0,'unregistered revisions must not inherit the .127 exception');
+  change(dir,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
+  assert.match(check(dir,sha).stderr,/path bindings or execution semantics changed/);
+});
