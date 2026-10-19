@@ -1,6 +1,7 @@
 const {test,expect}=require('@playwright/test');
 const {mkdirSync}=require('node:fs');
 const path=require('node:path');
+const moreFixture=require('./helpers/more-application.cjs');
 const reviewDir=process.env.SETTINGS_REVIEW_DIR||'';
 
 async function captureReview(page,name){
@@ -30,6 +31,18 @@ async function establishAccount(page){
   });
 }
 
+async function openProfile(page){
+  await page.locator('#account-trigger').click();await page.locator('#account-settings-action').click();
+  await page.locator('[data-settings-target="profile"]').click();
+  await expect(page.locator('#settings-profile-heading')).toBeFocused();
+}
+async function section(page,name){
+  if(await page.locator('.settings-mobile-back').isVisible())await page.locator('.settings-mobile-back').click();
+  await page.locator('[data-settings-target="'+name+'"]').click();
+  await expect(page.locator(`[data-settings-section="${name}"] h2`)).toBeFocused();
+}
+async function changeProfileLocale(page,locale){await section(page,'language');await page.locator('#settings-language').selectOption(locale);await section(page,'profile');}
+
 test.beforeEach(async({page})=>{
   await page.route('**/*',route=>{
     const url=new URL(route.request().url());
@@ -42,12 +55,11 @@ test('mobile Profile scroll reaches Save and draft actions remain operable',asyn
   await page.setViewportSize({width:390,height:844});
   await page.goto(`./?settings-mobile=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await waitForApp(page);await establishAccount(page);
-  await page.evaluate(()=>openSettingsPanel('account'));
+  await openProfile(page);
   await captureReview(page,'settings-mobile-index');
-  await page.locator('[data-settings-target="profile"]').click();
   await captureReview(page,'settings-mobile-profile');
   await page.locator('#prof-bio').fill('A changed local fixture bio');
-  await page.evaluate(()=>{selectSettingsSection('appearance',{focus:false});selectSettingsSection('profile',{focus:false});});
+  await section(page,'appearance');await section(page,'profile');
   await expect(page.locator('#prof-bio')).toHaveValue('A changed local fixture bio');
   await expect(page.locator('#profile-save')).toBeEnabled();
   await expect(page.locator('#profile-discard')).toBeEnabled();
@@ -65,7 +77,7 @@ test('desktop focus stays in Settings while the covered app is inert',async({pag
   await page.setViewportSize({width:1440,height:900});
   await page.goto(`./?settings-focus=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await waitForApp(page);await establishAccount(page);
-  await page.evaluate(()=>openSettingsPanel('account'));
+  await openProfile(page);
   await captureReview(page,'settings-desktop-profile');
   await page.locator('.settings-modal-close').focus();
   await page.keyboard.press('Shift+Tab');
@@ -77,7 +89,7 @@ test('avatar picker owns Escape and consecutive arrow navigation',async({page})=
   await page.setViewportSize({width:1440,height:900});
   await page.goto(`./?settings-avatar=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await waitForApp(page);await establishAccount(page);
-  await page.evaluate(()=>openSettingsPanel('account'));
+  await openProfile(page);
   await page.locator('#prof-av-open').click();
   await page.locator('#prof-av-search').fill('nidoran');
   await expect(page.locator('.profile-avatar-option')).toHaveCount(2);
@@ -107,8 +119,8 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
         if(!Object.prototype.hasOwnProperty.call(values,path))throw new Error(`Unexpected fixture read: ${path}`);
         return{val:()=>values[path]};
       };
-      allData=normalizeData(fixture);saveLocal(allData);applyTheme(theme);openAccountSettingsSection('profile');
-    },theme);
+      allData=normalizeData(fixture);saveLocal(allData);applyTheme(theme);
+    },theme);await openProfile(page);
     await expect(page.locator('html')).toHaveAttribute('data-theme',theme);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.locator('#prof-bio').fill(`Saved ${theme} ${width}`);
@@ -139,26 +151,30 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
 
 test('dirty Profile status survives reopening and interface translation',async({page})=>{
   await page.goto('./?settings-dirty-translation');await waitForApp(page);await establishAccount(page);
-  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  await openProfile(page);
   await page.locator('#prof-bio').fill('A draft that is still unsaved');
-  await page.locator('.settings-modal-close').click();
-  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  await expect(page.locator('#prof-bio')).toHaveValue('A draft that is still unsaved');
   await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
-  await page.evaluate(()=>changeInterfaceLocale('ja'));
+  await page.locator('.settings-modal-close').click();
+  await openProfile(page);
+  await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
+  await changeProfileLocale(page,'ja');
   await expect(page.locator('#profile-err')).toHaveText('未保存の変更があります');
   await expect(page.locator('#prof-bio')).toHaveValue('A draft that is still unsaved');
   await expect(page.locator('#profile-save')).toBeEnabled();
 });
 
 test('invalid Friend Code remains identified while other Profile fields change',async({page})=>{
-  await page.goto('./?settings-validation-state');await waitForApp(page);await establishAccount(page);
-  await page.evaluate(()=>openAccountSettingsSection('profile'));
+  // A coherent owned session prevents unrelated startup/cache snapshots from
+  // replacing the form after the test has begun editing it.
+  await moreFixture.install(page);
+  await openProfile(page);
   await page.locator('#fc-inp').fill('123');await page.locator('#profile-save').click();
   await expect(page.locator('#fc-inp')).toHaveAttribute('aria-invalid','true');
   await page.locator('#prof-bio').fill('Other field changed');
   await expect(page.locator('#fc-inp')).toHaveAttribute('aria-invalid','true');
   await expect(page.locator('#profile-err')).toHaveText('Friend Code must contain 12 digits.');
-  await page.evaluate(()=>changeInterfaceLocale('ja'));
+  await changeProfileLocale(page,'ja');
   await expect(page.locator('#profile-err')).toHaveText('フレンドコードは12桁の数字で入力してください。');
   await page.locator('#fc-inp').fill('123456789012');
   await expect(page.locator('#fc-inp')).not.toHaveAttribute('aria-invalid','true');

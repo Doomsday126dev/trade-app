@@ -6,12 +6,14 @@ const {join}=require('node:path');
 const root=join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
-test('signed-in desktop Settings is a routed page with seven semantic destinations',()=>{
+test('signed-in desktop Settings has five destinations and retains legacy Tools route compatibility',()=>{
   assert.match(html,/const SETTINGS_DESKTOP_QUERY='\(min-width:768px\)'/);
-  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data','legal'\]\)/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
+  for(const section of ['profile','language','appearance','security','data'])assert.match(html,new RegExp(`data-settings-target="${section}"`));
+  assert.doesNotMatch(html,/data-settings-target="tools"/);
   assert.match(html,/function settingsRouteHash\(section=null\)\{return section&&SETTINGS_SECTIONS\.includes\(section\)\?`#settings\/\$\{section\}`:'#settings';\}/);
   assert.match(html,/\.settings-overlay\.settings-page-mode\{[^}]*background:var\(--bg\)/);
-  assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*grid-template-columns:240px minmax\(0,1fr\)/);
+  assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*max-width:var\(--container-wide\)[^}]*grid-template-columns:200px minmax\(0,1fr\)/);
   assert.match(html,/<nav class="settings-nav settings-account-only" aria-label="Settings sections"/);
 });
 
@@ -56,13 +58,15 @@ test('mobile and public Settings retain their constrained dialog boundaries',()=
   assert.match(html,/if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}/);
 });
 
-test('logout exits every Settings deep link and provider rows remain informational',()=>{
+test('logout exits every Settings deep link and provider actions keep their capability gates',()=>{
   const logout=html.slice(html.indexOf('function logout(){'),html.indexOf('// ── NAV'));
   assert.match(logout,/if\(parseSettingsRoute\(\)\.matches\)history\.replaceState\(\{\},'',settingsRouteUrl\(false\)\)/);
   const security=html.slice(html.indexOf('id="settings-account-security"'),html.indexOf('</section>',html.indexOf('id="settings-account-security"')));
   assert.match(security,/data-provider-actions="disabled"/);
-  assert.doesNotMatch(security,/<button[^>]+data-provider|linkWithPopup|linkWithRedirect/);
-  assert.match(security,/security\.disabledNotice/);
+  assert.match(security,/data-provider="google" hidden/);
+  assert.match(security,/data-provider-action[^>]+onclick="handleGoogleAccountAction\(\)" hidden/);
+  assert.doesNotMatch(security,/linkWithPopup|linkWithRedirect/);
+  assert.match(html,/if\(!PROVIDER_CAPABILITIES\.googleExistingAccountLinking\)return null/);
 });
 
 test('Settings navigation adds no preference, share, auth-provider, or remote mutation path',()=>{
