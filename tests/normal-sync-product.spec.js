@@ -36,7 +36,7 @@ async function install(page,state=null,{profileOnly=false,emulator=''}={}){
       const encode=value=>btoa(JSON.stringify(value)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
       const token=encode({alg:'none',typ:'JWT'})+'.'+encode({sub:uid,user_id:uid,aud:'demo-trade-investigation',iss:'https://securetoken.google.com/demo-trade-investigation',iat:seconds,exp:seconds+3600,email:'safe@example.test',firebase:{sign_in_provider:'password'}})+'.';
       const endpoint=(path,authenticated=true)=>`${emulator}/${path?path+'.json':'.json'}?ns=${ns}${authenticated?'&auth='+token:''}`;
-      const seed=await fetch(endpoint('',false),{method:'PUT',headers:{authorization:'Bearer owner','content-type':'application/json'},body:JSON.stringify(remote)});if(!seed.ok)throw new Error('Emulator fixture seed failed');
+      const seed=saved?{ok:true}:await fetch(endpoint('',false),{method:'PUT',headers:{authorization:'Bearer owner','content-type':'application/json'},body:JSON.stringify(remote)});if(!seed.ok)throw new Error('Emulator fixture seed failed');
       const readServer=async path=>{const response=await fetch(endpoint(path),{headers:{'X-Firebase-ETag':'true'}});if(!response.ok)throw new Error('Emulator read failed: '+response.status);return{value:await response.json(),etag:response.headers.get('etag')};};
       get=async path=>{reads.push(path);const {value}=await readServer(path);return{exists:()=>value!=null,val:()=>clone(value)};};
       serverTimestamp=()=>({'.sv':'timestamp'});
@@ -186,4 +186,11 @@ test('emulator canonical save publishes under deployed rules and survives indepe
   const reopened=await context.newPage();await install(reopened,stored,{profileOnly:true,emulator});await settled(reopened);
   expect(await reopened.evaluate(()=>productDeclarations().entries.some(e=>e.name==='Squirtle'))).toBe(true);
   await reopened.evaluate(()=>stopAccountSyncRuntime());
+  const viewer=await context.newPage();
+  await viewer.route('**/sw.js*',route=>route.abort());
+  await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:'export function initializeApp(){return{}}'}));
+  await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:'export class ReCaptchaEnterpriseProvider{};export function initializeAppCheck(){return{}};export async function getToken(){return{token:"emulator-only"}}'}));
+  await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:`export function getDatabase(){return{}};export function ref(db,path){return path};export async function get(path){const response=await fetch(${JSON.stringify(emulator)}+'/'+path+'.json?ns=demo-trade-investigation-default-rtdb');if(!response.ok)throw new Error('emulator read failed');const value=await response.json();return{exists:()=>value!=null,val:()=>value}}`}));
+  await viewer.goto('./?view=NormalProduct');await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
+  await viewer.reload();await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
 });
