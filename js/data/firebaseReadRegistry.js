@@ -208,6 +208,8 @@
         item.text==='get(ref(db,`authIndex/${expectedUid}`))'?2:item.count})))
   });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
+    // Focused .125 runtime retains the reviewed .123 read topology.
+    'a794c3d8150f20745045383cba4c6b8fd5940698':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     '62482523588e5f7a3065936c93bfa043d4d31fb5':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     'f585cb2523ad65f2bbdcbe15ff8b5837a0366269':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     '4614e1e4345befbb7c1b1a75fa3230e57e8e94a4':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
