@@ -462,7 +462,7 @@ test('legacy list and board queue entries are held for migration and retired onl
 test('legacy queue retirement preserves the board source and converts unrelated profile fields to child updates',()=>{
   const start=html.indexOf('function accountSyncMigratedLegacyQueueItem'),end=html.indexOf('function accountSyncMarkMutationBlocked'),source=html.slice(start,end),context={cur:'Owner',OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],sessionCacheBoundaryData:{MY_LIST_UPDATE_KIND:'my-list-update'}};
   vm.runInNewContext(`${source}\nthis.retained=accountSyncRetainedLegacyQueueEntries;`,context);
-  const profile={kind:'set',path:'users/Owner',data:{friendCode:'1234 5678 9012',wallpaper:'mono',specialTradeBoard:{lf:[],ft:[{name:'Pikachu'}]}},ts:123};
+  const profile={kind:'set',path:'users/Owner',data:{friendCode:'1234 5678 9012',wallpaper:'mono',canonicalListActivity:{schemaVersion:1,updatedAt:1,listed:1},specialTradeBoard:{lf:[],ft:[{name:'Pikachu'}]}},ts:123};
   assert.deepEqual(JSON.parse(JSON.stringify(context.retained('users/Owner',profile,'Owner'))),[
     ['users/Owner/friendCode',{kind:'set',path:'users/Owner/friendCode',data:'1234 5678 9012',ts:123}],
     ['users/Owner/wallpaper',{kind:'set',path:'users/Owner/wallpaper',data:'mono',ts:123}]
@@ -478,7 +478,7 @@ test('allowlisted profile writes preserve the legacy board before and after cano
   assert.ok(writeUser.indexOf('await accountSyncPreserveLegacyBoard(u)')<writeUser.indexOf('saveLocal(s)'));
   assert.match(writeUser,/preserveLegacyBoard\)queueAccountSyncProfileFields\(u,s\.users\[u\]\)/);
   const writeNow=html.slice(html.indexOf('async function writeUserNow'),html.indexOf('async function writeUserStrict'));
-  assert.match(writeNow,/preserveLegacyBoard\?update\(ref\(db,`users\/\$\{u\}`\),profileValue\):set/);
+  assert.match(writeNow,/update\(ref\(db,`users\/\$\{u\}`\),profileValue\)/);
   assert.match(writeNow,/acknowledgeAccountSyncProfileFields\(u,profileValue\)/);
   const profileHelpers=html.slice(html.indexOf('function accountSyncQueuedProfileBoardItem'),html.indexOf('function accountSyncMarkMutationBlocked'));
   assert.match(profileHelpers,/delete fields\.specialTradeBoard/);
