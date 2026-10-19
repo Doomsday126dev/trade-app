@@ -207,3 +207,20 @@ test('offline navigation and supported deep links fall back to the complete vers
     await event.complete;
   }
 });
+
+
+test('sprite cache clones before queued cache work while browser consumes the response',async()=>{
+  let releaseQueue;
+  const blocked=new Promise(resolve=>{releaseQueue=resolve;});
+  const run=createHarness({fetchImpl:async()=>new Response('sprite-bytes')});
+  run.context.blocker=blocked;
+  vm.runInContext('spriteCacheMutation = blocker',run.context);
+  const url='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png';
+  const event=run.dispatchFetch(request(url));
+  assert.equal(await (await event.response).text(),'sprite-bytes');
+  releaseQueue();await event.complete;
+  assert.equal(run.warnings.length,0,'cache work must not clone a consumed response');
+  const cached=await run.stores.get(run.spriteName).match(url);
+  assert.ok(cached,'sprite should be retained for offline loading');
+  assert.equal(await cached.text(),'sprite-bytes');
+});

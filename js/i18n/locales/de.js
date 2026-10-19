@@ -167,5 +167,10 @@
     ,'safeTransfer.temporarilyUnavailable':'Die sichere Transfersuche ist vorübergehend nicht verfügbar, während die vollständige Abdeckung der Wunschlisten geprüft wird.'
     ,'safeTransfer.candidate.scope':'Ausgewählter Bereich: {trainers}','safeTransfer.candidate.loading':'Serverbestätigte geteilte Wünsche werden geprüft…','safeTransfer.candidate.blocked':'Vor dem Erstellen einer Suche ist eine vollständige, aktuelle Momentaufnahme des Bereichs erforderlich.','safeTransfer.candidate.ready':'{candidates} mögliche Arten nach dem Schutz von {protected} gewünschten Arten.','safeTransfer.candidate.empty':'In dieser Bereichs-Momentaufnahme sind keine möglichen Arten mehr übrig.','safeTransfer.candidate.copy':'Teil {part} von {total} kopieren','safeTransfer.candidate.copied':'Kopiert.','safeTransfer.candidate.copyFailed':'Kopieren fehlgeschlagen. Der aktuelle Suchbegriff bleibt unten zum manuellen Kopieren erhalten.'
     ,'contextSearch.copyProtected':'Geschützte Suche kopieren','contextSearch.copyBroad':'Breite Spezialsuche kopieren','contextSearch.mixedHelp':'Normale Gesuche verwenden die geschützte Suche. Besondere oder genaue Gesuche verwenden eine getrennte breite Artensuche, damit gewünschte Treffer nicht ausgeschlossen werden.'
+    ,"accountSync.publicationPending":"Gespeichert; Teilen ausstehend"
+    ,"accountSync.publicationPendingDetail":"Deine privaten Änderungen sind gespeichert. Die geteilte Liste konnte nicht aktualisiert werden. Zum Wiederholen tippen."
+    ,"admin.canonicalEntries":"{count} Wünsche"
+    ,"admin.legacyEntries":"{count} ältere Einträge"
+    ,"admin.legacyUpdated":"Ältere Aktualisierung {time}"
   });
 })(window);

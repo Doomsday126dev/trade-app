@@ -237,7 +237,7 @@ test('only confirmed list and profile changes request automatic publication',()=
   const profile=between('async function saveProfile(event){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
-  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit'\)/);
+  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit',true\)/);
   assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
   assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot\)/);
   assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
@@ -256,4 +256,14 @@ test('publication is constrained to the active trainer public-share path',()=>{
   assert.match(publish,/await withTimeout\(set\(target,snapshot\)/);
   assert.match(publish,/await withTimeout\(get\(target\)/);
   assert.doesNotMatch(`${queue}\n${publish}`,/wishlist\/\$\{username\}|have\/\$\{username\}|users\/\$\{username\}/);
+});
+
+
+test('accepted canonical lists require a current hydrated profile but no legacy list reads',()=>{
+  const h=hydratedHarness(),args={gate:h.gate,token:h.token,trigger:'owned_list_edit',username:'TrainerA',source:shareSource(),canonical:true,declarations:[]};
+  assert.equal(publication.buildPublicShareSnapshot(args).error.code,'share-publication/profile-not-ready');
+  h.gate.markLoaded(h.token,'profile');
+  assert.equal(publication.buildPublicShareSnapshot(args).ok,true);
+  assert.equal(publication.buildPublicShareSnapshot({...args,canonical:false}).error.code,'share-publication/not-ready');
+  h.gate.invalidate();assert.equal(publication.buildPublicShareSnapshot(args).ok,false);
 });

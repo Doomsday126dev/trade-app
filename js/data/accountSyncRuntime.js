@@ -226,6 +226,9 @@
       publicProjectionPromise=work.then(()=>undefined,()=>undefined);return work;
     }
     function retryPublicProjection(){
+      if(initializationKind==='legacy-migration')return controller.snapshot().then(state=>{
+        requireRunning();return state.lastProjectionError?controller.publishAcceptedProjection(Object.freeze({kind:'public-publication-retry'})):Object.freeze({ok:true,status:'unchanged'});
+      });
       const work=publicProjectionPromise.then(async()=>{
         requireRunning();const storedValue=publicProjectionPending||await journal.getMeta(PROVIDER_PUBLICATION_PENDING_META);
         if(storedValue==null)return Object.freeze({ok:true,status:'unchanged'});

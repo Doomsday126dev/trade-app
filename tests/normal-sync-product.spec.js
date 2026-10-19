@@ -2,13 +2,13 @@ const {test,expect}=require('@playwright/test');
 
 // Only the Firebase transport/auth boundary is simulated. Admission, migration,
 // IndexedDB, repository transactions, product actions and publication are real.
-async function install(page,state=null){
+async function install(page,state=null,{profileOnly=false,emulator=''}={}){
   await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|firestore\.googleapis\.com)/,route=>route.abort());
   await page.goto('./?normal-sync-qualification');
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('normal-sync-qualification'));
   await page.waitForFunction(()=>typeof ensureAccountSyncRuntime==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
-  return page.evaluate(async saved=>{
+  return page.evaluate(async ({saved,profileOnly,emulator})=>{
     managedSubscriptions.unsubscribeAll?.();managedListenerLifecycle.deactivateSession('normal-sync-fixture');managedOwnedDataCoordinator?.reset();
     await stopAccountSyncRuntime();
     const uid='normal-product-uid',username='NormalProduct';
@@ -28,19 +28,41 @@ async function install(page,state=null){
       const next=fn(clone(read(path)));if(next===undefined)return{committed:false,snapshot:snapshot(path)};
       writes.push(path);put(path,next);notify();return{committed:true,snapshot:snapshot(path)};
     };
-    set=async(path,value)=>{if(path!==`publicShares/${username}`)throw new Error(`Legacy or identity write: ${path}`);writes.push(path);put(path,value);};
+    set=async(path,value)=>{if(window.__normal?.failPublication&&path===`publicShares/${username}`)throw Object.assign(new Error('simulated disconnect'),{code:'db/public-share-timeout'});if(path!==`publicShares/${username}`&&path!==`users/${username}/canonicalListActivity`)throw new Error(`Legacy or identity write: ${path}`);writes.push(path);put(path,value);};
     update=async()=>{throw new Error('Unexpected legacy update');};
+    if(emulator){
+      if(!/^http:\/\/(127\.0\.0\.1|localhost):[0-9]+$/.test(emulator))throw new Error('Local emulator required');
+      const ns='demo-trade-investigation-default-rtdb',seconds=Math.floor(Date.now()/1000);
+      const encode=value=>btoa(JSON.stringify(value)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
+      const token=encode({alg:'none',typ:'JWT'})+'.'+encode({sub:uid,user_id:uid,aud:'demo-trade-investigation',iss:'https://securetoken.google.com/demo-trade-investigation',iat:seconds,exp:seconds+3600,email:'safe@example.test',firebase:{sign_in_provider:'password'}})+'.';
+      const endpoint=(path,authenticated=true)=>`${emulator}/${path?path+'.json':'.json'}?ns=${ns}${authenticated?'&auth='+token:''}`;
+      const seed=await fetch(endpoint('',false),{method:'PUT',headers:{authorization:'Bearer owner','content-type':'application/json'},body:JSON.stringify(remote)});if(!seed.ok)throw new Error('Emulator fixture seed failed');
+      const readServer=async path=>{const response=await fetch(endpoint(path),{headers:{'X-Firebase-ETag':'true'}});if(!response.ok)throw new Error('Emulator read failed: '+response.status);return{value:await response.json(),etag:response.headers.get('etag')};};
+      get=async path=>{reads.push(path);const {value}=await readServer(path);return{exists:()=>value!=null,val:()=>clone(value)};};
+      serverTimestamp=()=>({'.sv':'timestamp'});
+      runTransaction=async(path,fn,options)=>{
+        if(options?.applyLocally!==false)throw new Error('Unverified local transaction');
+        const current=await readServer(path),next=fn(clone(current.value));if(next===undefined)return{committed:false,snapshot:{val:()=>current.value}};
+        const response=await fetch(endpoint(path),{method:'PUT',headers:{'content-type':'application/json','if-match':current.etag},body:JSON.stringify(next)});if(!response.ok)throw new Error('Emulator transaction rejected: '+response.status);
+        const value=await response.json();put(path,value);writes.push(path);notify();return{committed:true,snapshot:snapshot(path)};
+      };
+      set=async(path,value)=>{
+        if(window.__normal?.failPublication&&path===`publicShares/${username}`)throw Object.assign(new Error('simulated disconnect'),{code:'db/public-share-timeout'});
+        const response=await fetch(endpoint(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(value)});if(!response.ok)throw new Error('Emulator write rejected: '+response.status);
+        put(path,await response.json());writes.push(path);
+      };
+    }
     auth={currentUser:{uid}};cur=username;currentAuthUid=uid;_authStateKnown=true;firebaseDataProtectionReady=true;db={};fbOn=true;activeCanonicalIdentity=null;
     activateOwnedSession(uid,username);
     if(!saved){allData=normalizeData(clone(remote));saveLocal(allData);}
-    for(const surface of publicSharePublicationDomain.REQUIRED_SOURCE_SURFACES)managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
+    for(const surface of (profileOnly?['profile']:publicSharePublicationDomain.REQUIRED_SOURCE_SURFACES))managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
     _pathLoadState={wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded',have:'loaded'};
     document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
     document.getElementById('my-un').textContent=username;switchTab('mylist',{render:false});
     const canary=await accountSyncCanaryMember(),started=await ensureAccountSyncRuntime();renderMyList();setSyncStatus('online');
     window.__normal={remote,writes,reads,original};
     return{canary,started,state:await managedAccountSyncRuntime.snapshot(),authority:(await accountSyncMutationAuthority()).mode};
-  },state);
+  },{saved:state,profileOnly,emulator});
 }
 async function settled(page){
   await expect.poll(()=>page.evaluate(async()=>{await managedAccountSyncRuntime.controller.drain();return(await managedAccountSyncRuntime.snapshot()).state;})).toBe('saved');
@@ -69,7 +91,7 @@ test('legacy account preserves inert FT while wants edits and publication surviv
   });
   expect(before.remote.users.NormalProduct.specialTradeBoard).toEqual(before.original);
   expect(before.remote.wishlist.NormalProduct).toEqual({Pikachu:'H'});
-  expect(before.writes.every(path=>path.startsWith('accountSync/normal-product-uid/')||path==='publicShares/NormalProduct')).toBe(true);
+  expect(before.writes.every(path=>path.startsWith('accountSync/normal-product-uid/')||path==='publicShares/NormalProduct'||path==='users/NormalProduct/canonicalListActivity')).toBe(true);
   const declarations=before.remote.publicShares.NormalProduct.declarations;
   expect(declarations.some(e=>e.name==='Bulbasaur'&&e.intent==='lf'&&e.p==='')).toBe(true);
   expect(declarations.some(e=>e.name==='Squirtle'&&e.intent==='lf'&&e.p==='H'&&e.gender==='m'&&!e.shiny)).toBe(true);
@@ -117,4 +139,51 @@ test('normal product authority rejects broken identity and unresolved recovery w
   expect(result.broken).toBe(false);expect(result.afterIdentity).toBe(result.before);
   expect(result.recovery).toBe(false);expect(result.after).toBe(result.afterCandidate);expect(result.state).toBe('review-required');
   await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+
+
+test('canonical publication ignores unneeded legacy reads, reports publication failure and retries after reload',async({page,context})=>{
+  await install(page,null,{profileOnly:true});await settled(page);
+  expect(await page.evaluate(()=>__normal.remote.publicShares.NormalProduct.declarationCount)).toBe(1);
+  await page.evaluate(()=>{__normal.failPublication=true;});
+  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Squirtle',p:'H'}]))).toBe(true);await settled(page);
+  const failed=await page.evaluate(async()=>({state:await managedAccountSyncRuntime.snapshot(),presentation:accountSyncPresentation(),remote:structuredClone(__normal.remote)}));
+  expect(failed.state.state).toBe('saved');expect(failed.state.lastProjectionError).toBeTruthy();
+  expect(failed.presentation.labelKey).toBe('accountSync.publicationPending');
+  expect(failed.remote.publicShares.NormalProduct.declarationCount).toBe(1);
+  expect(failed.remote.users.NormalProduct.canonicalListActivity.listed).toBe(2);
+  const accepted=await page.evaluate(()=>Math.max(...accountSyncCanonicalEntities.filter(e=>e.entityType==='tradeEntry').map(e=>e.updatedAt)));
+  expect(failed.remote.users.NormalProduct.canonicalListActivity.updatedAt).toBe(accepted);
+  const row=await page.evaluate(()=>adminUserRows().find(row=>row.u===cur));expect(row.listed).toBe(2);expect(row.updated).toBe(accepted);expect(row.canonical).toBe(true);
+  await page.evaluate(()=>{__normal.failPublication=false;});
+  await page.evaluate(()=>openSyncDetail());
+  expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
+  const saved=await page.evaluate(()=>structuredClone(__normal.remote));
+  expect(saved.publicShares.NormalProduct.declarations.some(e=>e.name==='Squirtle')).toBe(true);
+  await page.evaluate(()=>stopAccountSyncRuntime());await page.close();
+  const reopened=await context.newPage();await install(reopened,saved,{profileOnly:true});await settled(reopened);
+  const persisted=await reopened.evaluate(()=>__normal.remote.publicShares.NormalProduct);
+  expect(persisted.declarations.some(e=>e.name==='Squirtle')).toBe(true);
+  expect(await reopened.evaluate(()=>{const data=normalizeData({});applyPublicShareSnapshot(data,__normal.remote.publicShares.NormalProduct);return productDeclarations('NormalProduct',data).entries.map(e=>e.name);})).toContain('Squirtle');
+  await reopened.evaluate(()=>stopAccountSyncRuntime());
+});
+
+
+test('emulator canonical save publishes under deployed rules and survives independent server read and reopen',async({page,context,request})=>{
+  const emulator=process.env.POGO_DATABASE_EMULATOR;test.skip(!emulator,'Run with a local RTDB emulator and the reviewed rules loaded');
+  expect(emulator).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):[0-9]+$/);
+  await install(page,null,{profileOnly:true,emulator});await settled(page);
+  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Squirtle',p:'H'}]))).toBe(true);await settled(page);
+  const publicUrl=emulator+'/publicShares/NormalProduct.json?ns=demo-trade-investigation-default-rtdb';
+  const publicResponse=await request.get(publicUrl);expect(publicResponse.status()).toBe(200);const published=await publicResponse.json();
+  expect(published.declarations.some(e=>e.name==='Squirtle')).toBe(true);
+  const server=await request.get(emulator+'/.json?ns=demo-trade-investigation-default-rtdb',{headers:{authorization:'Bearer owner'}});expect(server.status()).toBe(200);const stored=await server.json();
+  expect(stored.users.NormalProduct.canonicalListActivity.listed).toBe(2);
+  expect(Object.values(stored.accountSync['normal-product-uid'].tradeEntries).filter(e=>!e.deleted).length).toBe(3);
+  const denied=await request.get(emulator+'/accountSync/normal-product-uid.json?ns=demo-trade-investigation-default-rtdb');expect(denied.status()).toBe(401);
+  await page.evaluate(()=>stopAccountSyncRuntime());await page.close();
+  const reopened=await context.newPage();await install(reopened,stored,{profileOnly:true,emulator});await settled(reopened);
+  expect(await reopened.evaluate(()=>productDeclarations().entries.some(e=>e.name==='Squirtle'))).toBe(true);
+  await reopened.evaluate(()=>stopAccountSyncRuntime());
 });
