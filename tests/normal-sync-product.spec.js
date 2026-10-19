@@ -194,3 +194,33 @@ test('emulator canonical save publishes under deployed rules and survives indepe
   await viewer.goto('./?view=NormalProduct');await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
   await viewer.reload();await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
 });
+
+
+test('publication cannot follow an account switch while its activity transaction is pending',async({page})=>{
+  await install(page);await settled(page);
+  const result=await page.evaluate(async()=>{
+    const rows=accountSyncModel.publicTradeProjection(accountSyncCanonicalEntities),before=__normal.writes.length;
+    let release,entered;const started=new Promise(resolve=>{entered=resolve;});
+    runTransaction=async(path,fn)=>{const value=fn(__normal.remote.users.NormalProduct.canonicalListActivity);entered();return new Promise(resolve=>{release=()=>resolve({committed:true,snapshot:{val:()=>value}});});};
+    const pending=publishAccountSyncProjection(rows,{}, {updatedAt:Date.now()}).then(()=>'',error=>error.message);
+    await started;cur='OtherTrainer';auth={currentUser:{uid:'other-user'}};activateOwnedSession('other-user','OtherTrainer');release();
+    return{error:await pending,writes:__normal.writes.slice(before)};
+  });
+  expect(result.error).toBe('share-publication/session-changed');expect(result.writes).toEqual([]);
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('emulator account fence cannot make activity analytics block an allowed public update',async({page,request})=>{
+  const emulator=process.env.POGO_DATABASE_EMULATOR;test.skip(!emulator,'Local emulator required');
+  expect(emulator).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):[0-9]+$/);
+  await install(page,null,{profileOnly:true,emulator});await settled(page);
+  const fence=await request.put(emulator+'/legacyIdentityFences/normal-product-uid.json?ns=demo-trade-investigation-default-rtdb',{headers:{authorization:'Bearer owner'},data:{fixture:true}});expect(fence.status()).toBe(200);
+  await page.evaluate(async()=>{
+    const row=accountSyncCanonicalEntities.find(e=>!e.deleted&&e.entityType==='tradeEntry'&&accountSyncCatalogEntryForId(e.identity.catalogId)?.name==='Pikachu');
+    await applyAccountSyncTradeMutations([{kind:'patch',entityType:'tradeEntry',entityId:row.entityId,patch:{priority:'L'}}],(await accountSyncMutationAuthority()).controller);
+  });await settled(page);
+  expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
+  const published=await request.get(emulator+'/publicShares/NormalProduct.json?ns=demo-trade-investigation-default-rtdb');expect(published.status()).toBe(200);
+  expect((await published.json()).declarations.some(e=>e.name==='Pikachu'&&e.p==='L')).toBe(true);
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});

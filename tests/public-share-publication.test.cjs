@@ -237,9 +237,9 @@ test('only confirmed list and profile changes request automatic publication',()=
   const profile=between('async function saveProfile(event){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
-  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit',true\)/);
+  assert.match(canonicalAck,/publicShareSnapshotForUser\(username,source,'owned_list_edit',true\)/);
   assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
-  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot\)/);
+  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(username,built.snapshot\)/);
   assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
   assert.match(profile,/requestPublicSharePublication\('share_profile_update'/);
 });
