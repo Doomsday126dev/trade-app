@@ -208,6 +208,7 @@
         item.text==='get(ref(db,`authIndex/${expectedUid}`))'?2:item.count})))
   });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
+    '76c0fd1cf9f5cd6295c2be5037f7c933af3a9e6b':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     'aa7a3ec6629b9c77868dd8764c9d12ce9e92b5d7':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,
     // Focused .125 runtime retains the reviewed .123 read topology.
     'a794c3d8150f20745045383cba4c6b8fd5940698':LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT,

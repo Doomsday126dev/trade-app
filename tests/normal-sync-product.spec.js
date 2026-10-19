@@ -51,6 +51,10 @@ async function install(page,state=null,{profileOnly=false,emulator=''}={}){
         const response=await fetch(endpoint(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(value)});if(!response.ok)throw new Error('Emulator write rejected: '+response.status);
         put(path,await response.json());writes.push(path);
       };
+      update=async(path,fields)=>{
+        const response=await fetch(endpoint(path),{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(fields)});if(!response.ok)throw new Error('Emulator profile update rejected: '+response.status);
+        for(const [field,value]of Object.entries(await response.json()))put(path+'/'+field,value);writes.push(path);notify(path);
+      };
     }
     auth={currentUser:{uid}};cur=username;currentAuthUid=uid;_authStateKnown=true;firebaseDataProtectionReady=true;db={};fbOn=true;activeCanonicalIdentity=null;
     activateOwnedSession(uid,username);
@@ -222,5 +226,60 @@ test('emulator account fence cannot make activity analytics block an allowed pub
   expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
   const published=await request.get(emulator+'/publicShares/NormalProduct.json?ns=demo-trade-investigation-default-rtdb');expect(published.status()).toBe(200);
   expect((await published.json()).declarations.some(e=>e.name==='Pikachu'&&e.p==='L')).toBe(true);
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('stale offline profile edit and old queued replay cannot overwrite canonical activity',async({page})=>{
+  const emulator=process.env.POGO_DATABASE_EMULATOR||'';
+  await install(page,null,{emulator});await settled(page);
+  const result=await page.evaluate(async emulator=>{
+    const stale=structuredClone(getLocal().users[cur]);
+    const fresh={schemaVersion:1,updatedAt:Date.now()+1000,listed:9};
+    const serverSet=set,serverUpdate=update;
+    if(emulator)await runTransaction(ref(db,`users/${cur}/canonicalListActivity`),()=>fresh,{applyLocally:false});
+    else __normal.remote.users[cur].canonicalListActivity=fresh;
+    update=async()=>{throw new Error('offline profile transport');};
+    await writeUserNow(cur,{...stale,bio:'offline biography'});clearTimeout(syncFlushTimer);
+    const generated=Object.values(syncQueue).filter(item=>item.path?.includes('/canonicalListActivity')).map(item=>item.path);
+    // Persisted .126 queue shapes must also be safe after upgrading.
+    syncQueue[`users/${cur}/canonicalListActivity`]={kind:'set',path:`users/${cur}/canonicalListActivity`,data:stale.canonicalListActivity,ts:1};
+    syncQueue[`users/${cur}/canonicalListActivity/listed`]={kind:'set',path:`users/${cur}/canonicalListActivity/listed`,data:1,ts:1};
+    syncQueue[`users/${cur}`]={kind:'set',path:`users/${cur}`,data:{bio:'offline biography',canonicalListActivity:stale.canonicalListActivity,'canonicalListActivity/listed':1},ts:1};
+    _onOwnedDataSnapshot({surface:'profile',path:`users/${cur}`,value:structuredClone(__normal.remote.users[cur])});
+    const overlaid=structuredClone(getLocal().users[cur].canonicalListActivity);
+    const attempts=[];
+    const apply=(path,value)=>{const parts=path.split('/'),key=parts.pop();let node=__normal.remote;for(const part of parts)node=node[part]??={};node[key]=structuredClone(value);};
+    set=async(path,value)=>{attempts.push(path);if(emulator)return serverSet(path,value);apply(path,value);};
+    update=async(path,fields)=>{attempts.push(path);if(emulator)return serverUpdate(path,fields);for(const [field,value]of Object.entries(fields))apply(path+'/'+field,value);};
+    await flushSyncQueue();clearTimeout(syncFlushTimer);
+    return{generated,overlaid,fresh,remote:emulator?(await get(ref(db,`users/${cur}`))).val():__normal.remote.users[cur],attempts,remaining:Object.keys(syncQueue)};
+  },emulator);
+  expect.soft(result.generated).toEqual([]);
+  expect.soft(result.overlaid).toEqual(result.fresh);
+  expect.soft(result.remote.canonicalListActivity).toEqual(result.fresh);
+  expect(result.remote.bio).toBe('offline biography');
+  expect(result.attempts.some(path=>path.includes('/canonicalListActivity'))).toBe(false);
+  expect(result.remaining).toEqual([]);
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+
+test('auth binding preserves the newer server activity summary',async({page})=>{
+  const emulator=process.env.POGO_DATABASE_EMULATOR||'';
+  await install(page,null,{emulator});await settled(page);
+  const result=await page.evaluate(async emulator=>{
+    const fresh={schemaVersion:1,updatedAt:Date.now()+2000,listed:12};
+    if(emulator)await runTransaction(ref(db,`users/${cur}/canonicalListActivity`),()=>fresh,{applyLocally:false});
+    else __normal.remote.users[cur].canonicalListActivity=fresh;
+    const apply=(path,value)=>{const parts=path.split('/'),key=parts.pop();let node=__normal.remote;for(const part of parts)node=node[part]??={};node[key]=structuredClone(value);};
+    // Auth-directory provisioning is outside this synthetic member fixture; the profile write and read use real emulator rules.
+    const serverSet=set;
+    set=async(path,value)=>{if(path.startsWith('loginDirectory/'))return apply(path,value);if(emulator)return serverSet(path,value);apply(path,value);};
+    if(!emulator)update=async(path,fields)=>{for(const [field,value]of Object.entries(fields))apply(path+'/'+field,value);};
+    await bindAuthUserNow(cur,{authUid:'normal-product-uid'});
+    return{fresh,remote:emulator?(await get(ref(db,`users/${cur}`))).val():__normal.remote.users[cur]};
+  },emulator);
+  expect(result.remote.canonicalListActivity).toEqual(result.fresh);
+  expect(result.remote.authUid).toBe('normal-product-uid');
   await page.evaluate(()=>stopAccountSyncRuntime());
 });

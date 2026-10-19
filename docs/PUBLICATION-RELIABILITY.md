@@ -11,3 +11,15 @@ Validation includes a real Response body-consumption regression, runtime publica
 The initial diagnosis found recent Mazer/Roninshima server mutations with old legacy timestamps and old public copies. Captured accepted public rows project successfully offline. The legacy hydration dependency and provider-only retry no-op reproduce a publication failure mechanism, but the original device's precise error is unavailable. Spark storage/bandwidth overage metrics were false, with substantial headroom. Do not attribute the complaint to billing or claim every attempted save succeeds.
 
 Release scope: based on live release-2026-09-23.123 (62482523588e5f7a3065936c93bfa043d4d31fb5), with only these fixes and a coherent release marker. The runtime excludes subsequent undeployed Settings/Share/appearance and sprite changes, including PR 145. Merge this branch without squashing before selecting its immutable runtime commit; the runtime must be reachable from main. Use current reviewed Pages control selector release-pages-control-fe32497866cb09f5fbef2df23d4918c00241c64d and the supported manual dispatcher. Rollback target remains release-2026-09-23.123 at the exact SHA above. No billing, rules, access, credentials or Functions deployment is required.
+
+
+The .127 follow-up addresses PR146 discussion_r4317061779: a stale cached
+activity summary was included in ordinary profile updates, queued child sets,
+and overlays. Profile inputs and queued root/child replay now exclude derived
+activity, root profile replay uses partial updates so omitted derived fields
+are preserved, and old derived queue entries are discarded without changing
+the editable bio/avatar fields. The accepted-canonical summary transaction is
+unchanged. Synthetic desktop/mobile emulator coverage verifies a newer summary
+survives an offline stale profile edit, incoming snapshot overlay and replay.
+No actual user impact or lost list entries was established. PR147 and PR148
+review threads/summaries contained no additional findings at this review.

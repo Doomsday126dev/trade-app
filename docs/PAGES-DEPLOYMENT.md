@@ -275,3 +275,10 @@ original-session guard. The corrected focused .126 runtime is
 topology and has its own exact-SHA registration. Neither runtime tag is moved.
 The .126 runtime is selected independently from this control correction and
 does not include undeployed main UI or sprite changes.
+
+
+Focused .127 (`76c0fd1cf9f5cd6295c2be5037f7c933af3a9e6b`) excludes derived
+activity from ordinary profile writes/replay/overlays and auth-binding profile updates. It keeps the same 23
+reviewed reads and gets an exact-SHA registration with unchanged path/hash
+checks. The runtime is selected separately from the integration/control commits.
+Local no-SHA validation recognizes .127; unknown explicit SHAs remain rejected.

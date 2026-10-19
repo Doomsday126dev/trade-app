@@ -1370,6 +1370,8 @@ function providerOnlyLegacyWritePath(path,username=cur,uid=auth?.currentUser?.ui
   return providerOnlyIdentityActive(owner)&&((name&&(target===`users/${name}`||target.startsWith(`users/${name}/`)||target===`loginDirectory/${name}`||target.startsWith(`loginDirectory/${name}/`)))||(owner&&(target===`authIndex/${owner}`||target.startsWith(`authIndex/${owner}/`))));
 }
 function queueSync(path,data){
+  if(canonicalActivityQueuePath(path))return false;
+  if(/^users\/[^/]+$/.test(String(path))&&data&&typeof data==='object'&&!Array.isArray(data))data=ordinaryProfileFields(data);
   if(providerOnlyLegacyWritePath(path))return false;
   const item={kind:'set',path,data,ts:Date.now()};
   if(unsafeWholeListQueueEntry(path,item)){
@@ -1453,6 +1455,7 @@ async function flushSyncQueue(){
   const entries=Object.entries(syncQueue);
   let permanentDrops=0;
   for(const[path,item] of entries){
+    if(canonicalActivityQueuePath(item?.path||path)){if(queueItemIsCurrent(path,item))delete syncQueue[path];continue;}
     if(providerOnlyLegacyWritePath(item?.path||path)){
       if(queueItemIsCurrent(path,item))delete syncQueue[path];
       continue;
@@ -1481,6 +1484,7 @@ async function flushSyncQueue(){
     }
     try{
       if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
+      else if(/^users\/[^/]+$/.test(String(item.path))&&item.data&&typeof item.data==='object'&&!Array.isArray(item.data))await update(ref(db,item.path),ordinaryProfileFields(item.data));
       else await set(ref(db,item.path),item.data??null);
       if(queueItemIsCurrent(path,item))delete syncQueue[path];
       saveSyncQueue();
@@ -2872,6 +2876,7 @@ async function republishOwnPublicShare(){
 }
 
 async function writeUser(u,data){
+  data=ordinaryProfileFields(data);
   const preserveLegacyBoard=await accountSyncPreserveLegacyBoard(u);
   if(u===cur&&providerOnlyIdentityActive()){
     const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);syncFromLocal();return;
@@ -2891,6 +2896,7 @@ function canWriteLoginDirectoryNow(){
   return !!(auth?.currentUser&&cur&&localUser?.isAdmin);
 }
 async function writeUserNow(u,data){
+  data=ordinaryProfileFields(data);
   const preserveLegacyBoard=await accountSyncPreserveLegacyBoard(u);
   if(u===cur&&providerOnlyIdentityActive()){
     const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);syncFromLocal();return;
@@ -2904,8 +2910,8 @@ async function writeUserNow(u,data){
   saveLocal(s);
   if(fbOn&&db){
     try{
-      const profileValue=preserveLegacyBoard?accountSyncProfileFields(s.users[u]):s.users[u];
-      await withTimeout(preserveLegacyBoard?update(ref(db,`users/${u}`),profileValue):set(ref(db,`users/${u}`),profileValue),8000,'Saving login timed out','db/write-timeout');
+      const profileValue=preserveLegacyBoard?accountSyncProfileFields(s.users[u]):ordinaryProfileFields(s.users[u]);
+      await withTimeout(update(ref(db,`users/${u}`),profileValue),8000,'Saving login timed out','db/write-timeout');
       if(canWriteLoginDirectoryNow())await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
       if(preserveLegacyBoard)acknowledgeAccountSyncProfileFields(u,profileValue);
       else delete syncQueue[`users/${u}`];
@@ -2921,13 +2927,14 @@ async function writeUserNow(u,data){
   syncFromLocal();
 }
 async function writeUserStrict(u,data){
+  data=ordinaryProfileFields(data);
   const preserveLegacyBoard=await accountSyncPreserveLegacyBoard(u);
   const s=getLocal();
   s.users[u]=normalizedUserRecord(u,s.users[u],data);
   s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
   if(fbOn&&db){
-    const profileValue=preserveLegacyBoard?accountSyncProfileFields(s.users[u]):s.users[u];
-    await withTimeout(preserveLegacyBoard?update(ref(db,`users/${u}`),profileValue):set(ref(db,`users/${u}`),profileValue),8000,'Saving user timed out','db/write-timeout');
+    const profileValue=preserveLegacyBoard?accountSyncProfileFields(s.users[u]):ordinaryProfileFields(s.users[u]);
+    await withTimeout(update(ref(db,`users/${u}`),profileValue),8000,'Saving user timed out','db/write-timeout');
     await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
   }
   saveLocal(s);allData=normalizeData(s);refreshAll();
@@ -2935,9 +2942,9 @@ async function writeUserStrict(u,data){
 }
 async function bindAuthUserNow(username,authUpdate){
   const s=getLocal();
-  const next=normalizedUserRecord(username,s.users[username],authUpdate);
+  const next=normalizedUserRecord(username,s.users[username],ordinaryProfileFields(authUpdate));
   if(fbOn&&db){
-    await withTimeout(set(ref(db,`users/${username}`),next),8000,'Linking login timed out','auth/bind-timeout');
+    await withTimeout(update(ref(db,`users/${username}`),ordinaryProfileFields(next)),8000,'Linking login timed out','auth/bind-timeout');
     const dirNext=normalizedLoginDirectoryRecord(username,next,{...(s.loginDirectory?.[username]||{}),authReady:true});
     await withTimeout(set(ref(db,`loginDirectory/${username}`),dirNext),8000,'Linking login directory timed out','auth/directory-timeout');
     delete syncQueue[`users/${username}`];
@@ -3317,8 +3324,14 @@ function accountSyncMigratedLegacyQueueItem(item,username=cur){
 function accountSyncQueuedProfileBoardItem(item,username=cur){
   return String(item?.path||'')===`users/${String(username||'')}`&&Object.prototype.hasOwnProperty.call(item?.data||{},'specialTradeBoard');
 }
+function canonicalActivityQueuePath(path){return /^users\/[^/]+\/canonicalListActivity(?:\/|$)/.test(String(path||''));}
+function ordinaryProfileFields(profile={}){
+  const fields={...profile};
+  for(const key of Object.keys(fields))if(key==='canonicalListActivity'||key.startsWith('canonicalListActivity/'))delete fields[key];
+  return fields;
+}
 function accountSyncProfileFields(profile={}){
-  const fields={...profile};delete fields.specialTradeBoard;return fields;
+  const fields=ordinaryProfileFields(profile);delete fields.specialTradeBoard;return fields;
 }
 async function accountSyncPreserveLegacyBoard(username){
   if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return false;
@@ -3331,6 +3344,7 @@ async function accountSyncPreserveLegacyBoard(username){
 function queueAccountSyncProfileFields(username,profile){
   const name=String(username||''),fields=accountSyncProfileFields(profile),previousQueue=syncQueue,nextQueue={...syncQueue},timestamp=Date.now();
   if(!name||!Object.keys(fields).length)return false;
+  for(const[key,item]of Object.entries(nextQueue))if(canonicalActivityQueuePath(item?.path||key))delete nextQueue[key];
   const rootPath=`users/${name}`,rootItem=nextQueue[rootPath];
   if(accountSyncQueuedProfileBoardItem(rootItem,name))nextQueue[rootPath]={...rootItem,data:{specialTradeBoard:accountSyncClone(rootItem.data.specialTradeBoard)}};
   else delete nextQueue[rootPath];
@@ -3352,6 +3366,7 @@ function acknowledgeAccountSyncProfileFields(username,fields){
   }
 }
 function accountSyncRetainedLegacyQueueEntries(key,item,username=cur){
+  if(canonicalActivityQueuePath(item?.path||key))return Object.freeze([]);
   if(accountSyncMigratedLegacyQueueItem(item,username))return Object.freeze([]);
   if(!accountSyncQueuedProfileBoardItem(item,username))return Object.freeze([[key,item]]);
   const data=accountSyncProfileFields(item.data),rootPath=String(item.path),timestamp=Number(item.ts)||0;
@@ -4285,6 +4300,10 @@ function applyDataPath(root,path,data){
   else node[last]=data;
 }
 function applyQueuedData(root,item){
+  if(canonicalActivityQueuePath(item?.path))return;
+  if(/^users\/[^/]+$/.test(String(item?.path))&&item.data&&typeof item.data==='object'&&!Array.isArray(item.data)){
+    Object.entries(ordinaryProfileFields(item.data)).forEach(([field,value])=>applyDataPath(root,`${item.path}/${field}`,value));return;
+  }
   if(item?.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND){
     Object.entries(item.data||{}).forEach(([name,value])=>applyDataPath(root,`${item.path}/${name}`,value));
     return;

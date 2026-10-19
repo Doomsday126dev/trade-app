@@ -148,6 +148,7 @@ function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{},s
   context.accountSyncRolloutEligible=async()=>false;
   context.accountSyncMarkMutationBlocked=()=>{};
   context.accountSyncMigratedLegacyQueueItem=()=>false;
+  vm.runInContext(between('function canonicalActivityQueuePath','async function accountSyncPreserveLegacyBoard'),context);
   vm.runInContext(between('function unsafeWholeListQueueEntry','function showSyncDot'),context);
   vm.runInContext(between('function listEntryValuesEqual','async function writeList(type,u,list,{previousList,orderModel}={})'),context);
   return context;
