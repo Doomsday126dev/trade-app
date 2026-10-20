@@ -1,8 +1,10 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({
+    "accountSync.publishing":"保存済み・共有リストを更新中",
+    "accountSync.publishingDetail":"非公開の変更は保存済みです。共有リストを自動更新しています。",
     "accountSync.publicationPending":"保存済み・共有待ち",
-    "accountSync.publicationPendingDetail":"非公開の変更は保存済みです。共有リストを更新できませんでした。タップして再試行してください。",
+    "accountSync.publicationPendingDetail":"非公開の変更は保存済みです。共有リストの更新を待っています。自動で再試行します。今すぐ再試行するにはタップしてください。",
     "admin.canonicalEntries":"希望 {count} 件",
     "admin.legacyEntries":"旧データ {count} 件",
     "admin.legacyUpdated":"旧データの更新 {time}",

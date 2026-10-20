@@ -23,3 +23,12 @@ unchanged. Synthetic desktop/mobile emulator coverage verifies a newer summary
 survives an offline stale profile edit, incoming snapshot overlay and replay.
 No actual user impact or lost list entries was established. PR147 and PR148
 review threads/summaries contained no additional findings at this review.
+
+
+## .128 SDK payload compatibility and automatic recovery
+
+The affected Safari PWA was online on .127 with healthy private sync and zero pending, blocked or conflicted operations. Its public publication error was `hasOwnProperty is not a function`. Populated v2 compatibility lists were null-prototype dictionaries; Firebase 12.14.0 calls an instance `hasOwnProperty` while validating nonempty payloads. Empty lists did not trigger it. The list builder still accumulates safely with null-prototype dictionaries, then emits ordinary objects at its transport boundary. This preserves declaration content and the existing allowlist. A regression uses the actual @firebase/database 1.1.3 component from Firebase 12.14.0, reproduces the captured old shape and verifies SDK writes plus independent unauthenticated server reads under emulator rules. Prior REST-adapter coverage bypassed this SDK validation.
+
+Publication now records a small owner-bound pending marker in IndexedDB, never a second cached public payload. It uses the latest accepted canonical rows on each attempt, coalesces concurrent requests, retries with 1/2/4/8/16/30 second backoff while online with a healthy current listener, and pauses on offline/session/listener loss. Startup and healthy-listener recovery resume pending work. Only acknowledged and verified publication clears the marker. A slow initial attempt says Saved; updating shared list; a failure retains Saved; sharing pending and explains automatic retry. Real outages cannot honestly be guaranteed to clear within seconds. Ordinary publication-state updates do not reapply canonical list rows.
+
+Tests cover normal, transient and sustained failures, slow/coalesced requests, offline/reconnect, restart with the durable marker, session stop, legacy/canonical product flows, SDK validation and emulator persistence. Production verification must compare the public projection to accepted private rows without editing list entries; controller UI status alone is insufficient evidence. No billing, rules, access, credential or backend deployment is needed for this payload fix.

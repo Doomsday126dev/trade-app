@@ -282,3 +282,12 @@ activity from ordinary profile writes/replay/overlays and auth-binding profile u
 reviewed reads and gets an exact-SHA registration with unchanged path/hash
 checks. The runtime is selected separately from the integration/control commits.
 Local no-SHA validation recognizes .127; unknown explicit SHAs remain rejected.
+
+
+Focused .128 (`9d7fd6c2a93dacfa04f2eba5db5123c4741a9718`) fixes
+Firebase SDK payload compatibility and automatic public publication recovery.
+It retains the exact reviewed 23-read legacy contract, with an exact-SHA alias
+and unchanged path/handler checks. Local no-SHA validation recognizes its
+release marker; unknown explicit SHAs still fail closed. Rollback is .127 at
+`76c0fd1cf9f5cd6295c2be5037f7c933af3a9e6b`. Runtime selection excludes the
+later integration merge and unrelated pending UI/sprite changes.

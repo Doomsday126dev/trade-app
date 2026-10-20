@@ -268,6 +268,9 @@
         lists[entry.category][entry.name]={p:entry.p,mod:entry.mod,lucky:entry.lucky,shiny:entry.shiny,xxl:entry.xxl,xxs:entry.xxs,backgroundId:entry.backgroundId};
       }
     }
+    // Firebase SDK validation requires ordinary objects at the transport boundary.
+    // Keep null-prototype dictionaries while accumulating untrusted dynamic keys.
+    for(const type of REQUIRED_LIST_SURFACES)lists[type]={...lists[type]};
     return{ok:true,status:'ready',snapshot:{
       version:unified?2:1,...(unified?{declarations:unified,declarationCount:unified.length}:{}),
       username:cleanUsername,

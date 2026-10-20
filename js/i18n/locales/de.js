@@ -1,8 +1,10 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({
+    "accountSync.publishing":"Gespeichert; geteilte Liste wird aktualisiert",
+    "accountSync.publishingDetail":"Deine privaten Änderungen sind gespeichert. Deine geteilte Liste wird automatisch aktualisiert.",
     "accountSync.publicationPending":"Gespeichert; Teilen ausstehend",
-    "accountSync.publicationPendingDetail":"Deine privaten Änderungen sind gespeichert. Die geteilte Liste konnte nicht aktualisiert werden. Zum Wiederholen tippen.",
+    "accountSync.publicationPendingDetail":"Deine privaten Änderungen sind gespeichert. Die geteilte Liste wartet auf die Aktualisierung. Wir versuchen es automatisch erneut. Tippe, um es jetzt zu versuchen.",
     "admin.canonicalEntries":"{count} Wünsche",
     "admin.legacyEntries":"{count} ältere Einträge",
     "admin.legacyUpdated":"Ältere Aktualisierung {time}",
