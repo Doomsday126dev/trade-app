@@ -147,7 +147,7 @@ test('normal product authority rejects broken identity and unresolved recovery w
 
 
 
-test('canonical publication ignores unneeded legacy reads, reports publication failure and retries after reload',async({page,context})=>{
+test('canonical publication ignores unneeded legacy reads, reports failure and automatically retries before reload',async({page,context})=>{
   await install(page,null,{profileOnly:true});await settled(page);
   expect(await page.evaluate(()=>__normal.remote.publicShares.NormalProduct.declarationCount)).toBe(1);
   await page.evaluate(()=>{__normal.failPublication=true;});
@@ -161,8 +161,7 @@ test('canonical publication ignores unneeded legacy reads, reports publication f
   expect(failed.remote.users.NormalProduct.canonicalListActivity.updatedAt).toBe(accepted);
   const row=await page.evaluate(()=>adminUserRows().find(row=>row.u===cur));expect(row.listed).toBe(2);expect(row.updated).toBe(accepted);expect(row.canonical).toBe(true);
   await page.evaluate(()=>{__normal.failPublication=false;});
-  await page.evaluate(()=>openSyncDetail());
-  expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
+  await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError),{timeout:5000}).toBe('');
   const saved=await page.evaluate(()=>structuredClone(__normal.remote));
   expect(saved.publicShares.NormalProduct.declarations.some(e=>e.name==='Squirtle')).toBe(true);
   await page.evaluate(()=>stopAccountSyncRuntime());await page.close();

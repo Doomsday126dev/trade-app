@@ -1,8 +1,10 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({
+    "accountSync.publishing":"Guardado; actualizando lista compartida",
+    "accountSync.publishingDetail":"Tus cambios privados están guardados. Tu lista compartida se está actualizando automáticamente.",
     "accountSync.publicationPending":"Guardado; publicación pendiente",
-    "accountSync.publicationPendingDetail":"Tus cambios privados están guardados. No se pudo actualizar la lista compartida. Toca para reintentar.",
+    "accountSync.publicationPendingDetail":"Tus cambios privados están guardados. La lista compartida está pendiente de actualizar. Reintentaremos automáticamente. Toca para reintentar ahora.",
     "admin.canonicalEntries":"{count} deseos",
     "admin.legacyEntries":"{count} entradas antiguas",
     "admin.legacyUpdated":"Actualización antigua {time}",

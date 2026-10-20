@@ -1,8 +1,10 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    "accountSync.publishing":"Saved; updating shared list",
+    "accountSync.publishingDetail":"Your private changes are saved. Your shared list is updating automatically.",
     "accountSync.publicationPending":"Saved; sharing pending",
-    "accountSync.publicationPendingDetail":"Your private changes are saved. The shared list could not be updated. Tap to retry.",
+    "accountSync.publicationPendingDetail":"Your private changes are saved. The shared list is waiting to update. We will retry automatically. Tap to retry now.",
     "admin.canonicalEntries":"{count} wants",
     "admin.legacyEntries":"{count} legacy entries",
     "admin.legacyUpdated":"Legacy update {time}",

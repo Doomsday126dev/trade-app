@@ -9790,7 +9790,8 @@ function accountSyncPresentation(){
   const count=Math.max(0,Number(accountSyncUiState.pendingCount)||0)+Math.max(0,Number(accountSyncUiState.blockedCount)||0)+Math.max(0,Number(accountSyncUiState.conflictCount)||0)+Math.max(0,Number(accountSyncUiState.recoveryCandidateCount)||0);
   const recoveryState=accountSyncEffectiveRecoveryState(),plan=accountSyncCurrentRecoveryPlan(),running=recoveryState.status==='running';
   const publicationPending=state==='saved'&&!!accountSyncUiState.lastProjectionError;
-  const presentation=publicationPending?{className:'offline',labelKey:'accountSync.publicationPending',detailKey:'accountSync.publicationPendingDetail'}:running?{className:'syncing',labelKey:'accountSync.recoveryRunning',detailKey:'accountSync.recoveryRunningDetail'}:{
+  const publishing=publicationPending&&accountSyncUiState.lastProjectionError==='account-sync/publication-pending';
+  const presentation=publishing?{className:'syncing',labelKey:'accountSync.publishing',detailKey:'accountSync.publishingDetail'}:publicationPending?{className:'offline',labelKey:'accountSync.publicationPending',detailKey:'accountSync.publicationPendingDetail'}:running?{className:'syncing',labelKey:'accountSync.recoveryRunning',detailKey:'accountSync.recoveryRunningDetail'}:{
     saved:{className:'online',labelKey:'accountSync.saved',detailKey:'accountSync.savedDetail'},
     'pending-sync':{className:'syncing',labelKey:'accountSync.saving',detailKey:'accountSync.savingDetail'},
     offline:{className:'offline',labelKey:'accountSync.offline',detailKey:'accountSync.offlineDetail'},

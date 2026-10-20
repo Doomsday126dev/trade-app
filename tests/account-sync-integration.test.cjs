@@ -132,10 +132,10 @@ test('private acknowledgement precedes public projection and projection excludes
   const dispatch=controller.slice(controller.indexOf('async function dispatch'),controller.indexOf('async function drain'));
   const apply=dispatch.indexOf('executeAuthorizedMutation(()=>repository.applyOperation'),acknowledge=dispatch.indexOf('await journal.acknowledge'),project=dispatch.indexOf('await publishAcceptedProjection');
   assert.ok(apply>=0);assert.ok(acknowledge>=0);assert.ok(project>=0);assert.ok(apply<acknowledge);assert.ok(acknowledge<project);assert.match(dispatch,/listenerAuthorityCurrent\(canonical\.authority\).*await journal\.acknowledge/s);
-  const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('async function activate'));
+  const publish=controller.slice(controller.indexOf('async function performPublicPublication'),controller.indexOf('async function activate'));
   const projection=publish.indexOf('model.publicTradeProjection'),publication=publish.indexOf('executeAuthorizedMutation(()=>onProjection');assert.ok(projection>=0);assert.ok(publication>=0);assert.ok(projection<publication);assert.match(publish,/listenerAuthorityCurrent\(authority\).*executeAuthorizedMutation\(\(\)=>onProjection/s);
   for(const privateField of ['fieldRevisions','fieldMutations','fieldMutationHashes','lifecycleMutation','operationId','recoveryCandidates','migrations'])assert.doesNotMatch(publish,new RegExp(`onProjection\\([^)]*${privateField}`));
-  assert.match(controller,/catch\(error\)\{lastProjectionError=/);
+  assert.match(controller,/catch\(error\)\{publicationPending=true;publicationAttempts\+\+;lastProjectionError=/);
 });
 
 test('entity, direct watched, and public projection writes retain operation-specific authority contracts',()=>{
@@ -156,7 +156,7 @@ test('entity, direct watched, and public projection writes retain operation-spec
   assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.readRecoveryReviewAcceptance\(evidence\.record\)\)/);
   assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.createRecoveryReviewAcceptance\(evidence\.record\)\)/);
 
-  const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('function handleListenerData'));
+  const publish=controller.slice(controller.indexOf('async function performPublicPublication'),controller.indexOf('function handleListenerData'));
   assert.match(publish,/executeAuthorizedMutation\(\(\)=>onProjection/);
   assert.doesNotMatch(publish,/readAccount|runAuthorizedWatchedMutation/);
 });

@@ -9,6 +9,8 @@
     // The app supplies verified admission; retain the old constructor for isolated fixtures.
     const eligible=enabled===true&&writesEnabled===true&&(admitted===undefined?allowlist.has(owner):admitted===true);
     let active=false,lifecycleEpoch=0,listenerAuthorityVersion=0,optimisticRevision=0,drainPromise=null,drainRequested=false,manualRetryPromise=null,mutationPromise=Promise.resolve(),repositoryMutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),drainQueue=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastErrorCategory='',lastProjectionError='',lastSyncAt=0,listenerState='inactive';
+    const PUBLICATION_PENDING_META='public-publication-pending-v1';
+    let publicationTimer=null,publicationPromise=null,publicationRequested=false,publicationPending=false,publicationAttempts=0;
     const listenerWaiters=new Set();
     const entities=new Map(),acceptedEntities=new Map();
     function key(type,id){return`${type}|${id}`;}
@@ -24,7 +26,7 @@
     function listenerFailure(code,message='The live account sync listener is not ready'){return model.failure(code,message);}
     function listenerAuthorityError(){return Object.assign(new Error('The live account sync listener authority changed'),{code:'account-sync/listener-authority-lost'});}
     function watchedWriteError(code,message){return Object.assign(new Error(message),{code});}
-    function closeListenerAuthority(nextState){listenerAuthorityVersion++;listenerState=nextState;clearTimeout(retryTimer);retryTimer=null;return listenerAuthorityVersion;}
+    function closeListenerAuthority(nextState){clearTimeout(publicationTimer);publicationTimer=null;listenerAuthorityVersion++;listenerState=nextState;clearTimeout(retryTimer);retryTimer=null;return listenerAuthorityVersion;}
     function listenerAuthority(epoch=lifecycleEpoch){return sessionCurrent()&&active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy'?Object.freeze({epoch,version:listenerAuthorityVersion}):null;}
     function listenerAuthorityCurrent(binding){return sessionCurrent()&&!!binding&&active&&eligible&&online()&&binding.epoch===lifecycleEpoch&&binding.version===listenerAuthorityVersion&&listenerState==='healthy';}
     function listenerLifecycleCurrent(binding){return sessionCurrent()&&!!binding&&active&&eligible&&binding.epoch===lifecycleEpoch;}
@@ -99,9 +101,9 @@
         listenerWaiters.add(waiter);
       });
     }
-    function emit(){
+    function emit(projectEntities=true){
       stateEmitPromise=stateEmitPromise.then(()=>snapshot()).then(state=>onState?.(state)).catch(()=>{});
-      try{onEntities?.(Object.freeze([...entities.values()]));}catch{}
+      if(projectEntities)try{onEntities?.(Object.freeze([...entities.values()]));}catch{}
       return stateEmitPromise;
     }
     async function snapshot(){
@@ -214,16 +216,43 @@
         return Object.freeze({accepted:observed,authority:nextAuthority});
       });
     }
-    async function publishAcceptedProjection(operation,authority=listenerAuthority()){
+    function schedulePublicPublication(delay=Math.min(30000,1000*Math.pow(2,Math.min(5,Math.max(0,publicationAttempts-1))))){
+      clearTimeout(publicationTimer);publicationTimer=null;
+      if(publicationPromise||!publicationPending||!listenerAuthority()||projectionAllowed()!==true||typeof onProjection!=='function')return;
+      publicationTimer=setTimeout(()=>{publicationTimer=null;publishAcceptedProjection(Object.freeze({kind:'automatic-publication-retry'})).catch(()=>{});},delay);
+      publicationTimer?.unref?.();
+    }
+    async function performPublicPublication(operation,authority=listenerAuthority()){
       if(!active||!eligible||projectionAllowed()!==true||typeof onProjection!=='function')return Object.freeze({ok:true,status:'deferred'});
       try{
+        publicationPending=true;
+        if(!lastProjectionError){lastProjectionError='account-sync/publication-pending';emit(false);}
+        await journal.setMeta(PUBLICATION_PENDING_META,{schemaVersion:1,ownerUid:owner,pending:true});
         const projection=await serializeCanonical(()=>{if(!listenerAuthorityCurrent(authority))throw listenerAuthorityError();return model.publicTradeProjection([...acceptedEntities.values()]);});
         const execution=await executeAuthorizedMutation(()=>onProjection(projection,operation,Object.freeze({updatedAt:Math.max(0,...[...acceptedEntities.values()].filter(entity=>entity.entityType==='tradeEntry').map(entity=>Number(entity.updatedAt)||0))})),authority);
         if(!execution.started||!execution.current)throw listenerAuthorityError();
         if(execution.error)throw execution.error;
         if(execution.value?.ok===false||['pending','queued','deferred'].includes(execution.value?.status))throw new Error('account-sync/public-projection-not-confirmed');
-        if(lastProjectionError){lastProjectionError='';emit();}return Object.freeze({ok:true,status:'published',count:projection.length});
-      }catch(error){lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit();return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
+        await journal.removeMeta(PUBLICATION_PENDING_META);
+        publicationPending=false;publicationAttempts=0;
+        if(lastProjectionError){lastProjectionError='';emit(false);}return Object.freeze({ok:true,status:'published',count:projection.length});
+      }catch(error){publicationPending=true;publicationAttempts++;lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit(false);return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
+    }
+    function publishAcceptedProjection(operation,authority=listenerAuthority()){
+      if(publicationPromise){publicationRequested=true;return publicationPromise;}
+      clearTimeout(publicationTimer);publicationTimer=null;
+      const work=(async()=>{
+        let result;
+        do{
+          publicationRequested=false;
+          result=await performPublicPublication(operation,authority);
+          authority=listenerAuthority();
+        }while(publicationRequested&&authority&&projectionAllowed()===true);
+        return result;
+      })();
+      publicationPromise=work;
+      work.finally(()=>{if(publicationPromise===work)publicationPromise=null;schedulePublicPublication();}).catch(()=>{});
+      return work;
     }
     function handleListenerData(value,epoch){
       if(!active||epoch!==lifecycleEpoch)return;
@@ -234,7 +263,7 @@
         listenerState='healthy';clearError('listener','canonical');return true;
       }).then(accepted=>{
         if(!accepted||!active||epoch!==lifecycleEpoch||version!==listenerAuthorityVersion||listenerState!=='healthy')return;
-        settleListenerWaiters(Object.freeze({ok:true,status:'healthy'}));emit();if(online())drain();
+        settleListenerWaiters(Object.freeze({ok:true,status:'healthy'}));emit();if(online()){drain();schedulePublicPublication();}
       }).catch(error=>{
         if(!active||epoch!==lifecycleEpoch||version!==listenerAuthorityVersion)return;
         closeListenerAuthority('failed');setError(error,'canonical','account-sync/canonical-validation-failed');settleListenerWaiters(listenerFailure(lastError));emit();
@@ -243,6 +272,8 @@
     async function activate(){
       if(active)return Object.freeze({ok:true,status:eligible?'active':'disabled'});
       const epoch=++lifecycleEpoch;active=true;if(eligible)closeListenerAuthority('starting');
+      const pendingPublication=await journal.getMeta(PUBLICATION_PENDING_META);
+      if(pendingPublication?.ownerUid===owner&&pendingPublication?.pending===true){publicationPending=true;lastProjectionError='account-sync/publication-pending';}
       const localEntities=await journal.listEntities();
       if(!active||epoch!==lifecycleEpoch)return Object.freeze({ok:true,status:'inactive'});
       for(const entity of localEntities)entities.set(key(entity.entityType,entity.entityId),entity);
@@ -262,7 +293,7 @@
     }
     async function deactivate(){
       lifecycleEpoch++;active=false;closeListenerAuthority('inactive');settleListenerWaiters(listenerFailure('account-sync/session-inactive'));try{unsubscribe?.();}catch{}unsubscribe=null;
-      await Promise.allSettled([mutationPromise,repositoryMutationPromise,remoteAcceptPromise,drainPromise,manualRetryPromise].filter(Boolean));
+      await Promise.allSettled([mutationPromise,repositoryMutationPromise,remoteAcceptPromise,drainPromise,manualRetryPromise,publicationPromise].filter(Boolean));
       await emit();
       return Object.freeze({ok:true,status:'inactive'});
     }
