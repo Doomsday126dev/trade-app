@@ -249,3 +249,36 @@ Previous successful deployments, concurrent deployments, the wrong control selec
 Before approving the two commits, run focused selector/runtime, manifest, predeploy, postdeploy, rollback, deterministic artifact, and service-worker rollback tests; parse YAML/JSON; check JavaScript/CJS syntax; run sensitive/capability scans; and run `git diff --check`.
 
 No control revision is deployment-eligible until Commit A is immutable, Commit B pins that exact SHA, and a matching immutable control-selector tag exists at Commit B. Do not dispatch from `main` or from a runtime release tag.
+
+
+## Focused .125 compatibility
+
+The focused reliability runtime `a794c3d8150f20745045383cba4c6b8fd5940698`
+retains the live .123 read topology: 23 direct gets and no direct onValue.
+It intentionally excludes undeployed main UI and sprite work. Its exact SHA
+selects the existing legacy-publication contract, including all reviewed
+handler hashes, paths, scopes and counts. Unknown explicit runtime SHAs still
+select the newer contract and fail on this topology. Local no-SHA validation
+also recognizes the .125 release marker; Pages always supplies an exact SHA.
+
+The first .125 deployment (run 39298948385) stopped before artifact deployment
+because the prior control default expected 24 read sites for unknown SHAs.
+This source-only compatibility registration and dispatcher repin preserve the
+immutable .125 runtime tag and all production access/rules/billing settings.
+
+
+The .125 deployment was held before approval after regression review found
+that a rejected legacy activity summary could block an otherwise permitted
+public update and that a publication crossing an account switch needed an
+original-session guard. The corrected focused .126 runtime is
+`aa7a3ec6629b9c77868dd8764c9d12ce9e92b5d7`. It retains the same reviewed 23-read
+topology and has its own exact-SHA registration. Neither runtime tag is moved.
+The .126 runtime is selected independently from this control correction and
+does not include undeployed main UI or sprite changes.
+
+
+Focused .127 (`76c0fd1cf9f5cd6295c2be5037f7c933af3a9e6b`) excludes derived
+activity from ordinary profile writes/replay/overlays and auth-binding profile updates. It keeps the same 23
+reviewed reads and gets an exact-SHA registration with unchanged path/hash
+checks. The runtime is selected separately from the integration/control commits.
+Local no-SHA validation recognizes .127; unknown explicit SHAs remain rejected.

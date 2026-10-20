@@ -104,8 +104,8 @@ test('1500-character warning boundary remains exact after localization',()=>{
 test('search-language override is device-local and regenerates every visible string surface',()=>{
   assert.match(html,/const POGO_SEARCH_LANGUAGE_KEY='pogoPokemonGoSearchLocale:v1'/);
   assert.match(html,/const POGO_SEARCH_LANGUAGE_OVERRIDE_KEY='pogoPokemonGoSearchLocaleOverride:v1'/);
-  assert.match(html,/id="settings-search-language-override"[^>]*onchange="togglePokemonGoSearchLocaleOverride\(this\.checked\)"/);
-  assert.match(html,/id="settings-search-language-override-row" hidden/);
+  assert.match(html,/option value="follow-app" data-i18n="settings.sameAsApp"/);
+  assert.doesNotMatch(html,/id="settings-search-language-override"/);
   assert.match(html,/id="settings-search-language"[^>]*onchange="changePokemonGoSearchLocale\(this\.value\)"/);
   const block=html.slice(html.indexOf('function pokemonGoSearchLanguagePreference'),html.indexOf('function saveSyncQueue'));
   assert.match(block,/lsGet\(POGO_SEARCH_LANGUAGE_KEY,null\)/);
@@ -117,9 +117,8 @@ test('search-language override is device-local and regenerates every visible str
   assert.match(block,/if\(next==='follow-app'\)\{lsRemove\(POGO_SEARCH_LANGUAGE_KEY\);lsRemove\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY\);\}/);
   assert.match(block,/lsSet\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,true\)/);
   assert.match(block,/lsSet\(POGO_SEARCH_LANGUAGE_KEY,next\)/);
-  assert.match(block,/checkbox\.checked=override/);
-  assert.match(block,/row\.hidden=!override/);
-  assert.match(block,/select\.disabled=!override/);
+  assert.match(block,/select\.disabled=false;select\.value=preference/);
+  assert.match(block,/override\?'settings.searchFixed':'settings.searchFollows'/);
   assert.match(block,/renderCombinedList\(declarations\)/);
   assert.match(block,/renderTrainerGroupResults\(\)/);
   assert.match(block,/favoriteBrowseState\.selected\)renderFavoriteBrowseResults\(\)/);
@@ -131,15 +130,13 @@ test('search-language override is device-local and regenerates every visible str
   assert.doesNotMatch(block,/userPreferences|trainerPreferences|firebase|queueSync|set\s*\(\s*ref|update\s*\(\s*ref|fetch\s*\(/i);
 });
 
-test('language panel makes app language primary and the search override subordinate',()=>{
+test('language panel aligns app language and an explicit automatic-or-fixed search choice',()=>{
   const panel=html.slice(html.indexOf('<section class="settings-section language-settings-panel"'),html.indexOf('</section>',html.indexOf('<section class="settings-section language-settings-panel"')));
   assert.match(panel,/class="language-primary-row"/);
-  assert.match(panel,/settings\.searchLanguageAutomatic/);
-  assert.match(panel,/settings\.searchLanguageOverride/);
-  assert.match(panel,/aria-controls="settings-search-language-override-row"/);
-  assert.doesNotMatch(panel,/option value="follow-app"/);
-  assert.match(html,/\.language-override-toggle\{[^}]*min-height:48px/);
-  assert.match(html,/\.language-primary-row select,\.language-override-row select\{min-height:48px\}/);
+  assert.match(panel,/settings\.sameAsApp/);
+  assert.match(panel,/aria-describedby="settings-search-language-help"/);
+  assert.match(panel,/option value="follow-app"/);
+  assert.match(html,/\.language-primary-row select\{min-height:48px/);
   assert.match(html,/\.language-primary-row\{grid-template-columns:1fr;gap:6px\}/);
 });
 

@@ -8,7 +8,9 @@ module.exports = defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  reporter: [['list']],
+  reporter: process.env.PRODUCT_CI_EVIDENCE === '1'
+    ? [['list'], ['json', { outputFile: 'product-ci-artifacts/browser-results.json' }]]
+    : [['list']],
   use: {
     baseURL,
     trace: 'retain-on-failure',
@@ -21,7 +23,9 @@ module.exports = defineConfig({
     timeout: 10_000
   } : undefined,
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // Supported full Chromium/new-headless: candidate mitigation for the observed
+    // headless-shell context crashes, not an established root-cause fix.
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: 'chromium', viewport: { width: 1440, height: 900 } } },
     {
       name: 'mobile',
       use: {

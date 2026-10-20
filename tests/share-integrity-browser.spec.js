@@ -33,11 +33,12 @@ test('Share publishes a multiline note and copied text distinguishes Max categor
   await page.evaluate(()=>{
     const note='Saturday\nAfter 3 pm';
     allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity',intentDeclarations:[{entityId:'audit-note-entry',name:'Pikachu',side:'lf',p:'H',note}]}}});
-    publishPublicShareNow=async()=>{window.__publishedDeclarations=publicSharePublicationDomain.publicDeclarations(productDeclarations().entries);return{status:'published'};};
-    publicSharePublicationCurrent=()=>true;
+    publishPublicShareNow=async()=>{window.__publishedDeclarations=publicSharePublicationDomain.publicDeclarations(productDeclarations().entries);return{ok:true,status:'published'};};
+    activePublicShareHydrationToken=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur}).token;
+    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
     openProductShare('link');
   });
-  await page.locator('#product-share-link button').click();
+  await page.locator('#product-share-primary').click();
   await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopied');
   const publication=await page.evaluate(()=>({note:window.__publishedDeclarations[0].note,copied:window.__copied}));
   expect(publication.note).toBe('Saturday\u2028After 3 pm');
@@ -47,7 +48,7 @@ test('Share publishes a multiline note and copied text distinguishes Max categor
     allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity'}},wishlist:{AuditViewer:{Bulbasaur:'H'}},dynamax:{AuditViewer:{Bulbasaur:'H'}},gmax:{AuditViewer:{'Gigantamax Charizard':'M'}},costumes:{}});
     openProductShare('text');
   });
-  await page.locator('#product-share-text button').click();
+  await page.locator('#product-share-primary').click();
   const copied=await page.evaluate(()=>window.__copied);
   expect(copied).toContain('- Bulbasaur · High');
   expect(copied).toContain('- Bulbasaur · Dynamax · High');
