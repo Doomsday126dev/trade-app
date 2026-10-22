@@ -245,3 +245,12 @@ test('focused .130 recovery release retains exact public readback boundaries',t=
   change(dir,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
   assert.match(check(dir,sha).stderr,/path bindings or execution semantics changed/);
 });
+
+test('isolated .131 analytics release preserves exact public readback boundaries',t=>{
+  const sha='56ae1b8217bd1e6e66da19ec74aee9ec57382dc6',dir=fixture(t);
+  for(const file of ['index.html','css/app.css','js/app/application.js','js/data/firebaseReadRegistry.js'])fs.writeFileSync(path.join(dir,file),execFileSync('git',['show',`${sha}:${file}`],{cwd:root}));
+  const result=check(dir,sha);assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+  assert.notEqual(check(dir,'b'.repeat(40)).status,0,'unregistered revisions must not inherit the .131 exception');
+  change(dir,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
+  assert.match(check(dir,sha).stderr,/path bindings or execution semantics changed/);
+});
