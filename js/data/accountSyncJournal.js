@@ -8,11 +8,14 @@
     return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});
   }
   function transactionDone(transaction){
-    return new Promise((resolve,reject)=>{
+    const done=new Promise((resolve,reject)=>{
       transaction.oncomplete=()=>resolve();
       transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));
       transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));
     });
+    // A request awaited inside this transaction can fail before its caller
+    // reaches `await done`, particularly when retirement aborts the transaction.
+    done.catch(()=>{});return done;
   }
   function recordKey(ownerUid,...parts){return[ownerUid,...parts].join('|');}
   function openDatabase(indexedDB,databaseName=model.DATABASE_NAME){
@@ -35,18 +38,31 @@
   function createAccountSyncJournal({indexedDB=global.indexedDB,ownerUid,databaseName=model.DATABASE_NAME,now=()=>Date.now(),maxAutomaticAttempts=12}={}){
     const owner=model.firebaseKey(ownerUid,128);
     if(!owner)throw new TypeError('Account sync journal requires an owner UID');
-    let databasePromise=null,closed=false;
+    let databasePromise=null,closed=false,writesRetired=false;
+    const activeWrites=new Set();
+    function requireWritable(){if(writesRetired||closed)throw Object.assign(new Error('Account sync journal writer is retired'),{code:'account-sync/journal-retired'});}
+    function writeTransaction(db,stores){
+      requireWritable();
+      const transaction=db.transaction(stores,'readwrite');activeWrites.add(transaction);
+      const settled=()=>activeWrites.delete(transaction);
+      transaction.addEventListener('complete',settled,{once:true});transaction.addEventListener('abort',settled,{once:true});
+      return transaction;
+    }
+    function retireWrites(){
+      writesRetired=true;
+      for(const transaction of activeWrites)try{transaction.abort();}catch{}
+    }
     const database=()=>closed?Promise.reject(Object.assign(new Error('Account sync journal is closed'),{code:'account-sync/journal-closed'})):(databasePromise||(databasePromise=openDatabase(indexedDB,databaseName)));
     async function read(storeName,key){
       const db=await database(),transaction=db.transaction(storeName,'readonly');
       return requestResult(transaction.objectStore(storeName).get(key));
     }
     async function write(storeName,record){
-      const db=await database(),transaction=db.transaction(storeName,'readwrite');
+      const db=await database(),transaction=writeTransaction(db,storeName);
       transaction.objectStore(storeName).put(record);await transactionDone(transaction);return record;
     }
     async function remove(storeName,key){
-      const db=await database(),transaction=db.transaction(storeName,'readwrite');
+      const db=await database(),transaction=writeTransaction(db,storeName);
       transaction.objectStore(storeName).delete(key);await transactionDone(transaction);
     }
     async function ownerRecords(storeName){
@@ -66,13 +82,14 @@
         operationIds.add(operation.operationId);
       }
       const db=await database(),storeNames=optimisticEntities.length?['operations','entities']:['operations'];
-      const transaction=db.transaction(storeNames,'readwrite'),done=transactionDone(transaction),operationStore=transaction.objectStore('operations');
+      const transaction=writeTransaction(db,storeNames),done=transactionDone(transaction),operationStore=transaction.objectStore('operations');
       const keys=operations.map(operation=>recordKey(owner,operation.operationId));
       let existing;
       try{existing=await Promise.all(keys.map(key=>requestResult(operationStore.get(key))));}
       catch(error){try{transaction.abort();}catch{}await done.catch(()=>{});throw error;}
       const results=[],time=Number(now());
       try{
+        requireWritable();
         for(let index=0;index<operations.length;index++){
           const operation=operations[index],prior=existing[index],key=keys[index];
           if(prior){
@@ -118,7 +135,7 @@
     async function markConflict(operationId,conflicts){
       const key=recordKey(owner,operationId),record=await read('operations',key);if(!record)throw new Error('Operation is missing');
       const time=Number(now()),next={...record,status:'conflict',nextAttemptAt:0,updatedAt:time,lastErrorCode:'account-sync/conflict'};
-      const db=await database(),transaction=db.transaction(['operations','conflicts'],'readwrite');
+      const db=await database(),transaction=writeTransaction(db,['operations','conflicts']);
       transaction.objectStore('operations').put(next);
       for(const item of conflicts||[]){requireOwner(item);transaction.objectStore('conflicts').put({...item,key:recordKey(owner,item.conflictId)});}
       await transactionDone(transaction);return next;
@@ -136,10 +153,12 @@
     async function listEntities(){return(await ownerRecords('entities')).map(record=>record.entity);}
     async function listConflicts({unresolvedOnly=true}={}){return(await ownerRecords('conflicts')).filter(item=>!unresolvedOnly||item.resolved!==true).sort((a,b)=>a.createdAt-b.createdAt);}
     async function resolveConflict(conflictId){
-      const key=recordKey(owner,conflictId),db=await database(),transaction=db.transaction(['conflicts','operations'],'readwrite'),done=transactionDone(transaction);
+      const key=recordKey(owner,conflictId),db=await database(),transaction=writeTransaction(db,['conflicts','operations']),done=transactionDone(transaction);
       const conflictStore=transaction.objectStore('conflicts'),operationStore=transaction.objectStore('operations'),record=await requestResult(conflictStore.get(key));
+      requireWritable();
       if(!record){await done;return false;}
       const operationKey=recordKey(owner,record.operationId),operation=await requestResult(operationStore.get(operationKey)),time=Number(now());
+      requireWritable();
       conflictStore.put({...record,resolved:true,resolvedAt:time});
       if(operation?.status==='conflict')operationStore.put({...operation,status:'resolved',nextAttemptAt:0,lastErrorCode:'',updatedAt:time});
       await done;return true;
@@ -166,9 +185,10 @@
         const id=model.firebaseKey(candidateId,700);if(!id||id!==candidateId)throw new TypeError('Recovery candidate ID is invalid');return id;
       });
       if(new Set(ids).size!==ids.length)throw new TypeError('Recovery candidate review contains duplicate IDs');
-      const expected=[...ids].sort(),db=await database(),transaction=db.transaction('recoveryCandidates','readwrite'),done=transactionDone(transaction),store=transaction.objectStore('recoveryCandidates'),index=store.index('ownerUid'),range=global.IDBKeyRange?.only?global.IDBKeyRange.only(owner):owner;
+      const expected=[...ids].sort(),db=await database(),transaction=writeTransaction(db,'recoveryCandidates'),done=transactionDone(transaction),store=transaction.objectStore('recoveryCandidates'),index=store.index('ownerUid'),range=global.IDBKeyRange?.only?global.IDBKeyRange.only(owner):owner;
       try{
         const records=await requestResult(index.getAll(range)),unresolved=records.filter(item=>item.resolved!==true),actual=unresolved.map(item=>item.candidateId).sort();
+        requireWritable();
         if(actual.length!==expected.length||actual.some((id,index)=>id!==expected[index]))throw Object.assign(new Error('Recovery candidate set changed before review'),{code:'account-sync/recovery-review-changed'});
         const time=Number(now());for(const record of unresolved)store.put({...record,resolved:true,resolvedAt:time});
         await done;return unresolved.length;
@@ -184,11 +204,12 @@
     }
     async function close(){
       if(closed)return;
+      retireWrites();
       closed=true;
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,listMeta,getMeta,removeMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,retireWrites,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,listMeta,getMeta,removeMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});

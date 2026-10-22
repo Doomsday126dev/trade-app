@@ -6,6 +6,7 @@
   function createMemoryJournalState(){return{entities:new Map(),operations:new Map(),conflicts:new Map(),meta:new Map(),recoveryCandidates:new Map()};}
   function createMemoryJournal(ownerUid,state=createMemoryJournalState(),clock=()=>Date.now()){
     const owner=ownerUid;
+    let writesRetired=false;
     const own=record=>{if(record?.ownerUid!==owner)throw Object.assign(new Error('owner mismatch'),{code:'account-sync/owner-mismatch'});};
     async function enqueueOperations(operations,optimisticEntities=[]){
       for(const operation of operations)own(operation);
@@ -28,7 +29,7 @@
       return results;
     }
     async function enqueueOperation(operation){return(await enqueueOperations([operation]))[0];}
-    return Object.freeze({
+    const journal={
       ownerUid:owner,
       enqueueOperation,enqueueOperations,
       async listOperations({statuses=['pending','sending','blocked','conflict']}={}){return[...state.operations.values()].filter(record=>statuses.includes(record.status)).sort((a,b)=>a.createdAt-b.createdAt||a.operationId.localeCompare(b.operationId));},
@@ -59,7 +60,15 @@
         const recoverableBlocked=blocked.filter(model.blockedRetryEligible),blockedCategories=[...new Set(blocked.map(item=>model.blockedRetryCategory(item.lastErrorCode)))].sort();
         return{ownerUid:owner,pendingCount:[...state.operations.values()].filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,recoverableBlockedCount:recoverableBlocked.length,unsafeBlockedCount:blocked.length-recoverableBlocked.length,blockedCategories,blockedErrorCode:blocked.length?(codes.length===1?codes[0]:'account-sync/blocked-operation'):'',conflictCount:[...state.conflicts.values()].filter(item=>!item.resolved).length,entityCount:state.entities.size,recoveryCandidateCount:[...state.recoveryCandidates.values()].filter(item=>item.resolved!==true).length};
       }
-    });
+    };
+    const mutations=['enqueueOperations','enqueueOperation','markAttempt','retainBlocked','acknowledge','markConflict','retryBlocked','putEntity','deleteEntity','resolveConflict','setMeta','removeMeta','putRecoveryCandidate','resolveRecoveryCandidate','resolveRecoveryCandidates'];
+    for(const name of mutations){
+      const mutate=journal[name];journal[name]=async(...args)=>{
+        if(writesRetired)throw Object.assign(new Error('Account sync journal writer is retired'),{code:'account-sync/journal-retired'});
+        return mutate(...args);
+      };
+    }
+    return Object.freeze({...journal,retireWrites(){writesRetired=true;}});
   }
   function createDeterministicServer({ownerUid,clock=(()=>{let value=1000;return()=>++value;})()}={}){
     const entities=new Map(),listeners=new Set(),attempts=[],responseLoss=new Set();let failNext=null;

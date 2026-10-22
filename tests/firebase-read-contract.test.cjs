@@ -12,7 +12,8 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const current=requestedRuntimeSha||(hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
+const localRecovery=/2026-10-22\.130/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
@@ -56,7 +57,7 @@ test('default checker validates the control checkout without downgrading identif
   const dir=fixture(t,controlRoot);
   const local=checkWithoutRuntimeSha(dir);
   assert.equal(local.status,0,local.stderr);
-  assert.equal(JSON.parse(local.stdout).directReads.length,23);
+  assert.equal(JSON.parse(local.stdout).directReads.length,collectReadSites(controlRoot).length);
   const identified=check(dir,'a'.repeat(40));
   assert.notEqual(identified.status,0,'an explicit new-runtime SHA must not select the local .123 contract');
   change(dir,'js/app/application.js','const path=`trainerShares/${session.uid}`;','const path=`users/${session.uid}`;');

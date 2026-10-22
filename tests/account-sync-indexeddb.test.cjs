@@ -7,14 +7,68 @@ const {chromium,webkit}=require('playwright');
 const root=path.join(__dirname,'..');
 const browserType=process.env.POGO_ACCOUNT_SYNC_BROWSER==='webkit'?webkit:chromium;
 
+test('retired IndexedDB writers cannot overwrite replacement acknowledgements or commit pending transactions',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html'});response.end('<!doctype html><title>Retired journal fixture</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  browser=await browserType.launch({headless:true});
+  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  for(const file of ['js/domain/accountSyncModel.js','js/data/accountSyncJournal.js'])await page.addScriptTag({path:path.join(root,file)});
+  const results=await page.evaluate(async()=>{
+    const api=window.PogoData.accountSyncJournal,model=window.PogoDomain.accountSyncModel,ownerUid='retired-owner',results=[];
+    for(const method of ['markAttempt','retainBlocked','acknowledge','markConflict','retryBlocked']){
+      const databaseName=`retired-${method}-${crypto.randomUUID()}`,old=api.createAccountSyncJournal({ownerUid,databaseName}),next=api.createAccountSyncJournal({ownerUid,databaseName}),other=api.createAccountSyncJournal({ownerUid:'another-owner',databaseName});
+      const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:25:base'},entityId=model.tradeEntryId(identity);
+      const operation=(await model.createOperation({ownerUid,entityType:'tradeEntry',entityId,identity,kind:'add',patch:{priority:'H'},baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},clientAt:10})).value;
+      await old.enqueueOperation(operation);
+      if(['retainBlocked','retryBlocked'].includes(method))await old.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/network-failed'});
+      let release,entered,hold=true;const gate=new Promise(r=>release=r),waiting=new Promise(r=>entered=r),originalGet=IDBObjectStore.prototype.get;
+      IDBObjectStore.prototype.get=function(...args){
+        const request=originalGet.apply(this,args);if(this.name!=='operations'||!hold)return request;hold=false;
+        return new Proxy(request,{
+          get(target,key){const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},
+          set(target,key,value){if(key==='onsuccess')target.onsuccess=event=>{entered();gate.then(()=>value.call(target,event));};else Reflect.set(target,key,value,target);return true;}
+        });
+      };
+      let late;
+      try{
+        const args=method==='acknowledge'?[operation.operationId,{revision:1}]:method==='markConflict'?[operation.operationId,[{ownerUid,conflictId:'old-conflict',operationId:operation.operationId,entityType:'tradeEntry',entityId,createdAt:10,resolved:false}]]:[operation.operationId,{retryable:true,errorCode:'account-sync/network-failed'}];
+        late=old[method](...args).then(()=>({ok:true}),error=>({ok:false,code:error.code}));
+        await waiting;IDBObjectStore.prototype.get=originalGet;old.retireWrites();
+        await next.acknowledge(operation.operationId,{revision:5});await next.setMeta('public-publication-pending-v1',{ownerUid,pending:true});
+        release();const outcome=await late,record=(await next.listOperations({statuses:['acknowledged','pending','blocked','conflict']}))[0];
+        results.push({method,outcome,status:record.status,revision:record.serverRevision,conflicts:(await next.listConflicts()).length,otherPending:(await other.snapshot()).pendingCount,retiredReadonlyPending:(await old.snapshot()).pendingCount});
+      }finally{IDBObjectStore.prototype.get=originalGet;release?.();await late;await old.close();await next.close();await other.close();}
+    }
+    const databaseName='retired-active-'+crypto.randomUUID(),old=api.createAccountSyncJournal({ownerUid,databaseName}),next=api.createAccountSyncJournal({ownerUid,databaseName});
+    const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:133:base'},entityId=model.tradeEntryId(identity),operation=(await model.createOperation({ownerUid,entityType:'tradeEntry',entityId,identity,kind:'add',patch:{priority:'H'},baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},clientAt:10})).value;
+    const originalPut=IDBObjectStore.prototype.put;let aborted=false;
+    IDBObjectStore.prototype.put=function(...args){const request=originalPut.apply(this,args);if(this.name==='operations'&&!aborted){aborted=true;old.retireWrites();}return request;};
+    try{
+      const outcome=await old.enqueueOperation(operation).then(()=>({ok:true}),error=>({ok:false,name:error.name}));
+      const pending=(await next.snapshot()).pendingCount;
+      const meta=await old.removeMeta('public-publication-pending-v1').then(()=>({ok:true}),error=>({ok:false,code:error.code}));
+      await next.setMeta('public-publication-pending-v1',{ownerUid,pending:true});
+      results.push({method:'active-transaction-abort',outcome,pending,meta,marker:(await next.getMeta('public-publication-pending-v1')).pending});
+    }finally{IDBObjectStore.prototype.put=originalPut;await old.close();await next.close();}
+    const unopened=api.createAccountSyncJournal({ownerUid,databaseName:'retired-opening-'+crypto.randomUUID()}),writing=unopened.setMeta('late',{value:true}).then(()=>({ok:true}),error=>({ok:false,code:error.code}));unopened.retireWrites();
+    results.push({method:'pending-database-open',outcome:await writing,marker:await unopened.getMeta('late')});await unopened.close();return results;
+  });
+  for(const result of results.slice(0,5))assert.deepEqual(result,{method:result.method,outcome:{ok:false,code:'account-sync/journal-retired'},status:'acknowledged',revision:5,conflicts:0,otherPending:0,retiredReadonlyPending:0});
+  assert.equal(results[5].outcome.ok,false);assert.equal(results[5].pending,0);assert.deepEqual(results[5].meta,{ok:false,code:'account-sync/journal-retired'});assert.equal(results[5].marker,true);
+  assert.deepEqual(results[6],{method:'pending-database-open',outcome:{ok:false,code:'account-sync/journal-retired'},marker:null});
+});
+
 test('the real IndexedDB journal survives reload, isolates owners, and keeps conflicts non-retryable',async t=>{
   const server=http.createServer((_request,response)=>{
     response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
     response.end('<!doctype html><title>Account sync journal test</title>');
   });
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_test_${Date.now()}`;
   const loadScripts=async()=>{
     await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});
@@ -50,9 +104,10 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
 
 test('reviewed recovery evidence remains preserved locally without keeping the account in review-required',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Recovery review persistence</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_reviewed_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load();
@@ -76,9 +131,10 @@ test('reviewed recovery evidence remains preserved locally without keeping the a
 
 test('the real IndexedDB journal resolves only the exact recovery review set in one transaction',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Atomic recovery review</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_recovery_batch_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load();
@@ -105,9 +161,10 @@ test('the real IndexedDB journal resolves only the exact recovery review set in 
 
 test('real IndexedDB conflict acceptance publishes Saved before reporting success',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Account sync conflict acceptance</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_conflict_acceptance_${Date.now()}`;
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
   for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});
@@ -129,9 +186,10 @@ test('real IndexedDB conflict acceptance publishes Saved before reporting succes
 
 test('the real IndexedDB journal commits operation batches and optimistic entities atomically',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html'});response.end('<!doctype html><title>Atomic journal</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_atomic_${Date.now()}`;
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
   await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/domain/accountSyncMerge.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});
@@ -149,9 +207,10 @@ test('the real IndexedDB journal commits operation batches and optimistic entiti
 
 test('a pre-.70 committed-entity acknowledgement block survives reload and reconciles idempotently under current source',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Historical account sync recovery</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_historical_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async files=>{for(const file of files)await page.addScriptTag({path:path.join(root,file)});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load(['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js']);
@@ -189,9 +248,10 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
 
 test('persisted pending and sending operations stay byte-identical until a live listener snapshot is accepted',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Listener authority persistence</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_listener_authority_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load();
@@ -234,9 +294,10 @@ test('persisted pending and sending operations stay byte-identical until a live 
 
 test('a failed retained retry makes one call and remains blocked across another IndexedDB reload',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Retained retry persistence</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});
-  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_retained_retry_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load();
@@ -271,8 +332,10 @@ test('a failed retained retry makes one call and remains blocked across another 
 
 test('the real IndexedDB journal classifies mixed blocked codes and preserves unsafe records byte for byte',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Blocked account sync classification</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_blocked_${Date.now()}`;await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});
   const result=await page.evaluate(async databaseName=>{
     const model=window.PogoDomain.accountSyncModel,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
@@ -289,8 +352,10 @@ test('the real IndexedDB journal classifies mixed blocked codes and preserves un
 
 test('provider profile pending evidence survives a real IndexedDB reopen and stays owner-partitioned',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Provider profile pending persistence</title>');});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{if(server.listening)await new Promise(resolve=>server.close(resolve));}});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await browserType.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  browser=await browserType.launch({headless:true});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_profile_pending_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`,pending={schemaVersion:1,ownerUid:'uid-owner',values:{friendCode:'0000 1111 2222',bio:'Retry me',discord:'',avatarPokemon:''},baseRevision:1,queuedAt:100};
   const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
   await page.goto(url,{waitUntil:'domcontentloaded'});await load();

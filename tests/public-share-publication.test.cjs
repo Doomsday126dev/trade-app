@@ -253,7 +253,9 @@ test('publication is constrained to the active trainer public-share path',()=>{
   assert.match(sessionMatch,/activePublicShareHydrationToken\.username===username/);
   assert.match(queue,/queueSync\(`publicShares\/\$\{username\}`/);
   assert.match(publish,/const target=ref\(db,`publicShares\/\$\{username\}`\)/);
-  assert.match(publish,/await withTimeout\(set\(target,snapshot\)/);
+  assert.match(publish,/const writing=set\(target,snapshot\),completion=observePublicWriteCompletion\(writing,username,auth\?\.currentUser\?\.uid,\{snapshot\}\)/);
+  assert.match(publish,/await withTimeout\(writing,8000,'Publishing share link timed out','db\/public-share-timeout'\)/);
+  assert.match(publish,/completion\.markUncertain\(\);throw error/);
   assert.match(publish,/await withTimeout\(get\(target\)/);
   assert.doesNotMatch(`${queue}\n${publish}`,/wishlist\/\$\{username\}|have\/\$\{username\}|users\/\$\{username\}/);
 });
