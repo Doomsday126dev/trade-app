@@ -9,6 +9,7 @@
     "css/app.css"
   ],
   "scriptFiles": [
+    "js/services/traffic.js",
     "data.js",
     "js/domain/productLimits.js",
     "js/domain/favoriteCapabilities.js",

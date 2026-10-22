@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<!-- Firebase uses assigned RTDB shard hosts; analytics is restricted to its exact collector. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://recaptchaenterprise.googleapis.com https://apis.google.com https://accounts.google.com https://trade-list-a4297.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://us-central1-trade-list-a4297.cloudfunctions.net https://www.google.com https://www.recaptcha.net https://recaptcha.google.com https://raw.githubusercontent.com https://doomsday126dev-trade.goatcounter.com">
+<meta name="pogo-traffic-endpoint" content="https://doomsday126dev-trade.goatcounter.com/count">
+<script src="js/services/traffic.js?v=2026-10-22.131" defer></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111316">
@@ -11,7 +16,7 @@
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-10-22.130';
+window.__POGO_RELEASE_ID='2026-10-22.131';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:true,
@@ -83,7 +88,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-10-22.130">
+<link rel="stylesheet" href="css/app.css?v=2026-10-22.131">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -129,7 +134,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   <div class="privacy-page-intro">
     <p class="privacy-eyebrow">Privacy</p>
     <h1 id="privacy-title">Privacy notice</h1>
-    <p class="privacy-updated">Last updated August 31, 2026</p>
+    <p class="privacy-updated">Last updated October 22, 2026</p>
     <p>PoGo Trades is an unofficial community tool for managing and sharing Pokemon GO trade lists. This notice explains the information the app uses and the choices available to you.</p>
   </div>
   <section aria-labelledby="privacy-information">
@@ -147,11 +152,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </section>
   <section aria-labelledby="privacy-services">
     <h2 id="privacy-services">Service providers</h2>
-    <p>Google Firebase provides authentication and data synchronization, GitHub Pages delivers the website, and Cloudflare Web Analytics supplies aggregate site-usage measurements. These services may receive standard request, browser, and page-URL metadata. PoGo Trades does not send private list contents or typed search queries as custom analytics events.</p>
+    <p>Google Firebase provides authentication and data synchronization, and GitHub Pages delivers the website. GoatCounter provides basic traffic counting. It receives only a generic Trade or public-share page category and fixed app title, with no page URL, query, fragment, referrer, trainer/share identifier, collection contents or typed input. Browser-direct requests also expose your network IP address and browser User-Agent to GoatCounter for its approximate session counts; these are not exact counts of people. The integration uses no analytics cookies, persistent identifier or third-party tracking script.</p>
   </section>
   <section aria-labelledby="privacy-choices">
     <h2 id="privacy-choices">Your choices</h2>
-    <p>You can keep using Username and PIN, disconnect Google when another usable sign-in method remains, control what you publish, clear local site data through your browser, or request correction or deletion of account data. Recovery evidence may be retained long enough to protect against data loss and resolve synchronization failures.</p>
+    <p>You can keep using Username and PIN, disconnect Google when another usable sign-in method remains, control what you publish, clear local site data through your browser, or request correction or deletion of account data. Supported Do Not Track and Global Privacy Control preferences disable traffic counting. Recovery evidence may be retained long enough to protect against data loss and resolve synchronization failures.</p>
   </section>
   <section aria-labelledby="privacy-contact">
     <h2 id="privacy-contact">Contact</h2>
@@ -870,95 +875,95 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-10-22.130"></script>
-<script src="js/domain/productLimits.js?v=2026-10-22.130"></script>
-<script src="js/domain/favoriteCapabilities.js?v=2026-10-22.130"></script>
-<script src="js/domain/favoritePickerModel.js?v=2026-10-22.130"></script>
-<script src="js/domain/priorities.js?v=2026-10-22.130"></script>
-<script src="js/ui/badges.js?v=2026-10-22.130"></script>
-<script src="js/domain/username.js?v=2026-10-22.130"></script>
-<script src="js/domain/requestAccess.js?v=2026-10-22.130"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-10-22.130"></script>
-<script src="js/domain/priorityValues.js?v=2026-10-22.130"></script>
-<script src="js/domain/scheduleDates.js?v=2026-10-22.130"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-10-22.130"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-10-22.130"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-10-22.130"></script>
-<script src="js/domain/safeTransferRestoration.js?v=2026-10-22.130"></script>
-<script src="js/domain/searchStrings.js?v=2026-10-22.130"></script>
-<script src="js/ui/stringHtml.js?v=2026-10-22.130"></script>
-<script src="js/ui/safeTransferCandidate.js?v=2026-10-22.130"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-10-22.130"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-10-22.130"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-10-22.130"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-10-22.130"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-10-22.130"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-10-22.130"></script>
-<script src="js/domain/fuzzyText.js?v=2026-10-22.130"></script>
-<script src="js/domain/autocompleteText.js?v=2026-10-22.130"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-10-22.130"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-10-22.130"></script>
-<script src="js/domain/relativeTime.js?v=2026-10-22.130"></script>
-<script src="js/domain/clientRelease.js?v=2026-10-22.130"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-10-22.130"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-10-22.130"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-10-22.130"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-10-22.130"></script>
-<script src="js/domain/eventPresentation.js?v=2026-10-22.130"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-10-22.130"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-10-22.130" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-10-22.130"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-10-22.130"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-10-22.130"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-10-22.130"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-10-22.130"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-10-22.130"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-10-22.130" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-10-22.130"></script>
-<script src="js/utils/textSafety.js?v=2026-10-22.130"></script>
-<script src="js/ui/stringPanels.js?v=2026-10-22.130"></script>
-<script src="js/ui/emptyState.js?v=2026-10-22.130"></script>
-<script src="js/i18n/locales/en.js?v=2026-10-22.130"></script>
-<script src="js/i18n/locales/ja.js?v=2026-10-22.130"></script>
-<script src="js/i18n/locales/es.js?v=2026-10-22.130"></script>
-<script src="js/i18n/locales/de.js?v=2026-10-22.130"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-10-22.130"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-10-22.130"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-10-22.130"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-10-22.130"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-10-22.130"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-10-22.130"></script>
-<script src="js/i18n/core.js?v=2026-10-22.130"></script>
-<script src="js/services/firebaseClient.js?v=2026-10-22.130"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-10-22.130"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-10-22.130" data-pogo-provider-public-capability></script>
-<script src="js/services/favoriteResolverClient.js?v=2026-10-22.130"></script>
-<script src="js/services/favoriteWriteTransport.js?v=2026-10-22.130"></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-10-22.130"></script>
-<script src="js/data/subscriptionManager.js?v=2026-10-22.130"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-10-22.130"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-10-22.130"></script>
-<script src="js/data/currentUserRepository.js?v=2026-10-22.130"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-10-22.130"></script>
-<script src="js/data/publicShareRepository.js?v=2026-10-22.130"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-10-22.130"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-10-22.130"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-10-22.130"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-10-22.130"></script>
-<script src="js/data/favoriteAdditionRepository.js?v=2026-10-22.130"></script>
-<script src="js/data/accountSyncController.js?v=2026-10-22.130"></script>
-<script src="js/data/favoriteAdditions.js?v=2026-10-22.130"></script>
-<script src="js/data/favoriteRecoveryPreview.js?v=2026-10-22.130"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-10-22.130"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-10-22.130"></script>
-<script src="js/app/favoritePicker.js?v=2026-10-22.130"></script>
-<script src="js/app/application.js?v=2026-10-22.130"></script>
+<script src="data.js?v=2026-10-22.131"></script>
+<script src="js/domain/productLimits.js?v=2026-10-22.131"></script>
+<script src="js/domain/favoriteCapabilities.js?v=2026-10-22.131"></script>
+<script src="js/domain/favoritePickerModel.js?v=2026-10-22.131"></script>
+<script src="js/domain/priorities.js?v=2026-10-22.131"></script>
+<script src="js/ui/badges.js?v=2026-10-22.131"></script>
+<script src="js/domain/username.js?v=2026-10-22.131"></script>
+<script src="js/domain/requestAccess.js?v=2026-10-22.131"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-10-22.131"></script>
+<script src="js/domain/priorityValues.js?v=2026-10-22.131"></script>
+<script src="js/domain/scheduleDates.js?v=2026-10-22.131"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-10-22.131"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-10-22.131"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-10-22.131"></script>
+<script src="js/domain/safeTransferRestoration.js?v=2026-10-22.131"></script>
+<script src="js/domain/searchStrings.js?v=2026-10-22.131"></script>
+<script src="js/ui/stringHtml.js?v=2026-10-22.131"></script>
+<script src="js/ui/safeTransferCandidate.js?v=2026-10-22.131"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-10-22.131"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-10-22.131"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-10-22.131"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-10-22.131"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-10-22.131"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-10-22.131"></script>
+<script src="js/domain/fuzzyText.js?v=2026-10-22.131"></script>
+<script src="js/domain/autocompleteText.js?v=2026-10-22.131"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-10-22.131"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-10-22.131"></script>
+<script src="js/domain/relativeTime.js?v=2026-10-22.131"></script>
+<script src="js/domain/clientRelease.js?v=2026-10-22.131"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-10-22.131"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-10-22.131"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-10-22.131"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-10-22.131"></script>
+<script src="js/domain/eventPresentation.js?v=2026-10-22.131"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-10-22.131"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-10-22.131" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-10-22.131"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-10-22.131"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-10-22.131"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-10-22.131"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-10-22.131"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-10-22.131"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-10-22.131" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-10-22.131"></script>
+<script src="js/utils/textSafety.js?v=2026-10-22.131"></script>
+<script src="js/ui/stringPanels.js?v=2026-10-22.131"></script>
+<script src="js/ui/emptyState.js?v=2026-10-22.131"></script>
+<script src="js/i18n/locales/en.js?v=2026-10-22.131"></script>
+<script src="js/i18n/locales/ja.js?v=2026-10-22.131"></script>
+<script src="js/i18n/locales/es.js?v=2026-10-22.131"></script>
+<script src="js/i18n/locales/de.js?v=2026-10-22.131"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-10-22.131"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-10-22.131"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-10-22.131"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-10-22.131"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-10-22.131"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-10-22.131"></script>
+<script src="js/i18n/core.js?v=2026-10-22.131"></script>
+<script src="js/services/firebaseClient.js?v=2026-10-22.131"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-10-22.131"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-10-22.131" data-pogo-provider-public-capability></script>
+<script src="js/services/favoriteResolverClient.js?v=2026-10-22.131"></script>
+<script src="js/services/favoriteWriteTransport.js?v=2026-10-22.131"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-10-22.131"></script>
+<script src="js/data/subscriptionManager.js?v=2026-10-22.131"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-10-22.131"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-10-22.131"></script>
+<script src="js/data/currentUserRepository.js?v=2026-10-22.131"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-10-22.131"></script>
+<script src="js/data/publicShareRepository.js?v=2026-10-22.131"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-10-22.131"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-10-22.131"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-10-22.131"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-10-22.131"></script>
+<script src="js/data/favoriteAdditionRepository.js?v=2026-10-22.131"></script>
+<script src="js/data/accountSyncController.js?v=2026-10-22.131"></script>
+<script src="js/data/favoriteAdditions.js?v=2026-10-22.131"></script>
+<script src="js/data/favoriteRecoveryPreview.js?v=2026-10-22.131"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-10-22.131"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-10-22.131"></script>
+<script src="js/app/favoritePicker.js?v=2026-10-22.131"></script>
+<script src="js/app/application.js?v=2026-10-22.131"></script>
 
 </template>
 <script>
@@ -1255,6 +1260,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 </script>
 
 
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fe630b31803492095d8b9f9d2487143"}'></script><!-- End Cloudflare Web Analytics -->
+
 </body>
 </html>
