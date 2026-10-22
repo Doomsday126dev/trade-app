@@ -182,7 +182,9 @@ test('inactive future identity sharing and preference paths remain denied to eve
     `shareAccess/${IDS.ordinary}`,`userPreferences/${IDS.ordinary}`,
     `accounts/${IDS.ordinary}`,`shareGroupAccess/${IDS.ordinary}`,
     `privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,
-    `publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1'
+    `publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1',
+    `accountSync/${IDS.ordinary}/favorites`,`favoriteSlots/${IDS.ordinary}`,
+    'legacyProvisioningFreeze'
   ];
   for(const actor of [undefined,TOKENS.ordinary,TOKENS.other,TOKENS.admin]){
     for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
