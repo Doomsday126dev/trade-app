@@ -41,6 +41,12 @@ jobs:
           test -x "$JAVA_HOME_21_X64/bin/java"
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+      - name: Prefer official HTTPS archive for browser OS dependencies
+        if: steps.selection.outputs.browser_dependencies == 'true'
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
       - if: steps.selection.outputs.browser_dependencies == 'true'
         run: npx playwright install --with-deps chromium webkit
       - name: Syntax, hygiene and changed-area contracts
