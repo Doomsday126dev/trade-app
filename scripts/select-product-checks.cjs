@@ -143,7 +143,7 @@ if(require.main===module){
   const plan=select(files);console.log(JSON.stringify(plan,null,2));
   if(plan.errors.length)throw new Error(plan.errors.join('\n'));
   if(process.argv.includes('--plan')){
-    if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`browser=${plan.browser.length>0}\nperformance=${plan.performance}\nfunctions=${plan.functions}\nrules=${plan.rules}\nlegacyReset=${plan.legacyReset}\n`);
+    if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`browser=${plan.browser.length>0}\nbrowser_dependencies=${plan.browser.length>0||plan.node.includes('tests/account-sync-indexeddb.test.cjs')}\nperformance=${plan.performance}\nfunctions=${plan.functions}\nrules=${plan.rules}\nlegacyReset=${plan.legacyReset}\n`);
   }else if(process.argv.includes('--browser')){
     if(plan.browser.length)run(process.execPath,['node_modules/@playwright/test/cli.js','test',...plan.browser,'--project=desktop','--workers=1']);
   }else{
