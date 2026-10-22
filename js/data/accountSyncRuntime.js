@@ -229,14 +229,24 @@
       if(initializationKind==='legacy-migration')return controller.snapshot().then(state=>{
         requireRunning();return state.lastProjectionError?controller.publishAcceptedProjection(Object.freeze({kind:'public-publication-retry'})):Object.freeze({ok:true,status:'unchanged'});
       });
-      const work=publicProjectionPromise.then(async()=>{
+      // Validate durable evidence after any current publication finishes, but
+      // do not chain the next controller publication into its own provider
+      // writer queue. That would deadlock queueProviderPublicProjection.
+      const checked=publicProjectionPromise.then(async()=>{
         requireRunning();const storedValue=publicProjectionPending||await journal.getMeta(PROVIDER_PUBLICATION_PENDING_META);
-        if(storedValue==null)return Object.freeze({ok:true,status:'unchanged'});
+        if(storedValue==null)return false;
         const stored=await pendingPublicationRecord(storedValue);requireRunning();
         if(!stored)throw Object.assign(new Error('Pending provider publication evidence is invalid'),{code:'account-sync/public-projection-pending-invalid'});
-        publicProjectionPending=stored;return flushProviderPublicProjection(stored);
+        publicProjectionPending=stored;return true;
       });
-      publicProjectionPromise=work.then(()=>undefined,()=>undefined);return work;
+      return checked.then(async pending=>{
+        const state=await controller.snapshot();requireRunning();
+        // Rebuild from current accepted rows and retain the controller's
+        // authority, durable marker and success/error bookkeeping.
+        return pending||state.lastProjectionError
+          ?controller.publishAcceptedProjection(Object.freeze({kind:'public-publication-retry'}))
+          :Object.freeze({ok:true,status:'unchanged'});
+      });
     }
     function publishCurrentProjection(kind='explicit-share'){
       requireRunning();return controller.publishAcceptedProjection(Object.freeze({kind}));
