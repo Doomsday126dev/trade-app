@@ -41,10 +41,10 @@ jobs:
           test -x "$JAVA_HOME_21_X64/bin/java"
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+      - if: steps.selection.outputs.browser_dependencies == 'true'
+        run: npx playwright install --with-deps chromium webkit
       - name: Syntax, hygiene and changed-area contracts
         run: node scripts/ci/product-evidence.cjs node
-      - if: steps.selection.outputs.browser == 'true'
-        run: npx playwright install --with-deps chromium webkit
       - name: Affected browser journeys
         if: steps.selection.outputs.browser == 'true'
         run: node scripts/ci/product-evidence.cjs browser
