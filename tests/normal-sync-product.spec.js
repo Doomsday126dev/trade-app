@@ -282,3 +282,43 @@ test('auth binding preserves the newer server activity summary',async({page})=>{
   expect(result.remote.authUid).toBe('normal-product-uid');
   await page.evaluate(()=>stopAccountSyncRuntime());
 });
+
+
+test('a delayed legacy public queue cannot overwrite a newer canonical publication',async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(async()=>{
+    const old=structuredClone(__normal.remote.publicShares.NormalProduct),serverSet=set;let release,entered;
+    const barrier=new Promise(r=>release=r),started=new Promise(r=>entered=r);
+    let held=false;
+    set=async(path,value)=>{if(path==='publicShares/NormalProduct'&&!held&&value.declarationCount===1){held=true;entered();await barrier;}return serverSet(path,value);};
+    __normal.releaseLegacy=release;
+    queueSync('publicShares/NormalProduct',old);clearTimeout(syncFlushTimer);
+    __normal.legacyFlush=flushSyncQueue();await started;
+  });
+  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Squirtle',p:'H'}]))).toBe(true);
+  // The unfixed queue writer is outside canonical serialization: the newer
+  // publication can finish while its stale cached public write is held.
+  await page.waitForFunction(()=>__normal.remote.publicShares.NormalProduct.declarationCount===2,null,{timeout:500}).catch(()=>{});
+  await page.evaluate(async()=>{__normal.releaseLegacy();await __normal.legacyFlush;});
+  await settled(page);
+  const result=await page.evaluate(async()=>({state:await managedAccountSyncRuntime.snapshot(),count:__normal.remote.publicShares.NormalProduct.declarationCount,names:__normal.remote.publicShares.NormalProduct.declarations.map(e=>e.name)}));
+  expect(result.state.pendingCount).toBe(0);expect(result.state.lastProjectionError).toBe('');
+  expect(result.count).toBe(2);expect(result.names).toContain('Squirtle');
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+
+test('canonical public queue retains failed work and reports publication pending',async({page})=>{
+  await install(page);await settled(page);
+  const failed=await page.evaluate(async()=>{
+    __normal.failPublication=true;queueSync('publicShares/NormalProduct',structuredClone(__normal.remote.publicShares.NormalProduct));clearTimeout(syncFlushTimer);
+    await flushSyncQueue();clearTimeout(syncFlushTimer);
+    return{queued:!!syncQueue['publicShares/NormalProduct'],state:await managedAccountSyncRuntime.snapshot(),presentation:accountSyncPresentation()};
+  });
+  expect(failed.queued).toBe(true);expect(failed.state.state).toBe('saved');expect(failed.state.lastProjectionError).toBeTruthy();
+  expect(failed.presentation.publicationPending).toBe(true);
+  await page.evaluate(async()=>{__normal.failPublication=false;await flushSyncQueue();clearTimeout(syncFlushTimer);});
+  expect(await page.evaluate(()=>!!syncQueue['publicShares/NormalProduct'])).toBe(false);
+  expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});

@@ -1483,7 +1483,15 @@ async function flushSyncQueue(){
       continue;
     }
     try{
-      if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
+      if(canonicalOwnsLegacy&&item.path===`publicShares/${cur}`){
+        const runtime=managedAccountSyncRuntime,username=cur,uid=auth?.currentUser?.uid;
+        if(!runtime?.projectionReady||runtime.ownerUid!==uid||runtime.username!==username)continue;
+        // Persisted profile/share queues may contain older list rows. Rebuild
+        // from accepted canonical data inside its serialized publisher instead.
+        const published=await runtime.publishCurrentProjection('legacy-public-queue-recovery');
+        if(runtime!==managedAccountSyncRuntime||cur!==username||auth?.currentUser?.uid!==uid||!published?.ok||published.status!=='published')continue;
+      }
+      else if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
       else if(/^users\/[^/]+$/.test(String(item.path))&&item.data&&typeof item.data==='object'&&!Array.isArray(item.data))await update(ref(db,item.path),ordinaryProfileFields(item.data));
       else await set(ref(db,item.path),item.data??null);
       if(queueItemIsCurrent(path,item))delete syncQueue[path];

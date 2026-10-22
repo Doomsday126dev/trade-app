@@ -334,7 +334,13 @@ test('provider canonical add edit delete and retry publish exact monotonic anony
   const eevee={surface:'my-list',lane:'wishlist',catalogId:'pokemon:eevee'},eeveeId=window.PogoDomain.accountSyncModel.tradeEntryId(eevee);failNext=true;
   assert.equal((await runtime.controller.addEntity({entityType:'tradeEntry',entityId:eeveeId,identity:eevee,values:{priority:'L'}})).ok,true);await runtime.controller.drain();
   assert.equal(h.server.entities.size,2);assert.equal(stored.shareVersion,4);assert.equal(journalState.meta.has('provider-publication-pending-v1'),true);
-  const retried=await runtime.retryPublicProjection();assert.equal(retried.ok,true);assert.equal(stored.shareVersion,5);assert.equal(stored.lists.wishlist.Eevee.p,'L');assert.equal(journalState.meta.has('provider-publication-pending-v1'),false);
+  const other=h.createDevice('provider-other');await other.start();
+  assert.equal((await other.controller.patchEntity({entityType:'tradeEntry',entityId:eeveeId,patch:{priority:'H'}})).ok,true);await other.controller.drain();
+  assert.equal(runtime.controller.getEntity('tradeEntry',eeveeId).values.priority,'H');
+  const retried=await runtime.retryPublicProjection();assert.equal(retried.ok,true);assert.equal(stored.shareVersion,5);
+  assert.deepEqual([stored.lists.wishlist.Eevee.p,(await runtime.snapshot()).lastProjectionError],['H','']);
+  assert.equal(journalState.meta.has('provider-publication-pending-v1'),false);await other.controller.deactivate();
+  assert.equal((await runtime.snapshot()).lastProjectionError,'');await runtime.stop();
 });
 
 test('provider-only initialization rejects partial canonical entities and never publishes them',async()=>{
