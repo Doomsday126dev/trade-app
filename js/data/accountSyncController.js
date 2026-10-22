@@ -10,7 +10,7 @@
     const eligible=enabled===true&&writesEnabled===true&&(admitted===undefined?allowlist.has(owner):admitted===true);
     let active=false,lifecycleEpoch=0,listenerAuthorityVersion=0,optimisticRevision=0,drainPromise=null,drainRequested=false,manualRetryPromise=null,mutationPromise=Promise.resolve(),repositoryMutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),drainQueue=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastErrorCategory='',lastProjectionError='',lastSyncAt=0,listenerState='inactive';
     const PUBLICATION_PENDING_META='public-publication-pending-v1';
-    let publicationTimer=null,publicationPromise=null,publicationRequested=false,publicationPending=false,publicationAttempts=0;
+    let publicationTimer=null,publicationPromise=null,publicationRequested=false,publicationPending=false,publicationAttempts=0,acceptedPublicKey=null;
     const listenerWaiters=new Set();
     const entities=new Map(),acceptedEntities=new Map();
     function key(type,id){return`${type}|${id}`;}
@@ -192,6 +192,18 @@
       acceptedEntities.clear();for(const [entityKey,entity] of accepted)acceptedEntities.set(entityKey,entity);
       await rebuildOptimisticEntities();
       await onAccount?.(value);
+      if(!active||epoch!==lifecycleEpoch)return;
+      const nextPublicKey=model.canonicalJson(model.publicTradeProjection([...acceptedEntities.values()]).sort((a,b)=>a.entryId.localeCompare(b.entryId)));
+      const publicChanged=acceptedPublicKey!==null&&acceptedPublicKey!==nextPublicKey;
+      acceptedPublicKey=nextPublicKey;
+      if(publicChanged&&projectionAllowed()===true&&typeof onProjection==='function'){
+        // Another device can disappear after its private commit. Reconcile only
+        // through the existing accepted-public adapter, never optimistic rows.
+        publicationPending=true;if(publicationPromise)publicationRequested=true;
+        if(!lastProjectionError)lastProjectionError='account-sync/publication-pending';
+        await journal.setMeta(PUBLICATION_PENDING_META,{schemaVersion:1,ownerUid:owner,pending:true});
+        if(!active||epoch!==lifecycleEpoch)return;
+      }
       clearError('listener','canonical');emit();
     }
     function serializeCanonical(task){
@@ -411,15 +423,21 @@
     function deleteEntity({entityType,entityId}){return buildMutation({entityType,entityId,kind:'delete'});}
     function dispatchResult({ok=false,called=false,progressed=false,errorCode=''}={}){return Object.freeze({ok,called,progressed,errorCode});}
     async function recordDispatchFailure(record,error,{manual=false}={}){
-      const code=safeErrorCode(error,'account-sync/network-failed');
-      if(manual){
-        const retained=await journal.retainBlocked(record.operationId,{errorCode:code});
-        if(retained)lastErrorCategory='blocked-operation';
-        return dispatchResult({called:true,errorCode:code});
+      const epoch=lifecycleEpoch;
+      try{
+        const code=safeErrorCode(error,'account-sync/network-failed');
+        if(manual){
+          const retained=await journal.retainBlocked(record.operationId,{errorCode:code});
+          if(retained)lastErrorCategory='blocked-operation';
+          return dispatchResult({called:true,errorCode:code});
+        }
+        const next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:code});
+        if(next.status==='blocked')lastErrorCategory='blocked-operation';
+        scheduleDrain(next.nextAttemptAt);return dispatchResult({called:true,errorCode:code});
+      }catch(journalError){
+        if(!sessionCurrent()||!active||epoch!==lifecycleEpoch)return dispatchResult({called:true,errorCode:'account-sync/session-changed'});
+        throw journalError;
       }
-      const next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:code});
-      if(next.status==='blocked')lastErrorCategory='blocked-operation';
-      scheduleDrain(next.nextAttemptAt);return dispatchResult({called:true,errorCode:code});
     }
     async function dispatch(record,epoch,{manual=false}={}){
       const authority=listenerAuthority(epoch);
@@ -428,7 +446,7 @@
         if(!execution.started)return dispatchResult({errorCode:'account-sync/listener-not-ready'});
         if(execution.error){
           if(!execution.current)return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
-          return recordDispatchFailure(record,execution.error,{manual});
+          return await recordDispatchFailure(record,execution.error,{manual});
         }
         const result=execution.value;
         if(result.ok){
@@ -450,8 +468,11 @@
           clearError('blocked-operation');return dispatchResult({ok:true,called:true,progressed:true});
         }
         if(!execution.current)return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
-        return recordDispatchFailure(record,result.error||'account-sync/rejected',{manual});
+        return await recordDispatchFailure(record,result.error||'account-sync/rejected',{manual});
       }catch(error){
+        // An old transport may settle after a bounded runtime detach. Preserve
+        // the uncertain operation for the current runtime to reconcile.
+        if(!listenerLifecycleCurrent(authority))return dispatchResult({called:true,errorCode:'account-sync/session-changed'});
         if(error?.code==='account-sync/listener-authority-lost')return dispatchResult({called:true,errorCode:error.code});
         return recordDispatchFailure(record,error,{manual});
       }finally{emit();}

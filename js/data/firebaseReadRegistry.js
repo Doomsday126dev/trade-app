@@ -193,6 +193,22 @@
       count:item.text==='get(ref(db,`users/${username}`))'?5:
         item.text==='get(ref(db,`authIndex/${expectedUid}`))'?2:item.count})))
   });
+  // Recovery adds one exact public readback after a matching late SDK ACK.
+  // Keep the historical contract intact for immutable rollback sources.
+  const RECOVERY_SOURCE_CALL_CONTRACT=Object.freeze({
+    ...SOURCE_CALL_CONTRACT,
+    directGetCount:24,
+    directReadSites:Object.freeze([
+      ...SOURCE_CALL_CONTRACT.directReadSites.slice(0,3),
+      site('writeVerifiedLegacyPublicSnapshot','get(target)','publicShares/{currentUsername}','legacy_public_readback','publish','C','A matching late SDK acknowledgement permits one fresh public readback to verify current accepted content before avoiding a redundant repair write.'),
+      ...SOURCE_CALL_CONTRACT.directReadSites.slice(3)
+    ]),
+    readHandlerHashes:Object.freeze({...SOURCE_CALL_CONTRACT.readHandlerHashes,
+      writeProviderPublicShareSnapshot:'9668f236abc2e04de442a6edc3dd4215eb553e3a04e24ad9144e82d46c524c50',
+      writeVerifiedLegacyPublicSnapshot:'a11ebd95358ff2f345d63ac3dd20f14c5a4a257ca46a7958d787ee9d3163d1f2'}),
+    needles:Object.freeze(Array.from(SOURCE_CALL_CONTRACT.needles,item=>Object.freeze({...item,
+      count:item.text==='get(target)'?3:item.count})))
+  });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
     '4614e1e4345befbb7c1b1a75fa3230e57e8e94a4':SOURCE_CALL_CONTRACT,
     'df20ddbc5a273b8fef0832c4e38b3de86b69a2dd':LEGACY_SOURCE_CALL_CONTRACT,
@@ -214,5 +230,5 @@
     return Object.freeze({ok:violations.length===0,violations:Object.freeze(violations)});
   }
 
-  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT,SOURCE_CALL_CONTRACTS,CANDIDATE_SURFACE_GROUPS,validateFeatureGateContract});
+  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT:RECOVERY_SOURCE_CALL_CONTRACT,SOURCE_CALL_CONTRACTS,CANDIDATE_SURFACE_GROUPS,validateFeatureGateContract});
 })(window);

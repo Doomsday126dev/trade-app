@@ -83,6 +83,87 @@ function createRuntime(window,h,repositoryState,journalState,readMigrationSource
   });
 }
 
+function heldRequest(){let release,entered;return{gate:new Promise(r=>release=r),waiting:new Promise(r=>entered=r),release:(...args)=>release(...args),entered:()=>entered()};}
+async function boundedStop(runtime){
+  let timer;
+  try{return await Promise.race([runtime.stop(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Session stop exceeded 1500ms')),1500);})]);}
+  finally{clearTimeout(timer);}
+}
+
+for(const outcome of ['late-commit','late-error','malformed-response'])test(`bounded stop retains intent and isolates same-owner replacement: ${outcome}`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState();
+  let notifications=0;
+  const old=createRuntime(window,h,state,journal,async()=>source('bounded-stop'),()=>{notifications++;},()=>{notifications++;});await old.start();
+  const held=heldRequest(),apply=state.repository.applyOperation;
+  state.repository.applyOperation=async operation=>{held.entered();await held.gate;if(outcome==='late-error')throw Error('late failure');if(outcome==='malformed-response')return null;return apply(operation);};
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  const addition=await old.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}});await held.waiting;
+  const started=Date.now(),stopped=await boundedStop(old);assert.equal(stopped.status,'detached');assert.ok(Date.now()-started<1500);
+  assert.equal((await old.snapshot()).active,false);assert.equal(journal.operations.get(addition.operation.operationId).status,'pending');
+  state.repository.applyOperation=apply;
+  const next=createRuntime(window,h,state,journal,async()=>{throw Error('completed migration must resume');});await next.start();await next.controller.drain();
+  assert.equal((await next.snapshot()).state,'saved');assert.equal(h.server.entities.size,1);
+  assert.equal((await next.controller.patchEntity({entityType:'tradeEntry',entityId,patch:{priority:'M'}})).ok,true);await next.controller.drain();
+  const before=JSON.stringify([...journal.operations]),notificationCount=notifications;
+  held.release();await stopped.settled;
+  assert.equal(JSON.stringify([...journal.operations]),before);assert.equal(notifications,notificationCount);
+  assert.equal(next.controller.getEntity('tradeEntry',entityId).values.priority,'M');assert.equal((await next.snapshot()).state,'saved');
+  assert.equal(h.server.entities.size,1);assert.equal(journal.operations.get(addition.operation.operationId).status,'acknowledged');await next.stop();
+});
+
+for(const stage of ['startup-read','public-write'])test(`bounded stop lets a replacement start while retired ${stage} remains unresolved`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState(),held=heldRequest();
+  const read=state.repository.readAccount;
+  if(stage==='startup-read')state.repository.readAccount=async()=>{held.entered();await held.gate;return read();};
+  const old=createRuntime(window,h,state,journal,async()=>source('bounded-startup'),()=>{},()=>{},async()=>{if(stage==='public-write'){held.entered();await held.gate;}return{ok:true,status:'published'};});
+  const starting=old.start();const rejected=assert.rejects(starting,error=>error.code==='account-sync/runtime-closed');await held.waiting;
+  const stopped=await boundedStop(old);assert.equal(stopped.status,'detached');state.repository.readAccount=read;
+  const next=createRuntime(window,h,state,journal,async()=>source('bounded-startup'));await next.start();
+  assert.equal((await next.snapshot()).state,'saved');
+  held.release();await rejected;await stopped.settled;
+  assert.equal(journal.meta.has('public-publication-pending-v1'),false);assert.equal((await next.snapshot()).state,'saved');await next.stop();
+});
+
+test('bounded detach cannot transfer a pending operation or a late response into another owner',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState(),held=heldRequest();
+  const old=createRuntime(window,h,state,journal,async()=>source('different-owner'));await old.start();
+  const apply=state.repository.applyOperation;state.repository.applyOperation=async op=>{held.entered();await held.gate;return apply(op);};
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  await old.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}});await held.waiting;
+  const stopped=await boundedStop(old);assert.equal(stopped.status,'detached');
+  const other=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({ownerUid:'uid-other',crypto:webcrypto}),device=other.createDevice('different-owner');await device.start();
+  assert.equal((await device.controller.snapshot()).pendingCount,0);assert.equal(device.controller.activeEntities().length,0);
+  held.release();await stopped.settled;assert.equal(h.server.entities.size,1);assert.equal(other.server.entities.size,0);assert.equal(other.server.attempts.length,0);
+  assert.equal((await device.controller.snapshot()).state,'saved');assert.equal(journal.operations.values().next().value.status,'pending');await device.controller.deactivate();
+});
+
+test('bounded provider-profile stop retains pending profile and fences late old completion',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState(),held=heldRequest();
+  const old=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>({ok:true,status:'published'}),{initializationKind:'provider-only'});await old.start();
+  const write=state.repository.writeProfile;state.repository.writeProfile=async(...args)=>{held.entered();await held.gate;return write(...args);};
+  const updating=old.updateProviderProfile({bio:'Pending biography'});await held.waiting;
+  const stopped=await boundedStop(old);assert.equal(stopped.status,'detached');assert.equal(journal.meta.has('provider-profile-pending-v1'),true);
+  state.repository.writeProfile=write;
+  const next=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>({ok:true,status:'published'}),{initializationKind:'provider-only'});await next.start();
+  assert.equal(next.providerProfile.bio,'Pending biography');assert.equal(journal.meta.has('provider-profile-pending-v1'),false);
+  held.release();assert.equal((await updating).ok,false);await stopped.settled;assert.equal(next.providerProfile.bio,'Pending biography');assert.equal((await next.snapshot()).state,'saved');await next.stop();
+});
+
+for(const response of ['network-error','malformed-response'])test(`retired journal failure cannot resurrect replacement-acknowledged intent: ${response}`,async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),held=heldRequest();
+  const raw=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',journalState,h.clock);
+  const journal={...raw,async markAttempt(...args){held.entered();await held.gate;return raw.markAttempt(...args);}};
+  const old=createRuntime(window,h,state,journalState,async()=>source('retired-journal'),()=>{},()=>{},async()=>({ok:true,status:'published'}),{journal});await old.start();
+  const apply=state.repository.applyOperation;state.repository.applyOperation=async()=>{if(response==='malformed-response')return null;throw Object.assign(Error('temporary'),{code:'account-sync/network-failed'});};
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  const added=await old.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}});await held.waiting;
+  const stopped=await boundedStop(old);assert.equal(stopped.status,'detached');state.repository.applyOperation=apply;
+  const next=createRuntime(window,h,state,journalState,async()=>source('retired-journal'));await next.start();await next.controller.drain();
+  assert.equal(journalState.operations.get(added.operation.operationId).status,'acknowledged');assert.equal((await next.snapshot()).state,'saved');
+  held.release();await stopped.settled;
+  assert.equal(journalState.operations.get(added.operation.operationId).status,'acknowledged');assert.equal((await next.snapshot()).state,'saved');await next.stop();
+});
+
 async function directWriteAttempt(method,{order='callback-before',configure}={}){
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),orders={[method]:order},repositoryState=runtimeRepository(window,h,{orders}),journalState=h.createMemoryJournalState();
   const runtime=createRuntime(window,h,repositoryState,journalState,async()=>source(`device-${method}-${order}`,{remote:{Pikachu:'H'}}));

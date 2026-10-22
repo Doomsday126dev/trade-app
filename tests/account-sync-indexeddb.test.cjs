@@ -7,6 +7,57 @@ const {chromium,webkit}=require('playwright');
 const root=path.join(__dirname,'..');
 const browserType=process.env.POGO_ACCOUNT_SYNC_BROWSER==='webkit'?webkit:chromium;
 
+test('retired IndexedDB writers cannot overwrite replacement acknowledgements or commit pending transactions',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html'});response.end('<!doctype html><title>Retired journal fixture</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await browserType.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  for(const file of ['js/domain/accountSyncModel.js','js/data/accountSyncJournal.js'])await page.addScriptTag({path:path.join(root,file)});
+  const results=await page.evaluate(async()=>{
+    const api=window.PogoData.accountSyncJournal,model=window.PogoDomain.accountSyncModel,ownerUid='retired-owner',results=[];
+    for(const method of ['markAttempt','retainBlocked','acknowledge','markConflict','retryBlocked']){
+      const databaseName=`retired-${method}-${crypto.randomUUID()}`,old=api.createAccountSyncJournal({ownerUid,databaseName}),next=api.createAccountSyncJournal({ownerUid,databaseName}),other=api.createAccountSyncJournal({ownerUid:'another-owner',databaseName});
+      const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:25:base'},entityId=model.tradeEntryId(identity);
+      const operation=(await model.createOperation({ownerUid,entityType:'tradeEntry',entityId,identity,kind:'add',patch:{priority:'H'},baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},clientAt:10})).value;
+      await old.enqueueOperation(operation);
+      if(['retainBlocked','retryBlocked'].includes(method))await old.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/network-failed'});
+      let release,entered,hold=true;const gate=new Promise(r=>release=r),waiting=new Promise(r=>entered=r),originalGet=IDBObjectStore.prototype.get;
+      IDBObjectStore.prototype.get=function(...args){
+        const request=originalGet.apply(this,args);if(this.name!=='operations'||!hold)return request;hold=false;
+        return new Proxy(request,{
+          get(target,key){const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},
+          set(target,key,value){if(key==='onsuccess')target.onsuccess=event=>{entered();gate.then(()=>value.call(target,event));};else Reflect.set(target,key,value,target);return true;}
+        });
+      };
+      let late;
+      try{
+        const args=method==='acknowledge'?[operation.operationId,{revision:1}]:method==='markConflict'?[operation.operationId,[{ownerUid,conflictId:'old-conflict',operationId:operation.operationId,entityType:'tradeEntry',entityId,createdAt:10,resolved:false}]]:[operation.operationId,{retryable:true,errorCode:'account-sync/network-failed'}];
+        late=old[method](...args).then(()=>({ok:true}),error=>({ok:false,code:error.code}));
+        await waiting;IDBObjectStore.prototype.get=originalGet;old.retireWrites();
+        await next.acknowledge(operation.operationId,{revision:5});await next.setMeta('public-publication-pending-v1',{ownerUid,pending:true});
+        release();const outcome=await late,record=(await next.listOperations({statuses:['acknowledged','pending','blocked','conflict']}))[0];
+        results.push({method,outcome,status:record.status,revision:record.serverRevision,conflicts:(await next.listConflicts()).length,otherPending:(await other.snapshot()).pendingCount,retiredReadonlyPending:(await old.snapshot()).pendingCount});
+      }finally{IDBObjectStore.prototype.get=originalGet;release?.();await late;await old.close();await next.close();await other.close();}
+    }
+    const databaseName='retired-active-'+crypto.randomUUID(),old=api.createAccountSyncJournal({ownerUid,databaseName}),next=api.createAccountSyncJournal({ownerUid,databaseName});
+    const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:133:base'},entityId=model.tradeEntryId(identity),operation=(await model.createOperation({ownerUid,entityType:'tradeEntry',entityId,identity,kind:'add',patch:{priority:'H'},baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},clientAt:10})).value;
+    const originalPut=IDBObjectStore.prototype.put;let aborted=false;
+    IDBObjectStore.prototype.put=function(...args){const request=originalPut.apply(this,args);if(this.name==='operations'&&!aborted){aborted=true;old.retireWrites();}return request;};
+    try{
+      const outcome=await old.enqueueOperation(operation).then(()=>({ok:true}),error=>({ok:false,name:error.name}));
+      const pending=(await next.snapshot()).pendingCount;
+      const meta=await old.removeMeta('public-publication-pending-v1').then(()=>({ok:true}),error=>({ok:false,code:error.code}));
+      await next.setMeta('public-publication-pending-v1',{ownerUid,pending:true});
+      results.push({method:'active-transaction-abort',outcome,pending,meta,marker:(await next.getMeta('public-publication-pending-v1')).pending});
+    }finally{IDBObjectStore.prototype.put=originalPut;await old.close();await next.close();}
+    const unopened=api.createAccountSyncJournal({ownerUid,databaseName:'retired-opening-'+crypto.randomUUID()}),writing=unopened.setMeta('late',{value:true}).then(()=>({ok:true}),error=>({ok:false,code:error.code}));unopened.retireWrites();
+    results.push({method:'pending-database-open',outcome:await writing,marker:await unopened.getMeta('late')});await unopened.close();return results;
+  });
+  for(const result of results.slice(0,5))assert.deepEqual(result,{method:result.method,outcome:{ok:false,code:'account-sync/journal-retired'},status:'acknowledged',revision:5,conflicts:0,otherPending:0,retiredReadonlyPending:0});
+  assert.equal(results[5].outcome.ok,false);assert.equal(results[5].pending,0);assert.deepEqual(results[5].meta,{ok:false,code:'account-sync/journal-retired'});assert.equal(results[5].marker,true);
+  assert.deepEqual(results[6],{method:'pending-database-open',outcome:{ok:false,code:'account-sync/journal-retired'},marker:null});
+});
+
 test('the real IndexedDB journal survives reload, isolates owners, and keeps conflicts non-retryable',async t=>{
   const server=http.createServer((_request,response)=>{
     response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});

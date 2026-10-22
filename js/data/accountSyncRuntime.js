@@ -166,7 +166,7 @@
       if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});
       if(!sessionCurrent())throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
     }
-    function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
+    function notifyMigration(state,detail={}){migrationState=state;if(!stopped)onMigrationState?.(Object.freeze({state,...detail}));}
     function pendingProfileRecord(value){
       const keys=model.plainObject(value)?Object.keys(value).sort():[],expected=[...PROFILE_PENDING_KEYS].sort(),normalized=model.normalizeProfileValues(value?.values),baseRevision=model.integer(value?.baseRevision),queuedAt=model.integer(value?.queuedAt);
       return keys.length===expected.length&&keys.every((key,index)=>key===expected[index])&&value.schemaVersion===model.SCHEMA_VERSION&&value.ownerUid===owner&&normalized.ok&&model.canonicalJson(normalized.value)===model.canonicalJson(value.values)&&baseRevision!==null&&queuedAt!==null
@@ -550,6 +550,10 @@
           if(!controller.eligible)return activated;
           const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
           if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
+          // Resolve retained operations before capturing migration/profile reads.
+          // Otherwise a read taken before replay can arrive after the listener's
+          // accepted commit and incorrectly appear to have lost that entity.
+          await controller.drain();requireRunning();
           migrationState='reading';const plan=initializationKind==='provider-only'?await ensureProviderInitialization():await ensureMigration();requireRunning();
           if(initializationKind==='provider-only'){migrationState='profile';await ensureProviderProfile();requireRunning();}
           if(initializationKind==='legacy-migration')await synchronizeRecoveryReviewAcceptance();requireRunning();projectionReady=true;
@@ -594,7 +598,19 @@
     function stop(){
       if(stopPromise)return stopPromise;
       stopped=true;projectionReady=false;
-      stopPromise=(async()=>{await controller.deactivate();await startPromise?.catch(()=>{});await journal.close?.();return Object.freeze({ok:true,status:'closed'});})();
+      journal.retireWrites?.();
+      // Detach authority immediately, but keep the retired journal alive until
+      // issued work settles. A transport promise can remain queued offline;
+      // it must not hold replacement sessions hostage or be treated as cancelled.
+      const settling=controller.deactivate();
+      const cleanup=Promise.allSettled([settling,startPromise,profileMutationPromise,publicProjectionPromise].filter(Boolean))
+        .then(async()=>{await journal.close?.();return Object.freeze({ok:true,status:'closed'});});
+      cleanup.catch(()=>{});
+      stopPromise=(async()=>{
+        let timer;
+        try{return await Promise.race([cleanup,new Promise(resolve=>{timer=setTimeout(()=>resolve(Object.freeze({ok:true,status:'detached',settled:cleanup})),250);})]);}
+        finally{clearTimeout(timer);}
+      })();
       return stopPromise;
     }
     async function snapshot(){return runtimeState(await controller.snapshot());}

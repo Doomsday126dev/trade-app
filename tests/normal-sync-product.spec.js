@@ -1,9 +1,14 @@
 const {test,expect}=require('@playwright/test');
+test.use({serviceWorkers:'block'});
 
 // Only the Firebase transport/auth boundary is simulated. Admission, migration,
 // IndexedDB, repository transactions, product actions and publication are real.
 async function install(page,state=null,{profileOnly=false,emulator=''}={}){
-  await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|firestore\.googleapis\.com)/,route=>route.abort());
+  // Keep real SDK imports, but do not send local-fixture attestations, Auth
+  // traffic, Functions/Run calls or analytics to production during startup.
+  // Context-level routes also cover reopened pages; PWA caching is tested in
+  // its separate service-worker-enabled file.
+  await page.context().route(url=>/(?:^|\.)(?:firebaseio\.com|firebasedatabase\.app|firebaseapp\.com|googleapis\.com|cloudfunctions\.net|run\.app|cloudflareinsights\.com)$/.test(url.hostname)||url.pathname.includes('/recaptcha/'),route=>route.abort());
   await page.goto('./?normal-sync-qualification');
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('normal-sync-qualification'));
@@ -173,7 +178,7 @@ test('canonical publication ignores unneeded legacy reads, reports failure and a
 });
 
 
-test('emulator canonical save publishes under deployed rules and survives independent server read and reopen',async({page,context,request})=>{
+test('emulator canonical save publishes under deployed rules and survives independent server read and reopen',async({page,context,request,browser})=>{
   const emulator=process.env.POGO_DATABASE_EMULATOR;test.skip(!emulator,'Run with a local RTDB emulator and the reviewed rules loaded');
   expect(emulator).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):[0-9]+$/);
   await install(page,null,{profileOnly:true,emulator});await settled(page);
@@ -189,13 +194,19 @@ test('emulator canonical save publishes under deployed rules and survives indepe
   const reopened=await context.newPage();await install(reopened,stored,{profileOnly:true,emulator});await settled(reopened);
   expect(await reopened.evaluate(()=>productDeclarations().entries.some(e=>e.name==='Squirtle'))).toBe(true);
   await reopened.evaluate(()=>stopAccountSyncRuntime());
-  const viewer=await context.newPage();
+  // A truly anonymous viewer must not inherit the owner's controlling SW, which
+  // can bypass the SDK transport routes below (notably in WebKit).
+  const {viewport,userAgent,deviceScaleFactor,isMobile,hasTouch,baseURL}=test.info().project.use;
+  const viewerContext=await browser.newContext({viewport,userAgent,deviceScaleFactor,isMobile,hasTouch,baseURL,serviceWorkers:'block'});
+  const viewer=await viewerContext.newPage();
+  try{
   await viewer.route('**/sw.js*',route=>route.abort());
   await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:'export function initializeApp(){return{}}'}));
   await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:'export class ReCaptchaEnterpriseProvider{};export function initializeAppCheck(){return{}};export async function getToken(){return{token:"emulator-only"}}'}));
   await viewer.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},body:`export function getDatabase(){return{}};export function ref(db,path){return path};export async function get(path){const response=await fetch(${JSON.stringify(emulator)}+'/'+path+'.json?ns=demo-trade-investigation-default-rtdb');if(!response.ok)throw new Error('emulator read failed');const value=await response.json();return{exists:()=>value!=null,val:()=>value}}`}));
   await viewer.goto('./?view=NormalProduct');await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
   await viewer.reload();await expect(viewer.locator('#share-list-out')).toContainText('Squirtle');
+  }finally{await viewerContext.close();}
 });
 
 
@@ -321,4 +332,118 @@ test('canonical public queue retains failed work and reports publication pending
   expect(await page.evaluate(()=>!!syncQueue['publicShares/NormalProduct'])).toBe(false);
   expect(await page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
   await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('same-account runtime replacement recovers a held save without waiting for its old transport',async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(async()=>{
+    const transaction=runTransaction;let release,entered,held=false;
+    const gate=new Promise(r=>release=r),waiting=new Promise(r=>entered=r);
+    runTransaction=async(...args)=>{if(!held&&String(args[0]).includes('/tradeEntries/')){held=true;entered();await gate;}return transaction(...args);};
+    __normal.heldSave={release,waiting,restore:()=>{runTransaction=transaction;}};
+    // Repositories capture their transport at construction time.
+    await stopAccountSyncRuntime();await ensureAccountSyncRuntime();
+  });
+  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Squirtle',p:'H'}]))).toBe(true);
+  await page.evaluate(async()=>{await __normal.heldSave.waiting;__normal.heldSave.oldDrain=managedAccountSyncRuntime.controller.drain();});
+  const result=await page.evaluate(async()=>{
+    const started=performance.now();await stopAccountSyncRuntime();const elapsed=performance.now()-started;
+    __normal.heldSave.restore();const replacement=await ensureAccountSyncRuntime();
+    await managedAccountSyncRuntime.controller.drain();
+    const entity=managedAccountSyncRuntime.controller.activeEntities('tradeEntry').find(e=>e.identity.catalogId.includes('squirtle')||accountSyncCatalogEntryForId(e.identity.catalogId,e.identity)?.name==='Squirtle');
+    if(!entity)throw Error('Recovered declaration missing');
+    const changed=await managedAccountSyncRuntime.controller.patchEntity({entityType:'tradeEntry',entityId:entity.entityId,patch:{priority:'M'}});
+    if(!changed.ok)throw Error('Replacement edit failed');await managedAccountSyncRuntime.controller.drain();
+    __normal.heldSave.release();await __normal.heldSave.oldDrain;
+    return{elapsed,replacement,state:await managedAccountSyncRuntime.snapshot(),server:structuredClone(__normal.remote.accountSync['normal-product-uid']),public:structuredClone(__normal.remote.publicShares.NormalProduct)};
+  });
+  expect(result.elapsed).toBeLessThan(1500);expect(result.replacement.ok).toBe(true);expect(result.state.state).toBe('saved');
+  // Two public wants plus the preserved, inert legacy FT entry.
+  const rows=Object.values(result.server.tradeEntries).filter(e=>!e.deleted);expect(rows).toHaveLength(3);expect(result.public.declarations).toHaveLength(2);
+  expect(result.public.declarations.find(e=>e.name==='Squirtle').p).toBe('M');
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('another device repairs the public list through the product allowlist',async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(async()=>{
+    const ownerUid=auth.currentUser.uid,journal=accountSyncJournalData.createAccountSyncJournal({ownerUid,databaseName:'repair-peer-'+Date.now()});
+    const repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid});
+    const peer=window.PogoData.accountSyncController.createAccountSyncController({ownerUid,journal,repository,enabled:true,writesEnabled:true,admitted:true});
+    await peer.activate();await peer.waitForListenerReady();
+    const old=peer.activeEntities('tradeEntry').find(e=>e.identity.surface==='my-list');
+    const changed=await peer.patchEntity({entityType:'tradeEntry',entityId:old.entityId,patch:{priority:'L'}});if(!changed.ok)throw Error('Peer mutation failed');
+    await peer.drain();await peer.deactivate();await journal.close();
+  });
+  await expect.poll(()=>page.evaluate(()=>__normal.remote.publicShares.NormalProduct.declarations.find(e=>e.name==='Pikachu')?.p),{timeout:5000}).toBe('L');
+  const result=await page.evaluate(async()=>({public:__normal.remote.publicShares.NormalProduct,state:await managedAccountSyncRuntime.snapshot()}));
+  expect(result.public.declarations.every(e=>e.intent==='lf')).toBe(true);expect(result.public.declarations.some(e=>e.name==='Eevee')).toBe(false);
+  expect(result.public.favorites).toBeUndefined();expect(result.public.tags).toBeUndefined();expect(result.public.recoveryCandidates).toBeUndefined();
+  expect(result.state.lastProjectionError).toBe('');await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+for(const cause of ['runtime-replaced','deadline-expired'])test(`late public write is reconciled after ${cause}`,async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(async cause=>{
+    const serverSet=set,timeout=withTimeout;let release,entered,held=false;
+    const gate=new Promise(r=>release=r),waiting=new Promise(r=>entered=r);
+    set=async(path,value)=>{
+      if(path==='publicShares/NormalProduct'&&!held){held=true;entered();await gate;const result=await serverSet(path,value);__normal.latePriority=value.declarations.find(e=>e.name==='Pikachu')?.p;return result;}
+      return serverSet(path,value);
+    };
+    if(cause==='deadline-expired')withTimeout=(promise,ms,message,code)=>timeout(promise,code==='db/public-share-timeout'?40:ms,message,code);
+    __normal.latePublic={release,waiting,restoreTimeout:()=>{withTimeout=timeout;}};
+    __normal.latePublic.publication=managedAccountSyncRuntime.publishCurrentProjection('late-write-fixture');
+    await waiting;
+  },cause);
+  if(cause==='runtime-replaced')await page.evaluate(async()=>{await stopAccountSyncRuntime();await ensureAccountSyncRuntime();});
+  else await page.evaluate(async()=>{await __normal.latePublic.publication;__normal.latePublic.restoreTimeout();});
+  await page.evaluate(async()=>{
+    const entity=managedAccountSyncRuntime.controller.activeEntities('tradeEntry').find(e=>e.identity.surface==='my-list');
+    const result=await managedAccountSyncRuntime.controller.patchEntity({entityType:'tradeEntry',entityId:entity.entityId,patch:{priority:'M'}});
+    if(!result.ok)throw Error('Current edit failed');await managedAccountSyncRuntime.controller.drain();
+    if(__normal.remote.publicShares.NormalProduct.declarations.find(e=>e.name==='Pikachu')?.p!=='M')throw Error('Current publication missing');
+    __normal.latePublic.release();await __normal.latePublic.publication;
+  });
+  await expect.poll(()=>page.evaluate(()=>__normal.latePriority)).toBe('H');
+  await expect.poll(()=>page.evaluate(()=>__normal.remote.publicShares.NormalProduct.declarations.find(e=>e.name==='Pikachu')?.p),{timeout:5000}).toBe('M');
+  await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError)).toBe('');
+  await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('late-write observer handles settled deadline races and refuses another owner',async({page})=>{
+  await install(page);await settled(page);await page.evaluate(()=>stopAccountSyncRuntime());
+  const result=await page.evaluate(async()=>{
+    const uid=auth.currentUser.uid,username=cur,calls=[];
+    const runtime={ownerUid:uid,username,projectionReady:true,publishCurrentProjection:async kind=>{calls.push(kind);return{ok:true,status:'published'};}};
+    managedAccountSyncRuntime=runtime;
+    try{
+      const completion=observePublicWriteCompletion(Promise.resolve(),username,uid);
+      await Promise.resolve();completion.markUncertain();completion.markUncertain();await new Promise(r=>setTimeout(r,0));
+      const afterDeadlineRace=calls.length;
+      let release;const pending=new Promise(r=>release=r);observePublicWriteCompletion(pending,username,uid);
+      managedAccountSyncRuntime={...runtime,ownerUid:'another-owner',username:'Another'};release();await new Promise(r=>setTimeout(r,0));
+      const afterOwnerSwitch=calls.length;managedAccountSyncRuntime=runtime;
+      const aborted=observePublicWriteCompletion(Promise.resolve({committed:false}),username,uid,{provider:true});aborted.markUncertain();await new Promise(r=>setTimeout(r,0));
+      return{afterDeadlineRace,afterOwnerSwitch,afterProviderAbort:calls.length};
+    }finally{managedAccountSyncRuntime=null;}
+  });
+  expect(result).toEqual({afterDeadlineRace:1,afterOwnerSwitch:1,afterProviderAbort:1});
+});
+
+test('sustained slow public acknowledgements converge without a rewrite loop and proof is one-use',async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(async()=>{
+    const serverSet=set,timeout=withTimeout;__normal.slowWrites=0;
+    set=async(path,value)=>{if(path==='publicShares/NormalProduct'){__normal.slowWrites++;await new Promise(r=>setTimeout(r,70));}return serverSet(path,value);};
+    withTimeout=(promise,ms,message,code)=>timeout(promise,code==='db/public-share-timeout'?40:ms,message,code);
+    __normal.restoreSlow=()=>{set=serverSet;withTimeout=timeout;};
+    await managedAccountSyncRuntime.publishCurrentProjection('sustained-slow-fixture');
+  });
+  await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError),{timeout:3000}).toBe('');
+  await page.waitForTimeout(300);expect(await page.evaluate(()=>__normal.slowWrites)).toBe(1);
+  await page.evaluate(()=>managedAccountSyncRuntime.publishCurrentProjection('explicit_share'));
+  await expect.poll(()=>page.evaluate(async()=>(await managedAccountSyncRuntime.snapshot()).lastProjectionError),{timeout:3000}).toBe('');
+  await page.waitForTimeout(300);expect(await page.evaluate(()=>__normal.slowWrites)).toBe(2);
+  await page.evaluate(async()=>{__normal.restoreSlow();await stopAccountSyncRuntime();});
 });

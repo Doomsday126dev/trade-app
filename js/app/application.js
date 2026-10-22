@@ -2687,18 +2687,43 @@ function notePublicSharePublicationBlocked(result,trigger){
 function publicSharePublicationCurrent(result){
   return result?.ok===true&&(result.status==='published'||result.status==='reconciled');
 }
+let lateLegacyPublicAcknowledgement=null;
+function publicSnapshotContentKey(snapshot,username){
+  const normalized=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
+  if(!normalized.ok)return null;
+  const {updatedAt,...content}=normalized.snapshot;return accountSyncModel.canonicalJson(content);
+}
+function observePublicWriteCompletion(write,username,uid,{snapshot,provider=false}={}){
+  const runtime=managedAccountSyncRuntime;let uncertain=false,completed=false,repairRequested=false;
+  const issuedSnapshot=snapshot?JSON.parse(JSON.stringify(snapshot)):null;
+  // A deadline cannot cancel Firebase's issued write. Observe its actual
+  // completion even after the caller or its runtime has stopped waiting.
+  function repairIfNeeded(){
+    const current=managedAccountSyncRuntime;
+    if(!completed||repairRequested||!uncertain&&runtime===current)return;
+    if(!current?.projectionReady||current.ownerUid!==uid||current.username!==username||auth?.currentUser?.uid!==uid||cur!==username)return;
+    repairRequested=true;
+    if(issuedSnapshot)lateLegacyPublicAcknowledgement={uid,username,runtime:current,snapshot:issuedSnapshot,expiresAt:Date.now()+30000};
+    Promise.resolve().then(()=>current.publishCurrentProjection('late-public-write-recovery')).catch(()=>{});
+  }
+  Promise.resolve(write).then(result=>{if(provider&&result?.committed===false)return;completed=true;repairIfNeeded();}).catch(()=>{});
+  return{markUncertain(){uncertain=true;repairIfNeeded();}};
+}
 async function writeProviderPublicShareSnapshot(session,snapshot){
   if(!providerPublicProjectionSessionMatches(session)||!db)throw providerFailure('provider-public/session-changed');
   const path=`trainerShares/${session.uid}`;
   const target=ref(db,path);let transaction=null,transactionError=null,exactAbort=false;
   try{
-    transaction=await withTimeout(runTransaction(target,current=>{
+    const writing=runTransaction(target,current=>{
       if(!providerPublicProjectionSessionMatches(session))return;
       if(current!=null&&providerPublicProjectionDomain.projectionContentMatches(snapshot,current,{trainerName:session.username})){
         exactAbort=true;return;
       }
       return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
-    }),8000,'Publishing provider share timed out','provider-public/write-timeout');
+    });
+    const completion=observePublicWriteCompletion(writing,session.username,session.uid,{provider:true});
+    try{transaction=await withTimeout(writing,8000,'Publishing provider share timed out','provider-public/write-timeout');}
+    catch(error){completion.markUncertain();throw error;}
   }catch(error){transactionError=error;}
   if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
   let remote;
@@ -2793,7 +2818,23 @@ async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
   const token=activePublicShareHydrationToken;
   if(!publicShareSessionMatches(username))throw new Error('share-publication/session-changed');
   const target=ref(db,`publicShares/${username}`);
-  await withTimeout(set(target,snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
+  const proof=lateLegacyPublicAcknowledgement;
+  if(proof){
+    lateLegacyPublicAcknowledgement=null;
+    if(proof.runtime===managedAccountSyncRuntime&&proof.uid===auth?.currentUser?.uid&&proof.username===username&&proof.expiresAt>=Date.now()){
+      const expectedKey=publicSnapshotContentKey(snapshot,username);
+      if(expectedKey!==null&&publicSnapshotContentKey(proof.snapshot,username)===expectedKey){
+        // Actual raw ACK plus matching readback can confirm a slow successful
+        // write without issuing the same write forever after each deadline.
+        const readback=await withTimeout(get(target),8000,'Confirming late share write timed out','db/public-share-timeout');
+        if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username))throw new Error('share-publication/session-changed');
+        if(publicSnapshotContentKey(readback.exists()?readback.val():null,username)===expectedKey)return;
+      }
+    }
+  }
+  const writing=set(target,snapshot),completion=observePublicWriteCompletion(writing,username,auth?.currentUser?.uid,{snapshot});
+  try{await withTimeout(writing,8000,'Publishing share link timed out','db/public-share-timeout');}
+  catch(error){completion.markUncertain();throw error;}
   const readback=await withTimeout(get(target),8000,'Confirming share link timed out','db/public-share-timeout');
   const normalized=publicSharePublicationDomain.publicShareProjectionStatus(readback.exists()?readback.val():null,{username});
   const expected=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
