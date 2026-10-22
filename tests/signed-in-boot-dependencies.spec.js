@@ -64,7 +64,9 @@ async function installLoginTransport(page){
 async function assertReducedRuntime(page,expected){
   const scripts=await page.evaluate(()=>performance.getEntriesByType('resource').filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).map(entry=>entry.name));
   expect(scripts.filter(url=>candidates.test(url))).toEqual([]);
-  expect(scripts.length).toBe(expected);
+  const traffic=scripts.filter(url=>/\/js\/services\/traffic\.js(?:\?|$)/.test(url));
+  expect(traffic.length).toBe(1);
+  expect(scripts.length-traffic.length).toBe(expected);
   expect(await page.evaluate(()=>({registry:typeof PogoData.firebaseReadRegistry,sync:typeof PogoDomain.trainerPreferenceSync,repository:typeof PogoData.trainerPreferencesRepository,queue:typeof PogoData.trainerPreferenceSyncQueue,tagPanel:typeof window.PogoUI?.trainerTagPanel,publicApp:typeof __pogoStartPublicShare}))).toEqual({registry:'undefined',sync:'undefined',repository:'undefined',queue:'undefined',tagPanel:'undefined',publicApp:'undefined'});
 }
 
