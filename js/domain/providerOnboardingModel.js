@@ -164,7 +164,7 @@
       requireCurrent();
       if(!['ambiguous-result','retryable-failure'].includes(state.status)||typeof reconcileAccount!=='function')throw failure('provider-onboarding/reconciliation-unavailable');
       return finishCreation(()=>reconcileAccount(Object.freeze({uid:binding.uid,lifecycleId:binding.lifecycleId,
-        providerKey:state.providerKey,handle:state.handle})));
+        providerKey:state.providerKey,handle:state.handle})),profile?normalizedProfile(profile):null);
     }
     function cancel(){
       const providerKey=state.providerKey;binding=null;profile=null;profileInvalid=false;clear();

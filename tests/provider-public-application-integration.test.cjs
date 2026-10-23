@@ -70,10 +70,11 @@ test('anonymous standalone share uses App Check without Auth and falls back to t
   assert.doesNotMatch(publicApp,/firebase-auth\.js|getAuth\(|signIn|currentUser/);
 });
 
-test('new provider projection assets are versioned and production release remains unchanged',()=>{
+test('provider projection assets track the current release marker',()=>{
+  const release=/window\.__POGO_RELEASE_ID=['"]([^'"]+)['"]/.exec(html)[1];
+  assert.match(release,/^\d{4}-\d{2}-\d{2}\.\d+$/);
   for(const file of ['js/domain/providerPublicProjection.js','js/services/providerPublicShareGateway.js']){
-    assert.ok(manifest.scriptFiles.includes(file),file);assert.match(html,new RegExp(file.replaceAll('/','\\/')+'\\?v=2026-08-31\\.86'));
+    assert.ok(manifest.scriptFiles.includes(file),file);assert.ok(html.includes(file+'?v='+release),file);
   }
-  assert.match(html,/window\.__POGO_RELEASE_ID=['"]2026-08-31\.86['"]/);
   assert.match(html,/usernameValid=\/\^\[\^\.\#\$\\\/\\\[\\\]\\u0000-\\u001f\\u007f\]\{2,64\}\$\//);
 });

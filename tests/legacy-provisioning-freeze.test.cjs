@@ -49,3 +49,13 @@ test('every supported legacy activation path converges on the guarded creator wh
   assert.match(html,/window\.__POGO_LEGACY_PROVISIONING_ENFORCEMENT__=false/);
   assert.doesNotMatch(html,/window\.__POGO_LEGACY_PROVISIONING_ENFORCEMENT__=true/);
 });
+
+test('active RTDB null-child omission is the same freeze, not a released or malformed transition',()=>{
+  const model=load(),wire=freeze();delete wire.releasedAt;
+  assert.equal(model.valid(wire),true);
+  assert.equal(model.legacyCreationDecision(wire).code,'legacy-provisioning/frozen');
+  assert.equal(model.certificationMatches(wire,certification(),500),true);
+  assert.equal(model.valid({...wire,state:'released'}),false);
+  assert.equal(model.valid({...wire,unexpected:true}),false);
+  assert.equal(model.valid({...wire,releasedAt:0}),false);
+});

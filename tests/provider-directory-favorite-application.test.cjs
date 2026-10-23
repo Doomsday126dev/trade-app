@@ -34,7 +34,7 @@ test('Favorite migration and creation use canonical Firestore identity with an e
   assert.match(migration,/function resolveLegacyFavoriteIdentity/);
   assert.match(migration,/PROVIDER_CAPABILITIES\.providerPublicReadSupport[\s\S]+resolveCanonicalFavoriteIdentity[\s\S]+resolveLegacyFavoriteIdentity/);
   assert.match(migration,/async function accountSyncExactFavoriteUid/);
-  assert.match(migration,/resolveFavoriteIdentityForSession\(displayName,expected\)/);
+  assert.match(migration,/resolveFavoriteIdentityForSession\(displayName,expected,\{allowIncidentResolver:false\}\)/);
   assert.match(favorite,/await accountSyncFavoriteIdentity\(username\)/);
   assert.match(favorite,/entityId:targetUid,identity:\{targetUid\},values:\{displayName\}/);
   assert.doesNotMatch(favorite,/favoriteSyncUnavailable[\s\S]+accountSyncProduct\.exactFavoriteTargetUid[\s\S]+controller\.addEntity/);
