@@ -29,26 +29,24 @@ test('conflict safety requires an explicit choice and inaction never selects sav
   assert.doesNotMatch(source,/`\$\{id\}-later`\)\.onclick=.*onRemote/);
 });
 
-test('contextual trainer-first guidance is visible without enabling the retired forced tour',()=>{
-  assert.match(html,/id="mylist-guidance-title"/);
-  assert.doesNotMatch(html,/id="find-guidance-title"/);
-  assert.match(html,/data-i18n="trainer\.findDescription"|id="find-trainer-description"/);
-  for(const key of ['guidance.myListBody','guidance.findTrainer','guidance.exploreEvents'])assert.match(html,new RegExp(key.replace('.','\\.')));
-  const tour=block('function maybeStartTour','// ── EXPOSE');
-  assert.match(tour,/if\(TRAINER_FIRST_INTERIM_ENABLED\)return/);
+// Historical guidance cards and Inventory links were removed by the wants-only
+// shell. Assert the current, task-local guidance and safe legacy-route behavior.
+test('contextual wants guidance lives beside the affected actions without a forced tour',()=>{
+  const list=block('<!-- MY LIST -->','<!-- SCHEDULE -->');
+  assert.match(list,/workflow\.aboutSearches/);assert.match(list,/workflow\.searchHelp/);assert.match(list,/id="wants-about-searches" hidden/);
+  assert.match(list,/myList\.flagsAndDetails/);assert.match(html,/workflow\.needsPriorityHelp/);
+  assert.doesNotMatch(html,/id="mylist-guidance-title"|id="find-guidance-title"/);
+  const tour=block('function maybeStartTour','// ── EXPOSE');assert.match(tour,/if\(TRAINER_FIRST_INTERIM_ENABLED\)return/);
 });
 
-test('Legacy Inventory is a Settings App & Data read-only route and no longer a tab or shortcut',()=>{
-  const tabs=block('<div class="tabs" role="tablist"','<!-- BROWSE -->');
-  assert.doesNotMatch(tabs,/data-tab="have"|Legacy Inventory/);
-  assert.doesNotMatch(html,/id="account-legacy-inventory-action"/);
-  assert.match(html,/onclick="openSettingsTool\('inventory'\)"/);
-  assert.match(html,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
-  assert.match(html,/else if\(action==='have'\)/);
+test('Inventory is removed from Settings and navigation while old links resolve safely',()=>{
+  const tabs=block('<div class="tabs" role="tablist"','<!-- BROWSE -->');assert.doesNotMatch(tabs,/data-tab="have"|Legacy Inventory/);
+  assert.doesNotMatch(html,/id="account-legacy-inventory-action"|onclick="openSettingsTool\('inventory'\)"|id="tab-have"/);
+  const switcher=block('function switchTab(','let productShareScope=');assert.match(switcher,/if\(t==='have'\)t='mylist'/);
   assert.equal(manifest.shortcuts.some(item=>item.url.includes('action=have')),false);
 });
 
-test('Events expose Now Soon Later hierarchy accessible filters and one source action',()=>{
+test('Events expose Now Soon Later hierarchy accessible filters, visible bonuses and an in-app detail action',()=>{
   const source=block('function setEventTypeFilter','function renderSchedule');
   assert.match(source,/eventFilterKeydown/);
   assert.match(source,/ArrowLeft.*ArrowRight.*Home.*End/s);
@@ -56,7 +54,7 @@ test('Events expose Now Soon Later hierarchy accessible filters and one source a
   assert.match(source,/data-group="\$\{section\.group\}"/);
   assert.match(source,/section\.group==='now'\?'is-active'/);
   assert.match(source,/eventPresentationDomain\.eventTiming/);
-  assert.match(source,/const tag=link\?'a':'article'/);
+  assert.match(source,/const tag='article'/);
   assert.match(source,/aria-label=.*events\.openDetailsFor/s);
   assert.doesNotMatch(source,/event-card-bonuses|visibleBonuses/);
   assert.match(html,/\.event-filter\{[^}]*min-height:48px/);
@@ -71,8 +69,8 @@ test('backup export remains while production root restore is fail-closed',()=>{
 
 test('locale changes rerender only the active heavy surface',()=>{
   const source=block('function changeInterfaceLocale','let trainerSuggestionTimer');
-  for(const name of ['mylist','find','schedule','have','admin'])assert.match(source,new RegExp(`active==='${name}'`));
-  assert.doesNotMatch(source,/renderBrowse\(\)/);
+  for(const name of ['mylist','find','schedule','admin'])assert.match(source,new RegExp(`active==='${name}'`));
+  assert.doesNotMatch(source,/renderBrowse\(\)|active==='have'/);
   assert.match(source,/settings-modal.*renderSettings\(\)/s);
   assert.match(source,/_activeShareView\?\.username.*renderShareView/s);
   assert.doesNotMatch(source,/fetchPogoEvents|Firebase|queueSync|writeList/);

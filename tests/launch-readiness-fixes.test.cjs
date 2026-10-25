@@ -15,7 +15,7 @@ const between=(start,end)=>{
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 
 test('UX-01 order metadata is explicit, account-partitioned, and Firebase-schema neutral',()=>{
-  const order=between("const MY_LIST_ORDER_PREFIX='pogoMyListOrder_v1';",'function myListEditorHtml');
+  const order=between("const MY_LIST_ORDER_PREFIX='pogoMyListOrder_v1';",'function currentListEntries(');
   assert.match(order,/auth\?\.currentUser\?\.uid\|\|currentAuthUid/);
   assert.match(order,/owner\?\.uid!==uid\|\|value\.owner\?\.username!==user/);
   assert.match(order,/applyExplicitMyListOrder/);
@@ -27,32 +27,27 @@ test('UX-01 order metadata is explicit, account-partitioned, and Firebase-schema
   assert.match(priority,/model\.priorities\[targetKey\]\.push\(name\)/);
 });
 
-test('UX-01 exposes pointer and keyboard controls only in reorder mode',()=>{
-  const rows=between('function myListRowHtml','function myListPrioritySectionHtml');
-  assert.match(rows,/reorderMode\?`<button type="button" class="drag-handle"/);
-  assert.match(rows,/onpointerdown="myListPointerStart\(event\)"/);
-  assert.match(rows,/data-reorder-move="up"/);assert.match(rows,/data-reorder-move="down"/);
-  assert.match(rows,/priorityIndex<=0\?'disabled'/);assert.match(rows,/priorityIndex>=priorityCount-1\?'disabled'/);
-  const movement=between('function dragDrop','function announceMyListAction');
-  assert.match(movement,/sourcePriority!==targetPriority/);
-  assert.doesNotMatch(movement,/pointerType==='mouse'/);
-  assert.match(movement,/document\.elementFromPoint/);
-  assert.match(movement,/querySelector\('\.drag-handle'\)\?\.focus/);
+// The wants-only release removed normal reorder and LF/FT Board editing UI.
+// Keep their persisted-order isolation proof above, but qualify the current editing
+// and Board presentation contracts here instead of unreachable renderer functions.
+test('UX-01 wants rows offer named edit and remove actions without drag-only interaction',()=>{
+  const rows=between('function renderCombinedList(','function toggleWantsSection(');
+  assert.match(rows,/class="myrow-edit"[^>]+onclick="openCombinedEditor\(this\.dataset\.group,this\)"/);
+  assert.match(rows,/class="myrow-remove"[^>]+onclick="removeWantsGroup\(this\.dataset\.group\)"/);
+  assert.match(rows,/aria-label=.*myList\.openMoreFor/);
+  assert.match(rows,/aria-label=.*myList\.removeEntry/);
+  assert.doesNotMatch(rows,/draggable=|onpointerdown=|drag-handle/);
+  const active=between('<!-- MY LIST -->','<!-- SCHEDULE -->');assert.doesNotMatch(active,/mylist-reorder-toggle|toggleReorderMode/);
 });
 
-test('A11Y-02 Special Trade Board uses deep stable combobox focus',()=>{
-  const markup=between('<div class="modal special-board-modal">','<div class="ov" id="shortcuts-modal"');
-  for(const side of['lf','ft']){
-    assert.match(markup,new RegExp(`id="special-${side}-ac"[^>]*role="combobox"[^>]*aria-autocomplete="list"[^>]*aria-expanded="false"[^>]*aria-controls="special-${side}-dd"`));
-    assert.match(markup,new RegExp(`id="special-${side}-dd" role="listbox"`));
-  }
-  const special=between('let _specialAcFocus','function openSpecialTradeBoard');
-  assert.match(special,/\(_specialAcFocus\[side\]\?\?-1\)\+1/);
-  assert.doesNotMatch(special,/\(_specialAcFocus\[side\]\|\|-1\)/);
-  assert.match(special,/id="special-\$\{side\}-option-\$\{i\}" role="option" aria-selected="false"/);
-  assert.match(special,/aria-activedescendant/);assert.match(special,/scrollIntoView\(\{block:'nearest'\}\)/);
-  assert.match(special,/onpointerdown="event\.preventDefault\(\);specialAcSelect/);
-  assert.match(special,/ev\.stopPropagation\(\);_closeSpecialAc\(side\)/);
+test('A11Y-02 Board is a wants-only image selection and editing returns to the shared list',()=>{
+  const markup=between('<div class="modal special-board-modal">','<div class="ov" id="event-detail-modal"');
+  assert.match(markup,/id="special-lf-list"/);assert.match(markup,/onclick="exportSpecialBoardImage\(\)"/);
+  assert.match(markup,/closeModal\('special-board-modal'\);switchTab\('mylist'\)/);
+  assert.doesNotMatch(markup,/special-(?:lf|ft)-ac|special-ft-list|role="combobox"/);
+  const editor=between('id="combined-editor-modal"','<!-- SETTINGS');
+  assert.match(editor,/aria-modal="true"/);assert.match(editor,/id="combined-name"[^>]*list="combined-catalog"[^>]*required/);
+  assert.match(editor,/id="combined-save"/);assert.match(editor,/id="combined-error"/);
 });
 
 function primaryTypeDomain(){

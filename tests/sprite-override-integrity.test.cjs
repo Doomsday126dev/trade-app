@@ -6,8 +6,12 @@ const vm=require('node:vm');
 
 const root=join(__dirname,'..');
 const application=readFileSync(join(root,'js/app/application.js'),'utf8');
-const start=application.indexOf('const REVIEWED_SPRITE_OVERRIDE_EQUIVALENTS='),end=application.indexOf('\nfunction validateSpriteLoad',start);
-assert.ok(start>=0&&end>start);
+function runtimeFunctions(){
+  const start=application.indexOf('function reviewedEquivalentSpriteOverride('),end=application.indexOf('// ── PER-IMAGE',start);
+  const image=application.indexOf('function spriteImg('),imageEnd=application.indexOf('function validateSpriteLoad',image);
+  assert.ok(start>=0&&end>start&&image>=0&&imageEnd>image);
+  return application.slice(start,end)+application.slice(image,imageEnd);
+}
 
 function harness(){
   const POKE='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
@@ -15,6 +19,7 @@ function harness(){
   const context=vm.createContext({
     SPRITE_BASE:POKE,
     spriteSlugsDomain:{
+      verifiedEquivalentSpriteUrl(name,no){return name==='Scatterbug (Garden)'?`${POKE}664.png`:'';},
       spriteSemanticIdentity(name,gender){return{exactRequired:/H-Avalugg|Scatterbug \(/.test(name)||gender==='f'};},
       publicSpriteDisplayName:name=>name,publicSpriteBaseName:name=>String(name).replace(/^H-/,'').replace(/\s*\([^)]*\)$/,'')
     },
@@ -26,7 +31,7 @@ function harness(){
     i18nCore:{t:(_key,{name})=>`${name} art unavailable`},escAttr:value=>String(value||''),
     effectiveSpriteScale:()=>1,effectiveSpriteOrigin:()=>({cx:.5,cy:.5}),_spriteTransform:()=>({transform:'none',transformOrigin:'center'})
   });
-  vm.runInContext(application.slice(start,end),context);
+  vm.runInContext(runtimeFunctions(),context);
   return{context,POKE,exact};
 }
 

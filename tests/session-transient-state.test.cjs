@@ -39,6 +39,7 @@ function transientHarness(){
   const checked={checked:true};
   const cleared=[];
   const context=vm.createContext({
+    taskToolOrigin:null,closeModal(id){elements[id]?.classList.remove('open');},
     _sessionTransientGeneration:0,undoTimer:11,undoStack:{name:'Pidgey'},undoReturnFocus:{},_toastTimer:12,
     _feedbackAnnouncementTimer:13,_lastFeedbackAnnouncement:{message:'Removed Pidgey Undo',at:1},
     trainerSuggestionTimer:14,favoriteSavedPromptTimer:15,_modalFocusTimer:16,

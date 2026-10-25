@@ -190,3 +190,20 @@ test('EVENT-01 classifies deadline, replacement, abort, HTTP, parse, and network
   assert.equal(classify(new SyntaxError('x'),{replaced:false,deadlineExceeded:false}),'parse');
   assert.equal(classify(new TypeError('x'),{replaced:false,deadlineExceeded:false}),'network');
 });
+
+test('event memory expires, failed checks preserve last-known data and checked time',async()=>{
+  const old=Date.now()-3*60*60*1000;
+  const run=harness({cached:{t:old,data:{events:[{eventID:'last-known'}],raids:[],fetchedAt:old}}});
+  run.run(`_eventData={events:[{eventID:'memory-old'}],raids:[],fetchedAt:${old}}`);
+  const pending=run.run('fetchPogoEvents()');assert.equal(run.requests.length,2);
+  run.requests[0].reject(new Error('offline'));run.requests[1].reject(new Error('offline'));
+  await pending;assert.equal(run.run('_eventData.stale'),true);assert.equal(run.run('_eventData.fetchedAt'),old);assert.equal(run.run('_eventData.events[0].eventID'),'last-known');
+});
+test('malformed event payload is not cached as a successful check',async()=>{
+  const run=harness();const pending=run.run('fetchPogoEvents()');resolvePair(run,0,{unexpected:'object'},[]);await pending;
+  assert.equal(run.run('_eventLoadState'),'error');assert.equal(run.run('_eventData.fetchedAt'),0);assert.equal(run.storage.size,0);
+});
+test('optional raid download failure does not discard successful event data',async()=>{
+  const run=harness();const pending=run.run('fetchPogoEvents()');run.requests[0].resolve(response([{eventID:'events-healthy'}]));run.requests[1].reject(new Error('raid feed offline'));await pending;
+  assert.equal(run.run('_eventData.events[0].eventID'),'events-healthy');assert.equal(run.run('_eventData.raidsUnavailable'),true);assert.equal(run.run('_eventLoadState'),'ready');
+});

@@ -30,10 +30,28 @@ async function seed(){
 // Only emulator endpoint wiring and the App Check attestation boundary are
 // substituted. Login, restored Auth, own-account subscriptions, IndexedDB,
 // startup/migration, RTDB transactions and the product actions execute normally.
+function emulatorHtmlPolicy(html){
+  const endpoints=['http://127.0.0.1:9500','ws://127.0.0.1:9500','http://127.0.0.1:9599','http://127.0.0.1:4198'];
+  let changed=false;
+  const output=html.replace(/(<meta http-equiv="Content-Security-Policy" content=")([^"]+)(")/,(_match,before,policy,after)=>{
+    const updated=policy.replace(/(^|;)(\s*connect-src\s+)([^;]*)/,(_directive,separator,name,values)=>{
+      changed=true;return separator+name+[...new Set([...values.trim().split(/\s+/),...endpoints])].join(' ');
+    });
+    return before+updated+after;
+  });
+  if(!changed)throw new Error('Exact emulator fixture connect policy is missing');
+  return output;
+}
+function emulatorHtml(html){
+  let configured=false;
+  const output=emulatorHtmlPolicy(html).replace(/window\.__POGO_FIREBASE_CONFIG=Object\.freeze\(\{[\s\S]*?\}\);/,block=>{configured=true;return block.replaceAll('trade-list-a4297',project);});
+  if(!configured)throw new Error('Exact emulator Firebase config is missing');
+  return output;
+}
 async function routeEmulators(page,fixture,{legacy=true,candidate=false,picker=false}={}){
   const origin=String(test.info().project.use.baseURL||'http://localhost:4174');
   if(page.context().browser()?.browserType().name()==='chromium')await page.context().grantPermissions(['local-network-access'],{origin});
-  await page.route(url=>/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firestore\.googleapis\.com)$/.test(url.hostname),route=>route.abort());
+  await page.route(url=>/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firestore\.googleapis\.com|cloudfunctions\.net)$/.test(url.hostname),route=>route.abort());
   if(candidate){
     expect((await adminData('PUT','.settings/rules',JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/database.rules.favorite-resolver.json'),'utf8')))).status).toBe(200);
     await page.route('**/js/services/favoriteWriteTransport.js*',route=>{
@@ -66,7 +84,7 @@ async function routeEmulators(page,fixture,{legacy=true,candidate=false,picker=f
     return route.fulfill({contentType:'text/javascript',body:source});
   });
   await page.route(url=>url.origin===origin&&(url.pathname==='/'||url.pathname==='/index.html'),route=>{
-    let html=fs.readFileSync(path.join(root,'index.html'),'utf8').replaceAll('trade-list-a4297',project);
+    let html=emulatorHtml(fs.readFileSync(path.join(root,'index.html'),'utf8'));
     html=html.replace('state.auth=state.authMod.getAuth(state.app);',`state.auth=state.authMod.getAuth(state.app);state.authMod.connectAuthEmulator(state.auth,'${authHost}',{disableWarnings:true});`);
     return route.fulfill({contentType:'text/html',body:html});
   });
@@ -92,4 +110,4 @@ async function settled(page){try{await expect.poll(()=>page.evaluate(async()=>{a
 async function account(fixture){return(await adminData('GET',`accountSync/${fixture.uid}`)).value;}
 
 
-module.exports={seed,routeEmulators,login,settled,account,adminData,request,dataUrl};
+module.exports={seed,routeEmulators,login,settled,account,adminData,request,dataUrl,emulatorHtmlPolicy,emulatorHtml};

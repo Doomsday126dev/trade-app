@@ -102,7 +102,10 @@
     "review:uid-handles": "node scripts/build-identity-review.js",
     "reset:existing-pin": "node scripts/reset-existing-auth-pin.cjs",
     "visual": "playwright test",
-    "visual:headed": "playwright test --headed"
+    "visual:headed": "playwright test --headed",
+    "profile:events": "node scripts/profile-events.cjs",
+    "test:usability": "node --test tests/usability-import.test.cjs && playwright test tests/usability-improvements.spec.js --project=desktop --workers=1",
+    "test:usability:browsers": "playwright test --config=playwright.usability.config.cjs"
   },
   "repository": {
     "type": "git",

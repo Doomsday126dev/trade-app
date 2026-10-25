@@ -414,23 +414,34 @@ test('response allowlists accept expected terminal codes and reject extra, malfo
   await assert.rejects(state.service.validateResponse({ code: 'SUCCESS' }, context), /group-e\/response-invalid/);
 });
 
-test('production authority epoch-millisecond foundation timestamps pass the browser response contract', async () => {
+test('current authority redaction and historical timestamps pass the closed browser response contracts', async () => {
   const state = setup();
   const context = { attemptId: state.fixture.ATTEMPT.A, uid: state.fixture.UID.A, cryptoImpl: crypto.webcrypto };
   const foundation = redactFoundationDocument({
     fields: {
+      uid: { stringValue: state.fixture.UID.A },
       schemaVersion: { integerValue: '1' },
       canonicalTrainerName: { stringValue: 'Synthetic A' },
-      normalizedTrainerName: { stringValue: 'synthetica' },
-      handleKey: { stringValue: 'v1_73796e74686574696361' },
+      normalizedTrainerName: { stringValue: 'synthetic a' },
+      handleKey: { stringValue: 'v1_73796e7468657469632061' },
       legacyUsername: { stringValue: 'Synthetic A' },
       status: { stringValue: 'active' },
       revision: { integerValue: '1' },
       createdAt: { integerValue: '1787686365000' },
       updatedAt: { integerValue: '1787686365000' }
     }
-  });
-  const response = { ...success(state.fixture.UID.A, state.fixture.ATTEMPT.A), foundation };
+  }, state.fixture.UID.A);
+  assert.equal(Object.hasOwn(foundation,'createdAt'),false);assert.equal(Object.hasOwn(foundation,'updatedAt'),false);
+  const currentResponse={...success(state.fixture.UID.A,state.fixture.ATTEMPT.A),foundation};
+  assert.equal((await state.service.validateResponse(currentResponse,context)).code,'SUCCESS');
+  await assert.rejects(state.service.validateResponse({...currentResponse,foundation:{...foundation,identityKind:'provider_only'}},context),/group-e\/response-invalid/);
+  await assert.rejects(state.service.validateResponse({...currentResponse,foundation:{...foundation,extra:'unapproved'}},context),/group-e\/response-invalid/);
+  for(const revision of [null,0,-1,'1',1.5])await assert.rejects(state.service.validateResponse({...currentResponse,foundation:{...foundation,revision}},context),/group-e\/response-invalid/);
+  const providerFoundation={...foundation,identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null};
+  assert.equal((await state.service.validateResponse({...currentResponse,foundation:providerFoundation},context)).code,'SUCCESS');
+  for(const revision of [null,0,-1,'1',1.5])await assert.rejects(state.service.validateResponse({...currentResponse,foundation:{...providerFoundation,revision}},context),/group-e\/response-invalid/);
+  const {identityKind,legacyAccessConfigured,...historical}=foundation;
+  const response = { ...success(state.fixture.UID.A, state.fixture.ATTEMPT.A), foundation: {...historical,createdAt:1787686365000,updatedAt:1787686365000} };
 
   assert.equal(typeof response.foundation.createdAt, 'number');
   assert.equal(typeof response.foundation.updatedAt, 'number');
@@ -439,7 +450,7 @@ test('production authority epoch-millisecond foundation timestamps pass the brow
   for (const timestamp of [NaN, Infinity, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, null, {}, 'not-a-timestamp']) {
     await assert.rejects(state.service.validateResponse({
       ...response,
-      foundation: { ...foundation, createdAt: timestamp }
+      foundation: { ...response.foundation, createdAt: timestamp }
     }, context), /group-e\/response-invalid/);
   }
 });
@@ -467,8 +478,9 @@ test('page integration exposes only an explicit operator constructor and closes 
   assert.match(html, /await e1ClientFoundationCanary\.open\(configuration\)/);
   assert.match(html, /getBrowserContextDigest:\(\)=>e1ClientFoundationCanaryService\.browserContextDigest\(/);
   assert.doesNotMatch(html, /getRuntimeInstanceDigest|runtimeInstanceNonce/);
-  assert.match(html, /import\('https:\/\/www\.gstatic\.com\/firebasejs\/10\.12\.2\/firebase-functions\.js'\)/);
+  assert.match(html, /import\('https:\/\/www\.gstatic\.com\/firebasejs\/12\.14\.0\/firebase-functions\.js'\)/);
   assert.match(html, /function resetSessionTransientUi[\s\S]*e1ClientFoundationCanary\.close\(\)/);
   assert.equal((html.match(/__pogoCreateGroupEClientFoundationCanary\(/g) || []).length, 0);
-  assert.doesNotMatch(html, /providerLink|linkWithPopup|unlink\(/);
+  const constructor=html.slice(html.indexOf('window.__pogoCreateGroupEClientFoundationCanary='),html.indexOf('const i18nCore='));
+  assert.doesNotMatch(constructor, /providerLink|linkWithPopup|unlink\(/);
 });

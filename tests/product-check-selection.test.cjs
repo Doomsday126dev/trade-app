@@ -170,3 +170,7 @@ test('isolated Favorite backend and Rules use their dedicated qualification with
   const plan=select(['functions/favorite-resolver/index.js','tests/firebase/database.rules.favorite-resolver.json']);
   assert.equal(plan.commands.some(([,args])=>args.includes('check:contract')||args.includes('check:sec02-production-rules')),false);
 });
+
+test('browser contract tests importing the authority receive actual Functions dependencies',()=>{
+  for(const file of ['tests/e1-client-foundation-canary.test.cjs','tests/provider-account-foundation.test.cjs']){const plan=select([file]);assert.ok(plan.node.includes(file));assert.equal(plan.functions,true);assert.deepEqual(plan.errors,[]);}
+});

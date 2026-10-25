@@ -73,32 +73,22 @@ test('Admin navigation and data rows use the shared product icon and list langua
   assert.match(html,/\.admin-member-row,\.admin-role-row,\.admin-maintenance-row\{[^}]*border-bottom:1px solid var\(--border\)[^}]*border-radius:0/);
 });
 
-test('Legacy Inventory is a secondary read-only archive with compatibility intact',()=>{
-  const account=between('<div class="account-popover" id="account-popover"','<!-- Sync recovery banner');
-  const archive=between('<div class="page ui-container ui-container-wide" id="tab-have">','<!-- SCHEDULE -->');
-  assert.doesNotMatch(account,/openLegacyInventoryTool|inventory\.title/);
-  assert.match(html,/openSettingsTool\('inventory'\)/);
-  assert.match(archive,/inventory\.archiveTitle/);
-  assert.match(archive,/inventory\.archiveHelp/);
-  assert.match(archive,/id="legacy-inventory-export"/);
-  assert.doesNotMatch(archive,/have-ac-input|have-toggle-row|have-bulk-bar|have-browse-view|addInventoryEntry/);
-  assert.match(html,/action==='have'/);
-  assert.match(html,/function exportLegacyInventoryCsv\(/);
-  assert.match(html,/function renderMyHave\(/);
+test('retired Inventory has no navigable page or Settings entrypoint',()=>{
+  const index=readFileSync(path.join(root,'index.html'),'utf8');
+  assert.doesNotMatch(index,/id="tab-have"|openSettingsTool\('inventory'\)|openLegacyInventoryTool/);
+  assert.match(html,/const LEGACY_INVENTORY_READ_ONLY=true/);
+  assert.doesNotMatch(index,/onclick="(?:addInventoryEntry|updateInventoryQty|removeInventoryEntry|submitOfferAction)/);
+  assert.match(html,/const RETAINED_TABS=|function switchTab\(/);
 });
 
-test('Legacy Inventory uses shared archive framing without restoring edit controls',()=>{
-  const archive=between('<div class="page ui-container ui-container-wide" id="tab-have">','<!-- SCHEDULE -->');
-  assert.match(archive,/class="status-badge archive-read-only"/);
-  assert.match(archive,/ui-icon-archive/);
-  assert.match(archive,/class="mylist-search app-search-shell search-filter archive-filter"/);
-  assert.match(archive,/id="legacy-inventory-export"[\s\S]*ui-icon-download/);
-  assert.match(archive,/id="have-mine-out" class="legacy-archive-list"/);
-  assert.doesNotMatch(archive,/onclick="(?:addInventoryEntry|updateInventoryQty|removeInventoryEntry)/);
-  assert.match(html,/emptyHtml\(i18nCore\.t\('inventory\.legacyEmpty'\),i18nCore\.t\('inventory\.archiveHelp'\),'archive'\)/);
+test('Settings App and Data retains diagnostics without restoring inventory controls',()=>{
+  const data=between('data-settings-section="data"','</section>');
+  assert.match(data,/accountSync|data|health/i);
+  assert.doesNotMatch(data,/have-ac-input|have-toggle-row|have-bulk-bar|addInventoryEntry|openLegacyInventoryTool/);
+  assert.doesNotMatch(readFileSync(path.join(root,'index.html'),'utf8'),/id="legacy-inventory-export"|id="have-mine-out"/);
 });
 
-test('future trainer-change summaries remain documented and unimplemented',()=>{
+test('device-local trainer changes are implemented without claiming cross-device history',()=>{
   for(const requirement of [
     'authenticated, immutable Firebase Auth UID',
     'revision or content fingerprint',
@@ -107,7 +97,9 @@ test('future trainer-change summaries remain documented and unimplemented',()=>{
     'added, removed, and changed',
     'Baseline advancement'
   ])assert.match(readiness,new RegExp(requirement,'i'));
-  assert.match(readiness,/does not calculate, store, sync, or display/i);
+  assert.match(readiness,/device-local recurring-trainer comparisons/);
+  assert.match(readiness,/No cross-device history backend is enabled/);
+  assert.match(readiness,/Explicit \"Mark checked\" advances a Favorite baseline/);
   assert.doesNotMatch(html,/lastSeenTrainerRevision|trainerChangeSummary|advanceTrainerBaseline/);
 });
 

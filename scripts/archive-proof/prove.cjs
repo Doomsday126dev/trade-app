@@ -9,12 +9,12 @@ const path=require('node:path');
 const assert=require('node:assert/strict');
 const f=require('./format.cjs');
 const {adaptSyntheticSource}=require('./source-adapter.cjs');
-const {makeSource,loadCurrentContracts,SECRET_MARKERS,OWNER,SOURCE_COMMIT}=require('./fixtures/synthetic-source.cjs');
+const {makeSource,loadPinnedContracts,SECRET_MARKERS,OWNER,SOURCE_COMMIT}=require('./fixtures/synthetic-source.cjs');
 
 function writeNew(file,value){fs.writeFileSync(file,f.inspectableJson(value),{flag:'wx',mode:0o600});}
 function recordDigest(records){return f.digest([...records].sort((a,b)=>f.entityKey(a)<f.entityKey(b)?-1:1),'source-records');}
 function currentSemanticDigest(records,catalog,profile){
-  const {product}=loadCurrentContracts();
+  const {product}=loadPinnedContracts();
   const entries=new Map(catalog.entries.map(item=>[item.catalogId,item]));
   const active=records.filter(item=>item.entityType!=='tradeEntry'||!item.deleted&&item.identity.lane!=='for-trade');
   const projected=product.projectTradeEntities({entities:active,catalogEntryForId:id=>{const item=entries.get(id);return item?{name:item.name,displayName:item.name,no:item.speciesId}:null;},encodePriority:values=>JSON.stringify(values)});
@@ -52,7 +52,7 @@ async function prove(output){
   const second=f.reexportTarget(target,receipt);
   const restoredRecords=[...second.canonical.entities,...second.historical.records.filter(item=>item.kind==='retired-sync-entity').map(item=>item.value)];
   assert.equal(recordDigest(restoredRecords),expectedRecordsHash,'Full source wire records (including tombstones/FT) did not survive');
-  assert.equal(currentSemanticDigest(second.canonical.entities,second.catalog,second.canonical.profile.values),expectedSemanticHash,'Current-model semantic canonical state differs');
+  assert.equal(currentSemanticDigest(second.canonical.entities,second.catalog,second.canonical.profile.values),expectedSemanticHash,'Pinned source-model semantic canonical state differs');
   assert.equal(f.digest(second.knownDevices[0].history,'device-history'),expectedHistoryHash);
   assert.equal(f.digest(second.canonical.publicShare.snapshot,'public-share'),expectedPublicHash);
   assert.equal(f.digest(second.canonical.recoveryEvidence,'server-recovery'),expectedRecoveryHash);
@@ -61,7 +61,7 @@ async function prove(output){
 
   // Independent source-model validation: these contracts only construct/check
   // fixtures. The standalone archive reader does not need the old runtime files.
-  const contracts=loadCurrentContracts();
+  const contracts=loadPinnedContracts();
   for(const record of restoredRecords)assert.equal(contracts.merge.validateEntity(record,{ownerUid:OWNER,entityType:record.entityType,entityId:record.entityId}).ok,true);
   for(const item of second.knownDevices[0].journal.operations)assert.equal((await contracts.model.verifyOperation(item.operation)).ok,true);
   assert.equal(contracts.publication.publicShareProjectionStatus(second.canonical.publicShare.snapshot,{username:second.provenance.currentHandle}).ok,true);

@@ -22,17 +22,12 @@ test('durable provider activation is hard-disabled and exposes no executable act
   assert.deepEqual(Array.from(domain.PROVIDERS),['google','email','discord','legacy-pin']);
 });
 
-test('Account & Security is informational, account-only, and has no provider buttons',()=>{
-  const start=html.indexOf('id="settings-account-security-heading"');
-  const end=html.indexOf('</section>',start);
-  assert.ok(start>0&&end>start);
+test('Account and Security separates PIN from capability-gated provider actions',()=>{
+  const start=html.indexOf('id="settings-account-security-heading"'),end=html.indexOf('</section>',start);assert.ok(start>0&&end>start);
   const panel=html.slice(start,end);
-  const methods=panel.slice(panel.indexOf('class="account-security-methods"'),panel.indexOf('class="account-security-notice"'));
-  assert.match(panel,/data-provider="google"/);
-  assert.match(panel,/data-provider="email"/);
-  assert.match(panel,/data-provider="discord"/);
-  assert.match(panel,/data-provider="legacy-pin"/);
-  assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
+  for(const provider of ['google','discord','username-pin'])assert.match(panel,new RegExp(`data-provider="${provider}"`));
+  assert.doesNotMatch(panel,/data-provider="email"/);
+  assert.match(panel,/data-provider="google" hidden/);assert.match(panel,/data-provider-action[^>]+hidden/);
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/account-security-panel settings-account-only/);
 });
@@ -84,10 +79,11 @@ test('E.2 provider metadata remains absent from client reads, writes, and curren
   assert.doesNotMatch(rules,/authProviders|authProviderSubjects|authLinkAttempts|providerSubjects/);
 });
 
-test('PIN remains the active login and provider SDK methods are not imported',()=>{
+test('PIN login coexists with explicit capability-gated Google entry',()=>{
   assert.match(html,/signInWithEmailAndPassword=authMod\.signInWithEmailAndPassword/);
-  assert.match(html,/id="login-pin"/);
-  assert.doesNotMatch(html,/linkWithPopup|linkWithRedirect|GoogleAuthProvider|sendSignInLinkToEmail|OAuthProvider\(['"]oidc\.discord/);
+  assert.match(html,/id="login-pin"/);assert.match(html,/async function continueWithGoogle\(/);
+  assert.match(html,/function providerModulesRequired\(/);assert.match(html,/googlePublicEntry/);
+  assert.doesNotMatch(html,/sendSignInLinkToEmail|OAuthProvider\(['"]oidc\.discord/);
 });
 
 test('provider readiness preserves disabled share and preference flags',()=>{

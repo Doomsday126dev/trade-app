@@ -11,12 +11,17 @@ const releaseAssets=new Set([...worker.matchAll(/^\s+'([^']+)',?$/gm)].map(match
 
 test('production Connected Accounts exposes username and PIN while providers stay hidden and inert',()=>{
   const start=html.indexOf('id="settings-account-security"'),end=html.indexOf('</section>',start),panel=html.slice(start,end);
-  assert.match(panel,/data-i18n="security\.connectedAccounts"/);
+  assert.match(panel,/data-i18n="security\.methodsLabel"/);
   assert.match(panel,/data-provider="username-pin"/);assert.match(panel,/data-provider="username-pin"[\s\S]*data-i18n="security\.connected"/);
   for(const provider of['google','discord'])assert.match(panel,new RegExp(`account-security-provider-development[^>]+data-provider="${provider}" hidden`));
   assert.doesNotMatch(panel,/data-provider="email"|data-provider="legacy-pin"/);
   const primary=panel.slice(panel.indexOf('data-provider="username-pin"'),panel.indexOf('data-provider="google"'));
-  assert.doesNotMatch(primary,/<button|onclick=|href=|data-action=/);
+  // The retained main variant has an explicit, initially hidden PIN editor.
+  // It must not accidentally expose development provider actions in that row.
+  assert.match(primary,/id="settings-pin-toggle"[^>]+onclick="toggleSettingsPinForm\(\)"[^>]+hidden/);
+  assert.match(primary,/id="settings-pin-form" hidden onsubmit="event\.preventDefault\(\);savePinSettings\(\)"/);
+  assert.deepEqual([...primary.matchAll(/onclick="([^"]+)"/g)].map(match=>match[1]),['toggleSettingsPinForm()','toggleSettingsPinForm(false,true)']);
+  assert.doesNotMatch(primary,/href=|data-provider-action|handleGoogleAccountAction/);
   assert.match(panel,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+onclick="handleGoogleAccountAction\(\)" hidden/);
 });
 

@@ -135,7 +135,7 @@ test('search harness uses real protected serialization, scoped filters and condi
   assert.deepEqual(copied([{name:'Pikachu',no:25},{name:'Unresolved',no:null,shiny:true}]),[ordinary+'25']);
   assert.match(c.contextualIntentSearchHtml([{name:'Unresolved',no:null}],'Fixture',{compact:true}),/contextual-omitted[^>]*>Unresolved/);
 });
-test('canonical copy creation is add-only and idempotent; original Board records survive edits and reload',async()=>{
+test('wanted copy creation is add-only and idempotent; retired offers are rejected and Board evidence survives',async()=>{
   const {context:c,domain:d}=harness(),data=source(),original=JSON.stringify(data.users.Owner.specialTradeBoard),calls=[];
   Object.assign(c,{allData:data,auth:{currentUser:{uid:'owner'}},accountSyncCanonicalEntities:[],accountSyncCatalogIdentity:(_type,name)=>({catalogId:name}),accountSyncAuthorityCurrent:()=>true,toast:()=>{},i18nCore:{t:key=>key},
     accountSyncMutationAuthority:async()=>({mode:'canonical',controller:{}}),

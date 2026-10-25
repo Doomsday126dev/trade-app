@@ -22,7 +22,7 @@ test('feedback uses one polite announcer without making visual toasts live regio
   assert.doesNotMatch(html,/class="toast" id="toast"[^>]*(?:role=|aria-live=)/);
   assert.match(html,/function announceFeedback\(message\)[\s\S]*_lastFeedbackAnnouncement[\s\S]*<800/);
   assert.match(html,/function toast\(msg,dur=2500\)[\s\S]*announceFeedback\(msg\)/);
-  assert.match(html,/showFavoriteSavedPrompt\(username\)[\s\S]*announceFeedback\(message\.textContent\)/);
+  assert.match(html,/showFavoriteSavedPrompt\(username,\{canonical=false\}=\{\}\)[\s\S]*announceFeedback\(message\.textContent\)/);
 });
 
 test('copy confirmation remains focused, visual, and deduplicated',()=>{
@@ -65,12 +65,13 @@ test('A11Y-06 provides a skip target and native search-string disclosure control
   assert.doesNotMatch(html,/class="user-str-hdr" onclick=/);
 });
 
-test('My List autocomplete exposes a named combobox and managed active option',()=>{
-  assert.match(html,/id="ac-input"[^>]*data-i18n-aria-label="myList\.searchPlaceholder"[^>]*role="combobox"[^>]*aria-autocomplete="list"[^>]*aria-expanded="false"[^>]*aria-controls="ac-dropdown"/);
-  assert.match(html,/id="ac-dropdown" role="listbox"[^>]*data-i18n-aria-label="myList\.suggestionsLabel"/);
-  assert.match(html,/id="add-pokemon-option-\$\{i\}" role="option" aria-selected="false"/);
-  assert.match(html,/function acUpdateFocus\(\)[\s\S]*aria-activedescendant[\s\S]*aria-selected/);
-  assert.match(html,/function closeAddAutocomplete\(\)[\s\S]*aria-expanded','false'[\s\S]*removeAttribute\('aria-activedescendant'\)/);
+test('wanted-list lookup uses a named native datalist and accessible editor',()=>{
+  const index=readFileSync(path.join(root,'index.html'),'utf8');
+  const lookup=index.match(/<input[^>]+id="wants-add-name"[^>]*>/)?.[0];assert.ok(lookup);
+  assert.match(lookup,/list="combined-catalog"/);assert.match(lookup,/data-i18n-aria-label="myList\.searchPlaceholder"/);assert.match(lookup,/required/);
+  assert.match(index,/<datalist id="combined-catalog"/);
+  assert.match(index,/id="combined-editor-modal"[^>]+role="dialog"[^>]+aria-modal="true"[^>]+aria-labelledby="combined-editor-title"/);
+  assert.match(index,/id="combined-name"[^>]+list="combined-catalog"/);
 });
 
 test('compact feedback is bounded, safe-area aware, nonblocking, and reduced-motion aware',()=>{
