@@ -201,6 +201,7 @@
 "events.detailsPending":"Details und Quelle zeigen die Eventinhalte.",
 "events.allBonuses":"Alle {count} Boni und Bedingungen",
 "events.detailsChecked":"Details geprüft: {date}",
+"events.boundaryHours":"Beginn {start} · Ende {end}",
 "events.localTimeShort":"Ortszeit",
 "events.yourTimeShort":"Deine Ortszeit",
 "events.venueTimeShort":"Veranstaltungszeit · Zone unbestätigt",
