@@ -906,6 +906,34 @@
       "reviewedCandidateFiles": [],
       "artworkStatus": "unavailable",
       "identityStatus": "released"
+    },
+    {
+      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Astronaut)",
+      "displayIdentity": "Pikachu (Astronaut)",
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
+      "identityStatus": "released",
+      "artworkStatus": "unavailable",
+      "currentStatus": "pending-reviewed-artwork",
+      "reasonCategory": "accepted-source-missing",
+      "lastReviewedDate": "2026-10-25",
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "searchTerms": [
+        [
+          "astronaut"
+        ]
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "Official released identity; accepted gallery has no exact Astronaut caption."
+      },
+      "nextReviewAction": "Require exact Astronaut art; never substitute Cosmog Spacesuit or base Pikachu."
     }
   ],
   "reviewScope": "All 127 accepted-source GO galleries compared live on 2026-09-22 with no changes; all 21 inherited unavailable identities re-reviewed. Four September announcements are recorded as released with artwork unavailable, and two October identities remain announced.",

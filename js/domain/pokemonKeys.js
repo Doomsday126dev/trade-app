@@ -171,6 +171,7 @@
   catalogIdentityDefinitions.forEach(def=>verifiedIdentityByCatalogKey.set(normalizeCatalogKey(def.catalogId),def));
 
   const verifiedMissingEntries=Object.freeze([
+    Object.freeze({no:25,name:'Pikachu (Astronaut)',displayName:'Pikachu (Astronaut)',users:{}}),
     Object.freeze({
       no:25,
       name:"Pikachu (Professor Willow's Assistant)",

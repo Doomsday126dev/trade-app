@@ -22,10 +22,10 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:389,exact:364,unsupported:25});
-  assert.equal(report.candidates.length,25);
+  assert.deepEqual(report.counts,{canonical:390,exact:364,unsupported:26});
+  assert.equal(report.candidates.length,26);
   assert.equal(report.coverage.releaseEvidenceEntries,15);
-  assert.equal(report.upcomingIdentities.length,1);
+  assert.equal(report.upcomingIdentities.length,0);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
   assert.equal(buildReport({...inputs(),online:true}).status,'no-new-findings');
 });
@@ -82,7 +82,7 @@ test('newly released evidence identities missing from the catalog are flagged; f
 test('released September costumes are unavailable records while later announcements stay queued',()=>{
   const data=inputs();data.now=new Date('2026-09-17T00:00:00Z');
   const report=buildReport(data);
-  assert.equal(report.upcomingIdentities.length,1);assert.equal(report.missingIdentities.length,0);
+  assert.equal(report.upcomingIdentities.length,0);assert.equal(report.missingIdentities.length,0);
   for(const name of ["Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)",'Pikachu (PokeXciting Turquoise)']){
     assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'unavailable',name);
     const pending=data.pending.entries.find(row=>row.displayIdentity===name);
@@ -109,12 +109,12 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   assert.equal(sources.worldsOfficial.result,'released');
   const released=data.releases.entries.filter(row=>row.lifecycleStatus==='released');
   const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
-  assert.equal(released.length,13);assert.equal(announced.length,2);
+  assert.equal(released.length,14);assert.equal(announced.length,1);
   assert.ok(released.every(row=>row.artworkStatus==='unavailable'));
   assert.ok(data.releases.entries.every(row=>Date.parse(row.lastVerifiedAt)<=reviewedAt&&row.evidenceRetrieval.url===row.evidenceUrl));
-  assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Astronaut)','Pikachu (Batik Shirt)']);
+  assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Batik Shirt)']);
   assert.equal(announced.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
-  assert.equal(announced.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'unavailable');
+  assert.equal(released.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'unavailable');
 });
 test('broken, tampered and wrong-source local asset mappings are reported',()=>{
   const missing=inputs();missing.catalog.entries[0].assets.default='assets/sprites/go/missing.png';

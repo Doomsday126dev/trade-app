@@ -611,7 +611,7 @@ function selectCombinedGroup(index,selected){
 }
 function prepareWantsCatalog(){
   const options=document.getElementById('combined-catalog');
-  if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
+  if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}" label="${escAttr([e.dn,...(e.searchAliases||[]),...(costumeSpriteCatalogDomain.resolve({name:e.name})?.no===25?['costume Pikachu']:[])].join(' · '))}">${escHtml(e.dn)}</option>`).join('');
 }
 function openWantsAddEditor(){
   openCombinedEditor();
@@ -6931,7 +6931,10 @@ function pokemonDisplayName(entry){
   return pokemonNamesI18n.displayName(entry,{locale:i18nCore.getLocale()});
 }
 function pokemonSearchLabels(entry){
-  return pokemonNamesI18n.searchLabels(entry,{locale:i18nCore.getLocale()});
+  const labels=pokemonNamesI18n.searchLabels(entry,{locale:i18nCore.getLocale()});
+  // Costume is a search facet, never a different saved identity.
+  if(costumeSpriteCatalogDomain.resolution({names:[entry.name,entry.displayName].filter(Boolean)}).knownVariant)return [...labels,'costume','costumed'];
+  return labels;
 }
 function pokemonEntryForLegacyKey(entries,name){
   return pokemonCatalogDomain.entryForLegacyKey(entries,name);
@@ -12092,8 +12095,11 @@ async function writeSpecialBoard(board){
 let _specialAcFocus={lf:-1,ft:-1};
 function selectableSpriteEntry(entry){
   const context=spriteCatalogContext(entry.no,entry.name,entry.displayName||entry.name,entry.catalogId);
-  if(context.unresolved)return false;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:entry.gender});
+  // Verified identity eligibility is independent of artwork availability.
+  // Sprite resolution still renders the existing unavailable-art treatment.
+  if(reviewed.status==='unavailable')return reviewed.record?.identityStatus==='released';
+  if(context.unresolved)return false;
   return !reviewed.knownVariant||reviewed.status==='exact'&&reviewed.urls.length>0;
 }
 function _specialAllItems(){

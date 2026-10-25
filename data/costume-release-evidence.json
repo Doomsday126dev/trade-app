@@ -266,7 +266,7 @@
       "releaseDate": "2026-10-04",
       "dateMeaning": "Announced debut for the official October 4–10, 2026 local-time event",
       "evidenceUrl": "https://pokemongo.com/news/world-space-week-2026",
-      "lifecycleStatus": "announced",
+      "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
       "lastVerifiedAt": "2026-09-22T21:15:29Z",
       "evidenceRetrieval": {
@@ -274,6 +274,11 @@
         "retrievedAt": "2026-09-22T21:15:29Z",
         "sha256": "a93cfe82d157ea1a5ed77ff72570da248ba3511e0a95aa8d3d74cb66e1c5f52e",
         "result": "announced"
+      },
+      "currentVerification": {
+        "date": "2026-10-25",
+        "source": "https://pokemongolive.com/en/news/world-space-week-2026",
+        "result": "Official October 4–10 debut; Shiny possible. No invented game form identifier."
       }
     }
   ],
