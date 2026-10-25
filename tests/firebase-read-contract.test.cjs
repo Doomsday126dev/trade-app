@@ -12,7 +12,7 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-5])/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-6])/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -281,4 +281,18 @@ test('planner registration does not authorize an unknown 9879c42ebcf743397b77fd6
 });
 test('planner exact-9879c42ebcf743397b77fd61514efb3e9f4e5e0c registration still rejects changed read targets',t=>{
  const dir=plannerEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'9879c42ebcf743397b77fd61514efb3e9f4e5e0c').status,0);
+});
+
+function detailsEventsFixture(t){
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'events136-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ execFileSync('git',['archive','33e7c8208977dd201b29c02d6eec1737a28e59bc','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+}
+test('exact Events .136 source retains reviewed recovery read contract',t=>{
+ const result=check(detailsEventsFixture(t),'33e7c8208977dd201b29c02d6eec1737a28e59bc');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+});
+test('Details registration does not authorize an unknown 33e7c8208977dd201b29c02d6eec1737a28e59bc',t=>{
+ assert.notEqual(check(detailsEventsFixture(t),'b'.repeat(40)).status,0);
+});
+test('planner exact-33e7c8208977dd201b29c02d6eec1737a28e59bc registration still rejects changed read targets',t=>{
+ const dir=detailsEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'33e7c8208977dd201b29c02d6eec1737a28e59bc').status,0);
 });
