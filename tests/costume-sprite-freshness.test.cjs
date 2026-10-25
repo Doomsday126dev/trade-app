@@ -211,3 +211,7 @@ test('October review tracks released costumes without substituting base art and 
   data.now=new Date('2026-10-27T00:00:00Z');
   assert.deepEqual(buildReport(data).missingIdentities.map(row=>row.catalogName).sort(),['Pikachu (Hat and Capelet)','Sinistea (Bow)','Zubat (Top Hat)']);
 });
+
+test('overdue announced identity is flagged even when a catalog record exists, without auto release',()=>{
+ const data=inputs(),row=data.releases.entries.find(x=>x.catalogName==='Pikachu (Astronaut)');row.lifecycleStatus='announced';row.releaseDate='2026-10-01';data.now=new Date('2026-10-25T00:00:00Z');const before=JSON.stringify(data.releases);assert.ok(buildReport(data).problems.some(x=>x.kind==='release-status-review'&&x.identity===row.catalogName));assert.equal(JSON.stringify(data.releases),before);data.now=new Date('2026-10-01T12:00:00Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),false);
+});

@@ -26,16 +26,16 @@ test('reviewed costume art and excluded identities stay honest across current wa
     myListType='costumes';buildAcItems();renderMyList('');
     return names.map(name=>({name,selectable:selectableSpriteEntry({name,no:PogoDomain.costumeSpriteCatalog.resolve({name})?.no}),urls:PogoDomain.costumeSpriteCatalog.resolution({name}).urls}));
   },pending.entries.map(entry=>entry.displayIdentity));
-  expect(selectable).toHaveLength(21);
-  for(const row of selectable){expect(row.selectable,row.name).toBe(false);expect(row.urls,row.name).toEqual([]);}
+  expect(selectable).toHaveLength(pending.entries.length);
+  for(const row of selectable){expect(row.selectable,row.name).toBe(pending.entries.find(e=>e.displayIdentity===row.name).species.dex===25&&pending.entries.find(e=>e.displayIdentity===row.name).identityStatus==='released');expect(row.urls,row.name).toEqual([]);}
   expect(await page.evaluate(()=>selectableSpriteEntry({name:'Pikachu (Worlds 2025)',no:25}))).toBe(true);
-  const exact=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2025)'}).locator('img');
+  const exact=page.locator('.wants-row').filter({hasText:'Pikachu (Worlds 2025)'}).locator('img');
   await expect(exact).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
   await exact.scrollIntoViewIfNeeded();
   // Force decoding for this art check; native lazy-load budgets have separate tests.
   await exact.evaluate(image=>{image.loading='eager';});
   await expect.poll(()=>exact.evaluate(image=>image.complete&&image.naturalWidth>1)).toBe(true);
-  const historical=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2026)'});
+  const historical=page.locator('.wants-row').filter({hasText:'Pikachu (Worlds 2026)'});
   await expect(historical.locator('img')).toHaveCount(0);
   await expect(historical.locator('.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
 
