@@ -267,6 +267,9 @@
 "events.detailsPending":"Abre los detalles y la fuente para ver el contenido.",
 "events.allBonuses":"Los {count} bonus y condiciones",
 "events.detailsChecked":"Detalles comprobados: {date}",
+"events.localTimeShort":"Hora local",
+"events.yourTimeShort":"Tu hora local",
+"events.venueTimeShort":"Hora del recinto · zona sin confirmar",
 "events.bonuses":"Bonificaciones"
     ,"events.bonusesUnknown":"El feed no aporta bonificaciones. Consulta la fuente; no significa que no haya."
     ,"events.feedStatus":"Resumen de eventos"
