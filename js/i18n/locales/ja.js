@@ -6,7 +6,7 @@
     "accountSync.publicationPending":"保存済み・共有待ち",
     "accountSync.publicationPendingDetail":"非公開の変更は保存済みです。共有リストの更新を待っています。自動で再試行します。今すぐ再試行するにはタップしてください。",
     "admin.canonicalEntries":"希望 {count} 件",
-    "admin.legacyEntries":"ほしいものリスト：{count}件",
+    "admin.legacyEntries":"ほしいものリストのみ: {count}",
     "admin.legacyUpdated":"以前の更新：{time}",
 ...root.en,"who.title":"これを欲しい人は？","who.scope":"トレーナー","who.variant":"希望するバリエーション","who.broad":"すべてのバリエーション","who.broadNote":"種単位の結果です。各バリエーションを確認してください。","who.exact":"公開されたバリエーションと構造化された条件が一致します。メモを確認してください。交換可能性は保証しません。","who.missing":"選択したバリエーションは現在利用できません","who.noMatch":"選択に一致する閲覧可能な希望はありません。","who.search":"この希望を検索","groups.dateUnknown":"公開日時不明","groups.favorites":"すべてのお気に入り","groups.newSince":"前回の確認以降の追加・変更","groups.newTop":"新しい優先度「高」の希望","groups.first":"初回確認","groups.updated":"更新あり · 新規 {count}件 · 新しい優先度「高」の希望 {top}件","groups.unchanged":"変更なし","groups.aged":"古い公開情報","groups.checked":"確認済みにする","groups.checkedAll":"閲覧可能なトレーナーを確認済みにする","groups.historyLocal":"この端末で前回確認済みにした時点との差分です。初回は比較対象がありません。",
     "groups.manage":"グループ管理","groups.memberCount":"トレーナー {count}人","groups.updatedTrainers":"更新 {count}人","groups.review":"トレーナーの更新",
