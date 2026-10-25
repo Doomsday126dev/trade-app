@@ -8,26 +8,26 @@ const vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
 const {sha256}=require('../format.cjs');
 const clone=value=>JSON.parse(JSON.stringify(value));
-const ROOT=path.resolve(__dirname,'../../..');
+const ROOT=path.join(__dirname,'pinned-runtime');
 const OWNER='synthetic_archive_owner';
 const HANDLE='SyntheticArchiveTrainer';
 const AT=1788825600000;
 const CAPTURED_AT='2026-09-08T00:00:01.000Z';
 const SOURCE_COMMIT='c3fd690a2a2c46dab448873b244e496199283694';
 const SECRET_MARKERS=['SYNTHETIC_EXCLUDED_PIN_9274','SYNTHETIC_EXCLUDED_PASSWORD','SYNTHETIC_EXCLUDED_REFRESH_TOKEN','SYNTHETIC_EXCLUDED_ID_TOKEN','SYNTHETIC_EXCLUDED_PRIVATE_KEY','SYNTHETIC_EXCLUDED_PIN_HASH'];
-function loadCurrentContracts(){
+function loadPinnedContracts(){
   const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'source-contracts.json'),'utf8'));
   const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')};
   const context=vm.createContext({window,crypto:webcrypto,TextEncoder,TextDecoder,Uint8Array});
   for(const file of ['js/domain/productLimits.js','js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncProduct.js','js/domain/accountSyncMigration.js','js/domain/pokemonKeys.js','js/domain/publicSharePublication.js','js/data/trainerHistoryStore.js']){
     const bytes=fs.readFileSync(path.join(ROOT,file),'utf8');
-    if(expected.sourceCommit!==SOURCE_COMMIT||sha256(bytes)!==expected.files[file])throw new Error('Archive fixture source contract changed; revalidate its adapter and provenance before regenerating');
+    if(expected.sourceCommit!==SOURCE_COMMIT||sha256(bytes)!==expected.files[file])throw new Error('Pinned archive fixture contract changed; restore the declared source bytes or revalidate provenance');
     vm.runInContext(bytes,context,{filename:file,timeout:2000});
   }
   return{model:window.PogoDomain.accountSyncModel,merge:window.PogoDomain.accountSyncMerge,product:window.PogoDomain.accountSyncProduct,migration:window.PogoDomain.accountSyncMigration,catalog:window.PogoDomain.pokemonCatalog,publication:window.PogoDomain.publicSharePublication,history:window.PogoData.trainerHistoryStore};
 }
 async function makeSource(){
-  const api=loadCurrentContracts();let sequence=0;
+  const api=loadPinnedContracts();let sequence=0;
   const catalogInputs=[
     {no:25,name:'Pikachu'},
     {no:25,name:'Pikachu (Moon)'},
@@ -120,4 +120,4 @@ async function makeSource(){
   };
 }
 function CATEGORIES_FOR_FIXTURE(lane){return['wishlist','dynamax','gmax','costumes'].includes(lane)?lane:'wishlist';}
-module.exports={makeSource,loadCurrentContracts,OWNER,HANDLE,AT,CAPTURED_AT,SOURCE_COMMIT,SECRET_MARKERS};
+module.exports={makeSource,loadPinnedContracts,OWNER,HANDLE,AT,CAPTURED_AT,SOURCE_COMMIT,SECRET_MARKERS};

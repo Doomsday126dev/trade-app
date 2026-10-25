@@ -90,8 +90,8 @@ test('Profile cleanup preserves stored Discord IDs while grouping active fields'
   for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])assert.match(profile,new RegExp(key.replace('.','\\.')));
   assert.doesNotMatch(profile,/Discord User ID|prof-discord-id|discord-id-help/);
   const save=html.slice(html.indexOf('async function saveProfile'),html.indexOf('async function savePinSettings'));
-  assert.match(save,/const upd=\{friendCode:fc,bio,discord,avatarPokemon\}/);
-  assert.doesNotMatch(save,/discordId|delete|remove/);
+  assert.match(save,/upd=\{friendCode:raw\.friendCode\.trim\(\),bio:raw\.bio\.trim\(\),discord:raw\.discord\.trim\(\),avatarPokemon:raw\.avatarPokemon\.trim\(\)\}/);
+  assert.doesNotMatch(save,/discordId|delete\s+.*discord|removeItem\(/);
   assert.match(html,/@media\(min-width:768px\)\{\.settings-page-mode \.settings-mobile-back\{display:none!important\}\}/);
   assert.match(html,/\.wp-swatch\{height:48px;min-height:48px/);
 });

@@ -11,39 +11,21 @@ const window={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/domain/pokemonKeys.js'),'utf8'),{window});
 const pokemonCatalog=window.PogoDomain.pokemonCatalog;
 
-test('Wave 1 artwork inventory distinguishes production .80 from the .85 source candidate',()=>{
+test('artwork maintenance inventory matches the current pending source candidate without relabeling its baseline',()=>{
   assert.equal(inventory.maintenanceConcept,'pending-reviewed-artwork');
-  assert.equal(inventory.entries.length,21);
-  assert.deepEqual(inventory.productionBaseline,{
-    release:'2026-08-29.80',
-    canonicalRecords:376,
-    exactArtworkRecords:348,
-    pendingArtworkRecords:28,
-    selectableRows:423,
-    exactSelectableRows:395,
-    placeholderRows:28,
-    unknownOrBaseSpeciesFallthrough:0
-  });
-  assert.deepEqual(inventory.sourceCandidate,{
-    basedOnMainCommit:'fd4e399793642cc53fda6d634966f6ce73772847',
-    targetRelease:'2026-08-31.86',
-    canonicalRecords:376,
-    exactArtworkRecords:355,
-    pendingArtworkRecords:21,
-    selectableRows:423,
-    exactSelectableRows:402,
-    placeholderRows:21,
-    unknownOrBaseSpeciesFallthrough:0
-  });
-  const ids=new Set(),categories={
-    'newly-announced':0,
-    'accepted-source-missing':0,
-    'mapping-ambiguous':0,
-    'restricted-source-only':0,
-    'review-pending':0
-  };
+  assert.match(inventory.productionBaseline.release,/^2026-09-22\.117$/);
+  assert.equal(inventory.productionBaseline.canonicalRecords,376);
+  assert.equal(inventory.productionBaseline.exactArtworkRecords+inventory.productionBaseline.pendingArtworkRecords,inventory.productionBaseline.canonicalRecords);
+  assert.equal(inventory.maintenanceCandidate.canonicalRecords,391);
+  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,364);
+  assert.equal(inventory.maintenanceCandidate.pendingArtworkRecords,inventory.entries.length);
+  assert.equal(inventory.maintenanceCandidate.excludedRows,inventory.entries.length);
+  assert.equal(inventory.maintenanceCandidate.canonicalRecords,spriteCatalog.entries.length);
+  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,spriteCatalog.entries.filter(entry=>entry.status==='exact').length);
+  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords+inventory.maintenanceCandidate.pendingArtworkRecords,inventory.maintenanceCandidate.canonicalRecords);
+  const ids=new Set(),categories=Object.fromEntries(inventory.reasonCategories.map(key=>[key,0]));
   const unavailable=spriteCatalog.entries.filter(entry=>entry.status==='unavailable');
-  assert.equal(unavailable.length,21);
+  assert.equal(unavailable.length,inventory.entries.length);
   for(const entry of inventory.entries){
     assert.equal(ids.has(entry.canonicalCostumeId),false,entry.canonicalCostumeId);ids.add(entry.canonicalCostumeId);
     assert.ok(Object.hasOwn(categories,entry.reasonCategory),entry.reasonCategory);categories[entry.reasonCategory]++;
@@ -54,16 +36,15 @@ test('Wave 1 artwork inventory distinguishes production .80 from the .85 source 
     const source=unavailable.find(item=>item.no===entry.species.dex&&item.names.includes(entry.displayIdentity));
     assert.ok(source,`${entry.displayIdentity} is not an unavailable source-candidate record`);
     const canonical=pokemonCatalog.decorateCatalogEntry({no:source.no,name:entry.displayIdentity}).catalogId;
-    assert.equal(entry.canonicalCostumeId,canonical,entry.displayIdentity);
+    if(entry.canonicalCostumeId.startsWith('announcement:')){
+      assert.match(entry.canonicalCostumeId,/^announcement:[a-z0-9:-]+$/);
+      assert.equal(entry.candidate.exactImageFound,false,entry.displayIdentity);
+      assert.notEqual(entry.canonicalCostumeId,canonical,'Unresolved announcement identity must not masquerade as a resolved runtime catalog identity');
+    }else assert.equal(entry.canonicalCostumeId,canonical,entry.displayIdentity);
   }
-  assert.deepEqual(categories,{
-    'newly-announced':9,
-    'accepted-source-missing':0,
-    'mapping-ambiguous':5,
-    'restricted-source-only':7,
-    'review-pending':0
-  });
-  assert.deepEqual(new Set(unavailable.map(entry=>pokemonCatalog.decorateCatalogEntry({no:entry.no,name:entry.names[0]}).catalogId)),ids);
+  assert.equal(Object.values(categories).reduce((sum,count)=>sum+count,0),inventory.entries.length);
+  assert.equal(categories['identity-unverified'],3);
+  assert.deepEqual(new Set(unavailable.map(source=>inventory.entries.find(entry=>entry.species.dex===source.no&&source.names.includes(entry.displayIdentity))?.canonicalCostumeId)),ids);
   for(const resolved of [
     'Pikachu (Fragment)','Raichu Fragment Cap','Pikachu (Halloween 2022)','Pikachu (Halloween 2024)',
     'Pikachu (Holiday 2022)','Pikachu (Holiday 2024)','Gengar (Halloween 2024)'

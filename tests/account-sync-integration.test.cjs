@@ -476,7 +476,7 @@ test('legacy queue retirement preserves the board source and converts unrelated 
 test('allowlisted profile writes preserve the legacy board before and after canonical migration',()=>{
   const writeUser=html.slice(html.indexOf('async function writeUser(u,data)'),html.indexOf('function canWriteLoginDirectoryNow'));
   assert.ok(writeUser.indexOf('await accountSyncPreserveLegacyBoard(u)')<writeUser.indexOf('saveLocal(s)'));
-  assert.match(writeUser,/preserveLegacyBoard\)queueAccountSyncProfileFields\(u,s\.users\[u\]\)/);
+  assert.match(writeUser,/preserveLegacyBoard\)queued=queueAccountSyncProfileFields\(u,s\.users\[u\]\)/);
   const writeNow=html.slice(html.indexOf('async function writeUserNow'),html.indexOf('async function writeUserStrict'));
   assert.match(writeNow,/update\(ref\(db,`users\/\$\{u\}`\),profileValue\)/);
   assert.match(writeNow,/acknowledgeAccountSyncProfileFields\(u,profileValue\)/);

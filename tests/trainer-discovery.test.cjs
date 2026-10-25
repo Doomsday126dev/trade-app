@@ -99,6 +99,8 @@ test('trainer history is partitioned by UID and username and marks opened snapsh
   a.toggleFavorite('TrainerOne');
   a.rememberOpened('TrainerOne',{lists:{wishlist:{Pikachu:'H'}}},123);
   assert.equal(a.read().favorites.length,1);
+  assert.equal(a.snapshotFor('trainerone'),null,'Opening a Favorite must not mark it checked');
+  assert.equal(a.rememberChecked('TrainerOne',{lists:{wishlist:{Pikachu:'H'}}},{seenAt:123}).ok,true);
   assert.equal(a.snapshotFor('trainerone').seenAt,123);
   const b=history.createTrainerHistoryStore({storage,identity:{uid:'uid-b',username:'Bob'}});
   assert.equal(b.read().favorites.length,0);
@@ -140,7 +142,7 @@ test('empty, absent, and interrupted local migrations are safe and repeatable',(
   }));
   const completed=store.read(),persisted=JSON.parse(storage.getItem(store.key));
   assert.equal(completed.favorites[0].displayName,'Alpha');assert.equal(JSON.stringify(completed.favorites[0].tagIds),JSON.stringify(['tag_raid']));assert.equal('note' in completed.favorites[0],false);
-  assert.equal(completed.tags.tag_raid.label,'Raid');assert.equal(completed.recent[0].displayName,'Alpha');assert.equal(JSON.stringify(completed.snapshots.alpha),JSON.stringify(snapshot));assert.equal(persisted.migrationVersion,3);
+  assert.equal(completed.tags.tag_raid.label,'Raid');assert.equal(completed.recent[0].displayName,'Alpha');assert.equal(JSON.stringify(completed.snapshots.alpha),JSON.stringify({...snapshot,targetUid:''}));assert.equal(persisted.migrationVersion,3);
   const once=storage.getItem(store.key);store.read();assert.equal(storage.getItem(store.key),once);
 });
 

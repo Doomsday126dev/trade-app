@@ -71,12 +71,10 @@ test('DATA-01 safe backup export remains available and non-destructive',()=>{
 });
 
 test('SEC-03 retired Inventory and Offers handlers have no supported UI entrypoint',()=>{
-  const inventoryMarkup=between('<!-- HAVE (Inventory) -->','<!-- SCHEDULE -->');
-  const inventoryRender=between('function renderMyHave(filterVal)','function exportLegacyInventoryCsv()');
+  const index=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
   assert.match(html,/const LEGACY_INVENTORY_READ_ONLY=true/);
   assert.match(html,/SEC-03 dead-code backlog: remove the retired Inventory edit\/browse\/Offers/);
-  assert.doesNotMatch(inventoryMarkup,/have-browse-view|have-toggle-btn|openOfferModal|openIncomingOffersModal|submitOfferAction/);
-  assert.match(inventoryRender,/if\(LEGACY_INVENTORY_READ_ONLY\)[\s\S]*?return;[\s\S]*?openIncomingOffersModal/);
-  assert.match(html,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
-  assert.match(html,/action==='have'\)\{finalTab='have';switchTab\(finalTab,\{render:false\}\);\}/);
+  assert.doesNotMatch(index,/id="tab-have"|openLegacyInventoryTool|openSettingsTool\('inventory'\)/);
+  assert.doesNotMatch(index,/onclick="(?:addInventoryEntry|updateInventoryQty|removeInventoryEntry|openOfferModal|openIncomingOffersModal|submitOfferAction)/);
+  assert.match(html,/if\(LEGACY_INVENTORY_READ_ONLY\)\{toast/);
 });

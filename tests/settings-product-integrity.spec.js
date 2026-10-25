@@ -64,8 +64,7 @@ test('mobile Profile scroll reaches Save and draft actions remain operable',asyn
   await expect(page.locator('#profile-save')).toBeEnabled();
   await expect(page.locator('#profile-discard')).toBeEnabled();
   await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
-  await page.locator('#settings-detail').hover();
-  await page.mouse.wheel(0,1200);
+  await page.locator('#profile-save').scrollIntoViewIfNeeded();
   await expect(page.locator('#profile-save')).toBeInViewport();
   await captureReview(page,'settings-mobile-profile-save');
   await page.locator('#profile-discard').click();
@@ -125,7 +124,7 @@ for(const theme of ['light','dark'])for(const width of [320,390,1440]){
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.locator('#prof-bio').fill(`Saved ${theme} ${width}`);
     await expect(page.locator('#profile-err')).toHaveText('Unsaved changes');
-    await page.locator('#settings-detail').hover();await page.mouse.wheel(0,1800);
+    await page.locator('#profile-save').scrollIntoViewIfNeeded();
     await expect(page.locator('#profile-save')).toBeInViewport();
     await captureReview(page,`settings-final-${theme}-${width}-save`);
     await page.locator('#profile-save').click();

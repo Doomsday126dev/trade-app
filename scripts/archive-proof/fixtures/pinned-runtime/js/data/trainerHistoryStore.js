@@ -1,0 +1,213 @@
+(function(global){
+  const root=global.PogoData=global.PogoData||{};
+  const VERSION=3;
+  const PREFIX='pogoTrainerHistory_v1:';
+  const MAX_TAGS=24;
+  const MAX_TAGS_PER_FAVORITE=24;
+  const MAX_TAG_LABEL_LENGTH=40;
+  const MAX_SNAPSHOT_BYTES=512*1024;
+  const MAX_HISTORY_BYTES=2*1024*1024;
+  const MAX_FAVORITES=global.PogoDomain?.productLimits?.MAX_FAVORITES;
+  if(!Number.isInteger(MAX_FAVORITES)||MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
+
+  function ownerKey(identity){
+    const uid=String(identity?.uid||'').trim(),username=String(identity?.username||'').trim();
+    if(!uid||!username)throw new TypeError('trainer history requires UID and username');
+    return`${PREFIX}${encodeURIComponent(uid)}`;
+  }
+  function trainerRef(username){
+    const displayName=String(username||'').normalize('NFKC').trim();
+    return{key:displayName.toLocaleLowerCase('en-US'),displayName};
+  }
+  function normalizeLabel(value){return String(value??'').normalize('NFKC').trim().replace(/\s+/gu,' ');}
+  function labelIdentity(value){return normalizeLabel(value).toLocaleLowerCase('en-US');}
+  function codePointLength(value){return Array.from(String(value||'')).length;}
+  function utf8ByteLength(value){
+    let length=0;
+    for(const character of String(value)){
+      const point=character.codePointAt(0);
+      length+=point<=0x7f?1:point<=0x7ff?2:point<=0xffff?3:4;
+    }
+    return length;
+  }
+  function timestamp(value,fallback=0){const parsed=Number(value);return Number.isFinite(parsed)&&parsed>=0?parsed:fallback;}
+  function plainObject(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
+  function empty(identity){return{version:VERSION,schemaVersion:VERSION,migrationVersion:VERSION,owner:{uid:String(identity.uid),username:String(identity.username)},favorites:[],recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};}
+  function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
+    if(!storage)throw new TypeError('trainer history requires storage');
+    const key=ownerKey(identity);
+    function cleanFavorite(value,fallbackTime=0){
+      const item=trainerRef(value?.displayName||value?.trainerName);
+      if(!item.key)return null;
+      const createdAt=timestamp(value?.createdAt||value?.addedAt||fallbackTime),updatedAt=timestamp(value?.updatedAt,createdAt);
+      const targetUid=String(value?.targetUid||'').trim();
+      return{...item,...(targetUid?{targetUid}:{}),tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort().slice(0,MAX_TAGS_PER_FAVORITE),createdAt,updatedAt};
+    }
+    function cleanRecent(value){
+      const item=trainerRef(value?.displayName||value?.trainerName);
+      const openedAt=timestamp(value?.openedAt||value?.lastOpenedAt,-1);
+      return item.key&&openedAt>=0?{...item,openedAt}:null;
+    }
+    function cleanTag(id,value){
+      const label=normalizeLabel(value?.label||value?.displayLabel),normalizedLabel=labelIdentity(label);
+      if(!/^tag_[a-z0-9_-]{1,80}$/.test(String(id))||!label||codePointLength(label)>MAX_TAG_LABEL_LENGTH)return null;
+      return{id:String(id),label,normalizedLabel,createdAt:timestamp(value?.createdAt),updatedAt:timestamp(value?.updatedAt)};
+    }
+    function cleanSnapshot(value){
+      const seenAt=timestamp(value?.seenAt,-1),snapshot=plainObject(value?.snapshot);
+      if(seenAt<0||!Object.keys(snapshot).length)return null;
+      try{if(utf8ByteLength(JSON.stringify(snapshot))>MAX_SNAPSHOT_BYTES)return null;}catch{return null;}
+      return{seenAt,snapshot,targetUid:String(value?.targetUid||'')};
+    }
+    function normalize(value){
+      const state=empty(identity),source=value&&typeof value==='object'?value:{};
+      const sameOwner=source.owner?.uid===identity.uid&&source.owner?.username===identity.username;
+      if(!sameOwner)return state;
+      const seen=new Set();
+      for(const raw of Array.isArray(source.favorites)?source.favorites:[]){
+        const item=cleanFavorite(raw);if(!item||seen.has(item.key)){state.migration.skippedFavorites++;continue;}seen.add(item.key);state.favorites.push(item);
+      }
+      state.favorites=state.favorites
+        .sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key))
+        .slice(0,maxFavorites);
+      const recentSeen=new Set();
+      for(const raw of Array.isArray(source.recent)?source.recent:[]){
+        const item=cleanRecent(raw);if(!item||recentSeen.has(item.key)){state.migration.skippedRecents++;continue;}recentSeen.add(item.key);state.recent.push(item);
+      }
+      state.recent=state.recent.sort((a,b)=>b.openedAt-a.openedAt||a.key.localeCompare(b.key)).slice(0,maxRecent);
+      for(const [id,raw] of Object.entries(plainObject(source.tags))){
+        if(Object.keys(state.tags).length>=maxTags)break;
+        const tag=cleanTag(id,raw);if(tag)state.tags[id]=tag;
+      }
+      const activeIds=new Set(Object.keys(state.tags));
+      state.favorites=state.favorites.map(item=>({...item,tagIds:item.tagIds.filter(id=>activeIds.has(id))}));
+      let historyBytes=0;
+      const retained=new Set([...state.favorites,...state.recent].map(item=>item.key));
+      for(const item of Object.entries(plainObject(source.snapshots)).filter(([key])=>retained.has(key)).map(([key,value])=>({key,...value})).sort((a,b)=>b.seenAt-a.seenAt)){
+        const snapshot=cleanSnapshot(plainObject(source.snapshots)[item.key]);
+        if(snapshot){const bytes=utf8ByteLength(JSON.stringify(snapshot));if(historyBytes+bytes<=MAX_HISTORY_BYTES){state.snapshots[item.key]=snapshot;historyBytes+=bytes;}}
+      }
+      return state;
+    }
+    function write(value){const clean=normalize({...value,version:VERSION,owner:{uid:identity.uid,username:identity.username}});storage.setItem(key,JSON.stringify(clean));return clean;}
+    function read(){
+      try{
+        const raw=JSON.parse(storage.getItem(key)||'null');
+        const versions=[raw?.version,raw?.schemaVersion,raw?.migrationVersion].filter(value=>Number.isFinite(Number(value))).map(Number);
+        if(versions.some(version=>version>VERSION))return empty(identity);
+        const state=normalize(raw);
+        const migrationNeeded=raw&&raw.owner?.uid===identity.uid&&raw.owner?.username===identity.username&&(raw.version!==VERSION||raw.schemaVersion!==VERSION||raw.migrationVersion!==VERSION);
+        if(migrationNeeded){try{storage.setItem(key,JSON.stringify(state));}catch{} }
+        return state;
+      }catch{return empty(identity);}
+    }
+    function favoriteFor(username){const item=trainerRef(username);return read().favorites.find(value=>value.key===item.key)||null;}
+    function uniqueTagId(state){let suffix=Number(now()).toString(36),id=`tag_${suffix}`,index=1;while(state.tags[id])id=`tag_${suffix}_${index++}`;return id;}
+    return Object.freeze({
+      key,read,favoriteFor,
+      isFavorite:username=>!!favoriteFor(username),
+      toggleFavorite(username,{targetUid=''}={}){
+        const state=read(),item=trainerRef(username),index=state.favorites.findIndex(value=>value.key===item.key),timestamp=Number(now());
+        if(index>=0)state.favorites.splice(index,1);
+        else state.favorites.push({...item,...(String(targetUid).trim()?{targetUid:String(targetUid).trim()}:{}),tagIds:[],createdAt:timestamp,updatedAt:timestamp});
+        state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
+        write(state);return{favorite:index<0,state:read()};
+      },
+      updateCanonicalName(username){
+        const state=read(),item=trainerRef(username),current=state.favorites.find(value=>value.key===item.key);
+        if(current&&current.displayName!==item.displayName){current.displayName=item.displayName;current.updatedAt=Number(now());write(state);return true;}return false;
+      },
+      rememberOpened(username,snapshot,openedAt=Number(now())){
+        const state=read(),item={...trainerRef(username),openedAt};
+        state.recent=[item,...state.recent.filter(value=>value.key!==item.key)].slice(0,maxRecent);
+        // Favorite baselines advance only through the explicit checked action.
+        if(!state.favorites.some(favorite=>favorite.key===item.key))state.snapshots[item.key]={seenAt:openedAt,snapshot};
+        write(state);return read();
+      },
+      rememberChecked(username,snapshot,{seenAt=Number(now()),targetUid=''}={}){
+        const state=read(),item=trainerRef(username),favorite=state.favorites.find(value=>value.key===item.key);
+        if(!favorite||String(favorite.targetUid||'')!==String(targetUid)||!cleanSnapshot({seenAt,snapshot}))return{ok:false};
+        if(state.snapshots[item.key]?.seenAt>seenAt)return{ok:false};
+        state.snapshots[item.key]={seenAt,snapshot,targetUid};
+        try{write(state);return{ok:read().snapshots[item.key]?.seenAt===seenAt};}catch{return{ok:false};}
+      },
+      snapshotFor:username=>read().snapshots[trainerRef(username).key]||null,
+      createTag(label){
+        const state=read(),display=normalizeLabel(label),normalizedLabel=labelIdentity(display);
+        if(!display)return{ok:false,code:'tag-empty'};
+        if(codePointLength(display)>MAX_TAG_LABEL_LENGTH)return{ok:false,code:'tag-too-long'};
+        if(Object.keys(state.tags).length>=maxTags)return{ok:false,code:'tag-limit'};
+        if(Object.values(state.tags).some(tag=>tag.normalizedLabel===normalizedLabel))return{ok:false,code:'tag-duplicate'};
+        const timestamp=Number(now()),id=uniqueTagId(state);state.tags[id]={id,label:display,normalizedLabel,createdAt:timestamp,updatedAt:timestamp};write(state);return{ok:true,id,state:read()};
+      },
+      ensureTag(label){
+        const state=read(),display=normalizeLabel(label),normalizedLabel=labelIdentity(display);
+        if(!display)return{ok:false,code:'tag-empty'};
+        if(codePointLength(display)>MAX_TAG_LABEL_LENGTH)return{ok:false,code:'tag-too-long'};
+        const existing=Object.values(state.tags).find(tag=>tag.normalizedLabel===normalizedLabel);
+        if(existing)return{ok:true,id:existing.id,created:false,state};
+        if(Object.keys(state.tags).length>=maxTags)return{ok:false,code:'tag-limit'};
+        const timestamp=Number(now()),id=uniqueTagId(state);state.tags[id]={id,label:display,normalizedLabel,createdAt:timestamp,updatedAt:timestamp};write(state);return{ok:true,id,created:true,state:read()};
+      },
+      renameTag(id,label){
+        const state=read(),tag=state.tags[id],display=normalizeLabel(label),normalizedLabel=labelIdentity(display);
+        if(!tag)return{ok:false,code:'tag-missing'};
+        if(!display)return{ok:false,code:'tag-empty'};
+        if(codePointLength(display)>MAX_TAG_LABEL_LENGTH)return{ok:false,code:'tag-too-long'};
+        if(Object.values(state.tags).some(other=>other.id!==id&&other.normalizedLabel===normalizedLabel))return{ok:false,code:'tag-duplicate'};
+        Object.assign(tag,{label:display,normalizedLabel,updatedAt:Number(now())});write(state);return{ok:true,state:read()};
+      },
+      deleteTag(id){
+        const state=read();if(!state.tags[id])return{ok:false,code:'tag-missing'};
+        delete state.tags[id];state.favorites.forEach(item=>{item.tagIds=item.tagIds.filter(value=>value!==id);});write(state);return{ok:true,state:read()};
+      },
+      setFavoriteTags(username,tagIds){
+        const state=read(),item=state.favorites.find(value=>value.key===trainerRef(username).key),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
+        if(!item)return{ok:false,code:'favorite-missing'};
+        if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
+        item.tagIds=ids;item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
+      },
+      updateFavoriteOrganization(username,{tagIds=[]}={}){
+        const state=read(),item=state.favorites.find(value=>value.key===trainerRef(username).key),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
+        if(!item)return{ok:false,code:'favorite-missing'};
+        if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
+        item.tagIds=ids;
+        item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
+      },
+      saveFavoriteOrganization(username,{tagIds=[],targetUid=''}={}){
+        const state=read(),ref=trainerRef(username),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
+        if(!ref.key)return{ok:false,code:'favorite-missing'};
+        if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
+        let item=state.favorites.find(entry=>entry.key===ref.key),created=false;
+        if(!item){
+          if(state.favorites.length>=maxFavorites)return{ok:false,code:'favorite-limit'};
+          const timestamp=Number(now());item={...ref,...(String(targetUid).trim()?{targetUid:String(targetUid).trim()}:{}),tagIds:[],createdAt:timestamp,updatedAt:timestamp};state.favorites.push(item);created=true;
+        }
+        item.displayName=ref.displayName;if(String(targetUid).trim())item.targetUid=String(targetUid).trim();item.tagIds=ids;
+        item.updatedAt=Number(now());state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
+        write(state);return{ok:true,created,state:read()};
+      },
+      replaceSyncedOrganization({favorites=[],tags={}}={}){
+        const state=read(),canonical=Array.isArray(favorites)?favorites:[];
+        // Once the account-sync listener is authoritative, this device-local
+        // projection must mirror it exactly. Older unresolved favorites remain
+        // available through the migration/recovery evidence; merging them back
+        // here would let a standalone PWA disagree with every other same-UID
+        // client while still reporting a healthy sync state.
+        state.tags=plainObject(tags);
+        state.favorites=canonical;
+        return{ok:true,state:write(state)};
+      },
+      filterFavorites({query='',tagIds=[]}={}){
+        const state=read(),needle=labelIdentity(query),selected=[...new Set(tagIds.map(String))];
+        return state.favorites.filter(item=>{
+          const tagLabels=item.tagIds.map(id=>state.tags[id]?.label||'');
+          const text=labelIdentity([item.displayName,...tagLabels].join(' '));
+          return(!needle||text.includes(needle))&&(!selected.length||selected.every(id=>item.tagIds.includes(id)));
+        });
+      },
+      clear(){storage.removeItem(key);}
+    });
+  }
+  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_SNAPSHOT_BYTES,MAX_HISTORY_BYTES,createTrainerHistoryStore});
+})(window);
