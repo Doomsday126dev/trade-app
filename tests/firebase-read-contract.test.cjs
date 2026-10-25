@@ -257,14 +257,14 @@ test('isolated .131 analytics release preserves exact public readback boundaries
 
 function compactEventsFixture(t){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'events134-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
- execFileSync('git',['archive','c93bb6aebd263c7620c7e4da1d5f742eb0485ec6','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+ execFileSync('git',['archive','0e1a9f7844d6c0c7d556518a6d06815de185d2fc','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
 }
 test('exact Events .134 source retains reviewed recovery read contract',t=>{
- const result=check(compactEventsFixture(t),'c93bb6aebd263c7620c7e4da1d5f742eb0485ec6');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+ const result=check(compactEventsFixture(t),'0e1a9f7844d6c0c7d556518a6d06815de185d2fc');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
 });
 test('Events registration does not authorize an unknown SHA',t=>{
  const result=check(compactEventsFixture(t),'b'.repeat(40));assert.notEqual(result.status,0);
 });
 test('Events exact-SHA registration still rejects changed read targets',t=>{
- const dir=compactEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'c93bb6aebd263c7620c7e4da1d5f742eb0485ec6').status,0);
+ const dir=compactEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'0e1a9f7844d6c0c7d556518a6d06815de185d2fc').status,0);
 });
