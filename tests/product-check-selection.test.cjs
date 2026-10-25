@@ -174,3 +174,7 @@ test('isolated Favorite backend and Rules use their dedicated qualification with
 test('browser contract tests importing the authority receive actual Functions dependencies',()=>{
   for(const file of ['tests/e1-client-foundation-canary.test.cjs','tests/provider-account-foundation.test.cjs']){const plan=select([file]);assert.ok(plan.node.includes(file));assert.equal(plan.functions,true);assert.deepEqual(plan.errors,[]);}
 });
+
+test('retired event HTML fixtures retain current fact and browser owners',()=>{
+ const retired='tests/fixtures/events-source/halloween-official.html';const plan=select([retired],{exists:file=>file!==retired});assert.deepEqual(plan.errors,[]);assert.ok(plan.node.includes('tests/events-ia.test.cjs'));assert.ok(plan.browser.includes('tests/events-current-source.spec.js'));
+});
