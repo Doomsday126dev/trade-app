@@ -29,7 +29,7 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Real public-feed snapshot cards and outage recovery
         if: github.event_name == 'pull_request'
-        run: npx playwright test --config=playwright.event-sources.config.cjs
+        run: npx playwright test --config=playwright.day-planner.config.cjs
       - name: Refresh permitted summary feed; preserve curated detail dates
         if: github.event_name != 'pull_request'
         run: python3 scripts/events/refresh-event-details.py --output event-details-candidate.json
