@@ -270,6 +270,15 @@
 "events.localTimeShort":"Hora local",
 "events.yourTimeShort":"Tu hora local",
 "events.venueTimeShort":"Hora del recinto · zona sin confirmar",
+"events.dayPlanner":"Plan diario",
+"events.plannerDate":"{date}: {count} eventos de horario limitado. Selecciona para ver inicios y finales.",
+"events.timedLegend":"Los números cuentan eventos de horario limitado. Elige un día para ver inicios, finales y horas.",
+"events.timedDay":"Horario limitado",
+"events.startingDay":"Empiezan",
+"events.endingDay":"Terminan",
+"events.uncertainDay":"Comprueba el horario",
+"events.noTimedDay":"No hay eventos cortos con horario.",
+"events.alsoOngoing":"También en curso ({count})",
 "events.bonuses":"Bonificaciones"
     ,"events.bonusesUnknown":"El feed no aporta bonificaciones. Consulta la fuente; no significa que no haya."
     ,"events.feedStatus":"Resumen de eventos"

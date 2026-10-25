@@ -53,7 +53,7 @@ test('timeline keeps one chronological column beside the calendar and Up next ov
   assert.match(render,/class="event-rail-module event-calendar event-calendar-\$\{escAttr\(variant\)\}"/);
   assert.match(render,/class="event-rail-module event-up-next"/);
   assert.match(render,/class="event-calendar-legend"/);
-  assert.match(render,/events\.calendarLegend/);
+  assert.match(render,/events\.timedLegend/);
   assert.match(render,/details class="event-calendar-disclosure"/);
   assert.match(render,/const tag='article'/);
   assert.match(render,/class="event-card card-row/);
@@ -109,12 +109,12 @@ test('calendar marks meaningful starts while selected-date filtering retains mul
 
 test('calendar marker and selected-date state remain visually and semantically distinct',()=>{
   const render=html.slice(html.indexOf('function renderEventCalendar'),html.indexOf('function renderEventSelectedDay'));
-  assert.match(render,/cell\.markerCount\?' has-events'/);
+  assert.match(render,/cell\.timedCount\?' has-timed-events'/);
   assert.match(render,/selected\?' selected'/);
   assert.match(render,/aria-selected="\$\{selected\}"/);
-  assert.match(render,/events\.calendarHasEvents/);
+  assert.match(render,/events\.plannerDate/);
   assert.match(html,/\.event-calendar-day\.selected\{background:var\(--accent\)/);
-  assert.match(html,/\.event-calendar-day\.selected i\{background:#fff/);
+  assert.match(html,/\.event-calendar-day\.selected \.event-calendar-count/);
 });
 
 test('filters and loading empty filtered error offline states remain distinct',()=>{
@@ -130,7 +130,7 @@ test('filters and loading empty filtered error offline states remain distinct',(
   assert.match(render,/events\.clearDate/);
 });
 
-test('calendar and overview interactions are keyboard reachable without count or sprite clutter',()=>{
+test('calendar and overview interactions expose timed counts and keyboard navigation',()=>{
   const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
   assert.match(render,/data-event-action="date" data-date="\$\{cell\.key\}"/);
   assert.match(render,/function eventsKeydown\(event\)[\s\S]*eventCalendarKeydown\(event,day\.dataset\.date/);
@@ -139,10 +139,10 @@ test('calendar and overview interactions are keyboard reachable without count or
   assert.match(render,/pokemonNamesI18n\.speciesName\(\{no\},locale\)/);
   assert.match(render,/new Intl\.ListFormat\(locale,\{style:'short',type:'conjunction'\}\)/);
   assert.doesNotMatch(render,/event-up-next-sprite|spriteImg\(no,32/);
-  assert.match(render,/cell\.markerCount\?'<i aria-hidden="true"><\/i>'/);
+  assert.match(render,/cell\.timedCount\?`<small class="event-calendar-count"/);
   assert.match(render,/renderEventSelectedDay\(events\)/);
   assert.match(render,/events\.onDate/);
-  assert.match(render,/events\.noneOnDate/);
+  assert.match(render,/events\.noTimedDay/);
   assert.match(render,/timing\.timeLabel/);
   assert.match(render,/data-event-action="jump" data-event-id=/);
   assert.match(render,/function eventsAction\(event\)[\s\S]*jumpToEvent\(control\.dataset\.eventId/);

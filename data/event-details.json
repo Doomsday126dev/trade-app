@@ -1472,10 +1472,10 @@
   "events": {
     "pokemon-go-city-safari-boston-2026-rescheduled": {
       "bonuses": [
-        "Current ticket holders: up to five Special Trades per day.",
-        "Current ticket holders: half Stardust cost for trades.",
-        "Current ticket holders: four-hour Lures, excluding Golden Lures.",
-        "Current ticket holders: increased Shiny chance; eight-hour Party Play."
+        "Current ticket holders: Up to five Special Trades per day.",
+        "Current ticket holders: Half Stardust cost for trades.",
+        "Current ticket holders: Four-hour Lures, excluding Golden Lures.",
+        "Current ticket holders: Increased Shiny chance; eight-hour Party Play."
       ],
       "caveats": [
         "Existing ticket holders only, worldwide: October 24 and 25, 10 a.m.–6 p.m. player-local time each day. This is not an overnight window."
@@ -1749,9 +1749,9 @@
     "season-24-twilight-trails": {
       "bonuses": [
         "GO Pass Rank 1: +1 Candy per trade; guaranteed trade Candy XL for Trainers level 31+.",
-        "GO Pass Rank 25: increased Gift opening, receiving and storage limits.",
-        "GO Pass Rank 50: double Daily Adventure Incense duration.",
-        "GO Pass Rank 75: increased hatch XP and Stardust; multiplier not specified."
+        "GO Pass Rank 25: Increased Gift opening, receiving and storage limits.",
+        "GO Pass Rank 50: Double Daily Adventure Incense duration.",
+        "GO Pass Rank 75: Increased hatch XP and Stardust; multiplier not specified."
       ],
       "caveats": [
         "These are GO Pass milestone rewards, not unconditional season bonuses. Each unlocked bonus lasts until that GO Pass ends."
