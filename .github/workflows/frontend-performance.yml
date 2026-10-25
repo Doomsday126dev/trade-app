@@ -101,3 +101,58 @@ jobs:
         run: |
           npm run profile:frontend-assets
           npm run profile:service-worker-install
+
+  paired-runtime:
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == 'chore/integrate-events136'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: Compare immutable runtime sources on one runner
+        run: |
+          baseline_dir=$(mktemp -d)
+          candidate_dir=$(mktemp -d)
+          git archive 9879c42ebcf743397b77fd61514efb3e9f4e5e0c | tar -x -C "$baseline_dir"
+          git archive 87cf84e712384491b23897c1a2f252258a17448e | tar -x -C "$candidate_dir"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$candidate_dir/node_modules"
+          # One unchanged candidate harness owns both measurements and limits.
+          # Extra logging is outside the measured browser interval.
+          python3 - "$candidate_dir" <<'PY'
+          import pathlib,sys
+          p=pathlib.Path(sys.argv[1])/'tests/my-list-performance.spec.js'
+          s=p.read_text();needle='expect(filter.ms).toBeLessThan(count===1000?100:75);'
+          assert needle in s
+          p.write_text(s.replace(needle,'console.log("SCALE_FILTER",JSON.stringify({count,...filter}));'+needle))
+          PY
+          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/baseline.log 2>&1 &
+          baseline_pid=$!
+          python3 -m http.server 8880 --bind 127.0.0.1 --directory "$candidate_dir" >/tmp/candidate.log 2>&1 &
+          candidate_pid=$!
+          trap 'kill "$baseline_pid" "$candidate_pid"' EXIT
+          for port in 8879 8880; do
+            for attempt in {1..30}; do
+              if curl --fail --silent "http://127.0.0.1:$port/" >/dev/null; then break; fi
+              sleep 1
+            done
+          done
+          cd "$candidate_dir"
+          set +e
+          echo 'PAIRED_BASELINE 9879c42ebcf743397b77fd61514efb3e9f4e5e0c'
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:8879 npm run test:performance:browser
+          baseline_status=$?
+          echo 'PAIRED_CANDIDATE 87cf84e712384491b23897c1a2f252258a17448e'
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:8880 npm run test:performance:browser
+          candidate_status=$?
+          set -e
+          echo "Baseline status: $baseline_status (diagnostic)"
+          echo "Candidate status: $candidate_status (mandatory)"
+          test "$candidate_status" -eq 0
