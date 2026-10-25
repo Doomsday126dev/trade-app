@@ -285,14 +285,14 @@ test('planner exact-9879c42ebcf743397b77fd61514efb3e9f4e5e0c registration still 
 
 function detailsEventsFixture(t){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'events136-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
- execFileSync('git',['archive','33e7c8208977dd201b29c02d6eec1737a28e59bc','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+ execFileSync('git',['archive','87cf84e712384491b23897c1a2f252258a17448e','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
 }
 test('exact Events .136 source retains reviewed recovery read contract',t=>{
- const result=check(detailsEventsFixture(t),'33e7c8208977dd201b29c02d6eec1737a28e59bc');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+ const result=check(detailsEventsFixture(t),'87cf84e712384491b23897c1a2f252258a17448e');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
 });
-test('Details registration does not authorize an unknown 33e7c8208977dd201b29c02d6eec1737a28e59bc',t=>{
+test('Details registration does not authorize an unknown 87cf84e712384491b23897c1a2f252258a17448e',t=>{
  assert.notEqual(check(detailsEventsFixture(t),'b'.repeat(40)).status,0);
 });
-test('planner exact-33e7c8208977dd201b29c02d6eec1737a28e59bc registration still rejects changed read targets',t=>{
- const dir=detailsEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'33e7c8208977dd201b29c02d6eec1737a28e59bc').status,0);
+test('planner exact-87cf84e712384491b23897c1a2f252258a17448e registration still rejects changed read targets',t=>{
+ const dir=detailsEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'87cf84e712384491b23897c1a2f252258a17448e').status,0);
 });
