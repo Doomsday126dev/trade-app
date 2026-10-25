@@ -1,5 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+const vm=require('node:vm');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
@@ -75,5 +76,12 @@ test('provider projection assets share the declared release and preserve usernam
   for(const file of ['js/domain/providerPublicProjection.js','js/services/providerPublicShareGateway.js']){
     assert.ok(manifest.scriptFiles.includes(file),file);assert.ok(html.includes(`${file}?v=${release}`),file);
   }
-  assert.ok(html.includes('usernameValid='));assert.ok(html.includes('{2,64}'));
+  const from=html.indexOf('function parsePogoPublicShareRequest()'),to=html.indexOf('\n}',from)+2;
+  assert.ok(from>=0&&to>from,'Public route parser must exist');
+  const context=vm.createContext({URLSearchParams,location:{search:''}});vm.runInContext(html.slice(from,to),context);
+  const parse=name=>{context.location.search='?view='+encodeURIComponent(name)+'&list=wishlist';return context.parsePogoPublicShareRequest();};
+  for(const name of ['AB','Trainer 123','名前','a'.repeat(64)])assert.equal(parse(name).valid,true,name);
+  const forbidden=['.','#','$','/','[',']',...Array.from({length:32},(_,i)=>String.fromCharCode(i)),String.fromCharCode(127)];
+  for(const character of forbidden){const result=parse('AB'+character+'CD');assert.equal(result.valid,false,JSON.stringify(character));assert.equal(result.username,'');}
+  for(const name of ['', 'A','a'.repeat(65)])assert.equal(parse(name).valid,false,JSON.stringify(name));
 });
