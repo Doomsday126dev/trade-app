@@ -108,7 +108,7 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
       errors.push(`Deleted path has no declared surviving owner: ${file}. Add a routing rule before qualification.`);
     }
   }
-  return{node:[...node].sort(),browser:[...browser].sort(),commands:safeCommands,errors,legacyReset,functions:[...node].some(file=>file.startsWith('functions/test/'))||safeCommands.some(([command,args])=>args.some(arg=>arg==='functions'||arg.startsWith('functions/')&&!arg.startsWith('functions/legacy-pin-reset'))),rules:legacyReset||commands.some(([command,args])=>args.some(arg=>/rules|firestore-authority/.test(arg))),sensitive:any(/accountSync|functions\/|rules|provider/i),
+  return{node:[...node].sort(),browser:[...browser].sort(),commands:safeCommands,errors,legacyReset,functions:[...node].some(file=>file.startsWith('functions/test/')||['tests/e1-client-foundation-canary.test.cjs','tests/provider-account-foundation.test.cjs'].includes(file))||safeCommands.some(([command,args])=>args.some(arg=>arg==='functions'||arg.startsWith('functions/')&&!arg.startsWith('functions/legacy-pin-reset'))),rules:legacyReset||commands.some(([command,args])=>args.some(arg=>/rules|firestore-authority/.test(arg))),sensitive:any(/accountSync|functions\/|rules|provider/i),
     performance:any(/^(?:index\.html|css\/|js\/|sw\.js|data\.js|data\/|package(?:-lock)?\.json|playwright\.config\.js|scripts\/performance\/|tests\/.*performance|\.github\/workflows\/frontend-performance\.yml)/),
     syntax:files.filter(file=>/\.(?:c?js|mjs)$/.test(file)&&exists(file))};
 }
