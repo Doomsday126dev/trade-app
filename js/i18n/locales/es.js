@@ -267,6 +267,7 @@
 "events.detailsPending":"Abre los detalles y la fuente para ver el contenido.",
 "events.allBonuses":"Los {count} bonus y condiciones",
 "events.detailsChecked":"Detalles comprobados: {date}",
+"events.boundaryHours":"Empieza a las {start} · termina a las {end}",
 "events.localTimeShort":"Hora local",
 "events.yourTimeShort":"Tu hora local",
 "events.venueTimeShort":"Hora del recinto · zona sin confirmar",

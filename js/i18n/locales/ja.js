@@ -266,6 +266,7 @@
 "events.detailsPending":"イベントの内容は「詳細」と情報元で確認できます。",
 "events.allBonuses":"全{count}件のボーナス・条件",
 "events.detailsChecked":"詳細の確認日時：{date}",
+"events.boundaryHours":"{start}開始・{end}終了",
 "events.localTimeShort":"現地時間",
 "events.yourTimeShort":"端末の現地時間",
 "events.venueTimeShort":"会場時刻・タイムゾーン未確認",
