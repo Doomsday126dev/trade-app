@@ -32,14 +32,14 @@ function build(domain,data,entries){
   for(const name of domain.publicSharePublication.REQUIRED_SOURCE_SURFACES)gate.markLoaded(token,name);
   return domain.publicSharePublication.buildPublicShareSnapshot({gate,token,trigger:'explicit_share',username:'Owner',source:data,declarations:entries,now:100}).snapshot;
 }
-test('unified publication includes Board LF/FT, dedupes exact aliases and preserves distinct qualifiers without provenance',()=>{
+test('wants-only publication includes Board LF, dedupes aliases, excludes FT and preserves qualifiers without provenance',()=>{
   const {context:c,domain:d}=harness(),data=source(),original=JSON.stringify(data);
   const model=c.productDeclarations('Owner',data),snapshot=build(d,data,model.entries);
-  assert.equal(snapshot.version,2);assert.equal(snapshot.declarationCount,4);
+  assert.equal(snapshot.version,2);assert.equal(snapshot.declarationCount,2);
   assert.equal(snapshot.declarations.filter(e=>e.name==='Pikachu').length,1);
   assert.equal(model.entries.find(e=>e.name==='Pikachu').ref.surface,'my-list');
   assert.equal(model.entries.find(e=>e.name==='Pikachu').aliases.length,1);
-  assert.equal(snapshot.declarations.filter(e=>e.intent==='ft').length,2);
+  assert.equal(snapshot.declarations.filter(e=>e.intent==='ft').length,0);
   assert.equal(snapshot.declarations.find(e=>e.name==='Eevee').p,'');
   assert.equal(snapshot.declarations.find(e=>e.name==='Eevee').gender,'f');
   assert.equal(snapshot.declarations.find(e=>e.name==='Eevee').note,'Public note');
@@ -52,7 +52,7 @@ test('public V2 prefers declarations over compatibility lists and validates exac
   snapshot.lists.wishlist.Ghost='H';
   const read=api.publicShareProjectionStatus(snapshot);
   assert.equal(read.ok,true);assert.equal(api.intentEntries(read.snapshot,'lf','wishlist').length,2);
-  assert.equal(api.intentEntries(read.snapshot,'ft','wishlist').length,2);
+  assert.equal(api.intentEntries(read.snapshot,'ft','wishlist').length,0);
   assert.equal(api.publicShareProjectionStatus({...snapshot,declarationCount:9}).ok,false);
   const corrupt=plain(snapshot);corrupt.declarations[0].ownerUid='secret';
   assert.equal(api.publicShareProjectionStatus(corrupt).ok,false);
@@ -70,29 +70,30 @@ test('old LF-only public links remain readable and do not claim offer data',()=>
 test('unified priority searches use intent/category/filter and omit empty or unresolved sets',()=>{
   const {context:c}=harness();c.allData=source();
   Object.assign(c,{document:{getElementById:()=>({value:''})},normalizeAcText:value=>String(value||'').toLowerCase(),pokemonGoSearchLocale:()=> 'en',regionalFormTerm:()=>'',dexSearchTerm:entry=>String(entry.no),entrySearchFilters:()=>[],stringFromSearchItems:items=>items.map(item=>item.term).join(','),dexStringFromNumbers:numbers=>numbers.join(',')});
-  vm.runInContext(app.slice(app.indexOf('function buildStrings('),app.indexOf('function myListSearchLabel(')),c);
+  vm.runInContext(app.slice(app.indexOf('function buildStrings('),app.indexOf('async function copyText(')),c);
   assert.deepEqual(plain(c.buildStrings('wishlist','Owner','lf')),{H:'25',U:'133',LUCKY:'133',XXL:'133'});
-  assert.deepEqual(plain(c.buildStrings('wishlist','Owner','ft')),{M:'151',L:'151'});
+  assert.equal(c.buildStrings('wishlist','Owner','ft'),null,'Retired offers never appear in active search generation');
   assert.equal(c.buildStrings('dynamax','Owner','lf'),null);
   c.document.getElementById=()=>({value:'absent'});
   assert.equal(c.buildStrings('wishlist','Owner','lf'),null);
 });
-test('canonical copy creation is add-only and idempotent; original Board records survive edits and reload',async()=>{
+test('wanted copy creation is add-only and idempotent; retired offers are rejected and Board evidence survives',async()=>{
   const {context:c,domain:d}=harness(),data=source(),original=JSON.stringify(data.users.Owner.specialTradeBoard),calls=[];
   Object.assign(c,{allData:data,auth:{currentUser:{uid:'owner'}},accountSyncCanonicalEntities:[],accountSyncCatalogIdentity:(_type,name)=>({catalogId:name}),accountSyncAuthorityCurrent:()=>true,toast:()=>{},i18nCore:{t:key=>key},
     accountSyncMutationAuthority:async()=>({mode:'canonical',controller:{}}),
     applyAccountSyncTradeMutations:async mutations=>{calls.push(...mutations);for(const row of mutations)c.accountSyncCanonicalEntities.push({...row,deleted:false});return{ok:true};}});
   vm.runInContext(app.slice(app.indexOf('async function addManagedIntentEntries('),app.indexOf('async function enableIntentEditing(')),c);
-  const entry=data.users.Owner.specialTradeBoard.ft[0];
-  assert.equal(await c.addManagedIntentEntries('ft',[entry]),true);
-  assert.equal(await c.addManagedIntentEntries('ft',[entry]),true);
-  assert.equal(calls.length,1);assert.equal(calls[0].kind,'add');assert.equal(calls[0].identity.surface,'my-list');assert.equal(calls[0].identity.lane,'for-trade');
+  const entry=data.users.Owner.specialTradeBoard.lf[1];
+  assert.equal(await c.addManagedIntentEntries('ft',[data.users.Owner.specialTradeBoard.ft[0]]),false);assert.equal(calls.length,0);
+  assert.equal(await c.addManagedIntentEntries('lf',[entry]),true);
+  assert.equal(await c.addManagedIntentEntries('lf',[entry]),true);
+  assert.equal(calls.length,1);assert.equal(calls[0].kind,'add');assert.equal(calls[0].identity.surface,'my-list');assert.equal(calls[0].identity.lane,'looking-for');
   c.accountSyncCanonicalEntities[0].values={...calls[0].values,note:'Edited copy'};
-  const projected=d.accountSyncProduct.projectTradeEntities({entities:plain(c.accountSyncCanonicalEntities),catalogEntryForId:name=>({name,no:151}),encodePriority:()=>''});
+  const projected=d.accountSyncProduct.projectTradeEntities({entities:plain(c.accountSyncCanonicalEntities),catalogEntryForId:name=>({name,no:133}),encodePriority:()=>''});
   data.users.Owner.intentDeclarations=plain(projected.intentDeclarations);
   const restored=c.productDeclarations('Owner',plain(data));
   assert.ok(restored.entries.some(e=>e.note==='Edited copy'));
-  assert.equal(restored.entries.filter(e=>e.name==='Mew').length,3);
+  assert.equal(restored.entries.filter(e=>e.name==='Mew').length,0);
   assert.equal(JSON.stringify(data.users.Owner.specialTradeBoard),original);
 });
 test('canonical copying fails closed across account switches or unavailable sync',async()=>{
@@ -142,7 +143,7 @@ test('a declaration edit during publication prevents copying an out-of-date URL 
   assert.equal(copies,0);assert.equal(statuses.at(-1),'share.publicationPending');
 });
 
-test('application Compare consumes public FT/LF and falls back to wanted overlap for v1',()=>{
+test('application Compare excludes retired offers and preserves wanted overlap for legacy links',()=>{
   const {context:c}=harness();c.allData=source();
   Object.assign(c,{ownTradeListsAvailable:()=>true,trainerTradeListsAvailable:()=>true});
   c.selectedTrainerRuntime={username:'Other',publicData:{users:{Other:{publicDeclarations:[
@@ -152,7 +153,7 @@ test('application Compare consumes public FT/LF and falls back to wanted overlap
   vm.runInContext(app.slice(app.indexOf('function computeTradeMatchSummary('),app.indexOf('function tradeIntentFreeform(')),c);
   const reciprocal=c.computeTradeMatchSummary('Other');
   assert.equal(reciprocal.offersAvailable,true);
-  assert.equal(reciprocal.theyOffer.length,1);assert.equal(reciprocal.iOffer.length,1);
+  assert.equal(reciprocal.theyOffer.length,0);assert.equal(reciprocal.iOffer.length,0);
   c.selectedTrainerRuntime.publicData={users:{Other:{}},wishlist:{Other:{Pikachu:{p:'H',shiny:true}}}};
   const legacy=c.computeTradeMatchSummary('Other');
   assert.equal(legacy.offersAvailable,false);assert.equal(legacy.both.length,1);

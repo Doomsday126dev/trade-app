@@ -67,6 +67,6 @@ test('retired surfaces are replaced by owned or read-only interim behavior',()=>
   assert.match(source,/const LEGACY_INVENTORY_READ_ONLY=true;/);
   assert.match(source,/if\(LEGACY_INVENTORY_READ_ONLY\)\{toast\(i18nCore\.t\('inventory\.legacyReadOnly'/);
   assert.match(source,/const users=\[cur\]\.filter/);
-  assert.match(source,/if\(TRAINER_FIRST_INTERIM_ENABLED\)\{renderEventsOnly\(\);return;\}/);
+  assert.match(source,/if\(TRAINER_FIRST_INTERIM_ENABLED\)\{renderEventsOnly\(\);if\(!_eventInflight/);
   assert.match(source,/typeof TRAINER_FIRST_INTERIM_ENABLED!=='undefined'&&TRAINER_FIRST_INTERIM_ENABLED/);
 });

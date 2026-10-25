@@ -6,12 +6,12 @@ const {join}=require('node:path');
 const root=join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
-test('signed-in desktop Settings is a routed page with seven semantic destinations',()=>{
+test('signed-in desktop Settings is a routed page with six semantic destinations',()=>{
   assert.match(html,/const SETTINGS_DESKTOP_QUERY='\(min-width:768px\)'/);
-  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data','legal'\]\)/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function settingsRouteHash\(section=null\)\{return section&&SETTINGS_SECTIONS\.includes\(section\)\?`#settings\/\$\{section\}`:'#settings';\}/);
   assert.match(html,/\.settings-overlay\.settings-page-mode\{[^}]*background:var\(--bg\)/);
-  assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*grid-template-columns:240px minmax\(0,1fr\)/);
+  assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*grid-template-columns:200px minmax\(0,1fr\)/);
   assert.match(html,/<nav class="settings-nav settings-account-only" aria-label="Settings sections"/);
 });
 
@@ -61,8 +61,9 @@ test('logout exits every Settings deep link and provider rows remain information
   assert.match(logout,/if\(parseSettingsRoute\(\)\.matches\)history\.replaceState\(\{\},'',settingsRouteUrl\(false\)\)/);
   const security=html.slice(html.indexOf('id="settings-account-security"'),html.indexOf('</section>',html.indexOf('id="settings-account-security"')));
   assert.match(security,/data-provider-actions="disabled"/);
-  assert.doesNotMatch(security,/<button[^>]+data-provider|linkWithPopup|linkWithRedirect/);
-  assert.match(security,/security\.disabledNotice/);
+  assert.match(security,/data-provider-action[^>]+hidden/);
+  assert.doesNotMatch(security,/onclick="(?:linkWithPopup|linkWithRedirect)/);
+  assert.match(security,/security\.foundationNotice/);
 });
 
 test('Settings navigation adds no preference, share, auth-provider, or remote mutation path',()=>{
@@ -86,8 +87,8 @@ test('Profile cleanup preserves stored Discord IDs while grouping active fields'
   for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])assert.match(profile,new RegExp(key.replace('.','\\.')));
   assert.doesNotMatch(profile,/Discord User ID|prof-discord-id|discord-id-help/);
   const save=html.slice(html.indexOf('async function saveProfile'),html.indexOf('async function savePinSettings'));
-  assert.match(save,/const upd=\{friendCode:fc,bio,discord,avatarPokemon\}/);
-  assert.doesNotMatch(save,/discordId|delete|remove/);
+  assert.match(save,/upd=\{friendCode:raw\.friendCode\.trim\(\),bio:raw\.bio\.trim\(\),discord:raw\.discord\.trim\(\),avatarPokemon:raw\.avatarPokemon\.trim\(\)\}/);
+  assert.doesNotMatch(save,/discordId|delete\s+.*discord|removeItem\(/);
   assert.match(html,/@media\(min-width:768px\)\{\.settings-page-mode \.settings-mobile-back\{display:none!important\}\}/);
   assert.match(html,/\.wp-swatch\{height:48px;min-height:48px/);
 });

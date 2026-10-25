@@ -33,7 +33,7 @@ test('full offline round trip destroys source, preserves wire records and byte-i
 });
 
 test('fixture represents real .100 wire contracts, not invented current account operations',async()=>{
-  const api=fixture.loadCurrentContracts();
+  const api=fixture.loadPinnedContracts();
   assert.equal(api.product.canonicalSyncState(source.accountSync,fixture.OWNER).ok,true);
   assert.equal(api.product.normalSyncEligibility({authenticatedUid:fixture.OWNER,username:fixture.HANDLE,indexRecord:source.identity.authIndex[fixture.OWNER],userAuthUid:source.identity.userRecord.authUid,account:source.accountSync}).ok,true);
   for(const record of [...Object.values(source.accountSync.tradeEntries),...Object.values(source.accountSync.favorites),...Object.values(source.accountSync.tags)])assert.equal(api.merge.validateEntity(record,{ownerUid:fixture.OWNER,entityType:record.entityType,entityId:record.entityId}).ok,true);

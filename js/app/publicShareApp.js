@@ -115,6 +115,8 @@
     document.getElementById('share-view')?.classList.add('active');
   }
   function publicError(message,detail=t('share.publicTryAgain')){
+    state.snapshot=null;document.getElementById('share-list-tabs')?.replaceChildren();
+    const header=document.getElementById('share-hdr');if(header)header.textContent=t('share.listTitle',{username:state.request?.username||''});
     const out=document.getElementById('share-list-out');
     if(out)out.innerHTML=`<div class="empty public-share-empty" role="status"><div class="empty-icon" aria-hidden="true">🔗</div><h3>${esc(message)}</h3><p>${esc(detail)}</p><button type="button" class="btn btn-secondary" data-public-share-action="retry">${esc(t('share.publicRetry'))}</button></div>`;
   }
@@ -227,12 +229,20 @@
     }
   }
   function ctaHtml(){return`<aside class="public-share-cta"><span>${esc(t('share.publicCta'))}</span><a class="btn btn-secondary" href="./">${esc(t('share.publicCtaAction'))}</a></aside>`;}
+  let unsubscribePublic=null,publicReadGeneration=0;
+  function stopPublicUpdates(){if(unsubscribePublic)unsubscribePublic();unsubscribePublic=null;}
+  function publicUpdatesStatus(key='share.watching'){
+    let node=document.getElementById('public-updates-status');
+    if(!node){node=document.createElement('p');node.id='public-updates-status';node.className='share-privacy-note';node.setAttribute('role','status');document.getElementById('share-hdr')?.after(node);}
+    node.textContent=t(global.navigator.onLine===false?'share.offlineCopy':key);
+  }
   function render(){
     if(!state.snapshot)return;
     translate(document);
     renderHeader(state.snapshot);renderTabs(state.snapshot);renderList(state.snapshot);
   }
   async function readProjection(){
+    const generation=++publicReadGeneration;stopPublicUpdates();
     const request=state.request;
     if(!request?.valid){
       hidePrivateShell();translate(document);
@@ -263,10 +273,11 @@
         importFunctionsSdk:()=>import(`${FIREBASE_SDK}/firebase-functions.js`)
       });
       const provider=await client.read(request.username);
+      if(generation!==publicReadGeneration)return;
       if(provider.ok){
         state.snapshot=provider.snapshot;
         state.type=LIST_TYPES.includes(request.type)?request.type:'wishlist';
-        state.status='ready';render();
+        state.status='ready';render();publicUpdatesStatus('share.refreshCopy');
         global.__pogoShellReady=true;global.__pogoBootComplete=true;
         global.__pogoStartup.protectedReadyAt=performance.now();
         clearTimeout(global.__pogoBootWatch);return;
@@ -275,6 +286,7 @@
     const path=`publicShares/${request.username}`;
     diagnostics.readPaths.push(path);diagnostics.events.push(`read:${path}`);
     const snapshot=await databaseSdk.get(databaseSdk.ref(databaseSdk.getDatabase(app),path));
+    if(generation!==publicReadGeneration)return;
     const projection=global.PogoDomain.publicSharePublication.publicShareProjectionStatus(snapshot.exists()?snapshot.val():null,{username:request.username});
     if(!projection.ok){
       const key={not_published:'trainer.notPublished',projection_incomplete:'trainer.shareNeedsRepublishing',projection_unsupported:'trainer.sharedMalformed'}[projection.status]||'trainer.sharedUnavailable';
@@ -282,14 +294,28 @@
     }
     state.snapshot=projection.snapshot;
     state.type=LIST_TYPES.includes(request.type)?request.type:'wishlist';
-    state.status='ready';render();
+    state.status='ready';render();publicUpdatesStatus();
+    // One exact public projection; no directory/root/private fallback or polling.
+    if(typeof databaseSdk.onValue==='function'){
+      let signature=JSON.stringify(projection.snapshot);
+      const stop=databaseSdk.onValue(databaseSdk.ref(databaseSdk.getDatabase(app),path),value=>{
+        if(generation!==publicReadGeneration)return;
+        const next=global.PogoDomain.publicSharePublication.publicShareProjectionStatus(value.exists()?value.val():null,{username:request.username});
+        if(!next.ok){state.snapshot=null;publicError(t('trainer.notPublished'),t('trainer.publicHint'));publicUpdatesStatus('share.unavailableCopy');return;}
+        const nextSignature=JSON.stringify(next.snapshot);
+        if(nextSignature!==signature||!state.snapshot){signature=nextSignature;state.snapshot=next.snapshot;render();}
+        publicUpdatesStatus();
+      },()=>{if(generation!==publicReadGeneration)return;publicReadGeneration++;stopPublicUpdates();state.snapshot=null;publicError(t('trainer.sharedReadFailed'));publicUpdatesStatus('share.unavailableCopy');});
+      if(generation===publicReadGeneration)unsubscribePublic=stop;else stop();
+    }
     global.__pogoShellReady=true;global.__pogoBootComplete=true;
     global.__pogoStartup.protectedReadyAt=performance.now();
     clearTimeout(global.__pogoBootWatch);
   }
   async function retry(){
+    const generation=publicReadGeneration+1;
     try{state.status='loading';await readProjection();}
-    catch(error){state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}
+    catch(error){if(generation!==publicReadGeneration)return;state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}
   }
   function openLanguage(){
     const modal=document.getElementById('settings-modal'),layout=document.getElementById('settings-layout');
@@ -300,7 +326,7 @@
     const title=document.getElementById('settings-title');if(title)title.textContent=t('settings.languageTitle');
     const description=document.getElementById('settings-description');if(description)description.textContent=t('settings.languageDescription');
     modal.classList.add('open');document.body.classList.add('modal-open');
-    requestAnimationFrame(()=>select?.focus());
+    requestAnimationFrame(()=>{if(modal.classList.contains('open')&&!modal.contains(document.activeElement))select?.focus();});
   }
   function closeModal(id){
     document.getElementById(id)?.classList.remove('open');document.body.classList.remove('modal-open');
@@ -318,9 +344,12 @@
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
   }
   async function changeLocale(locale){
-    await global.__pogoEnsureLocale(locale);core().setLocale(locale);translate(document);
+    await global.__pogoEnsureLocale(locale);
+    const modal=document.getElementById('settings-modal'),focused=document.activeElement,restore=modal?.classList.contains('open')&&modal.contains(focused);
+    core().setLocale(locale);translate(document);
     if(state.snapshot)render();
     const select=document.getElementById('settings-language');if(select)select.value=core().getLocale();
+    if(restore&&focused?.isConnected&&modal.classList.contains('open')&&!modal.contains(document.activeElement))focused.focus();
   }
   function handleAction(event){
     const control=event.target.closest('[data-public-share-action]');if(!control)return;
@@ -350,13 +379,18 @@
   async function start(request){
     if(state.status!=='idle')return;
     state.request=request;state.type=request?.type||'wishlist';state.status='loading';
+    global.addEventListener('pagehide',()=>{publicReadGeneration++;stopPublicUpdates();});
+    global.addEventListener('pageshow',event=>{if(event.persisted)void retry();});
+    global.addEventListener('offline',()=>publicUpdatesStatus());
+    global.addEventListener('online',()=>publicUpdatesStatus('share.reconnectingCopy'));
     document.addEventListener('click',handleAction);
     document.addEventListener('keydown',handleModalKey);
     document.addEventListener('error',handleSpriteError,true);
     spriteOptical.observe(document);
     Object.assign(global,{openSettingsPanel:openLanguage,closeModal,changeInterfaceLocale:changeLocale,exitShareView:()=>{location.href=new URL('./',location.href).href;}});
+    const generation=publicReadGeneration+1;
     try{await readProjection();}
-    catch(error){state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}
+    catch(error){if(generation!==publicReadGeneration)return;state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}
   }
 
   global.__pogoStartPublicShare=start;
