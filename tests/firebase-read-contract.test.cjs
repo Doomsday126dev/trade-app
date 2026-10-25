@@ -8,7 +8,7 @@ const vm=require('node:vm');
 const {collectReadSites,reconcileReadSites}=require('../scripts/lib/firebase-read-sites.cjs');
 const root=path.join(__dirname,'..');
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
-const current='4614e1e4345befbb7c1b1a75fa3230e57e8e94a4';
+const current=''; // Unpinned candidate uses the current trusted registry; historical SHA cases stay pinned.
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
@@ -24,13 +24,13 @@ function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
-test('parsed .116 inventory accounts for 23 reviewed sites',()=>{
+test('current inventory accounts for all 24 reviewed sites',()=>{
   const actual=collectReadSites(root);
-  assert.equal(actual.length,23);
+  assert.equal(actual.length,24);
   const inventory=reconcileReadSites(actual,contract.directReadSites,contract.readHandlerHashes);
   assert.equal(inventory.filter(site=>site.classification==='A').length,16);
-  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,7);
-  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,23);
+  assert.equal(inventory.filter(site=>['C','D'].includes(site.classification)).length,8);
+  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,24);
   assert.ok(inventory.every(site=>site.normalizedPath&&site.justification&&site.featureGate));
   assert.ok(!contract.needles.some(item=>item.text.includes('loginDirectory/${handle}')));
 });
@@ -86,7 +86,7 @@ test('static read validation uses the trusted registry even when the target neve
   fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/<script src="js\/data\/firebaseReadRegistry\.js\?v=[^"]+"><\/script>\n/g,''));
   fs.writeFileSync(path.join(dir,'js/data/firebaseReadRegistry.js'),'throw new Error("target registry must never execute during validation");');
   const result=check(dir,current);assert.equal(result.status,0,result.stderr);
-  assert.equal(JSON.parse(result.stdout).directReads.length,23);
+  assert.equal(JSON.parse(result.stdout).directReads.length,24);
 });
 
 

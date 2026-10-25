@@ -167,12 +167,16 @@
     return capability;
   }
   function validateFoundation(value,code){
-    if(!exactFields(value,FOUNDATION_FIELDS))fail('group-e/response-invalid');
+    const canonicalFields=['schemaVersion','canonicalTrainerName','normalizedTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername','status','revision'];
+    const canonical=exactFields(value,canonicalFields);
+    if(!canonical&&!exactFields(value,FOUNDATION_FIELDS))fail('group-e/response-invalid');
+    if(canonical&&(!Number.isSafeInteger(value.revision)||value.revision<1))fail('group-e/response-invalid');
+    if(canonical&&!(value.identityKind==='legacy_migrated'&&value.legacyAccessConfigured===true&&value.legacyUsername===value.canonicalTrainerName||value.identityKind==='provider_only'&&value.legacyAccessConfigured===false&&value.legacyUsername===null))fail('group-e/response-invalid');
     if(value.schemaVersion!==1||typeof value.canonicalTrainerName!=='string'||!value.canonicalTrainerName||
       typeof value.normalizedTrainerName!=='string'||!value.normalizedTrainerName||!HANDLE_KEY.test(value.handleKey||'')||
       value.legacyUsername!==null&&typeof value.legacyUsername!=='string'||
       value.revision!==null&&(!Number.isSafeInteger(value.revision)||value.revision<0)||
-      !validTime(value.createdAt)||!validTime(value.updatedAt)||typeof value.status!=='string')fail('group-e/response-invalid');
+      !canonical&&(!validTime(value.createdAt)||!validTime(value.updatedAt))||typeof value.status!=='string')fail('group-e/response-invalid');
     if(code==='SUCCESS'&&value.status!=='active')fail('group-e/response-invalid');
     if(code==='ACCOUNT_FROZEN'&&!FROZEN.has(value.status))fail('group-e/response-invalid');
     return Object.freeze({...value});

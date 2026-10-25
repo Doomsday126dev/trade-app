@@ -105,7 +105,7 @@ test('Request Access cannot persist locally or remotely before App Check readine
 
 test('signed-in catalog and preference caches initialize only inside showApp',()=>{
   const showApp=between('function showApp(){','const renderFrame=');
-  assert.match(showApp,/loadTypeCache\(\);\s*syncSpeedAddMode\(\)/);
+  assert.match(showApp,/syncSpeedAddMode\(\)/);
   assert.match(showApp,/buildAcItems\(\)/);
   assert.match(showApp,/pogo:signed-in-ready/);
 });

@@ -15,7 +15,7 @@ function sources(){return{
   authIndex:{'u-ready':{username:'Ready'},'u-incomplete':{username:'Incomplete'},'u-missing':{username:'Missing'},'u-malformed':{username:'Malformed'},'u-conflict':{username:'OtherName'},'u-case-a':{username:'CaseName'},'u-case-b':{username:'casename'},'u-protected':{username:'Protected'},'u-legacy':{username:'Legacy'}},
   admins:{'u-protected':true},
   authInput:{schemaVersion:1,identities:['u-ready','u-incomplete','u-missing','u-malformed','u-conflict','u-case-a','u-case-b','u-protected','u-legacy'].map(uid=>auth(uid))},
-  publicShares:{Ready:complete('Ready'),Incomplete:{version:1,username:'Incomplete',profile:{}},Malformed:{version:2,username:'Malformed',profile:{},lists:{}},Conflict:complete('Conflict'),CaseName:complete('CaseName'),casename:complete('casename'),Protected:complete('Protected'),Legacy:complete('Legacy')}
+  publicShares:{Ready:complete('Ready'),Incomplete:{version:1,username:'Incomplete',profile:{}},Malformed:{version:999,username:'Malformed',profile:{},lists:{}},Conflict:complete('Conflict'),CaseName:complete('CaseName'),casename:complete('casename'),Protected:complete('Protected'),Legacy:complete('Legacy')}
 };}
 function audit(){const result=loadDomain().auditShareMigration(sources());assert.equal(result.ok,true);return result.value;}
 

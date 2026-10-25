@@ -234,5 +234,20 @@
 "share.downloadFullCsv":"全リストをCSVで保存"
 ,
 "events.venueUnknown":"会場の時刻はフィードの値です。会場のタイムゾーンが未提供のためカウントダウンは表示しません。情報元を確認してください。"
+,
+"settings.savingChanges":"変更を保存中…",
+"profile.savedQueued":"プロフィールを端末に保存しました。アカウントへの同期は待機中です。",
+"profile.savedOnDevice":"プロフィールをこの端末に保存しました。アカウントへの同期は未確認です。",
+"profile.saveUnconfirmed":"変更を確認できません。下書きは残っています。接続を確認して再試行してください。",
+"profile.pinMetadataQueued":"PIN を更新しました。アカウント情報の同期は待機中です。新しい PIN を使用してください。",
+"profile.pinMetadataUnconfirmed":"PIN の更新は確認されましたが、アカウント情報の同期は未確認です。新しい PIN を保管し、同期状況を確認してください。",
+"settings.appearanceQueued":"外観を端末に保存しました。アカウント同期は待機中です。",
+"settings.appearanceLocal":"外観をこの端末に保存しました。アカウント同期は未確認です。",
+"admin.roleNeedsConnection":"役割を変更するには接続が必要です。役割の変更は予約されていません。",
+"admin.roleQueued":"役割の変更を予約しました。サーバーでの権限変更は未確認です。",
+"admin.roleUnconfirmed":"役割の変更を確認できません。同期状況を確認してから再試行してください。",
+"admin.requestDenialUnconfirmed":"申請の拒否を確認できません。最新の状態を確認してから再試行してください。"
+,
+"events.groupVenueUnknown":"会場時刻は未確認"
   });
 })(window);

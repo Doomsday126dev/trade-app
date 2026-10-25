@@ -17,8 +17,8 @@ test('visual avatar picker uses the canonical catalog lazily and keeps string pe
   const profile=html.slice(html.indexOf('data-settings-section="profile"'),html.indexOf('data-settings-section="language"'));
   assert.match(profile,/<input type="hidden" id="prof-av-input">/);assert.doesNotMatch(profile,/id="prof-av-list"|<datalist/);
   const save=html.slice(html.indexOf('async function saveProfile'),html.indexOf('async function savePinSettings'));
-  assert.match(save,/const avatarPokemon=document\.getElementById\('prof-av-input'\)\?\.value\.trim\(\)\|\|''/);
-  assert.match(save,/const upd=\{friendCode:fc,bio,discord,avatarPokemon\}/);
+  assert.match(save,/avatarPokemon:raw\.avatarPokemon\.trim\(\)/);
+  assert.match(save,/upd=\{friendCode:raw\.friendCode\.trim\(\),bio:raw\.bio\.trim\(\),discord:raw\.discord\.trim\(\),avatarPokemon:raw\.avatarPokemon\.trim\(\)\}/);
 });
 
 test('legacy and unknown avatar values retain safe compatibility behavior',()=>{
@@ -36,7 +36,7 @@ test('legal acknowledgements are a compact link-free footer surface, not a prima
   const legal=index.slice(start,end);
   assert.match(legal,/PokéAPI provides species, form, and sprite-repository inputs/);
   assert.match(legal,/their artwork is not served by PoGo Trades/);
-  assert.match(legal,/shown as labels unless exact, approved artwork is available/);
+  assert.doesNotMatch(legal,/legal\.backgroundUse/);
   assert.match(legal,/not affiliated with, endorsed by, or sponsored by the rights holders/);
   assert.doesNotMatch(legal,/<a\b|href=|https?:\/\//i);
   assert.doesNotMatch(legal,/licensed|authorized|fair use|official partner/i);
@@ -49,23 +49,25 @@ test('internal provenance distinguishes served assets from research-only sources
   assert.match(provenance,/PokeMiners[\s\S]*\*\*REFERENCE ONLY\*\*/);
   assert.match(provenance,/Serebii[\s\S]*\*\*REFERENCE ONLY\*\*/);
   assert.match(provenance,/Pokémon GO Hub[\s\S]*\*\*REMOVE \/ DO NOT SERVE\*\*/);
-  assert.match(provenance,/Background qualifiers use honest compact labels/);
+  assert.match(provenance,/Backgrounds remain out of active product surfaces/);
 });
 
-test('normal My List rows are dense and progressive while reorder remains explicit',()=>{
-  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
-  assert.match(rows,/reorderMode&&!bulkMode\?'draggable="true"'/);assert.match(rows,/reorderMode\?`<button type="button" class="drag-handle"/);
-  assert.match(rows,/class="myrow-priority-quick"/);assert.doesNotMatch(rows,/class="myrow-priority" role="group"/);
-  assert.match(rows,/details class="myrow-editor"/);assert.match(html,/@media\(max-width:600px\)[^{]*\{[\s\S]*?\.myrow-priority-quick\{display:none\}/);
-  assert.match(html,/\.myrow\{min-height:58px/);assert.match(html,/id="mylist-reorder-toggle"/);
+test('unified wanted rows expose identity, selection and an explicit edit action',()=>{
+  const rows=html.slice(html.indexOf('template.innerHTML=`<article class="myrow wants-row'),html.indexOf('function refreshCombinedSearch'));
+  assert.match(rows,/data-name="\$\{escAttr\(e\.name\)\}"/);
+  assert.match(rows,/data-priority=/);assert.match(rows,/class="wants-select"/);
+  assert.match(rows,/openCombinedEditor/);assert.match(rows,/class="myrow-copy"/);
+  assert.doesNotMatch(rows,/draggable="true"|confirmRemove\(/);
+  assert.match(index,/id="combined-editor-modal"[^>]+role="dialog"/);
+  assert.match(index,/id="combined-save"/);
 });
 
-test('priority moves are exact, announced, and do not reuse toggle-delete behavior',()=>{
-  const move=html.slice(html.indexOf('function movePriority'),html.indexOf('function setPri'));
-  assert.match(move,/\['H','M','L'\]\.includes\(p\)/);assert.match(move,/current\.p===p/);assert.match(move,/priValue\(p,current\.mod,current\.lucky,current\.xxl,current\.xxs,current\.shiny,current\.backgroundId\)/);
-  assert.match(move,/announceMyListAction/);assert.doesNotMatch(move,/delete list|confirm\(/);
-  const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function hydrateMyRowEditor'));
-  assert.match(editor,/myrow-priority-editor/);assert.match(editor,/movePriority/);
+test('combined priority edits preserve explicit removal and session-bound mutations',()=>{
+  const edit=html.slice(html.indexOf('async function saveCombinedEditor'),html.indexOf('let boardHiddenKeys'));
+  assert.match(edit,/remove=false/);assert.match(edit,/draft\.owner!==cur\|\|draft\.uid!==auth\?\.currentUser\?\.uid/);
+  assert.match(edit,/applyAccountSyncTradeMutations/);assert.match(edit,/wantsCollapsedSections\.delete/);
+  assert.match(index,/id="wants-remove"[^>]+onclick="saveCombinedEditor\(true\)"/);
+  assert.match(index,/id="combined-priority"/);
 });
 
 test('reorder persists explicit within-priority order without rewriting Firebase list data',()=>{
@@ -76,5 +78,5 @@ test('reorder persists explicit within-priority order without rewriting Firebase
 test('Batch B adds no Firebase surface or new profile schema',()=>{
   assert.doesNotMatch(html,/avatarCatalogId|avatarPokemon\s*:\s*\{/);
   assert.doesNotMatch(html,/onValue\(/);
-  assert.match(html,/const upd=\{friendCode:fc,bio,discord,avatarPokemon\}/);
+  assert.match(html,/avatarPokemon:raw\.avatarPokemon\.trim\(\)/);
 });

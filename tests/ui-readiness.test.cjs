@@ -201,7 +201,8 @@ test('favorite organizer saves tag changes immediately and clears stale deleted-
   const opener=html.slice(html.indexOf('function openTrainerOrganizer'),html.indexOf('function closeTrainerOrganizer'));
   const changed=html.slice(html.indexOf('function trainerOrganizerChanged'),html.indexOf('function renderTrainerOrganizer'));
   const deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function rememberTrainerOpened'));
-  assert.match(changed,/setFavoriteTags\(trainerOrganizerState\.username,tagIds\)/);
+  assert.match(changed,/if\(!operation\.current\(\)\)return/);
+  assert.match(changed,/setFavoriteTags\(operation\.username,tagIds\)/);
   assert.doesNotMatch(opener,/discardChanges|draftNote|draftTagIds/);
   assert.match(deletion,/trainerOrganizerState\.tagIds=trainerOrganizerState\.tagIds\.filter/);
   assert.doesNotMatch(deletion,/draftTagIds|saveTrainerOrganizer/);

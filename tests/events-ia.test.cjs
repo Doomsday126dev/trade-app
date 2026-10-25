@@ -147,7 +147,7 @@ test('calendar and overview interactions are keyboard reachable without count or
   assert.match(render,/data-event-action="jump" data-event-id=/);
   assert.match(render,/function eventsAction\(event\)[\s\S]*jumpToEvent\(control\.dataset\.eventId/);
   assert.match(render,/card\.scrollIntoView/);
-  assert.match(render,/card\.focus\(\{preventScroll:true\}\)/);
+  assert.match(render,/card\.querySelector\('\[data-event-action="details"\]'\)\|\|card\)\.focus\(\{preventScroll:true\}\)/);
 });
 
 test('Events dynamic controls use one stable delegated owner instead of inline handlers',()=>{
@@ -212,4 +212,11 @@ test('event detail facts keep bonus exceptions and never infer paid/free eligibi
 test('venue-local feed values without an offset do not invent an exact countdown',()=>{
  const domain=loadDomain(),event={eventType:'city-safari',start:'2026-10-25T10:00:00',end:'2026-10-25T18:00:00'};
  assert.equal(domain.timingBasis(event),'venue-unknown');const timing=domain.eventTiming(event,{now:Date.parse('2026-10-25T12:00:00Z'),timeZone:'UTC'});assert.equal(timing.relative,null);assert.equal(timing.zoneUncertain,true);assert.ok(timing.timeLabel);
+});
+
+test('unknown venue times cannot be classified Now or expired in the viewer zone',()=>{
+ const domain=loadDomain(),event={eventType:'city-safari',start:'2026-10-24T10:00:00',end:'2026-10-25T18:00:00'};
+ for(const now of [Date.parse('2026-10-24T09:00:00Z'),Date.parse('2026-10-25T20:00:00Z'),Date.parse('2026-10-26T08:00:00Z')]){
+  assert.equal(domain.eventGroup(event,now),'unconfirmed');const sections=domain.prepareEvents([event],{now});assert.equal(sections[0].group,'unconfirmed');assert.equal(sections[0].events.length,1);
+ }
 });

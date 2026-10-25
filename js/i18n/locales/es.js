@@ -235,5 +235,20 @@
 "share.downloadFullCsv":"Descargar CSV completo"
 ,
 "events.venueUnknown":"Horario del lugar según el feed; zona exacta no indicada. Sin cuenta atrás; comprueba la fuente."
+,
+"settings.savingChanges":"Guardando cambios…",
+"profile.savedQueued":"Perfil guardado en este dispositivo; sincronización pendiente.",
+"profile.savedOnDevice":"Perfil guardado en este dispositivo. Sincronización con la cuenta sin confirmar.",
+"profile.saveUnconfirmed":"No se pudo confirmar el cambio. Se conserva el borrador; comprueba la conexión y reintenta.",
+"profile.pinMetadataQueued":"PIN actualizado; sincronización de datos pendiente. Usa el nuevo PIN.",
+"profile.pinMetadataUnconfirmed":"Se confirmó el nuevo PIN, pero no la sincronización de datos. Conserva el nuevo PIN y comprueba la sincronización.",
+"settings.appearanceQueued":"Apariencia guardada en este dispositivo; sincronización pendiente.",
+"settings.appearanceLocal":"Apariencia guardada en este dispositivo; sincronización sin confirmar.",
+"admin.roleNeedsConnection":"Conéctate antes de cambiar roles. No se encoló ningún cambio.",
+"admin.roleQueued":"Cambio de rol en cola. Autorización del servidor aún sin confirmar.",
+"admin.roleUnconfirmed":"No se pudo confirmar el cambio de rol. Comprueba la sincronización antes de reintentar.",
+"admin.requestDenialUnconfirmed":"No se pudo confirmar el rechazo. Comprueba el estado actual antes de reintentar."
+,
+"events.groupVenueUnknown":"Hora del lugar sin confirmar"
   });
 })(window);

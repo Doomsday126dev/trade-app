@@ -26,7 +26,7 @@ test('comparison uses only wanted lists including Special Board wants',()=>{
   assert.match(source,/OWNED_MY_LIST_TYPES/);
   assert.match(source,/specialTradeBoard/);
   assert.match(source,/Array\.isArray\(board\?\.lf\)/);
-  assert.match(source,/tradeListComparisonDomain\.compareWantedLists/);
+  assert.match(source,/tradeListComparisonDomain\.compareDeclarations/);
   assert.doesNotMatch(source,/board\?\.ft|tradeListOffers|myOffers|theirOffers|allData\.have|inventory|\bqty\b/);
 });
 
@@ -40,9 +40,8 @@ test('comparison cards render exact wanted qualifiers and three named sections',
 
 test('all three wanted sections reuse canonical localized search-string controls',()=>{
   const source=block('function tradeMatchSearchItems','function renderTradeMatchModal');
-  assert.match(source,/stringFromSearchItems\(tradeMatchSearchItems\(entries\),\{locale:pokemonGoSearchLocale\(\)\}\)/);
-  assert.match(source,/myListSearchOptionHtml\(option,`trade-match-\$\{key\}`/);
-  assert.match(source,/showLimit:true/);
+  assert.match(source,/contextualIntentSearchHtml\(entries,label\)/);
+  assert.match(source,/data-contextual-direction/);
   assert.match(source,/tradeMatch\.searchString/);
   assert.equal((source.match(/box\('(both|mine|theirs)'/g)||[]).length,3);
   assert.match(source,/tradeMatchSearchHtml\(items,cls/);

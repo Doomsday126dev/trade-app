@@ -6,8 +6,10 @@ const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
-const add=html.slice(html.indexOf('<div class="add-form'),html.indexOf('<div class="owner-share-notice"'));
-const toolbar=html.slice(html.indexOf('<div class="sec mylist-list-toolbar"'),html.indexOf('<div id="mylist-out">'));
+// The wants-only shell uses a real form and one shared detail editor, not retired category trays.
+const add=html.slice(html.indexOf('<form class="add-form wants-add-form"'),html.indexOf('<div class="wants-list-toolbar"'));
+const editor=html.slice(html.indexOf('id="combined-editor-modal"'),html.indexOf('<!-- SETTINGS'));
+const toolbar=html.slice(html.indexOf('<div class="wants-list-toolbar"'),html.indexOf('<div id="wants-find"'));
 const prioritySource=readFileSync(path.join(root,'js/domain/priorityValues.js'),'utf8');
 const enLocale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
 
@@ -25,31 +27,29 @@ test('normal add hierarchy keeps lookup, priority, Add, and per-entry details to
   assert.doesNotMatch(add,/aria-controls="export-menu"/);
 });
 
-test('list-wide actions live beside Reorder inside one compact List tools menu',()=>{
-  assert.match(toolbar,/class="mylist-list-actions"/);
-  assert.match(toolbar,/id="mylist-reorder-toggle"/);
-  assert.match(toolbar,/myList\.listTools/);
-  const menu=toolbar.slice(toolbar.indexOf('id="export-menu"'),toolbar.indexOf('</div>\n        </div>',toolbar.indexOf('id="export-menu"')));
-  for(const key of ['myList.importAction','myList.speedAdd','myList.bulkEdit','export.classicImage'])assert.match(menu,new RegExp(key.replace('.','\\.')));
-  assert.equal((toolbar.match(/id="export-menu-btn"/g)||[]).length,1);
+test('list-wide actions are discoverable beside Share and Select in one compact tools menu',()=>{
+  assert.match(toolbar,/onclick="openProductShare\(\)"/);assert.match(toolbar,/onclick="startWantsSelection\(\)"/);
+  assert.match(toolbar,/<details id="wants-list-tools"/);assert.match(toolbar,/<summary[^>]*>/);
+  for(const key of ['workflow.findInList','myList.importAction','workflow.aboutSearches'])assert.match(toolbar,new RegExp(key.replace('.','\\.')));
+  assert.equal((toolbar.match(/id="wants-list-tools"/g)||[]).length,1);
+  assert.doesNotMatch(toolbar,/mylist-reorder-toggle|speedAdd|bulkEdit/);
 });
 
-test('voice is an accessible action inside the lookup field',()=>{
-  const lookupStart=add.search(/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
-  const lookup=add.slice(lookupStart,add.indexOf('</div>',lookupStart));
-  assert.match(lookup,/id="voice-btn"/);assert.match(lookup,/data-i18n-aria-label="myList\.voiceInput"/);
-  assert.match(html,/\.voice-btn\{[^}]*width:48px;height:48px/);
+test('native catalog lookup is named and does not advertise the removed voice action',()=>{
+  assert.match(add,/id="wants-add-name"[^>]*list="combined-catalog"[^>]*required/);
+  assert.match(add,/data-i18n-aria-label="myList\.searchPlaceholder"/);
+  assert.match(html,/id="combined-catalog"/);assert.match(html,/onfocus="prepareWantsCatalog\(\)"/);
+  assert.doesNotMatch(add,/voice-btn|toggleVoiceInput/);
 });
 
-test('flags and variant details remain behind Flags & details without changing identifiers',()=>{
-  assert.match(add,/id="add-advanced"/);
-  assert.match(add,/class="add-flag-grid"/);
-  for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxl','add-pmon-xxs','add-pmon-notes','add-pmon-background'])assert.match(add,new RegExp(`id="${id}"`));
-  assert.match(add,/myList\.variantDetailsPlaceholder/);
-  assert.match(html,/\.lucky-add\{[^}]*min-height:var\(--control-min\)/);
-  assert.match(html,/\.add-flag-grid\{[^}]*grid-template-columns:repeat\(4,max-content\)/);
-  assert.match(html,/@media\(max-width:600px\)\{#tab-mylist \.add-advanced\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*\}#tab-mylist \.add-flag-grid\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(html,/list\[name\]=priValue\(pri,notes,lucky,xxl,xxs,shiny,backgroundId\)/);
+test('flags and exact variant details live in the shared wants editor and omit backgrounds',()=>{
+  assert.match(add,/onclick="openWantsAddEditor\(\)"/);
+  for(const id of ['combined-lucky','combined-shiny','combined-xxl','combined-xxs','combined-mod','combined-gender','combined-note'])assert.match(editor,new RegExp(`id="${id}"`));
+  assert.match(editor,/maxlength="160"/);assert.doesNotMatch(editor,/background-picker|combined-background/);
+  const save=html.slice(html.indexOf('async function saveCombinedEditor('),html.indexOf('let boardHiddenKeys='));
+  assert.match(save,/if\(changes\.xxl&&changes\.xxs\)return fail/);
+  assert.match(save,/workflow\.choosePriority/);assert.match(save,/applyAccountSyncTradeMutations\(mutations,authority\.controller\)/);
+  assert.match(save,/draft\.owner!==cur\|\|draft\.uid!==auth\?\.currentUser\?\.uid/);
 });
 
 test('trade qualifiers normalize gender aliases and reject impossible Shadow requirements',()=>{
@@ -74,7 +74,8 @@ test('trade qualifiers normalize gender aliases and reject impossible Shadow req
 
 test('lookup and existing-list filter use deliberate search variants',()=>{
   assert.match(add,/search-lookup/);
-  assert.match(html,/class="mylist-search app-search-shell search-filter"/);
+  assert.match(html,/type="search" class="field-control" id="combined-filter"/);
+  assert.match(html,/id="combined-filter"[^>]*data-i18n-aria-label="workflow\.findInList"/);
 });
 
 test('tag metadata and selectable assignment controls have distinct weight',()=>{

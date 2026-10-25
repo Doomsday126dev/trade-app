@@ -92,6 +92,7 @@ function parseImportTokens(raw){
     const numbers=terms.filter(t=>/^\d{1,4}$/.test(t));
     if(numbers.length!==1||terms.some(t=>!/^\d{1,4}$/.test(t)&&!allowed.has(t)))return{ok:false};
     const dex=Number(numbers[0]),filters=terms.filter(t=>t!==numbers[0]);
+    if(new Set(filters.filter(term=>REGION_SEARCH_TERMS.has(term))).size>1)return{ok:false};
     if(!dex||filters.includes('male')&&filters.includes('female')||filters.includes('xxl')&&filters.includes('xxs')||filters.includes('dynamax')&&filters.includes('gigantamax'))return{ok:false};
     tokens.push({dex,filters});
   }

@@ -235,5 +235,20 @@
 "share.downloadFullCsv":"Ganze Liste als CSV herunterladen"
 ,
 "events.venueUnknown":"Ortszeit laut Feed; genaue Veranstaltungszeitzone fehlt. Kein Countdown; Quelle prüfen."
+,
+"settings.savingChanges":"Änderungen werden gespeichert…",
+"profile.savedQueued":"Profil auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend.",
+"profile.savedOnDevice":"Profil auf diesem Gerät gespeichert. Kontosynchronisierung hier nicht bestätigt.",
+"profile.saveUnconfirmed":"Änderung nicht bestätigt. Entwurf bleibt erhalten; Verbindung prüfen und erneut versuchen.",
+"profile.pinMetadataQueued":"PIN aktualisiert; Kontodaten-Synchronisierung ausstehend. Neue PIN verwenden.",
+"profile.pinMetadataUnconfirmed":"PIN-Änderung bestätigt, Kontodaten-Synchronisierung unbestätigt. Neue PIN behalten und Synchronisierung prüfen.",
+"settings.appearanceQueued":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend.",
+"settings.appearanceLocal":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung unbestätigt.",
+"admin.roleNeedsConnection":"Vor Rollenänderungen verbinden. Keine Rollenänderung vorgemerkt.",
+"admin.roleQueued":"Rollenänderung vorgemerkt. Serverberechtigung noch nicht bestätigt.",
+"admin.roleUnconfirmed":"Rollenänderung nicht bestätigt. Vor erneutem Versuch Synchronisierung prüfen.",
+"admin.requestDenialUnconfirmed":"Ablehnung nicht bestätigt. Vor erneutem Versuch aktuellen Anfragestatus prüfen."
+,
+"events.groupVenueUnknown":"Veranstaltungszeit unbestätigt"
   });
 })(window);

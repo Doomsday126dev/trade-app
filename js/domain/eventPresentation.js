@@ -1,6 +1,6 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
-  const GROUPS=Object.freeze(['now','soon','later']);
+  const GROUPS=Object.freeze(['now','soon','later','unconfirmed']);
   const TYPES=Object.freeze(['all','spotlight','raids','max','gbl','research','general']);
   const UP_NEXT_CATEGORIES=Object.freeze(['spotlight_hour','max_monday','raid_day','community_day']);
   function dateOnly(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));}
@@ -22,6 +22,7 @@
     return'general';
   }
   function eventGroup(event,now=Date.now(),soonWindow=3*86400000){
+    if(timingBasis(event)==='venue-unknown')return'unconfirmed';
     const start=eventDate(event?.start).getTime(),end=eventDate(event?.end,dateOnly(event?.end)).getTime();
     if(!Number.isFinite(end)||end<now)return'expired';
     if(Number.isFinite(start)&&start<=now)return'now';
@@ -31,7 +32,7 @@
   function prepareEvents(events,{now=Date.now(),filter='all',date='',timeZone,limit=60}={}){
     const rows=(events||[]).map(event=>({...event,uiType:eventType(event),uiGroup:eventGroup(event,now)}))
       .filter(event=>event.uiGroup!=='expired'&&(filter==='all'||event.uiType===filter)&&(!date||eventIntersectsDate(event,date,{timeZone})))
-      .sort((a,b)=>eventDate(a.start)-eventDate(b.start)).slice(0,limit);
+      .sort((a,b)=>(a.uiGroup==='unconfirmed')-(b.uiGroup==='unconfirmed')||eventDate(a.start)-eventDate(b.start)).slice(0,limit);
     return GROUPS.map(group=>({group,events:rows.filter(event=>event.uiGroup===group)})).filter(section=>section.events.length);
   }
   function normalizedEventKind(event){

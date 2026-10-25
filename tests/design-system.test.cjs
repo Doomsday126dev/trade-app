@@ -24,8 +24,8 @@ test('design tokens define the bounded spacing, container, radius, type, control
 
 test('consumer shell uses shared surface, motion, gutter, and navigation primitives',()=>{
   for(const token of ['surface-canvas','surface-raised','surface-subtle','surface-hover','border-strong','shadow-low','shadow-high','page-gutter','transition-fast','transition-base'])assert.match(css,new RegExp(`--${token}:`));
-  assert.match(css,/\.topbar\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
-  assert.match(css,/\.tabs\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
+  assert.match(css,/\.topbar\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100% - var\(--container-wide\)\)\/2\)\)/);
+  assert.match(css,/\.tabs\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100% - var\(--container-wide\)\)\/2\)\)/);
   assert.match(css,/\.tab\.active\{[^}]*box-shadow:inset 0 -3px var\(--accent\)/);
   assert.match(css,/\.tab-icon-slot\{[^}]*display:flex[^}]*align-items:center[^}]*justify-content:center[^}]*width:22px[^}]*height:22px[^}]*flex:0 0 22px/);
   assert.match(css,/\.tab-icon-slot \.tab-icon\{[^}]*width:20px[^}]*height:20px[^}]*flex:none/);
@@ -35,7 +35,7 @@ test('consumer shell uses shared surface, motion, gutter, and navigation primiti
     assert.equal((button.match(/class="ui-icon tab-icon"/g)||[]).length,1,id);
     assert.equal((button.match(/class="tab-icon-slot"/g)||[]).length,1,id);
     assert.equal((button.match(/class="tab-label"/g)||[]).length,1,id);
-    assert.equal((button.match(/class="tab-short-label"/g)||[]).length,1,id);
+    assert.equal((button.match(/class="tab-short-label"/g)||[]).length,id==='nav-events'?0:1,id);
   }
   assert.doesNotMatch(css,/\.tab\[data-tab=[^\]]+\]::before\{content:/);
   for(const locale of locales)assert.doesNotMatch(locale,/'nav\.(?:myList|findTrainer|events|admin)(?:Short)?':'[^']*[📋🔍📅⚙️]/u);
@@ -79,7 +79,7 @@ test('button hierarchy exposes five distinct reusable roles with one primary in 
 });
 
 test('active fields use the shared theme and retain deliberate search variants',()=>{
-  for(const id of ['login-user','login-pin','find-trainer-input','ac-input','organizer-new-tag','settings-language','settings-search-language'])assert.match(html,new RegExp(`class="[^"]*field-control[^"]*"[^>]+id="${id}"|id="${id}"[^>]+class="[^"]*field-control`));
+  for(const id of ['login-user','login-pin','find-trainer-input','wants-add-name','organizer-new-tag','settings-language','settings-search-language'])assert.match(html,new RegExp(`class="[^"]*field-control[^"]*"[^>]+id="${id}"|id="${id}"[^>]+class="[^"]*field-control`));
   assert.match(css,/\.field-control,#tab-admin/);
   assert.match(css,/\.search-lookup\{max-width:var\(--container-standard\)\}/);
   assert.match(css,/\.search-filter\{max-width:var\(--container-standard\)\}/);
@@ -95,7 +95,7 @@ test('shared Pokémon autocomplete rows reset native controls onto themed surfac
   assert.match(css,/\.ac-item-no\{[^}]*color:var\(--muted\)/);
   assert.match(css,/\.ac-item-variant\{[^}]*color:var\(--muted\)/);
   assert.doesNotMatch(css,/\.ac-(?:dropdown|item)[^}]*background:\s*(?:#fff|white)/i);
-  assert.match(html,/class="ac-dropdown" id="ac-dropdown"/);
+  assert.match(html,/<datalist id="combined-catalog"/);
   assert.match(html,/id="favorite-browse-suggestions" role="listbox"/);
 });
 
@@ -128,62 +128,32 @@ test('chip taxonomy keeps metadata, selection, filtering, status, removal, and n
   assert.match(css,/\.chip-selectable\{[^}]*min-height:var\(--control-min\)/);
 });
 
-test('My List category navigation uses a dot and semantic selection, never a checkmark',()=>{
-  const myList=html.slice(html.indexOf('<!-- MY LIST'),html.indexOf('<!-- HAVE'));
-  assert.match(myList,/class="ltab nav-pill active"[^>]+aria-selected="true"/);
-  assert.match(myList,/class="ltab-marker" aria-hidden="true"><\/span>/);
-  assert.doesNotMatch(myList,/class="ltab-marker"[^>]*>✓/);
-  assert.match(css,/\.mylist-type-tabs \.ltab-marker\{[^}]*width:6px[^}]*border-radius:50%[^}]*background:var\(--ac2\)/);
+test('unified wanted list replaces category navigation with a single primary list',()=>{
+  const index=readFileSync(path.join(root,'index.html'),'utf8');
+  const list=index.slice(index.indexOf('<!-- MY LIST'),index.indexOf('<!-- SCHEDULE'));
+  assert.match(list,/id="combined-list"/);assert.match(list,/id="wants-add-name"/);
+  assert.doesNotMatch(list,/data-mylist-type=|My List categories|ltab-marker/);
+  assert.match(html,/function wantSectionLabel\(/);
 });
 
-test('obvious application chrome uses the shared icon system and dense rows disclose rare controls',()=>{
-  assert.match(html,/id="find-trainer-input"[\s\S]*?ui-icon-search/);
-  assert.match(html,/function myListSearchActionHtml[\s\S]*?uiIconMarkup\('copy'/);
+test('application chrome and unified wanted rows use icons with explicit edit and remove actions',()=>{
   assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
-  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
-  const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowHtml'));
-  assert.match(rows,/class="myrow-priority-quick"/);
-  assert.match(rows,/ontoggle="hydrateMyRowPriority\(this\)"/);
-  assert.match(html,/function hydrateMyRowPriority[\s\S]*?insertAdjacentHTML\('beforeend'/);
-  assert.doesNotMatch(rows,/class="myrow-priority-menu"/);
-  assert.match(rows,/class="myrow-active-traits"/);
-  assert.doesNotMatch(rows,/class="myrow-trait detail" title=/);
-  assert.match(rows,/details class="myrow-editor"/);
-  assert.match(rows,/summary class="myrow-edit"/);
-  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes'])assert.match(editor,new RegExp(`${handler}\\(`));
-  assert.doesNotMatch(editor,/confirmRemove\(/);
-  assert.match(rows,/class="myrow-remove"/);
-  assert.doesNotMatch(rows,/uiIconMarkup\('trash'/);
-  assert.match(css,/\.myrow-remove::before\{[^}]*mask:url\("data:image\/svg\+xml/);
-  assert.match(rows,/confirmRemove\('\$\{jsName\}','\$\{jsDn\}'\)/);
-  assert.match(rows,/ontoggle="hydrateMyRowEditor\(this\)"/);
-  assert.match(editor,/insertAdjacentHTML\('beforeend',myListEditorHtml\(entry\)\)/);
-  assert.match(editor,/class="myrow-editor-title">\$\{escHtml\(dn\)\}/);
+  const rows=html.slice(html.indexOf('template.innerHTML=`<article class="myrow wants-row'),html.indexOf('function refreshCombinedSearch'));
+  assert.match(rows,/class="myrow-edit"/);assert.match(rows,/uiIconMarkup\('sliders'/);
+  assert.match(rows,/class="myrow-remove"/);assert.match(rows,/removeWantsGroup/);
+  assert.match(rows,/aria-label="\$\{escAttr\(i18nCore\.t\('myList\.removeEntry'/);
+  assert.match(rows,/openCombinedEditor/);assert.match(rows,/myrow-active-traits/);
   assert.match(css,/\.myrow-edit,\.myrow-remove\{[^}]*min-width:48px[^}]*min-height:44px/);
-  assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
-  assert.doesNotMatch(css,/\.myrow\[data-full\]:has\(\.myrow-name:hover\)::(?:before|after)/);
-  assert.doesNotMatch(css,/content:attr\(data-full\)/);
 });
 
-test('My List rows foreground collection identity while retaining fast editing',()=>{
-  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
-  assert.match(rows,/uiIconMarkup\('grip','ui-icon'\)/);
-  assert.match(rows,/myrow-sprite-wrap/);
-  assert.match(rows,/class="myrow-name"/);
-  assert.match(rows,/class="myrow-priority-quick"/);
-  assert.doesNotMatch(rows,/class="myrow-priority" role="group"/);
-  assert.match(rows,/details class="myrow-editor"/);
-  assert.match(css,/\.myrow\{[^}]*min-height:58px[^}]*gap:9px/);
+test('unified wanted rows retain identity, notes, traits and accessible selection',()=>{
+  const rows=html.slice(html.indexOf('template.innerHTML=`<article class="myrow wants-row'),html.indexOf('function refreshCombinedSearch'));
+  for(const token of ['data-name','data-priority','data-wants-section','myrow-sprite-wrap','myrow-name wants-name','wants-select','wants-note'])assert.ok(rows.includes(token),token);
+  assert.match(rows,/onchange="selectCombinedGroup\(this\.dataset\.group,this\.checked\)"/);
   assert.match(css,/\.myrow-sprite-wrap\{width:34px;height:34px/);
-  assert.match(css,/\.myrow-name\{font-size:14px;font-weight:700/);
-  assert.match(css,/\.drag-handle\{[^}]*width:28px;height:40px/);
-  assert.match(css,/@media\(max-width:600px\)\{[\s\S]*?\.myrow\{min-height:54px;padding:3px var\(--space-1\);gap:6px\}/);
-  assert.match(css,/\.myrow-sprite-wrap,\.myrow-sprite\{width:32px;height:32px\}/);
-  assert.match(css,/\.myrow-active-traits\{max-width:92px\}/);
-  assert.match(css,/\.myrow-copy \.myrow-active-traits\{max-width:100%;gap:2px;flex-wrap:nowrap;overflow:hidden\}/);
-  assert.match(css,/\.myrow-trait\.detail\{display:inline-flex;max-width:62px\}/);
-  assert.match(css,/\.myrow-edit,\.myrow-remove\{width:var\(--control-min\);min-width:var\(--control-min\);height:var\(--control-min\);min-height:var\(--control-min\);padding:0\}/);
+  assert.match(css,/\.myrow-edit,\.myrow-remove\{width:var\(--control-min\)/);
+  assert.doesNotMatch(rows,/draggable="true"|class="myrow-priority" role="group"/);
 });
 
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{
@@ -191,7 +161,7 @@ test('cards, priority, status, and empty-state primitives preserve semantic stru
   assert.match(html,/favorite-card-shell card-interactive/);
   assert.match(html,/event-card card-row/);
   assert.match(html,/share-pcard card-row/);
-  assert.match(css,/\.share-section\.card-content\{padding:0\}/);
+  assert.match(css,/\.share-section-hdr\{[^}]*display:flex/);
   assert.match(css,/\.share-pcard\.card-row\{padding:7px 9px/);
   assert.match(css,/\.mylist-priority-section\.H \.mylist-priority-heading\{[^}]*border-left-color:var\(--H\)/);
   assert.doesNotMatch(css,/\.mylist-priority-section\.[HML]\{[^}]*border-top-color/);
@@ -206,7 +176,8 @@ test('cards, priority, status, and empty-state primitives preserve semantic stru
 test('accessibility and disabled product boundaries remain explicit',()=>{
   assert.match(css,/:where\(button,a,input,select,textarea,\[role="button"\],\[tabindex\]\):focus-visible/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(html,/role="tablist"[^>]+aria-label="My List categories"/);
+  assert.match(html,/role="tablist"[^>]+aria-label="Main sections"/);
+  assert.match(html,/id="wants-sort"|id="combined-filter"/);
   assert.match(html,/organizer-selectable-chip chip chip-selectable"[^>]+aria-pressed=/);
   assert.match(shareVisibility,/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);
   assert.match(trainerPreferences,/SYNCED_TRAINER_PREFERENCES_ENABLED\s*:\s*false/);

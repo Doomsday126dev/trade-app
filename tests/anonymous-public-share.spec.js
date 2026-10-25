@@ -44,7 +44,7 @@ function representativePublicProjection(){
   return{...publicProjection,version:2,declarations,declarationCount:declarations.length};
 }
 
-async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false,live=false}={}){
+async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false,live=false,deferredFirst=false}={}){
   const requests=[];
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
@@ -79,6 +79,8 @@ async function installPublicFirebase(page,{exists=true,projection=publicProjecti
       export function getDatabase(){return{kind:'public-database'}}
       export function ref(_database,path){return{path}}
       export async function get(target){
+        globalThis.__publicGetCount=(globalThis.__publicGetCount||0)+1;
+        if(${deferredFirst?'true':'false'}&&globalThis.__publicGetCount===1)return new Promise((_resolve,reject)=>{globalThis.__rejectFirstPublic=reject;});
         globalThis.__publicShareOrder.push('database-read');
         globalThis.__publicShareReads=(globalThis.__publicShareReads||[]).concat(target.path);
         if(!globalThis.__publicShareTokenReady)throw new Error('read-before-app-check');
@@ -369,7 +371,7 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.locator('#settings-language').selectOption(locale);
       await page.locator('#settings-modal button:visible').first().focus();
       await page.keyboard.press('Shift+Tab');
-      expect(await page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
+      await expect.poll(()=>page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
       await page.keyboard.press('Escape');
       await expect(page.locator('#settings-modal')).not.toHaveClass(/open/);
       await expect(page.locator('#share-language-trigger')).toBeFocused();
@@ -590,4 +592,10 @@ test('exact public listener updates, clears unavailable data and releases on pag
   await page.evaluate(()=>__livePublicError(new Error('permission denied')));await expect(page.locator('#share-list-out')).not.toContainText('Pikachu');
   await page.evaluate(projection=>__livePublicData({exists:()=>true,val:()=>projection}),JSON.parse(JSON.stringify(publicProjection)));await expect(page.locator('#share-list-out')).not.toContainText('Pikachu');
   await page.evaluate(()=>dispatchEvent(new Event('pagehide')));expect(await page.evaluate(()=>__livePublicSubscriptions)).toBe(0);
+});
+
+test('late initial rejection cannot erase a successful bfcache-resumed public view',async({page})=>{
+ await installPublicFirebase(page,{live:true,deferredFirst:true});await page.goto('./?view=PublicTrainer');await page.waitForFunction(()=>typeof __rejectFirstPublic==='function');
+ await page.evaluate(()=>{dispatchEvent(new Event('pagehide'));dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});await expect(page.locator('#share-list-out')).toContainText('Pikachu');
+ await page.evaluate(()=>__rejectFirstPublic(new Error('isolated earlier request failure')));await page.waitForTimeout(50);await expect(page.locator('#share-list-out')).toContainText('Pikachu');
 });

@@ -581,5 +581,20 @@
 "share.downloadFullCsv":"Download full CSV"
 ,
 "events.venueUnknown":"Venue-local hours from feed · exact venue timezone not supplied. Countdown unavailable; verify the source."
+,
+"settings.savingChanges":"Saving changes…",
+"profile.savedQueued":"Profile saved on this device; account sync is queued.",
+"profile.savedOnDevice":"Profile saved on this device. Account sync is not confirmed here.",
+"profile.saveUnconfirmed":"Could not confirm this change. Your draft is kept; check connection and retry.",
+"profile.pinMetadataQueued":"PIN updated; account metadata sync is queued. Keep using the new PIN.",
+"profile.pinMetadataUnconfirmed":"PIN update was acknowledged, but account metadata sync is unconfirmed. Keep the new PIN and check sync status.",
+"settings.appearanceQueued":"Appearance saved on this device; account sync is queued.",
+"settings.appearanceLocal":"Appearance saved on this device; account sync is not confirmed.",
+"admin.roleNeedsConnection":"Connect before changing account roles. No role change was queued.",
+"admin.roleQueued":"Role change queued. Server authorization is not confirmed yet.",
+"admin.roleUnconfirmed":"Could not confirm the role change. Check sync status before retrying.",
+"admin.requestDenialUnconfirmed":"Could not confirm denial. Check the latest request status before retrying."
+,
+"events.groupVenueUnknown":"Venue time unconfirmed"
   });
 })(window);

@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
+const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
@@ -27,8 +28,9 @@ test('interim navigation exposes trainer-first retained surfaces only',()=>{
   const account=between('<div class="account-popover"','</div>\n      </div>');
   assert.doesNotMatch(account,/account-legacy-inventory-action|openLegacyInventoryTool\(\)|Legacy Inventory/);
   const settings=between('data-settings-section="tools"','data-settings-section="data"');
-  assert.match(settings,/openSettingsTool\('inventory'\)/);
-  assert.match(settings,/nav\.legacyInventory/);
+  assert.doesNotMatch(settings,/openSettingsTool\('inventory'\)|nav\.legacyInventory/);
+  assert.match(settings,/openSettingsTool\('safe-transfer'\)/);
+  assert.match(tabs,/data-tab="more"/);
 });
 
 test('exact owned mode is active and startup has no broad private listeners',()=>{
@@ -68,7 +70,9 @@ test('My List owns current-user strings and Trade Match is not in retained navig
   assert.match(strings,/const users=\[cur\]\.filter/);
   const tabs=between('<div class="tabs" role="tablist"','</div>');
   assert.doesNotMatch(tabs,/Trade Match|Offers/);
-  assert.match(source,/id="my-strings-out"/);
+  const list=between('<!-- MY LIST -->','<!-- SCHEDULE -->');
+  assert.match(list,/id="combined-list"/);assert.match(list,/id="combined-search"/);
+  assert.match(source,/updateWantsSearch\(search,entries,label\)/);
 });
 
 test('Find Trainer autocomplete uses the public directory while selected and Favorite reads use exact public shares only',()=>{
@@ -77,11 +81,11 @@ test('Find Trainer autocomplete uses the public directory while selected and Fav
   const repository=readFileSync(path.join(root,'js/data/publicShareRepository.js'),'utf8');
   const cache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
   assert.match(repository,/client\.read\(`publicShares\/\$\{shareUsername\(username\)\}`\)/);
-  assert.match(cache,/repository\.read\(favorite\.displayName\)/);
+  assert.match(cache,/repository\.read\(favorite\.displayName,\{targetUid:favorite\.targetUid\|\|''\}\)/);
   const browse=between('function favoriteBrowseCatalog(){','function closeFavoriteCardActions');
   assert.doesNotMatch(browse,/allData\.loginDirectory|Object\.keys\(allData\.users|publicShares\/|\.listen\(/);
   assert.match(source,/trainerDiscoveryDomain\.fold\(name\)===trainerDiscoveryDomain\.fold\(value\)/);
-  assert.match(source,/bestTrainerSuggestion\(Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
+  assert.match(source,/bestTrainerSuggestion\(combinedTrainerDirectoryNames\(\)/);
   assert.match(source,/resolved=resolvedTrainerSearchValue\(requested\)/);
   assert.match(source,/catch\(error\)\{showTrainerSearchError\(\);return;\}/);
   assert.doesNotMatch(find,/allData\.users\?\.|wishlist\[|have\[/);
@@ -95,18 +99,14 @@ test('favorites are owner-scoped local state and event cards use grouped present
   }
 });
 
-test('Legacy Inventory is read-only and export does not write Firebase',()=>{
-  const write=between('async function writeHave','function setHaveView');
-  assert.match(write,/if\(LEGACY_INVENTORY_READ_ONLY\)/);
-  const exportSource=between('function exportLegacyInventoryCsv','function openIncomingOffersModal');
-  assert.match(exportSource,/downloadBlob/);
-  assert.doesNotMatch(exportSource,/queueSync|set\(|update\(|writeHave/);
-  assert.match(source,/else if\(action==='have'\)\{finalTab='have';switchTab\(finalTab,\{render:false\}\);\}/);
-  assert.match(source,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
-  const archive=between('<!-- HAVE (Inventory) -->','<!-- SCHEDULE -->');
-  assert.match(archive,/inventory\.archiveTitle/);
-  assert.match(archive,/legacy-inventory-export/);
-  assert.doesNotMatch(archive,/have-ac-input|have-toggle-row|have-bulk-bar|have-browse-view|addInventoryEntry/);
+// .91 removed Inventory markup and entrypoints while retaining inert stored data.
+test('retired Inventory URLs redirect to wants and expose no inventory edit/export surface',()=>{
+  const list=between('<!-- MY LIST -->','<!-- SCHEDULE -->');assert.doesNotMatch(list,/have-ac-input|have-toggle-row|have-bulk-bar/);
+  assert.doesNotMatch(source,/id="tab-have"|onclick="openSettingsTool\('inventory'\)"|function openLegacyInventoryTool/);
+  const routing=between('function switchTab(','let productShareScope=');
+  const ids=[],context={activeTabName:()=> 'mylist',closeExistingPinReset:()=>{},protectedOwnerSession:()=>false,matchMedia:()=>({matches:false}),window:{scrollTo:()=>{}},document:{querySelectorAll:()=>[],querySelector:()=>null,getElementById:id=>{ids.push(id);return{classList:{add:()=>{}}};}}};
+  vm.runInNewContext(routing,context);context.switchTab('have',{render:false});assert.deepEqual(ids,['tab-mylist']);
+  const writer=between('async function writeHave(','function _nameToSpriteEntry(');assert.match(writer,/LEGACY_INVENTORY_READ_ONLY/);
 });
 
 test('Events bypasses personal schedule, trade, reserved, and quota rendering',()=>{

@@ -44,7 +44,7 @@ test('provider-only profile and activity writes are barred from every legacy ide
   const listWrite=section('async function writeListSerialized','async function writeListItem');
   assert.match(listWrite,/if\(!providerOnlyIdentityActive\(\)\)\{[\s\S]+users\/\$\{u\}\/lastUpdated[\s\S]+users\/\$\{u\}\/lastSeen/);
   const profileWrite=section('async function saveProfile','async function savePinSettings');
-  assert.match(profileWrite,/if\(providerOnlyIdentityActive\(\)\)[\s\S]+runtime\.updateProviderProfile\(upd\)[\s\S]+else\{[\s\S]+writeUser\(cur,upd\)/);
+  assert.match(profileWrite,/if\(providerOnlyIdentityActive\(\)\)[\s\S]+runtime\.updateProviderProfile\(upd\)[\s\S]+else\{[\s\S]+writeUser\(cur,upd,\{current\}\)/);
 });
 
 test('provider-only sessions skip legacy protected list and pending-decrement subscriptions',()=>{
