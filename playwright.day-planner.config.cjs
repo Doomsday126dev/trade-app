@@ -1,1 +1,1 @@
-const base=require('./playwright.event-sources.config.cjs');module.exports={...base,testMatch:['events-current-source.spec.js','events-day-planner.spec.js','events-inline-ranks.spec.js']};
+const base=require('./playwright.event-sources.config.cjs');module.exports={...base,testMatch:['events-current-source.spec.js','events-day-planner.spec.js','events-inline-ranks.spec.js','events-details-control.spec.js','events-category-filter.spec.js']};
