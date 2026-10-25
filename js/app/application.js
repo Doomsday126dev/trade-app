@@ -13385,7 +13385,7 @@ function eventCalendarKeydown(event,dateKey){
   eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);
   eventCalendarDate=isoDate(next);
   renderEventsOnly();
-  requestAnimationFrame(()=>document.querySelector(`.event-calendar-day[data-date="${eventCalendarDate}"]`)?.focus());
+  requestAnimationFrame(()=>[...document.querySelectorAll(`.event-calendar-day[data-date="${eventCalendarDate}"]`)].find(node=>node.getClientRects().length)?.focus());
 }
 function jumpToEvent(eventId){
   eventCalendarDate='';
@@ -13398,20 +13398,35 @@ function jumpToEvent(eventId){
     (card.querySelector('[data-event-action="details"]')||card).focus({preventScroll:true});
   });
 }
+function eventAgendaDate(){
+  if(eventCalendarDate)return eventCalendarDate;
+  const today=new Date();return isoDate(today.getFullYear()===eventCalendarAnchor.getFullYear()&&today.getMonth()===eventCalendarAnchor.getMonth()?today:eventCalendarAnchor);
+}
 function renderEventCalendar(events,{variant='desktop'}={}){
-  const locale=i18nCore.getLocale(),calendar=eventPresentationDomain.calendarMonth(events,{year:eventCalendarAnchor.getFullYear(),month:eventCalendarAnchor.getMonth()});
+  const locale=i18nCore.getLocale(),calendar=eventPresentationDomain.calendarMonth(events,{year:eventCalendarAnchor.getFullYear(),month:eventCalendarAnchor.getMonth()}),selectedDate=eventAgendaDate();
   const heading=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(calendar.year,calendar.month,1));
-  const weekdays=Array.from({length:7},(_,index)=>new Intl.DateTimeFormat(locale,{weekday:'narrow'}).format(new Date(2026,7,2+index)));
+  const weekdays=Array.from({length:7},(_,index)=>new Intl.DateTimeFormat(locale,{weekday:'short'}).format(new Date(2026,7,2+index)));
   const titleId=`event-calendar-title-${variant}`;
-  return`<section class="event-rail-module event-calendar event-calendar-${escAttr(variant)}" aria-labelledby="${titleId}"><div class="event-rail-heading"><h2 id="${titleId}">${escHtml(i18nCore.t('events.calendar'))}</h2><div class="event-calendar-nav"><button type="button" data-event-action="month" data-event-month-delta="-1" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" data-event-action="month" data-event-month-delta="1" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{const selected=cell.key===eventCalendarDate,label=i18nCore.t('events.calendarDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),status:i18nCore.t(cell.markerCount?'events.calendarHasEvents':'events.calendarNoEvents')});return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.markerCount?' has-events':''}" data-event-action="date" data-date="${cell.key}" role="gridcell" aria-selected="${selected}" aria-label="${escAttr(label)}"><span>${cell.day}</span>${cell.markerCount?'<i aria-hidden="true"></i>':''}</button>`;}).join('')}</div><div class="event-calendar-legend"><i aria-hidden="true"></i><span>${escHtml(i18nCore.t('events.calendarLegend'))}</span></div>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" data-event-action="clear-date" data-date="${eventCalendarDate}">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
+  return`<section class="event-rail-module event-calendar event-calendar-${escAttr(variant)}" aria-labelledby="${titleId}"><div class="event-rail-heading"><h2 id="${titleId}">${escHtml(i18nCore.t('events.dayPlanner'))}</h2><div class="event-calendar-nav"><button type="button" data-event-action="month" data-event-month-delta="-1" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" data-event-action="month" data-event-month-delta="1" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{
+    const selected=cell.key===selectedDate,label=i18nCore.t('events.plannerDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),count:i18nCore.formatNumber(cell.timedCount)});
+    return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.timedCount?' has-timed-events':''}" data-event-action="date" data-date="${cell.key}" role="gridcell" tabindex="${selected?0:-1}" aria-selected="${selected}" aria-label="${escAttr(label)}"><span>${cell.day}</span>${cell.timedCount?`<small class="event-calendar-count" aria-hidden="true">${escHtml(i18nCore.formatNumber(cell.timedCount))}</small>`:''}</button>`;
+  }).join('')}</div><p class="event-calendar-legend">${escHtml(i18nCore.t('events.timedLegend'))}</p>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" data-event-action="clear-date" data-date="${eventCalendarDate}">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
 }
 function renderEventSelectedDay(events){
-  if(!eventCalendarDate)return'';
-  const locale=i18nCore.getLocale(),dateLabel=new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${eventCalendarDate}T12:00:00`));
-  const matches=eventPresentationDomain.eventsOnDate(events,eventCalendarDate);
-  const rows=matches.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),id=eventStableId(event);return`<button type="button" class="event-selected-day-row" data-event-action="jump" data-event-id="${escAttr(id)}"><strong>${escHtml(localized.localizedTitle)}</strong><span>${escHtml(timing.timeLabel||timing.dateLabel)}</span></button>`;}).join('');
-  return`<div class="event-selected-day" aria-live="polite"><h3>${escHtml(i18nCore.t('events.onDate',{date:dateLabel}))}</h3>${rows?`<div class="event-selected-day-list">${rows}</div>`:`<p class="event-selected-day-empty">${escHtml(i18nCore.t('events.noneOnDate',{date:dateLabel}))}</p>`}</div>`;
+  const dateKey=eventAgendaDate(),locale=i18nCore.getLocale(),dateLabel=new Intl.DateTimeFormat(locale,{weekday:'short',month:'short',day:'numeric'}).format(new Date(`${dateKey}T12:00:00`));
+  const agenda=eventPresentationDomain.dayAgenda(events,dateKey);
+  const rows=(items,kind)=>items.map(event=>{
+    const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),id=eventStableId(event);
+    let hours=timing.timeLabel||i18nCore.t('events.hoursUnknown');
+    if(kind==='starting'||kind==='ending')hours=eventPresentationDomain.dateOnly(event[kind==='starting'?'start':'end'])?i18nCore.t('events.hoursUnknown'):new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(eventPresentationDomain.eventDate(event[kind==='starting'?'start':'end']));
+    if(kind==='ongoing')hours=timing.dateLabel;
+    if(kind==='uncertain')hours=eventTimeBasisLabel(event,{compact:true});
+    return`<button type="button" class="event-selected-day-row" data-event-action="details" data-event-id="${escAttr(id)}"><strong>${escHtml(localized.localizedTitle)}</strong><span>${escHtml(hours)}</span></button>`;
+  }).join('');
+  const section=(kind,key)=>agenda[kind].length?`<section class="event-day-section" data-agenda-kind="${kind}"><h4>${escHtml(i18nCore.t(key))}<span>${escHtml(i18nCore.formatNumber(agenda[kind].length))}</span></h4>${rows(agenda[kind],kind)}</section>`:'';
+  return`<div class="event-selected-day" aria-live="polite"><h3>${escHtml(i18nCore.t('events.onDate',{date:dateLabel}))}</h3>${section('timed','events.timedDay')}${!agenda.timed.length?`<p class="event-day-empty">${escHtml(i18nCore.t('events.noTimedDay'))}</p>`:''}${section('starting','events.startingDay')}${section('ending','events.endingDay')}${section('uncertain','events.uncertainDay')}${agenda.ongoing.length?`<details class="event-day-ongoing" data-event-disclosure="ongoing-${escAttr(dateKey)}"><summary>${escHtml(i18nCore.t('events.alsoOngoing',{count:i18nCore.formatNumber(agenda.ongoing.length)}))}</summary>${rows(agenda.ongoing,'ongoing')}</details>`:''}</div>`;
 }
+
 function renderEventFeaturedPokemonNames(event){
   const parts=eventLabelsI18n.recurringParts(event),locale=i18nCore.getLocale();
   if(!parts?.speciesIds?.length)return'';

@@ -270,6 +270,15 @@
 "events.localTimeShort":"Ortszeit",
 "events.yourTimeShort":"Deine Ortszeit",
 "events.venueTimeShort":"Veranstaltungszeit · Zone unbestätigt",
+"events.dayPlanner":"Tagesplanung",
+"events.plannerDate":"{date}: {count} zeitlich begrenzte Events. Für Beginn und Ende auswählen.",
+"events.timedLegend":"Zahlen zählen zeitlich begrenzte Events. Tag für Beginn, Ende und Uhrzeiten wählen.",
+"events.timedDay":"Zeitlich begrenzt",
+"events.startingDay":"Beginnen",
+"events.endingDay":"Enden",
+"events.uncertainDay":"Uhrzeit prüfen",
+"events.noTimedDay":"Keine kurzen Events mit Uhrzeit gelistet.",
+"events.alsoOngoing":"Außerdem laufend ({count})",
 "events.bonuses":"Boni"
     ,"events.bonusesUnknown":"Keine Bonusdetails im Feed. Quelle prüfen; dies bedeutet nicht, dass es keine Boni gibt."
     ,"events.feedStatus":"Event-Überblick"
