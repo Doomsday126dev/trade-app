@@ -71,10 +71,10 @@ for(const outcome of ['resolve','reject'])test(`delayed request denial ${outcome
 test('Events minute ticks preserve mobile disclosures, calendar focus and detail return focus',async({page})=>{
  await fixture(page);await page.setViewportSize({width:390,height:844});await page.clock.install({time:new Date('2026-10-25T12:00:00Z')});
  await page.evaluate(()=>{_eventData={events:[{eventID:'synthetic-clock',name:'Synthetic Community Day',eventType:'community-day',start:'2026-10-25T14:00:00',end:'2026-10-25T17:00:00',extraData:{communityday:{bonuses:[{text:'Synthetic bonus'}]}}}],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';eventCalendarDate='';switchTab('schedule');renderEventsOnly();});
- await page.locator('[data-event-disclosure="sources"] > summary').click();await page.locator('[data-event-disclosure="mobile-calendar"] > summary').click();const next=page.locator('.event-calendar-mobile [data-event-month-delta="1"]');await next.focus();
- await page.clock.fastForward(60001);await expect(page.locator('[data-event-disclosure="sources"]')).toHaveAttribute('open','');await expect(page.locator('[data-event-disclosure="mobile-calendar"]')).toHaveAttribute('open','');await expect(next).toBeFocused();
- await page.locator('[data-event-action="details"]').click();await page.clock.fastForward(60001);await expect(page.locator('#event-detail-modal')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('[data-event-action="details"]')).toBeFocused();
- await page.evaluate(()=>jumpToEvent('synthetic-clock'));await expect(page.locator('[data-event-action="details"]')).toBeFocused();
+ await expect(page.locator('.events-credits')).toContainText('ScrapedDuck');await page.locator('[data-event-disclosure="mobile-calendar"] > summary').click();const next=page.locator('.event-calendar-mobile [data-event-month-delta="1"]');await next.focus();
+ await page.clock.fastForward(60001);await expect(page.locator('.events-credits')).toContainText('LeekDuck');await expect(page.locator('[data-event-disclosure="mobile-calendar"]')).toHaveAttribute('open','');await expect(next).toBeFocused();
+ await page.locator('.event-card [data-event-action="details"]').click();await page.clock.fastForward(60001);await expect(page.locator('#event-detail-modal')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('.event-card [data-event-action="details"]')).toBeFocused();
+ await page.evaluate(()=>jumpToEvent('synthetic-clock'));await expect(page.locator('.event-card [data-event-action="details"]')).toBeFocused();
 });
 
 test('organizer readiness cannot copy A memberships into B',async({page})=>{

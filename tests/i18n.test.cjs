@@ -288,13 +288,19 @@ test('dynamic product renderers do not reintroduce known English-only recovery c
 test('pre-trusted dynamic product corrections have complete localized renderer keys',()=>{
   const {catalogs}=load();
   const keys=[
-    'events.calendarLegend','trainer.syncHydrating','trainer.syncHydratingHelp',
+    'events.timedLegend','events.dayPlanner','events.plannerDate','events.timedDay',
+    'events.startingDay','events.endingDay','events.uncertainDay','events.noTimedDay','events.alsoOngoing',
+    'trainer.syncHydrating','trainer.syncHydratingHelp',
     'trainer.profileLoading','trainer.profileLoadingHelp','tradeMatch.searchString'
   ];
   for(const key of keys){
     for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
     for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
-    assert.match(html,new RegExp(`i18nCore\\.t\\('${key.replaceAll('.','\\.')}'`));
+    if(['events.timedDay','events.startingDay','events.endingDay','events.uncertainDay'].includes(key)){
+      const section={timedDay:'timed',startingDay:'starting',endingDay:'ending',uncertainDay:'uncertain'}[key.split('.')[1]];
+      assert.ok(applicationSource.includes(`section('${section}','${key}')`),key);
+      assert.ok(applicationSource.includes('escHtml(i18nCore.t(key))'),key);
+    }else assert.match(html,new RegExp(`i18nCore\\.t\\('${key.replaceAll('.','\\.')}'`));
   }
 });
 
