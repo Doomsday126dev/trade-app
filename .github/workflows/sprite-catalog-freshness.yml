@@ -3,7 +3,7 @@ name: Sprite catalog freshness
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 9 * * 1'
+    - cron: '17 9 * * *'
   pull_request:
     paths:
       - 'data/*costume*'
@@ -12,6 +12,8 @@ on:
       - 'scripts/*costume*'
       - 'scripts/sprites/**'
       - 'tests/costume*'
+      - 'scripts/check-deployed-costume-catalog.cjs'
+      - 'tests/deployed-costume-catalog.test.cjs'
       - '.github/workflows/sprite-catalog-freshness.yml'
 
 permissions:
@@ -30,13 +32,25 @@ jobs:
         run: |
           node scripts/generate-costume-sprite-runtime.cjs --check
           node scripts/generate-public-sprite-dex.cjs --check
-          node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs
+          node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs tests/deployed-costume-catalog.test.cjs
       - name: Offline review integrity (pull requests)
         if: github.event_name == 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --offline --report costume-freshness.json --summary costume-freshness.md
-      - name: Live source and review freshness (weekly or manual)
+      - name: Live source and review freshness (daily or manual)
         if: github.event_name != 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --report costume-freshness.json --summary costume-freshness.md
+      - name: Generate review candidate and verify deployed coverage
+        if: always()
+        run: node scripts/check-deployed-costume-catalog.cjs ${{ github.event_name == 'pull_request' && '--candidate-only' || '' }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: costume-maintenance-review
+          path: |
+            costume-freshness.json
+            costume-freshness.md
+            costume-maintenance.json
+            costume-maintenance.md
       - name: Publish review summary even when attention is required
         if: always()
         run: |
@@ -44,4 +58,8 @@ jobs:
             cat costume-freshness.md >> "$GITHUB_STEP_SUMMARY"
           else
             printf '%s\n' 'Costume check could not produce a report. Inspect the failed validation step; do not treat this run as current.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if test -f costume-maintenance.md; then
+            cat costume-maintenance.md >> "$GITHUB_STEP_SUMMARY"
           fi

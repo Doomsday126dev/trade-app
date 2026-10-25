@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-22",
+  "reviewedAt": "2026-10-19",
   "source": {
     "id": "pokemondb-go-reviewed",
     "homepage": "https://pokemondb.net/sprites",
@@ -6999,8 +6999,18 @@
         "Astronaut Pikachu"
       ],
       "status": "unavailable",
-      "identityStatus": "released",
-      "unavailableReason": "Released October 4, 2026; no individually reviewed exact artwork in accepted source."
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Blue)",
+        "PokéXciting Pikachu (Blue)"
+      ],
+      "status": "unavailable",
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     }
   ]
 }

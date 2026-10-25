@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-09-22",
-  "coverage": "Current public News discovery reviewed September 22, 2026. Thirteen previously recorded identities were reconciled; two newly announced October identities were added. This is not a complete history or live feed.",
+  "lastReviewedDate": "2026-10-19",
+  "coverage": "Public News index and costume-bearing announcements reviewed October 19, 2026. Astronaut and Batik confirmed released; Blue PokéXciting confirmed already available; three Halloween October 27 debuts queued. Events requires sign-in. This is a bounded manual review, not a complete history or exhaustive feed.",
   "reviewSources": [
     "https://pokemongo.com/news",
     "https://pokemongo.com/events"
@@ -249,14 +249,14 @@
       "releaseDate": "2026-09-28",
       "dateMeaning": "Announced Timed Research availability begins September 28; featured local event is October 2",
       "evidenceUrl": "https://pokemongo.com/news/patterns-of-the-wild-2026",
-      "lifecycleStatus": "announced",
+      "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
-      "lastVerifiedAt": "2026-09-22T21:15:29Z",
+      "lastVerifiedAt": "2026-10-19T16:43:26.821Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/patterns-of-the-wild-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "359ab1e65a2cf997a1d2190e81d644d46bcbf222821d8721ead528c44e9bd55d",
-        "result": "announced"
+        "retrievedAt": "2026-10-19T16:43:26.821Z",
+        "sha256": "aacbc58f700843c1ecd52a90b512e680f21ad6d051b41b4a0d9fb2b12bc9f842",
+        "result": "released"
       }
     },
     {
@@ -268,17 +268,80 @@
       "evidenceUrl": "https://pokemongo.com/news/world-space-week-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-09-22T21:15:29Z",
+      "lastVerifiedAt": "2026-10-19T16:43:26.505Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/world-space-week-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "a93cfe82d157ea1a5ed77ff72570da248ba3511e0a95aa8d3d74cb66e1c5f52e",
+        "retrievedAt": "2026-10-19T16:43:26.505Z",
+        "sha256": "7edf1a352c9f1cda7c2a97e54dcd7d8ecb217b1fa1e238c299a11db66c0dec76",
+        "result": "released"
+      }
+    },
+    {
+      "id": "announcement:2026-pokexciting:25:blue",
+      "catalogName": "Pikachu (PokeXciting Blue)",
+      "dex": 25,
+      "releaseDate": "2026-10-19",
+      "dateMeaning": "Confirmed available as of review, not first worldwide debut: official announcement says cross-region stamp encounter is already live; November 7 is the dedicated event start.",
+      "evidenceUrl": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "unavailable",
+      "lastVerifiedAt": "2026-10-19T16:43:27.308Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+        "retrievedAt": "2026-10-19T16:43:27.308Z",
+        "sha256": "0693d2165e6c29bd612bd45c21e0021b94de18c8c5e7ef2fa3530abbae969651",
+        "result": "released"
+      }
+    },
+    {
+      "id": "announcement:2026-halloween:pikachu-hat-capelet",
+      "catalogName": "Pikachu (Hat and Capelet)",
+      "dex": 25,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "announced",
+      "artworkStatus": "unavailable",
+      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-19T16:43:27.113Z",
+        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
         "result": "announced"
-      },
-      "currentVerification": {
-        "date": "2026-10-25",
-        "source": "https://pokemongolive.com/en/news/world-space-week-2026",
-        "result": "Official October 4–10 debut; Shiny possible. No invented game form identifier."
+      }
+    },
+    {
+      "id": "announcement:2026-halloween:zubat-top-hat",
+      "catalogName": "Zubat (Top Hat)",
+      "dex": 41,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "announced",
+      "artworkStatus": "unavailable",
+      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-19T16:43:27.113Z",
+        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
+        "result": "announced"
+      }
+    },
+    {
+      "id": "announcement:2026-halloween:sinistea-bow",
+      "catalogName": "Sinistea (Bow)",
+      "dex": 854,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "announced",
+      "artworkStatus": "unavailable",
+      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-19T16:43:27.113Z",
+        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
+        "result": "announced"
       }
     }
   ],
@@ -289,27 +352,27 @@
     }
   ],
   "reviewEvidence": {
-    "reviewedAt": "2026-09-22T21:24:25.274Z",
+    "reviewedAt": "2026-10-19T16:44:37.599Z",
     "hashAlgorithm": "sha256",
     "acceptedArtworkSnapshot": {
       "url": "https://pokemondb.net/sprites",
-      "retrievedAt": "2026-09-22T21:14:26.054Z",
-      "sha256": "f39811c7ad0d748536482ca3e2d7e22c250b8847aa0c16eef1314dc53e9caf8c",
-      "result": "127 monitored galleries matched the reviewed snapshot; no filenames or labels changed"
+      "retrievedAt": "2026-10-19T16:43:44.504Z",
+      "sha256": "1fa682886ccd976c4420fa49a83a0e6dbdc17689dca4a260f5d621b57b0872bf",
+      "result": "128 monitored galleries matched the reviewed snapshot; no filenames or labels changed"
     },
     "sources": {
       "news": {
         "url": "https://pokemongo.com/news",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "1bfeb730f8a041c413368b382c9ecc2ebf649fa29752aeb88f2c47f8d7c24e0e",
+        "retrievedAt": "2026-10-19T16:43:24.881Z",
+        "sha256": "4007e6fd58505deabf8409f894b3189705245dda6c0a88ff387d91e5c3d10840",
         "result": "reviewed"
       },
       "events": {
         "url": "https://pokemongo.com/events",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "060e91cb013a112d024e0640448215a268ab2a7813db6c2d7811050dc323a10b",
+        "retrievedAt": "2026-10-19T16:43:25.192Z",
+        "sha256": "96dca7797443b592dc8e30d492deb027ed2cb7e3cac63802d40c6104592b8ff7",
         "result": "unresolved-sign-in-required",
-        "gap": "The public Events route redirected to an account sign-in page, so release discovery used the public News index and primary event announcements."
+        "gap": "The public Events route redirects to a sign-in page; discovery used the public News index and primary announcements."
       },
       "horizons": {
         "url": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
@@ -325,15 +388,15 @@
       },
       "space": {
         "url": "https://pokemongo.com/news/world-space-week-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "a93cfe82d157ea1a5ed77ff72570da248ba3511e0a95aa8d3d74cb66e1c5f52e",
-        "result": "announced"
+        "retrievedAt": "2026-10-19T16:43:26.505Z",
+        "sha256": "7edf1a352c9f1cda7c2a97e54dcd7d8ecb217b1fa1e238c299a11db66c0dec76",
+        "result": "released"
       },
       "batik": {
         "url": "https://pokemongo.com/news/patterns-of-the-wild-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "359ab1e65a2cf997a1d2190e81d644d46bcbf222821d8721ead528c44e9bd55d",
-        "result": "announced"
+        "retrievedAt": "2026-10-19T16:43:26.821Z",
+        "sha256": "aacbc58f700843c1ecd52a90b512e680f21ad6d051b41b4a0d9fb2b12bc9f842",
+        "result": "released"
       },
       "worldsOfficial": {
         "url": "https://pokemongo.com/news/world-championships-event-2026?hl=eng",
@@ -377,6 +440,30 @@
         "retrievedAt": "2026-09-22T21:21:23Z",
         "sha256": "9098beb7de3a9d4b5b2a46ac0ead6b1f069589508408edaa7b04872e578b55ca",
         "result": "released"
+      },
+      "halloween2026": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-19T16:43:27.113Z",
+        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
+        "result": "announced"
+      },
+      "singapore": {
+        "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+        "retrievedAt": "2026-10-19T16:43:27.308Z",
+        "sha256": "0693d2165e6c29bd612bd45c21e0021b94de18c8c5e7ef2fa3530abbae969651",
+        "result": "released"
+      },
+      "festivalOfLights": {
+        "url": "https://pokemongo.com/news/festival-of-lights-2026",
+        "retrievedAt": "2026-10-19T16:43:27.618Z",
+        "sha256": "795cac9c9ed1ab8501d2b5416c217a2b0ed26eed379f0ea4125d7cf2802ead0c",
+        "result": "returning-existing-identities"
+      },
+      "fallMarathon": {
+        "url": "https://pokemongo.com/news/fall-marathon-buddy-trek-2026",
+        "retrievedAt": "2026-10-19T16:43:28.108Z",
+        "sha256": "358ed7eb50c53fde26397dd94154a3210393faedabcf0e9d0f6aec6c336bcb96",
+        "result": "returning-existing-identity"
       }
     }
   }
