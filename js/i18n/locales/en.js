@@ -608,7 +608,12 @@
     ,"events.localTime":"Player-local hours · device zone: {zone}"
     ,"events.fixedTime":"Worldwide instant · shown in {zone}"
     ,"events.dateOnlyTime":"Date supplied; exact hours not supplied"
-    ,"events.bonuses":"Bonuses"
+    ,"events.bonusLastKnown":"Last checked details; source recheck needed",
+"events.sourceEnglish":"Source details in English",
+"events.detailsPending":"Open details and source for event features.",
+"events.allBonuses":"All {count} bonuses & conditions",
+"events.detailsChecked":"Details checked: {date}",
+"events.bonuses":"Bonuses"
     ,"events.bonusesUnknown":"Bonus details not supplied by this feed. Check the source; this does not mean no bonuses."
     ,"events.feedStatus":"Event briefing"
     ,"events.staleFeed":"Last-known event information · refresh not confirmed"

@@ -1,0 +1,69 @@
+{
+  "season-24-twilight-trails": {
+    "source": "https://pokemongo.com/seasons/twilight-trails",
+    "evidence": [
+      "Reach Major Milestones on your GO Pass",
+      "Rank 1",
+      "Rank 25",
+      "Rank 50",
+      "Rank 75",
+      "Once unlocked, these bonuses will last until the current GO Pass ends"
+    ],
+    "bonuses": [
+      "GO Pass Rank 1: +1 Candy per trade; guaranteed trade Candy XL for Trainers level 31+.",
+      "GO Pass Rank 25: increased Gift opening, receiving and storage limits.",
+      "GO Pass Rank 50: double Daily Adventure Incense duration.",
+      "GO Pass Rank 75: increased hatch XP and Stardust; multiplier not specified."
+    ],
+    "caveats": [
+      "These are GO Pass milestone rewards, not unconditional season bonuses. Each unlocked bonus lasts until that GO Pass ends."
+    ]
+  },
+  "gbl-twilight-trails_ultra-league_master-league-mega-edition_fantasy-cup-great-league-edition": {
+    "source": "https://pokemongo.com/news/go-battle-league-twilight-trails",
+    "evidence": [
+      "October 20 - October 27",
+      "Fantasy Cup: Great League Edition",
+      "4× Stardust from win rewards (this does not include end-of-set rewards)"
+    ],
+    "bonuses": [
+      "4× Stardust for win rewards; end-of-set rewards excluded."
+    ],
+    "caveats": [
+      "Applies to the October 20–27 league rotation. The official schedule uses 1 p.m. PDT (GMT−7)."
+    ]
+  },
+  "gbl-twilight-trails_master-league_mega-halloween-cup-great-league-edition": {
+    "source": "https://pokemongo.com/news/go-battle-league-twilight-trails",
+    "evidence": [
+      "October 27 - November 3",
+      "Mega Halloween Cup: Great League Edition",
+      "4× Stardust from win rewards (this does not include end-of-set rewards)"
+    ],
+    "bonuses": [
+      "4× Stardust for win rewards; end-of-set rewards excluded."
+    ],
+    "caveats": [
+      "The summary feed conflicts with the official start hour: official October 27 at 1 p.m. PDT is 20:00 UTC; the feed lists 21:00 UTC. Check the official schedule before planning."
+    ]
+  },
+  "pokemon-go-city-safari-boston-2026-rescheduled": {
+    "source": "https://leekduck.com/events/pokemon-go-city-safari-boston-2026-rescheduled/",
+    "evidence": [
+      "current ticket holders",
+      "10 am to 6 pm local time daily",
+      "Up to five Special Trades",
+      "Half Stardust cost for trades",
+      "Four-hour Lure Modules"
+    ],
+    "bonuses": [
+      "Current ticket holders: up to five Special Trades per day.",
+      "Current ticket holders: half Stardust cost for trades.",
+      "Current ticket holders: four-hour Lures, excluding Golden Lures.",
+      "Current ticket holders: increased Shiny chance; eight-hour Party Play."
+    ],
+    "caveats": [
+      "Existing ticket holders only, worldwide: October 24 and 25, 10 a.m.–6 p.m. player-local time each day. This is not an overnight window."
+    ]
+  }
+}
