@@ -20,7 +20,7 @@ function deferred(){
 function response(data,{ok=true,status=200}={}){return{ok,status,json:async()=>data};}
 function abortError(){const error=new Error('aborted');error.name='AbortError';return error;}
 
-function harness({cached=null}={}){
+function harness({cached=null,bundled=null}={}){
   const requests=[],timers=new Map(),timerHistory=[];
   const storage=new Map(cached?[["pogoEventCache_v1",JSON.stringify(cached)]]:[]);
   let timerId=0;
@@ -32,7 +32,7 @@ function harness({cached=null}={}){
   const context=vm.createContext({
     localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,String(value))},
     navigator:{onLine:true},Date,Promise,JSON,Error,SyntaxError,AbortController,
-    fetch:fetchImpl,
+    fetch:fetchImpl,eventPresentationDomain:{fallbackEventData:()=>bundled},
     setTimeout(callback,delay){const id=++timerId,record={id,callback,delay,cleared:false};timers.set(id,record);timerHistory.push(record);return id;},
     clearTimeout(id){const record=timers.get(id);if(record)record.cleared=true;timers.delete(id);}
   });
@@ -206,4 +206,10 @@ test('malformed event payload is not cached as a successful check',async()=>{
 test('optional raid download failure does not discard successful event data',async()=>{
   const run=harness();const pending=run.run('fetchPogoEvents()');run.requests[0].resolve(response([{eventID:'events-healthy'}]));run.requests[1].reject(new Error('raid feed offline'));await pending;
   assert.equal(run.run('_eventData.events[0].eventID'),'events-healthy');assert.equal(run.run('_eventData.raidsUnavailable'),true);assert.equal(run.run('_eventLoadState'),'ready');
+});
+
+test('bundled dated fallback survives source outage without inventing a successful check',async()=>{
+ const bundled={events:[{eventID:'last-known'}],raids:[],fetchedAt:1234,stale:true,sourceFallback:true};
+ const run=harness({bundled});const pending=run.run('fetchPogoEvents()');run.requests[0].reject(new Error('offline'));run.requests[1].reject(new Error('offline'));
+ const value=await pending;assert.equal(value.events[0].eventID,'last-known');assert.equal(value.fetchedAt,1234);assert.equal(value.stale,true);assert.equal(run.run('_eventLoadState'),'ready');assert.equal(run.storage.has('pogoEventCache_v1'),false);
 });

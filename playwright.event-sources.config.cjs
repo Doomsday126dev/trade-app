@@ -1,0 +1,2 @@
+const {defineConfig}=require('@playwright/test');
+module.exports=defineConfig({testDir:'./tests',testMatch:'events-current-source.spec.js',timeout:45000,workers:1,reporter:'list',use:{baseURL:'http://127.0.0.1:4197',serviceWorkers:'block'},webServer:{command:'python3 -m http.server 4197',url:'http://127.0.0.1:4197',reuseExistingServer:false},projects:[{name:'chromium-phone',use:{browserName:'chromium',viewport:{width:390,height:844}}},{name:'webkit-phone',use:{browserName:'webkit',viewport:{width:390,height:844}}}]});
