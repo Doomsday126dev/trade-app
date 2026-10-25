@@ -43,12 +43,19 @@ test('slow request checks reuse the pending write and Back prevents late success
   await page.evaluate(()=>hideRequestForm());await page.evaluate(()=>__requestResolve());await page.clock.fastForward(50);await expect(page.locator('#req-sent-status')).toBeHidden();
 });
 
-test('share goals preserve mode and scope; keyboard and export reach real controls',async({page})=>{
-  await fixture(page);await page.evaluate(()=>openSettingsTool('export'));await expect(page.locator('#product-share-modal')).toBeVisible();
-  await page.locator('[data-share-mode="text"]').click();await page.locator('#product-share-scope').selectOption('top');await expect(page.locator('#product-share-text')).toBeVisible();
-  await page.locator('[data-share-mode="link"]').click();await expect(page.locator('#share-link-action')).toBeDisabled();await expect(page.locator('[data-full-list-export]').first()).toBeDisabled();await expect(page.locator('#share-link-scope-help')).toContainText('full list');
-  await page.locator('[data-share-mode="search"]').click();await expect(page.locator('#share-search-output textarea')).toHaveCount(1);await page.locator('#share-game-language').selectOption('ja');await expect(page.locator('#share-search-output textarea')).toContainText('こうかん');
-  await page.keyboard.press('Escape');await page.keyboard.press('n');await expect(page.locator('#wants-add-name')).toBeFocused();await page.locator('#wants-add-name').blur();await page.keyboard.press('s');await expect(page.locator('#product-share-search')).toBeVisible();
+test('share formats preserve subset scope while live link explicitly previews the full list; search and keyboard controls work',async({page})=>{
+  await fixture(page);await page.evaluate(()=>{openAccountSettingsSection('tools');openSettingsTool('export',document.getElementById('settings-export'));});await expect(page.locator('#product-share-modal')).toBeVisible();
+  await page.locator('[data-share-mode="text"]').click();await page.locator('#share-scope-top').check();await expect(page.locator('.share-text-preview')).toBeVisible();
+  const top=await page.evaluate(()=>productShareSnapshot.length);expect(await page.evaluate(()=>productShareUi.mode)).toBe('text');
+  await page.locator('[data-share-mode="link"]').click();await expect(page.locator('#product-share-disclosure')).toContainText(/full wants|full.*list/i);await expect(page.locator('#product-share-options [name="share-scope"]')).toHaveCount(0);
+  expect(await page.evaluate(()=>productShareSnapshot.length)).toBe(await page.evaluate(()=>productDeclarations().entries.length));
+  await page.locator('[data-share-mode="text"]').click();await expect(page.locator('#share-scope-top')).toBeChecked();expect(await page.evaluate(()=>productShareSnapshot.length)).toBe(top);
+  await page.locator('#share-text-csv').check();await expect(page.locator('.share-fixed-scope')).toContainText('full wants list');expect(await page.evaluate(()=>productShareSnapshot.length)).toBe(await page.evaluate(()=>productDeclarations().entries.length));
+  await page.locator('#share-text-plain').check();await expect(page.locator('#share-scope-top')).toBeChecked();expect(await page.evaluate(()=>productShareSnapshot.length)).toBe(top);
+  await page.keyboard.press('Escape');await page.evaluate(()=>{closeModal('settings-modal',{route:false});history.replaceState({},'',location.pathname);});
+  await page.keyboard.press('n');await expect(page.locator('#wants-add-name')).toBeFocused();await page.locator('#wants-add-name').blur();await page.keyboard.press('s');await expect(page.locator('#combined-list [data-wants-copy]').first()).toBeFocused();
+  await page.evaluate(()=>openAccountSettingsSection('language'));await page.locator('#settings-search-language').selectOption('ja');await page.evaluate(()=>{closeModal('settings-modal',{route:false});history.replaceState({},'',location.pathname);});
+  await expect(page.locator('#combined-list [data-wants-copy]').first()).toHaveAttribute('data-wants-copy',/こうかん/);await page.locator('#combined-list [data-wants-copy]').first().click();expect(await page.evaluate(()=>__copiedText)).toContain('こうかん');
 });
 
 const now=new Date('2026-10-25T12:00:00Z').getTime();

@@ -12,7 +12,7 @@ async function fixture(page){
   const origin=new URL(page.context()._options.baseURL).origin;
   await page.context().route('**/*',route=>new URL(route.request().url()).origin===origin&&['GET','HEAD'].includes(route.request().method())?route.continue():route.abort());
   await installLoginTransport(page);await page.goto('/?isolated-usability');await installTrustedFixture(page);
-  await page.evaluate(()=>{navigator.clipboard.writeText=async value=>{window.__copiedText=value;};window.confirm=()=>true;});
+  await page.evaluate(()=>{currentAuthUid=auth.currentUser.uid;navigator.clipboard.writeText=async value=>{window.__copiedText=value;};window.confirm=()=>true;});
 }
 const normal=readFileSync(join(root,'tests/normal-sync-product.spec.js'),'utf8');
 const installNormal=eval('('+normal.slice(normal.indexOf('async function install('),normal.indexOf('\nasync function settled'))+')');

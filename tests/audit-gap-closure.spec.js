@@ -31,9 +31,9 @@ test('old Profile completion cannot publish or reset a different session',async(
  await page.evaluate(()=>{cur='NewSession';auth={currentUser:{uid:'new-session-uid'}};__finishProfile({ok:true,delivery:'queued'});});await page.waitForTimeout(50);expect(await page.evaluate(()=>window.__publications||0)).toBe(0);
 });
 test('PIN password acknowledgement cannot write metadata for a new account',async({page})=>{
- await profile(page);await page.evaluate(()=>{allData.users[cur].pin='synthetic-legacy-proof';allData.users[cur].authUid=auth.currentUser.uid;auth.currentUser.providerData=[{providerId:'password'}];selectSettingsSection('security');renderConnectedAccounts();window.__pinWrites=[];updatePassword=()=>new Promise(resolve=>{window.__finishPassword=resolve;});hashPin=async()=> 'synthetic-hash';writeUser=async username=>{__pinWrites.push(username);};const save=savePinSettings;savePinSettings=(...args)=>window.__pinTask=save(...args);});
+ await profile(page);await page.evaluate(()=>{allData.users[cur].pin='synthetic-legacy-proof';allData.users[cur].authUid=auth.currentUser.uid;auth.currentUser.providerData=[{providerId:'password'}];selectSettingsSection('security');renderConnectedAccounts();toggleSettingsPinForm(true);window.__pinWrites=[];updatePassword=()=>new Promise(resolve=>{window.__finishPassword=resolve;});hashPin=async()=> 'synthetic-hash';writeUser=async username=>{__pinWrites.push(username);};const save=savePinSettings;savePinSettings=(...args)=>window.__pinTask=save(...args);});
  expect(await page.evaluate(()=>usernamePinAccessUsable())).toBe(true);await expect(page.locator('#settings-security-pin-panel')).toBeVisible();
- await page.locator('#np1').fill('654321');await page.locator('#np2').fill('654321');await page.locator('[onclick="savePinSettings()"]').click();
+ await page.locator('#np1').fill('654321');await page.locator('#np2').fill('654321');await page.locator('#settings-pin-form [type="submit"]').click();
  await page.evaluate(()=>{firebaseSignOut=async()=>{};logout();auth={currentUser:{uid:'new-session-uid'}};cur='NewSession';activateOwnedSession('new-session-uid','NewSession');allData=normalizeData({users:{NewSession:{authUid:'new-session-uid'}}});__finishPassword();});await page.evaluate(()=>__pinTask);expect(await page.evaluate(()=>__pinWrites)).toEqual([]);
 });
 test('appearance compatibility save cannot apply stale UI to another account',async({page})=>{
@@ -58,9 +58,9 @@ test('public Settings exposes only language and legal dialog returns focus',asyn
 });
 
 test('PIN A-to-B-to-A logout and activation cannot revive the earlier completion',async({page})=>{
- await profile(page);await page.evaluate(()=>{allData.users[cur].pin='synthetic-legacy-proof';allData.users[cur].authUid=auth.currentUser.uid;auth.currentUser.providerData=[{providerId:'password'}];selectSettingsSection('security');renderConnectedAccounts();window.__pinWrites=[];updatePassword=()=>new Promise(resolve=>{window.__finishPassword=resolve;});hashPin=async()=> 'synthetic-hash';writeUser=async username=>{__pinWrites.push(username);};const save=savePinSettings;savePinSettings=(...args)=>window.__pinTask=save(...args);});
+ await profile(page);await page.evaluate(()=>{allData.users[cur].pin='synthetic-legacy-proof';allData.users[cur].authUid=auth.currentUser.uid;auth.currentUser.providerData=[{providerId:'password'}];selectSettingsSection('security');renderConnectedAccounts();toggleSettingsPinForm(true);window.__pinWrites=[];updatePassword=()=>new Promise(resolve=>{window.__finishPassword=resolve;});hashPin=async()=> 'synthetic-hash';writeUser=async username=>{__pinWrites.push(username);};const save=savePinSettings;savePinSettings=(...args)=>window.__pinTask=save(...args);});
  expect(await page.evaluate(()=>usernamePinAccessUsable())).toBe(true);await expect(page.locator('#settings-security-pin-panel')).toBeVisible();
- await page.locator('#np1').fill('654321');await page.locator('#np2').fill('654321');await page.locator('[onclick="savePinSettings()"]').click();
+ await page.locator('#np1').fill('654321');await page.locator('#np2').fill('654321');await page.locator('#settings-pin-form [type="submit"]').click();
  await page.evaluate(()=>{const user=auth.currentUser,name=cur,data=structuredClone(allData);firebaseSignOut=async()=>{};logout();auth={currentUser:{uid:'middle-uid'}};cur='MiddleSession';activateOwnedSession('middle-uid',cur);logout();auth={currentUser:user};cur=name;activateOwnedSession(user.uid,name);allData=data;__finishPassword();});await page.evaluate(()=>__pinTask);expect(await page.evaluate(()=>__pinWrites)).toEqual([]);
 });
 for(const outcome of ['resolve','reject'])test(`delayed request denial ${outcome} cannot restore an earlier account`,async({page})=>{
@@ -103,7 +103,7 @@ test('Favorites filters, group management and canceling removal preserve members
  const state=await page.evaluate(()=>({before:__favoritesBefore,after:ensureTrainerHistoryStore().read()}));expect(state.after.favorites).toEqual(state.before.favorites);expect(state.after.snapshots).toEqual(state.before.snapshots);
 });
 test('Settings tool dispatch cannot open a private tool after logout',async({page})=>{
- await fixture(page);const opened=await page.evaluate(()=>{const schedule=setTimeout;let callback;setTimeout=fn=>{callback=fn;return 1;};openSettingsTool('import');setTimeout=schedule;cur='';auth={currentUser:null};let calls=0;openImport=()=>calls++;callback();return calls;});expect(opened).toBe(0);
+ await fixture(page);const result=await page.evaluate(()=>{openAccountSettingsSection('tools');firebaseSignOut=async()=>{};logout();let calls=0;openImport=()=>calls++;return{accepted:openSettingsTool('import'),calls};});expect(result).toEqual({accepted:false,calls:0});
 });
 for(const action of ['add','remove','rename','delete'])test(`Favorite ${action} readiness is fenced before a new account can inherit the action`,async({page})=>{
  await fixture(page);const calls=await page.evaluate(async action=>{
@@ -131,8 +131,8 @@ test('accepted Profile avatar changes and clearing refresh all identity chrome',
 test('Settings utilities open the intended tools and ordinary accounts cannot export an admin backup',async({page})=>{
  await fixture(page);
  for(const [tool,modal]of [['import','import-modal'],['export','product-share-modal'],['safe-transfer','safe-transfer-modal'],['shortcuts','shortcuts-modal']]){
-  await page.evaluate(()=>openAccountSettingsSection('tools'));await page.locator(`[onclick="openSettingsTool('${tool}')"]`).click();await expect(page.locator(`#${modal}`)).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator(`#${modal}`)).toBeHidden();
+  await page.evaluate(()=>openAccountSettingsSection('tools'));await page.locator(`[onclick^="openSettingsTool('${tool}'"]`).click();await expect(page.locator(`#${modal}`)).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator(`#${modal}`)).toBeHidden();
  }
- await page.evaluate(()=>openAccountSettingsSection('tools'));await expect(page.locator('[onclick="openSettingsTool(\'backup\')"]')).toBeHidden();expect(await page.evaluate(()=>exportData())).toBe(false);
+ await page.evaluate(()=>openAccountSettingsSection('tools'));await expect(page.locator('[onclick^="openSettingsTool(\'backup\'"]')).toBeHidden();expect(await page.evaluate(()=>exportData())).toBe(false);
  await page.evaluate(()=>openAccountSettingsSection('data'));await expect(page.locator('[data-settings-section="data"]')).toBeVisible();await expect(page.locator('#trainer-sync-local-status')).toBeVisible();await expect(page.locator('#settings-release-id')).toContainText('2026-');
 });
