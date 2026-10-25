@@ -10452,7 +10452,7 @@ function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
   const route=parseSettingsRoute();
   document.getElementById('settings-layout')?.classList.add('mobile-list');
-  if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
+  if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&Number(history.state?.settingsDepth)>1&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
   if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
   requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
 }
