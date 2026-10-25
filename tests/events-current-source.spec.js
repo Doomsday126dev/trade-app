@@ -10,6 +10,9 @@ for(const locale of ['en','ja'])test(`current public event source snapshot shows
  await expect(page.locator('.event-card[data-event-id="pokemonspotlighthour2026-10-29"]')).toContainText('2× Evolution XP');
  await expect(page.locator('.event-card[data-event-id="palkia-in-5-star-raid-battles-october-2026"]')).toContainText('Palkia');
  await expect(page.locator('.event-card .event-unknown')).toHaveCount(0);
+ const pawniard=page.locator('.event-card[data-event-id="november-communityday2026"]');
+ await expect(pawniard).toContainText('3-hour Incense');await expect(pawniard).toContainText('excludes Daily Adventure Incense');
+ await expect(pawniard).toContainText('excludes Golden Lure Modules');
  if(locale==='ja')await expect(season).toContainText('情報元の詳細は英語です');
  await season.locator('[data-event-action="details"]').first().click();await expect(page.locator('#event-detail-body')).toContainText('Rank 75');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);

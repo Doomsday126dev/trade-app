@@ -13439,7 +13439,7 @@ function eventBonusesHtml(event,{full=false}={}){
   const source=facts.bonusSource,sourceUrl=eventPresentationDomain.safeHttpsUrl(source?.url);
   const date=source?.checkedAt?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(source.checkedAt)):'';
   const attribution=sourceUrl?`<p class="event-bonus-source"><a href="${escAttr(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t(sourceUrl.includes('pokemongo.com/')?'events.officialNews':'events.sourceDetails'))}</a>${date?` · ${escHtml(i18nCore.t('events.detailsChecked',{date}))}`:''}${source?.stale?` · ${escHtml(i18nCore.t('events.bonusLastKnown'))}`:''}${i18nCore.getLocale()!=='en'?` · ${escHtml(i18nCore.t('events.sourceEnglish'))}`:''}</p>`:'';
-  const caveatRows=full?facts.caveats:[...new Set([...facts.caveats.slice(0,1),...facts.caveats.filter(c=>c.includes('*'))])],visible=full?bonuses:bonuses.slice(0,3);
+  const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
   const caveats=caveatRows.length?`<div class="event-bonus-caveats">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
   if(bonuses.length)return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${caveats}<ul>${visible.map(b=>`<li>${escHtml(b)}</li>`).join('')}</ul>${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
