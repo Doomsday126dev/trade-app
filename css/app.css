@@ -2482,8 +2482,8 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 .event-card-main{gap:5px}.event-card .event-time-basis{margin:0;font-size:11px}
 .event-card .event-benefits{border:0;padding:0;margin-top:7px}
 .event-benefits h4{font-size:10px;letter-spacing:.06em;margin:0 0 5px}
-.event-benefit-list{list-style:none;padding:0!important;margin:0;display:grid;gap:5px}
-.event-benefit-list li{margin:0;padding:5px 9px;border-left:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 6%,var(--card));border-radius:0 5px 5px 0;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.event-benefit-list{list-style:none;padding:0!important;margin:0;display:grid;gap:3px}
+.event-benefit-list li{margin:0;padding:3px 7px;border-left:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 6%,var(--card));border-radius:0 5px 5px 0;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
 .event-benefit-value{font-weight:850;color:var(--text)}
 .event-benefits .event-bonus-caveats{margin:6px 0 0;padding-left:9px;border-left:2px solid var(--border2);font-size:11px;line-height:1.4}
 .event-benefits .event-bonus-caveats p{margin:3px 0}
@@ -2491,7 +2491,7 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 .event-card .event-benefits>.btn{min-height:36px;padding:5px 0;background:none;border:0;text-align:left;color:var(--ac2);font-size:11px}
 @media(min-width:900px){.event-card .event-card-cue{align-self:start;min-height:44px}.event-card .event-benefit-list{max-width:66ch}}
 
-.event-benefit-scope{font-size:11px;font-weight:750;line-height:1.4;margin:7px 0 3px;color:var(--muted);overflow-wrap:anywhere}
+.event-benefit-scope{display:inline;font-size:inherit;font-weight:750;line-height:inherit;margin:0 .3em 0 0;color:var(--text);overflow-wrap:anywhere}
 .events-source{border:0;border-radius:0;background:none;padding:4px 0 8px;align-items:center;gap:8px;margin-bottom:8px}
 .events-source.is-stale{border-left:2px solid var(--warn);padding-left:8px}
 .events-credits{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;line-height:1.5;margin:12px 0;color:var(--muted)}
