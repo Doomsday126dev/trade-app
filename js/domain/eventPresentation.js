@@ -14,6 +14,7 @@
   function eventType(event){
     const sourceType=String(event?.eventType||'').trim().toLowerCase();
     if(sourceType==='pokemon-spotlight-hour')return'spotlight';
+    if(['max-mondays','max-battles','max-battle-day'].includes(sourceType))return'max';
     const text=`${event?.eventType||''} ${event?.name||''} ${event?.heading||''}`.toLowerCase();
     if(/max battle|dynamax|gigantamax/.test(text))return'max';
     if(/raid/.test(text))return'raids';

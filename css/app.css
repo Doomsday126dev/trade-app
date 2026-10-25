@@ -2510,3 +2510,10 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 .event-day-ongoing .event-selected-day-row{font-size:11px}.event-selected-day>h3{margin-top:12px}
 
 .event-day-ongoing summary{display:list-item;padding:10px 0;min-height:40px}
+
+/* Details is a secondary text action, with a full touch target. */
+.event-card .event-card-cue{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;width:auto;padding:6px 8px;background:transparent;border:0;border-radius:6px;font-size:13px;font-weight:650;line-height:1.4;white-space:nowrap}
+.event-card .event-card-cue-icon{width:16px;height:16px;flex:0 0 16px}
+.event-card .event-card-cue-label{white-space:nowrap}
+.event-card .event-card-cue:hover{background:var(--bg2)}
+.event-date-filter{font-size:13px;font-weight:650;margin:10px 0;color:var(--text)}
