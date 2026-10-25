@@ -2532,3 +2532,9 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 .settings-overlay .settings-friend-code{max-width:320px}
 .settings-overlay .settings-profile-actions{padding:12px 0;gap:8px}
 @media(max-width:767px){.settings-overlay .settings-profile-group{padding:14px 0}.settings-overlay .settings-field-row>label{display:grid;gap:4px}.settings-overlay .settings-profile-actions{padding-bottom:calc(14px + env(safe-area-inset-bottom))}.settings-overlay .settings-identity-row .profile-avatar-control{gap:6px}.settings-overlay .settings-identity-row .profile-avatar-open{max-width:100%}}
+
+/* Shared fixed role track prevents each row from shifting status/activity. */
+@media(min-width:901px){.admin-member-row{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 100px}}
+.admin-member-status,.admin-member-meta{min-width:0;overflow-wrap:anywhere}.admin-member-row>.admin-role-badge{justify-self:end;max-width:100%;white-space:normal}
+@media(min-width:601px) and (max-width:900px){.admin-member-row{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 100px}.admin-member-identity{grid-row:1 / span 2}.admin-member-status{grid-column:2;grid-row:1}.admin-member-meta{grid-column:2;grid-row:2}.admin-member-row>.admin-role-badge{grid-column:3;grid-row:1 / span 2}}
+@media(max-width:600px){.admin-member-row{grid-template-columns:minmax(0,1fr) auto}.admin-member-identity{grid-column:1;grid-row:1}.admin-member-status{grid-column:1 / -1;grid-row:2}.admin-member-meta{grid-column:1 / -1;grid-row:3}.admin-member-row>.admin-role-badge{grid-column:2;grid-row:1}}
