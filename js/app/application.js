@@ -11577,6 +11577,8 @@ async function fetchPogoEvents(force=false){
     operation.failureKind=eventRequestFailureKind(e,operation);
     const cached=readCachedEventRecord();
     if(cached||_eventData?.fetchedAt){_eventData={...(cached?.data||_eventData),stale:true};_eventLoadState='ready';return _eventData;}
+    const bundled=eventPresentationDomain.fallbackEventData?.();
+    if(bundled?.events?.length){_eventData=bundled;_eventLoadState='ready';return _eventData;}
     _eventLoadState=navigator.onLine===false?'offline':'error';
     _eventData={events:[],raids:[],fetchedAt:0};return _eventData;
   }finally{clearTimeout(operation.timer);}})();
@@ -13432,9 +13434,20 @@ function eventTimeBasisLabel(event){
   const basis=eventPresentationDomain.timingBasis(event);
   return i18nCore.t(basis==='fixed'?'events.fixedTime':basis==='date-only'?'events.dateOnlyTime':basis==='venue-unknown'?'events.venueUnknown':'events.localTime',{zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'device'});
 }
-function eventBonusesHtml(event){
-  const facts=eventPresentationDomain.eventFacts(event),bonuses=facts.bonuses.length?facts.bonuses:localizedEventBonuses(event);
-  return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${bonuses.length?`<ul>${bonuses.map(b=>`<li>${escHtml(b)}</li>`).join('')}</ul>`:`<p class="event-unknown">${escHtml(i18nCore.t('events.bonusesUnknown'))}</p>`}${facts.caveats.length?`<div class="event-bonus-caveats">${facts.caveats.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:''}</div>`;
+function eventBonusesHtml(event,{full=false}={}){
+  const facts=eventPresentationDomain.eventFacts(event,{locale:i18nCore.getLocale()}),bonuses=facts.bonuses.length?facts.bonuses:localizedEventBonuses(event);
+  const source=facts.bonusSource,sourceUrl=eventPresentationDomain.safeHttpsUrl(source?.url);
+  const date=source?.checkedAt?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(source.checkedAt)):'';
+  const attribution=sourceUrl?`<p class="event-bonus-source"><a href="${escAttr(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t(sourceUrl.includes('pokemongo.com/')?'events.officialNews':'events.sourceDetails'))}</a>${date?` · ${escHtml(i18nCore.t('events.detailsChecked',{date}))}`:''}${source?.stale?` · ${escHtml(i18nCore.t('events.bonusLastKnown'))}`:''}${i18nCore.getLocale()!=='en'?` · ${escHtml(i18nCore.t('events.sourceEnglish'))}`:''}</p>`:'';
+  const caveatRows=full?facts.caveats:[...new Set([...facts.caveats.slice(0,1),...facts.caveats.filter(c=>c.includes('*'))])],visible=full?bonuses:bonuses.slice(0,3);
+  const caveats=caveatRows.length?`<div class="event-bonus-caveats">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
+  if(bonuses.length)return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${caveats}<ul>${visible.map(b=>`<li>${escHtml(b)}</li>`).join('')}</ul>${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  // Raid rotations have featured bosses, not necessarily an event multiplier.
+  const features=facts.bosses.length?facts.bosses:facts.encounters;
+  if(features.length)return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
+  // One useful detail action replaces repeated empty bonus panels. Unknown does
+  // not mean unannounced, no bonuses, or a successful source check.
+  return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
 }
 function eventsSourceHtml(){
   const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
@@ -13446,7 +13459,7 @@ function openEventBrief(eventId,returnFocus=null){
   const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),facts=eventPresentationDomain.eventFacts(event),localized=eventLabelsI18n.localizeEvent(event,locale),link=eventPresentationDomain.safeHttpsUrl(event.link);
   document.getElementById('event-detail-title').textContent=localized.localizedTitle||event.name||i18nCore.t('events.title');
   const list=(title,items)=>`<section class="event-detail-section"><h3>${escHtml(i18nCore.t(title))}</h3>${items.length?`<ul>${items.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul>`:`<p class="event-unknown">${escHtml(i18nCore.t('events.detailsUnknown'))}</p>`}</section>`;
-  document.getElementById('event-detail-body').innerHTML=`<p class="event-detail-date">${escHtml(timing.dateLabel)}</p><p class="event-detail-hours">${escHtml(timing.timeLabel||i18nCore.t('events.hoursUnknown'))}</p><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event))}</p>${eventBonusesHtml(event)}${list('events.encounters',facts.encounters)}${list('events.raidBosses',facts.bosses)}<section class="event-detail-section"><h3>${escHtml(i18nCore.t('events.research'))}</h3>${facts.research.length?facts.research.map(step=>`<details><summary>${escHtml(step.name)}</summary><ul>${step.tasks.map(task=>`<li>${escHtml(task.text)}${task.reward?` — ${escHtml(task.reward)}`:''}</li>`).join('')}</ul></details>`).join(''):`<p class="event-unknown">${escHtml(i18nCore.t('events.detailsUnknown'))}</p>`}</section><section class="event-detail-section"><h3>${escHtml(i18nCore.t('events.tickets'))}</h3><p>${escHtml(i18nCore.t('events.ticketUnknown'))}</p></section><p class="event-source-note">${escHtml(i18nCore.t('events.sourceDisclaimer'))}</p>${link?`<a class="btn btn-secondary" href="${escAttr(link)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.sourceDetails'))}</a>`:''}`;
+  document.getElementById('event-detail-body').innerHTML=`<p class="event-detail-date">${escHtml(timing.dateLabel)}</p><p class="event-detail-hours">${escHtml(timing.timeLabel||i18nCore.t('events.hoursUnknown'))}</p><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event))}</p>${eventBonusesHtml(event,{full:true})}${list('events.encounters',facts.encounters)}${list('events.raidBosses',facts.bosses)}<section class="event-detail-section"><h3>${escHtml(i18nCore.t('events.research'))}</h3>${facts.research.length?facts.research.map(step=>`<details><summary>${escHtml(step.name)}</summary><ul>${step.tasks.map(task=>`<li>${escHtml(task.text)}${task.reward?` — ${escHtml(task.reward)}`:''}</li>`).join('')}</ul></details>`).join(''):`<p class="event-unknown">${escHtml(i18nCore.t('events.detailsUnknown'))}</p>`}</section><section class="event-detail-section"><h3>${escHtml(i18nCore.t('events.tickets'))}</h3><p>${escHtml(i18nCore.t('events.ticketUnknown'))}</p></section><p class="event-source-note">${escHtml(i18nCore.t('events.sourceDisclaimer'))}</p>${link?`<a class="btn btn-secondary" href="${escAttr(link)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.sourceDetails'))}</a>`:''}`;
   const opener=returnFocus||[...document.querySelectorAll('[data-event-action="details"]')].find(button=>button.dataset.eventId===eventId);
   openModal('event-detail-modal',{returnFocus:opener||document.activeElement});
 }
@@ -13460,6 +13473,7 @@ function scheduleEventClock(){
   },60000);
 }
 function renderEventsOnly(){
+  if(!_eventData){const bundled=eventPresentationDomain.fallbackEventData?.();if(bundled?.events?.length){_eventData=bundled;_eventLoadState='ready';}}
   scheduleEventClock();
   // Keep live dialog opener nodes intact while the user is reading details.
   if(anyOpenModal())return;
@@ -13520,7 +13534,7 @@ document.getElementById('events-out')?.addEventListener('keydown',eventsKeydown)
 document.getElementById('events-out')?.addEventListener('scroll',eventsScroll,true);
 window.addEventListener('resize',()=>document.querySelectorAll('.event-filter-row').forEach(syncEventFilterScrollState));
 function renderSchedule(){
-  if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();if(!_eventInflight&&Date.now()-eventLastAttemptAt>=60000&&(!_eventData||Date.now()-_eventData.fetchedAt>=EVENT_CACHE_TTL))fetchPogoEvents().then(()=>{if(activeTabName()==='schedule')renderEventsOnly();});return;}
+  if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();if(!_eventInflight&&Date.now()-eventLastAttemptAt>=60000&&(!_eventData||_eventData.sourceFallback||Date.now()-_eventData.fetchedAt>=EVENT_CACHE_TTL))fetchPogoEvents().then(()=>{if(activeTabName()==='schedule')renderEventsOnly();});return;}
   if(!schedAnchor)schedAnchor=startOfWeek(new Date());
   if(!schedSelectedDate)schedSelectedDate=todayIso();
   const scheduleAllowed=scheduleAllowedUsers();

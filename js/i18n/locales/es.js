@@ -262,7 +262,12 @@
     ,"events.localTime":"Horario local del jugador · zona del dispositivo: {zone}"
     ,"events.fixedTime":"Instante mundial · mostrado en {zone}"
     ,"events.dateOnlyTime":"Fecha disponible; horas exactas no indicadas"
-    ,"events.bonuses":"Bonificaciones"
+    ,"events.bonusLastKnown":"Últimos detalles comprobados; revisar fuente",
+"events.sourceEnglish":"Detalles de la fuente en inglés",
+"events.detailsPending":"Abre los detalles y la fuente para ver el contenido.",
+"events.allBonuses":"Los {count} bonus y condiciones",
+"events.detailsChecked":"Detalles comprobados: {date}",
+"events.bonuses":"Bonificaciones"
     ,"events.bonusesUnknown":"El feed no aporta bonificaciones. Consulta la fuente; no significa que no haya."
     ,"events.feedStatus":"Resumen de eventos"
     ,"events.staleFeed":"Última información conocida · actualización sin confirmar"

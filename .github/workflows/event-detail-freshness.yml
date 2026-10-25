@@ -1,0 +1,48 @@
+name: Event detail source freshness
+on:
+  schedule:
+    - cron: '35 8 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/events/**'
+      - 'data/event-detail*'
+      - 'tests/events-source*'
+      - '.github/workflows/event-detail-freshness.yml'
+permissions:
+  contents: read
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Verify parser and fallback invariants
+        run: python3 tests/events-source-pipeline.test.py
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Real public-feed snapshot cards and outage recovery
+        run: npx playwright test --config=playwright.event-sources.config.cjs
+      - name: Check live sources and create review candidate
+        if: github.event_name != 'pull_request'
+        run: python3 scripts/events/refresh-event-details.py --output event-details-candidate.json
+      - name: Summarize coverage without publishing unreviewed facts
+        if: github.event_name != 'pull_request'
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('event-details-candidate.json'))
+          print('## Event detail candidate (not published)')
+          print('Daily source checks produce a candidate for review. Public details update only after a tested release.')
+          for key,value in d['events'].items():
+              print(f"- {key}: {value['status']}; {len(value['bonuses'])} bonus rows")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: github.event_name != 'pull_request'
+        with:
+          name: event-details-review-candidate
+          path: event-details-candidate.json
+          retention-days: 7

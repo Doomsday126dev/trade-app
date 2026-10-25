@@ -262,7 +262,12 @@
     ,"events.localTime":"Spielerlokale Uhrzeit · Gerätezone: {zone}"
     ,"events.fixedTime":"Weltweiter Zeitpunkt · angezeigt in {zone}"
     ,"events.dateOnlyTime":"Datum vorhanden; genaue Uhrzeit nicht angegeben"
-    ,"events.bonuses":"Boni"
+    ,"events.bonusLastKnown":"Zuletzt geprüfte Details; Quelle erneut prüfen",
+"events.sourceEnglish":"Quelldetails auf Englisch",
+"events.detailsPending":"Details und Quelle zeigen die Eventinhalte.",
+"events.allBonuses":"Alle {count} Boni und Bedingungen",
+"events.detailsChecked":"Details geprüft: {date}",
+"events.bonuses":"Boni"
     ,"events.bonusesUnknown":"Keine Bonusdetails im Feed. Quelle prüfen; dies bedeutet nicht, dass es keine Boni gibt."
     ,"events.feedStatus":"Event-Überblick"
     ,"events.staleFeed":"Letzter bekannter Stand · Aktualisierung unbestätigt"
