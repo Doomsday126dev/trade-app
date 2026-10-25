@@ -14,6 +14,7 @@
   function eventType(event){
     const sourceType=String(event?.eventType||'').trim().toLowerCase();
     if(sourceType==='pokemon-spotlight-hour')return'spotlight';
+    if(['max-mondays','max-battles','max-battle-day'].includes(sourceType))return'max';
     const text=`${event?.eventType||''} ${event?.name||''} ${event?.heading||''}`.toLowerCase();
     if(/max battle|dynamax|gigantamax/.test(text))return'max';
     if(/raid/.test(text))return'raids';
@@ -147,7 +148,7 @@
       :dateFormatter.format(start);
     let timeLabel='';
     if(!allDay){
-      if(hasEnd&&typeof timeFormatter.formatRange==='function')timeLabel=timeFormatter.formatRange(start,end);
+      if(hasEnd&&!multiDay&&typeof timeFormatter.formatRange==='function')timeLabel=timeFormatter.formatRange(start,end);
       else timeLabel=hasEnd?`${timeFormatter.format(start)} – ${timeFormatter.format(end)}`:timeFormatter.format(start);
     }
     const group=eventGroup(event,now),target=group==='now'&&hasEnd?end.getTime():start.getTime();
@@ -156,7 +157,7 @@
     const todayKey=dateParts(nowDate,timeZone),startKey=dateParts(start,timeZone);
     const tomorrow=new Date(nowDate);tomorrow.setDate(tomorrow.getDate()+1);
     const dayOffset=startKey===todayKey?0:startKey===dateParts(tomorrow,timeZone)?1:null;
-    return Object.freeze({dateLabel,timeLabel,relative,multiDay,dayOffset:zoneUncertain?null:dayOffset,zoneUncertain});
+    return Object.freeze({dateLabel,timeLabel,startTimeLabel:allDay?'':timeFormatter.format(start),endTimeLabel:allDay||!hasEnd?'':timeFormatter.format(end),relative,multiDay,dayOffset:zoneUncertain?null:dayOffset,zoneUncertain});
   }
   function timingBasis(event){
     const raw=String(event?.start||'');

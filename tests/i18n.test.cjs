@@ -288,7 +288,7 @@ test('dynamic product renderers do not reintroduce known English-only recovery c
 test('pre-trusted dynamic product corrections have complete localized renderer keys',()=>{
   const {catalogs}=load();
   const keys=[
-    'events.timedLegend','events.dayPlanner','events.plannerDate','events.timedDay',
+    'events.boundaryHours','events.timedLegend','events.dayPlanner','events.plannerDate','events.timedDay',
     'events.startingDay','events.endingDay','events.uncertainDay','events.noTimedDay','events.alsoOngoing',
     'trainer.syncHydrating','trainer.syncHydratingHelp',
     'trainer.profileLoading','trainer.profileLoadingHelp','tradeMatch.searchString'

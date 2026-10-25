@@ -613,6 +613,7 @@
 "events.detailsPending":"Open details and source for event features.",
 "events.allBonuses":"All {count} bonuses & conditions",
 "events.detailsChecked":"Details checked: {date}",
+"events.boundaryHours":"Starts {start} · ends {end}",
 "events.localTimeShort":"Local time",
 "events.yourTimeShort":"Your local time",
 "events.venueTimeShort":"Venue time · zone unconfirmed",
