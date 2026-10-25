@@ -299,14 +299,14 @@ test('planner exact-87cf84e712384491b23897c1a2f252258a17448e registration still 
 
 function members137Fixture(t){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'members137-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
- execFileSync('git',['archive','f0f6b5e148c65b261113ab520bfc48a6d3d1a20b','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+ execFileSync('git',['archive','0bfa8e08c64bd80fb5881458601daec11d03e2cc','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
 }
 test('exact Members .137 source retains reviewed recovery read contract',t=>{
- const result=check(members137Fixture(t),'f0f6b5e148c65b261113ab520bfc48a6d3d1a20b');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+ const result=check(members137Fixture(t),'0bfa8e08c64bd80fb5881458601daec11d03e2cc');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
 });
-test('Members registration rejects unknown source f0f6b5e148c65b261113ab520bfc48a6d3d1a20b',t=>{
+test('Members registration rejects unknown source 0bfa8e08c64bd80fb5881458601daec11d03e2cc',t=>{
  assert.notEqual(check(members137Fixture(t),'b'.repeat(40)).status,0);
 });
 test('Members exact-source registration still rejects changed read targets',t=>{
- const dir=members137Fixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'f0f6b5e148c65b261113ab520bfc48a6d3d1a20b').status,0);
+ const dir=members137Fixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'0bfa8e08c64bd80fb5881458601daec11d03e2cc').status,0);
 });
