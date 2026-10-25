@@ -220,3 +220,13 @@ test('unknown venue times cannot be classified Now or expired in the viewer zone
   assert.equal(domain.eventGroup(event,now),'unconfirmed');const sections=domain.prepareEvents([event],{now});assert.equal(sections[0].group,'unconfirmed');assert.equal(sections[0].events.length,1);
  }
 });
+
+test('actual October source snapshot enriches season, pass, Halloween and raid-day cards',()=>{
+ const domain=loadDomain(),feed=JSON.parse(readFileSync(join(root,'tests/fixtures/events-source/events-2026-10-25.json'),'utf8'));
+ for(const id of ['season-24-twilight-trails','go-pass-october-2026','halloween-2026-part-1','chandelure-super-mega-raid-day-2026']){
+  const facts=domain.eventFacts(feed.find(e=>e.eventID===id));assert.ok(facts.bonuses.length,id);assert.ok(facts.bonusSource.url.startsWith('https://pokemongo.com/'));assert.ok(facts.bonusSource.checkedAt);
+ }
+ const native=domain.eventFacts(feed.find(e=>e.eventID==='pokemonspotlighthour2026-10-29'));assert.ok(native.bonuses.includes('2× Evolution XP'));
+ const season=domain.eventFacts(feed.find(e=>e.eventID==='season-24-twilight-trails'),{now:Date.parse('2026-11-01T00:00:00Z')});assert.equal(season.bonusSource.stale,true);assert.match(season.caveats.join(' '),/GO Pass/);
+ const fallback=domain.fallbackEventData();assert.equal(fallback.stale,true);assert.equal(fallback.sourceFallback,true);assert.ok(fallback.events.length>40);
+});
