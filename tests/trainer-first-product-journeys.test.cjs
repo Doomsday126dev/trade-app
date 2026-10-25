@@ -48,7 +48,7 @@ test('Legacy Inventory is a Settings App & Data read-only route and no longer a 
   assert.equal(manifest.shortcuts.some(item=>item.url.includes('action=have')),false);
 });
 
-test('Events expose Now Soon Later hierarchy accessible filters and one source action',()=>{
+test('Events expose Now Soon Later hierarchy accessible filters, visible bonuses and an in-app detail action',()=>{
   const source=block('function setEventTypeFilter','function renderSchedule');
   assert.match(source,/eventFilterKeydown/);
   assert.match(source,/ArrowLeft.*ArrowRight.*Home.*End/s);
@@ -56,7 +56,7 @@ test('Events expose Now Soon Later hierarchy accessible filters and one source a
   assert.match(source,/data-group="\$\{section\.group\}"/);
   assert.match(source,/section\.group==='now'\?'is-active'/);
   assert.match(source,/eventPresentationDomain\.eventTiming/);
-  assert.match(source,/const tag=link\?'a':'article'/);
+  assert.match(source,/const tag='article'/);
   assert.match(source,/aria-label=.*events\.openDetailsFor/s);
   assert.doesNotMatch(source,/event-card-bonuses|visibleBonuses/);
   assert.match(html,/\.event-filter\{[^}]*min-height:48px/);

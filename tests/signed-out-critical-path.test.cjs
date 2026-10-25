@@ -96,10 +96,11 @@ test('RTDB handles and listeners fail closed until App Check initialization succ
 test('Request Access cannot persist locally or remotely before App Check readiness',()=>{
   const submit=between('async function submitRequest(){','function renderPendingRequests');
   const guard=submit.indexOf('await ensureFirebaseDataProtection()');
-  const localWrite=submit.indexOf('const s=getLocal()');
-  const remoteWrite=submit.indexOf("set(ref(db,`requests/${reqId}`)");
-  assert.ok(guard>0&&guard<localWrite&&localWrite<remoteWrite);
+  const localWrite=submit.indexOf('const local=getLocal()');
+  const remoteWrite=submit.indexOf("set(ref(db,`requests/${submission.id}`)");
+  assert.ok(guard>0&&guard<remoteWrite&&remoteWrite<localWrite);
   assert.match(submit,/catch\(e\)[\s\S]+request\.sendFailed[\s\S]+return;/);
+  assert.ok(submit.indexOf('if(!result.ok)')<localWrite);
 });
 
 test('signed-in catalog and preference caches initialize only inside showApp',()=>{

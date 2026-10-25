@@ -232,7 +232,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
       <div class="field"><label for="req-username" data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
       <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
-      <button type="button" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
+      <button type="button" id="request-send" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
       <div class="err" id="req-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
     </div>
     <div id="req-sent-status" style="display:none" class="req-status" role="status" aria-live="polite" aria-atomic="true">
@@ -658,26 +658,34 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     </div>
   </div>
 </div>
+<div class="ov" id="event-detail-modal" role="dialog" aria-modal="true" aria-labelledby="event-detail-title"><div class="modal event-detail-modal"><h2 id="event-detail-title"></h2><div id="event-detail-body"></div><div class="mact"><button type="button" class="bghost" onclick="closeModal('event-detail-modal')" data-i18n="common.close">Close</button></div></div></div>
 <div class="ov" id="product-share-modal" role="dialog" aria-modal="true" aria-labelledby="product-share-title">
   <div class="modal product-share-modal">
     <h3 id="product-share-title" data-i18n="product.share">Share</h3>
+    <div class="share-goals" role="group" data-i18n-aria-label="product.share" aria-label="Share">
+      <button type="button" data-share-mode="link" aria-pressed="true" onclick="setProductShareMode('link')"><strong data-i18n="share.liveList">Share live list</strong><span data-i18n="share.liveCaption">A public page anyone can open</span></button>
+      <button type="button" data-share-mode="search" aria-pressed="false" onclick="setProductShareMode('search')"><strong data-i18n="share.gameSearch">Find in Pokémon GO</strong><span data-i18n="share.searchCaption">Search your own game inventory</span></button>
+      <button type="button" data-share-mode="image" aria-pressed="false" onclick="setProductShareMode('image')"><strong data-i18n="share.imageSnapshot">Share image</strong><span data-i18n="share.snapshotCaption">A snapshot of this selection</span></button>
+      <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')"><strong data-i18n="share.textSnapshot">Copy text</strong><span data-i18n="share.snapshotCaption">A snapshot of this selection</span></button>
+    </div>
     <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
     <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
       <option value="full" data-i18n="phase2.full">Full list</option>
       <option value="top" data-i18n="phase2.top">High</option>
       <option value="selected" data-i18n="phase2.selected">Selected entries</option>
     </select>
-    <div id="product-share-preview" class="product-share-preview" aria-live="polite"></div>
-    <div class="intent-tabs" role="group" data-i18n-aria-label="product.share" aria-label="Share">
-      <button type="button" data-share-mode="link" aria-pressed="true" onclick="setProductShareMode('link')" data-i18n="product.link">Link</button>
-      <button type="button" data-share-mode="image" aria-pressed="false" onclick="setProductShareMode('image')" data-i18n="product.image">Image</button>
-      <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
-    </div>
+    <details id="product-share-preview-wrap" class="share-preview-disclosure"><summary data-i18n="share.previewSelection">Preview selected wants</summary><div id="product-share-preview" class="product-share-preview" aria-live="polite"></div></details>
     <section id="product-share-link">
-      <p data-i18n="wants.linkScope">Public link includes your full wants list.</p>
-      <button type="button" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
+      <p id="share-link-scope-help"></p><p class="share-privacy-note" data-i18n="share.publicFields">Published profile details and want notes are visible. This username-based link is public, not a private invitation.</p>
+      <button type="button" id="share-link-action" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
       <p id="share-link-status" role="status" aria-live="polite"></p>
       <input id="share-public-url" class="field-control" readonly data-i18n-aria-label="product.link" aria-label="Link">
+    </section>
+    <section id="product-share-search" hidden>
+      <label for="share-game-language" data-i18n="share.gameLanguage">Pokémon GO language</label>
+      <select id="share-game-language" class="field-control" onchange="setShareGameLanguage(this.value)"><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="de">Deutsch</option></select>
+      <p class="share-privacy-note" data-i18n="share.searchLimits">Finds possible species matches, not exact individuals or every form. Current filters exclude 4★, traded, Shadow, Purified, background and Pokémon above 2500 CP; non-shiny-only sections also exclude shiny.</p>
+      <div id="share-search-output"></div>
     </section>
     <section id="product-share-image" hidden class="share-format-actions">
       <button type="button" class="btn btn-primary" onclick="exportProductShareImage()" data-i18n="specialBoard.export">Export as image</button>
@@ -685,6 +693,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <section id="product-share-text" hidden class="share-format-actions">
       <button type="button" class="btn btn-secondary" onclick="copyProductShareText()" data-i18n="phase2.copyText">Copy text</button>
     </section>
+    <details class="share-more-formats"><summary data-i18n="share.moreFormats">More formats · full list</summary><p class="share-privacy-note" data-i18n="share.fullExportsHelp">These formats export your current full wants list. Markdown also includes your profile contact details. Choose Full list to enable them.</p><div class="share-extra-actions"><button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('markdown')" data-i18n="share.copyFullMarkdown">Copy full Markdown</button><button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('csv')" data-i18n="share.downloadFullCsv">Download full CSV</button></div></details>
     <div class="mact"><button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button></div>
   </div>
 </div>
@@ -832,8 +841,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="shortcut-row"><kbd>?</kbd><span data-i18n="shortcuts.showHelp">Show this shortcut list</span></div>
       <div class="shortcut-row"><kbd>Esc</kbd><span data-i18n="shortcuts.closeDialog">Close the open dialog</span></div>
       <div class="shortcut-section-hdr" data-i18n="shortcuts.rowEditing">Editing a row</div>
-      <div class="shortcut-row"><kbd data-i18n="shortcuts.click">Click</kbd><span data-i18n="shortcuts.editQuantity">Type a new quantity directly</span></div>
-      <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="shortcuts.commit">Save the edit; Esc cancels it</span></div>
+      <div class="shortcut-row"><kbd data-i18n="shortcuts.click">Click</kbd><span data-i18n="shortcuts.editWant">Open a Pokémon name to edit priority and details</span></div>
+      <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="shortcuts.saveWant">Save in the editor; Esc closes without saving</span></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-top:8px" data-i18n="shortcuts.typingDisabled">Shortcuts are disabled while you type in a field.</div>
     <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')" data-i18n="common.gotIt">Got it</button></div>

@@ -82,6 +82,21 @@ function formVariantFromSearchFilters(filters){
   return filters.find(f=>FORM_QUALIFIER_TERMS.has(f))||'';
 }
 
+function parseImportTokens(raw){
+  const chunks=String(raw||'').trim().split(/[,:;\n]+/).map(s=>s.trim()).filter(Boolean);
+  if(!chunks.length||chunks.length>1000)return{ok:false};
+  const allowed=new Set(['shiny','lucky','xxl','xxs','male','female','dynamax','gigantamax',...REGION_SEARCH_TERMS]);
+  const tokens=[];
+  for(const chunk of chunks){
+    const terms=chunk.split('&').map(s=>s.trim().toLowerCase());
+    const numbers=terms.filter(t=>/^\d{1,4}$/.test(t));
+    if(numbers.length!==1||terms.some(t=>!/^\d{1,4}$/.test(t)&&!allowed.has(t)))return{ok:false};
+    const dex=Number(numbers[0]),filters=terms.filter(t=>t!==numbers[0]);
+    if(!dex||filters.includes('male')&&filters.includes('female')||filters.includes('xxl')&&filters.includes('xxs')||filters.includes('dynamax')&&filters.includes('gigantamax'))return{ok:false};
+    tokens.push({dex,filters});
+  }
+  return{ok:true,tokens};
+}
   root.pokemonSearchTerms=Object.freeze({
     REGION_CODE_TERMS,
     REGIONAL_FORM_TERMS,
@@ -96,6 +111,7 @@ function formVariantFromSearchFilters(filters){
     castformTypeFilter,
     modSearchFilters,
     modFromSearchFilters,
+    parseImportTokens,
     castformTypeFromSearchFilters,
     formVariantFilter,
     formVariantFromSearchFilters

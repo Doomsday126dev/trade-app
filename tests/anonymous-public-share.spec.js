@@ -44,7 +44,7 @@ function representativePublicProjection(){
   return{...publicProjection,version:2,declarations,declarationCount:declarations.length};
 }
 
-async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false}={}){
+async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false,live=false}={}){
   const requests=[];
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
@@ -75,6 +75,7 @@ async function installPublicFirebase(page,{exists=true,projection=publicProjecti
   await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:`const projection=${JSON.stringify(projection)};
+      ${live?`export function onValue(target,onData,onError){globalThis.__livePublicPath=target.path;globalThis.__livePublicData=onData;globalThis.__livePublicError=onError;globalThis.__livePublicSubscriptions=(globalThis.__livePublicSubscriptions||0)+1;return()=>{globalThis.__livePublicSubscriptions--;};}`:''}
       export function getDatabase(){return{kind:'public-database'}}
       export function ref(_database,path){return{path}}
       export async function get(target){
@@ -572,4 +573,21 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#login-pg')).toBeHidden();
     expect(await page.evaluate(()=>window.__publicShareReads)).toEqual(['publicShares/PublicTrainer']);
   });
+});
+
+// Isolated SDK transport only: exercise the actual anonymous renderer lifecycle.
+test('exact public listener updates, clears unavailable data and releases on pagehide',async({page})=>{
+  await installPublicFirebase(page,{live:true});await page.goto('./?view=PublicTrainer');
+  await expect(page.locator('#share-list-out')).toContainText('Pikachu');
+  expect(await page.evaluate(()=>__livePublicPath)).toBe('publicShares/PublicTrainer');
+  expect(await page.evaluate(()=>__livePublicSubscriptions)).toBe(1);
+  await page.evaluate(projection=>{projection.lists.wishlist.Charmander={p:'L'};__livePublicData({exists:()=>true,val:()=>projection});},JSON.parse(JSON.stringify(publicProjection)));
+  await expect(page.locator('#share-list-out')).toContainText('Charmander');
+  await page.evaluate(()=>__livePublicData({exists:()=>false,val:()=>null}));
+  await expect(page.locator('#share-list-out')).not.toContainText('Charmander');await expect(page.locator('#share-hdr')).not.toContainText('Public trade notes');
+  await page.evaluate(projection=>__livePublicData({exists:()=>true,val:()=>projection}),JSON.parse(JSON.stringify(publicProjection)));
+  await expect(page.locator('#share-list-out')).toContainText('Pikachu');
+  await page.evaluate(()=>__livePublicError(new Error('permission denied')));await expect(page.locator('#share-list-out')).not.toContainText('Pikachu');
+  await page.evaluate(projection=>__livePublicData({exists:()=>true,val:()=>projection}),JSON.parse(JSON.stringify(publicProjection)));await expect(page.locator('#share-list-out')).not.toContainText('Pikachu');
+  await page.evaluate(()=>dispatchEvent(new Event('pagehide')));expect(await page.evaluate(()=>__livePublicSubscriptions)).toBe(0);
 });

@@ -60,7 +60,10 @@ for(const profile of profiles){
         firstPartyResourceCount:firstParty.length,
         firstPartyTransferredBytes:firstParty.reduce((total,entry)=>total+(entry.transferSize||entry.encodedBodySize||0),0),
         firstPartyDecodedBytes:firstParty.reduce((total,entry)=>total+(entry.decodedBodySize||0),0),
-        eagerFirstPartyScripts:firstParty.filter(entry=>entry.initiatorType==='script').length,
+        // .131 intentionally loads one lightweight privacy-safe traffic sender.
+        // Keep every other eager first-party script forbidden.
+        eagerFirstPartyScripts:firstParty.filter(entry=>entry.initiatorType==='script'&&!/\/js\/services\/traffic\.js(?:\?|$)/.test(entry.name)).length,
+        eagerTrafficScripts:firstParty.filter(entry=>entry.initiatorType==='script'&&/\/js\/services\/traffic\.js(?:\?|$)/.test(entry.name)).length,
         signedInApplicationLoaded:firstParty.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         protectedRequested:window.__pogoStartup.protectedRequestedAt,
         appCheckStarted:window.__pogoStartup.appCheckStartedAt,
@@ -74,6 +77,7 @@ for(const profile of profiles){
     expect(shell.firstPartyTransferredBytes).toBeLessThanOrEqual(SHELL_BUDGET.firstPartyTransferredBytes);
     expect(shell.firstPartyDecodedBytes).toBeLessThanOrEqual(SHELL_BUDGET.firstPartyDecodedBytes);
     expect(shell.eagerFirstPartyScripts).toBe(0);
+    expect(shell.eagerTrafficScripts).toBeLessThanOrEqual(1);
     expect(shell.signedInApplicationLoaded).toBe(false);
     expect(shell.protectedRequested).toBeNull();
     expect(shell.appCheckStarted).toBeNull();
@@ -91,7 +95,7 @@ for(const profile of profiles){
         appCheckStartedAfterRequest:window.__pogoStartup.appCheckStartedAt>=request,
         readyAfterAppCheck:firstReady>=window.__pogoStartup.appCheckReadyAt,
         appCheckImports:resources.filter(entry=>/firebase-app-check\.js/.test(entry.name)).length,
-        featureScriptCount:resources.filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).length,
+        featureScriptCount:resources.filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin&&!/\/js\/services\/traffic\.js(?:\?|$)/.test(entry.name)).length,
         signedInApplicationLoaded:resources.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         maxLongTask:Math.max(0,...window.__startupLongTasks)
       };

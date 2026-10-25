@@ -111,7 +111,7 @@ test('Legacy Inventory is read-only and export does not write Firebase',()=>{
 
 test('Events bypasses personal schedule, trade, reserved, and quota rendering',()=>{
   const schedule=between('function renderSchedule(){','// ── RESERVED TRADES');
-  assert.match(schedule,/if\(TRAINER_FIRST_INTERIM_ENABLED\)\{renderEventsOnly\(\);return;\}/);
+  assert.match(schedule,/if\(TRAINER_FIRST_INTERIM_ENABLED\)\{renderEventsOnly\(\);if\(!_eventInflight/);
 });
 
 test('Admin broad reads are owner-gated, on demand, and lifecycle-owned',()=>{

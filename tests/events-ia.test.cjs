@@ -55,10 +55,10 @@ test('timeline keeps one chronological column beside the calendar and Up next ov
   assert.match(render,/class="event-calendar-legend"/);
   assert.match(render,/events\.calendarLegend/);
   assert.match(render,/details class="event-calendar-disclosure"/);
-  assert.match(render,/const tag=link\?'a':'article'/);
+  assert.match(render,/const tag='article'/);
   assert.match(render,/class="event-card card-row/);
-  assert.match(render,/target="_blank" rel="noopener noreferrer" aria-label=/);
-  assert.match(render,/link\?`<span class="event-card-cue"/);
+  assert.match(render,/data-event-action="details"/);
+  assert.match(render,/<button type="button" class="event-card-cue"/);
   assert.match(render,/uiIconMarkup\('chevron-right'/);
   assert.doesNotMatch(render,/event-card-bonuses|event-card-details btn/);
   assert.match(html,/\.event-card-grid\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
@@ -200,4 +200,16 @@ test('zero one and event-heavy fixtures stay bounded and sorted without per-card
   assert.equal(prepared.reduce((sum,section)=>sum+section.events.length,0),30);
   assert.ok(elapsed<100);
   assert.doesNotMatch(html,/event-card[^\n]+addEventListener/);
+});
+
+test('event detail facts keep bonus exceptions and never infer paid/free eligibility',()=>{
+ const domain=loadDomain();
+ const facts=domain.eventFacts({extraData:{communityday:{bonuses:[{text:'2× Candy*'}],bonusDisclaimers:['* Trade window ends later; ticket holders only.'],spawns:[{name:'Pikachu'}],specialresearch:[{name:'Research',tasks:[{text:'Catch 3',reward:{text:'Candy'}}]}]}}});
+ assert.equal(facts.bonuses[0],'2× Candy*');assert.match(facts.caveats[0],/ticket holders/);assert.equal(facts.encounters[0],'Pikachu');assert.equal(facts.research[0].tasks[0].reward,'Candy');assert.equal(facts.free,undefined);
+ assert.equal(domain.timingBasis({start:'2026-10-25T14:00:00'}),'local');assert.equal(domain.timingBasis({start:'2026-10-25T14:00:00Z'}),'fixed');assert.equal(domain.timingBasis({start:'2026-10-25'}),'date-only');
+});
+
+test('venue-local feed values without an offset do not invent an exact countdown',()=>{
+ const domain=loadDomain(),event={eventType:'city-safari',start:'2026-10-25T10:00:00',end:'2026-10-25T18:00:00'};
+ assert.equal(domain.timingBasis(event),'venue-unknown');const timing=domain.eventTiming(event,{now:Date.parse('2026-10-25T12:00:00Z'),timeZone:'UTC'});assert.equal(timing.relative,null);assert.equal(timing.zoneUncertain,true);assert.ok(timing.timeLabel);
 });

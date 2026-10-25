@@ -14,7 +14,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('active Request Access writer uses one canonical builder and one existing Firebase path',()=>{
   assert.match(html,/requestAccess\.build\(\{rawUsername,rawNote,canonicalize:canonicalUsernameInput\}\)/);
-  assert.equal((html.match(/set\(ref\(db,`requests\/\$\{reqId\}`\),reqData\)/g)||[]).length,1);
+  assert.equal((html.match(/set\(ref\(db,`requests\/\$\{submission.id\}`\),submission.payload\)/g)||[]).length,1);
   for(const key of ['request.nameTooLong','request.noteTooLong'])assert.match(html,new RegExp(key.replace('.','\\.'),'u'));
   assert.doesNotMatch(html,/const reqData=\{username,note:/);
   assert.doesNotMatch(html,/requests\/\$\{reqId\}.*(?:admin|isAdmin)/);
