@@ -310,3 +310,11 @@ test('Members registration rejects unknown source 0bfa8e08c64bd80fb5881458601dae
 test('Members exact-source registration still rejects changed read targets',t=>{
  const dir=members137Fixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'0bfa8e08c64bd80fb5881458601daec11d03e2cc').status,0);
 });
+
+function costume138Fixture(t){
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'costume138-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ execFileSync('git',['archive','3740d59178758afd2371a6dbea1d8d10f3888312','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+}
+test('exact costume .138 source retains reviewed recovery reads',t=>{const r=check(costume138Fixture(t),'3740d59178758afd2371a6dbea1d8d10f3888312');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('costume .138 registration rejects unknown source',t=>{assert.notEqual(check(costume138Fixture(t),'b'.repeat(40)).status,0)});
+test('costume .138 registration rejects a changed private read target',t=>{const d=costume138Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'3740d59178758afd2371a6dbea1d8d10f3888312').status,0)});
