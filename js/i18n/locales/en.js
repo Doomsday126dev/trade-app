@@ -613,6 +613,9 @@
 "events.detailsPending":"Open details and source for event features.",
 "events.allBonuses":"All {count} bonuses & conditions",
 "events.detailsChecked":"Details checked: {date}",
+"events.localTimeShort":"Local time",
+"events.yourTimeShort":"Your local time",
+"events.venueTimeShort":"Venue time · zone unconfirmed",
 "events.bonuses":"Bonuses"
     ,"events.bonusesUnknown":"Bonus details not supplied by this feed. Check the source; this does not mean no bonuses."
     ,"events.feedStatus":"Event briefing"

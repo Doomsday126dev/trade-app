@@ -12,7 +12,7 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.132)/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-4])/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -253,4 +253,18 @@ test('isolated .131 analytics release preserves exact public readback boundaries
   assert.notEqual(check(dir,'b'.repeat(40)).status,0,'unregistered revisions must not inherit the .131 exception');
   change(dir,'js/app/application.js','const target=ref(db,`publicShares/${username}`);','const target=ref(db,`users/${username}`);');
   assert.match(check(dir,sha).stderr,/path bindings or execution semantics changed/);
+});
+
+function compactEventsFixture(t){
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'events134-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ execFileSync('git',['archive','0e1a9f7844d6c0c7d556518a6d06815de185d2fc','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+}
+test('exact Events .134 source retains reviewed recovery read contract',t=>{
+ const result=check(compactEventsFixture(t),'0e1a9f7844d6c0c7d556518a6d06815de185d2fc');assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).directReads.length,24);
+});
+test('Events registration does not authorize an unknown SHA',t=>{
+ const result=check(compactEventsFixture(t),'b'.repeat(40));assert.notEqual(result.status,0);
+});
+test('Events exact-SHA registration still rejects changed read targets',t=>{
+ const dir=compactEventsFixture(t);change(dir,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(dir,'0e1a9f7844d6c0c7d556518a6d06815de185d2fc').status,0);
 });

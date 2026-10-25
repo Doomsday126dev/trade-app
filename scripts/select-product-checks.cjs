@@ -33,6 +33,7 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
   const node=new Set(['tests/product-check-selection.test.cjs']),browser=new Set(),commands=[],errors=[];
   const any=pattern=>files.some(file=>pattern.test(file));
   const add=tests=>tests.forEach(file=>node.add(file));
+  if(any(/^(?:tests\/fixtures\/events-source\/|scripts\/events\/|data\/event-detail)/)){add(['tests/events-ia.test.cjs','tests/events-request-lifecycle.test.cjs','tests/events-compact.test.cjs']);browser.add('tests/events-current-source.spec.js');}
   if(files.some(favoriteResolverFile))add(['tests/favorite-additions.test.cjs','tests/favorite-recovery-preview.test.cjs','tests/favorite-write-transport.test.cjs']);
   const legacyReset=files.some(legacyResetFile);
   const resetOnly=legacyReset&&files.every(file=>legacyResetFile(file)||['tests/account-sync-runtime.test.cjs',

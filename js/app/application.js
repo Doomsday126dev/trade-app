@@ -438,9 +438,9 @@ let wantsSelectionMode=false;
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
 function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
-function combinedGroups(model=productDeclarations()){
+function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
   const groups=new Map();
-  for(const entry of model.entries){const key=combinedKey(entry);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry);}
+  for(const entry of model.entries){const key=keyFor(entry);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry);}
   return [...groups.values()];
 }
 const combinedRowCache=new Map();
@@ -449,7 +449,9 @@ function renderCombinedList(model=productDeclarations()){
   if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
-  const groups=combinedGroups(model),valid=new Set(groups.flat().map(productSelectionKey));
+  // The model is fresh for every render; cache only within this synchronous pass.
+  const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
+  const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
   const sections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
@@ -477,7 +479,7 @@ function renderCombinedList(model=productDeclarations()){
     body.hidden=collapsed;
     const rows=(collapsed?[]:filtered.slice(0,limit)).map(e=>{
       const entries=byEntry.get(e),selected=entries.every(x=>combinedSelection.has(productSelectionKey(x))),priority=section.priority;
-      const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
+      const key=keyFor(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
       const cached=combinedRowCache.get(key);let row=cached?.row;
       if(cached?.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
     const source=myListSourceMap(e.category||'wishlist').get(pokemonCatalogDomain.normalizeCatalogKey(e.name));
@@ -499,7 +501,7 @@ function renderCombinedList(model=productDeclarations()){
     });
     const grid=[...body.children].find(child=>child.classList.contains('mygrid'));
     const focusedElement=rows.some(row=>row.contains(document.activeElement))?document.activeElement:null;
-    if(rows.length*2<grid.children.length&&!focusedElement)grid.replaceChildren(...rows);
+    if((rows.length*2<grid.children.length||rows.length>grid.children.length*2)&&!focusedElement)grid.replaceChildren(...rows);
     else{
       rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
       while(grid.children.length>rows.length)grid.lastElementChild.remove();
@@ -520,7 +522,7 @@ function renderCombinedList(model=productDeclarations()){
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
   if(!active.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
-  const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>combinedKey(entries[0])));
+  const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
   for(const [key,cached]of combinedRowCache){if(combinedRowCache.size<=cacheBudget)break;if(!visibleNodes.has(cached.row))combinedRowCache.delete(key);}
@@ -13422,7 +13424,7 @@ function renderEventUpNext(events){
   return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
 function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events,{variant:'desktop'})}${renderEventUpNext(events)}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
-function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div>`;}
+function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
 function syncEventFilterScrollState(row){
   if(!row)return;
   row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
@@ -13430,21 +13432,38 @@ function syncEventFilterScrollState(row){
 async function retryEvents(){
   if(_eventInflight)return;_eventLoadState=_eventData?.events?.length?'refreshing':'loading';renderEventsOnly();await fetchPogoEvents(true);renderEventsOnly();
 }
-function eventTimeBasisLabel(event){
+function eventTimeBasisLabel(event,{compact=false}={}){
   const basis=eventPresentationDomain.timingBasis(event);
+  if(compact)return i18nCore.t(basis==='fixed'?'events.yourTimeShort':basis==='venue-unknown'?'events.venueTimeShort':basis==='date-only'?'events.dateOnlyTime':'events.localTimeShort');
   return i18nCore.t(basis==='fixed'?'events.fixedTime':basis==='date-only'?'events.dateOnlyTime':basis==='venue-unknown'?'events.venueUnknown':'events.localTime',{zone:Intl.DateTimeFormat().resolvedOptions().timeZone||'device'});
+}
+function eventBonusText(text){
+  // Emphasis is presentation only; retain the complete source wording.
+  return escHtml(text).replace(/(\d+(?:[/.]\d+)?(?:×|x|%|[-–]hour))/g,'<strong class="event-benefit-value">$1</strong>');
+}
+function eventBonusGroups(bonuses){
+  const groups=[];
+  for(const text of bonuses){
+    const divider=text.indexOf(' — '),colon=text.match(/^((?:GO Pass )?Rank \d+|Current ticket holders):\s*(.+)$/);
+    const scope=divider>=0?text.slice(0,divider):colon?colon[1]:'';
+    const benefit=divider>=0?text.slice(divider+3):colon?colon[2]:text;
+    const last=groups[groups.length-1];
+    if(last&&last.scope===scope)last.items.push(benefit);else groups.push({scope,items:[benefit]});
+  }
+  return groups;
 }
 function eventBonusesHtml(event,{full=false}={}){
   const facts=eventPresentationDomain.eventFacts(event,{locale:i18nCore.getLocale()}),bonuses=facts.bonuses.length?facts.bonuses:localizedEventBonuses(event);
   const source=facts.bonusSource,sourceUrl=eventPresentationDomain.safeHttpsUrl(source?.url);
   const date=source?.checkedAt?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(source.checkedAt)):'';
-  const attribution=sourceUrl?`<p class="event-bonus-source"><a href="${escAttr(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t(sourceUrl.includes('pokemongo.com/')?'events.officialNews':'events.sourceDetails'))}</a>${date?` · ${escHtml(i18nCore.t('events.detailsChecked',{date}))}`:''}${source?.stale?` · ${escHtml(i18nCore.t('events.bonusLastKnown'))}`:''}${i18nCore.getLocale()!=='en'?` · ${escHtml(i18nCore.t('events.sourceEnglish'))}`:''}</p>`:'';
+  const attribution=sourceUrl?`<p class="event-bonus-source"><a href="${escAttr(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t(sourceUrl.includes('pokemongo.com/')?'events.officialNews':'events.sourceDetails'))}</a>${full&&date?` · ${escHtml(i18nCore.t('events.detailsChecked',{date}))}`:''}${source?.stale?` · ${escHtml(i18nCore.t('events.bonusLastKnown'))}`:''}${i18nCore.getLocale()!=='en'?` · ${escHtml(i18nCore.t('events.sourceEnglish'))}`:''}</p>`:'';
   const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
-  const caveats=caveatRows.length?`<div class="event-bonus-caveats">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
-  if(bonuses.length)return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${caveats}<ul>${visible.map(b=>`<li>${escHtml(b)}</li>`).join('')}</ul>${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  const benefitRows=eventBonusGroups(visible).map(group=>`${group.scope?`<p class="event-benefit-scope">${escHtml(group.scope)}</p>`:''}<ul class="event-benefit-list">${group.items.map(b=>`<li>${eventBonusText(b)}</li>`).join('')}</ul>`).join('');
+  const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
+  if(bonuses.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
-  if(features.length)return`<div class="event-bonuses"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
+  if(features.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
   // One useful detail action replaces repeated empty bonus panels. Unknown does
   // not mean unannounced, no bonuses, or a successful source check.
   return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
@@ -13452,7 +13471,7 @@ function eventBonusesHtml(event,{full=false}={}){
 function eventsSourceHtml(){
   const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
-  return`<div class="events-source${stale?' is-stale':''}" role="status"><div><strong>${escHtml(i18nCore.t(stale?'events.staleFeed':'events.feedStatus'))}</strong><p class="events-checked">${escHtml(i18nCore.t('events.checked',{date}))}</p><details data-event-disclosure="sources"><summary>${escHtml(i18nCore.t('events.sources'))}</summary><p>${escHtml(i18nCore.t('events.sourceDisclaimer'))} <a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> / <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></p></details></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
+  return`<div class="events-source${stale?' is-stale':''}" role="status"><div><strong>${escHtml(i18nCore.t(stale?'events.staleFeed':'events.feedStatus'))}</strong><p class="events-checked">${escHtml(i18nCore.t('events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
 }
 function openEventBrief(eventId,returnFocus=null){
   const event=(_eventData?.events||[]).find(e=>eventStableId(e)===eventId);if(!event)return;
@@ -13502,7 +13521,7 @@ function renderEventsOnly(){
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
     const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(timing.timeLabel)}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(timing.timeLabel)}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));

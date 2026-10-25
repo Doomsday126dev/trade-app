@@ -174,3 +174,19 @@ test.describe('isolated My List scale profile',()=>{
     expect(result.maxLongTask).toBeLessThanOrEqual(200);
   });
 });
+
+test('group keys are reused within a render and recomputed after edits',async({page})=>{
+ await page.route('https://**/*',route=>route.abort());await page.goto('./?render-key-lifetime');
+ await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');await page.evaluate(()=>window.__pogoEnsureFullApp('render-key-lifetime'));await page.waitForFunction(()=>typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);await installListFixture(page,120);
+ const result=await page.evaluate(()=>{
+  const original=combinedKey;let calls=0;combinedKey=entry=>{calls++;return original(entry);};
+  try{
+   renderMyList('Synthetic Pokemon 0119',{reason:'filter'});const filterCalls=calls;
+   const row=document.querySelector('#combined-list .myrow'),name=row.dataset.name,oldKey=row.dataset.key;
+   allData.wishlist[cur][name]='L[shiny]';calls=0;renderMyList();const editCalls=calls;
+   const changed=[...document.querySelectorAll('#combined-list .myrow')].find(node=>node.dataset.name===name);
+   return{filterCalls,editCalls,keyChanged:changed.dataset.key!==oldKey,shiny:changed.textContent.includes('Shiny')};
+  }finally{combinedKey=original;}
+ });
+ expect(result.filterCalls).toBe(120);expect(result.editCalls).toBe(120);expect(result.keyChanged).toBe(true);expect(result.shiny).toBe(true);
+});
