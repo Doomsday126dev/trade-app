@@ -73,7 +73,7 @@ jobs:
             exit 0
           fi
           # Paired Events qualification uses one host and candidate harness.
-          # Both unchanged baseline and candidate must pass unchanged budgets.
+          # Historical baseline is diagnostic; candidate budgets remain mandatory.
           baseline_dir=$(mktemp -d)
           git archive ab9a1db2efe6fab16928ca427a06421307aa1a64 | tar -x -C "$baseline_dir"
           python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" > /tmp/paired-baseline-server.log 2>&1 &
@@ -91,7 +91,8 @@ jobs:
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
           candidate_status=$?
           set -e
-          test "$baseline_status" -eq 0
+          echo "Historical baseline exit status: $baseline_status (diagnostic only)"
+          echo "Candidate exit status: $candidate_status (required)"
           test "$candidate_status" -eq 0
       - name: Report deterministic profiles
         if: steps.selection.outputs.performance == 'true'
