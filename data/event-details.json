@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-10-25T12:25:43.295763+00:00",
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T15:52:45.561984+00:00",
   "feed": [
     {
       "eventID": "dynamax-uxie-mesprit-azelf-max-battle-day-2026",
@@ -1485,18 +1485,8 @@
       "contentHash": "341fee77e9718def54a5f4f161cff90a4795dead4aea8963569c459b6d1f9c1e",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "max-mondays-2026-10-26": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/max-mondays-2026-10-26/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "gbl-twilight-trails_ultra-league_master-league-mega-edition_fantasy-cup-great-league-edition": {
       "bonuses": [
@@ -1510,51 +1500,8 @@
       "contentHash": "44c9fa89a6c6f05b1dda4c030449a9d9b4d367c97c7e8d7680df3c40537243f4",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "mega-charizard-x-mega-charizard-y-in-mega-raids-october-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/mega-charizard-x-mega-charizard-y-in-mega-raids-october-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "palkia-in-5-star-raid-battles-october-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/palkia-in-5-star-raid-battles-october-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "raidhour20261028": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/raidhour20261028/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "pokemonspotlighthour2026-10-29": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/pokemonspotlighthour2026-10-29/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "chandelure-super-mega-raid-day-2026": {
       "bonuses": [
@@ -1569,7 +1516,8 @@
       "contentHash": "1b501b9ee07165690295430a15b3abc64f6a194b1df4bfd07401be3384ecdf89",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "halloween-2026-part-1": {
       "bonuses": [
@@ -1588,18 +1536,8 @@
       "contentHash": "0a463200842eebac17b2f1b1f6a4184def5a85d0c26a8664757c087bc1d61b2d",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "max-mondays-2026-11-02": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/max-mondays-2026-11-02/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "go-pass-october-2026": {
       "bonuses": [
@@ -1623,7 +1561,8 @@
       "contentHash": "9f350add68b54fc80e4f3a9cd0e10700d5c59e8d3ed4f8767b9bae1d5be5d51b",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "gbl-twilight-trails_master-league_mega-halloween-cup-great-league-edition": {
       "bonuses": [
@@ -1637,51 +1576,8 @@
       "contentHash": "44c9fa89a6c6f05b1dda4c030449a9d9b4d367c97c7e8d7680df3c40537243f4",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "shadow-landorus-incarnate-forme-in-shadow-raids-october-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/shadow-landorus-incarnate-forme-in-shadow-raids-october-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "giratina-origin-forme-in-5-star-raid-battles-october-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/giratina-origin-forme-in-5-star-raid-battles-october-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "raidhour20261104": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/raidhour20261104/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "pokemonspotlighthour2026-11-05": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/pokemonspotlighthour2026-11-05/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "halloween-2026-part-2": {
       "bonuses": [
@@ -1699,7 +1595,8 @@
       "contentHash": "3a8d29023a50696d6b2002770131d9443359a923a8f95d0084e176cb12bb8f47",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "pokemon-go-wild-area-2026-sendai-japan": {
       "bonuses": [
@@ -1730,7 +1627,8 @@
       "contentHash": "ef3ea83abb34c64a8f272e2450bf048c0ad23c2d403a5df303def3b5712409b7",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "pokemon-go-wild-area-2026-mexico-city": {
       "bonuses": [
@@ -1761,51 +1659,8 @@
       "contentHash": "ee30392f8a7f4ca63dfe5d208428cee5d5b8cc757b87af9eaa9e882f8d765002",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "mega-sableye-in-mega-raids-october-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/mega-sableye-in-mega-raids-october-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "giratina-altered-forme-in-5-star-raid-battles-november-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/giratina-altered-forme-in-5-star-raid-battles-november-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "shadow-tornadus-incarnate-forme-in-shadow-raids-november-4-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/shadow-tornadus-incarnate-forme-in-shadow-raids-november-4-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "gbl-twilight-trails_great-league-mega-edition_ultra-league-mega-edition_master-league-mega-edition-split-3": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/gbl-twilight-trails_great-league-mega-edition_ultra-league-mega-edition_master-league-mega-edition-split-3/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "pokemon-night-out-london-2026": {
       "bonuses": [
@@ -1819,7 +1674,8 @@
       "contentHash": "cb0beb2bb549744232564525ba04abb335af20ee9d2f1e2ac02485eb7d953ee8",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "into-the-wild-2026": {
       "bonuses": [
@@ -1849,51 +1705,8 @@
       "contentHash": "2db488432726fe8a37760b5d7f22909667ae6adeb2d54e6b929c1d0202e02672",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "pokemon-go-wild-area-2026-global": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/pokemon-go-wild-area-2026-global/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "max-mondays-2026-11-16": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/max-mondays-2026-11-16/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "gbl-twilight-trails_great-league_ultra-league-mega-edition_2026-go-laic-cup": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/gbl-twilight-trails_great-league_ultra-league-mega-edition_2026-go-laic-cup/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "raidhour20261118": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/raidhour20261118/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "minior-showers-leonids-2026": {
       "bonuses": [
@@ -1906,7 +1719,8 @@
       "contentHash": "366f7b02c16da5c5ec8f406872320358a324e9f01dc0f998b0f9cb052753f003",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "november-communityday2026": {
       "bonuses": [
@@ -1929,84 +1743,8 @@
       "contentHash": "42a23e8469298b99b249d025461b94f630f0ec3d6cc3a0ff5602c9e5440c7b34",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "dynamax-trails-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/dynamax-trails-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "max-mondays-2026-11-23": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/max-mondays-2026-11-23/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "cresselia-darkrai-in-5-star-raid-battles-november-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/cresselia-darkrai-in-5-star-raid-battles-november-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "mega-banette-in-mega-raids-november-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/mega-banette-in-mega-raids-november-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "gbl-twilight-trails_ultra-league_master-league-mega-edition_2026-go-laic-cup": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/gbl-twilight-trails_ultra-league_master-league-mega-edition_2026-go-laic-cup/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "raidhour20261125": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/raidhour20261125/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "twilight-wishes-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/twilight-wishes-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "season-24-twilight-trails": {
       "bonuses": [
@@ -2023,7 +1761,8 @@
       "contentHash": "e1e2fff13a2a8b3c03fe4bddaf150263b4817fd3423a9b5461d05b64da55f71d",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
+      "failures": [],
+      "maintenanceMode": "curated"
     },
     "go-pass-november-2026": {
       "bonuses": [
@@ -2047,62 +1786,9 @@
       "contentHash": "f4695691db67ec9778457f12683c8ab998f702bd917b15ba877992a28ee3e43d",
       "status": "verified",
       "field": "bonuses",
-      "failures": []
-    },
-    "gbl-twilight-trails_master-league_mega-catch-cup-great-league-edition": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/gbl-twilight-trails_master-league_mega-catch-cup-great-league-edition/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "shadow-tornadus-incarnate-forme-in-shadow-raids-november-16-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/shadow-tornadus-incarnate-forme-in-shadow-raids-november-16-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "deoxys-normal-defense-attack-speed-formes-in-5-star-raid-battles-november-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/deoxys-normal-defense-attack-speed-formes-in-5-star-raid-battles-november-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "mega-metagross-in-mega-raids-november-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/mega-metagross-in-mega-raids-november-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
-    },
-    "pokemon-x-adidas-2026": {
-      "bonuses": [],
-      "caveats": [],
-      "status": "not-supplied",
-      "failures": [
-        {
-          "source": "https://leekduck.com/events/pokemon-x-adidas-2026/",
-          "kind": "no-bonus-section"
-        }
-      ]
+      "failures": [],
+      "maintenanceMode": "curated"
     }
-  }
+  },
+  "detailMaintenance": "curated; source references require human verification"
 }

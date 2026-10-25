@@ -1,27 +1,27 @@
-import importlib.util,pathlib,unittest,json
+import importlib.util,pathlib,unittest,json,copy
+from unittest.mock import patch
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('event_pipeline',ROOT/'scripts/events/refresh-event-details.py');p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
 class Sources(unittest.TestCase):
- def test_official_rank_and_deluxe(self):
-  f=p.parse_bonuses((ROOT/'tests/fixtures/events-source/halloween-official.html').read_text());self.assertEqual(len(f['bonuses']),4);self.assertIn('Rank 10',f['bonuses'][0]);self.assertIn('Deluxe',f['bonuses'][1]);self.assertIn('Rank 20',f['bonuses'][2]);self.assertTrue(any('Milestones' in c for c in f['caveats']))
- def test_secondary_rank_and_deluxe(self):
-  f=p.parse_bonuses((ROOT/'tests/fixtures/events-source/halloween-secondary.html').read_text());self.assertEqual(len(f['bonuses']),4);self.assertIn('Rank 10',f['bonuses'][0]);self.assertIn('Rank 20',f['bonuses'][2])
- def test_primary_down_uses_secondary(self):
-  event={'eventID':'halloween-2026-part-1','link':'https://leekduck.com/events/halloween-2026-part-1/'}
-  def fetch(url):
-   if 'pokemongo.com' in url:raise OSError('offline')
-   return (ROOT/'tests/fixtures/events-source/halloween-secondary.html').read_text()
-  f=p.resolve(event,fetch=fetch,now='2026-10-25T12:00:00Z');self.assertEqual(len(f['bonuses']),4);self.assertIn('leekduck.com',f['source']);self.assertEqual(f['failures'][0]['kind'],'unavailable')
- def test_both_sources_down_preserves_original_check(self):
-  old={'bonuses':['Rank 10: double Candy'],'caveats':[],'checkedAt':'2026-10-24T12:00:00Z','source':'https://pokemongo.com/news/test'}
-  def fail(url):raise OSError('offline')
-  f=p.resolve({'eventID':'halloween-2026-part-1','link':'https://leekduck.com/events/halloween-2026-part-1/'},fetch=fail,now='2026-10-25T12:00:00Z',previous=old);self.assertEqual(f['status'],'last-known');self.assertEqual(f['checkedAt'],old['checkedAt'])
- def test_no_section_not_false_no_bonuses(self):
-  f=p.resolve({'eventID':'unannounced','link':'https://leekduck.com/events/test/'},fetch=lambda u:'<h2>Spawns</h2><p>Details coming soon</p>');self.assertEqual(f['status'],'not-supplied');self.assertEqual(f['bonuses'],[])
- def test_ticket_and_time_context(self):
-  f=p.parse_bonuses('<h2>Ticket Holder Bonuses</h2><p>Only on your ticketed event day, 10–18 local.</p><div class="bonus-text">Double Candy</div><h3>Trading</h3><p>Ticket holders: 00–23:59 local.</p><div class="bonus-text">Half trade Stardust</div><h2>Spawns</h2><li>Not a bonus</li>');self.assertEqual(len(f['bonuses']),2);self.assertIn('10–18',f['bonuses'][0]);self.assertIn('00–23:59',f['bonuses'][1]);self.assertIn('Trading',f['bonuses'][1])
- def test_deluxe_context_stays_attached(self):
-  f=p.parse_bonuses('<h2>Major Milestone Bonuses</h2><p>Tier 2 Rank 25</p><li>40 Gifts</li><p>Upgrade to GO Pass Deluxe for the following bonus.</p><p>Tier 2 Rank 25</p><li>50 Gifts</li><h2>Shop</h2><li>Shop offer</li>');self.assertEqual(len(f['bonuses']),2);self.assertNotIn('Deluxe',f['bonuses'][0]);self.assertIn('Deluxe',f['bonuses'][1])
- def test_real_current_cards_have_verified_information(self):
-  d=json.loads((ROOT/'data/event-details.json').read_text());ids=['season-24-twilight-trails','go-pass-october-2026','halloween-2026-part-1','chandelure-super-mega-raid-day-2026','pokemon-go-city-safari-boston-2026-rescheduled'];self.assertTrue(all(d['events'][i]['bonuses'] and d['events'][i]['source'].startswith('https://') for i in ids));self.assertTrue(all('Current ticket holders' in b for b in d['events'][ids[-1]]['bonuses']))
+ def setUp(self):self.catalog=json.loads((ROOT/'data/event-details.json').read_text());self.feed=json.loads((ROOT/'tests/fixtures/events-source/events-2026-10-25.json').read_text())
+ def test_direct_detail_html_is_rejected_before_network(self):
+  with patch.object(p.urllib.request,'urlopen') as network:
+   for url in ['https://leekduck.com/events/halloween-2026-part-1/','https://pokemongo.com/news/halloween-part-1-2026','http://127.0.0.1/']:
+    with self.assertRaises(ValueError):p.download(url)
+   network.assert_not_called()
+ def test_original_detail_dates_and_facts_are_preserved(self):
+  result=p.build_record(self.feed,self.catalog,'2026-10-26T12:00:00Z')
+  self.assertEqual(len(result['events']),15)
+  for key,value in result['events'].items():
+   self.assertEqual(value['checkedAt'],self.catalog['events'][key]['checkedAt']);self.assertEqual(value['bonuses'],self.catalog['events'][key]['bonuses']);self.assertEqual(value['caveats'],self.catalog['events'][key]['caveats']);self.assertEqual(value['maintenanceMode'],'curated')
+ def test_missing_event_never_receives_invented_bonus(self):
+  result=p.build_record([{'eventID':'unknown'}],self.catalog,'2026-10-26T12:00:00Z');self.assertNotIn('unknown',result['events'])
+ def test_malformed_feed_fails_closed(self):
+  for bad in [{},['bad'],[{}]]:
+   with self.assertRaises(ValueError):p.build_record(bad,self.catalog,'2026-10-26T12:00:00Z')
+ def test_invalid_curated_provenance_fails_closed(self):
+  bad=copy.deepcopy(self.catalog);bad['events']['halloween-2026-part-1']['source']='javascript:alert(1)'
+  with self.assertRaises(ValueError):p.build_record(self.feed,bad,'2026-10-26T12:00:00Z')
+ def test_rank_ticket_and_exclusion_conditions_remain(self):
+  events=p.build_record(self.feed,self.catalog,'2026-10-26T12:00:00Z')['events'];self.assertIn('Rank 10',events['halloween-2026-part-1']['bonuses'][0]);self.assertIn('Deluxe',events['halloween-2026-part-1']['bonuses'][1]);self.assertTrue(all('ticket holders' in b for b in events['pokemon-go-city-safari-boston-2026-rescheduled']['bonuses']));self.assertTrue(any('Daily Adventure Incense' in c for c in events['november-communityday2026']['caveats']))
 if __name__=='__main__':unittest.main()

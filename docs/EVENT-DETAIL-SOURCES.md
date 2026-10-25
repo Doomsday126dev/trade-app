@@ -1,33 +1,38 @@
-# Event detail maintenance
+# Event source maintenance
 
-The summary feed does not contain bonus details for most events. The versioned
-runtime includes a checked source snapshot. It resolves reviewed official rules
-first, then explicit bonus sections on the exact Leek Duck event detail page,
-then the last known checked details. Native Spotlight/Community Day feed fields
-remain a runtime fallback. Source HTML is never executed or injected in the app.
+The browser reads the permitted ScrapedDuck summary feed. Missing bonus details
+come from a versioned factual catalog in data/event-details.json. The current
+catalog includes 15 reviewed records. Preserve source references, verification
+dates, ticket/rank conditions, exclusions and bonus-specific time windows.
 
-Every enriched bonus field records its URL, successful check time, source hash
-and fallback failures. Rank, ticket, time and starred restrictions are retained.
-Unknown is not equivalent to no bonuses or unannounced. Raid rotations show
-featured bosses instead of an empty bonus panel. Non-English UI labels clearly
-identify English source details. Source checks older than 48 hours are labeled.
-The main summary feed retains its separate two-hour freshness indicator.
+The follow-on removes all automated detail-HTML fetching. The refresh command
+accepts only the exact ScrapedDuck feed URL. Neither Leek Duck nor official
+announcement pages are fetched by automation. Existing source links are for
+human fact verification; no downstream HTML-scraping permission is asserted.
 
-Run `python3 scripts/events/refresh-event-details.py --output candidate.json`
-to generate a bounded next-32-day candidate from public sources. Review current
-records and constraints, then use `--write` to update both data/event-details.json
-and the embedded runtime record. This avoids adding a browser CORS dependency,
-CSP exception or paid service. Test with
-`python3 tests/events-source-pipeline.test.py` and the Events browser checks.
+Run `python3 scripts/events/refresh-event-details.py --output candidate.json` to
+refresh the feed candidate while preserving detail verification dates. `--write`
+updates the versioned bundled catalog and embedded runtime. It does not reverify
+the curated bonus facts. Verify/correct facts manually before a tested release.
 
-The read-only GitHub workflow checks daily at 08:35 UTC and offers manual runs.
-It uploads a candidate and coverage summary, **not an automatic publication**.
-It cannot change repository content or deploy. A tested release is still needed
-to refresh the bundled details. Automated content publication would need a
-separately reviewed release integration; it is not claimed by this change.
+The read-only workflow is scheduled daily at 08:35 UTC. It refreshes only the
+permitted feed and creates a review candidate, never publishes. Non-PR runs do
+not install browsers. Failed requests cannot become successful detail checks.
+The runtime marks detail records older than 48 hours as last-known; a successful
+feed refresh never updates those separate detail timestamps. Cached/bundled feed
+fallback and native Spotlight/Community Day detail fields remain available.
 
-If all sources fail, old successful timestamps are retained. Missing/changed
-reviewed evidence cannot become newly verified. A failed live summary feed uses
-cached data first, then the bundled dated feed, with a stale indicator. No account
-or private list data enters these requests. ScrapedDuck and Leek Duck attribution
-remains in the app; the app is free, with no advertising or paid content access.
+Small visible Events footer links credit ScrapedDuck and Leek Duck. Individual
+facts link to their source, with detailed provenance in the event detail view.
+Factual eligibility and timing caveats remain visible beside benefits.
+
+## Future commercial use
+
+Current ScrapedDuck conditions exclude ads and paywalls and require credit to
+ScrapedDuck and Leek Duck. The present app remains free. Before monetization,
+obtain suitable commercial permission or replace that dependency with a licensed
+alternative. Permission for the feed does not establish permission for direct
+HTML extraction from Leek Duck or official sites. No provider outreach or new
+paid source integration has been performed. Keep the normalized event/bonus
+records independent of their provider so a later approved replacement does not
+require redesigning the event cards.

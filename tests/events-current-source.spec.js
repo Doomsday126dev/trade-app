@@ -13,6 +13,9 @@ for(const locale of ['en','ja'])test(`current public event source snapshot shows
  const pawniard=page.locator('.event-card[data-event-id="november-communityday2026"]');
  await expect(pawniard).toContainText('3-hour Incense');await expect(pawniard).toContainText('excludes Daily Adventure Incense');
  await expect(pawniard).toContainText('excludes Golden Lure Modules');
+ await expect(pawniard.locator('.event-time-basis')).toHaveText(locale==='ja'?'現地時間':'Local time');
+ await expect(page.locator('.events-credits')).toContainText('ScrapedDuck');await expect(page.locator('.events-credits')).toContainText('LeekDuck');
+ await expect(page.locator('[data-event-disclosure="sources"]')).toHaveCount(0);
  if(locale==='ja')await expect(season).toContainText('情報元の詳細は英語です');
  await season.locator('[data-event-action="details"]').first().click();await expect(page.locator('#event-detail-body')).toContainText('Rank 75');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
