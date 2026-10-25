@@ -318,3 +318,19 @@ test('Account & Security readiness copy is complete and localized',()=>{
     }
   }
 });
+
+test('Members last-known summaries retain translations after the English fallback spread',()=>{
+  const {core}=load();
+  const messages={
+    ja:['以前のほしいものリスト: 2','以前の更新日時は不明です','以前の更新：時刻'],
+    es:['Última lista de deseos conocida: 2','Hora de actualización anterior desconocida','Actualización anterior: 時刻'],
+    de:['Früherer Wunschlistenstand: 2','Früherer Aktualisierungszeitpunkt unbekannt','Frühere Aktualisierung: 時刻']
+  };
+  for(const [locale,[count,unknown,updated]] of Object.entries(messages)){
+    core.setLocale(locale,{persist:false});
+    assert.equal(core.t('admin.legacyEntries',{count:2}),count);
+    assert.equal(core.t('admin.earlierUpdateUnknown'),unknown);
+    assert.equal(core.t('admin.legacyUpdated',{time:'時刻'}),updated);
+    assert.notEqual(core.t('admin.canonicalEntries',{count:2}),'2 wants');
+  }
+});
