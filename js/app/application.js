@@ -438,9 +438,9 @@ let wantsSelectionMode=false;
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
 function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
-function combinedGroups(model=productDeclarations()){
+function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
   const groups=new Map();
-  for(const entry of model.entries){const key=combinedKey(entry);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry);}
+  for(const entry of model.entries){const key=keyFor(entry);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry);}
   return [...groups.values()];
 }
 const combinedRowCache=new Map();
@@ -449,7 +449,9 @@ function renderCombinedList(model=productDeclarations()){
   if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
-  const groups=combinedGroups(model),valid=new Set(groups.flat().map(productSelectionKey));
+  // The model is fresh for every render; cache only within this synchronous pass.
+  const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
+  const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
   const sections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
@@ -477,7 +479,7 @@ function renderCombinedList(model=productDeclarations()){
     body.hidden=collapsed;
     const rows=(collapsed?[]:filtered.slice(0,limit)).map(e=>{
       const entries=byEntry.get(e),selected=entries.every(x=>combinedSelection.has(productSelectionKey(x))),priority=section.priority;
-      const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
+      const key=keyFor(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
       const cached=combinedRowCache.get(key);let row=cached?.row;
       if(cached?.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
     const source=myListSourceMap(e.category||'wishlist').get(pokemonCatalogDomain.normalizeCatalogKey(e.name));
@@ -499,7 +501,7 @@ function renderCombinedList(model=productDeclarations()){
     });
     const grid=[...body.children].find(child=>child.classList.contains('mygrid'));
     const focusedElement=rows.some(row=>row.contains(document.activeElement))?document.activeElement:null;
-    if(rows.length*2<grid.children.length&&!focusedElement)grid.replaceChildren(...rows);
+    if((rows.length*2<grid.children.length||rows.length>grid.children.length*2)&&!focusedElement)grid.replaceChildren(...rows);
     else{
       rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
       while(grid.children.length>rows.length)grid.lastElementChild.remove();
@@ -520,7 +522,7 @@ function renderCombinedList(model=productDeclarations()){
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
   if(!active.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
-  const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>combinedKey(entries[0])));
+  const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
   for(const [key,cached]of combinedRowCache){if(combinedRowCache.size<=cacheBudget)break;if(!visibleNodes.has(cached.row))combinedRowCache.delete(key);}
