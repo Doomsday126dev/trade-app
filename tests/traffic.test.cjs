@@ -42,3 +42,14 @@ test('enabled HTML pins the verified collector, removes legacy tracker and sets 
  const policy=html.match(/http-equiv="Content-Security-Policy" content="([^"]+)/)[1];assert.ok(policy.includes('https://doomsday126dev-trade.goatcounter.com'));assert.doesNotMatch(policy,/\*\.goatcounter|connect-src \*/);
  assert.equal(api.exactCollectorPolicy({querySelectorAll:()=>[{httpEquiv:'Content-Security-Policy',content:policy}]},'https://doomsday126dev-trade.goatcounter.com'),true);
 });
+
+test('width-only field is validated, and inaccessible measurements do not break counting',()=>{
+ for(const value of [320,1440,32767,393.4]){
+  const f=fixture();f.window.screen={width:value,height:99999};api.install(f);
+  const u=new URL(f.calls[0][0]);assert.equal(u.searchParams.get('s'),String(Math.round(value)));assert.deepEqual([...u.searchParams.keys()],['p','t','r','s']);assert.ok(!u.href.includes(secret));
+ }
+ for(const value of [undefined,null,'1440',NaN,Infinity,-1,0,0.5,32768,{},true]){
+  const f=fixture();f.window.screen={width:value};api.install(f);assert.equal(new URL(f.calls[0][0]).searchParams.has('s'),false);
+ }
+ const f=fixture();Object.defineProperty(f.window,'screen',{get(){throw Error('blocked');}});assert.doesNotThrow(()=>api.install(f));assert.equal(f.calls.length,1);assert.equal(new URL(f.calls[0][0]).searchParams.has('s'),false);
+});

@@ -3,7 +3,7 @@ const {chromium,webkit}=require('playwright');
 const script=fs.readFileSync('js/services/traffic.js','utf8'),html=fs.readFileSync('index.html','utf8');
 const endpoint='https://doomsday126dev-trade.goatcounter.com/count',secret='SYNTHETIC_PRIVATE_SHARE_TRAINER_SEARCH_IV_TOKEN_a49';
 for(const [engine,type]of[['chromium',chromium],['safari-webkit',webkit]])test(`${engine}: real collector URLs and headers exclude private values and credentials`,async()=>{
- const browser=await type.launch({headless:true});try{
+ const browser=await type.launch({headless:true,...(process.env.TRAFFIC_CHROME_CHANNEL&&engine==='chromium'?{channel:process.env.TRAFFIC_CHROME_CHANNEL}:{})});try{
  for(const scenario of [
   {query:`?view=${secret}&list=wishlist&search=CP123#${secret}`,expected:'/trade-share'},
   {query:`?account=${secret}&input=${secret}#${secret}`,expected:'/trade'},
@@ -34,7 +34,7 @@ for(const [engine,type]of[['chromium',chromium],['safari-webkit',webkit]])test(`
   }
   await page.locator('#private').fill(secret+'changed');await page.evaluate(secret=>{history.replaceState({},'',`?view=${secret}#${secret}`);document.dispatchEvent(new Event('visibilitychange'));document.dispatchEvent(new Event('prerenderingchange'));},secret);
   const counts=requests.filter(r=>new URL(r.url).hostname===new URL(endpoint).hostname);assert.equal(counts.length,scenario.expected?1:0,JSON.stringify(scenario));
-  if(counts.length){const counted=counts[0],url=new URL(counted.url);assert.deepEqual([...url.searchParams],[['p',scenario.expected],['t','PoGo Trades'],['r','']]);assert.equal(counted.headers.referer,undefined);assert.equal(counted.headers.cookie,undefined);assert.ok(!JSON.stringify(counted).includes(secret));}
+  if(counts.length){const counted=counts[0],url=new URL(counted.url);assert.deepEqual([...url.searchParams],[['p',scenario.expected],['t','PoGo Trades'],['r',''],['s',String(await page.evaluate(()=>screen.width))]]);assert.equal(counted.headers.referer,undefined);assert.equal(counted.headers.cookie,undefined);assert.ok(!JSON.stringify(counted).includes(secret));}
   await page.locator('#external').click();await page.waitForURL('https://probe.example.test/next');
   for(const request of requests){assert.ok(!JSON.stringify(request.headers).includes(secret),'Private value leaked in request headers');if(new URL(request.url).hostname==='probe.example.test')assert.equal(request.headers.referer,undefined);}
   await context.close();

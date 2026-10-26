@@ -26,6 +26,9 @@
     }
     return found;
   }
+  function screenWidth(window){
+    try{const value=window.screen?.width;return typeof value==='number'&&Number.isFinite(value)&&value>=1&&value<=32767?Math.round(value):null;}catch{return null;}
+  }
   function install({window,document,navigator,fetch}){
     let consumed=false;
     function send(){
@@ -36,6 +39,7 @@
       consumed=true;
       document.removeEventListener('visibilitychange',send);document.removeEventListener('prerenderingchange',send);
       endpoint.searchParams.set('p',page);endpoint.searchParams.set('t',TITLE);endpoint.searchParams.set('r','');
+      const width=screenWidth(window);if(width!==null)endpoint.searchParams.set('s',String(width));
       try{Promise.resolve(fetch(endpoint.href,{method:'GET',mode:'no-cors',credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',keepalive:true})).catch(()=>{});}catch{}
     }
     document.addEventListener('visibilitychange',send);document.addEventListener('prerenderingchange',send);send();
