@@ -318,3 +318,10 @@ function costume138Fixture(t){
 test('exact costume .138 source retains reviewed recovery reads',t=>{const r=check(costume138Fixture(t),'3740d59178758afd2371a6dbea1d8d10f3888312');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
 test('costume .138 registration rejects unknown source',t=>{assert.notEqual(check(costume138Fixture(t),'b'.repeat(40)).status,0)});
 test('costume .138 registration rejects a changed private read target',t=>{const d=costume138Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'3740d59178758afd2371a6dbea1d8d10f3888312').status,0)});
+
+function finalCostume138Fixture(t){
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'costume138-final-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','ed7139d87da409e6fa0ec81e31b149cebbc33ea8','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+}
+test('final .138 with all eleven costumes retains exact recovery read contract',t=>{const r=check(finalCostume138Fixture(t),'ed7139d87da409e6fa0ec81e31b149cebbc33ea8');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('final .138 contract rejects unknown SHA',t=>{assert.notEqual(check(finalCostume138Fixture(t),'b'.repeat(40)).status,0)});
+test('final .138 rejects changed private target',t=>{const d=finalCostume138Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'ed7139d87da409e6fa0ec81e31b149cebbc33ea8').status,0)});
