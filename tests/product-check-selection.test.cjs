@@ -178,3 +178,8 @@ test('browser contract tests importing the authority receive actual Functions de
 test('retired event HTML fixtures retain current fact and browser owners',()=>{
  const retired='tests/fixtures/events-source/halloween-official.html';const plan=select([retired],{exists:file=>file!==retired});assert.deepEqual(plan.errors,[]);assert.ok(plan.node.includes('tests/events-ia.test.cjs'));assert.ok(plan.browser.includes('tests/events-current-source.spec.js'));
 });
+test('CI gap acknowledgements are not frontend inputs; runtime catalogs retain performance gates',()=>{
+ assert.equal(select(['scripts/sprites/costume-gap-baseline.json']).performance,false);
+ for(const runtime of ['data/costume-sprite-catalog.json','data.js','js/domain/costumeSpriteCatalog.js','index.html','css/app.css'])assert.equal(select([runtime]).performance,true,runtime);
+ const fs=require('node:fs'),path=require('node:path');const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../scripts/pages/frontend-files.json')));assert.ok(!Object.values(manifest).filter(Array.isArray).flat().includes('scripts/sprites/costume-gap-baseline.json'));
+});
