@@ -464,7 +464,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('.background-badge-kind')).toHaveCount(0);
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
     await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
-    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/female\/25\.png/);
+    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/shiny\/female\/25\.png/);
     await expect(page.locator('.public-share-pokemon-mark')).toHaveCount(0);
     await assertPublicPrivacy(page);
     await page.locator('#app-legal-footer button').click();
