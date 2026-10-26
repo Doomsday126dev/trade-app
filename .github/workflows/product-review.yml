@@ -51,14 +51,18 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Syntax, hygiene and changed-area contracts
         run: node scripts/ci/product-evidence.cjs node
-      - name: Affected browser journeys
+      - name: Prepare reviewed browser sprites
         if: steps.selection.outputs.browser == 'true'
         run: |
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           mkdir -p /tmp/max-originals /tmp/trade-recent-catalog-evidence
           curl -fsSL https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/25.png -o /tmp/max-originals/pikachu.png
           curl -fsSL https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/female/133.png -o /tmp/max-originals/eevee-female-shiny.png
-          CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache node scripts/ci/product-evidence.cjs browser
+      - name: Affected browser journeys
+        if: steps.selection.outputs.browser == 'true'
+        env:
+          CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
+        run: node scripts/ci/product-evidence.cjs browser
       - name: Sanitize isolated test evidence
         id: evidence
         if: always()

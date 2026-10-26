@@ -10,6 +10,7 @@ test('actual list and canvas Max comparison',async({page})=>{
  }
  await page.locator('#wants-add-name').fill('');await page.waitForTimeout(800);await page.locator('#wants-add-name').blur();await page.keyboard.press('Escape');
  await expect(page.locator('.myrow-trait.shiny')).toHaveCount(0);await expect(page.locator('.sprite-max-symbol')).toHaveCount(4);await expect(page.locator('.wants-row').filter({hasText:'Eevee'}).locator('.sr-only')).toContainText('Shiny');
+
  const offset=await page.locator('.sprite-sizzlipede-home img.myrow-sprite').evaluate(e=>getComputedStyle(e).translate);expect(offset).toMatch(/-14\.7/);
  const stage=process.env.MAX_STAGE||'new';
  if(stage==='old'){const source=fs.readFileSync('/tmp/max-originals/old-application.js','utf8');await page.evaluate(src=>{renderProductShareImage=eval('('+src+')');for(const row of document.querySelectorAll('.wants-row')){row.querySelector('.wants-name').textContent=row.dataset.name;row.querySelector('.sprite-max-symbol')?.remove();const type=/Gigantamax/.test(row.dataset.name)?'gmax':/Dynamax/.test(row.dataset.name)?'dynamax':'';row.querySelector('.myrow-sprite-wrap').insertAdjacentHTML('beforeend',maxCrownSvg(type));if(row.querySelector('.sr-only'))row.querySelector('.myrow-copy').insertAdjacentHTML('beforeend','<span class="myrow-trait shiny">✨</span>');}},source.slice(source.indexOf('async function renderProductShareImage('),source.indexOf('\nfunction refreshAll',source.indexOf('async function renderProductShareImage('))));}
