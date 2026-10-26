@@ -5266,7 +5266,7 @@ async function doLogin(){
 
 async function logout(){
   if(window.__pogoProviderHostAuthGate?.available&&auth){
-    try{await firebaseSignOut(auth);}catch{
+    try{await window.__pogoProviderHostAuthGate.prepareSignOut();}catch{
       toast('Sign-in is still finishing. Please try signing out again.',4500);return;
     }
   }
@@ -5285,7 +5285,7 @@ async function logout(){
     localStorage.removeItem('pgu');localStorage.removeItem('pguts');
     sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts'); // belt-and-suspenders cleanup
   }catch{}
-  if(auth&&!window.__pogoProviderHostAuthGate?.available)firebaseSignOut(auth).catch(()=>{});
+  if(auth)firebaseSignOut(auth).catch(()=>{});
   document.querySelectorAll('.ov.open').forEach(el=>closeModal(el.id));
   document.getElementById('app').style.display='none';
   showLogin();

@@ -29,15 +29,17 @@
       if(providerId!=='google.com'||!user?.providerData?.some(item=>item.providerId==='password'))fail('provider-auth/verified-fallback-required');
       return run('preserve',()=>sdk.unlink(user,providerId),user);
     };
-    wrapped.signOut=async instance=>{
-      if(instance!==auth)fail('provider-auth/instance-mismatch');
+    async function prepareSignOut(){
       if(active?.committing)fail('provider-auth/commit-in-progress');
       if(active){const pending=active;pending.canceled=true;await pending.settled.catch(()=>{});}
+    }
+    wrapped.signOut=async instance=>{
+      if(instance!==auth)fail('provider-auth/instance-mismatch');await prepareSignOut();
       return run('sign-out',()=>sdk.signOut(auth));
     };
     // Existing-account qualification never creates or deletes Firebase users.
     for(const name of['createUserWithEmailAndPassword','deleteUser'])wrapped[name]=()=>fail('provider-auth/account-creation-disabled');
-    return Object.freeze({available:true,sdk:Object.freeze(wrapped),snapshot:()=>Object.freeze({uid:String(auth.currentUser?.uid||''),lifecycleId:lifecycle()}),
+    return Object.freeze({available:true,sdk:Object.freeze(wrapped),prepareSignOut,snapshot:()=>Object.freeze({uid:String(auth.currentUser?.uid||''),lifecycleId:lifecycle()}),
       cancel(){if(active?.committing)return Object.freeze({status:'committing',canCancel:false});if(active)active.canceled=true;return Object.freeze({status:'canceled',canCancel:true});}});
   }
   root.providerHostAuthGate=Object.freeze({install});
