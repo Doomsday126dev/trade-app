@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-26",
+  "scope": "Twelve released Shiny identities;21 targeted published images. Existing normal art is preserved. Nine gendered pairs plus three female-only cosplay models; no inferred release for Clone/PhD/ambiguous Detective.",
+  "records": [
+    {
+      "name": "Pikachu (Ash)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-ash-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-ash-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "1966dec00ba2cc23de17f9861587bdf3755708e4dbc44ab2aa63708e80f73f2a",
+        "femaleShiny": "eb2f4b15827eb7624ac2cb2137fb01298fc4faaa4e511c4283457c1a32b0297d"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-ash.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-003%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Santa)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-santa-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-santa-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "08c5c7b5babee5c62c1e8a592037e08234dc4d7ee2c22ab2c5821cfdc8f3b622",
+        "femaleShiny": "8930deafce2ef2943cd4748557164b582c75ef8197697fd0fc83e0bce51c9b69"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-santa.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-001%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Witch)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-halloween-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-halloween-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "bede2bc354da6f465e0e8e71eb29e1ce4130e04eb22d8bc916db5aa777f349af",
+        "femaleShiny": "dfbd5d791f8d1b2e9f73cbab58c12f0089bcca408e60d53a43bd108cc7e645de"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-halloween.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-004%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Summer)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-summer-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-summer-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "e0ab0abc33ad84c067c29747018a4ec94da18ebb6a36daa71a6b8d026a785dd0",
+        "femaleShiny": "e2514449a153711d357a093a4bc2ce2c8f967839d8ee3d16ed2d565d18ee2be3"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-summer.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-005%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Flower Crown)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-flowers-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-flowers-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "631caaf9c22094cd05ebede1e7aa9ce36ae375467511f1d3ed8129142e56d89b",
+        "femaleShiny": "d2e2458461b59cb5ef58ec6028dcf812c8c195017437c0b9809b7114e728ccea"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-flowers.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-007%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Fragment)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-fragment-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-fragment-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "cf60a4b74b514013e4014ab3b43d3e46787c506387dd21e8f96278c570b6b643",
+        "femaleShiny": "ffc056181211ebe77c4de6e3b24c5f9ade2e82c9e6f3c4cecbeb01174e174e3c"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-fragment.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-006%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Straw)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-strawhat-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-strawhat-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "f0575703626da1b9523d8e0e999e97b8733f764092eabee9a14a0b0ca2aaa209",
+        "femaleShiny": "3802c088646f1452d76fc295d155ada6bc058b5e8ae393bc957ecc1d01387a4d"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-strawhat.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-009%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Explorer)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-explorer-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-explorer-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "c2ab909f8d66b606cf293aba8775a6f311f66ab7004108d8eb9193bee808367b",
+        "femaleShiny": "4e3b9a60ce2bb408038435a7fb35a0423131717983d12dca3c726979f6c98ab3"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-explorer.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-022%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Captain)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "shiny": "assets/sprites/go/serebii-pikachu-captain-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-captain-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "ed9b8be635fe45153a27c90933b11f1e75a0507224821ad864bbff0bf610cebe",
+        "femaleShiny": "93191f38a16c3bc82b2349aa773b475fd14f14ed8f6751de33656b7a4faed742"
+      },
+      "sourceUrls": {
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-captain.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-063%2BF%2BS.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Libre)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-libre-shiny.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-libre-shiny.png"
+      },
+      "sha256": {
+        "femaleShiny": "b8a2b49b8208cc9882704bc24d054fd2ec20a2819b30604fb5584411d43540e3",
+        "shiny": "b8a2b49b8208cc9882704bc24d054fd2ec20a2819b30604fb5584411d43540e3"
+      },
+      "sourceUrls": {
+        "femaleShiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-libre.png",
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-libre.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Rock Star)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-rockstar-shiny.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-rockstar-shiny.png"
+      },
+      "sha256": {
+        "femaleShiny": "968814ef37432cf6b77b99ae6d44288c05e3a2fdb9d9c6da6e2312415663cdd0",
+        "shiny": "968814ef37432cf6b77b99ae6d44288c05e3a2fdb9d9c6da6e2312415663cdd0"
+      },
+      "sourceUrls": {
+        "femaleShiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-rockstar.png",
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-rockstar.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    },
+    {
+      "name": "Pikachu (Pop Star)",
+      "reviewedAt": "2026-10-26",
+      "sourcePages": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pikachugo.vercel.app/"
+      ],
+      "shinyReleaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "assets": {
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-popstar-shiny.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-popstar-shiny.png"
+      },
+      "sha256": {
+        "femaleShiny": "c41f30f677a72f9d398bd9e15a17890339f9a46b33a7dbae484f167aadb9f183",
+        "shiny": "c41f30f677a72f9d398bd9e15a17890339f9a46b33a7dbae484f167aadb9f183"
+      },
+      "sourceUrls": {
+        "femaleShiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-popstar.png",
+        "shiny": "https://www.serebii.net/pokemongo/pokemon/shiny/025-popstar.png"
+      },
+      "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+    }
+  ]
+}
