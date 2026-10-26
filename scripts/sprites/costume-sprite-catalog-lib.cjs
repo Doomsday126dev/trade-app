@@ -7,6 +7,7 @@ const {validatePinnedReview}=require('./pinned-pikachu-review.cjs');
 const {validateStarterShinyReview}=require('./starter-shiny-review.cjs');
 const {validateFormShinyReview}=require('./form-shiny-review.cjs');
 const {validateEvolutionShinyReview}=require('./evolution-shiny-review.cjs');
+const {validateConsolidatedShinyReview}=require('./consolidated-shiny-review.cjs');
 const {validateCostume20ShinyReview}=require('./costume20-shiny-review.cjs');
 
 const SCHEMA_VERSION=1;
@@ -38,7 +39,7 @@ function validateCatalog(catalog,root){
       aliases.set(key,entry);
     }
     if(entry.availableGenders){
-      if(!Array.isArray(entry.availableGenders)||!entry.availableGenders.length||entry.availableGenders.some(g=>!['m','f'].includes(g))||new Set(entry.availableGenders).size!==entry.availableGenders.length)fail('Invalid reviewed costume genders');
+      if(!Array.isArray(entry.availableGenders)||(!entry.availableGenders.length&&entry.consolidatedShinyArtworkReview?.genderModel!=='genderless')||entry.availableGenders.some(g=>!['m','f'].includes(g))||new Set(entry.availableGenders).size!==entry.availableGenders.length)fail('Invalid reviewed costume genders');
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-costume-genders.json'))).records.find(r=>r.name===entry.names[0]);if(!reviewed||JSON.stringify(reviewed.availableGenders)!==JSON.stringify(entry.availableGenders)||!reviewed.evidence?.length)fail('Costume gender review evidence changed');}
     }
     if(entry.status==='unavailable'){
@@ -52,6 +53,7 @@ function validateCatalog(catalog,root){
     validateFormShinyReview(entry,root);
     validateEvolutionShinyReview(entry,root);
     validateCostume20ShinyReview(entry,root);
+    validateConsolidatedShinyReview(entry,root);
     if(entry.shinyAvailability!==undefined){
       if(!['released','unreleased','needs-identification'].includes(entry.shinyAvailability))fail('Invalid Shiny availability');
       if(entry.shinyAvailability!=='released'&&root){const proof=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-pikachu-shiny-assets.json'))).availability.find(r=>r.name===entry.names[0]);if(!proof||proof.shinyAvailability!==entry.shinyAvailability||!proof.evidence.length)fail('Unreviewed Shiny availability');}
