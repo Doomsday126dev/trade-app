@@ -157,12 +157,13 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
   for(const release of releases.entries){
     if(!release.id||releaseIds.has(release.id)||!Number.isInteger(release.dex)||!release.catalogName||!/^https:\/\/(?:pokemongo\.com|www\.pokemon\.com)\//.test(release.evidenceUrl)||!Number.isFinite(Date.parse(release.releaseDate)))throw new Error(`Invalid release evidence: ${release.id}`);
     releaseIds.add(release.id);
-    // A passed announcement needs human confirmation even when an old catalog
-    // row already exists. Allow two days for worldwide player-local debut dates;
-    // never auto-promote an announcement or download artwork from this check.
-    if(release.lifecycleStatus==='announced'&&now.getTime()>=Date.parse(release.releaseDate)+2*86400000)
-      problems.push({kind:'release-status-review',identity:release.catalogName,releaseDate:release.releaseDate});
-    if(!findEntry(release.catalogName,release.dex)){
+    // A date-only announcement is a review deadline, not proof of release in
+    // any player's timezone. Never turn the clock into release authorization.
+    if(release.lifecycleStatus==='announced'){
+      if(now.getTime()>=Date.parse(release.releaseDate))
+        problems.push({kind:'release-status-review',identity:release.catalogName,releaseDate:release.releaseDate,evidenceUrl:release.evidenceUrl,releaseStatus:'announced-unconfirmed'});
+      else if(!findEntry(release.catalogName,release.dex))upcomingIdentities.push(release);
+    }else if(!findEntry(release.catalogName,release.dex)){
       if(Date.parse(release.releaseDate)<=now.getTime())missingIdentities.push(release);
       else upcomingIdentities.push(release);
     }

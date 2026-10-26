@@ -26492,6 +26492,49 @@
         "shiny": "e8a7acd47db06577366645a913b3c6d80eedac92",
         "femaleShiny": "2574d145ef73b59a05d817ed7cb0785bb334834a"
       }
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Orange Hanbok)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-hanbok.png",
+      "sourceLabel": "Orange Hanbok",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-hanbok.png",
+      "assets": {
+        "default": "assets/sprites/go/serebii-pikachu-orange-hanbok-female.png",
+        "female": "assets/sprites/go/serebii-pikachu-orange-hanbok-female.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-orange-hanbok-female-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-orange-hanbok-female-shiny.png"
+      },
+      "sha256": {
+        "default": "02450ee88197a7d4581ca5959c8e0ff4f0ff020dc305e3e25878077cf3f20a61",
+        "female": "02450ee88197a7d4581ca5959c8e0ff4f0ff020dc305e3e25878077cf3f20a61",
+        "shiny": "c59735282b03b75968384971596d620320777809db5592c71979040800548960",
+        "femaleShiny": "c59735282b03b75968384971596d620320777809db5592c71979040800548960"
+      },
+      "sourceFiles": {
+        "default": "025-hanbok.png",
+        "shiny": "shiny/025-hanbok.png"
+      },
+      "reviewIdentityId": "pokemon:25:costume:orange-hanbok-2026",
+      "availableGenders": [
+        "f"
+      ],
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-26",
+      "pixelReview": "Original 120px normal and Shiny PNGs inspected: orange hanbok, red headwear and female heart-notched tail. No male artwork substituted.",
+      "genderEvidenceQualification": "Female-only availability is collector-documented (pikachugo), not explicitly stated by the official event announcement; the published PNGs independently show female tails.",
+      "identityEvidence": [
+        "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
+      ]
     }
   ]
 }

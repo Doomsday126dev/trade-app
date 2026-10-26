@@ -664,10 +664,17 @@ function refreshCombinedShinyAvailability(){
   box.disabled=!!blocked&&!box.checked;
   hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
 }
+function combinedAllowedGenders(name){
+  const costume=costumeSpriteCatalogDomain.resolve({name});
+  if(costume?.availableGenders)return costume.availableGenders;
+  // Reviewed recent Max additions: the lake guardians are genderless.
+  // This also covers their existing standard entries; saved conflicts survive.
+  return [480,481,482].includes(window.PogoDomain.publicPokemonDex.dex(name))?[]:['f','m'];
+}
 function refreshCombinedGenderOptions(savedValue){
   refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
-  const allowed=costumeSpriteCatalogDomain.resolve({name})?.availableGenders||['f','m'];
+  const allowed=combinedAllowedGenders(name);
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
@@ -740,7 +747,7 @@ async function saveCombinedEditor(remove=false){
   if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
   const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
-  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=costume?.availableGenders;
+  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=combinedAllowedGenders(name);
   const unchangedSavedShiny=draft.entries.length&&draft.entries.every(entry=>entry.shiny===true);
   if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
@@ -985,7 +992,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no,gender||entry?.gender||'',entry?.shiny===true);
   if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
   const identity=spriteSemanticIdentity(context.canonicalName||resolvedName,gender,entry?.no);
@@ -1004,7 +1011,7 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
   const identity=spriteSemanticIdentity(lookupName,gender,no);
@@ -1063,7 +1070,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no,gender,shiny);
   if(equivalent){push(equivalent);return urls;}
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
@@ -1098,7 +1105,7 @@ function reviewedEquivalentSpriteOverride(no,name,dn,url){
 }
 function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
-  if(reviewedEquivalentSpriteOverride(no,name,dn,url))return url;
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url)&&(!spriteSlugsDomain.reviewedDynamaxBase?.(name||dn,no)||chain.includes(url)))return url;
   const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
   const exactRequired=identity?.exactRequired??(
     normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
@@ -7876,6 +7883,9 @@ function exportSpriteFallbackUrls(e){
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
   if(reviewed.knownVariant)return Array.from(reviewed.urls);
+  // The reviewed Max chain already carries exact normal-form/Shiny/gender
+  // semantics. Do not prepend the older unqualified normal-art preference.
+  if(spriteSlugsDomain.reviewedDynamaxBase(e.spriteName||e.name,e.no))return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
   const compatibilityKeys=[...context.lookupKeys];
   for(const value of [e.spriteName,e.name,e.dn]){

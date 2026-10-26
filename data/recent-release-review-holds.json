@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-10-26",
+  "entries": [
+    {
+      "id": "minior-green-core-2026",
+      "name": "Minior (Green Core)",
+      "releaseStatus": "released-form-needs-exact-runtime-review",
+      "source": "https://pokemongo.com/news/minior-meteor-showers-2026",
+      "action": "Verify Green Core identity and exact normal/Shiny artwork before adding a selectable form. Existing generic Minior does not establish every core; preserve saved generic records."
+    },
+    {
+      "id": "gigantamax-cinderace-shiny-2026",
+      "name": "Cinderace (Gigantamax), Shiny",
+      "releaseStatus": "released-shiny-needs-exact-runtime-review",
+      "source": "https://pokemongo.com/seasons/twilight-trails",
+      "action": "Audit the existing Gigantamax Cinderace Shiny resolver and exact form artwork. October 3 is a Shiny debut, not the first Gigantamax release. Do not substitute ordinary Cinderace or normal-as-Shiny art."
+    }
+  ]
+}

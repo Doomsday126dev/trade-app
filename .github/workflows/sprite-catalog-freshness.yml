@@ -14,6 +14,18 @@ on:
       - 'tests/costume*'
       - 'scripts/check-deployed-costume-catalog.cjs'
       - 'tests/deployed-costume-catalog.test.cjs'
+      - 'data.js'
+      - 'js/domain/pokemonKeys.js'
+      - 'js/domain/publicPokemonDex.js'
+      - 'js/domain/spriteSlugs.js'
+      - 'scripts/generate-public-sprite-dex.cjs'
+      - 'data/recent-release-coverage.json'
+      - 'data/recent-release-review-holds.json'
+      - 'data/release-discovery-snapshot.json'
+      - 'scripts/check-released-catalog.cjs'
+      - 'scripts/check-release-discovery.cjs'
+      - 'tests/recent-release-coverage.test.cjs'
+      - 'tests/release-discovery.test.cjs'
       - '.github/workflows/sprite-catalog-freshness.yml'
 
 permissions:
@@ -33,6 +45,13 @@ jobs:
           node scripts/generate-costume-sprite-runtime.cjs --check
           node scripts/generate-public-sprite-dex.cjs --check
           node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs tests/deployed-costume-catalog.test.cjs
+      - name: Reconcile independent released inventory and validate discovery failure handling
+        run: |
+          node scripts/check-released-catalog.cjs
+          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs
+      - name: Discover official announcements and season Max catalog gaps
+        if: always() && github.event_name != 'pull_request'
+        run: node scripts/check-release-discovery.cjs
       - name: Offline review integrity (pull requests)
         if: github.event_name == 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --offline --report costume-freshness.json --summary costume-freshness.md
@@ -51,6 +70,8 @@ jobs:
             costume-freshness.md
             costume-maintenance.json
             costume-maintenance.md
+            release-discovery.json
+            release-discovery.md
       - name: Publish review summary even when attention is required
         if: always()
         run: |
@@ -62,4 +83,10 @@ jobs:
 
           if test -f costume-maintenance.md; then
             cat costume-maintenance.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if test -f release-discovery.md; then
+            cat release-discovery.md >> "$GITHUB_STEP_SUMMARY"
+          elif test "${{ github.event_name }}" != "pull_request"; then
+            printf '%s\n' 'Release discovery produced no report. Coverage is unknown; inspect the failed discovery step.' >> "$GITHUB_STEP_SUMMARY"
           fi

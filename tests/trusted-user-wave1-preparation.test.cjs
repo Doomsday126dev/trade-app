@@ -16,8 +16,8 @@ test('artwork maintenance inventory matches the current pending source candidate
   assert.match(inventory.productionBaseline.release,/^2026-09-22\.117$/);
   assert.equal(inventory.productionBaseline.canonicalRecords,376);
   assert.equal(inventory.productionBaseline.exactArtworkRecords+inventory.productionBaseline.pendingArtworkRecords,inventory.productionBaseline.canonicalRecords);
-  assert.equal(inventory.maintenanceCandidate.canonicalRecords,392);
-  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,385);
+  assert.equal(inventory.maintenanceCandidate.canonicalRecords,393);
+  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,386);
   assert.equal(inventory.maintenanceCandidate.pendingArtworkRecords,inventory.entries.length);
   assert.equal(inventory.maintenanceCandidate.excludedRows,inventory.entries.length);
   const ids=new Set(),categories=Object.fromEntries(inventory.reasonCategories.map(key=>[key,0]));
