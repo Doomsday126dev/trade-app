@@ -84,3 +84,13 @@ passes), pending/storage-failure cases, and two independent Firebase 12.14.0 SDK
 Auth instances against the demo emulator. The SDK test proves only one instance
 installs its mapped UID. Production persistence propagation and interrupted-tab
 recovery remain separate canary qualifications, with no live grant performed.
+
+The follow-up browser-emulator test now also loads the exact pinned browser SDK
+from local packages in two Chromium tabs using Firebase indexedDBLocalPersistence.
+Both tabs start signed out; competing custom-token commits produce exactly one
+success, both tabs converge to the winning UID, and the losing tab retains it
+after reload. All network requests are restricted to loopback demo services.
+The first harness run lacked local idb/postinstall module mappings and timed out
+before initialization; adding those local dependencies produced 11/11 passing
+emulator tests. This qualifies actual SDK browser persistence in the emulator,
+not live Discord grants, production network behavior or interrupted-tab recovery.

@@ -16,6 +16,7 @@ on:
       - 'tests/account-recovery-collector.test.cjs'
       - 'tests/provider-auth-commit-gate.test.cjs'
       - 'tests/provider-auth-sdk-emulator.test.cjs'
+      - 'tests/provider-auth-browser-emulator.test.cjs'
       - 'functions/test/discord-candidate-gateway.test.cjs'
       - 'functions/test/firestore-discord-store.test.cjs'
       - 'functions/test/discord-access-authority.test.cjs'
