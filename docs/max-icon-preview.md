@@ -13,3 +13,5 @@ Synthetic comparison captures hold art constant on both sides to isolate present
 Qualification: Chromium and WebKit sample tests passed; 67/68 focused tests passed before the public-dex whitespace optimization, and the remaining size test is rerun separately. Initial aggregate found 10 failures; nine were fixed via explicit inventory counts/provenance routing, preserved-hold fixture coverage, harness helper loading and bounded public-dex compaction. Final aggregate required before release; no thresholds raised.
 
 Library comparisons: libfile_808f7e4a75248191a8d4a0fa95aa2000 (phone), libfile_dbf780b6b6f0819199a28a74977f5dcb (canvas image).
+
+Final qualification update: aggregate 1,976 passed / 12 existing skips, with four stale inventory/parser expectations subsequently corrected. Focused contract reruns cover those four; public dex is 34,997 bytes under the unchanged 35,000-byte limit. The initial aggregate failures were resolved without changing behavior assertions or budgets. Full protected release qualification is still required before publication.
