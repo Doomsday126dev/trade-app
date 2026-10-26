@@ -14,7 +14,7 @@
        if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
        else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
 -      if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
-+      
++
        ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
        nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
        ctx.fillStyle='#b8c2c9';
@@ -23,7 +23,7 @@
    };
    const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
 -    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
-+    
++
      if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
    };
    const drawGridSection=(entries,xBase,startY)=>{
