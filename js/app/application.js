@@ -14,7 +14,16 @@ async function loadFirebaseSdk(){
       startPogoEarlyAuth(),
       import(`${base}/firebase-database.js`)
     ]).then(([early,dbMod])=>{
-      const appMod=early.appMod,authMod=early.authMod;
+      const appMod=early.appMod;
+      let authMod=early.authMod;
+      if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__===true){
+        const install=window.PogoDev?.providerHostAuthGate?.install;
+        if(typeof install!=='function')throw new Error('Provider auth canary gate is unavailable');
+        window.__pogoProviderHostAuthGate=install({enabled:true,auth:early.auth,sdk:authMod,
+          expectedSignInUid:window.__POGO_PROVIDER_AUTH_GATE_CANARY_UID__,
+          onStatus:state=>window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}))});
+        authMod=window.__pogoProviderHostAuthGate.sdk;
+      }
       initializeApp=appMod.initializeApp;
       getDatabase=dbMod.getDatabase;
       ref=dbMod.ref;
@@ -5255,7 +5264,12 @@ async function doLogin(){
   }
 }
 
-function logout(){
+async function logout(){
+  if(window.__pogoProviderHostAuthGate?.available&&auth){
+    try{await firebaseSignOut(auth);}catch{
+      toast('Sign-in is still finishing. Please try signing out again.',4500);return;
+    }
+  }
   closeAccountMenu(false);
   if(parseSettingsRoute().matches)history.replaceState({},'',settingsRouteUrl(false));
   resetMyListCategoryForAccountBoundary();
@@ -5271,7 +5285,7 @@ function logout(){
     localStorage.removeItem('pgu');localStorage.removeItem('pguts');
     sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts'); // belt-and-suspenders cleanup
   }catch{}
-  if(auth)firebaseSignOut(auth).catch(()=>{});
+  if(auth&&!window.__pogoProviderHostAuthGate?.available)firebaseSignOut(auth).catch(()=>{});
   document.querySelectorAll('.ov.open').forEach(el=>closeModal(el.id));
   document.getElementById('app').style.display='none';
   showLogin();

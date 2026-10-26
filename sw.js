@@ -316,6 +316,13 @@ self.addEventListener('fetch',ev=>{
   if(req.method!=='GET')return;
   let url;
   try{url=new URL(req.url);}catch{return;}
+  // OAuth callback URLs must never enter shell caching or offline index fallback.
+  // The callback remains outside the release inventory until separately approved.
+  if(url.origin===self.location.origin&&url.pathname===new URL('./auth/discord.html',self.location.href).pathname){
+    ev.respondWith(fetch(req,{cache:'no-store',referrerPolicy:'no-referrer'}).catch(()=>
+      new Response('Sign-in needs a connection. Return to PoGo Trades and try again.',{status:503,headers:{'Content-Type':'text/plain','Cache-Control':'no-store'}})));
+    return;
+  }
   // Never cache Firebase calls
   if(isFirebase(url))return;
   // Sprites

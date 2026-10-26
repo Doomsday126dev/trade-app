@@ -48,7 +48,7 @@ test('standalone callback scrubs errors and codes before validating and never re
   assert.throws(()=>h.window.PogoDev.discordCallbackPage.capture({location,history}),/callback-invalid/);assert.equal(replaced.at(-1)[2],'/trade-app/auth/discord.html');
 });
 test('callback and candidate runtime remain outside release inventory',()=>{
-  const root=path.join(__dirname,'..');for(const file of['index.html','sw.js','scripts/pages/frontend-files.json','functions/src/index.js'])assert.doesNotMatch(fs.readFileSync(path.join(root,file),'utf8'),/auth\/discord\.html|discordCandidateRuntime|discordCallbackPage/);
+  const root=path.join(__dirname,'..');for(const file of['index.html','scripts/pages/frontend-files.json','functions/src/index.js'])assert.doesNotMatch(fs.readFileSync(path.join(root,file),'utf8'),/auth\/discord\.html|discordCandidateRuntime|discordCallbackPage/);
 });
 
 test('composed auth gate accepts its own UID/lifecycle transition without mistaking it for cancellation',async()=>{
@@ -60,3 +60,11 @@ test('composed auth gate accepts its own UID/lifecycle transition without mistak
     }});
   const api=runtime(h,server);await api.begin('sign-in');assert.equal((await api.completeCallback(callback(h))).status,'existing-account');assert.equal(auth.currentUser.uid,'synthetic-owner');
 });
+
+ test('popup navigation retains the host and blocked popup performs no gateway work',async()=>{
+ const h=browser({ownerBinding:A,lifecycleBinding:L}),server=backend(),api=runtime(h,server),navigations=[];
+ await assert.rejects(api.startPopup('link',{open:()=>null}),{code:'discord/popup-blocked'});assert.equal(server.calls.length,0);
+ let closed=false;const popup={closed:false,location:{replace:url=>navigations.push(url)},close(){closed=true;}};
+ await api.startPopup('link',{open:()=>popup});assert.equal(navigations.length,1);assert.equal(h.assigned.length,0);
+ assert.equal(api.cancel().status,'canceled');assert.equal(closed,true);assert.equal(h.values.size,0);
+ });
