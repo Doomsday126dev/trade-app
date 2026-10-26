@@ -31,7 +31,7 @@ jobs:
         run: |
           runtime_dir=$(mktemp -d)
           baseline_dir=$(mktemp -d)
-          git archive 8b26bf6ea28d865b09263f868cee6c3279690b60 | tar -x -C "$runtime_dir"
+          git worktree add --detach "$runtime_dir" 2bec47c137361e43867fb5f767d6d1f567a2a0e8
           git archive 748ad63a7b0d2e1efbc7689b660483b95fdab4e3 | tar -x -C "$baseline_dir"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$runtime_dir/node_modules"
           ln -s "$GITHUB_WORKSPACE/functions/node_modules" "$runtime_dir/functions/node_modules"

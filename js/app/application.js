@@ -1290,8 +1290,8 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
   if(!urls.length){
     const knownUnavailable=context.reviewed?.status==='unavailable';
-    const resolution=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny:opts.shiny===true});
-    const label=resolution.reason==='invalid-gender'?i18nCore.t('costume.genderUnsupported',{name:dn||name||'Pokémon'}):i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
+    const invalidGender=gender&&context.reviewed?.availableGenders&&!context.reviewed.availableGenders.includes(String(gender).toLowerCase());
+    const label=invalidGender?i18nCore.t('costume.genderUnsupported',{name:dn||name||'Pokémon'}):i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
     return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}" title="${escAttr(label)}">?</span>`;
   }
   const url=urls[0];
