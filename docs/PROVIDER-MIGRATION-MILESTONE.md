@@ -7,7 +7,7 @@ asset release worker's checkout. It selectively carries forward PR57's isolated
 Discord prototype, then changes its contract; it does not merge PR57 or enable
 any auth surface. No runtime HTML, application entry, service worker, frontend asset
 inventory, deployed Functions export, Rules, release control, or account data
-is changed. The second milestone adds one passive readonly journal capture method; it has no runtime caller. Package changes add local tests and the exact Firebase Auth SDK test dependency.
+is changed. The final milestone uses a separate source-only readonly journal capture adapter; the shipped journal is restored unchanged. Package changes add local tests and the exact Firebase Auth SDK test dependency.
 
 Current source enables Google public entry and existing-account linking.
 Provider account creation remains separately gated. Existing Google linking
@@ -257,3 +257,17 @@ readonly journal capture and canonical import dry runs. See
   failure (202 ms against unchanged 200 ms); paired main/candidate local
   qualification passed 8/8 each without changing budgets or renderer code.
   Final-head CI is being monitored independently of this diagnostic evidence.
+
+
+## Final isolation qualification
+
+The journal reader now lives in `js/dev/accountRecoveryJournalSnapshot.js`. The
+production journal file is restored unchanged; opening a missing database aborts
+rather than creating an empty export. Desktop/mobile qualification is 16 passed.
+Unit contracts remain 93 passed with 1 emulator-only skip; the 10 demo emulator
+checks include both independently reproduced review corrections.
+
+Commit `83b38358` completed all four GitHub workflows successfully, including the
+original frontend performance budgets. Earlier performance misses remain
+recorded as diagnostics; thresholds and rendering code were never changed. The
+final isolation head is separately qualified in CI.

@@ -106,7 +106,8 @@ installed in the production bootstrap; Google and PIN keep their existing paths.
 
 The candidate recovery collector reads exact owner legacy/profile/membership/
 share paths plus accepted canonical account data, raw local history/preferences,
-and one readonly IndexedDB transaction across every journal store. It includes
+and one readonly IndexedDB transaction across every journal store through
+a separate candidate adapter. The production journal source is unchanged. It includes
 acknowledged operations, resolved conflicts and reviewed recovery evidence.
 A second collection must match before a bundle is created. It refuses unknown
 schemas, owner changes, missing stores, unsupported enabled future features,
@@ -192,3 +193,15 @@ The exact SDK emulator proof now also mints a demo Firebase custom token,
 signs into the original UID, confirms the existing password method is retained,
 and rejects a canceled in-flight custom-token commit before installing a user.
 No service-account key or cloud signing permission is needed by that emulator.
+
+
+## Final isolation refinement
+
+`accountRecoveryJournalSnapshot.js` opens only an existing version-1 journal,
+reads all five stores in one owner-filtered readonly transaction, and closes its
+connection. A missing or unsupported database fails; the reader aborts database
+creation rather than labeling an empty new database as a full backup. Browser
+checks cover that behavior and complete acknowledged/reviewed evidence across
+reopen. The earlier passive method was removed from `accountSyncJournal.js`,
+restoring that shipped file byte-for-byte. All loaded production asset contents
+therefore remain outside this milestone's final diff.

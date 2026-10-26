@@ -38,7 +38,7 @@ test('account switch removes reminder and provider text is never interpreted as 
 });
 test('recovery snapshot captures acknowledged and reviewed IndexedDB records in one owner partition',async({page})=>{
   const path=require('node:path');
-  for(const file of['js/domain/accountSyncModel.js','js/data/accountSyncJournal.js'])await page.addScriptTag({path:path.join(__dirname,'..',file)});
+  for(const file of['js/domain/accountSyncModel.js','js/data/accountSyncJournal.js','js/dev/accountRecoveryJournalSnapshot.js'])await page.addScriptTag({path:path.join(__dirname,'..',file)});
   const result=await page.evaluate(async()=>{
     const api=window.PogoData.accountSyncJournal,model=window.PogoDomain.accountSyncModel,ownerUid='synthetic-owner',databaseName=`recovery-${crypto.randomUUID()}`;
     const a=api.createAccountSyncJournal({ownerUid,databaseName}),b=api.createAccountSyncJournal({ownerUid:'other-owner',databaseName});
@@ -47,8 +47,9 @@ test('recovery snapshot captures acknowledged and reviewed IndexedDB records in 
     await a.enqueueOperation(op);await a.acknowledge(op.operationId,{revision:2});
     await a.putRecoveryCandidate({ownerUid,candidateId:'reviewed-candidate',createdAt:10,resolved:true});
     await a.setMeta('retained-evidence',{accepted:true});await b.setMeta('private-other',{mustNotLeak:true});
-    const snapshot=await a.captureOwnerSnapshot();await a.close();
-    const reopened=api.createAccountSyncJournal({ownerUid,databaseName}),again=await reopened.captureOwnerSnapshot();
+    const reader=window.PogoDev.accountRecoveryJournalSnapshot.createAccountRecoveryJournalSnapshot({ownerUid,databaseName});
+    const snapshot=await reader.captureOwnerSnapshot();await a.close();
+    const reopened=api.createAccountSyncJournal({ownerUid,databaseName}),again=await reader.captureOwnerSnapshot();
     await reopened.close();await b.close();
     return{snapshot,equal:JSON.stringify(snapshot)===JSON.stringify(again)};
   });
@@ -84,4 +85,13 @@ test('standalone callback scrubs the URL, keeps code only in memory and fails sa
   const script=requests.find(request=>request.url().includes('discordCallbackPage.js'));expect(script.headers().referer).toBeUndefined();
   expect(requests.every(request=>request.url().startsWith('http://127.0.0.1:8886/'))).toBe(true);
   await page.reload();await expect(page.locator('#discord-callback-status')).toContainText('could not be resumed');
+});
+test('readonly recovery capture cannot create a missing journal or report it as complete',async({page})=>{
+  const path=require('node:path');for(const file of['js/domain/accountSyncModel.js','js/dev/accountRecoveryJournalSnapshot.js'])await page.addScriptTag({path:path.join(__dirname,'..',file)});
+  const result=await page.evaluate(async()=>{
+    const databaseName=`missing-recovery-${crypto.randomUUID()}`,reader=window.PogoDev.accountRecoveryJournalSnapshot.createAccountRecoveryJournalSnapshot({ownerUid:'synthetic-owner',databaseName});
+    const code=await reader.captureOwnerSnapshot().then(()=>null,error=>error.code);
+    return{code,created:(await indexedDB.databases()).some(value=>value.name===databaseName)};
+  });
+  expect(result).toEqual({code:'recovery/journal-missing',created:false});
 });
