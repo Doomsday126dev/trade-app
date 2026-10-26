@@ -655,7 +655,14 @@ function prepareWantsCatalog(){
     });
   }
 }
+function refreshCombinedShinyAvailability(){
+  const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
+  const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
+  box.disabled=!!blocked&&!box.checked;
+  hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
+}
 function refreshCombinedGenderOptions(savedValue){
+  refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
   const allowed=costumeSpriteCatalogDomain.resolve({name})?.availableGenders||['f','m'];
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
@@ -702,6 +709,7 @@ function openCombinedEditor(index){
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
+  refreshCombinedShinyAvailability();
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
   document.getElementById('combined-priority').value=[...priorities][0]||'';
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
@@ -729,7 +737,9 @@ async function saveCombinedEditor(remove=false){
   if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
   const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
-  const allowedGenders=costumeSpriteCatalogDomain.resolve({name})?.availableGenders;
+  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=costume?.availableGenders;
+  const unchangedSavedShiny=draft.entries.length&&draft.entries.every(entry=>entry.shiny===true);
+  if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');

@@ -618,6 +618,8 @@
 "events.groupVenueUnknown":"Venue time unconfirmed"
     ,"share.format":"Format"
     ,"share.gameSearch":"Pokémon GO search string"
+    ,"costume.shinyNotReleased":"Shiny has not been released for this costume."
+    ,"costume.shinyYearRequired":"Choose the Detective costume year before requesting Shiny."
     ,"costume.genderOnly":"{gender} only"
     ,"costume.savedConflict":"saved value needs review"
     ,"costume.genderConflict":"This saved gender is not a released form of this costume. Your entry is unchanged; choose a valid gender only if you want to correct it."

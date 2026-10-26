@@ -1,0 +1,9 @@
+# Remaining reviewed Pikachu Shiny artwork
+
+This patch registers 76 existing costume name mappings against 73 visually reviewed pinned source forms. It imports 146 original PNG files from Gabrielense/pogorewind commit `5c6bb56c4026e5fe3cd146910c7e9dad9f07d716`; source paths, Git blob hashes and SHA-256 hashes are recorded in `data/reviewed-pikachu-shiny-assets.json`. All source variants were inspected in labelled contact sheets with alpha compositing. No images were recoloured or substituted.
+
+Existing normal art remains unchanged except the female-only Saree model, which now uses the correctly reviewed female original. Explicit Detective 2023 has its own four exact models; the transient magnifying-glass animation is correctly absent from the authentic static icon. Generic Detective is not silently relabelled to a year. Holiday/Halloween return labels retain their existing catalog identities and share art only where source evidence establishes the same costume.
+
+Kurta and Mimikyu are male-only; Saree is female-only. Clone and Ph.D. have no released Shiny, and unspecified Detective needs a year choice. New unsupported Shiny selections are blocked; existing saved qualifiers are preserved and may be removed explicitly. No saved records are migrated, renamed or deleted. Seven ambiguous historical identities still need owner identification; this patch does not invent art for them or claim that the remaining non-Pikachu normal-only mappings are all released Shiny gaps.
+
+Validation covers source/proof tampering, every valid Shiny gender model, single-gender rejection, actual local image decoding, all canonical selectable identities through synthetic save/acknowledgement/reload/public rendering, and unsupported selection recovery in Chromium and WebKit. The broader full suite and required CI remain release gates. Source proof is reviewed evidence, not a blanket source licence claim or an automated import approval.

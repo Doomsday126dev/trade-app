@@ -273,6 +273,8 @@
 "events.groupVenueUnknown":"Hora del lugar sin confirmar"
     ,"share.format":"Formato"
     ,"share.gameSearch":"Cadena de búsqueda de Pokémon GO"
+    ,"costume.shinyNotReleased":"La versión variocolor de este disfraz no se ha lanzado."
+    ,"costume.shinyYearRequired":"Elige el año del disfraz de detective antes de pedir la versión variocolor."
     ,"costume.genderOnly":"Solo {gender}"
     ,"costume.savedConflict":"Revisar valor guardado"
     ,"costume.genderConflict":"El género guardado no existe para este disfraz. No se ha cambiado tu entrada; elige un género válido solo si quieres corregirla."

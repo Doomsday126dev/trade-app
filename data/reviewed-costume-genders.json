@@ -167,6 +167,64 @@
       ],
       "reviewedAt": "2026-10-26",
       "basis": "Published collection VARIANTS_RAW marks these cosplay costumes F (female-only); matching heart-tipped artwork independently inspected. Existing conflicting saved gender remains preserved by editor policy."
+    },
+    {
+      "name": "Pikachu (Kurta)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.reddit.com/r/TheSilphRoad/comments/1jg0dg3"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Male-only after March20,2025 retroactive correction https://www.reddit.com/r/TheSilphRoad/comments/1jg0dg3"
+    },
+    {
+      "name": "Pikachu (Mimikyu)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Male-only"
+    },
+    {
+      "name": "Pikachu (Saree)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Female-only; unsuffixed source pixels have heart tail, not male"
+    },
+    {
+      "name": "Pikachu (Clone)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published per-costume availability. Unreleased Shiny is not inferred from mined artwork. Saved conflicting qualifiers remain preserved."
+    },
+    {
+      "name": "Pikachu (Ph_D)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published per-costume availability. Unreleased Shiny is not inferred from mined artwork. Saved conflicting qualifiers remain preserved."
     }
   ],
   "independentVerification": "Cosmog 0% male/100% female and Worlds 100% male/0% female verified directly in source pages. Collector source HTML independently inspected: explicit M=male-only,F=female-only legend and Cosmog F/Worlds M/Astronaut M records. Other eight preserve both genders per linked parent research; shirts have moderate database evidence."
