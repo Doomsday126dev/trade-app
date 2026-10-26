@@ -17,6 +17,7 @@ const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(catalog.entries.length,392);
+  assert.equal(require('../data/pending-costume-artwork.json').maintenanceCandidate.canonicalRecords,catalog.entries.length);
   assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,385);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
