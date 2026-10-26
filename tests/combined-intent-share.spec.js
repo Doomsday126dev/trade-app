@@ -22,7 +22,6 @@ test('share scope controls output, selection persists across filtering and no da
   await fixture(page);
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(2);
   await expect(page.locator('#combined-list')).not.toContainText('Eevee');
-  await page.locator('#combined-list > [data-wants-section="H"] .contextual-details > summary').click();
   await expect(page.locator('#combined-list > [data-wants-section="H"] [data-wants-copy]')).toBeVisible();
   await expect(page.locator('#wants-selection-tools')).toBeHidden();
   await page.locator('#wants-select-toggle').click();

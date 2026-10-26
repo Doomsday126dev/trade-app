@@ -632,7 +632,7 @@ function refreshCombinedGenderOptions(savedValue){
   select.value=preserve||allowed.includes(value)?value:'';
   const hint=document.getElementById('combined-gender-hint');
   hint.hidden=!preserve;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):'';
-  if(preserve)select.closest('details').open=true;
+  if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
 function openWantsAddEditor(){
@@ -10611,7 +10611,7 @@ function closeModal(id){
     const visible=node=>node?.isConnected&&!node.disabled&&(node.tabIndex>=0||node.hasAttribute('tabindex'))&&node.getClientRects().length&&!node.closest('[inert]');
     // Settings tools may replace their opener while launching Share. Do not
     // leave focus in a hidden format select after Escape: it eats shortcuts.
-    if(!visible(returnFocus))returnFocus=[...document.querySelectorAll('.wants-list-toolbar button,#nav-more,#nav-mylist')].find(visible);
+    if(!visible(returnFocus))returnFocus=[...document.querySelectorAll('.wants-list-toolbar button'),...document.querySelectorAll('#nav-more,#nav-mylist')].find(visible);
   }
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
