@@ -1,0 +1,1 @@
+module.exports={testDir:'./tests',testMatch:'costume-pikachu.spec.js',timeout:45000,workers:1,outputDir:'/tmp/costume-pikachu-investigation/results',use:{baseURL:'http://127.0.0.1:8154',viewport:{width:390,height:844},serviceWorkers:'block'},projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}]};

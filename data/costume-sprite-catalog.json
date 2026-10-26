@@ -759,7 +759,8 @@
         "Cosmog-themed Spacesuit Pikachu"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1093,7 +1094,8 @@
         "Pikachu (Fossil)"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1403,7 +1405,8 @@
         "Pikachu (Instinct)"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1583,7 +1586,8 @@
         "Pikachu Marathon Visor"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1678,7 +1682,8 @@
         "Pikachu (Mystic)"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1749,7 +1754,8 @@
         "PokéXciting Pikachu (Turquoise)"
       ],
       "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -1774,7 +1780,8 @@
         "Pikachu (Professor Willow's Assistant)"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -2312,7 +2319,8 @@
         "Pikachu (Valor)"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -2457,7 +2465,8 @@
         "World Championships 2026 Pikachu"
       ],
       "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -6990,7 +6999,8 @@
         "Astronaut Pikachu"
       ],
       "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     },
     {
       "no": 25,
@@ -6999,7 +7009,8 @@
         "PokéXciting Pikachu (Blue)"
       ],
       "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
+      "identityStatus": "released"
     }
   ]
 }

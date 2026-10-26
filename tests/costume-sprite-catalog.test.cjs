@@ -82,7 +82,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:402,unavailable:21});
+  assert.deepEqual(statusCounts,{exact:402,unavailable:24});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -150,4 +150,19 @@ test('the local reviewed asset graph remains lazy rather than joining shell prec
   const releaseAssets=worker.match(/const RELEASE_ASSETS=\[([\s\S]*?)\n\];/)?.[1]||'';
   assert.doesNotMatch(releaseAssets,/assets\/sprites\/go/);
   assert.match(worker,/url\.origin===self\.location\.origin&&\/\\\/assets\\\/sprites\\\/go/);
+});
+
+test('search eligibility marks only audited released Pikachu identities without promoting their art',()=>{
+  const pending=JSON.parse(fs.readFileSync(path.join(root,'data/pending-costume-artwork.json'),'utf8'));
+  const expected=pending.entries.filter(e=>e.species.dex===25&&e.identityStatus==='released').map(e=>e.displayIdentity).sort();
+  const eligible=catalog.entries.filter(e=>e.identityStatus==='released');
+  assert.deepEqual(eligible.map(e=>e.names[0]).sort(),expected);
+  assert.equal(eligible.length,11);
+  for(const entry of eligible){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}
+  assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (Gloria)')).identityStatus,undefined);
+  assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (GO Fest 2023)')).identityStatus,undefined);
+});
+
+test('explicit reviewed female art has no default-gender fallback',()=>{
+  assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',gender:'f'}).urls),['assets/sprites/go/pikachu-detective-f.png']);
 });
