@@ -80,4 +80,19 @@ test('Firebase 12.14.0 blocking hook rejects wrong-UID sign-in and permits only 
   assert.equal(competing.find(value=>value.status==='rejected').reason.code,'provider-auth/session-changed');
   assert.equal([auth,secondAuth].filter(instance=>instance.currentUser).length,1);gates.forEach(gate=>gate.dispose());
 
+  // A completed SDK operation with a failed final ledger write can be reviewed
+  // after recreating the gate, but only with fresh server-verified ID-token proof.
+  await sdk.signOut(auth);window.crypto=require('node:crypto').webcrypto;
+  let recoveryCheckpoint={revision:0,uid:null,status:'settled'},failSettle=true;
+  const outcomes=new Map(),recoveryCoordination={read:async()=>({...recoveryCheckpoint}),write:async value=>{if(failSettle&&value.status==='settled')throw Error('synthetic settled-write failure');recoveryCheckpoint={...value};},readOutcome:async id=>outcomes.get(id),writeOutcome:async value=>outcomes.set(value.operationId,value)};
+  const createRecoveryGate=()=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,coordination:recoveryCoordination,beforeAuthStateChanged:sdk.beforeAuthStateChanged,getLifecycle:()=>auth.currentUser?.uid||'signed-out',signInWithCustomToken:sdk.signInWithCustomToken,
+    verifyCurrentAuth:async({user,expectedUid})=>{const decoded=await adminAuthApi.getAuth(adminApp).verifyIdToken(await user.getIdToken(true),true);return{uid:decoded.uid,verified:decoded.uid===expectedUid};}});
+  const interruptedGate=createRecoveryGate(),recoveryToken=await adminAuthApi.getAuth(adminApp).createCustomToken(a.user.uid);
+  const interrupted=await interruptedGate.commitCustomToken({customToken:recoveryToken,expectedUid:a.user.uid,expectedLifecycle:'signed-out'});
+  assert.equal(interrupted.authCoordinationBlocked,true);assert.equal(auth.currentUser.uid,a.user.uid);interruptedGate.dispose();failSettle=false;
+  const reloadedGate=createRecoveryGate(),review=await reloadedGate.prepareReconciliation();
+  await assert.rejects(reloadedGate.confirmReconciliation(review),{code:'provider-auth/explicit-review-required'});
+  assert.equal((await reloadedGate.confirmReconciliation(review,{accepted:true})).status,'reconciled');
+  assert.equal(auth.currentUser.uid,a.user.uid);await reloadedGate.assertSession();reloadedGate.dispose();
+
 });

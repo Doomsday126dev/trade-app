@@ -97,3 +97,18 @@ test('readonly recovery capture cannot create a missing journal or report it as 
   });
   expect(result).toEqual({code:'recovery/journal-missing',created:false});
 });
+
+test('reviewed checkpoint reconciliation survives reload and arbitrates two tabs without resetting unknown outcomes',async({page,context})=>{
+ const path=require('node:path'),other=await context.newPage();await other.goto('/tests/fixtures/provider-migration-preview.html');
+ const install=async target=>{await target.addScriptTag({path:path.join(__dirname,'../js/dev/providerAuthCommitGate.js')});await target.evaluate(()=>{
+  const module=PogoDev.providerAuthCommitGate;window.ledger=module.createLedger(indexedDB);window.auth={currentUser:{uid:'synthetic-recovery-owner'},authStateReady:async()=>{}};
+  window.recoveryGate=module.createProviderAuthCommitGate({auth,coordination:ledger,getLifecycle:()=>auth.currentUser?.uid||'signed-out',beforeAuthStateChanged:()=>()=>{},signInWithCustomToken:async()=>{},verifyCurrentAuth:async({user,expectedUid})=>({verified:user?.uid===expectedUid,uid:user?.uid})});
+ });};
+ await install(page);
+ await page.evaluate(async()=>{await ledger.write({revision:1,status:'pending',uid:'',targetUid:auth.currentUser.uid,kind:'sign-in',operationId:'synthetic-completed-operation'});await ledger.writeOutcome({operationId:'synthetic-completed-operation',pendingRevision:1,kind:'sign-in',beforeUid:'',uid:auth.currentUser.uid,status:'completed'});});
+ await page.reload();await install(page);await install(other);
+ for(const target of[page,other])await target.evaluate(async()=>{window.ticket=await recoveryGate.prepareReconciliation();});
+ expect(await page.evaluate(async()=>{try{await recoveryGate.confirmReconciliation(ticket);return'wrong';}catch(error){return error.code;}})).toBe('provider-auth/explicit-review-required');
+ const results=await Promise.all([page,other].map(target=>target.evaluate(async()=>{try{return(await recoveryGate.confirmReconciliation(ticket,{accepted:true})).status;}catch{return'blocked';}})));
+ expect(results.filter(value=>value==='reconciled')).toHaveLength(1);expect(await page.evaluate(async()=>(await ledger.read()).uid)).toBe('synthetic-recovery-owner');await other.close();
+});

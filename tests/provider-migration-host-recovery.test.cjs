@@ -71,3 +71,18 @@ test('completed auth with failed checkpoint remains visibly blocked and logout p
  const fresh=w.PogoDev.providerHostAuthGate.install({enabled:true,auth,sdk,coordination,expectedSignInUid:'synthetic-owner',locks:{request:async(name,options,work)=>work()}});
  await assert.rejects(fresh.prepareSignOut(),{code:'provider-auth/coordination-blocked'});
 });
+
+test('host clears a completed checkpoint warning only after reviewed verified recovery, then permits logout',async()=>{
+ const w=load(['js/dev/providerAuthCommitGate.js','js/dev/providerHostAuthGate.js']),auth={currentUser:null},hooks=new Set(),outcomes=new Map(),statuses=[];
+ let checkpoint={revision:0,uid:null,status:'settled'},broken=true,tail=Promise.resolve();
+ const coordination={read:async()=>structuredClone(checkpoint),write:async value=>{if(broken&&value.status==='settled')throw Error('synthetic storage failure');checkpoint=structuredClone(value);},readOutcome:async id=>outcomes.get(id),writeOutcome:async value=>outcomes.set(value.operationId,value)};
+ const change=async user=>{for(const hook of hooks)await hook(user);auth.currentUser=user;return{user};};
+ const sdk={beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async()=>change({uid:'synthetic-owner'}),signOut:async()=>{await change(null);}};
+ const options={enabled:true,auth,sdk,coordination,expectedSignInUid:'synthetic-owner',locks:{request:(name,opts,work)=>{const next=tail.then(work);tail=next.catch(()=>{});return next;}},verifyCurrentAuth:async({user,expectedUid})=>({uid:user?.uid||'',verified:(user?.uid||'')===expectedUid}),onStatus:value=>statuses.push(value)};
+ const host=w.PogoDev.providerHostAuthGate.install(options);await host.sdk.signInWithCustomToken(auth,'synthetic-token');broken=false;
+ const wrong=w.PogoDev.providerHostAuthGate.install({...options,expectedSignInUid:'another-canary'});await assert.rejects(wrong.prepareCheckpointRecovery(),{code:'provider-auth/canary-owner-required'});
+ const review=await host.prepareCheckpointRecovery();await assert.rejects(host.confirmCheckpointRecovery(review),{code:'provider-auth/explicit-review-required'});
+ assert.equal(host.snapshot().authCoordinationBlocked,true);assert.equal(auth.currentUser.uid,'synthetic-owner');
+ await host.confirmCheckpointRecovery(review,{accepted:true});assert.equal(host.snapshot().authCoordinationBlocked,false);assert.equal(statuses.at(-1).status,'idle');
+ await host.prepareSignOut();await host.sdk.signOut(auth);assert.equal(auth.currentUser,null);assert.equal(checkpoint.status,'settled');
+});

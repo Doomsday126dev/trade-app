@@ -2,13 +2,13 @@
   'use strict';
   const root=global.PogoDev=global.PogoDev||{};
   function fail(code){throw Object.assign(new Error(code),{code});}
-  function install({enabled=false,auth,sdk,expectedSignInUid,locks=global.navigator?.locks,onStatus=()=>{},coordination}={}){
+  function install({enabled=false,auth,sdk,expectedSignInUid,locks=global.navigator?.locks,onStatus=()=>{},coordination,verifyCurrentAuth}={}){
     if(!enabled)return Object.freeze({available:false,sdk});
     if(!auth||!sdk||typeof expectedSignInUid!=='string'||!expectedSignInUid||!root.providerAuthCommitGate)fail('provider-auth/canary-config-required');
     let generation=0,lastUid=String(auth.currentUser?.uid||''),active=null,coordinationBlocked=false;
     const lifecycle=()=>{const uid=String(auth.currentUser?.uid||'');if(uid!==lastUid){lastUid=uid;generation++;}return`host-${generation}`;};
     if(!global.indexedDB&&!coordination)fail('provider-auth/coordination-unavailable');
-    const gate=root.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,signInWithCustomToken:sdk.signInWithCustomToken,getLifecycle:lifecycle,...(coordination?{coordination}:{})});
+    const gate=root.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,signInWithCustomToken:sdk.signInWithCustomToken,getLifecycle:lifecycle,verifyCurrentAuth:typeof verifyCurrentAuth==='function'?async evidence=>{if(evidence.expectedUid&&evidence.expectedUid!==expectedSignInUid)fail('provider-auth/canary-owner-required');return verifyCurrentAuth(evidence);}:undefined,...(coordination?{coordination}:{})});
     function status(value){try{onStatus(Object.freeze(value));}catch{}}
     function run(kind,work,user){
       if(coordinationBlocked)fail('provider-auth/coordination-blocked');
@@ -44,7 +44,9 @@
     };
     // Existing-account qualification never creates or deletes Firebase users.
     for(const name of['createUserWithEmailAndPassword','deleteUser'])wrapped[name]=()=>fail('provider-auth/account-creation-disabled');
-    return Object.freeze({available:true,sdk:Object.freeze(wrapped),prepareSignOut,snapshot:()=>Object.freeze({uid:String(auth.currentUser?.uid||''),lifecycleId:lifecycle(),authCoordinationBlocked:coordinationBlocked}),
+    return Object.freeze({available:true,sdk:Object.freeze(wrapped),prepareSignOut,prepareCheckpointRecovery:gate.prepareReconciliation,
+      async confirmCheckpointRecovery(ticket,options){const result=await gate.confirmReconciliation(ticket,options);coordinationBlocked=false;status({status:'idle',canCancel:true,authCoordinationBlocked:false});return result;},
+      snapshot:()=>Object.freeze({uid:String(auth.currentUser?.uid||''),lifecycleId:lifecycle(),authCoordinationBlocked:coordinationBlocked}),
       cancel(){if(coordinationBlocked)return Object.freeze({status:'coordination-blocked',canCancel:false});if(active?.committing)return Object.freeze({status:'committing',canCancel:false});if(active)active.canceled=true;return Object.freeze({status:'canceled',canCancel:true});}});
   }
   root.providerHostAuthGate=Object.freeze({install});
