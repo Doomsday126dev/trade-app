@@ -142,8 +142,44 @@
         "Charmander (Friede's Goggles)",
         "Charmander wearing Friede's goggles"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "announcement:2026-horizons:4:friede-goggles",
+      "sourceProvider": "margxt-reviewed-friede",
+      "sourcePage": "https://www.margxt.fr/evenement-celebration-pour-la-serie-pokemon-les-horizons-2026-avec-salameche-portant-les-lunettes-de-friede-dans-pokemon-go/",
+      "sourceUrl": "https://www.margxt.fr/wp-content/uploads/2026/09/004-Salameche-lunettes-Friede.webp",
+      "sourceFile": "004-Salameche-lunettes-Friede.webp",
+      "sourceFiles": {
+        "default": "004-Salameche-lunettes-Friede.webp",
+        "shiny": "004-Salameche-lunettes-Friede-shiny.webp",
+        "female": "004-Salameche-lunettes-Friede.webp",
+        "femaleShiny": "004-Salameche-lunettes-Friede-shiny.webp"
+      },
+      "sourceSha256": {
+        "default": "05bd7a5799b8f9be6644c17faa1197c87444762ba6d16dcb5d20c8ad879bcc19",
+        "shiny": "cd60d1c0bb34ce38a8d56b2c8bde912d53440015b3df359067baa3bfa584b274",
+        "female": "05bd7a5799b8f9be6644c17faa1197c87444762ba6d16dcb5d20c8ad879bcc19",
+        "femaleShiny": "cd60d1c0bb34ce38a8d56b2c8bde912d53440015b3df359067baa3bfa584b274"
+      },
+      "assets": {
+        "default": "assets/sprites/go/margxt-charmander-friede-goggles.png",
+        "shiny": "assets/sprites/go/margxt-charmander-friede-goggles-shiny.png",
+        "female": "assets/sprites/go/margxt-charmander-friede-goggles.png",
+        "femaleShiny": "assets/sprites/go/margxt-charmander-friede-goggles-shiny.png"
+      },
+      "sha256": {
+        "default": "6559cd9f5405025e4f7a2b722c746af5bfcb5a11edfb8cfa4316072cc13eaf67",
+        "shiny": "b33ea051c55033d1cdacb51a28ba9a05e140e4e520653a32179dfc4193c58a87",
+        "female": "6559cd9f5405025e4f7a2b722c746af5bfcb5a11edfb8cfa4316072cc13eaf67",
+        "femaleShiny": "b33ea051c55033d1cdacb51a28ba9a05e140e4e520653a32179dfc4193c58a87"
+      },
+      "sourceLabel": "Charmander Friede Goggles",
+      "identityEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "shinyEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "reviewedAt": "2026-10-26",
+      "conversion": "Original published WebP decoded by Chromium canvas to lossless PNG; all 262144 decoded RGBA components per image verified identical. No cropping, recolouring or generated artwork.",
+      "pixelReview": "Normal and Shiny original images viewed in labelled sheet. Charmander wears goggles around neck; evolutions wear them on forehead. Shared non-dimorphic costume models for gender qualifiers."
     },
     {
       "no": 4,
@@ -187,8 +223,44 @@
         "Charmeleon (Friede's Goggles)",
         "Charmeleon wearing Friede's goggles"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "announcement:2026-horizons:5:friede-goggles",
+      "sourceProvider": "margxt-reviewed-friede",
+      "sourcePage": "https://www.margxt.fr/evenement-celebration-pour-la-serie-pokemon-les-horizons-2026-avec-salameche-portant-les-lunettes-de-friede-dans-pokemon-go/",
+      "sourceUrl": "https://www.margxt.fr/wp-content/uploads/2026/09/005-Reptincel-lunettes-Friede.webp",
+      "sourceFile": "005-Reptincel-lunettes-Friede.webp",
+      "sourceFiles": {
+        "default": "005-Reptincel-lunettes-Friede.webp",
+        "shiny": "005-Reptincel-lunettes-Friede-shiny.webp",
+        "female": "005-Reptincel-lunettes-Friede.webp",
+        "femaleShiny": "005-Reptincel-lunettes-Friede-shiny.webp"
+      },
+      "sourceSha256": {
+        "default": "00c5b06c8884bd1ec24e667ce9cdf76c1a9b8e11017ed1d60705d6c57242de6a",
+        "shiny": "3167038c83168a250f7dd6e6b03175dd6d1689b0296e86ac53c0e6ec2b045ba8",
+        "female": "00c5b06c8884bd1ec24e667ce9cdf76c1a9b8e11017ed1d60705d6c57242de6a",
+        "femaleShiny": "3167038c83168a250f7dd6e6b03175dd6d1689b0296e86ac53c0e6ec2b045ba8"
+      },
+      "assets": {
+        "default": "assets/sprites/go/margxt-charmeleon-friede-goggles.png",
+        "shiny": "assets/sprites/go/margxt-charmeleon-friede-goggles-shiny.png",
+        "female": "assets/sprites/go/margxt-charmeleon-friede-goggles.png",
+        "femaleShiny": "assets/sprites/go/margxt-charmeleon-friede-goggles-shiny.png"
+      },
+      "sha256": {
+        "default": "a6eda64d3024f9e1870644a57be13f8783f32cf2cb92008929eca5d5514edf72",
+        "shiny": "1f597120cc65963bda3e997d5f9ea1095418dc95c3af6393e55f9a9c171a42c5",
+        "female": "a6eda64d3024f9e1870644a57be13f8783f32cf2cb92008929eca5d5514edf72",
+        "femaleShiny": "1f597120cc65963bda3e997d5f9ea1095418dc95c3af6393e55f9a9c171a42c5"
+      },
+      "sourceLabel": "Charmeleon Friede Goggles",
+      "identityEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "shinyEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "reviewedAt": "2026-10-26",
+      "conversion": "Original published WebP decoded by Chromium canvas to lossless PNG; all 262144 decoded RGBA components per image verified identical. No cropping, recolouring or generated artwork.",
+      "pixelReview": "Normal and Shiny original images viewed in labelled sheet. Charmander wears goggles around neck; evolutions wear them on forehead. Shared non-dimorphic costume models for gender qualifiers."
     },
     {
       "no": 5,
@@ -230,8 +302,44 @@
         "Charizard (Friede's Goggles)",
         "Charizard wearing Friede's goggles"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "announcement:2026-horizons:6:friede-goggles",
+      "sourceProvider": "margxt-reviewed-friede",
+      "sourcePage": "https://www.margxt.fr/evenement-celebration-pour-la-serie-pokemon-les-horizons-2026-avec-salameche-portant-les-lunettes-de-friede-dans-pokemon-go/",
+      "sourceUrl": "https://www.margxt.fr/wp-content/uploads/2026/09/006-Dracaufeu-lunettes-Friede.webp",
+      "sourceFile": "006-Dracaufeu-lunettes-Friede.webp",
+      "sourceFiles": {
+        "default": "006-Dracaufeu-lunettes-Friede.webp",
+        "shiny": "006-Dracaufeu-lunettes-Friede-shiny.webp",
+        "female": "006-Dracaufeu-lunettes-Friede.webp",
+        "femaleShiny": "006-Dracaufeu-lunettes-Friede-shiny.webp"
+      },
+      "sourceSha256": {
+        "default": "167d8230706e179bb15503b316051eb718b330aa1d75e59f6b8070f33638efb3",
+        "shiny": "29385db5f9035a79cd6eea06bc0b932e0806103874a79e973f65f68ae14c5b44",
+        "female": "167d8230706e179bb15503b316051eb718b330aa1d75e59f6b8070f33638efb3",
+        "femaleShiny": "29385db5f9035a79cd6eea06bc0b932e0806103874a79e973f65f68ae14c5b44"
+      },
+      "assets": {
+        "default": "assets/sprites/go/margxt-charizard-friede-goggles.png",
+        "shiny": "assets/sprites/go/margxt-charizard-friede-goggles-shiny.png",
+        "female": "assets/sprites/go/margxt-charizard-friede-goggles.png",
+        "femaleShiny": "assets/sprites/go/margxt-charizard-friede-goggles-shiny.png"
+      },
+      "sha256": {
+        "default": "85b5d333af78dc8f5e6d0ce169ccc1e4348f3fa8a14e0294eff10f47e669ee4f",
+        "shiny": "d7ed47cd5da10c4f996d757f7ae761c19d49a5afce5c51a513571e8871bac8e4",
+        "female": "85b5d333af78dc8f5e6d0ce169ccc1e4348f3fa8a14e0294eff10f47e669ee4f",
+        "femaleShiny": "d7ed47cd5da10c4f996d757f7ae761c19d49a5afce5c51a513571e8871bac8e4"
+      },
+      "sourceLabel": "Charizard Friede Goggles",
+      "identityEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "shinyEvidence": "https://pokemongo.com/es-MX/news/pokemon-horizons-celebration-event-2026",
+      "reviewedAt": "2026-10-26",
+      "conversion": "Original published WebP decoded by Chromium canvas to lossless PNG; all 262144 decoded RGBA components per image verified identical. No cropping, recolouring or generated artwork.",
+      "pixelReview": "Normal and Shiny original images viewed in labelled sheet. Charmander wears goggles around neck; evolutions wear them on forehead. Shared non-dimorphic costume models for gender qualifiers."
     },
     {
       "no": 6,
@@ -5034,24 +5142,135 @@
       "names": [
         "Teddiursa Witch Hat"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:216:standard:legacy:Teddiursa%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm216.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm216.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm216.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm216.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm216.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm216.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Teddiursa Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm216-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm216-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm216-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm216-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "3cb40bc9be34ba8bf896b5dc2c6cdc6bdd68b0389b10614f1624e2bc255d2e41",
+        "shiny": "e1571dce029315a41a8117f65a5834fbde0b1d0ee9b3c64aa46156a8e413537e",
+        "female": "3cb40bc9be34ba8bf896b5dc2c6cdc6bdd68b0389b10614f1624e2bc255d2e41",
+        "femaleShiny": "e1571dce029315a41a8117f65a5834fbde0b1d0ee9b3c64aa46156a8e413537e"
+      },
+      "gitBlobShas": {
+        "default": "1fb58be21efc25d19042c1c1af776aa3714310e4",
+        "shiny": "cf374b7ec6a3553c29ecaf5ccdb334bbc36ae5d4",
+        "female": "1fb58be21efc25d19042c1c1af776aa3714310e4",
+        "femaleShiny": "cf374b7ec6a3553c29ecaf5ccdb334bbc36ae5d4"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 217,
       "names": [
         "Ursaring Witch Hat"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:217:standard:legacy:Ursaring%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm217.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm217.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm217.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm217.cHALLOWEEN_2025.g2.icon.png",
+        "femaleShiny": "pm217.cHALLOWEEN_2025.g2.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm217.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Ursaring Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm217-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm217-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm217-challoween-2025-g2-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm217-challoween-2025-g2-s-icon.png"
+      },
+      "sha256": {
+        "default": "d150d9f5f119088782823681d30e8fc048d313cd860a94d85a19cbb56eaaafc3",
+        "shiny": "65802cfdb45544b5bbbf76eb367244a888e61f583ee7014ebb51d830cc748002",
+        "female": "97d075ce03ab5e308500dfb6a69cef969dd30e4980e4c4fce9482064613319d1",
+        "femaleShiny": "7e71ef839fbaf65acd08ded056876262a1ffe700d94b5197d364948b002e8f55"
+      },
+      "gitBlobShas": {
+        "default": "23b9025c320babb4a4b354a863a3283f5d7df5ad",
+        "shiny": "5656bc4c35040e1c4f26e2508e5cd843e6c14e25",
+        "female": "1135ae9e2a52ac9ea82295a4f7072bbfa9b40a29",
+        "femaleShiny": "a95598934fccd76c90878bcee10b9fa87eab6733"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Distinct default and g2 female models",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 222,
       "names": [
         "Galarian Corsola Pink Sunglasses"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm222.fSPRING_2026.icon.png",
+      "sourceFiles": {
+        "default": "pm222.fSPRING_2026.icon.png",
+        "shiny": "pm222.fSPRING_2026.s.icon.png",
+        "female": "pm222.fSPRING_2026.icon.png",
+        "femaleShiny": "pm222.fSPRING_2026.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm222.fSPRING_2026.icon.png",
+      "sourceLabel": "Galarian Corsola Pink Sunglasses",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm222-fspring-2026-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm222-fspring-2026-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm222-fspring-2026-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm222-fspring-2026-s-icon.png"
+      },
+      "sha256": {
+        "default": "03d0c4c2320cadb8fcf9a07f8e1440ad6cfb6b8816b89907ce8d9344451559a3",
+        "shiny": "e4d4ad3ac8300c764ed9bbf6fac9a881d6a492335719e9f5b6093033afc6922c",
+        "female": "03d0c4c2320cadb8fcf9a07f8e1440ad6cfb6b8816b89907ce8d9344451559a3",
+        "femaleShiny": "e4d4ad3ac8300c764ed9bbf6fac9a881d6a492335719e9f5b6093033afc6922c"
+      },
+      "gitBlobShas": {
+        "default": "8f8d6729695fe12207de152a9ceee358df609757",
+        "shiny": "39470083a81749816860b028badf1a65013293a0",
+        "female": "8f8d6729695fe12207de152a9ceee358df609757",
+        "femaleShiny": "39470083a81749816860b028badf1a65013293a0"
+      },
+      "identityEvidence": "https://pokemongo.com/news/sustainability-week-2026",
+      "shinyEvidence": "https://pokemongo.com/news/sustainability-week-2026",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 225,
@@ -6802,16 +7021,90 @@
       "names": [
         "Noibat Headband"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:714:standard:legacy:Noibat%20Headband",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm714.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm714.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm714.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm714.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm714.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm714.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Noibat Headband",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm714-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm714-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm714-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm714-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "9dac85c5e62d1f9f452d8c80f62d5ba5592e9f45a7c4985c010a17bb4e7dff25",
+        "shiny": "bfea5bbd8bd7d468d176386c3c8d4b77e14082613e3bfc7c6c6691d315c8aac4",
+        "female": "9dac85c5e62d1f9f452d8c80f62d5ba5592e9f45a7c4985c010a17bb4e7dff25",
+        "femaleShiny": "bfea5bbd8bd7d468d176386c3c8d4b77e14082613e3bfc7c6c6691d315c8aac4"
+      },
+      "gitBlobShas": {
+        "default": "ec42778e5891c0025101d9c6383edf55cbc72d6c",
+        "shiny": "ffc417cc1fff5d4496b65c838bfac9b942482b9e",
+        "female": "ec42778e5891c0025101d9c6383edf55cbc72d6c",
+        "femaleShiny": "ffc417cc1fff5d4496b65c838bfac9b942482b9e"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 715,
       "names": [
         "Noivern Headband"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:715:standard:legacy:Noivern%20Headband",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm715.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm715.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm715.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm715.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm715.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm715.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Noivern Headband",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm715-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm715-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm715-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm715-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "b816029326cda9e8278d6598733318a6c9b284acc7dd70ae07c72f138d6b5d94",
+        "shiny": "77fc897c05d8281634273b70cbed7098ca7bf4e938f37e1e6bdc31d32e2db46f",
+        "female": "b816029326cda9e8278d6598733318a6c9b284acc7dd70ae07c72f138d6b5d94",
+        "femaleShiny": "77fc897c05d8281634273b70cbed7098ca7bf4e938f37e1e6bdc31d32e2db46f"
+      },
+      "gitBlobShas": {
+        "default": "543ef0279d1c71335f1bf0171ce25f8f03a8e76e",
+        "shiny": "6b86ce983b1c62859e52dbe70c854059da736d48",
+        "female": "543ef0279d1c71335f1bf0171ce25f8f03a8e76e",
+        "femaleShiny": "6b86ce983b1c62859e52dbe70c854059da736d48"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 722,
@@ -7039,8 +7332,45 @@
       "names": [
         "Ursaluna Witch Hat"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:901:standard:legacy:Ursaluna%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm901.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm901.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm901.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm901.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm901.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm901.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Ursaluna Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm901-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm901-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm901-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm901-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "6e4bed80dc9018f0f553d559faff3bacecb40dabb51a2a95e1fa48dc69141352",
+        "shiny": "2819573bf679ce377fe0f03be06adfa2fd50b578a5f34bce996c0bff9679d8bf",
+        "female": "6e4bed80dc9018f0f553d559faff3bacecb40dabb51a2a95e1fa48dc69141352",
+        "femaleShiny": "2819573bf679ce377fe0f03be06adfa2fd50b578a5f34bce996c0bff9679d8bf"
+      },
+      "gitBlobShas": {
+        "default": "ff9a0ab4a198d58f6adb65c75839b0153d362516",
+        "shiny": "950065518650ef1db58be679d311e0e96a8dfde6",
+        "female": "ff9a0ab4a198d58f6adb65c75839b0153d362516",
+        "femaleShiny": "950065518650ef1db58be679d311e0e96a8dfde6"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
     },
     {
       "no": 907,

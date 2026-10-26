@@ -50,6 +50,21 @@ function validateCatalog(catalog,root){
       for(const[key,suffix]of Object.entries({default:'',female:'.g2',shiny:'.s',femaleShiny:'.g2.s'}))if(entry.sourceFiles?.[key]!== 'pm25.f'+form+suffix+'.icon.png'||!entry.assets[key]||!entry.sha256[key])fail('Unreviewed Pokemod variant');
       if(entry.sourceUrl!==base+entry.sourceFiles.default)fail('Unreviewed Pokemod URL');
     }
+    if(entry.sourceProvider==='pokemod-reviewed-released'){
+      const stems={'Teddiursa Witch Hat':'pm216.cHALLOWEEN_2025','Ursaring Witch Hat':'pm217.cHALLOWEEN_2025','Ursaluna Witch Hat':'pm901.cHALLOWEEN_2025','Galarian Corsola Pink Sunglasses':'pm222.fSPRING_2026','Noibat Headband':'pm714.cHALLOWEEN_2025','Noivern Headband':'pm715.cHALLOWEEN_2025'};
+      const stem=stems[entry.names[0]],female=entry.names[0]==='Ursaring Witch Hat';
+      if(!stem||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca'||entry.identityStatus!=='released')fail('Unreviewed released Pokemod identity/commit');
+      const sourceBase='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
+      if(entry.sourceUrl!==sourceBase+stem+'.icon.png')fail('Unreviewed released Pokemod URL');
+      for(const [key,suffix]of Object.entries({default:'',shiny:'.s',female:female?'.g2':'',femaleShiny:female?'.g2.s':'.s'}))if(!entry.assets?.[key]||entry.sourceFiles?.[key]!==stem+suffix+'.icon.png'||!entry.gitBlobShas?.[key])fail('Unreviewed released Pokemod variant');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-released-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceCommit','sourceFiles','assets','sha256','gitBlobShas','identityEvidence','shinyEvidence'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Released Pokemod review evidence changed');}
+    }
+    if(entry.sourceProvider==='margxt-reviewed-friede'){
+      const names={"Charmander (Friede's Goggles)":'004-Salameche',"Charmeleon (Friede's Goggles)":'005-Reptincel',"Charizard (Friede's Goggles)":'006-Dracaufeu'},stem=names[entry.names[0]];
+      if(!stem||entry.identityStatus!=='released'||entry.sourceUrl!=='https://www.margxt.fr/wp-content/uploads/2026/09/'+stem+'-lunettes-Friede.webp')fail('Unreviewed Friede identity/source');
+      for(const[key,suffix]of Object.entries({default:'',shiny:'-shiny',female:'',femaleShiny:'-shiny'}))if(entry.sourceFiles?.[key]!==stem+'-lunettes-Friede'+suffix+'.webp'||!entry.assets?.[key]||!entry.sourceSha256?.[key])fail('Unreviewed Friede variant');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/margxt-friede-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourcePage','sourceUrl','sourceFiles','sourceSha256','assets','sha256','identityEvidence','shinyEvidence','conversion'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Friede review evidence changed');}
+    }
     if(entry.sourceProvider==='dittobase-reviewed'){
       const forms={'Pikachu (Astronaut)':'pikachu-astronaut','Pikachu (Cosmog Spacesuit)':'pikachu-pxp-2026','Pikachu (Worlds 2026)':'pikachu-wcs-2026',"Pikachu (Professor Willow's Assistant)":'pikachu-anniversary-2026','Pikachu (PokeXciting Turquoise)':'pikachu-anniversary-2026-malaysia-01','Pikachu (PokeXciting Blue)':'pikachu-anniversary-2026-singapore-01'};
       const stem=forms[entry.names[0]];if(!stem||entry.sourceUrl!=='https://assets.dittobase.com/go/pokemon-unpadded/25-'+stem+'.png'||entry.sourcePage!=='https://www.dittobase.com/pokemon-go/pokedex/'+stem)fail('Unreviewed Dittobase identity/source');

@@ -22,8 +22,8 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:391,exact:375,unsupported:16});
-  assert.equal(report.candidates.length,16);
+  assert.deepEqual(report.counts,{canonical:391,exact:384,unsupported:7});
+  assert.equal(report.candidates.length,7);
   assert.equal(report.coverage.releaseEvidenceEntries,19);
   assert.equal(report.upcomingIdentities.length,3);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
@@ -79,15 +79,15 @@ test('newly released evidence identities missing from the catalog are flagged; f
   data.releases.entries.at(-1).releaseDate='2026-10-01';
   assert.equal(buildReport(data).missingIdentities.length,0);
 });
-test('released September costumes are unavailable records while later announcements stay queued',()=>{
+test('released September costumes have reviewed exact art while later announcements stay queued',()=>{
   const data=inputs();data.now=new Date('2026-09-17T00:00:00Z');
   const report=buildReport(data);
   assert.equal(report.upcomingIdentities.length,3);assert.equal(report.missingIdentities.length,0);
   for(const name of ["Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)"]){
-    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'unavailable',name);
+    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'exact',name);
     const pending=data.pending.entries.find(row=>row.displayIdentity===name);
-    assert.equal(pending?.identityStatus,'released',name);
-    assert.equal(pending?.artworkStatus,'unavailable',name);
+    assert.equal(pending,undefined,name);
+    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.identityStatus,'released',name);
   }
 });
 test('current review evidence records exact retrieval times, URLs, hashes and unresolved source gaps',()=>{
