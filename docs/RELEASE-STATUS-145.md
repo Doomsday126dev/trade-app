@@ -11,3 +11,9 @@ Automatic approval review denied the exact-source registration/workflow change t
 A read-only semantic comparison against the registered .144 runtime confirmed all 24 read sites, paths, feature gates, audiences and handler hashes are identical. This evidence is not itself release approval. The seven ambiguous costume gaps and baseline expiry `2026-11-02T00:40:09.188Z` remain; the explicitly reviewed baseline delta covers only 76 intended mapping changes and the explicit Detective 2023 record.
 
 Synthetic phone/desktop screenshots were rendered and inspected. Library delivery could not start because the current required prepared-upload companion `library_hosted_apps.py` was unavailable. No upload was attempted and no Library IDs were created for these screenshots.
+
+## Approved release resumed
+
+The user explicitly approved the exact-source registration and qualification-workflow update on October 26 at 12:40 UTC. The previously nonexecuted action was retried once and accepted. Exact-source, unknown-SHA and changed-private-target tests pass (66 total); the complete integration aggregate now passes 2,017 tests with 12 existing skips. Permissions, read paths, guards and original performance budgets are unchanged. Required CI and protected deployment remain mandatory; later starter/form/evolution extensions are excluded.
+
+Library previews were subsequently saved successfully: list `libfile_127ce1fe995481918cbb217c09390eb6` (settled-animation correction, version 1), picker `libfile_d0e296c0ba748191b8c0615db1dc87d9`, More phone `libfile_b9b25268af3c8191abb36556da9a0b88`, More desktop `libfile_039699233a1c81918b5f3e26f16d7da8`. The earlier failure paragraph is historical. Computed opacity is 1 after the existing 250ms row animation, with 15.1:1 name contrast; no runtime change was needed.
