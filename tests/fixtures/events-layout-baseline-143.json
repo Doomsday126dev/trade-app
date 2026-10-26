@@ -80,5 +80,7 @@
       "height": 568,
       "cardHeight": 262.875
     }
-  ]
+  ],
+  "crossPlatformToleranceCssPx": 1,
+  "platformEvidence": "Linux CI 40276518783 rendered 263.171875px versus Mac 262.875px at 320px with the same shipped layout. One CSS pixel accommodates OS font rasterization; original performance budgets remain unchanged."
 }
