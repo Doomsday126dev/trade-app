@@ -117,13 +117,13 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'exact-reviewed');
 });
 test('broken, tampered and wrong-source local asset mappings are reported',()=>{
-  const missing=inputs();missing.catalog.entries[0].assets.default='assets/sprites/go/missing.png';
+  const missing=inputs();missing.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').assets.default='assets/sprites/go/missing.png';
   assert.ok(buildReport(missing).problems.some(row=>row.kind==='local-integrity'&&/Missing/.test(row.message)));
-  const digest=inputs();digest.catalog.entries[0].sha256.default='0'.repeat(64);
+  const digest=inputs();digest.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sha256.default='0'.repeat(64);
   assert.ok(buildReport(digest).problems.some(row=>row.kind==='local-integrity'&&/digest mismatch/.test(row.message)));
-  const source=inputs();source.catalog.entries[0].sourceUrl='https://unapproved.invalid/a.png';
+  const source=inputs();source.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sourceUrl='https://unapproved.invalid/a.png';
   assert.ok(buildReport(source).problems.some(row=>row.kind==='source-provenance'));
-  const mapping=inputs();mapping.catalog.entries[0].sourceFile=mapping.catalog.entries[1].sourceFile;
+  const mapping=inputs();mapping.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sourceFile=mapping.catalog.entries[1].sourceFile;
   assert.ok(buildReport(mapping).problems.some(row=>row.kind==='source-provenance'));
 });
 test('untracked unavailable records and stale pending entries do not silently drift',()=>{

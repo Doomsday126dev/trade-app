@@ -1,0 +1,1465 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+  "scope": "28 explicitly ready costumes only: 12 Raichu, 9 Pichu, 7 Eevee. 47 original Shiny imports; normal bytes retained.",
+  "records": [
+    {
+      "name": "Raichu Beanie",
+      "no": 26,
+      "sourceId": "0026-00-00-09",
+      "sourceName": "Beanie Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-09-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-09-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "9b7a82e9d52107f09b96364d7139bcb2e946fac359b1db4d7bec9ac84d970c6f",
+        "femaleShiny": "1829993255e8f18ede4c1111984f62cccb2617e51a67955a9132f7068833960b"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-09%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-09%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "53704c76b70a3b28f50da6ceabc0a4bafb398929",
+        "femaleShiny": "ebabee8089b531b906a7f7eb16c0c40958c32e57"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-09.png",
+          "sha256": "f39ebc4058aac7f96315ccc1453008c33ae0f69a41e25663c25d0372279663c4",
+          "gitBlobSha": "2941dac6079da49cb5bfa80bb27bc2803e577233",
+          "bytes": 19575
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-09%2BF.png",
+          "sha256": "e7d3207c9dceb5ce7df9df2a1ce06f8d1f82afbb26193ff81fe4f353c6b790ea",
+          "gitBlobSha": "33a2183518525b213b9b4140bb4a54fc8ae8b832",
+          "bytes": 19026
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-beanie.png",
+          "sha256": "faf547ad04a94daa1bcb915962d43720919c00c65e4c61f37019a7574df3f105"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-beanie-f.png",
+          "sha256": "c84a4cc7755bccd5f7d3f0344a0f4f143cec5b4b3fc21447e35a41bd4ba4ca23"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Cherry Blossoms",
+      "no": 26,
+      "sourceId": "0026-00-00-12",
+      "sourceName": "Cherry blossom Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-12-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-12-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "b91a6a23bb83744e8733afccb306745ebaa9fc88ee9f0ff332e06bf0ad3f4a2f",
+        "femaleShiny": "d43d528e2fcb4d93fe1b79d8a3a18ae53f0cfb9cd2b506e8b3c7a6ab796bea00"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-12%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-12%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "c5e21f71ca8a438284a27cae23ff41fa186fc762",
+        "femaleShiny": "cf29d66bce93f0f54ff1754b674f452c3e38b3a4"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-12.png",
+          "sha256": "2bf590a318c4d67f19804f658932ece1a1ea128ca080d59619709669718325ee",
+          "gitBlobSha": "42dd8b034adbd4800730b34ae267a0dff4a42c5c",
+          "bytes": 17329
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-12%2BF.png",
+          "sha256": "71198454cdf74560e9fe58c422acca28b8fc518f95eec88bb502d5e3945b9877",
+          "gitBlobSha": "d5e1a8ed45277219a6b922f67684c1bf336a3d4e",
+          "bytes": 16610
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-cherry-blossoms.png",
+          "sha256": "9184755b5849e5f9825ebd822bff291b42685ade5f7f90bc509ebfad98124076"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-cherry-blossoms-f.png",
+          "sha256": "a2d54a366b3425f82831b1f2b56ac4a80251d1388265c0f17e11348c46f09643"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Flower Crown",
+      "no": 26,
+      "sourceId": "0026-00-00-07",
+      "sourceName": "Flower crown Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-07-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-07-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "9e507f5b063e2f8691e1a6d0ded87869e412ba0a2e60b393c5a5b515fc8b5531",
+        "femaleShiny": "05e3cb253f734c130940b371399d9c81819ed82c2ca7f5e3fd95529c6477f24f"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-07%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-07%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "66dd30a438e14a7b44401f80065ab91f7a4c8096",
+        "femaleShiny": "aab52d3f60f94f8ed3cd0faf148303db292d8ec8"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-07.png",
+          "sha256": "3103f1cb9e8a0d38ecf05dc0e6cf13f7bcf4b726e6e6e764bdc2d5ff010fede1",
+          "gitBlobSha": "a9d9d0002bc41ae522e3d75834182bf6c81763fa",
+          "bytes": 19732
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-07%2BF.png",
+          "sha256": "d05bdae7c16b5675c681366f8c77b9ad89a45fcfbb9ce1ea1a196dc762ce31aa",
+          "gitBlobSha": "1a33b79f46c29339e1354a4c46af558d3d4bbb0b",
+          "bytes": 19191
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-flower.png",
+          "sha256": "3cb1acef9df52528ff0f3165481a00678015270efab3b614509dc36303366917"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-flower-f.png",
+          "sha256": "8b2daab5f397841658e9068db85c75fd9df56ace4ec19d25fa0bcafdd3460a48"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Fragment Cap",
+      "no": 26,
+      "sourceId": "0026-00-00-06",
+      "sourceName": "Fragment hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-06-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-06-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "eeb1becdcfc8f06e8c4ca7a8eae71c75ecdb33c953e94bb219beaabc8bbd3e23",
+        "femaleShiny": "926c4694290d1d69e9eea915724b5ecb73e3c103297f4e34d6fa689892ad0a74"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-06%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-06%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "c243c0563e69e46a83947ac0b876800a2f341e55",
+        "femaleShiny": "081edcda4e119ab319f72384df56d46642d180ca"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-06.png",
+          "sha256": "7d3fc6359eafdfd244a15ea40f3637cc2ef14e119656e76fe4efa8780c3ae94a",
+          "gitBlobSha": "6d06630117b95c66b9f96f15327f85c109994378",
+          "bytes": 19566
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-06%2BF.png",
+          "sha256": "9719b87453f0bebfc1eed7274f36798de5de92e5f0dd1dc6613c873db4e9f083",
+          "gitBlobSha": "9b997f7312562642baaced90be148deb9d6a4215",
+          "bytes": 19045
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-thunderbolt-cap.png",
+          "sha256": "93f4dac128b54e47aeea41ad4eb8949141339ac8b24c3131c3bc33ba96519b1e"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-thunderbolt-cap-f.png",
+          "sha256": "5d1f6449d00784f24494fb2685f24aeb3c63131826df3ee8a23b5e67694e4039"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Holiday 2023",
+      "no": 26,
+      "sourceId": "0026-00-00-14",
+      "sourceName": "Holiday 2023 Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/winter-holiday-part-1-2023",
+        "https://www.serebii.net/pokemongo/events/winterholiday2023part1.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-14-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-14-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "28d7d0c79bc2d42b7e3c970492de190684b74e47a97599fc831a5e034d58bbce",
+        "femaleShiny": "9660097572615dabee407fcfd028aa7273e547c0f980aa91f7ec06dc7d84000d"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-14%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-14%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "b1a90cbbf00d85ced7fc5bee4db193c87a1e285b",
+        "femaleShiny": "6eb74811dd98a67218bc70fe076d8166b330407f"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-14.png",
+          "sha256": "321396ad880f7ed676b197df5b28e9a1255b3de68d12a279094e162c0715d207",
+          "gitBlobSha": "a307c96da82f0359c0feaaecb9b0b4c91db18d8c",
+          "bytes": 18316
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-14%2BF.png",
+          "sha256": "4bf2c7cc98a1e08a3142d452b013ecec65962778e67653753fa18f77f746006d",
+          "gitBlobSha": "4fb986741955b6cef54c57e5a830070975fcc630",
+          "bytes": 17793
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-holiday-2023.png",
+          "sha256": "8d57cbf0b8870df4b66f90a938dd7354694a4fa2e2483f21b0bb439b1e5c0070"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-holiday-2023-f.png",
+          "sha256": "ca218fc2067c5f80491c3064552ff9011dc8ce7a52d7c496f4354839f605a27c"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu New Year",
+      "no": 26,
+      "sourceId": "0026-00-00-11",
+      "sourceName": "New Year's Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-11-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-11-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "af30f3971047ffa92a919424d56706de07514b73dcb204c7868fb75b463fb15c",
+        "femaleShiny": "3e7ffaa70befaec9483e61dac27faf567552d97d4f38e9c25cd6fd49dac1d518"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-11%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-11%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "09b2bf4b2927b0a11e975a64b34b3e2c5313d53b",
+        "femaleShiny": "ec91e8ba0c0bfc9022ca3f56d7f58589cc1b5565"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-11.png",
+          "sha256": "9260466addcae1de321d6e046a90e6e855d74a12f577950a091c69916a38484b",
+          "gitBlobSha": "356e15f4a98ca0cd2d5c8774e1704335f7d01142",
+          "bytes": 19794
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-11%2BF.png",
+          "sha256": "cef4022d136edfb2878c17a3514bacd0f5fdb5737a7e1db825272da4ed059604",
+          "gitBlobSha": "ae6ad5a14e1dacca0373654993e376ffbd543060",
+          "bytes": 19258
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-new-year-hat.png",
+          "sha256": "ef8820538010bebd1a4eb3d1cff08053b9967c43b9c7c93f8fe623c1bf7ee7ae"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-new-year-hat-f.png",
+          "sha256": "124f2c7dca3fd5afaf0a11241a5f3e0606f01dd29a14b0c9088b2a2b5eb370aa"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Original Cap",
+      "no": 26,
+      "sourceId": "0026-00-00-03",
+      "sourceName": "Ash hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-03-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "11299d375535fe236c0532eb28e249262d204a838addf169a86dbd6c32c55335",
+        "femaleShiny": "23200008ca9c16f78031dda3403cad008d6d5cfcf2bc750f6fd30be97972a892"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-03%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-03%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "0f03faa958bb21d700a9f9861f46f5f0a27e0d14",
+        "femaleShiny": "f1c5e827de256f53cb2e2579eeb1bfd27282631c"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-03.png",
+          "sha256": "94d49da5abf4f80594da666a1e938ea1724da93438dd53f13417cb5df78fb987",
+          "gitBlobSha": "87992b9496c9df06278bbad763fffd39146ddd0d",
+          "bytes": 19672
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-03%2BF.png",
+          "sha256": "b4b35b4e30b948e6de8dcd13885c28d081be1dda644fa3d71b84eb273a57ca24",
+          "gitBlobSha": "eef366444fa237594ed21b38bd53c12fcece6d40",
+          "bytes": 19143
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-cap.png",
+          "sha256": "716653b57b2b1b295e7faff40c04a971b412cf759275efe32121f53ee9adb7eb"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-cap-f.png",
+          "sha256": "c9e42a2acd75635ebe626f84ed429015486b7a69cce8c0eb90472c263f79f57a"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Party Hat",
+      "no": 26,
+      "sourceId": "0026-00-00-02",
+      "sourceName": "Party hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-02-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "c94e7737517873a2a0a582f19dcb2c9ac0720e81f5c6c26d052525831001ea97",
+        "femaleShiny": "3d01daf260b34ec0954b128fde8df08da89ee81804bf36fca1900b1584ec3436"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-02%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-02%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "4909a3ef664b2b1269fe09a5980b309efba7f04b",
+        "femaleShiny": "bccda531177bb90c9d0f68cef2e216747811820a"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-02.png",
+          "sha256": "6d14f724577479d78ba8208787333f1982809fd26b656447c60a9ef21aa71256",
+          "gitBlobSha": "c0d46106bd4b41faf844040be15887a00e524a63",
+          "bytes": 20016
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-02%2BF.png",
+          "sha256": "3209e8c21d0f3e8fc48fd8e35a90b8b73d5f1a6734b82b5ae6e35cd0f346cce2",
+          "gitBlobSha": "63d9b1f71f76deae05e8668fb24db0a8818d5288",
+          "bytes": 19507
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-party-hat.png",
+          "sha256": "9a757ba0ecc08506e1bcf801ed62ec34acaf06a9d245a238520fab49c30aa06a"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-party-hat-f.png",
+          "sha256": "54a3cd5338ffaa580857f43eb6adb5a07f09546b8149ab3db198afbb7da7fdfd"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Santa Hat",
+      "no": 26,
+      "sourceId": "0026-00-00-01",
+      "sourceName": "Santa hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-01-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "0114e396a16faccc2232b7c2476d3b4b19fbd8e325b8903d703eb3f3d220e25f",
+        "femaleShiny": "bbb6e47d760d765798d6613cfa671913094f254727526f0b219d09f403840775"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-01%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "04b0b0bd59ba03f85f125281c6a847bd89911938",
+        "femaleShiny": "8a275e9273fd0c565b018c6e3622c03a5e16b90f"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-01.png",
+          "sha256": "40585a7a2ca30e7af6ecd86446103c6555d32cb9a32404a6c321aecc015a0504",
+          "gitBlobSha": "44d246606ad27a4da35b1ff0e6d9f833ce38320b",
+          "bytes": 20212
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-01%2BF.png",
+          "sha256": "73c69a24fcf5443aef13220d7f4c39e2f6a2a23d63d6aac5d5126eee6b65d2de",
+          "gitBlobSha": "3b000b3f1ef982a9accf7930448af55f7b471739",
+          "bytes": 19762
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-santa.png",
+          "sha256": "fd6ceebd822993665943823eb2faba1e2833e078e4aa26d6fca23d0eabf0838e"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-santa-f.png",
+          "sha256": "86161278e305fd63163b248159229ef2943b7c55e3e61b2b93392975761243fe"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Summer Style",
+      "no": 26,
+      "sourceId": "0026-00-00-05",
+      "sourceName": "Summer hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-05-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-05-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "bc60561d2fcfa349b239d7a785891b6631ee794d26422f557ff7b46583f769f2",
+        "femaleShiny": "31ca70813ccb5b219f022e19cd10ae10d5c7cf0d0a98d090a97ada4b498450c0"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-05%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-05%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "6fc8a2af844ae88bf3ce1696399f7f09d5fb3580",
+        "femaleShiny": "87ecd5c63b63d6b073363f1296ec84a6559a7b21"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-05.png",
+          "sha256": "b1a3757b54392d7102d7fbbc32bc8cb02e557b211679210b9fba2ef26eca6d7d",
+          "gitBlobSha": "13237c9cb3f0bcf0459a5cbd8adb6d607043c605",
+          "bytes": 21703
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-05%2BF.png",
+          "sha256": "1f602c40c4fe09501083022aa23623b2b806714cfb993280fe31c6e95e0b1918",
+          "gitBlobSha": "35939324eb09944ae3ac1991f342ab24cbf8d637",
+          "bytes": 20871
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-summer.png",
+          "sha256": "f7a8da40f626283f8aac93634e19f979f1ae95bec7ca4a771d85b067f0dab205"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-summer-f.png",
+          "sha256": "c4a5b4ddc56c2b40bb0df52f8e143c2ef6d2f81e9619b6834cf716b54cac94d0"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu Witch Hat",
+      "no": 26,
+      "sourceId": "0026-00-00-04",
+      "sourceName": "Witch hat Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-04-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "f3d51433eca618b011c944f8fde9918c602f201cd9c27e027b8e53404822d99f",
+        "femaleShiny": "b3f2264405708ed3606348bdd74756a2b55aeda042037f61a4d76b068e19c2fe"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-04%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-04%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "dd7e4291903996af85f53bd668578a7ff4f0a207",
+        "femaleShiny": "41ef78f79cdd5d5e61174e142b556eff1c0fcf83"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-04.png",
+          "sha256": "44cc642cfaf313309e9f5b368703b4ae87c8da5a7ddbd8e99f2a5f1e1b11f708",
+          "gitBlobSha": "16a4625c8aa3990b256413d13167519b20e7d828",
+          "bytes": 20424
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-04%2BF.png",
+          "sha256": "e416494f1623308104ea91a0564409d86485053748b3a329dc1374d2d1fc87d3",
+          "gitBlobSha": "467f46f8f1d522b916eed694d88a7897b5036886",
+          "bytes": 19887
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-witch.png",
+          "sha256": "2370dca4f8e4bff20f75fcac9b519f881f0ed1d0e9a6cdc4c6f9aed15b37dd1c"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-witch-f.png",
+          "sha256": "e7f015782c8961fef947875f8e1e7ac5ffdaad641e26e3c85d6b0fab88b86d50"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Raichu World Cap",
+      "no": 26,
+      "sourceId": "0026-00-00-10",
+      "sourceName": "World cap Raichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-10-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0026-00-00-10-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "0ebdcc9e91fd38c7827e2dcd37060b34244648d4c287cf7bae2f5776d9b0f796",
+        "femaleShiny": "1d44f82c7ccd11bcd0b94d31f4d68793c1e8be64fa1c1b6835608cabbb116038"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-10%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-10%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d788df2f4aaf8aede7592bdbf0de387dec7418fe",
+        "femaleShiny": "5bbd0b97eb29f6ff09c059778ecefd4ac2619e04"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-10.png",
+          "sha256": "73d92e77dcb6d1c2ce88a280abb61332d7654ff33468d3ed8a740939db3f2bec",
+          "gitBlobSha": "bec34ffef6cf949c12d8e8fc5912f07198aff638",
+          "bytes": 19134
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0026-00-00-10%2BF.png",
+          "sha256": "1d2acbc225e700edc3085a30cab5f741ae8804f99164248dfd5c85cd39e77d14",
+          "gitBlobSha": "1ced21d9ae6fe2ab22bfa264e9861ba31d11c463",
+          "bytes": 18625
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raichu-world-cap.png",
+          "sha256": "1bae4cd88e773b76a92c849b71a15b7ccf62db8a36e25eaa2ac467f4bf851d49"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raichu-world-cap-f.png",
+          "sha256": "49526a1e13ab8c2d22061bff32e1883849a368b6b055bf15492b2ca31ef0e7ab"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Cherry Blossom)",
+      "no": 133,
+      "sourceId": "0133-00-00-04",
+      "sourceName": "Cherry blossom Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-04-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "a3fa9e7d724e31dfb43c538dc1551d033eeccffd4eab230721a891a68d3844f1",
+        "femaleShiny": "8b45253901aa0d9d987bb3706967f45d032dd6a4e0ee3bcd8669016e6183131d"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-04%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-04%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "5a813010f647775ce5299a9e46669d152c33ebe0",
+        "femaleShiny": "3062efdaf44422b5d35a728a163cbcbcb3e88665"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-04.png",
+          "sha256": "abd49eb731942b8b12b11771d4309a227570d1fd7f2c4b0c99d8440e45df1cba",
+          "gitBlobSha": "111b79b1a3a7607a31adf753c56a511f08ccd4e0",
+          "bytes": 7611
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-04%2BF.png",
+          "sha256": "2aaeee07bea49139733a2f01fbc37c8591fb3af56f0ea8d6bb17691ac0401126",
+          "gitBlobSha": "fd2396b9f409971b4bc0a9901eb5ee21d77d80fa",
+          "bytes": 7595
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-cherry-blossoms.png",
+          "sha256": "426d30207cf59c5de1bc065af7a859bb47326b5a482dce75ed3683c6a1d6e208"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-cherry-blossoms-f.png",
+          "sha256": "55284da6af7de6b00581d64814c55d700cd41831358c932541ad702bc75ef848"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Explorer)",
+      "no": 133,
+      "sourceId": "0133-00-00-05",
+      "sourceName": "Explorer Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-05-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-05-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "69805289bb9a529b1c786ec1b88cc32fe586eecc179bafc8155f9de90c1e191f",
+        "femaleShiny": "e7090ad6b9d87171fd4ccee964249c1979ab58a110e2010e5926e7783691f64a"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-05%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-05%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "28373d61ae478db3a40baa5c4499f06ec3327a8b",
+        "femaleShiny": "5941b4e628aa68fa7b9b94b601ce58dd20aa4488"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-05.png",
+          "sha256": "4299a0662c9d581679fff233e309e8277d44cb603d9c8e8511abec9bc4056346",
+          "gitBlobSha": "824291c7a383e833179eefa625bd4e981a8034b7",
+          "bytes": 7879
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-05%2BF.png",
+          "sha256": "0d10722dec016c695dc7b27ab17cd64a3a735be64984a5627a966732a6533f0c",
+          "gitBlobSha": "c4f7a3828bdaf4b98b38d42e9867b5ed6032263e",
+          "bytes": 7945
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-explorer-hat.png",
+          "sha256": "993c2f6f24e3854bb720d80667c828aba93ad9f7c293199ba60d2d6d7ee4315b"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-explorer-hat-f.png",
+          "sha256": "c7e6cb13433ca5198584d89a48227561494c18005b1cc7edf8f9e06eda66da82"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Flower Crown)",
+      "no": 133,
+      "sourceId": "0133-00-00-01",
+      "sourceName": "Flower crown Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-01-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "8abe71e8b0745e8b7b0bf106c869a8890c6aed72f72d95263abb75aea8bd9510",
+        "femaleShiny": "d06e49128fb88470161c1a6f5140634f110c86fc6e18cd7808e32d6adf2a0e3b"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-01%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "5f19d7967688f9edd553ed60660fbf224d38b27b",
+        "femaleShiny": "1a7c707524d6348b397d23c594f1b8f2a6acf616"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-01.png",
+          "sha256": "d2a99b29e9616a275c2b421cbc2aab1358755b0baf71ecdeb2265d1b07101009",
+          "gitBlobSha": "f765fc5de50663ea164f1c783cbb10c478d68f70",
+          "bytes": 8178
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-01%2BF.png",
+          "sha256": "5149a0ceab91933e8dd62a6865ba4874f3ac7232a775984680828789212d4274",
+          "gitBlobSha": "c749734e6e3fbef9ecd424a6c37016dcb46a8f17",
+          "bytes": 8214
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-flower.png",
+          "sha256": "1e552af73d3a52538d276173bc94b1c8f116623bd62f4af9f35776882a588ec0"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-flower-f.png",
+          "sha256": "fa45ee7bc1b0d0b560f7f0f1b92e60a7798492bb4c0accb79161cc70dbb2df88"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Holiday)",
+      "no": 133,
+      "sourceId": "0133-00-00-03",
+      "sourceName": "Holiday hat Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-03-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "d6f20117189a214532b6670d67e4fb8d8b68f9532107725a30fbe8fa24c1f32d",
+        "femaleShiny": "376eecea48634241519fd4fb149855849a75afa0c25f5c3a3be1ac3be250a29a"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-03%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-03%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "e8ce6bcd476801854b9d24cfe9f2235c4e7b0494",
+        "femaleShiny": "5bd5ed9a485cb1aea1deee4a1e41b5cb7cbf3ab5"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-03.png",
+          "sha256": "4e888f241b29005fb523136ff870c6de0d4228f4b934e75fcc77e86c35abce96",
+          "gitBlobSha": "c63e056a68638425836a803f92835aad0fd9e86d",
+          "bytes": 7902
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-03%2BF.png",
+          "sha256": "654e15287d6a44bd42afa195a9e6ad549733def226c11592aaacc239cc127ec7",
+          "gitBlobSha": "398d8733aa44356a1c6333b6a8fc6f439c61d8aa",
+          "bytes": 7850
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-holiday-hat.png",
+          "sha256": "8fad400042f13a71701d12b396abc915cd32bf3a2eb286ec2773dd9dcc8cc77f"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-holiday-hat-f.png",
+          "sha256": "f7d72e3ba4c889e17801f788f5dd85890ed3647bb5ec5ded380083be1d3b1a22"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Moon)",
+      "no": 133,
+      "sourceId": "0133-00-00-07",
+      "sourceName": "Moon crown Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-07-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-07-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "13c5fea37de59560f6eb252b7b5fe6f3be13b763e44670051beb28e385ebfd09",
+        "femaleShiny": "24a0525488a254292e7f2d412817d9a6e316e46a175b48861b4b813bf554de84"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-07%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-07%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "55235f651bdaf9acf1a9547da73041140677dd43",
+        "femaleShiny": "d0966cdd8664a177938737530682c33db16c5643"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-07.png",
+          "sha256": "d70f82be4bfe691de0f3857da7a391e5878ab696e4d27f2b3d1b73cfaa0b6160",
+          "gitBlobSha": "9b3c34c84b13ff4bc591c96a7437c6d8c442fd92",
+          "bytes": 7860
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-07%2BF.png",
+          "sha256": "41f85116088917c233f6e9c2d2435fdf0f18814328423a5532be50fde9159ce0",
+          "gitBlobSha": "c123dfc7cc9a9b3532896e6bbd8acad1b5deece2",
+          "bytes": 7914
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-moon-crown.png",
+          "sha256": "8e9ba4cfd8aac09e63329dbd47998f2e39358d6996ab2fee6b4e3e0967206c8e"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-moon-crown-f.png",
+          "sha256": "48ca41a078adcdd6f38e9e6f0bad55eb7563b72d108691a8825da3a38e1686dd"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Red Party)",
+      "no": 133,
+      "sourceId": "0133-00-00-02",
+      "sourceName": "Party hat Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-02-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "07f83a09d8553fc4116c2b30cddd018992f7941b31067ddb79e6e4a153020337",
+        "femaleShiny": "533564a778fb7b294a8966ba2eef9d4c3580330b00d4cff655f5874da952e886"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-02%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-02%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "bb6d2c487aa6dcfec999016044731128c3cbaea0",
+        "femaleShiny": "54b7e477e800b5a8911702bc91e3faed7b06d86d"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-02.png",
+          "sha256": "a9b5777fef853cebfbe412f5bd3cc8035746186edd18c811ca64c7be042d9fd1",
+          "gitBlobSha": "d80e563c9243522b2e7c76131a5b2ed161681e94",
+          "bytes": 8642
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-02%2BF.png",
+          "sha256": "6378afa0b92ba72877e793bbcbd3b534b506320c5eb3be011724bb6df488de91",
+          "gitBlobSha": "f5fda0edb4572a36806fe6cfe70f7fba04cbdc1a",
+          "bytes": 8672
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-red-party-hat.png",
+          "sha256": "fbacc71d42061d67711050f06f85354e4781ea2a2fb64ee56aef5e7a2e8c41dd"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-red-party-hat-f.png",
+          "sha256": "6a7c6cc556d382682357b6cd81b1a57b95fc5524a79f736af87804787c6c5196"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Eevee (Sun)",
+      "no": 133,
+      "sourceId": "0133-00-00-06",
+      "sourceName": "Sun crown Eevee",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "distinct-tail-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-06-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-06-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "c19f78862f453fb8ddbbf8e90add1e3a698ff2d52ced5c9a1fa115d5bb84f693",
+        "femaleShiny": "c38bb4d34bdb2601c3c50e9b00e8a5af3967dae53224253e4f7c6a2eb7a55cc2"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-06%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-06%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "48d1ad37a60ca1fcd8f923f45ea8b42dbfd91be5",
+        "femaleShiny": "f8586473f5158ffdfbb3f5c0285ed629ee107f84"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-06.png",
+          "sha256": "c4ca6817411bbdad667a645bac5655d05ecf7658bebead99a2cd007c0005ed0d",
+          "gitBlobSha": "9e9763a410d1980d043ebd5efab9a55720bdf511",
+          "bytes": 8023
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0133-00-00-06%2BF.png",
+          "sha256": "8a2d37b20842ed5bf9fd4c3497bb272643e5b03356a66068a2223ab6b3eb7bfd",
+          "gitBlobSha": "e52fb9ac595616c99a3c6a44c238a6eadc96919a",
+          "bytes": 8081
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/eevee-sun-crown.png",
+          "sha256": "fecb05ebcb26bb6203b02d7d1ce80565714d3f5f65ffc07b8d4ed26e0520e84c"
+        },
+        "female": {
+          "asset": "assets/sprites/go/eevee-sun-crown-f.png",
+          "sha256": "bb3d128e9cb3849986fd27b82e4eafc7a6c67cb5922280114af2dfeced812033"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Ash)",
+      "no": 172,
+      "sourceId": "0172-00-00-01",
+      "sourceName": "Ash hat Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "0343ee06b5bb62d41a2858d966e407d8f925ccf915affdcff5ffe9da36042e42",
+        "femaleShiny": "0343ee06b5bb62d41a2858d966e407d8f925ccf915affdcff5ffe9da36042e42"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "c8a1e350ed493c3604a7f1abd122c03c9de8d1c0",
+        "femaleShiny": "c8a1e350ed493c3604a7f1abd122c03c9de8d1c0"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-01.png",
+          "sha256": "7833f004ceb2572b94c9e84b465dbf983dcc07788be4bf5e1a2b66d04c196b21",
+          "gitBlobSha": "b4b1515e6e16aa4650d4b33f471c65be6e2149ca",
+          "bytes": 7132
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-cap.png",
+          "sha256": "760b4169dbbb463b90133744d055f65a8dcc41add976b65d21cb14b4df02016e"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Cherry Blossom)",
+      "no": 172,
+      "sourceId": "0172-00-00-09",
+      "sourceName": "Cherry blossom Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-09-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-09-shiny.png"
+      },
+      "sha256": {
+        "shiny": "051da2a0b775970971e83f2d5d33a5f26913259e1425198d57ebab414c3357eb",
+        "femaleShiny": "051da2a0b775970971e83f2d5d33a5f26913259e1425198d57ebab414c3357eb"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-09%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-09%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d4542e4d2bac4e31e8213ed330bc630726dd1636",
+        "femaleShiny": "d4542e4d2bac4e31e8213ed330bc630726dd1636"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-09.png",
+          "sha256": "6fa9b7c6076e19c43279326fb4633f835851b809523fe721e37d6d76f73062e5",
+          "gitBlobSha": "e4fc20c7c0de55e2be1570b5122e59cdb772303d",
+          "bytes": 7359
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-cherry-blossoms.png",
+          "sha256": "d6c8b8f5490234fe9084eca430239e807cbe4012dc9b9da78c24f69b3680cf38"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Flower Crown)",
+      "no": 172,
+      "sourceId": "0172-00-00-07",
+      "sourceName": "Flower crown Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-07-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-07-shiny.png"
+      },
+      "sha256": {
+        "shiny": "30a90663ec1c65ca17f2e47b72c7e98a2ec0ef507b01d3d09b05f897abc0b6d2",
+        "femaleShiny": "30a90663ec1c65ca17f2e47b72c7e98a2ec0ef507b01d3d09b05f897abc0b6d2"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-07%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-07%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "7c1e4a1a8f96b6f6e61780f6b20f5c3304b12824",
+        "femaleShiny": "7c1e4a1a8f96b6f6e61780f6b20f5c3304b12824"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-07.png",
+          "sha256": "ab5d49b0f5038ea448bc2360feea2adfaa35dcda468a4e81bc7346cadcb067cb",
+          "gitBlobSha": "d7e636e1164c2963c454384172dec24dfa1d2265",
+          "bytes": 8814
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-flower.png",
+          "sha256": "c3ad27f16998a15277958a3ea24bc95bf38938f245a4e2e498f95689c1243bb7"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (New Year)",
+      "no": 172,
+      "sourceId": "0172-00-00-08",
+      "sourceName": "New Year's Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-08-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-08-shiny.png"
+      },
+      "sha256": {
+        "shiny": "a932e3e9e37431cb39d3ea54552575528ed812ef226a4733f9a01a69086ac8ce",
+        "femaleShiny": "a932e3e9e37431cb39d3ea54552575528ed812ef226a4733f9a01a69086ac8ce"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-08%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-08%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "bb8894aeaa617ab89e35a2d07142ba52b24e8526",
+        "femaleShiny": "bb8894aeaa617ab89e35a2d07142ba52b24e8526"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-08.png",
+          "sha256": "4cc4e3bcfd02234114dd3b098eca3b3e2f96d4aad238984624937038dfd0144c",
+          "gitBlobSha": "22e2a047472813c381264fd9b0d39e490d24f09b",
+          "bytes": 8886
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-new-year-hat.png",
+          "sha256": "40d27a2cd179f86a3e6b12a64b05b6d2eff525bf9954b4f6f0be31aa42085a5e"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Party)",
+      "no": 172,
+      "sourceId": "0172-00-00-04",
+      "sourceName": "Party hat Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-04-shiny.png"
+      },
+      "sha256": {
+        "shiny": "715a1e6d0a49e58b3f7151f0a6ebbfdff12cb2b5649612274da98a546cab4b7c",
+        "femaleShiny": "715a1e6d0a49e58b3f7151f0a6ebbfdff12cb2b5649612274da98a546cab4b7c"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-04%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-04%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "03f0a5aecb99a38691974268027ca99e8458d0f4",
+        "femaleShiny": "03f0a5aecb99a38691974268027ca99e8458d0f4"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-04.png",
+          "sha256": "4f88d94e0be6149cf928466bbdb90b6200755fc5542dee37d713ed6cfcb8915a",
+          "gitBlobSha": "9064b0b63c80394d313810d261c6b727eb64d13e",
+          "bytes": 10279
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-party-hat.png",
+          "sha256": "63f194b79078cc667ed01df5c2d54bb4b133ad0e8d1aea7301344169b9fd7c66"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Santa)",
+      "no": 172,
+      "sourceId": "0172-00-00-03",
+      "sourceName": "Santa hat Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-03-shiny.png"
+      },
+      "sha256": {
+        "shiny": "147135b6e892f0e7b6720b9356cc57fe934f0d4ea174b99c785817ff5434e0f9",
+        "femaleShiny": "147135b6e892f0e7b6720b9356cc57fe934f0d4ea174b99c785817ff5434e0f9"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-03%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-03%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d87dc39242f581e018c5bda66367639405e456a0",
+        "femaleShiny": "d87dc39242f581e018c5bda66367639405e456a0"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-03.png",
+          "sha256": "837fcc89f01b1fe1f3555003cbd20a8b78e38c12decfa75c4222933dfa37f6b2",
+          "gitBlobSha": "6974059df3947aea7905c35aafe7337d0f2e417f",
+          "bytes": 8868
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-santa.png",
+          "sha256": "90dc492664eeb921d0dd0355c00416224ac353fb0d07fa1dcab948ba8e085981"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Summer)",
+      "no": 172,
+      "sourceId": "0172-00-00-05",
+      "sourceName": "Summer hat Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-05-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-05-shiny.png"
+      },
+      "sha256": {
+        "shiny": "6b5467c2d3190274f4320d2729a884b6d6f473a4f3af1c1b21a327a52193cc02",
+        "femaleShiny": "6b5467c2d3190274f4320d2729a884b6d6f473a4f3af1c1b21a327a52193cc02"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-05%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-05%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "56fca0c523caeb6e43383bd8141185aae04853dc",
+        "femaleShiny": "56fca0c523caeb6e43383bd8141185aae04853dc"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-05.png",
+          "sha256": "1db8f324b44b09c91e640c120951d2cf2d4f5c49399c949b711685faec5d7754",
+          "gitBlobSha": "5074c29ae1406795eae75914ceda641c447bb98c",
+          "bytes": 10054
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-summer.png",
+          "sha256": "11a7b6fa8eeea91d2b0ef1dfe7d14251f1e8d1101cdbe41805b77b992f5cd008"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Winter)",
+      "no": 172,
+      "sourceId": "0172-00-00-06",
+      "sourceName": "Beanie Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-06-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-06-shiny.png"
+      },
+      "sha256": {
+        "shiny": "2aa499b60b1401537a99a329d2d645b453cf771d780f54a59f4f59bd942a4b36",
+        "femaleShiny": "2aa499b60b1401537a99a329d2d645b453cf771d780f54a59f4f59bd942a4b36"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-06%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-06%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "474b5da79607cad359127f8b61cec91e3f0f19c7",
+        "femaleShiny": "474b5da79607cad359127f8b61cec91e3f0f19c7"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-06.png",
+          "sha256": "76609b37b7d8465f3975553ac69586748fea265e2aeef150daf134f532dd6fbc",
+          "gitBlobSha": "1aadc78af6e1994bc7ae13ca2037261f9752f353",
+          "bytes": 8496
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-beanie.png",
+          "sha256": "a5aeb808fb43bdb256876339a0382f660ebb24c3c243c8b55ecf5e478bd02893"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    },
+    {
+      "name": "Pichu (Witch)",
+      "no": 172,
+      "sourceId": "0172-00-00-02",
+      "sourceName": "Witch hat Pichu",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseQualification": "Species and exact outfit individually matched to released-Shiny evidence by independent research; not inferred from mined asset existence. No exact debut date asserted.",
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-02-shiny.png"
+      },
+      "sha256": {
+        "shiny": "d7ecbc8fee3bc650bb8c7ef268d22b80cafdff15b30bc28b87c5b5459304a80f",
+        "femaleShiny": "d7ecbc8fee3bc650bb8c7ef268d22b80cafdff15b30bc28b87c5b5459304a80f"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-02%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-02%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "bfb489e218cb67a985ce6f0093e8ed765082bd58",
+        "femaleShiny": "bfb489e218cb67a985ce6f0093e8ed765082bd58"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0172-00-00-02.png",
+          "sha256": "6dec4b5f2fe1392455583780a52f7c6cc04d12eae16956681e5d4d7acf81fcc9",
+          "gitBlobSha": "cf1122dd5d9b0ade40cd74a34965a4609c87a382",
+          "bytes": 9173
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/pichu-witch.png",
+          "sha256": "70ce58c7aae074ad4bd19eee3ddf538b0eda8e50a8faf5dd9efd28e1f9f56c3b"
+        }
+      },
+      "pixelReview": "All 94 original references locally inspected on four labelled alpha-composited sheets. Exact costumes, normal/Shiny colors and distinct Raichu/Eevee tail tips checked."
+    }
+  ],
+  "holds": [
+    {
+      "name": "Raichu Detective",
+      "status": "requires-identity-selection",
+      "reason": "Generic saved label lacks 2019/2023 identity; no merged mapping or saved-data rewrite."
+    }
+  ]
+}
