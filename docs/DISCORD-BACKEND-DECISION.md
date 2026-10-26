@@ -205,3 +205,39 @@ checks cover that behavior and complete acknowledged/reviewed evidence across
 reopen. The earlier passive method was removed from `accountSyncJournal.js`,
 restoring that shipped file byte-for-byte. All loaded production asset contents
 therefore remain outside this milestone's final diff.
+
+## Concrete staging package (pending; no changes performed)
+
+The read-only staging runtime inspection identified the existing identity
+`e1-identity-authority-runtime@trainer-hub-staging-37ib4wct.iam.gserviceaccount.com`.
+Use the existing `e1-identity-authority` service in `us-central1` and private
+Firestore database `phase-e-identity`; no new service/account is proposed.
+The owner must still select the Discord developer account/team and dedicated
+staging Firebase UID/Discord test identity. No saved account was used to create
+consent or resolve that choice.
+
+Proposed Secret Manager resource IDs, in `trainer-hub-staging-37ib4wct`, are
+`discord-oauth-client-secret`, `discord-oauth-state-key-v1` and
+`discord-oauth-subject-key-v1`. They do not exist as a result of this work.
+Approve access only for that existing private runtime and only to those resources.
+The exact signing identity should be that same existing runtime; any needed
+`iam.serviceAccounts.signBlob` grant is limited to it. Separately review the
+narrow `firebaseauth.users.get` read capability. No broad Token Creator role,
+user modification/deletion capability or service-account key is requested.
+
+TTL proposal: field `deleteAfter` on private collection groups
+`discordOAuthFlows`, `discordLinkReviews`, and `discordRateLimits` only.
+Mappings, unlink tombstones and operation/import receipts are not TTL targets.
+The approved canary must already have an accepted account/reciprocal handle and
+working PIN fallback. Its first persistent Discord linkage requires specific
+approval in addition to existing credential sign-in permission.
+
+Expected side effects are one application configuration, managed secret versions,
+narrow runtime grants, expiry cleanup and a separately approved staging release.
+No paid resource has been provisioned. Secret storage/access, runtime/database
+usage and TTL deletes may incur metered costs; a reliable total is not known.
+See [Secret Manager pricing](https://cloud.google.com/secret-manager/pricing) and
+[Firestore TTL billing](https://firebase.google.com/docs/firestore/ttl).
+The callback remains the exact GitHub Pages URL above and scope remains `identify`.
+The local reconciliation/import qualification and its unsupported cases are in
+[the bounded follow-up](PROVIDER-MIGRATION-RECONCILIATION-IMPORT.md).

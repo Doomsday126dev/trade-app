@@ -143,6 +143,6 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       return{status:'unlinked',replay:false};
     });
   }
-  return Object.freeze({readFoundation,readProviderLifecycle,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
+  return Object.freeze({readFoundation,readFoundationInTransaction:(tx,{uid})=>foundation(tx,uid),readProviderLifecycle,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
 }
 module.exports={createFirestoreDiscordOAuthStore};
