@@ -5,6 +5,8 @@ test('gender picker restricts only reviewed costumes; cancellation writes nothin
 test('existing invalid saved gender stays selected and unchanged through priority edit; explicit correction is required',async({page})=>{await normalFixture(page);expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Pikachu (Cosmog Spacesuit)',gender:'m',p:'H'}]))).toBe(true);await settled(page);await page.evaluate(()=>openCombinedEditor());await page.locator('#combined-name').fill('Pikachu (Cosmog Spacesuit)');await page.keyboard.press('Escape');const key=await page.evaluate(()=>{let e=productDeclarations().entries.find(e=>e.name==='Pikachu (Cosmog Spacesuit)');return combinedKey(e)});await page.evaluate(k=>openCombinedEditor(k),key);await expect(page.locator('#combined-gender')).toHaveValue('m');await expect(page.locator('#combined-gender-hint')).toBeVisible();await expect(page.locator('#combined-gender-hint')).toContainText('unchanged');await currentControls.priority(page,'L');await page.locator('#combined-save').click();await settled(page);expect(await page.evaluate(()=>productDeclarations().entries.find(e=>e.name==='Pikachu (Cosmog Spacesuit)').gender)).toBe('m');await page.evaluate(()=>{let e=productDeclarations().entries.find(e=>e.name==='Pikachu (Cosmog Spacesuit)');openCombinedEditor(combinedKey(e))});await page.locator('#combined-gender').selectOption('f');await page.locator('#combined-save').click();await settled(page);expect(await page.evaluate(()=>productDeclarations().entries.find(e=>e.name==='Pikachu (Cosmog Spacesuit)').gender)).toBe('f');await page.evaluate(()=>openCombinedEditor());await page.locator('#combined-name').fill('Pikachu (Astronaut)');await page.keyboard.press('Escape');await page.evaluate(()=>{let e=productDeclarations().entries.find(e=>e.name==='Pikachu (Cosmog Spacesuit)');openCombinedEditor(combinedKey(e))});await expect(page.locator('#combined-gender')).toHaveValue('f');});
 test('Share tabs switch by keyboard and cancel; priority sections retain one explicit search Copy action and inline validation',async({page},info)=>{
  await fixture(page);
+ await expect(page.locator('#combined-list .wants-section').first()).toBeVisible();
+ expect(await page.locator('#combined-list .wants-section').count()).toBeGreaterThan(0);
  for(const section of await page.locator('#combined-list .wants-section').all())await expect(section.locator('.wants-section-search [data-contextual-copy]')).toHaveCount(1);
  await page.evaluate(()=>openProductShare('link'));
  await expect(page.locator('#product-share-tab-link')).toHaveAttribute('aria-selected','true');
@@ -17,7 +19,10 @@ test('Share tabs switch by keyboard and cancel; priority sections retain one exp
  await page.keyboard.press('Escape');await expect(page.locator('#product-share-modal')).toBeHidden();
  await page.evaluate(()=>openCombinedEditor());await page.locator('#combined-name').fill('Pikachu (Valor)');await page.locator('#combined-save').click();
  await expect(page.locator('#combined-error')).toContainText('Choose a priority');
- // The current editor reserves room for eligibility help; test usable controls rather than the old fieldset's pixel height.
+ // Current approved two-row layout measures 133px (two 48px targets, 8px gap and legend).
+ // Retain compactness with 1px browser rounding allowance, alongside minimum touch targets.
+ await expect(page.locator('.want-requirements .want-choice')).toHaveCount(4);
+ expect(await page.locator('#combined-shiny').evaluate(el=>el.closest('fieldset').getBoundingClientRect().height)).toBeLessThanOrEqual(134);
  for(const choice of await page.locator('.want-requirements .want-choice').all()){const box=await choice.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);expect(box.width).toBeGreaterThanOrEqual(44);}
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
