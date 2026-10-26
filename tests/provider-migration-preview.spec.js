@@ -62,12 +62,14 @@ test('real Web Locks serialize competing auth commits across browser tabs',async
   for(const target of[page,other]){
     await target.addScriptTag({path:path.join(__dirname,'../js/dev/providerAuthCommitGate.js')});
     await target.evaluate(()=>{
-      const key='synthetic-cross-tab-auth';let hook=null;
-      const auth={get currentUser(){const uid=localStorage.getItem(key);return uid?{uid}:null;}};
-      window.commitGate=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,getLifecycle:()=>localStorage.getItem(key)||'signed-out',
+      let hook=null;
+      // Deliberately stale isolated observers: the shared IDB checkpoint must arbitrate.
+      const auth={currentUser:null};
+      window.commitGate=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,getLifecycle:()=>auth.currentUser?.uid||'signed-out',
         beforeAuthStateChanged:(a,callback)=>{hook=callback;return()=>{hook=null;};},
-        signInWithCustomToken:async(a,uid)=>{await new Promise(resolve=>setTimeout(resolve,100));await hook({uid});localStorage.setItem(key,uid);return{user:{uid}};}});
+        signInWithCustomToken:async(a,uid)=>{await new Promise(resolve=>setTimeout(resolve,100));await hook({uid});auth.currentUser={uid};return{user:{uid}};}});
     });
+    await target.evaluate(()=>commitGate.ready());
   }
   const results=await Promise.all([
     page.evaluate(()=>commitGate.commitCustomToken({customToken:'synthetic-owner-a',expectedUid:'synthetic-owner-a',expectedLifecycle:'signed-out'}).then(()=>({ok:true}),error=>({ok:false,code:error.code}))),

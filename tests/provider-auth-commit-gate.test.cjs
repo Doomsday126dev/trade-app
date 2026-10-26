@@ -5,9 +5,9 @@ function setup(){
   let tail=Promise.resolve(),lifecycle='out-1',hooks=new Set();const auth={currentUser:null},calls=[];
   const locks={request(name,options,work){const next=tail.then(work);tail=next.catch(()=>{});return next;}};
   async function transition(user){for(const hook of hooks)await hook(user);auth.currentUser=user;lifecycle=`life-${lifecycle}`;}
-  const create=()=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,getLifecycle:()=>lifecycle,
-    beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async(a,token)=>{calls.push(token);await transition({uid:'synthetic-owner'});return{user:auth.currentUser};}});
-  return{auth,create,transition,calls,hooks,get lifecycle(){return lifecycle;}};
+  const create=(overrides={})=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,getLifecycle:()=>lifecycle,
+    beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async(a,token)=>{calls.push(token);await transition({uid:'synthetic-owner'});return{user:auth.currentUser};},...overrides});
+  return{auth,create,transition,calls,hooks,locks,get lifecycle(){return lifecycle;}};
 }
 test('exact mapped UID commits once under a shared cross-tab lock',async()=>{
   const h=setup(),one=h.create(),two=h.create(),input={customToken:'synthetic-custom-token',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle};
@@ -48,4 +48,19 @@ test('later middleware cannot turn an accepted commit into a false cancellation 
   });
   await ready;assert.equal(boundary,true);active=false;release();
   assert.equal((await pending).user.uid,'synthetic-owner');assert.equal(h.auth.currentUser.uid,'synthetic-owner');
+});
+
+test('shared checkpoint refuses a stale tab even when its local observer still says signed out',async()=>{
+ const a=setup(),b=setup();let record={revision:0,uid:null,status:'settled'};
+ const coordination={read:async()=>({...record}),write:async value=>{record={...value};}};
+ const first=a.create({coordination}),second=b.create({coordination,locks:a.locks});await Promise.all([first.ready(),second.ready()]);
+ const results=await Promise.allSettled([first.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:a.lifecycle}),second.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:b.lifecycle})]);
+ assert.deepEqual(results.map(row=>row.status),['fulfilled','rejected']);assert.equal(results[1].reason.code,'provider-auth/session-changed');assert.equal(b.calls.length,0);
+});
+test('an interrupted checkpoint blocks new SDK requests and failed final storage does not misreport a committed sign-in',async()=>{
+ const h=setup();let record={revision:0,uid:null,status:'settled'};
+ const coordination={read:async()=>({...record}),write:async value=>{if(value.status==='settled')throw Error('storage unavailable');record={...value};}};
+ const gate=h.create({coordination});const result=await gate.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle});
+ assert.equal(result.user.uid,'synthetic-owner');assert.equal(result.authCoordinationBlocked,true);assert.equal(record.status,'pending');
+ const b=setup(),other=b.create({coordination,locks:h.locks});await assert.rejects(other.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:b.lifecycle}),{code:'provider-auth/session-changed'});assert.equal(b.calls.length,0);
 });

@@ -2,12 +2,13 @@
   'use strict';
   const root=global.PogoDev=global.PogoDev||{};
   function fail(code){throw Object.assign(new Error(code),{code});}
-  function install({enabled=false,auth,sdk,expectedSignInUid,locks=global.navigator?.locks,onStatus=()=>{}}={}){
+  function install({enabled=false,auth,sdk,expectedSignInUid,locks=global.navigator?.locks,onStatus=()=>{},coordination}={}){
     if(!enabled)return Object.freeze({available:false,sdk});
     if(!auth||!sdk||typeof expectedSignInUid!=='string'||!expectedSignInUid||!root.providerAuthCommitGate)fail('provider-auth/canary-config-required');
     let generation=0,lastUid=String(auth.currentUser?.uid||''),active=null;
     const lifecycle=()=>{const uid=String(auth.currentUser?.uid||'');if(uid!==lastUid){lastUid=uid;generation++;}return`host-${generation}`;};
-    const gate=root.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,signInWithCustomToken:sdk.signInWithCustomToken,getLifecycle:lifecycle});
+    if(!global.indexedDB&&!coordination)fail('provider-auth/coordination-unavailable');
+    const gate=root.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,signInWithCustomToken:sdk.signInWithCustomToken,getLifecycle:lifecycle,...(coordination?{coordination}:{})});
     function status(value){try{onStatus(Object.freeze(value));}catch{}}
     function run(kind,work,user){
       if(active)return Promise.reject(Object.assign(new Error('provider-auth/operation-pending'),{code:'provider-auth/operation-pending'}));

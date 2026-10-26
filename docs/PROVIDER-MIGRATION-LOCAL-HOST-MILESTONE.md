@@ -58,3 +58,29 @@ secret/HMAC material, narrow existing runtime permissions, private-store TTL,
 and dedicated-canary OAuth grant/release. No credential, grant, IAM, Rules or
 Firebase provider changes were made, and Firebase configuration read 403s were
 not bypassed. PIN remains available. No merge or deployment is authorized.
+
+## Cross-tab checkpoint follow-up
+
+CI exposed two successful competing synthetic sign-ins despite a Web Lock: a
+cached local auth/storage observer is not a fresh shared-state proof. The gate
+now opens `pogo-auth-commit-ledger` in IndexedDB and checks its revision and UID
+in a fresh transaction under the Web Lock. It records pending before invoking
+Firebase, and settled only after outcome validation. Another gate initialized
+against an older revision must restart/reload; it cannot act on a stale observer.
+Browser/host qualification fails closed without IndexedDB. No token is stored.
+
+A crash or uncertain write leaves pending and blocks further operations. There
+is deliberately no automatic lease expiry or reset: those could allow an older
+Firebase request to commit after another tab takes over. A reviewed local
+checkpoint recovery flow, including quiescing old tabs and reconciling actual
+Firebase identity, remains unimplemented and required before broader activation.
+If auth succeeds but the settled checkpoint cannot be written, the gate returns
+that successful result with `authCoordinationBlocked:true`; it does not falsely
+report failed/canceled sign-in. The host must expose that warning before rollout.
+This ledger coordinates cooperating candidate tabs, not old unguarded releases.
+
+Verification includes deliberately stale isolated browser observers (20 repeated
+passes), pending/storage-failure cases, and two independent Firebase 12.14.0 SDK
+Auth instances against the demo emulator. The SDK test proves only one instance
+installs its mapped UID. Production persistence propagation and interrupted-tab
+recovery remain separate canary qualifications, with no live grant performed.

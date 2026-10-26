@@ -7,7 +7,8 @@ test('host canary wraps existing SDK mutations, blocks wrong UID and refuses acc
   const change=async user=>{for(const hook of hooks)await hook(user);auth.currentUser=user;return{user};};
   const sdk={beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async(a,uid)=>change({uid}),signInWithEmailAndPassword:async(a,uid)=>change({uid}),signInWithPopup:async(a,p)=>change({uid:p.uid}),signOut:async()=>{await change(null);},linkWithPopup:async user=>({user}),unlink:async user=>user,updatePassword:async()=>{}};
   assert.equal(w.PogoDev.providerHostAuthGate.install({sdk}).sdk,sdk);
-  const host=w.PogoDev.providerHostAuthGate.install({enabled:true,auth,sdk,expectedSignInUid:'synthetic-owner',locks:{request:(name,opts,work)=>{const next=tail.then(work);tail=next.catch(()=>{});return next;}}});
+  let checkpoint={revision:0,uid:null,status:'settled'};const coordination={read:async()=>({...checkpoint}),write:async value=>{checkpoint={...value};}};
+  const host=w.PogoDev.providerHostAuthGate.install({coordination,enabled:true,auth,sdk,expectedSignInUid:'synthetic-owner',locks:{request:(name,opts,work)=>{const next=tail.then(work);tail=next.catch(()=>{});return next;}}});
   await assert.rejects(host.sdk.signInWithEmailAndPassword(auth,'wrong-owner'),{code:'provider-auth/unexpected-account'});assert.equal(auth.currentUser,null);
   await host.sdk.signInWithEmailAndPassword(auth,'synthetic-owner');assert.equal(auth.currentUser.uid,'synthetic-owner');
   assert.throws(()=>host.sdk.unlink({uid:'synthetic-owner',providerData:[{providerId:'password'}]},'google.com'),{code:'provider-auth/session-changed'});

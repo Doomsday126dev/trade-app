@@ -66,4 +66,18 @@ test('Firebase 12.14.0 blocking hook rejects wrong-UID sign-in and permits only 
   lateRelease();assert.equal((await late).status,'existing-account');assert.equal(auth.currentUser?.uid,a.user.uid);
   assert.ok(statuses.includes('committing'));assert.equal(client.getState().status,'idle');
   removeLater();lateGate.dispose();
+  await sdk.signOut(auth);
+  const secondApp=appSdk.initializeApp({projectId:'demo-pogo-discord',apiKey:'synthetic-demo-api-key',authDomain:'localhost'},`discord-second-${suffix}`);
+  t.after(()=>appSdk.deleteApp(secondApp));
+  const secondAuth=sdk.initializeAuth(secondApp,{persistence:sdk.inMemoryPersistence});sdk.connectAuthEmulator(secondAuth,`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`,{disableWarnings:true});await secondAuth.authStateReady();
+  let checkpoint={revision:0,uid:null,status:'settled'};
+  const coordination={read:async()=>({...checkpoint}),write:async value=>{checkpoint={...value};}};
+  const gates=[auth,secondAuth].map(instance=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth:instance,locks,coordination,beforeAuthStateChanged:sdk.beforeAuthStateChanged,getLifecycle:()=>instance.currentUser?.uid||'signed-out',signInWithCustomToken:sdk.signInWithCustomToken}));
+  await Promise.all(gates.map(gate=>gate.ready()));
+  const tokens=await Promise.all([a.user.uid,b.user.uid].map(uid=>adminAuthApi.getAuth(adminApp).createCustomToken(uid)));
+  const competing=await Promise.allSettled(gates.map((gate,index)=>gate.commitCustomToken({customToken:tokens[index],expectedUid:[a.user.uid,b.user.uid][index],expectedLifecycle:'signed-out'})));
+  assert.equal(competing.filter(value=>value.status==='fulfilled').length,1);
+  assert.equal(competing.find(value=>value.status==='rejected').reason.code,'provider-auth/session-changed');
+  assert.equal([auth,secondAuth].filter(instance=>instance.currentUser).length,1);gates.forEach(gate=>gate.dispose());
+
 });
