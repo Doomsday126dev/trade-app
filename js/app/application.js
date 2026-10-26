@@ -491,7 +491,7 @@ function renderCombinedList(model=productDeclarations()){
     const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}</span>
+      <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}</span>
       <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${maxPresentationMarkup(e)}${escHtml(maxPresentationName(e.dn))}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
@@ -6981,10 +6981,12 @@ async function renderProductShareImage(entries,owner){
       const artX=x+(cellWidth-76)/2;
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
-      if(maxIcon)drawImageContain(ctx,maxIcon,x+4,rowTop+54,22,22);
       if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
-      nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
+      nameLines.forEach((line,lineIndex)=>{
+        if(maxIcon&&lineIndex===0){const textWidth=ctx.measureText(line).width,iconSize=12,gap=4;const start=x+(cellWidth-textWidth-iconSize-gap)/2;drawImageContain(ctx,maxIcon,start,rowTop+77,iconSize,iconSize);ctx.textAlign='left';ctx.fillText(line,start+iconSize+gap,rowTop+88);ctx.textAlign='center';}
+        else ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14);
+      });
       ctx.fillStyle='#b8c2c9';
       detailLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+(nameLines.length+lineIndex)*14));
       ctx.textAlign='left';

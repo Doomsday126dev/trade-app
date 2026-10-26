@@ -2570,3 +2570,6 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 #combined-list .wants-name{font-weight:600}
 #combined-list .wants-section-search .contextual-copy-actions .btn{background:transparent;border-color:transparent;color:var(--muted);font-weight:500}
 #combined-list .wants-section-search .contextual-copy-actions .btn:hover{background:var(--surface-hover);color:var(--text)}
+
+/* HOME Sizzlipede: visible alpha bounds y=363..503 of 512; center the visible body in its slot. */
+.myrow-sprite-wrap.sprite-sizzlipede-home > img.myrow-sprite{translate:0 calc(var(--sprite-slot-list) * -0.4325);}
