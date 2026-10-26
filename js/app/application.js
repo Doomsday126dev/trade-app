@@ -21,7 +21,10 @@ async function loadFirebaseSdk(){
         if(typeof install!=='function')throw new Error('Provider auth canary gate is unavailable');
         window.__pogoProviderHostAuthGate=install({enabled:true,auth:early.auth,sdk:authMod,
           expectedSignInUid:window.__POGO_PROVIDER_AUTH_GATE_CANARY_UID__,
-          onStatus:state=>window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}))});
+          onStatus:state=>{
+            window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}));
+            if(state.authCoordinationBlocked)toast('Signed in, but account changes are blocked by an unresolved sign-in checkpoint.',6000);
+          }});
         authMod=window.__pogoProviderHostAuthGate.sdk;
       }
       initializeApp=appMod.initializeApp;
@@ -5266,8 +5269,8 @@ async function doLogin(){
 
 async function logout(){
   if(window.__pogoProviderHostAuthGate?.available&&auth){
-    try{await window.__pogoProviderHostAuthGate.prepareSignOut();}catch{
-      toast('Sign-in is still finishing. Please try signing out again.',4500);return;
+    try{await window.__pogoProviderHostAuthGate.prepareSignOut();}catch(error){
+      toast(error?.code==='provider-auth/commit-in-progress'?'Sign-in is still finishing. Please try signing out again.':'Sign-out is blocked by an unresolved sign-in checkpoint. This account is still signed in.',6000);return;
     }
   }
   closeAccountMenu(false);

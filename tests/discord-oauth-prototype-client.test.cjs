@@ -130,3 +130,9 @@ test('cancel during a pending auth commit invalidates the original commit guard'
   }});h.continuation('sign-in');const pending=h.client.completeFromLocation();await ready;h.client.cancel();release();
   await assert.rejects(pending,{code:'discord/canceled'});assert.deepEqual(h.signIns,[]);
 });
+
+test('successful sign-in with blocked coordination propagates warning and never returns to idle',async()=>{
+ const h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-token'},signInWithCustomToken:async()=>({user:{uid:'synthetic-owner'},authCoordinationBlocked:true})});
+ h.continuation('sign-in');const result=await h.client.completeFromLocation();assert.equal(result.status,'existing-account');assert.equal(result.authCoordinationBlocked,true);
+ assert.equal(h.client.getState().status,'coordination-blocked');assert.equal(h.client.cancel().canCancel,false);await assert.rejects(h.client.begin('sign-in'),{code:'provider-auth/coordination-blocked'});
+});

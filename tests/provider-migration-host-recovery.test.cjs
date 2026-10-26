@@ -55,3 +55,19 @@ test('application SDK binding installs the canary wrapper before exposing mutati
   assert.equal(calls.length,enabled?1:0);assert.equal(vm.runInContext('signInWithEmailAndPassword',context),enabled?wrapped.signInWithEmailAndPassword:raw.signInWithEmailAndPassword);
  }
 });
+
+test('completed auth with failed checkpoint remains visibly blocked and logout preserves local identity',async()=>{
+ const w=load(['js/dev/providerAuthCommitGate.js','js/dev/providerHostAuthGate.js']),auth={currentUser:null},hooks=new Set(),statuses=[];
+ let checkpoint={revision:0,uid:null,status:'settled'},signOuts=0;
+ const coordination={read:async()=>({...checkpoint}),write:async value=>{if(value.status==='settled')throw Error('synthetic storage failure');checkpoint={...value};}};
+ const sdk={beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async()=>{const user={uid:'synthetic-owner'};for(const hook of hooks)await hook(user);auth.currentUser=user;return{user};},signOut:async()=>{signOuts++;auth.currentUser=null;}};
+ const host=w.PogoDev.providerHostAuthGate.install({enabled:true,auth,sdk,coordination,expectedSignInUid:'synthetic-owner',locks:{request:async(name,options,work)=>work()},onStatus:value=>statuses.push(value)});
+ const result=await host.sdk.signInWithCustomToken(auth,'synthetic-token');assert.equal(result.authCoordinationBlocked,true);assert.equal(statuses.at(-1).status,'coordination-blocked');
+ await assert.rejects(host.prepareSignOut(),{code:'provider-auth/coordination-blocked'});assert.equal(auth.currentUser.uid,'synthetic-owner');assert.equal(signOuts,0);
+ const source=fs.readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8'),start=source.indexOf('async function logout(){'),end=source.indexOf('// ── NAV',start),messages=[];
+ const context=vm.createContext({window:{__pogoProviderHostAuthGate:host},auth,cur:'SyntheticTrainer',toast:value=>messages.push(value)});
+ await vm.runInContext(source.slice(start,end)+'\nlogout()',context);assert.equal(vm.runInContext('cur',context),'SyntheticTrainer');assert.match(messages[0],/still signed in/);assert.equal(signOuts,0);
+ // A fresh host must detect pending storage too, without relying on the old latch.
+ const fresh=w.PogoDev.providerHostAuthGate.install({enabled:true,auth,sdk,coordination,expectedSignInUid:'synthetic-owner',locks:{request:async(name,options,work)=>work()}});
+ await assert.rejects(fresh.prepareSignOut(),{code:'provider-auth/coordination-blocked'});
+});

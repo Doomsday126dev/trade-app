@@ -30,6 +30,15 @@
     const ready=coordination?coordination.read().then(value=>{observedRevision=value.revision;}):Promise.resolve();
     // Avoid an unhandled rejection before the first operation; run still fails closed.
     ready.catch(()=>{});
+    async function assertSession(){
+      return locks.request(LOCK,{mode:'exclusive'},async()=>{
+        await ready;if(disposed)throw failure('provider-auth/disposed');
+        if(coordination){const value=await coordination.read();
+          if(value.status!=='settled'||value.revision!==observedRevision||value.uid!==null&&value.uid!==String(auth.currentUser?.uid||''))throw failure('provider-auth/coordination-blocked');
+        }
+        return true;
+      });
+    }
     async function run({expectedUid,expectedLifecycle,kind='preserve',isCurrent:externalCurrent=()=>true,isActive:operationActive=()=>true,onCommitBoundary=()=>{}}={},work){
       if(disposed)throw failure('provider-auth/disposed');
       if(!['preserve','sign-in','sign-out'].includes(kind)||typeof work!=='function'||typeof expectedLifecycle!=='string')throw failure('provider-auth/invalid-operation');
@@ -84,7 +93,7 @@
       if(typeof customToken!=='string'||customToken.length<8||customToken.length>8192||!expectedUid)throw failure('provider-auth/token-invalid');
       return run({expectedUid,expectedLifecycle,kind:'sign-in',isCurrent,isActive,onCommitBoundary},()=>{if(!isCurrent())throw failure('provider-auth/session-changed');return signInWithCustomToken(auth,customToken);});
     }
-    return Object.freeze({run,commitCustomToken,ready:()=>ready,dispose(){disposed=true;}});
+    return Object.freeze({run,commitCustomToken,ready:()=>ready,assertSession,dispose(){disposed=true;}});
   }
   root.providerAuthCommitGate=Object.freeze({LOCK,createProviderAuthCommitGate});
 })(window);

@@ -25,8 +25,8 @@
     if(candidateMode&&redirect.pathname!=='/trade-app/auth/discord.html')throw failure('discord/callback-invalid');
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
-    let generation=0,activeRun=null,review=null;
-    const getState=()=>Object.freeze({status:activeRun?.committing?'committing':activeRun?'pending':review?'review':'idle',canCancel:!activeRun?.committing});
+    let generation=0,activeRun=null,review=null,coordinationBlocked=false;
+    const getState=()=>Object.freeze({status:coordinationBlocked?'coordination-blocked':activeRun?.committing?'committing':activeRun?'pending':review?'review':'idle',canCancel:!coordinationBlocked&&!activeRun?.committing});
     function notify(){try{onStatus(getState());}catch{/* UI observers cannot alter auth decisions. */}}
     function session(operation){
       const value=getSessionBinding();
@@ -60,6 +60,7 @@
       return data;
     }
     async function exclusive(work){
+      if(coordinationBlocked)throw failure('provider-auth/coordination-blocked');
       if(activeRun)throw failure('discord/operation-pending');
       const run={generation:++generation,controller:global.AbortController?new global.AbortController():null};
       run.check=()=>{if(generation!==run.generation||run.controller?.signal.aborted)throw failure('discord/canceled');};
@@ -124,10 +125,11 @@
         if(typeof signInWithCustomToken!=='function')throw failure('discord/sign-in-unavailable');
         run.check();assertCurrent(pending);
         // The host must serialize ALL auth actions, including cross-tab changes, with this commit.
-        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,
+        const committed=await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,
           onCommitBoundary:()=>{run.check();assertCurrent(pending);run.committing=true;notify();},
           isActive:()=>{try{run.check();return true;}catch{return false;}},isCurrent:()=>{try{run.check();assertCurrent(pending);return true;}catch{return false;}}});
-        run.check();return Object.freeze({status:'existing-account'});
+        run.check();coordinationBlocked=committed?.authCoordinationBlocked===true;
+        return Object.freeze({status:'existing-account',...(coordinationBlocked?{authCoordinationBlocked:true}:{})});
       }
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status'])&&result.status==='onboarding-required')return Object.freeze({status:'onboarding-required'});
       throw failure('discord/response-invalid');
@@ -141,6 +143,7 @@
       review=null;return Object.freeze({status:result.status});
     });}
     function cancel(){
+      if(coordinationBlocked)return Object.freeze({status:'coordination-blocked',canCancel:false});
       if(activeRun?.committing)return Object.freeze({status:'committing',canCancel:false});
       generation++;const previous=activeRun;activeRun=null;previous?.controller?.abort();review=null;clearPending();notify();
       return Object.freeze({status:'canceled',canCancel:true});

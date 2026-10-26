@@ -94,3 +94,19 @@ The first harness run lacked local idb/postinstall module mappings and timed out
 before initialization; adding those local dependencies produced 11/11 passing
 emulator tests. This qualifies actual SDK browser persistence in the emulator,
 not live Discord grants, production network behavior or interrupted-tab recovery.
+
+## Blocked-checkpoint UI and logout contract
+
+A focused review found that the host discarded the successful-commit warning
+and could clear local identity before a subsequent sign-out rejected the pending
+checkpoint. The host now latches and exposes `authCoordinationBlocked`, emits
+`coordination-blocked` rather than idle, and displays a signed-in warning. The
+Discord client preserves the flag in its successful result and blocked state.
+`prepareSignOut` checks the shared checkpoint under the Web Lock before the
+application clears local identity; both the original host and a fresh host refuse
+a pending checkpoint. The UI explicitly says the account remains signed in.
+The original local-cleanup-before-Firebase-signout ordering is retained for a
+permitted logout. These changes do not reconcile/reset a pending checkpoint;
+that recovery path remains unimplemented. Regressions inject a settled-write
+failure, verify actual application logout leaves local identity intact, and
+verify the Discord result/state never silently drops the warning.
