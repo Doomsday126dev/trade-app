@@ -1,0 +1,64 @@
+name: Isolated costume runtime qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/costume-runtime-review.yml'
+permissions:
+  contents: read
+jobs:
+  costume-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions --ignore-scripts
+      - name: Official browser dependency archive
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Qualify exact isolated runtime and unchanged browser budgets
+        run: |
+          runtime_dir=$(mktemp -d)
+          baseline_dir=$(mktemp -d)
+          git archive 8b26bf6ea28d865b09263f868cee6c3279690b60 | tar -x -C "$runtime_dir"
+          git archive 748ad63a7b0d2e1efbc7689b660483b95fdab4e3 | tar -x -C "$baseline_dir"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$runtime_dir/node_modules"
+          ln -s "$GITHUB_WORKSPACE/functions/node_modules" "$runtime_dir/functions/node_modules"
+          cd "$runtime_dir"
+          node --test tests/*.test.cjs
+          npm run check:pages-release
+          node scripts/generate-costume-sprite-runtime.cjs --check
+          npx playwright test --config playwright.gender-cleanup.config.cjs
+          npx playwright test --config playwright.comparison-shiny.config.cjs
+          python3 -m http.server 8878 --bind 127.0.0.1 --directory "$runtime_dir" >/tmp/runtime142-server.log 2>&1 &
+          candidate_pid=$!
+          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/runtime141-server.log 2>&1 &
+          baseline_pid=$!
+          trap 'kill "$candidate_pid" "$baseline_pid"' EXIT
+          for port in 8878 8879; do
+            for attempt in {1..30}; do
+              if curl --fail --silent "http://127.0.0.1:$port/" >/dev/null; then break; fi
+              sleep 1
+            done
+          done
+          set +e
+          echo 'Historical .141 baseline (diagnostic)'
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:8879 npm run test:performance:browser
+          baseline_status=$?
+          echo 'Exact .142 candidate (all original budgets mandatory)'
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
+          candidate_status=$?
+          set -e
+          echo "Baseline status: $baseline_status (diagnostic); candidate status: $candidate_status (mandatory)"
+          test "$candidate_status" -eq 0

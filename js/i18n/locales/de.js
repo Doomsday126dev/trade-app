@@ -250,7 +250,7 @@
     ,"import.ambiguous":"Mehrere Varianten passen und sind zunächst nicht ausgewählt. Gewünschte Formen oder Kostüme wählen. Alle auswählen umfasst jede angezeigte Variante."
     ,"share.liveList":"Live-Liste teilen"
     ,"share.liveCaption":"Öffentliche Seite ohne Konto"
-    ,"share.gameSearch":"In Pokémon GO suchen"
+    ,"share.gameSearch":"Pokémon GO-Suchstring"
     ,"share.searchCaption":"Eigene Pokémon im Spiel suchen"
     ,"share.imageSnapshot":"Bild teilen"
     ,"share.textSnapshot":"Text kopieren"
@@ -328,5 +328,10 @@
     ,"admin.roleUnconfirmed":"Rollenänderung nicht bestätigt. Vor erneutem Versuch Synchronisierung prüfen."
     ,"admin.requestDenialUnconfirmed":"Ablehnung nicht bestätigt. Vor erneutem Versuch aktuellen Anfragestatus prüfen."
     ,"events.groupVenueUnknown":"Veranstaltungszeit unbestätigt"
+    ,"share.format":"Format"
+    ,"costume.genderOnly":"Nur {gender}"
+    ,"costume.savedConflict":"Gespeicherten Wert prüfen"
+    ,"costume.genderConflict":"Das gespeicherte Geschlecht ist für dieses Kostüm nicht erschienen. Dein Eintrag bleibt unverändert; wähle nur dann ein gültiges Geschlecht, wenn du ihn korrigieren möchtest."
+    ,"costume.genderUnsupported":"{name}: Das gespeicherte Geschlecht gehört nicht zu einer erschienenen Form dieses Kostüms."
   });
 })(window);

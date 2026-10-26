@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "scope": "Eleven recently imported Pikachu identities only. No blanket rule for older or future costumes. Evidence reviewed with parent research; not inferred from generic asset filenames.",
+  "records": [
+    {
+      "name": "Pikachu (Cosmog Spacesuit)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-pxp-2026",
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Per-costume database/collector evidence, not filename inference."
+    },
+    {
+      "name": "Pikachu (Fossil)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/PokemonGoTrade/comments/1tw7e9n/lf_nothing_ft_excavator_pikachu/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (Instinct)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/spoofertrades/comments/1v3dyry/lf_these/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (Marathon)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/pokemongo/comments/1x8s5vb/am_i_unathletic_or_is_this_insane_for_2_days/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (Mystic)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/PokemonGoTrade/comments/1uxwgys/lf_top_ft_bottom/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (PokeXciting Turquoise)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-malaysia-01"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Database 50/50; preserve both genders. Moderate evidence, no independently verified catch screenshots."
+    },
+    {
+      "name": "Pikachu (Professor Willow's Assistant)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/PokemonGoTrade/comments/1v3e4ou/giveaway_or_pikaway_5_lucky_winners_pics_12_read/",
+        "https://www.reddit.com/r/PokemonGoTrade/comments/1whgpw6/ft_willow_instinct_bg_shiny_pikachu_lf_instinct/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (Valor)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.reddit.com/r/PokemonGoTrade/comments/1v3e4ou/giveaway_or_pikaway_5_lucky_winners_pics_12_read/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Sex-specific player reports plus distinct inspected male/female artwork. Preserve both."
+    },
+    {
+      "name": "Pikachu (Worlds 2026)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-wcs-2026",
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Per-costume database/collector evidence, not filename inference."
+    },
+    {
+      "name": "Pikachu (Astronaut)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.reddit.com/r/pokemongo/comments/1wzj4td/observation_re_astronaut_pikachu/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Per-costume database/collector evidence, not filename inference."
+    },
+    {
+      "name": "Pikachu (PokeXciting Blue)",
+      "availableGenders": [
+        "m",
+        "f"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-singapore-01"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Database 50/50; preserve both genders. Moderate evidence, no independently verified catch screenshots."
+    }
+  ],
+  "independentVerification": "Cosmog 0% male/100% female and Worlds 100% male/0% female verified directly in source pages. Collector source HTML independently inspected: explicit M=male-only,F=female-only legend and Cosmog F/Worlds M/Astronaut M records. Other eight preserve both genders per linked parent research; shirts have moderate database evidence."
+}

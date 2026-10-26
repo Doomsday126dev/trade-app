@@ -760,25 +760,33 @@
       ],
       "status": "exact",
       "identityStatus": "released",
-      "sourceProvider": "dittobase-reviewed",
-      "sourceFile": "25-pikachu-pxp-2026.png",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-xp26.png",
       "sourceLabel": "Cosmog Spacesuit",
-      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-pxp-2026",
-      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-pxp-2026.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-xp26.png",
       "assets": {
-        "default": "assets/sprites/go/dittobase-25-pikachu-pxp-2026.png",
-        "shiny": "assets/sprites/go/dittobase-25-pikachu-pxp-2026-shiny.png"
+        "default": "assets/sprites/go/serebii-pikachu-xp26-female.png",
+        "female": "assets/sprites/go/serebii-pikachu-xp26-female.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-xp26-female-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-xp26-female-shiny.png"
       },
       "sha256": {
-        "default": "ed0ac0f66695f2144c5ead40d25942f5ddae0c03c67174633e41a8122b1a907f",
-        "shiny": "9de3a5d6ce0fd5960d72bf7fae53b35e8f1772cedad425fba960024971c9103c"
+        "default": "8d6de4467a814a25e3b2569bca5302cce4e256b7e4e9f3d72a4313b6eed57be3",
+        "female": "8d6de4467a814a25e3b2569bca5302cce4e256b7e4e9f3d72a4313b6eed57be3",
+        "shiny": "ff80c68cd240954e9d82e6b56339fc1c781201e4f170fe37f8e5c2fce4fc7448",
+        "femaleShiny": "ff80c68cd240954e9d82e6b56339fc1c781201e4f170fe37f8e5c2fce4fc7448"
       },
       "sourceFiles": {
-        "default": "25-pikachu-pxp-2026.png",
-        "shiny": "25-pikachu-pxp-2026-shiny.png"
+        "default": "025-xp26.png",
+        "shiny": "shiny/025-xp26.png"
       },
-      "femaleArtworkUnavailable": true,
-      "reviewIdentityId": "pokemon:25:costume:PIKACHU_PXP_2026"
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_PXP_2026",
+      "availableGenders": [
+        "f"
+      ],
+      "reviewedAt": "2026-10-26",
+      "pixelReview": "Both 120px original normal/Shiny images independently inspected: female heart-notched tail. Supersedes straight-tail DittoBase art; do not relabel that artwork female."
     },
     {
       "no": 25,
@@ -1136,7 +1144,11 @@
         "female": "pm25.fFOSSIL_2026.g2.icon.png",
         "shiny": "pm25.fFOSSIL_2026.s.icon.png",
         "femaleShiny": "pm25.fFOSSIL_2026.g2.s.icon.png"
-      }
+      },
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -1470,7 +1482,11 @@
         "female": "pm25.fGOFEST_2026_CAP_YELLOW.g2.icon.png",
         "shiny": "pm25.fGOFEST_2026_CAP_YELLOW.s.icon.png",
         "femaleShiny": "pm25.fGOFEST_2026_CAP_YELLOW.g2.s.icon.png"
-      }
+      },
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -1674,7 +1690,11 @@
         "female": "pm25.fVISOR_2026.g2.icon.png",
         "shiny": "pm25.fVISOR_2026.s.icon.png",
         "femaleShiny": "pm25.fVISOR_2026.g2.s.icon.png"
-      }
+      },
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -1793,7 +1813,11 @@
         "female": "pm25.fGOFEST_2026_CAP_BLUE.g2.icon.png",
         "shiny": "pm25.fGOFEST_2026_CAP_BLUE.s.icon.png",
         "femaleShiny": "pm25.fGOFEST_2026_CAP_BLUE.g2.s.icon.png"
-      }
+      },
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -1889,7 +1913,11 @@
         "femaleShiny": "25-pikachu-anniversary-2026-malaysia-01-female-shiny.png"
       },
       "femaleArtworkUnavailable": false,
-      "reviewIdentityId": "announcement:2026-pokexciting:pikachu-turquoise"
+      "reviewIdentityId": "announcement:2026-pokexciting:pikachu-turquoise",
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -1939,7 +1967,11 @@
         "femaleShiny": "25-pikachu-anniversary-2026-female-shiny.png"
       },
       "femaleArtworkUnavailable": false,
-      "reviewIdentityId": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026"
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -2501,7 +2533,11 @@
         "female": "pm25.fGOFEST_2026_CAP_RED.g2.icon.png",
         "shiny": "pm25.fGOFEST_2026_CAP_RED.s.icon.png",
         "femaleShiny": "pm25.fGOFEST_2026_CAP_RED.g2.s.icon.png"
-      }
+      },
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     },
     {
       "no": 25,
@@ -2664,8 +2700,10 @@
         "default": "25-pikachu-wcs-2026.png",
         "shiny": "25-pikachu-wcs-2026-shiny.png"
       },
-      "femaleArtworkUnavailable": true,
-      "reviewIdentityId": "pokemon:25:costume:PIKACHU_WCS_2026"
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_WCS_2026",
+      "availableGenders": [
+        "m"
+      ]
     },
     {
       "no": 25,
@@ -7216,8 +7254,10 @@
         "default": "25-pikachu-astronaut.png",
         "shiny": "25-pikachu-astronaut-shiny.png"
       },
-      "femaleArtworkUnavailable": true,
-      "reviewIdentityId": "announcement:2026-world-space-week:pikachu-astronaut"
+      "reviewIdentityId": "announcement:2026-world-space-week:pikachu-astronaut",
+      "availableGenders": [
+        "m"
+      ]
     },
     {
       "no": 25,
@@ -7251,7 +7291,11 @@
         "femaleShiny": "25-pikachu-anniversary-2026-singapore-01-female-shiny.png"
       },
       "femaleArtworkUnavailable": false,
-      "reviewIdentityId": "announcement:2026-pokexciting:25:blue"
+      "reviewIdentityId": "announcement:2026-pokexciting:25:blue",
+      "availableGenders": [
+        "m",
+        "f"
+      ]
     }
   ]
 }

@@ -628,7 +628,9 @@
     "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01.png",
     "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-shiny.png",
     "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-female.png",
-    "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-female-shiny.png"
+    "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-female-shiny.png",
+    "assets/sprites/go/serebii-pikachu-xp26-female.png",
+    "assets/sprites/go/serebii-pikachu-xp26-female-shiny.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

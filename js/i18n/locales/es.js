@@ -250,7 +250,7 @@
     ,"import.ambiguous":"Coinciden varias variantes; empiezan sin seleccionar. Elige formas o disfraces concretos. Seleccionar todo incluye cada variante mostrada."
     ,"share.liveList":"Compartir lista en vivo"
     ,"share.liveCaption":"Una página pública sin cuenta"
-    ,"share.gameSearch":"Buscar en Pokémon GO"
+    ,"share.gameSearch":"Cadena de búsqueda de Pokémon GO"
     ,"share.searchCaption":"Busca en tu propio inventario"
     ,"share.imageSnapshot":"Compartir imagen"
     ,"share.textSnapshot":"Copiar texto"
@@ -328,5 +328,10 @@
     ,"admin.roleUnconfirmed":"No se pudo confirmar el cambio de rol. Comprueba la sincronización antes de reintentar."
     ,"admin.requestDenialUnconfirmed":"No se pudo confirmar el rechazo. Comprueba el estado actual antes de reintentar."
     ,"events.groupVenueUnknown":"Hora del lugar sin confirmar"
+    ,"share.format":"Formato"
+    ,"costume.genderOnly":"Solo {gender}"
+    ,"costume.savedConflict":"Revisar valor guardado"
+    ,"costume.genderConflict":"El género guardado no existe para este disfraz. No se ha cambiado tu entrada; elige un género válido solo si quieres corregirla."
+    ,"costume.genderUnsupported":"{name}: el género guardado no corresponde a una forma publicada de este disfraz."
   });
 })(window);

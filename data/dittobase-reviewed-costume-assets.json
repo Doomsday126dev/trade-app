@@ -29,9 +29,12 @@
         "default": "25-pikachu-astronaut.png",
         "shiny": "25-pikachu-astronaut-shiny.png"
       },
-      "femaleArtworkUnavailable": true,
       "reviewedAt": "2026-10-26T01:52:14.907Z",
-      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution."
+      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution.",
+      "availableGenders": [
+        "m"
+      ],
+      "genderReview": "Male-only released costume; absence of female art is not an asset gap. Existing conflicting saved qualifiers require explicit user review."
     },
     {
       "no": 25,
@@ -60,7 +63,9 @@
       },
       "femaleArtworkUnavailable": true,
       "reviewedAt": "2026-10-26T01:52:14.912Z",
-      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution."
+      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution.",
+      "supersededBy": "data/serebii-reviewed-costume-assets.json",
+      "correction": "Historical straight-tail artwork does not represent the released female-only PokémonXP costume. Kept as provenance history only; no longer used by runtime catalog."
     },
     {
       "no": 25,
@@ -87,9 +92,12 @@
         "default": "25-pikachu-wcs-2026.png",
         "shiny": "25-pikachu-wcs-2026-shiny.png"
       },
-      "femaleArtworkUnavailable": true,
       "reviewedAt": "2026-10-26T01:52:14.912Z",
-      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution."
+      "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution.",
+      "availableGenders": [
+        "m"
+      ],
+      "genderReview": "Male-only released costume; absence of female art is not an asset gap. Existing conflicting saved qualifiers require explicit user review."
     },
     {
       "no": 25,
