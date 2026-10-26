@@ -146,7 +146,6 @@ input,select,textarea{font-family:var(--font);outline:none}
 .combined-checks,.combined-selection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .combined-editor{width:560px;max-width:calc(100vw - 24px)}.combined-editor label{display:block;margin:10px 0}.combined-editor .field-control{width:100%;min-width:0}.combined-checks label{display:flex;align-items:center;gap:6px;min-height:44px}.combined-editor summary,#wants-combine>summary{min-height:44px;padding:12px 0;cursor:pointer}
 .product-share-preview{max-height:320px;overflow:auto;margin:12px 0;border-block:1px solid var(--border)}.product-share-preview ul{padding-left:20px}.product-share-preview li{overflow-wrap:anywhere}.product-share-modal [hidden]{display:none!important}
-@media(max-width:700px){#app>.tabs .desktop-events-tab{display:none}}
 .tab:hover{color:var(--text)}
 .notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;margin-left:4px;vertical-align:middle}
 
@@ -2077,7 +2076,7 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 #tab-mylist.intent-for-trade .mylist-list-tools{display:none}
 .badge.U{color:var(--muted);background:transparent}
 @media(max-width:700px){
-  #app>.tabs{position:fixed;bottom:0;left:0;right:0;top:auto;z-index:120;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:calc(var(--product-nav-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#101417);border-top:1px solid var(--border)}
+  #app>.tabs{position:fixed;bottom:0;left:0;right:0;top:auto;z-index:120;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:calc(var(--product-nav-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#101417);border-top:1px solid var(--border)}
   #app>.tabs .tab{min-width:0;padding:6px 2px;white-space:normal;gap:3px}
   #app>.tabs .tab-label{display:block;position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;font-size:12px;line-height:1.2}
   #app>.tabs .tab-short-label{display:none}
