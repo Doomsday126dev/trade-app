@@ -15,9 +15,9 @@
   "maintenanceCandidate": {
     "baseCommit": "bf4a7e437545833e515bd7518fede39f209279e1",
     "canonicalRecords": 391,
-    "exactArtworkRecords": 369,
-    "pendingArtworkRecords": 22,
-    "excludedRows": 22
+    "exactArtworkRecords": 375,
+    "pendingArtworkRecords": 16,
+    "excludedRows": 16
   },
   "reasonCategories": [
     "accepted-source-missing",
@@ -154,43 +154,6 @@
       ],
       "acceptedSourcePage": "https://pokemondb.net/sprites/charizard",
       "reviewedCandidateFiles": [],
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:costume:PIKACHU_PXP_2026",
-      "displayIdentity": "Pikachu (Cosmog Spacesuit)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "PIKACHU_PXP_2026 is confirmed by the official Worlds announcement; no Cosmog/spacesuit GO sprite is listed in the live accepted Pikachu gallery. Official event imagery is reference-only."
-      },
-      "nextReviewAction": "Recheck Cosmog/spacesuit candidates; require the PXP costume, not the distinct WCS 2026 outfit.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "cosmog"
-        ],
-        [
-          "spacesuit"
-        ],
-        [
-          "pxp",
-          "2026"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
@@ -362,82 +325,6 @@
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
-      "canonicalCostumeId": "announcement:2026-pokexciting:pikachu-turquoise",
-      "displayIdentity": "Pikachu (PokeXciting Turquoise)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "bf73dc2bc5698986b45d31ac5f60bd4631832e11efe59e4866c9fdfd2ff0923f"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The primary event evidence confirms this released identity. The October 19 accepted-source review found no exact Pikachu (PokeXciting Turquoise) sprite."
-      },
-      "nextReviewAction": "Review only the Turquoise Pok\u00e9Xciting costume when exact artwork appears; do not reuse another regional colour.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "pokexciting",
-          "turquoise"
-        ],
-        [
-          "turquoise"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
-      "displayIdentity": "Pikachu (Professor Willow's Assistant)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Professor Willow's assistant Pikachu debuted at the official July 21 birthday event; its outfit is absent from the accepted gallery. The Ph.D. sprite is a different costume."
-      },
-      "nextReviewAction": "Review the assistant outfit against the official identity; do not use Ph.D. Pikachu or merchandise artwork.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "willow"
-        ],
-        [
-          "assistant"
-        ],
-        [
-          "anniversary",
-          "2026"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Victor)",
       "displayIdentity": "Pikachu (Victor)",
       "species": {
@@ -465,41 +352,6 @@
       "reviewedCandidateFiles": [],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:costume:PIKACHU_WCS_2026",
-      "displayIdentity": "Pikachu (Worlds 2026)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "PIKACHU_WCS_2026 is confirmed by the official August 25 Worlds announcement. The accepted gallery lists Worlds 2022, 2023, 2024 and 2025, but no 2026 outfit. Official and mined images are not approved for copying."
-      },
-      "nextReviewAction": "Review only the WCS 2026 costume when published by an accepted sprite source; do not reuse Worlds 2025 or Cosmog Spacesuit.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "world",
-          "2026"
-        ],
-        [
-          "wcs",
-          "2026"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
@@ -774,75 +626,6 @@
       "artworkStatus": "unavailable",
       "identityStatus": "released",
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "announcement:2026-world-space-week:pikachu-astronaut",
-      "displayIdentity": "Pikachu (Astronaut)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/world-space-week-2026",
-        "retrievedAt": "2026-10-19T16:43:26.505Z",
-        "sha256": "7edf1a352c9f1cda7c2a97e54dcd7d8ecb217b1fa1e238c299a11db66c0dec76"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Official announcement confirms Astronaut Pikachu; the October 19 accepted Pikachu gallery contains no exact labelled artwork. Other costumes cannot substitute."
-      },
-      "nextReviewAction": "Review exact Astronaut Pikachu artwork when it appears in the accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "astronaut"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": []
-    },
-    {
-      "canonicalCostumeId": "announcement:2026-pokexciting:25:blue",
-      "displayIdentity": "Pikachu (PokeXciting Blue)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
-        "retrievedAt": "2026-10-19T16:43:27.308Z",
-        "sha256": "0693d2165e6c29bd612bd45c21e0021b94de18c8c5e7ef2fa3530abbae969651"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Official announcement confirms Pok\u00e9Xciting Pikachu (Blue); the October 19 accepted Pikachu gallery contains no exact labelled artwork. Other costumes cannot substitute."
-      },
-      "nextReviewAction": "Review exact Pok\u00e9Xciting Pikachu (Blue) artwork when it appears in the accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "pokexciting",
-          "blue"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": []
     }
   ],
   "reviewScope": "All 127 accepted-source GO galleries compared live on 2026-09-22 with no changes; all 21 inherited unavailable identities re-reviewed. Four September announcements are recorded as released with artwork unavailable, and two October identities remain announced.",
@@ -904,7 +687,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",
