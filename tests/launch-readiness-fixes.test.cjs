@@ -30,12 +30,12 @@ test('UX-01 order metadata is explicit, account-partitioned, and Firebase-schema
 // The wants-only release removed normal reorder and LF/FT Board editing UI.
 // Keep their persisted-order isolation proof above, but qualify the current editing
 // and Board presentation contracts here instead of unreachable renderer functions.
-test('UX-01 wants rows offer named edit and remove actions without drag-only interaction',()=>{
+test('UX-01 wants rows offer named edit and dialog removal without drag-only interaction',()=>{
   const rows=between('function renderCombinedList(','function toggleWantsSection(');
   assert.match(rows,/class="myrow-edit"[^>]+onclick="openCombinedEditor\(this\.dataset\.group\)"/);
-  assert.match(rows,/class="myrow-remove"[^>]+onclick="removeWantsGroup\(this\.dataset\.group\)"/);
+  assert.doesNotMatch(rows,/class="myrow-remove"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
   assert.match(rows,/aria-label=.*myList\.openMoreFor/);
-  assert.match(rows,/aria-label=.*myList\.removeEntry/);
+  assert.match(html,/setAttribute\('aria-label',i18nCore.t\('myList.removeEntry'/);
   assert.doesNotMatch(rows,/draggable=|onpointerdown=|drag-handle/);
   const active=between('<!-- MY LIST -->','<!-- SCHEDULE -->');assert.doesNotMatch(active,/mylist-reorder-toggle|toggleReorderMode/);
 });
@@ -46,7 +46,7 @@ test('A11Y-02 Board is a wants-only image selection and editing returns to the s
   assert.match(markup,/closeModal\('special-board-modal'\);switchTab\('mylist'\)/);
   assert.doesNotMatch(markup,/special-(?:lf|ft)-ac|special-ft-list|role="combobox"/);
   const editor=between('id="combined-editor-modal"','<!-- SETTINGS');
-  assert.match(editor,/aria-modal="true"/);assert.match(editor,/id="combined-name"[^>]*list="combined-catalog"[^>]*required/);
+  assert.match(editor,/aria-modal="true"/);assert.match(editor,/id="combined-name"[^>]*required/);
   assert.match(editor,/id="combined-save"/);assert.match(editor,/id="combined-error"/);
 });
 

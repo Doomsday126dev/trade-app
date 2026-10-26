@@ -148,12 +148,14 @@ test('new special wants save without priority; new normal wants require classifi
     openCombinedEditor();
   });
   await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name-suggestions [role=option]').filter({hasText:/^Charmander$/}).click();
   await page.locator('#combined-save').click();
   await expect(page.locator('#combined-error')).toHaveText('Choose a priority or a special requirement.');
   expect(await page.evaluate(()=>__mutations)).toEqual([]);
   for(const flag of ['lucky','xxl','xxs','shiny']){
     await page.evaluate(()=>openCombinedEditor());
     await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name-suggestions [role=option]').filter({hasText:/^Charmander$/}).click();
     await page.locator('#combined-'+flag).check();
     await page.locator('#combined-save').click();
     const mutation=await page.evaluate(()=>__mutations[0]);
@@ -166,11 +168,10 @@ test('new special wants save without priority; new normal wants require classifi
   await expect(page.locator('#combined-name')).toHaveValue('Psyduck');
 });
 
-test('remove icon retains confirmation and clipboard failure opens only that section for manual recovery',async({page})=>{
+test('editor cancellation preserves the list and clipboard failure opens only that section for manual recovery',async({page})=>{
   await fixture(page);
-  let dismissed=0;page.once('dialog',async dialog=>{dismissed++;await dialog.dismiss();});
-  await section(page,'H').locator('.myrow-remove').first().click();
-  expect(dismissed).toBe(1);await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
+  await section(page,'H').locator('.myrow-edit').first().click();
+  await expect(page.locator('#wants-remove')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
   await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new Error('denied');};});
   await section(page,'H').locator('[data-contextual-copy]').click();
   await expect(section(page,'H').locator('textarea')).toBeFocused();

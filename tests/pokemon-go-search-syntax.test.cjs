@@ -158,7 +158,8 @@ test('My List ARIA labels use complete locale templates around localized names',
   const start=html.indexOf('function renderCombinedList('),end=html.indexOf('function removeWantsGroup(',start);
   assert.ok(start>=0&&end>start,'current unified list renderer exists');
   const render=html.slice(start,end);
-  for(const key of ['phase2.select','myList.openMoreFor','myList.removeEntry'])assert.ok(render.includes(`i18nCore.t('${key}',{name:e.dn})`),key);
+  for(const key of ['phase2.select','myList.openMoreFor'])assert.ok(render.includes(`i18nCore.t('${key}',{name:e.dn})`),key);
+  assert.match(html,/setAttribute\('aria-label',i18nCore.t\('myList.removeEntry',\{name:entry.dn\|\|entry.name\|\|''\}\)\)/);
   assert.doesNotMatch(render,/aria-label="Set \$\{|aria-label="Toggle (?:Lucky|Shiny|XXL|XXS)|aria-label="Remove"/);
 });
 

@@ -494,7 +494,7 @@ function renderCombinedList(model=productDeclarations()){
       <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
       <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
-      <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${uiIconMarkup('trash','ui-icon ui-icon-sm')}</button></div></article>`;
+</div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
     });
@@ -609,18 +609,51 @@ function selectCombinedGroup(index,selected){
   document.querySelectorAll('#combined-list .wants-row').forEach(row=>{const input=row.querySelector('input');if(input.dataset.group===(typeof index==='string'?index:combinedKey(group?.[0]||{})))input.checked=selected;row.classList.toggle('wants-selected',input.checked);});
   refreshCombinedSearch(model);
 }
+let wantsPickerItems=[];
+function closeWantsPicker(input){
+  const list=document.getElementById(input.getAttribute('aria-controls'));if(list)list.hidden=true;
+  input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');input._pickerIndex=-1;
+}
+function renderWantsPicker(input){
+  const list=document.getElementById(input.getAttribute('aria-controls'));if(!list||input.readOnly)return;
+  const query=normalizeAcText(input.value);
+  input._pickerRows=query?rankAutocompleteItems(wantsPickerItems,query,{limit:25}):[];input._pickerIndex=-1;
+  list.replaceChildren(...input._pickerRows.map((item,index)=>{const option=document.createElement('div');option.id=list.id+'-'+index;option.className='wants-picker-option';option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.textContent=item.name;option.addEventListener('pointerdown',event=>event.preventDefault());option.addEventListener('click',()=>chooseWantsPicker(input,index));return option;}));
+  const open=input._pickerRows.length>0;list.hidden=!open;input.setAttribute('aria-expanded',String(open));input.removeAttribute('aria-activedescendant');
+}
+function chooseWantsPicker(input,index){
+  const item=input._pickerRows?.[index];if(!item)return;
+  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name')refreshCombinedGenderOptions();input.focus({preventScroll:true});
+}
 function prepareWantsCatalog(){
-  const options=document.getElementById('combined-catalog');
-  if(options.childElementCount)return;
-  // This name-only picker cannot distinguish two category IDs with the same
-  // value. Deduplicate its presentation, without merging catalog or list data.
-  const items=new Map();
-  for(const entry of _specialAllItems()){
-    const item=items.get(entry.name)||{...entry,labels:new Set()};
-    for(const label of [entry.dn,...(entry.searchAliases||[]),...(costumeSpriteCatalogDomain.resolve({name:entry.name})?.no===25?['costume Pikachu']:[])])if(label&&normalizeAcText(label)!==normalizeAcText(entry.name))item.labels.add(label);
-    items.set(entry.name,item);
+  if(!wantsPickerItems.length){
+    const items=new Map();
+    for(const entry of _specialAllItems()){
+      const prior=items.get(entry.name)||{...entry,search:''};
+      // Aliases help matching, but never become a second visible name.
+      prior.search+=' '+normalizeAcText([entry.name,entry.dn,...(entry.searchAliases||[]),costumeSpriteCatalogDomain.resolve({name:entry.name})?.no===25?'costume Pikachu':''].join(' '));items.set(entry.name,prior);
+    }
+    wantsPickerItems=[...items.values()];
   }
-  options.innerHTML=[...items.values()].map(e=>`<option value="${escAttr(e.name)}" label="${escAttr([...e.labels].join(' · '))}">${escHtml(e.name)}</option>`).join('');
+  for(const id of ['wants-add-name','combined-name']){
+    const input=document.getElementById(id);if(!input)continue;if(input.dataset.pickerReady){document.getElementById(input.getAttribute('aria-controls'))?.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));continue;}input.dataset.pickerReady='true';input.removeAttribute('list');
+    const list=document.createElement('div');list.id=id+'-suggestions';list.className='wants-picker';list.setAttribute('role','listbox');list.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));list.hidden=true;
+    input.parentElement.classList.add('wants-picker-wrap');input.insertAdjacentElement('afterend',list);
+    input.setAttribute('role','combobox');if(id==='combined-name')input.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
+    input.addEventListener('input',event=>{if(!event.isComposing)renderWantsPicker(input);});input.addEventListener('compositionend',()=>renderWantsPicker(input));
+    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>closeWantsPicker(input),0));
+    input.addEventListener('keydown',event=>{
+      if(event.isComposing)return;
+      if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();closeWantsPicker(input);return;}
+      if(['ArrowDown','ArrowUp'].includes(event.key)){
+        if(list.hidden)renderWantsPicker(input);if(list.hidden)return;event.preventDefault();
+        const count=input._pickerRows.length,current=input._pickerIndex??-1;input._pickerIndex=current<0?(event.key==='ArrowDown'?0:count-1):(current+(event.key==='ArrowDown'?1:-1)+count)%count;
+        [...list.children].forEach((option,index)=>option.setAttribute('aria-selected',String(index===input._pickerIndex)));
+        const selected=list.children[input._pickerIndex];input.setAttribute('aria-activedescendant',selected.id);selected.scrollIntoView({block:'nearest'});return;
+      }
+      if(event.key==='Enter'&&!list.hidden&&input._pickerIndex>=0){event.preventDefault();chooseWantsPicker(input,input._pickerIndex);}
+    });
+  }
 }
 function refreshCombinedGenderOptions(savedValue){
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
@@ -675,6 +708,7 @@ function openCombinedEditor(index){
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
   document.getElementById('combined-save').disabled=false;
   document.getElementById('wants-remove').hidden=!entries?.length;
+  document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
   openModal('combined-editor-modal');
 }
 function combinedSourceEntity(entry){
@@ -13187,7 +13221,8 @@ function eventBonusesHtml(event,{full=false}={}){
 function eventsSourceHtml(){
   const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
-  return`<div class="events-source${stale?' is-stale':''}" role="status"><div><strong>${escHtml(i18nCore.t(stale?'events.staleFeed':'events.feedStatus'))}</strong><p class="events-checked">${escHtml(i18nCore.t('events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
+  const saved=_eventData?.sourceFallback;
+  return`<div class="events-source${stale?' is-stale':''}" role="status"><div>${stale?`<strong>${escHtml(i18nCore.t('events.staleFeed'))}</strong>`:''}<p class="events-checked">${escHtml(i18nCore.t(saved?'events.savedSchedule':'events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
 }
 function openEventBrief(eventId,returnFocus=null){
   const event=(_eventData?.events||[]).find(e=>eventStableId(e)===eventId);if(!event)return;
