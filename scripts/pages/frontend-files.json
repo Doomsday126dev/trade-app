@@ -817,7 +817,17 @@
     "assets/sprites/go/pogorewind-pikachu-053.png",
     "assets/sprites/go/pogorewind-pikachu-053-female.png",
     "assets/sprites/go/pogorewind-pikachu-053-shiny.png",
-    "assets/sprites/go/pogorewind-pikachu-053-female-shiny.png"
+    "assets/sprites/go/pogorewind-pikachu-053-female-shiny.png",
+    "assets/sprites/go/serebii-starter-001-halloween2019-shiny.png",
+    "assets/sprites/go/serebii-starter-001-partyhat-shiny.png",
+    "assets/sprites/go/serebii-starter-001-pikachuvisor-shiny.png",
+    "assets/sprites/go/serebii-starter-004-halloween2019-shiny.png",
+    "assets/sprites/go/serebii-starter-004-partyhat-shiny.png",
+    "assets/sprites/go/serebii-starter-004-pikachuvisor-shiny.png",
+    "assets/sprites/go/serebii-starter-007-halloween2019-shiny.png",
+    "assets/sprites/go/serebii-starter-007-partyhat-shiny.png",
+    "assets/sprites/go/serebii-starter-007-pikachuvisor-shiny.png",
+    "assets/sprites/go/serebii-starter-007-sunglasses-shiny.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",
