@@ -2,7 +2,7 @@
 
 ## Status
 
-Functional and responsive QA passed for this draft, including the subsequently approved priority selector. Production publication is not requested by this task. Independent visual acceptance remains pending, particularly the imagegen-extracted mascot, which is not a pixel-exact copy of the supplied master. This is a review candidate, not a claim of exact logo extraction or production readiness.
+Functional and responsive QA passed for this draft, including the subsequently approved priority selector. Production publication is not requested by this task. Independent review at 23dc9067 confirmed closure of the demonstrated P2 defects. Populated lookup and opened shared-list evidence has now also been captured and inspected locally. User review remains pending; the imagegen-extracted mascot is not a pixel-exact copy of the supplied master. This is a review candidate, not a claim of exact logo extraction or production readiness.
 
 ## Reference and implementation comparison
 
@@ -28,7 +28,7 @@ No open functional P0/P1 issues found in the qualified flows. Brand fidelity acc
 
 - `node --test tests/*.test.cjs`: 1,964 passed, 12 skipped, zero failures.
 - `playwright.apri-regression.config.cjs`: 106 passed, 6 skipped (existing unsupported/emulator-dependent cases), zero failures. Chromium and WebKit: public shares, exact/held sprites, day/calendar/details/source states, four-tab navigation, 48-row editing, canonical save/reopen, account fencing/replacement and standalone privacy.
-- `playwright.apri.config.cjs`: all 18 cases pass across Chromium/WebKit. 36 exact-art rows, 390/820/1440, both themes, long names, empty/loading/error/offline, keyboard More actions and focus, reduced motion, system theme, repeated navigation, 2× phone capture.
+- `playwright.apri.config.cjs`: all 22 cases pass across Chromium/WebKit. 36 exact-art rows, 390/820/1440, both themes, long names, empty/loading/error/offline, keyboard More actions and focus, reduced motion, system theme, repeated navigation, 2× phone capture.
 - `playwright.apri-performance.config.cjs`: all eight pass. Existing budgets unchanged: desktop and throttled 390/320 startup, 1,000-entry structural bounds and 120-row filtering/editing at 4× CPU.
 - Syntax and whitespace checks passed. No changes to auth, database rules, service contracts, catalog data, sprite files, telemetry, privacy notice or deployment workflows.
 
@@ -51,4 +51,16 @@ The initial captures exposed genuine P2 issues; the draft was revised before han
 - Trainers: four separate actual lookup captures now accompany the four Favorites captures. The timestamp remains a public-snapshot publication time, never a claimed last edit/sign-in.
 - Priority filter: real distinct-row counts, zero-count choices, All including unprioritized flags, keyboard activation, account reset, canonical priority edits moving rows out, and retained hidden selections with explicit scope notice. Full/top/selected sharing scopes and Find counts remain unchanged. Filter interaction makes no writes.
 
-Final source checks: 1,964 unit passed / 12 existing skipped; 106 regression browser passed / 6 existing skipped; 18 presentation/filter browser passed; 8 unchanged performance checks passed. Logs: `/tmp/apri-final-unit.log`, `/tmp/apri-final-regression.log`, `/tmp/apri-final-captures.log`, `/tmp/apri-final-performance.log`. Captures in `apri-preview-library.md` preserve prior versions for before/after review. Independent visual acceptance remains pending; no deployment requested or performed.
+Final source checks: 1,964 unit passed / 12 existing skipped; 106 regression browser passed / 6 existing skipped; 22 presentation/filter browser passed; 8 unchanged performance checks passed. Logs: `/tmp/apri-final-unit.log`, `/tmp/apri-final-regression.log`, `/tmp/apri-final-captures.log`, `/tmp/apri-final-performance.log`. Captures in `apri-preview-library.md` preserve prior versions for before/after review. Local scoped visual QA: final result: passed. User preview review remains pending; no deployment requested or performed.
+
+## Populated browsing evidence and explicit scope checks
+
+Eight additional viewport captures show populated trainer suggestions and the opened synthetic published list at 390×844 and 1440×1000, light/dark. The journey types a known-name prefix, checks both suggestions, opens ReviewTrainerA by ArrowDown/Enter, then opens its costume category. All six sprites decode from the unchanged verified local catalog. The fixture records exactly one simulated public snapshot read and zero owner writes; all external requests are blocked. Existing Favorites captures include one publication date/time and one missing-time dash, with accessible publication semantics. These are separate states, not a new directory.
+
+Local pixel inspection confirmed readable names, explicit Shiny-only text, no horizontal overflow or clipped primary actions in these states. The existing shared-profile comparison summary remains stacked on phone; its density is unchanged. The label fix also replaces the shared-row sparkle-only Shiny flag with localized text. No account, query, permission or data-model changes accompany it.
+
+The priority test now exercises actual Copy text and a downloaded full CSV while Medium is selected: the full outputs contain all four fixture entries, selected text contains only the hidden selected Pikachu, and partial scope disables full-file exports. It also verifies zero filter writes, count updates after a canonical priority edit, the resulting empty Medium state, persistent selection when returning to All, account reset, and keyboard Enter activation. The existing search/filter, image rendering and publication regression coverage remains in place.
+
+P3 agenda repetition: the secondary featured line is suppressed only when one exact identity equals the localized headline or the exact identity plus localized event-type label. Origin Forme under a base-species headline and multiple named Pokémon remain explicit; bonuses and full details are preserved. The separate Up next rail retains its existing content.
+
+Final follow-up logs: `/tmp/apri-evidence-final-unit.log`, `/tmp/apri-evidence-final-presentation.log`, `/tmp/apri-evidence-final-regression.log`, `/tmp/apri-evidence-final-performance.log`. The initial targeted test failures were corrected fixture assumptions (missing-label accessible prefix, HTML bonus emphasis, clipboard stub); a unit VM was supplied its new title-localization dependency. No behavioral assertions or budgets were removed.

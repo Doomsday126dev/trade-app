@@ -12810,7 +12810,7 @@ function renderShareView(username,type,intent){
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
-          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
+          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" >${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
           ,''
@@ -13277,7 +13277,12 @@ function eventBonusesHtml(event,{full=false}={}){
   const benefitRows=`<ul class="event-benefit-list">${eventBonusGroups(visible).map(group=>`<li>${group.scope?`<span class="event-benefit-scope">${escHtml(group.scope)}:</span> `:''}<span class="event-benefit-text">${group.items.map(eventBonusText).join('; ')}</span></li>`).join('')}</ul>`;
   const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
   const featured=facts.bosses.length?facts.bosses:facts.encounters;
-  const featuredHtml=full?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+  // Suppress only an exact single-identity headline, never a base-species
+  // substring that could conceal a form, multiple bosses, or additional facts.
+  const headline=eventLabelsI18n.localizeEvent(event,i18nCore.getLocale()).localizedTitle;
+  const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
+  const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
+  const featuredHtml=full||headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
   if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;

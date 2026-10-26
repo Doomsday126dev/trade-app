@@ -57,12 +57,55 @@ test('Trainers distinguish direct lookup, saved demand, and publication time wit
   const favorites=favoriteShareSessionCache.syncFavorites(store.read().favorites);await Promise.all(favorites.map(f=>favoriteShareSessionCache.readFavorite(f)));
   switchTab('find');setTrainerDiscoveryMode('favorites');await renderTrainerQuickLists();
  });
- await expect(page.locator('.favorite-publication')).toHaveCount(2);await expect(page.locator('.favorite-publication time')).toHaveCount(1);await expect(page.locator('.favorite-publication').first()).toHaveAttribute('aria-label',/Not the trainer’s last sign-in/);
+ await expect(page.locator('.favorite-publication')).toHaveCount(2);await expect(page.locator('.favorite-publication time')).toHaveCount(1);await expect(page.locator('.favorite-publication').filter({hasNot:page.locator('time')})).toHaveText('Last updated—');await expect(page.locator('.favorite-publication').first()).toHaveAttribute('aria-label',/Not the trainer’s last sign-in/);
  for(const width of [1440,390])for(const theme of ['light','dark']){await page.setViewportSize({width,height:width===390?844:1000});await page.evaluate(t=>applyTheme(t),theme);await noOverflow(page);await page.screenshot({path:`${out}/${info.project.name}-favorites-${width}-${theme}.png`,fullPage:true,animations:'disabled'});await page.screenshot({path:`${out}/${info.project.name}-favorites-${width}-${theme}-viewport.png`,animations:'disabled'});}
  await page.locator('#trainer-mode-trainers').click();await expect(page.locator('#find-trainer-description')).toContainText('No Favorite required');
  for(const width of [1440,390])for(const theme of ['light','dark']){await page.setViewportSize({width,height:width===390?844:1000});await page.evaluate(t=>applyTheme(t),theme);await noOverflow(page);await page.screenshot({path:`${out}/${info.project.name}-trainers-lookup-${width}-${theme}-viewport.png`,animations:'disabled'});}
 
  await page.locator('#trainer-mode-pokemon').click();await expect(page.locator('#find-trainer-description')).toContainText('Wants do not indicate what they have available');
+});
+test('populated trainer lookup opens the selected published list with keyboard and no owner writes',async({page},info)=>{
+ await fixture(page);
+ await page.evaluate(records=>{
+  allData.loginDirectory={ReviewTrainerA:{ready:true},ReviewTrainerB:{ready:true}};
+  window.__previewReads=[];window.__trustedWrites=[];
+  loadPublicShareData=async username=>{
+   window.__previewReads.push(username);
+   const declarations=records.map((r,i)=>({intent:'lf',name:r.name,category:'costumes',p:i<2?'H':i<4?'M':'L',mod:'',gender:r.sourceGenders[0],backgroundId:'',note:'',lucky:false,shiny:true,xxl:false,xxs:false}));
+   const snapshot={version:2,username,profile:{bio:'Synthetic shared list for design review.'},lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},declarations,declarationCount:declarations.length,publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:Date.parse('2026-10-26T14:35:00Z')};
+   if(!applyPublicShareSnapshot(selectedTrainerData(username),snapshot))throw Error('Invalid synthetic public snapshot');
+   allData=runtimeDataWithSelectedTrainer(allData);
+   return {ok:true,username,snapshot};
+  };
+  switchTab('find');setTrainerDiscoveryMode('trainers');
+ },records.slice(0,6));
+ await page.locator('#find-trainer-input').fill('ReviewTrainer');
+ await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
+ await expect(page.locator('.trainer-suggestion-name').first()).toHaveText('ReviewTrainerA');
+ for(const width of [1440,390])for(const theme of ['light','dark']){
+  await page.setViewportSize({width,height:width===390?844:1000});await page.evaluate(t=>applyTheme(t),theme);
+  await noOverflow(page);await page.screenshot({path:`${out}/${info.project.name}-trainers-results-${width}-${theme}-viewport.png`,animations:'disabled'});
+ }
+ await page.locator('#find-trainer-input').focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+ await expect(page.locator('#share-view')).toHaveClass(/active/);await expect(page.locator('#share-hdr')).toContainText('ReviewTrainerA');
+ await page.locator('#share-list-tabs [data-list-type=costumes]').click();await expect(page.locator('#share-list-out .share-pcard')).toHaveCount(6);await expect(page.locator('#share-list-out')).toContainText(records[0].name);await expect(page.locator('#share-list-out')).toContainText('Shiny');
+ expect(await page.evaluate(()=>__previewReads)).toEqual(['ReviewTrainerA']);expect(await page.evaluate(()=>__trustedWrites)).toEqual([]);
+ for(const width of [1440,390])for(const theme of ['light','dark']){
+  await page.setViewportSize({width,height:width===390?844:1000});await page.evaluate(t=>applyTheme(t),theme);
+  await page.locator('#share-list-out img').evaluateAll(async imgs=>{for(const image of imgs){image.loading='eager';await image.decode();if(!image.naturalWidth)throw Error('Missing exact sprite');}});
+  await noOverflow(page);await page.screenshot({path:`${out}/${info.project.name}-trainer-shared-list-${width}-${theme}-viewport.png`,animations:'disabled'});
+ }
+});
+test('event headline dedup retains exact forms, multiple identities and full details',async({page})=>{
+ await fixture(page);
+ const values=await page.evaluate(event=>{
+  const render=value=>eventBonusesHtml(value);
+  const form={...event,name:'Giratina Spotlight Hour',extraData:{spotlight:{bonus:'2× catch XP',list:[{name:'Giratina (Origin Forme)'}]}}};
+  const multiple={...event,extraData:{spotlight:{bonus:'2× catch XP',list:[{name:'Gastly'},{name:'Haunter'}]}}};
+  return {exact:render(event),form:render(form),multiple:render(multiple),full:eventBonusesHtml(form,{full:true})};
+ },events[1]);
+ expect(values.exact).not.toContain('event-featured');expect(values.exact.replace(/<[^>]*>/g,'')).toContain('2× catch XP');
+ expect(values.form).toContain('Giratina (Origin Forme)');expect(values.multiple).toContain('Gastly · Haunter');expect(values.full.replace(/<[^>]*>/g,'')).toContain('2× catch XP');
 });
 test('day navigation, details, all events and load/error/offline states remain truthful',async({page})=>{
  await fixture(page);await page.setViewportSize({width:390,height:844});

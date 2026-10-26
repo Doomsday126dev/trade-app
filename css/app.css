@@ -2751,3 +2751,8 @@ html[data-theme="light"] .myrow-trait.lucky{color:#805900}
 #tab-find :is(.field-control,.app-search-input):focus{border-color:var(--ac2)}
 #tab-find :is(.field-control,.app-search-input):focus-visible{outline-color:var(--ac2)}
 @media(max-width:600px){.event-card-time .event-time-basis:not(:first-child)::before{content:none}}
+
+/* Shared lists retain the same explicit variant label as My List. */
+.share-pcard-flag.shiny{font-size:11px;color:#e76aaf;background:var(--surface-subtle)}
+html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
+@media(prefers-color-scheme:light){html:not([data-theme]) .share-pcard-flag.shiny{color:#a52f73}}

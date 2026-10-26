@@ -1,6 +1,6 @@
 # Apri native preview handoff
 
-Synthetic data only. Actual browser renders of the .148-based redesign draft, not production screenshots. Existing 16 images are version 1; version 0 preserves the pre-filter review. New Medium-filter and actual Trainers-lookup images are version 0. Former Trainers-labeled images depict Favorites; current filenames and labels are corrected.
+Synthetic data only. Actual browser renders of the .148-based redesign draft, not production screenshots. Events images are now version 2; the other original images are version 1; version 0 preserves the pre-filter review. Medium-filter, empty lookup, populated lookup and opened shared-list images are version 0. Former Trainers-labeled images depict Favorites; current filenames and labels are corrected.
 
 | State | Viewport | Theme | Library ID | Version |
 |---|---|---|---|---|
@@ -8,10 +8,10 @@ Synthetic data only. Actual browser renders of the .148-based redesign draft, no
 | mylist | 1440×1000 | dark | libfile_7eac803047dc8191bb20bbbdc44bde64 | 1 |
 | mylist | 390×844 | light | libfile_9dfe55d3396481918d34a6efa9308517 | 1 |
 | mylist | 390×844 | dark | libfile_fc560ebdb7708191b472cbbe51eb2550 | 1 |
-| events | 1440×1000 | light | libfile_0c6f0b01f1988191b2bf77c8729006b4 | 1 |
-| events | 1440×1000 | dark | libfile_20f111f726bc8191a6fcdd5313e322a5 | 1 |
-| events | 390×844 | light | libfile_6c56bd20544881918bb753dbc1ca506b | 1 |
-| events | 390×844 | dark | libfile_4def634367e08191ac2a2f64cd5f08f6 | 1 |
+| events | 1440×1000 | light | libfile_0c6f0b01f1988191b2bf77c8729006b4 | 2 |
+| events | 1440×1000 | dark | libfile_20f111f726bc8191a6fcdd5313e322a5 | 2 |
+| events | 390×844 | light | libfile_6c56bd20544881918bb753dbc1ca506b | 2 |
+| events | 390×844 | dark | libfile_4def634367e08191ac2a2f64cd5f08f6 | 2 |
 | more | 1440×1000 | light | libfile_f94bc699ee8c8191a09fe985028b0963 | 1 |
 | more | 1440×1000 | dark | libfile_95d3774d048881919ac6ac542dfbf416 | 1 |
 | more | 390×844 | light | libfile_f47cac99ac308191bdae32d847864ac6 | 1 |
@@ -28,3 +28,11 @@ Synthetic data only. Actual browser renders of the .148-based redesign draft, no
 | trainers-lookup | 1440×1000 | dark | libfile_4b52e44711cc8191a86979435ed61f3a | 0 |
 | trainers-lookup | 390×844 | light | libfile_6c87825cc83c819191c36757814617e3 | 0 |
 | trainers-lookup | 390×844 | dark | libfile_ce7be84643c881919df0d1a7296e34f4 | 0 |
+| trainers-results | 1440×1000 | light | libfile_cd844a57a74c81919cde9dd36dc69523 | 0 |
+| trainers-results | 1440×1000 | dark | libfile_3a436e729264819191c2aa2538787d4e | 0 |
+| trainers-results | 390×844 | light | libfile_92d472b7f6908191bbb2ac11a0bec054 | 0 |
+| trainers-results | 390×844 | dark | libfile_7ba735f4b8088191ab204bff915ca1c9 | 0 |
+| trainer-shared-list | 1440×1000 | light | libfile_e4e68602b7d48191bd89fdb5b4a080f1 | 0 |
+| trainer-shared-list | 1440×1000 | dark | libfile_04b294607c38819190ae4555085cff21 | 0 |
+| trainer-shared-list | 390×844 | light | libfile_86c2a5360f84819194c254f17667b487 | 0 |
+| trainer-shared-list | 390×844 | dark | libfile_9ae7621a53a88191aed66ab3a05c42de | 0 |

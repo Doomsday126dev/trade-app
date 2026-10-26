@@ -13,6 +13,20 @@ test('priority views count actual rows, preserve selected/full share scopes and 
  expect(await page.evaluate(()=>productScopeEntries('selected').map(e=>e.name))).toEqual(['Pikachu']);
  expect(await page.evaluate(()=>productScopeEntries('full'))).toEqual(original.all);expect(await page.evaluate(()=>productScopeEntries('top'))).toEqual(original.top);
  expect(await page.evaluate(()=>__normal.writes.length)).toBe(original.writes);
+ // Copy and file export retain their explicit scope while the Medium view is active.
+ await page.evaluate(()=>{Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedText=text;}}});openProductShare('text');});
+ await page.locator('#product-share-text button').click();
+ for(const name of ['Pikachu','Charmander','Squirtle','Bulbasaur'])expect(await page.evaluate(()=>__copiedText)).toContain(name);
+ await page.locator('#product-share-scope').selectOption('selected');await page.locator('#product-share-text button').click();
+ expect(await page.evaluate(()=>__copiedText)).toContain('Pikachu');expect(await page.evaluate(()=>__copiedText)).not.toContain('Charmander');
+ await page.locator('.share-more-formats summary').click();
+ await expect(page.locator('[data-full-list-export]').first()).toBeDisabled();await expect(page.locator('[data-full-list-export]').last()).toBeDisabled();
+ await page.locator('#product-share-scope').selectOption('full');
+ const downloaded=page.waitForEvent('download');await page.locator('[data-full-list-export]').last().click();
+ const csv=require('node:fs').readFileSync(await(await downloaded).path(),'utf8');
+ for(const name of ['Pikachu','Charmander','Squirtle','Bulbasaur'])expect(csv).toContain(name);
+ await page.locator('#product-share-modal .mact button').click();
+
  await page.locator('.wants-row[data-name="Charmander"] .wants-name').click();await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();await settled(page);
  await expect(page.locator('.wants-row')).toHaveCount(0);await expect(page.locator('#combined-list')).toContainText('No Pokémon with Medium priority');
  await expect(filter(page,'M').locator('.wants-filter-count')).toHaveText('0');await expect(filter(page,'L').locator('.wants-filter-count')).toHaveText('2');
