@@ -346,7 +346,7 @@ test.describe('visual smoke', () => {
     const operable=async selector=>{const el=page.locator(selector);await expect(el).toBeVisible();await el.scrollIntoViewIfNeeded();await expect(el).toBeInViewport();const box=await el.boundingBox();expect(box.width).toBeGreaterThan(0);expect(box.height).toBeGreaterThan(0);};
     await operable('#wants-add-name');await page.locator('#nav-find').click();await operable('#find-trainer-input');
     await page.locator('[data-discovery-mode="pokemon"]').click();await operable('#favorite-browse-input');
-    await page.locator('#nav-more').click();await page.locator('#more-events').click();await operable('.event-filter-row');
+    await page.locator('#nav-events').click();await operable('.event-filter-row');
     await page.locator('#account-trigger').click();await page.locator('#account-settings-action').click();await page.locator('[data-settings-target="language"]').click();
     await operable('#settings-language');await operable('.settings-modal-close');await page.locator('.settings-modal-close').click();
     await openSyntheticPublic(page,'ZoomPublic',{wishlist:{Pikachu:'H'}});await operable('#share-list-out');

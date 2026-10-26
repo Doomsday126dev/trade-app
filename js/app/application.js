@@ -6788,7 +6788,7 @@ function switchTab(t,opts={}){
   if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const navTarget=t==='admin'||t==='schedule'&&matchMedia('(max-width: 700px)').matches?'more':t;
+  const navTarget=t==='admin'?'more':t;
   const tabBtn=document.querySelector(`[data-tab="${navTarget}"]`);
   const page=document.getElementById(`tab-${t}`);
   if(!page)return;

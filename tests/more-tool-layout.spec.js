@@ -47,7 +47,7 @@ test('More short viewport, themes, pointer and enlarged localized text remain us
   await capture(page,'more-320-de-text-200');
   await page.evaluate(()=>{document.documentElement.style.fontSize='';applyTheme('dark');});await page.setViewportSize({width:1440,height:900});await page.evaluate(()=>scrollTo(0,0));
   await page.locator('#more-transfer').hover();await capture(page,'more-pointer');
-  await page.locator('#more-events').focus();await page.keyboard.press('Tab');await capture(page,'more-keyboard');
+  await page.locator('#more-transfer').focus();await page.keyboard.press('Tab');await capture(page,'more-keyboard');
 });
 test('actual contextual My List, trainer selection and Help captures',async({page})=>{
   await install(page);await page.setViewportSize({width:1440,height:900});
