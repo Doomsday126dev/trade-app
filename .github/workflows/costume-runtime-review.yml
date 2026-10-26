@@ -35,6 +35,10 @@ jobs:
           git archive 4bacc23c76c463797b340e7f380ad19438785b97 | tar -x -C "$baseline_dir"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$runtime_dir/node_modules"
           ln -s "$GITHUB_WORKSPACE/functions/node_modules" "$runtime_dir/functions/node_modules"
+          # Current interaction harness dismisses suggestions before opening Advanced.
+          # Only tests change; all frontend bytes remain the exact pinned source.
+          cp "$GITHUB_WORKSPACE/tests/released-costume-art.spec.js" "$runtime_dir/tests/released-costume-art.spec.js"
+          git -C "$runtime_dir" diff --exit-code -- index.html css js data.js sw.js assets manifest.json scripts/pages/frontend-files.json
           cd "$runtime_dir"
           node --test tests/*.test.cjs
           npm run check:pages-release
