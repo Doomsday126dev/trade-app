@@ -49,3 +49,10 @@ test('Rockruff Dusk shares appearance, but ambiguous Gigantamax Urshifu never su
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Urshifu (Gigantamax)','',892)),[]);
   assert.equal(sprites.isAmbiguousVisibleForm('Urshifu (Rapid Strike)',892),false);
 });
+
+test('reviewed equivalent forms retain Shiny color without normal fallback',()=>{
+ for(const [name,no]of [['Scatterbug (Garden)',664],['Rockruff (Dusk)',744]]){
+  assert.equal(sprites.verifiedEquivalentSpriteUrl(name,no,'',true),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${no}.png`);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls(name,'',no,true)),[`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${no}.png`]);
+ }
+});

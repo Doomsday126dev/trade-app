@@ -115,11 +115,11 @@
     return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax';
   }
   function verifiedEquivalentSpriteUrl(name='',no=0,gender='',shiny=false){
-    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return SCATTERBUG_EQUIVALENT_URL;
+    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return shiny?SCATTERBUG_EQUIVALENT_URL.replace('/pokemon/','/pokemon/shiny/'):SCATTERBUG_EQUIVALENT_URL;
     // Own-Tempo Rockruff is a distinct trade/evolution identity, not a
     // different-looking Rockruff stage.
     if(Number(no)===744&&normalizeSpriteKey(name)==='rockruff dusk')
-      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png';
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shiny?'shiny/':''}744.png`;
     const dynamaxBase=reviewedDynamaxBase(name,no);
     if(!dynamaxBase)return'';
     // Keep real Amped/Low Key and Single/Rapid Strike forms distinct.
