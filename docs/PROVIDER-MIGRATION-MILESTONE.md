@@ -5,9 +5,9 @@
 This branch was built in an independent clone from main `a3264ebe`, outside the
 asset release worker's checkout. It selectively carries forward PR57's isolated
 Discord prototype, then changes its contract; it does not merge PR57 or enable
-any auth surface. No runtime HTML, application, service worker, frontend asset
+any auth surface. No runtime HTML, application entry, service worker, frontend asset
 inventory, deployed Functions export, Rules, release control, or account data
-is changed. `package.json` only adds local test commands.
+is changed. The second milestone adds one passive readonly journal capture method; it has no runtime caller. Package changes add local tests and the exact Firebase Auth SDK test dependency.
 
 Current source enables Google public entry and existing-account linking.
 Provider account creation remains separately gated. Existing Google linking
@@ -139,7 +139,7 @@ custom-token design. No provider settings or production Rules were changed.
 
 ## Integration gates that remain open
 
-The prototype account store is deterministic test code, not a production adapter.
+The original in-memory store remains deterministic test code. The second milestone adds a private Firestore candidate with real emulator coverage; see [the backend decision](DISCORD-BACKEND-DECISION.md) for the default architecture and verified existing targets.
 A production host must serialize **all** auth commits (including cross-tab auth
 changes) with the injected custom-token sign-in operation and observe lifecycle
 changes before using the result. The client's `isCurrent` hook alone cannot
@@ -153,8 +153,7 @@ reverse-index cleanup and exact readback. Never count a hidden/stale provider
 row as usable and never remove the final method. Existing Google unlink remains
 on its existing tested path.
 
-The offline recovery format attests its inputs' declared completeness; there is
-**no production collector** proving those inputs are complete yet. Its hash detects
+The offline recovery format attests its inputs' declared completeness. A candidate collector and validated dry run now cover the current legacy/canonical feature set, with stable double-capture and full journal evidence; neither is enabled in production. Unsupported enabled provider/visibility/preference features fail closed pending their dedicated collectors. Its hash detects
 accidental/tampered-file changes, not authenticity or account ownership. Its plan
 has `automaticApply:false` and no apply adapter. It is not a finished migration
 backup/import feature. Data-specific validators, version/tombstone semantics,
@@ -221,3 +220,24 @@ runs could not bind loopback inside the sandbox; approved loopback-only test
 runs passed. No provider credential or real account access was involved. The
 new PR workflow repeats these source/synthetic checks with read-only repository
 permissions and has no deployment step.
+
+
+## Second milestone qualification
+
+The follow-up adds transactional Firestore state/release receipts, a revoked-token
+Firebase authority verifier, a default-off gateway seam, a Web Locks + Firebase
+blocking auth commit guard, a complete current-feature candidate collector, full
+readonly journal capture and canonical import dry runs. See
+[the default backend decision](DISCORD-BACKEND-DECISION.md).
+
+- First commit `40343beb`: all three GitHub workflows completed successfully.
+- Updated local unit contracts: 81 passed, 1 emulator-only skip.
+- Updated desktop/mobile browser checks: 12 passed, including actual cross-tab
+  Web Locks and complete IndexedDB snapshots across reopen.
+- Demo Auth/Firestore emulators: 8 passed, including exact Firebase 12.14.0 SDK
+  transition blocking, concurrent UID claims and denied private client reads.
+- Existing Google tests: 117 passed; account sync: 321 passed, 1 existing skip;
+  Pages: 111 passed; static performance: 32 passed.
+- Production Firebase auth configuration reads were denied HTTP 403; existing
+  staging/production Cloud Run origins were verified read-only. No security
+  setting, credential, OAuth grant or data was changed.

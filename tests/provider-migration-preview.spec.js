@@ -36,3 +36,41 @@ test('account switch removes reminder and provider text is never interpreted as 
   await page.evaluate(()=>preview.renderMaliciousLabel());await expect(page.getByText('<img src=x onerror=alert(1)>',{exact:true})).toBeVisible();
   await expect(page.locator('#security img')).toHaveCount(0);
 });
+test('recovery snapshot captures acknowledged and reviewed IndexedDB records in one owner partition',async({page})=>{
+  const path=require('node:path');
+  for(const file of['js/domain/accountSyncModel.js','js/data/accountSyncJournal.js'])await page.addScriptTag({path:path.join(__dirname,'..',file)});
+  const result=await page.evaluate(async()=>{
+    const api=window.PogoData.accountSyncJournal,model=window.PogoDomain.accountSyncModel,ownerUid='synthetic-owner',databaseName=`recovery-${crypto.randomUUID()}`;
+    const a=api.createAccountSyncJournal({ownerUid,databaseName}),b=api.createAccountSyncJournal({ownerUid:'other-owner',databaseName});
+    const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:25:base'},entityId=model.tradeEntryId(identity);
+    const op=(await model.createOperation({ownerUid,entityType:'tradeEntry',entityId,identity,kind:'add',patch:{priority:'H'},baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},clientAt:10})).value;
+    await a.enqueueOperation(op);await a.acknowledge(op.operationId,{revision:2});
+    await a.putRecoveryCandidate({ownerUid,candidateId:'reviewed-candidate',createdAt:10,resolved:true});
+    await a.setMeta('retained-evidence',{accepted:true});await b.setMeta('private-other',{mustNotLeak:true});
+    const snapshot=await a.captureOwnerSnapshot();await a.close();
+    const reopened=api.createAccountSyncJournal({ownerUid,databaseName}),again=await reopened.captureOwnerSnapshot();
+    await reopened.close();await b.close();
+    return{snapshot,equal:JSON.stringify(snapshot)===JSON.stringify(again)};
+  });
+  expect(result.equal).toBe(true);expect(result.snapshot.stores.operations[0].status).toBe('acknowledged');
+  expect(result.snapshot.stores.recoveryCandidates[0].resolved).toBe(true);
+  expect(JSON.stringify(result.snapshot)).not.toContain('mustNotLeak');expect(Object.keys(result.snapshot.stores)).toHaveLength(5);
+});
+test('real Web Locks serialize competing auth commits across browser tabs',async({page,context})=>{
+  const path=require('node:path'),other=await context.newPage();await other.goto('/tests/fixtures/provider-migration-preview.html');
+  for(const target of[page,other]){
+    await target.addScriptTag({path:path.join(__dirname,'../js/dev/providerAuthCommitGate.js')});
+    await target.evaluate(()=>{
+      const key='synthetic-cross-tab-auth';let hook=null;
+      const auth={get currentUser(){const uid=localStorage.getItem(key);return uid?{uid}:null;}};
+      window.commitGate=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,getLifecycle:()=>localStorage.getItem(key)||'signed-out',
+        beforeAuthStateChanged:(a,callback)=>{hook=callback;return()=>{hook=null;};},
+        signInWithCustomToken:async(a,uid)=>{await new Promise(resolve=>setTimeout(resolve,100));await hook({uid});localStorage.setItem(key,uid);return{user:{uid}};}});
+    });
+  }
+  const results=await Promise.all([
+    page.evaluate(()=>commitGate.commitCustomToken({customToken:'synthetic-owner-a',expectedUid:'synthetic-owner-a',expectedLifecycle:'signed-out'}).then(()=>({ok:true}),error=>({ok:false,code:error.code}))),
+    other.evaluate(()=>commitGate.commitCustomToken({customToken:'synthetic-owner-b',expectedUid:'synthetic-owner-b',expectedLifecycle:'signed-out'}).then(()=>({ok:true}),error=>({ok:false,code:error.code})))
+  ]);
+  expect(results.filter(row=>row.ok)).toHaveLength(1);expect(results.find(row=>!row.ok).code).toBe('provider-auth/session-changed');await other.close();
+});

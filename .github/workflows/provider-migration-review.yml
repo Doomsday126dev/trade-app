@@ -7,6 +7,15 @@ on:
       - 'functions/src/prototype/**'
       - 'functions/test/discord-oauth-prototype.test.cjs'
       - 'js/dev/**'
+      - 'js/data/accountSyncJournal.js'
+      - 'tests/account-recovery-collector.test.cjs'
+      - 'tests/provider-auth-commit-gate.test.cjs'
+      - 'tests/provider-auth-sdk-emulator.test.cjs'
+      - 'functions/test/discord-candidate-gateway.test.cjs'
+      - 'functions/test/firestore-discord-store.test.cjs'
+      - 'functions/test/discord-access-authority.test.cjs'
+      - 'tests/firebase/firebase.discord-prototype.json'
+      - 'scripts/check-discord-prototype-emulator.sh'
       - 'tests/account-recovery-bundle.test.cjs'
       - 'tests/discord-oauth-prototype-client.test.cjs'
       - 'tests/provider-migration-*.test.cjs'
@@ -30,7 +39,12 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix functions --ignore-scripts
       - run: npx playwright install --with-deps chromium
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: 21
       - run: npm run test:provider-migration
+      - run: npm run test:provider-migration:emulator
       - run: npm run test:provider-migration:browser
       - run: npm run test:google-provider
       - run: npm run test:account-sync

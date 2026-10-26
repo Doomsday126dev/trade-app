@@ -53,7 +53,7 @@ test('canceling wrong Discord account never sends confirmation',async()=>{
 });
 test('signed-out login passes token directly to serialized auth commit without persistence',async()=>{
   const token='synthetic-custom-token';
-  const h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'existing-account',customToken:token}});h.continuation('sign-in');
+  const h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:token}});h.continuation('sign-in');
   assert.equal((await h.client.completeFromLocation()).status,'existing-account');assert.deepEqual(h.signIns,[token]);assert.equal(h.writes.join('').includes(token),false);
 });
 test('unlinked Discord enters onboarding without provider account creation',async()=>{
@@ -75,11 +75,11 @@ test('malformed, expired, copied, duplicate and wrong-route callbacks scrub and 
   }
 });
 test('provider operation substitution cannot sign in while linking',async()=>{
-  const h=env({href:callback,completeResult:{ok:true,operation:'sign-in',status:'existing-account',customToken:'synthetic-custom-token'}});h.continuation();
+  const h=env({href:callback,completeResult:{ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-custom-token'}});h.continuation();
   await assert.rejects(h.client.completeFromLocation(),{code:'discord/response-invalid'});assert.deepEqual(h.signIns,[]);
 });
 test('session switch during request or before confirmation fails without sign-in or confirmation',async()=>{
-  let h;h=env({href:callback,signedOut:true,fetchImpl:async()=>{h.setBinding(A);return new Response(JSON.stringify({ok:true,operation:'sign-in',status:'existing-account',customToken:'synthetic-token'}));}});h.continuation('sign-in');
+  let h;h=env({href:callback,signedOut:true,fetchImpl:async()=>{h.setBinding(A);return new Response(JSON.stringify({ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-token'}));}});h.continuation('sign-in');
   await assert.rejects(h.client.completeFromLocation(),{code:'discord/session-changed'});assert.deepEqual(h.signIns,[]);
   const link=env({href:callback});link.continuation();await link.client.completeFromLocation();link.setBinding({...A,lifecycleBinding:`v1_${'e'.repeat(64)}`});
   await assert.rejects(link.client.confirmLink(),{code:'discord/session-changed'});assert.equal(link.calls.length,1);
@@ -102,6 +102,6 @@ test('duplicate clicks cannot start two browser operations',async()=>{
   const first=h.client.begin('link');await assert.rejects(h.client.begin('link'),{code:'discord/operation-pending'});release();await assert.rejects(first);assert.equal(h.calls.length,1);
 });
 test('candidate stays outside production loaders and caches',()=>{
-  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json','js/app/application.js'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding/);
+  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json','js/app/application.js'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun/);
   assert.doesNotMatch(SOURCE,/localStorage|indexedDB|accountSync|journal|DISCORD_CLIENT_SECRET/);
 });

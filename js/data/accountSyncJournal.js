@@ -194,6 +194,17 @@
         await done;return unresolved.length;
       }catch(error){try{transaction.abort();}catch{}await done.catch(()=>{});throw error;}
     }
+    async function captureOwnerSnapshot(){
+      // One readonly transaction includes acknowledged operations and reviewed evidence.
+      // Separate list/snapshot methods intentionally return filtered product views.
+      const db=await database(),transaction=db.transaction(STORE_NAMES,'readonly'),done=transactionDone(transaction);
+      const range=global.IDBKeyRange?.only?global.IDBKeyRange.only(owner):owner;
+      const values=await Promise.all(STORE_NAMES.map(name=>requestResult(transaction.objectStore(name).index('ownerUid').getAll(range))));
+      await done;
+      const stores=Object.fromEntries(STORE_NAMES.map((name,index)=>[name,values[index]]));
+      for(const records of Object.values(stores))for(const record of records)requireOwner(record);
+      return{schemaVersion:1,ownerUid:owner,stores};
+    }
     async function snapshot(){
       const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),listRecoveryCandidates()]);
       const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
@@ -209,7 +220,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,retireWrites,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,listMeta,getMeta,removeMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,retireWrites,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,listMeta,getMeta,removeMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,captureOwnerSnapshot,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});

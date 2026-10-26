@@ -263,6 +263,7 @@ test('linked signed-out login mints a custom token for the exact mapped UID only
     ok: true,
     operation: 'sign-in',
     status: 'existing-account',
+    uid: UID_A,
     customToken: `firebase-custom-token-for-${UID_A}`
   });
   assert.deepEqual(h.calls.mint, [UID_A]);
@@ -425,7 +426,7 @@ test('prototype remains absent from deployed Functions and production frontend i
   const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   const frontendInventory = fs.readFileSync(path.join(root, 'scripts/pages/frontend-files.json'), 'utf8');
   for (const source of [deployedFunctions, html, serviceWorker, frontendInventory]) {
-    assert.doesNotMatch(source, /discordOAuthPrototype|discord-oauth-prototype|discordOAuthHttpHandler/);
+    assert.doesNotMatch(source, /discordOAuthPrototype|discord-oauth-prototype|discordOAuthHttpHandler|firestoreDiscordOAuthStore|discordAccessAuthority|discordCandidateGateway/);
   }
   assert.doesNotMatch(deployedFunctions, /DISCORD_CLIENT_SECRET|createCustomToken/);
 });

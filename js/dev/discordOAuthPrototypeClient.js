@@ -104,12 +104,12 @@
         review={...pending,confirmationToken:result.confirmationToken,expiresAt:clock()+result.expiresInMs};
         return Object.freeze({status:'confirmation-required',discordLabel:result.discordLabel});
       }
-      if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status','customToken'])&&result.status==='existing-account'&&
-        typeof result.customToken==='string'&&result.customToken.length>=8&&result.customToken.length<=8192){
+      if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status','uid','customToken'])&&result.status==='existing-account'&&
+        typeof result.uid==='string'&&/^[A-Za-z0-9_-]{6,128}$/.test(result.uid)&&typeof result.customToken==='string'&&result.customToken.length>=8&&result.customToken.length<=8192){
         if(typeof signInWithCustomToken!=='function')throw failure('discord/sign-in-unavailable');
         assertCurrent(pending);
         // The host must serialize ALL auth actions, including cross-tab changes, with this commit.
-        await signInWithCustomToken(result.customToken,{isCurrent:()=>{try{assertCurrent(pending);return true;}catch{return false;}}});
+        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,isCurrent:()=>{try{assertCurrent(pending);return true;}catch{return false;}}});
         return Object.freeze({status:'existing-account'});
       }
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status'])&&result.status==='onboarding-required')return Object.freeze({status:'onboarding-required'});

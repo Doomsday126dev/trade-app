@@ -44,7 +44,7 @@
         if(!exact(section,['complete','records'])||section.complete!==true||!Array.isArray(section.records)||section.records.length>20000)fail('recovery/coverage-incomplete');
         const ids=new Set(),records=[];
         for(const record of section.records){
-          if(!exact(record,['id','value'])||!text(record.id)||RESERVED.has(record.id)||ids.has(record.id))fail('recovery/record-invalid');
+          if(!exact(record,['id','value'])||!text(record.id,1024)||RESERVED.has(record.id)||ids.has(record.id))fail('recovery/record-invalid');
           ids.add(record.id);records.push({id:record.id,value:normalize(record.value)});
         }
         records.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);sections[name]={complete:true,records};

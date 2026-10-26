@@ -309,9 +309,12 @@ function createDiscordOAuthPrototype({
       if (typeof customToken !== 'string' || customToken.length < 8 || customToken.length > 8192) {
         fail('internal', 'discord/custom_token_invalid');
       }
+      const rechecked = await store.resolveSubject({ providerSubjectKey });
+      if (!rechecked || rechecked.uid !== resolved.uid || rechecked.mappingRevision !== resolved.mappingRevision) fail('stale_state', 'discord/mapping_changed');
+      authority(await currentAuthority(), { required: false });
       await store.finishFlow({ stateHash: flow.stateHash, status: 'complete', reason: 'existing_account', timestamp: now() });
       emit('discord_oauth_sign_in_complete', id);
-      return Object.freeze({ ok: true, operation: 'sign-in', status: 'existing-account', customToken });
+      return Object.freeze({ ok: true, operation: 'sign-in', status: 'existing-account', uid: resolved.uid, customToken });
     } catch (error) {
       return failFlow(error);
     }
