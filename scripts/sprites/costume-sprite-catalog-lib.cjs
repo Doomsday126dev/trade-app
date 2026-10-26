@@ -42,6 +42,15 @@ function validateCatalog(catalog,root){
     }
     if(!entry.sourceFile||!entry.sourceLabel)fail(`Exact sprite entry is missing reviewed source evidence: ${entry.names[0]}`);
     if(!entry.assets?.default||!entry.sha256?.default)fail(`Exact sprite entry is missing its default local asset: ${entry.names[0]}`);
+    if(entry.shinyArtworkReview){
+      const forms={'Ash':['ash','003'],'Santa':['santa','001'],'Witch':['halloween','004'],'Summer':['summer','005'],'Flower Crown':['flowers','007'],'Fragment':['fragment','006'],'Straw':['strawhat','009'],'Explorer':['explorer','022'],'Captain':['captain','063'],'Libre':['libre',null],'Rock Star':['rockstar',null],'Pop Star':['popstar',null]};
+      const short=entry.names[0].match(/^Pikachu \((.*)\)$/)?.[1],form=forms[short],review=entry.shinyArtworkReview;
+      if(!form||review.name!==entry.names[0])fail('Unreviewed classic Shiny identity');
+      const [stem,id]=form,source='https://www.serebii.net/pokemongo/pokemon/shiny/025-'+stem+'.png',female=id?'https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-'+id+'%2BF%2BS.png':source;
+      if(review.sourceUrls.shiny!==source||review.sourceUrls.femaleShiny!==female)fail('Unreviewed classic Shiny source');
+      for(const key of ['shiny','femaleShiny'])if(review.assets[key]!==entry.assets[key]||review.sha256[key]!==entry.sha256[key])fail('Classic Shiny mapping drift');
+      if(root){const proof=JSON.parse(fs.readFileSync(path.join(root,'data/classic-pikachu-shiny-assets.json'))).records.find(r=>r.name===entry.names[0]);if(JSON.stringify(proof)!==JSON.stringify(review))fail('Classic Shiny review evidence changed');}
+    }
     if(entry.sourceProvider==='pokemod-reviewed'){
       const base='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
       const forms={'Pikachu (Fossil)':'FOSSIL_2026','Pikachu (Marathon)':'VISOR_2026','Pikachu (Mystic)':'GOFEST_2026_CAP_BLUE','Pikachu (Valor)':'GOFEST_2026_CAP_RED','Pikachu (Instinct)':'GOFEST_2026_CAP_YELLOW'};
@@ -49,6 +58,21 @@ function validateCatalog(catalog,root){
       if(!form||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca')fail('Unreviewed Pokemod identity/commit');
       for(const[key,suffix]of Object.entries({default:'',female:'.g2',shiny:'.s',femaleShiny:'.g2.s'}))if(entry.sourceFiles?.[key]!== 'pm25.f'+form+suffix+'.icon.png'||!entry.assets[key]||!entry.sha256[key])fail('Unreviewed Pokemod variant');
       if(entry.sourceUrl!==base+entry.sourceFiles.default)fail('Unreviewed Pokemod URL');
+    }
+    if(entry.sourceProvider==='pokemod-reviewed-released'){
+      const stems={'Teddiursa Witch Hat':'pm216.cHALLOWEEN_2025','Ursaring Witch Hat':'pm217.cHALLOWEEN_2025','Ursaluna Witch Hat':'pm901.cHALLOWEEN_2025','Galarian Corsola Pink Sunglasses':'pm222.fSPRING_2026','Noibat Headband':'pm714.cHALLOWEEN_2025','Noivern Headband':'pm715.cHALLOWEEN_2025'};
+      const stem=stems[entry.names[0]],female=entry.names[0]==='Ursaring Witch Hat';
+      if(!stem||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca'||entry.identityStatus!=='released')fail('Unreviewed released Pokemod identity/commit');
+      const sourceBase='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
+      if(entry.sourceUrl!==sourceBase+stem+'.icon.png')fail('Unreviewed released Pokemod URL');
+      for(const [key,suffix]of Object.entries({default:'',shiny:'.s',female:female?'.g2':'',femaleShiny:female?'.g2.s':'.s'}))if(!entry.assets?.[key]||entry.sourceFiles?.[key]!==stem+suffix+'.icon.png'||!entry.gitBlobShas?.[key])fail('Unreviewed released Pokemod variant');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-released-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceCommit','sourceFiles','assets','sha256','gitBlobShas','identityEvidence','shinyEvidence'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Released Pokemod review evidence changed');}
+    }
+    if(entry.sourceProvider==='margxt-reviewed-friede'){
+      const names={"Charmander (Friede's Goggles)":'004-Salameche',"Charmeleon (Friede's Goggles)":'005-Reptincel',"Charizard (Friede's Goggles)":'006-Dracaufeu'},stem=names[entry.names[0]];
+      if(!stem||entry.identityStatus!=='released'||entry.sourceUrl!=='https://www.margxt.fr/wp-content/uploads/2026/09/'+stem+'-lunettes-Friede.webp')fail('Unreviewed Friede identity/source');
+      for(const[key,suffix]of Object.entries({default:'',shiny:'-shiny',female:'',femaleShiny:'-shiny'}))if(entry.sourceFiles?.[key]!==stem+'-lunettes-Friede'+suffix+'.webp'||!entry.assets?.[key]||!entry.sourceSha256?.[key])fail('Unreviewed Friede variant');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/margxt-friede-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourcePage','sourceUrl','sourceFiles','sourceSha256','assets','sha256','identityEvidence','shinyEvidence','conversion'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Friede review evidence changed');}
     }
     if(entry.sourceProvider==='dittobase-reviewed'){
       const forms={'Pikachu (Astronaut)':'pikachu-astronaut','Pikachu (Cosmog Spacesuit)':'pikachu-pxp-2026','Pikachu (Worlds 2026)':'pikachu-wcs-2026',"Pikachu (Professor Willow's Assistant)":'pikachu-anniversary-2026','Pikachu (PokeXciting Turquoise)':'pikachu-anniversary-2026-malaysia-01','Pikachu (PokeXciting Blue)':'pikachu-anniversary-2026-singapore-01'};

@@ -31,19 +31,20 @@ jobs:
         run: |
           runtime_dir=$(mktemp -d)
           baseline_dir=$(mktemp -d)
-          git worktree add --detach "$runtime_dir" 2bec47c137361e43867fb5f767d6d1f567a2a0e8
-          git archive 748ad63a7b0d2e1efbc7689b660483b95fdab4e3 | tar -x -C "$baseline_dir"
+          git worktree add --detach "$runtime_dir" d40923bc02f5f6e7953e91d44c19e8368c4a9b54
+          git archive 2bec47c137361e43867fb5f767d6d1f567a2a0e8 | tar -x -C "$baseline_dir"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$runtime_dir/node_modules"
           ln -s "$GITHUB_WORKSPACE/functions/node_modules" "$runtime_dir/functions/node_modules"
           cd "$runtime_dir"
           node --test tests/*.test.cjs
           npm run check:pages-release
           node scripts/generate-costume-sprite-runtime.cjs --check
+          npx playwright test --config playwright.classic-shiny.config.cjs
           npx playwright test --config playwright.gender-cleanup.config.cjs
           npx playwright test --config playwright.comparison-shiny.config.cjs
-          python3 -m http.server 8878 --bind 127.0.0.1 --directory "$runtime_dir" >/tmp/runtime142-server.log 2>&1 &
+          python3 -m http.server 8878 --bind 127.0.0.1 --directory "$runtime_dir" >/tmp/runtime143-server.log 2>&1 &
           candidate_pid=$!
-          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/runtime141-server.log 2>&1 &
+          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/runtime142-server.log 2>&1 &
           baseline_pid=$!
           trap 'kill "$candidate_pid" "$baseline_pid"' EXIT
           for port in 8878 8879; do
@@ -53,10 +54,10 @@ jobs:
             done
           done
           set +e
-          echo 'Historical .141 baseline (diagnostic)'
+          echo 'Historical .142 baseline (diagnostic)'
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8879 npm run test:performance:browser
           baseline_status=$?
-          echo 'Exact .142 candidate (all original budgets mandatory)'
+          echo 'Exact .143 candidate (all original budgets mandatory)'
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
           candidate_status=$?
           set -e

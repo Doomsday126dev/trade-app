@@ -639,6 +639,7 @@ function refreshCombinedGenderOptions(savedValue){
 function openWantsAddEditor(invoker){
   openCombinedEditor(undefined,invoker);
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
+  refreshCombinedGenderOptions();
   setCombinedEditorPriority(document.getElementById('wants-add-priority').value);
 }
 function setWantsAddPriority(priority){

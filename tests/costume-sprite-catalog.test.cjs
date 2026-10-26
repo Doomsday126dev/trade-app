@@ -17,10 +17,10 @@ const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(catalog.entries.length,391);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,375);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,16);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,384);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,509);
+  assert.equal(assets.length,550);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -39,7 +39,7 @@ test('exact costumes resolve to distinct self-hosted art and gender variants',()
 });
 
 test('known costumes without reviewed art fail honestly instead of becoming base species',()=>{
-  for(const name of ['Noibat Headband',"Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)"]){
+  for(const name of ['Pikachu (Gloria)','Pikachu (Victor)','Pikachu (Jeju)','Pumpkaboo (Spooky)']){
     const result=resolver.resolution({name});
     assert.equal(result.knownVariant,true,name);
     assert.equal(result.status,'unavailable',name);
@@ -82,7 +82,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:413,unavailable:13});
+  assert.deepEqual(statusCounts,{exact:422,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -155,7 +155,7 @@ test('the local reviewed asset graph remains lazy rather than joining shell prec
 test('search eligibility marks only audited released Pikachu identities without promoting their art',()=>{
   const pending=JSON.parse(fs.readFileSync(path.join(root,'data/pending-costume-artwork.json'),'utf8'));
   const expected=pending.entries.filter(e=>e.species.dex===25&&e.identityStatus==='released').map(e=>e.displayIdentity).sort();
-  const eligible=catalog.entries.filter(e=>e.identityStatus==='released');
+  const eligible=catalog.entries.filter(e=>e.no===25&&e.identityStatus==='released');
   assert.deepEqual(eligible.filter(e=>e.status==='unavailable').map(e=>e.names[0]).sort(),expected);
   assert.equal(eligible.length,11);
   for(const entry of eligible.filter(e=>e.status==='unavailable')){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}

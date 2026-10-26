@@ -2,25 +2,25 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
       "identity": "Charmander (Friede's Goggles)",
-      "gap": true,
-      "fingerprint": "83b7ba4d8718b37367f31781f8148a1053f2c432d264797ce9b61c377ee9acf7"
+      "gap": false,
+      "fingerprint": "b332b846afa7a800f8e125a203bcb69686993ceb1d3c8450cacc806283f066d8"
     },
     {
       "id": "announcement:2026-horizons:5:friede-goggles",
       "identity": "Charmeleon (Friede's Goggles)",
-      "gap": true,
-      "fingerprint": "db02c1f95d5bab5924e681c2b6e3717fa9473ccfebeda5672814d798e64b93dd"
+      "gap": false,
+      "fingerprint": "4dcc850a36ab5fbc04e39dfd5d4077c0ceb9770fc6a43634c647ccc591b4e22c"
     },
     {
       "id": "announcement:2026-horizons:6:friede-goggles",
       "identity": "Charizard (Friede's Goggles)",
-      "gap": true,
-      "fingerprint": "769dc595fff8243442bba8a05ee0b1fbb84a664db8336f8e24d62961d84f3574"
+      "gap": false,
+      "fingerprint": "b09ec54b443e92150205769619dec13ee15edade8ad4ccf92e52a63bd2b979e1"
     },
     {
       "id": "announcement:2026-pokexciting:25:blue",
@@ -619,20 +619,20 @@
     {
       "id": "pokemon:216:standard:legacy:Teddiursa%20Witch%20Hat",
       "identity": "Teddiursa Witch Hat",
-      "gap": true,
-      "fingerprint": "acc0c76fd316a9d97fa9a02d3e58356b1ae955473133395dec38172fdd1aab94"
+      "gap": false,
+      "fingerprint": "903c7a2912df1e02ccdb085a41d8daef39585ee2d7599d53b4be0f84b9156d50"
     },
     {
       "id": "pokemon:217:standard:legacy:Ursaring%20Witch%20Hat",
       "identity": "Ursaring Witch Hat",
-      "gap": true,
-      "fingerprint": "423d9d329fc7e6707a8637554b2fda71db123c30222f8227c26ff84ebe645f91"
+      "gap": false,
+      "fingerprint": "94cc6fbf3d327db4a08c7d5d5304c4b32cecbd69df5f50da3b77424f282f4b13"
     },
     {
       "id": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
       "identity": "Galarian Corsola Pink Sunglasses",
-      "gap": true,
-      "fingerprint": "ec47e87ab89a4b9bd708a555a2f0b4ffe7e419189f13008cc78e744b3c539184"
+      "gap": false,
+      "fingerprint": "673320a01e48193ce55d19492b762819f68cb64bdb0b8491d908502bea0362b2"
     },
     {
       "id": "pokemon:225:standard:legacy:Delibird%20(Bow)",
@@ -716,7 +716,7 @@
       "id": "pokemon:25:costume:original-cap",
       "identity": "Pikachu (Ash)",
       "gap": false,
-      "fingerprint": "1399cb2eeb38e67253ceb98ccf258fb06d879e3f20dfdbf12396a389ae530125"
+      "fingerprint": "d2bfd5c46fa27b246d9df82d55531387dde68e94ccb4f75a21deaec690ec2f4d"
     },
     {
       "id": "pokemon:25:costume:party-hat-original",
@@ -866,7 +866,7 @@
       "id": "pokemon:25:costume:PIKACHU_HORIZONS",
       "identity": "Pikachu (Captain)",
       "gap": false,
-      "fingerprint": "316d6a5b4794a2ca1f885abb8e16c112b26980e4ec6b15e76d55431e9da2b14e"
+      "fingerprint": "530d2ea9ac4a4b1cc936afbbfdb05601e0b3ee3b0c438a4d8bfa249d772107ff"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_KARIYUSHI",
@@ -926,7 +926,7 @@
       "id": "pokemon:25:costume:PIKACHU_VS_2019",
       "identity": "Pikachu (Libre)",
       "gap": false,
-      "fingerprint": "c7f1bca57a832056ab8ad9a6b62206c81385e65aa361565951357ffde6ae869f"
+      "fingerprint": "68c2fd6f77a42103f57f47f5531e2fb9dfdb7a6e6fbfdbf7eda1a8f272982e28"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_WCS_2024",
@@ -1022,13 +1022,13 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Explorer)",
       "identity": "Pikachu (Explorer)",
       "gap": false,
-      "fingerprint": "48ff699951991a493990a189c995b6bca8afb88e35d85e92d2474c69761529e8"
+      "fingerprint": "c795ff0f61f5c67e2a6c8a59e7cf16329b21899bc881a213f7de758be78ecfea"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Flower%20Crown)",
       "identity": "Pikachu (Flower Crown)",
       "gap": false,
-      "fingerprint": "e5baf6f63cab3a9770f62efa39ff47c963951c21a93ffbb9e86a761a25a12cd7"
+      "fingerprint": "a3e37e0bdd739dacf468e9c52bbec055563d9114a753437e5e290e071fc30241"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Fossil)",
@@ -1040,7 +1040,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Fragment)",
       "identity": "Pikachu (Fragment)",
       "gap": false,
-      "fingerprint": "b4f802c8af54029d5cb1efe32487e6026accff6726ce147ce2df30b2c0d6712f"
+      "fingerprint": "3f3dc6432c107aaf073fee0bd15a89448f81dd628f400330448a9a91fe0c12b5"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Gloria)",
@@ -1166,7 +1166,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Pop%20Star)",
       "identity": "Pikachu (Pop Star)",
       "gap": false,
-      "fingerprint": "59d9906f0c8e6d3293be82e1713006e17f45d9b8cfb87cffbc0f216a08122bee"
+      "fingerprint": "c8e516caef5ec310324b1bd6d072d619dfdfd5bae7d8c169c30918b273e18a65"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Purple%20Shirt)",
@@ -1196,7 +1196,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Rock%20Star)",
       "identity": "Pikachu (Rock Star)",
       "gap": false,
-      "fingerprint": "e24633fb05a92590f00ccac7c50effac351c186c5849415c37f0f64977345620"
+      "fingerprint": "8278f21db639013e02241a6133f8f530be2621470fafbd25a7b14a1bb8aa6706"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Safari)",
@@ -1208,7 +1208,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Santa)",
       "identity": "Pikachu (Santa)",
       "gap": false,
-      "fingerprint": "e1a8076afa2608bccfedbe722f22aaa5bdf4105c4b11b1b209f1e019777a9ba1"
+      "fingerprint": "6131d9a294859e8be2dff48b1890e8e5b034c777b63a3400da6153d00675b142"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Saree)",
@@ -1226,13 +1226,13 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Straw)",
       "identity": "Pikachu (Straw)",
       "gap": false,
-      "fingerprint": "b89b48701dbdf305a6aefe3d332ab651a3c5b454c2ae14e8218c609c7ae6f474"
+      "fingerprint": "86926de6509de377ddea171cf829a7312c11797ce447fcfa7f8f486c37b31dc8"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Summer)",
       "identity": "Pikachu (Summer)",
       "gap": false,
-      "fingerprint": "8afd645c3b3025592b1b4284d16d419d8df55ba6b3b7db344522c3016f8cc261"
+      "fingerprint": "f6ced6f419d3e1ff3b8ec614d5ad7eef63edc1a52b77e214bbf33bc0bc7aa2ec"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(TCG)",
@@ -1262,7 +1262,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
       "identity": "Pikachu (Witch)",
       "gap": false,
-      "fingerprint": "f2b28f5f0bdf76489a8b0992827e7b35f7a87a0764fcb4185c527a81a2e9017b"
+      "fingerprint": "fa73391e42e1d7dec9da8bf5e3ca6ab6277b5393943399302b662b31bcbbb39c"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(World)",
@@ -2137,14 +2137,14 @@
     {
       "id": "pokemon:714:standard:legacy:Noibat%20Headband",
       "identity": "Noibat Headband",
-      "gap": true,
-      "fingerprint": "c8b4098a58f485191c16ed5583ef952df559cd44bd19c59855615ca8609914e1"
+      "gap": false,
+      "fingerprint": "d151d5ca6a4f36f93762abe493af3c79b80aa1c54fb1e18f983323f20d84f254"
     },
     {
       "id": "pokemon:715:standard:legacy:Noivern%20Headband",
       "identity": "Noivern Headband",
-      "gap": true,
-      "fingerprint": "88f1926d1f05d822382817003ca4eb2787c0037d9b9f4053590d0f1a871ea18e"
+      "gap": false,
+      "fingerprint": "2fe8662f37d711a34d40f34ce95e2c010656614fd70ee9af3b03863be0fa9283"
     },
     {
       "id": "pokemon:722:standard:legacy:Rowlet%20(Halloween)",
@@ -2305,8 +2305,8 @@
     {
       "id": "pokemon:901:standard:legacy:Ursaluna%20Witch%20Hat",
       "identity": "Ursaluna Witch Hat",
-      "gap": true,
-      "fingerprint": "354cafd5ff38d6b692d384d2f0bb72002461f0b1284a61f21c6a22717b4eca94"
+      "gap": false,
+      "fingerprint": "3e30e916873ab89c776bdc8c0ea9f0f46bed20c231e13ebe549d9ad1d868a7c8"
     },
     {
       "id": "pokemon:907:standard:legacy:Floragato%20Hat%20With%20Likos%20Pin",
