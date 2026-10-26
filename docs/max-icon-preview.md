@@ -23,3 +23,11 @@ The saved Shiny flag survived model projection. The generic `publicSpriteUrls` h
 My List and shared-card decorative Shiny badges are replaced with screen-reader text; canvas Shiny starbursts are removed. Max icons appear once at the sprite corner. Input/selection controls, filters, text exports and saved flags remain unchanged. The sample adds female Shiny Eevee with verified original female artwork and checks the actual decoded image URL.
 
 `apri-shiny-marker-followup.patch` is a separate, unapplied presentation-only follow-up for PR179. Its explicit pink shared-card Shiny label and My List trait occur at source lines 12813 and 499 in the preserved redesign. Apply the shared resolver correction with this integration before removing those labels. The patch does not activate auth or deploy the redesign.
+
+## Optional gender preference qualification
+
+Stored `gender` or a legacy gender qualifier is a trade preference. Catalog `availableGenders` and the sprite resolver's single-gender default affect eligibility/art only; they are not copied into saved requests. Existing saved qualifiers cannot prove historical user intent beyond their stored value, so none are migrated or erased.
+
+Added `tests/gender-preference.spec.js`: ordinary Eevee and female-only Orange Hanbok are saved without a gender preference, reloaded through the normal account-sync fixture, and checked in My List, public declarations and export details. Hanbok still resolves to female artwork while its request stays empty. The existing Max preview explicitly selects male/female and covers their persistence and rendering. Those symbols in the approved sample were deliberate fixture requests, not inferred costume genders.
+
+Release remains separate from PR179: confirm live baseline, freeze this runtime source, update exact-source/read-contract registration without changing guards/budgets/expiry, open the scoped PR, run required immutable CI and browser/performance qualification, merge only the qualified head, create immutable runtime/control release tags, dispatch the existing protected Pages workflow, approve its production gate only under matching authorization, then verify served source/assets and real phone/share/export journeys. Do not include auth or redesign changes. Stop any denied action rather than using another route.
