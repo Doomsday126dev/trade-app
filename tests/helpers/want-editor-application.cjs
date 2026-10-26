@@ -64,7 +64,7 @@ async function settled(page){
     return runtime===managedAccountSyncRuntime?snapshot.state:'restarting';
   })).toBe('saved');
 }
-async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
+async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('#wants-add-name').press('Escape');await expect(page.locator('#wants-add-name-suggestions')).toBeHidden();await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();await page.locator('#combined-name').press('Escape');await expect(page.locator('#combined-name-suggestions')).toBeHidden();}
 async function edit(page,name){await page.locator('#combined-list .wants-row').filter({has:page.locator(`.wants-name[data-group]`,{hasText:new RegExp(`^${name}$`)})}).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');}
 async function priority(page,value){await page.locator(`#combined-priorities input[value="${value}"]`).check();}
 async function entities(page){return page.evaluate(()=>structuredClone(accountSyncCanonicalEntities));}

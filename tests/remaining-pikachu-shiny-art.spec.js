@@ -9,6 +9,8 @@ test('every reviewed Shiny costume/gender renders its exact local bytes',async({
  await expect(page.locator('#pinned-sprites .known-unavailable')).toHaveCount(0);await page.evaluate(()=>stopAccountSyncRuntime());
 });
 test('all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender',async({page})=>{
+ // Same bounded allowance as playwright.remaining-pikachu.config.cjs: 76 complete save journeys.
+ test.setTimeout(180000);
  await normalFixture(page);
  const canonicalRows=await page.evaluate(rows=>{const found=new Map();for(const r of rows){const identity=accountSyncCatalogEntryForName('wishlist',r.name),item=_specialAllItems().find(e=>e.catalogId===identity?.catalogId);if(!item)throw Error('Not selectable: '+r.name);const previous=found.get(item.catalogId);if(previous&&previous.assets.shiny!==r.assets.shiny)throw Error('Conflicting alias mapping: '+r.name);found.set(item.catalogId,{...r,name:item.name});}return [...found.values()];},rows);
  for(const r of canonicalRows){await page.locator('#wants-add-name').fill(r.name);await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();await currentControls.priority(page,'H');await page.locator('#combined-shiny').check();await currentControls.genderDetails(page);await page.locator('#combined-gender').selectOption(r.sourceGenders.at(-1));await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);}
