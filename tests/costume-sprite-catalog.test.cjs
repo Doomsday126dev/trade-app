@@ -17,10 +17,10 @@ const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(catalog.entries.length,391);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,364);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,27);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,369);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,22);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,471);
+  assert.equal(assets.length,491);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/img\.pokemondb\.net|pokeminers|serebii|cdn08/i);
@@ -39,7 +39,7 @@ test('exact costumes resolve to distinct self-hosted art and gender variants',()
 });
 
 test('known costumes without reviewed art fail honestly instead of becoming base species',()=>{
-  for(const name of ['Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)','Pikachu (Fossil)','Noibat Headband',"Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)",'Pikachu (PokeXciting Turquoise)']){
+  for(const name of ['Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)','Noibat Headband',"Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)",'Pikachu (PokeXciting Turquoise)']){
     const result=resolver.resolution({name});
     assert.equal(result.knownVariant,true,name);
     assert.equal(result.status,'unavailable',name);
@@ -82,7 +82,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:402,unavailable:24});
+  assert.deepEqual(statusCounts,{exact:407,unavailable:19});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -156,13 +156,21 @@ test('search eligibility marks only audited released Pikachu identities without 
   const pending=JSON.parse(fs.readFileSync(path.join(root,'data/pending-costume-artwork.json'),'utf8'));
   const expected=pending.entries.filter(e=>e.species.dex===25&&e.identityStatus==='released').map(e=>e.displayIdentity).sort();
   const eligible=catalog.entries.filter(e=>e.identityStatus==='released');
-  assert.deepEqual(eligible.map(e=>e.names[0]).sort(),expected);
+  assert.deepEqual(eligible.filter(e=>e.status==='unavailable').map(e=>e.names[0]).sort(),expected);
   assert.equal(eligible.length,11);
-  for(const entry of eligible){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}
+  for(const entry of eligible.filter(e=>e.status==='unavailable')){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (Gloria)')).identityStatus,undefined);
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (GO Fest 2023)')).identityStatus,undefined);
 });
 
 test('explicit reviewed female art has no default-gender fallback',()=>{
   assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',gender:'f'}).urls),['assets/sprites/go/pikachu-detective-f.png']);
+});
+
+test('Pokemod source is pinned and every exact Shiny/gender variant is mandatory',()=>{
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='pokemod-reviewed');assert.equal(rows.length,5);
+ for(const row of rows){for(const gender of ['m','f'])for(const shiny of [false,true]){const key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(resolver.resolution({name:row.names[0],gender,shiny}).urls),[row.assets[key]]);}
+ for(const mutate of [r=>r.sourceCommit='0'.repeat(40),r=>r.sourceFiles.default='pm25.fWRONG.icon.png',r=>delete r.assets.femaleShiny,r=>r.sourceUrl='https://example.com/base.png']){const changed=structuredClone(catalog);mutate(changed.entries.find(e=>e.names[0]===row.names[0]));assert.throws(()=>validateCatalog(changed,root),/Pokemod/);}}
+ assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Astronaut)',shiny:true}).urls),[]);
+ assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',shiny:true}).urls),[]);
 });

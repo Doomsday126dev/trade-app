@@ -11,7 +11,7 @@ function reviewCandidate(catalog,releases,now=new Date()){
 }
 async function main(){
  const root=path.resolve(__dirname,'..'),catalog=JSON.parse(fs.readFileSync(path.join(root,'data/costume-sprite-catalog.json'))),releases=JSON.parse(fs.readFileSync(path.join(root,'data/costume-release-evidence.json')));
- const result={checkedAt:new Date().toISOString(),candidate:reviewCandidate(catalog,releases),missingExact:catalog.entries.filter(e=>e.status==='unavailable').map(e=>e.names[0]),shinyCoverage:'Not certified: reviewed catalog contains no separate Shiny asset evidence. Do not substitute normal art.',deployment:null};
+ const result={checkedAt:new Date().toISOString(),candidate:reviewCandidate(catalog,releases),missingExact:catalog.entries.filter(e=>e.status==='unavailable').map(e=>e.names[0]),shinyCoverage:'Partial: five reviewed Pokemod Pikachu identities have exact Shiny/default/female variants. Other Shiny costume art is not certified.',deployment:null};
  if(!process.argv.includes('--candidate-only')){
   try{const response=await fetch('https://doomsday126dev.github.io/trade-app/js/domain/costumeSpriteCatalog.js',{signal:AbortSignal.timeout(20000),cache:'no-store'});if(!response.ok)throw Error('Deployed catalog HTTP '+response.status);result.deployment={differentIdentities:compareCatalogs(catalog,parseRuntime(await response.text()))};}catch(e){result.deployment={error:e.message}};
  }
