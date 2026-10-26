@@ -21,4 +21,23 @@ test('Firebase 12.14.0 blocking hook rejects wrong-UID sign-in and permits only 
   await ready;await assert.rejects(sdk.signInWithEmailAndPassword(auth,b.user.email,password));assert.equal(auth.currentUser,null);
   release();const result=await pending;assert.equal(result.user.uid,a.user.uid);assert.equal(auth.currentUser.uid,a.user.uid);
   gate.dispose();
+  await sdk.signOut(auth);
+  // Exercise the actual custom-token bridge, not an email sign-in substitute.
+  const functionRequire=require('node:module').createRequire(path.join(__dirname,'../functions/package.json'));
+  const adminAppApi=functionRequire('firebase-admin/app'),adminAuthApi=functionRequire('firebase-admin/auth');
+  const adminApp=adminAppApi.initializeApp({projectId:'demo-pogo-discord'},`discord-custom-${suffix}`);t.after(()=>adminAppApi.deleteApp(adminApp));
+  const customToken=await adminAuthApi.getAuth(adminApp).createCustomToken(a.user.uid);
+  const direct=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,getLifecycle:()=>lifecycle,signInWithCustomToken:sdk.signInWithCustomToken});
+  const customResult=await direct.commitCustomToken({customToken,expectedUid:a.user.uid,expectedLifecycle:lifecycle});
+  assert.equal(customResult.user.uid,a.user.uid);assert.equal(auth.currentUser.uid,a.user.uid);
+  assert.equal((await customResult.user.getIdTokenResult()).signInProvider,'custom');
+  assert.ok(customResult.user.providerData.some(provider=>provider.providerId==='password'));
+  direct.dispose();
+  await sdk.signOut(auth);
+  let active=true,cancelEntered,cancelRelease;const cancelReady=new Promise(resolve=>{cancelEntered=resolve;}),cancelHeld=new Promise(resolve=>{cancelRelease=resolve;});
+  const canceledGate=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,getLifecycle:()=>lifecycle,
+    signInWithCustomToken:async(a,token)=>{cancelEntered();await cancelHeld;return sdk.signInWithCustomToken(a,token);}});
+  const secondToken=await adminAuthApi.getAuth(adminApp).createCustomToken(a.user.uid);
+  const canceled=canceledGate.commitCustomToken({customToken:secondToken,expectedUid:a.user.uid,expectedLifecycle:lifecycle,isCurrent:()=>active});
+  await cancelReady;active=false;cancelRelease();await assert.rejects(canceled,{code:'provider-auth/canceled'});assert.equal(auth.currentUser,null);canceledGate.dispose();
 });

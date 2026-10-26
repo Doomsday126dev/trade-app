@@ -21,6 +21,12 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
     if(!handle||handle.schemaVersion!==1||handle.uid!==uid||handle.state!=='active'||handle.canonicalTrainerName!==account.canonicalTrainerName||handle.normalizedTrainerName!==account.normalizedTrainerName||!Number.isSafeInteger(handle.revision)||handle.revision<1)fail('permission_denied','identity/handle_ownership_invalid');
     return{account,handle,accountFingerprint:fingerprint({account,handle})};
   }
+  function lifecycle(provider){
+    if(!provider)return 0;
+    if(!Number.isSafeInteger(provider.revision)||provider.revision<1||!['linked','unlinked'].includes(provider.state))fail('conflict','provider/link_state_invalid');
+    return provider.revision;
+  }
+  async function readProviderLifecycle({uid}){return firestore.runTransaction(async tx=>{await foundation(tx,uid);return lifecycle(data(await tx.get(providerRef(uid))));});}
   async function readFoundation({uid}){return firestore.runTransaction(tx=>foundation(tx,uid));}
   async function consumeRateLimit({keyHash,action,timestamp:at,windowMs,limit}){
     check(keyHash,HASH,'discord/rate_key_invalid');timestamp(at);
@@ -60,7 +66,9 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
     const target=reviewRef(record.reviewHash);if((await tx.get(target)).exists)fail('conflict','discord/confirmation_invalid');
     check(record.providerSubjectKey,SUBJECT,'discord/subject_invalid');timestamp(record.expiresAt);
     if(record.expiresAt<=now()||record.expiresAt-now()>300_000||!HASH.test(record.browserBindingHash))fail('invalid_argument','discord/confirmation_invalid');
-    tx.create(target,{...record,status:'pending',deleteAfter:new Date(record.expiresAt+300_000)});
+    const provider=data(await tx.get(providerRef(record.authority.uid))),reverse=data(await tx.get(subjectRef(record.providerSubjectKey)));
+    if(!Number.isSafeInteger(record.providerLifecycleRevision)||record.providerLifecycleRevision!==lifecycle(provider))fail('stale_state','discord/provider_changed');
+    tx.create(target,{...record,providerSubjectRevision:reverse?.revision||0,status:'pending',deleteAfter:new Date(record.expiresAt+300_000)});
   });}
   function exactReview(record,input){
     if(!record||record.expiresAt<=input.timestamp)fail('stale_state','discord/confirmation_expired');
@@ -87,9 +95,11 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       const [provider,reverse,receipt]=await Promise.all([tx.get(providerTarget).then(data),tx.get(subjectTarget).then(data),tx.get(receiptTarget).then(data)]);
       if(receipt){
         if(receipt.operation!=='linkDiscordSubject'||receipt.fingerprint!==input.requestFingerprint||!['linked','already-linked'].includes(receipt.result?.status))fail('replay_mismatch','idempotency/request_reused');
-        if(!coherent(provider,reverse,input.uid,input.providerSubjectKey))fail('conflict','provider/link_state_invalid');return{status:receipt.result.status,replay:true};
+        if(!coherent(provider,reverse,input.uid,input.providerSubjectKey)||receipt.result.providerLifecycleRevision!==provider.revision)fail('conflict','provider/link_state_invalid');return{status:receipt.result.status,replay:true};
       }
+      if(!Number.isSafeInteger(review.providerLifecycleRevision)||review.providerLifecycleRevision!==lifecycle(provider))fail('stale_state','discord/provider_changed');
       if(reverse&&reverse.state!=='released'&&reverse.uid!==input.uid)fail('conflict','provider/subject_already_linked');
+      if(review.providerSubjectRevision!==(reverse?.revision||0))fail('stale_state','discord/provider_changed');
       if(provider?.state==='linked'&&provider.providerSubjectKey!==input.providerSubjectKey)fail('conflict','provider/account_already_linked');
       if(reverse?.state==='released'&&reverse.uid!==input.uid){
         const old=data(await tx.get(providerRef(reverse.uid)));
@@ -99,12 +109,12 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       if(provider?.state==='linked'||reverse?.state==='claimed')already=coherent(provider,reverse,input.uid,input.providerSubjectKey);
       else if(provider&&provider.state!=='unlinked'||reverse&&reverse.state!=='released')fail('conflict','provider/link_state_invalid');
       const status=already?'already-linked':'linked';
+      const revision=already?provider.revision:Math.max(provider?.revision||0,reverse?.revision||0)+1;
       if(!already){
-        const revision=Math.max(provider?.revision||0,reverse?.revision||0)+1;
         const base={schemaVersion:1,provider:'discord',providerId:'discord.com',providerSubjectKey:input.providerSubjectKey,providerSubjectKeyVersion:1,revision,linkedAt:input.timestamp,updatedAt:input.timestamp};
         tx.set(providerTarget,{...base,state:'linked'});tx.set(subjectTarget,{...base,uid:input.uid,state:'claimed'});
       }
-      tx.create(receiptTarget,{schemaVersion:1,operation:'linkDiscordSubject',fingerprint:input.requestFingerprint,result:{status},createdAt:input.timestamp});
+      tx.create(receiptTarget,{schemaVersion:1,operation:'linkDiscordSubject',fingerprint:input.requestFingerprint,result:{status,providerLifecycleRevision:revision},createdAt:input.timestamp});
       tx.set(reviewTarget,{...review,status:'complete'});return{status,replay:false};
     });
   }
@@ -120,7 +130,7 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       const accepted=await foundation(tx,input.uid);
       if(accepted.accountFingerprint!==input.accountFingerprint)fail('stale_state','discord/foundation_changed');
       // The server verifier supplies exact, recent password-auth evidence, never a client boolean.
-      if(input.alternateAccess?.kind!=='verified-legacy-password'||input.alternateAccess.uid!==input.uid||input.alternateAccess.foundationFingerprint!==accepted.accountFingerprint||input.alternateAccess.verifiedAt>input.timestamp||input.timestamp-input.alternateAccess.verifiedAt>30_000)fail('permission_denied','discord/alternate_access_required');
+      if(input.alternateAccess?.kind!=='verified-legacy-password'||!Number.isSafeInteger(input.alternateAccess.verifiedAt)||input.alternateAccess.verifiedAt<0||input.alternateAccess.uid!==input.uid||input.alternateAccess.foundationFingerprint!==accepted.accountFingerprint||input.alternateAccess.verifiedAt>input.timestamp||input.timestamp-input.alternateAccess.verifiedAt>30_000)fail('permission_denied','discord/alternate_access_required');
       const providerTarget=providerRef(input.uid),receiptTarget=requestRef(input.uid,input.requestId);
       const provider=data(await tx.get(providerTarget)),receipt=data(await tx.get(receiptTarget));
       if(receipt){if(receipt.operation!=='unlinkDiscordSubject'||receipt.fingerprint!==input.requestFingerprint)fail('replay_mismatch','idempotency/request_reused');return{status:'unlinked',replay:true};}
@@ -133,6 +143,6 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       return{status:'unlinked',replay:false};
     });
   }
-  return Object.freeze({readFoundation,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
+  return Object.freeze({readFoundation,readProviderLifecycle,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
 }
 module.exports={createFirestoreDiscordOAuthStore};

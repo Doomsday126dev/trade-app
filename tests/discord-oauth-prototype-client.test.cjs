@@ -29,7 +29,7 @@ function env(options={}){
   vm.runInNewContext(SOURCE,{window,URL,Uint8Array,JSON,Object,Error,TypeError,Date,Number});
   const client=window.PogoDev.discordOAuthPrototypeClient.createDiscordOAuthPrototypeClient({fetchImpl,location,history,storage,cryptoApi:window.crypto,
     callbackUri:`${ORIGIN}/trade-app/`,getSessionBinding:()=>binding,clock:()=>now,getAuthorizationHeader:async()=>{options.onHeaders?.();return'Bearer synthetic-id-token';},
-    signInWithCustomToken:async(token,guard)=>{assert.equal(guard.isCurrent(),true);signIns.push(token);}});
+    signInWithCustomToken:async(token,guard)=>{if(options.signInWithCustomToken)return options.signInWithCustomToken(token,guard);assert.equal(guard.isCurrent(),true);signIns.push(token);}});
   function continuation(operation='link',extra={}){values.set(REQUEST_KEY,JSON.stringify({operation,requestId:`discord-${'a'.repeat(43)}`,...(operation==='link'?A:OUT),state:STATE,issuedAt:NOW,expiresAt:NOW+300000,...extra}));}
   return{client,values,writes,assigned,replaced,calls,signIns,continuation,storage,location,setBinding:value=>{binding=value;},setHref:value=>{href=value;},advance:ms=>{now+=ms;}};
 }
@@ -104,4 +104,29 @@ test('duplicate clicks cannot start two browser operations',async()=>{
 test('candidate stays outside production loaders and caches',()=>{
   for(const file of['index.html','sw.js','scripts/pages/frontend-files.json','js/app/application.js'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun/);
   assert.doesNotMatch(SOURCE,/localStorage|indexedDB|accountSync|journal|DISCORD_CLIENT_SECRET/);
+});
+test('cancel invalidates pending sign-in completion before any auth commit',async()=>{
+  let entered,release;const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const h=env({href:callback,signedOut:true,fetchImpl:async()=>{entered();await held;return new Response(JSON.stringify({ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-custom-token'}));}});h.continuation('sign-in');
+  const pending=h.client.completeFromLocation();await ready;h.client.cancel();release();
+  await assert.rejects(pending,{code:'discord/canceled'});assert.deepEqual(h.signIns,[]);
+});
+test('cancel invalidates pending begin before navigation and pending link completion before review',async()=>{
+  for(const operation of['begin','complete']){
+    let entered,release;const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+    const h=env({href:operation==='complete'?callback:undefined,fetchImpl:async()=>{
+      entered();await held;if(operation==='complete')return new Response(JSON.stringify({ok:true,operation:'link',status:'confirmation-required',confirmationToken:CONFIRM,discordLabel:'SyntheticDiscord',expiresInMs:300000}));
+      const url=new URL('https://discord.com/oauth2/authorize');url.search=new URLSearchParams({response_type:'code',client_id:'157730590492196864',redirect_uri:`${ORIGIN}/trade-app/`,scope:'identify',prompt:'consent',state:STATE,code_challenge:'c'.repeat(43),code_challenge_method:'S256'});return new Response(JSON.stringify({authorizeUrl:url.href,expiresInMs:300000}));
+    }});if(operation==='complete')h.continuation();
+    const pending=operation==='begin'?h.client.begin('link'):h.client.completeFromLocation();await ready;h.client.cancel();release();
+    await assert.rejects(pending,{code:'discord/canceled'});assert.deepEqual(h.assigned,[]);assert.equal(h.values.has(REQUEST_KEY),false);await assert.rejects(h.client.confirmLink(),{code:'discord/confirmation-expired'});
+  }
+});
+
+test('cancel during a pending auth commit invalidates the original commit guard',async()=>{
+  let entered,release,h;const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-token'},signInWithCustomToken:async(token,guard)=>{
+    entered();await held;if(!guard.isCurrent())throw Object.assign(new Error('canceled'),{code:'provider-auth/canceled'});h.signIns.push(token);
+  }});h.continuation('sign-in');const pending=h.client.completeFromLocation();await ready;h.client.cancel();release();
+  await assert.rejects(pending,{code:'discord/canceled'});assert.deepEqual(h.signIns,[]);
 });

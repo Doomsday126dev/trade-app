@@ -33,3 +33,9 @@ test('no Web Locks support fails closed rather than using an unsafe localStorage
   const h=setup();const window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/dev/providerAuthCommitGate.js'),'utf8'),{window,Object,Error,String,TypeError});
   assert.throws(()=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth:h.auth}),/Serialized auth/);
 });
+test('cancellation after an auth request starts is checked by the blocking SDK hook',async()=>{
+  const h=setup(),gate=h.create();let valid=true,release,entered;
+  const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const pending=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle,isCurrent:()=>valid},async()=>{entered();await held;await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};});
+  await ready;valid=false;release();await assert.rejects(pending,{code:'provider-auth/canceled'});assert.equal(h.auth.currentUser,null);assert.equal(h.hooks.size,0);
+});

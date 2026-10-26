@@ -118,7 +118,7 @@ function createDiscordOAuthPrototype({
 } = {}) {
   const settings = validateConfig(config);
   if (!store || !discord) throw new TypeError('Discord prototype adapters required');
-  for (const method of ['consumeRateLimit', 'createFlow', 'consumeFlow', 'finishFlow', 'linkSubjectAtomic', 'resolveSubject', 'createLinkReview', 'readLinkReview', 'finishLinkReview']) {
+  for (const method of ['consumeRateLimit', 'createFlow', 'consumeFlow', 'finishFlow', 'linkSubjectAtomic', 'resolveSubject', 'createLinkReview', 'readLinkReview', 'finishLinkReview', 'readProviderLifecycle']) {
     requiredFunction(store[method], `store.${method}`);
   }
   for (const method of ['exchangeCode', 'getCurrentUser', 'revokeToken']) {
@@ -152,6 +152,7 @@ function createDiscordOAuthPrototype({
     await rateLimit('begin', clientKey, timestamp);
     if (!['link', 'sign-in'].includes(operation)) fail('invalid_argument', 'discord/operation_invalid');
     const capturedAuthority = authority(await currentAuthority(), { required: operation === 'link' });
+    const providerLifecycleRevision = operation === 'link' ? await store.readProviderLifecycle({ uid: capturedAuthority.uid }) : null;
     const state = token();
     const verifier = token();
     const challenge = pkceChallenge(verifier);
@@ -165,6 +166,7 @@ function createDiscordOAuthPrototype({
       codeVerifier: verifier,
       codeChallenge: challenge,
       authority: capturedAuthority,
+      providerLifecycleRevision,
       createdAt: timestamp,
       expiresAt: timestamp + settings.flowTtlMs
     });
@@ -243,7 +245,7 @@ function createDiscordOAuthPrototype({
           fail('permission_denied', 'discord/token_response_invalid');
         }
         identity = await discord.getCurrentUser({ accessToken });
-        if (!identity || !SNOWFLAKE.test(String(identity.subject || '')) || typeof identity.label !== 'string' ||
+        if (!identity || typeof identity.subject !== 'string' || !SNOWFLAKE.test(identity.subject) || typeof identity.label !== 'string' ||
             !identity.label.trim() || identity.label.length > 80 || /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/u.test(identity.label)) {
           fail('permission_denied', 'discord/identity_invalid');
         }
@@ -285,7 +287,7 @@ function createDiscordOAuthPrototype({
         const confirmationToken = token();
         await store.createLinkReview({
           reviewHash: stateHash(confirmationToken), browserBindingHash: bindingHash(binding),
-          requestId: id, authority: flow.authority, providerSubjectKey,
+          requestId: id, authority: flow.authority, providerSubjectKey, providerLifecycleRevision: flow.providerLifecycleRevision,
           expiresAt: now() + settings.flowTtlMs
         });
         await store.finishFlow({ stateHash: flow.stateHash, status: 'complete', reason: 'confirmation_required', timestamp: now() });

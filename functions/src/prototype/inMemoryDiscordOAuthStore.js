@@ -90,10 +90,13 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
     });
   }
 
+  function lifecycle(provider){if(!provider)return 0;if(!Number.isSafeInteger(provider.revision)||provider.revision<1)fail('conflict','provider/link_state_invalid');return provider.revision;}
+  async function readProviderLifecycle({uid}){return serialized(()=>lifecycle(state.accounts[uid]?.providers?.discord));}
   async function createLinkReview(record) {
     return serialized(() => {
       if (!HASH.test(record.reviewHash) || state.linkReviews[record.reviewHash]) fail('conflict', 'discord/confirmation_invalid');
-      state.linkReviews[record.reviewHash] = clone(record);
+      if(record.providerLifecycleRevision!==lifecycle(state.accounts[record.authority.uid]?.providers?.discord))fail('stale_state','discord/provider_changed');
+      state.linkReviews[record.reviewHash] = {...clone(record),providerSubjectRevision:state.providerSubjects[record.providerSubjectKey]?.revision||0};
     });
   }
 
@@ -114,7 +117,7 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
     const provider = draft.accounts[uid]?.providers?.discord || null;
     if (!reverse && !provider) return false;
     if (!reverse || !provider || reverse.uid !== uid || reverse.providerSubjectKey !== providerSubjectKey ||
-        provider.providerSubjectKey !== providerSubjectKey || reverse.provider !== 'discord' || provider.provider !== 'discord') {
+        provider.providerSubjectKey !== providerSubjectKey || provider.state!=='linked'||reverse.state!=='claimed'||provider.revision!==reverse.revision||reverse.provider !== 'discord' || provider.provider !== 'discord') {
       fail('conflict', 'provider/link_state_invalid');
     }
     return true;
@@ -141,17 +144,20 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
             !['linked', 'already-linked'].includes(existingRequest.result?.status)) {
           fail('replay_mismatch', 'idempotency/request_reused');
         }
-        if (!coherentPair(draft, input.uid, input.providerSubjectKey)) fail('conflict', 'provider/link_state_missing');
+        if (!coherentPair(draft, input.uid, input.providerSubjectKey)||existingRequest.result.providerLifecycleRevision!==account.providers.discord.revision) fail('conflict', 'provider/link_state_missing');
         return { status: existingRequest.result.status, replay: true };
       }
       const claimed = draft.providerSubjects[input.providerSubjectKey];
+      if(review.providerLifecycleRevision!==lifecycle(account.providers?.discord))fail('stale_state','discord/provider_changed');
       if (claimed && claimed.uid !== input.uid) fail('conflict', 'provider/subject_already_linked');
+      if(review.providerSubjectRevision!==(claimed?.revision||0))fail('stale_state','discord/provider_changed');
       const currentProvider = account.providers?.discord;
       if (currentProvider && currentProvider.providerSubjectKey !== input.providerSubjectKey) {
         fail('conflict', 'provider/account_already_linked');
       }
       const alreadyLinked = coherentPair(draft, input.uid, input.providerSubjectKey);
       const status = alreadyLinked ? 'already-linked' : 'linked';
+      const revision=alreadyLinked?account.providers.discord.revision:Math.max(lifecycle(account.providers?.discord),claimed?.revision||0)+1;
       if (!alreadyLinked) {
         account.providers ||= {};
         account.providers.discord = {
@@ -159,7 +165,9 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
           provider: 'discord',
           providerId: 'discord.com',
           providerSubjectKey: input.providerSubjectKey,
-          linkedAt: input.timestamp
+          linkedAt: input.timestamp,
+          revision,
+          state:'linked'
         };
         draft.providerSubjects[input.providerSubjectKey] = {
           schemaVersion: 1,
@@ -167,7 +175,9 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
           providerId: 'discord.com',
           providerSubjectKey: input.providerSubjectKey,
           uid: input.uid,
-          linkedAt: input.timestamp
+          linkedAt: input.timestamp,
+          revision,
+          state:'claimed'
         };
       }
       draft.operationRequests[input.uid] ||= {};
@@ -175,7 +185,7 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
         operation: 'linkDiscordSubject',
         fingerprint: input.requestFingerprint,
         status: 'complete',
-        result: { status }
+        result: { status,providerLifecycleRevision:revision }
       };
       state = draft;
       return { status, replay: false };
@@ -199,7 +209,7 @@ function createInMemoryDiscordOAuthStore(seed = {}) {
     return snapshot;
   }
 
-  return Object.freeze({ consumeRateLimit, createFlow, consumeFlow, finishFlow, linkSubjectAtomic, resolveSubject, createLinkReview, readLinkReview, finishLinkReview, inspect });
+  return Object.freeze({ consumeRateLimit, readProviderLifecycle, createFlow, consumeFlow, finishFlow, linkSubjectAtomic, resolveSubject, createLinkReview, readLinkReview, finishLinkReview, inspect });
 }
 
 module.exports = { createInMemoryDiscordOAuthStore };

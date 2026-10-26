@@ -90,3 +90,21 @@ test('concurrent claims across UIDs serialize to one owner, and an old confirmat
   await assert.rejects(confirm(review,current),error=>error.reason==='provider/link_state_invalid');
   assert.equal(await h.store.resolveSubject({providerSubjectKey:provider.providerSubjectKey}),null);
 });
+test('an unconsumed review from before unlink cannot reconnect, while fresh explicit consent can',async()=>{
+  const h=await harness(),first=await h.review('before-a'),pending=await h.review('before-b');await h.confirm(first);
+  const authority=await h.authority(),provider=(await h.db.doc(`accounts/${h.a}/providers/discord`).get()).data();
+  await h.store.unlinkSubjectAtomic({uid:h.a,accountFingerprint:authority.accountFingerprint,expectedProviderRevision:provider.revision,requestId:`unlink-second-${h.a}`,requestFingerprint:hash('unlink-second'),timestamp:h.time,alternateAccess:{kind:'verified-legacy-password',uid:h.a,foundationFingerprint:authority.accountFingerprint,verifiedAt:h.time}});
+  await assert.rejects(h.confirm(pending),error=>error.reason==='discord/provider_changed');
+  assert.equal(await h.store.resolveSubject({providerSubjectKey:provider.providerSubjectKey}),null);
+  const fresh=await h.review('fresh-after-unlink');assert.equal((await h.confirm(fresh)).status,'linked');
+});
+test('confirm racing unlink never reconnects the method after the release transaction',async()=>{
+  const h=await harness(),first=await h.review('race-initial');await h.confirm(first);
+  const pending=await h.review('race-pending'),authority=await h.authority(),provider=(await h.db.doc(`accounts/${h.a}/providers/discord`).get()).data();
+  const results=await Promise.allSettled([
+    h.confirm(pending),
+    h.store.unlinkSubjectAtomic({uid:h.a,accountFingerprint:authority.accountFingerprint,expectedProviderRevision:provider.revision,requestId:`unlink-consent-race-${h.a}`,requestFingerprint:hash('unlink-consent-race'),timestamp:h.time,alternateAccess:{kind:'verified-legacy-password',uid:h.a,foundationFingerprint:authority.accountFingerprint,verifiedAt:h.time}})
+  ]);
+  assert.equal(results[1].status,'fulfilled');if(results[0].status==='rejected')assert.equal(results[0].reason.reason,'discord/provider_changed');
+  assert.equal(await h.store.resolveSubject({providerSubjectKey:provider.providerSubjectKey}),null);
+});

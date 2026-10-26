@@ -23,7 +23,7 @@
     const redirect=new URL(callbackUri,origin);
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
-    let inFlight=false,review=null;
+    let generation=0,activeRun=null,review=null;
     function session(operation){
       const value=getSessionBinding();
       if(!exactKeys(value,['ownerBinding','lifecycleBinding'])||!BINDING.test(value.lifecycleBinding)||
@@ -34,36 +34,39 @@
       const value=session(expected.operation);
       if(value.ownerBinding!==expected.ownerBinding||value.lifecycleBinding!==expected.lifecycleBinding)throw failure('discord/session-changed');
     }
-    async function request(route,pending,payload){
-      assertCurrent(pending);
+    async function request(route,pending,payload,run){
+      run.check();assertCurrent(pending);
       const headers={'content-type':'application/json'};
       if(pending.operation==='link'){
         const authorization=await getAuthorizationHeader();
-        assertCurrent(pending);
+        run.check();assertCurrent(pending);
         if(!authorization)throw failure('discord/auth-required');headers.authorization=authorization;
       }
-      const response=await fetchImpl(endpoint(route),{method:'POST',credentials:'same-origin',redirect:'error',headers,body:JSON.stringify(payload)});
-      assertCurrent(pending);
+      const response=await fetchImpl(endpoint(route),{method:'POST',credentials:'same-origin',redirect:'error',headers,body:JSON.stringify(payload),...(run.controller?{signal:run.controller.signal}:{})});
+      run.check();assertCurrent(pending);
       let data;try{data=await response.json();}catch{throw failure('discord/response-invalid');}
-      assertCurrent(pending);
+      run.check();assertCurrent(pending);
       if(!response.ok||data?.ok===false)throw failure(SAFE_REASONS.has(data?.error?.reason)?data.error.reason:'discord/request-failed');
       return data;
     }
     async function exclusive(work){
-      if(inFlight)throw failure('discord/operation-pending');
-      inFlight=true;try{return await work();}finally{inFlight=false;}
+      if(activeRun)throw failure('discord/operation-pending');
+      const run={generation:++generation,controller:global.AbortController?new global.AbortController():null};
+      run.check=()=>{if(generation!==run.generation||run.controller?.signal.aborted)throw failure('discord/canceled');};
+      activeRun=run;
+      try{return await work(run);}catch(error){run.check();throw error;}finally{if(activeRun===run)activeRun=null;}
     }
     function clearPending(){storage.removeItem(REQUEST_KEY);}
     function scrubCallback(){
       const clean=new URL(location.href);for(const key of['code','state','iss','error','error_description','error_uri'])clean.searchParams.delete(key);
       history.replaceState(history.state,'',`${clean.pathname}${clean.search}${clean.hash}`);
     }
-    async function begin(operation){return exclusive(async()=>{
+    async function begin(operation){return exclusive(async run=>{
       if(!['link','sign-in'].includes(operation))throw new TypeError('Invalid Discord operation');
       review=null;clearPending();
       const captured=session(operation),issuedAt=clock();
       const pending={operation,requestId:`discord-${base64url(cryptoApi.getRandomValues(new Uint8Array(32)))}`,...captured};
-      const result=await request('begin',pending,{operation,requestId:pending.requestId});
+      const result=await request('begin',pending,{operation,requestId:pending.requestId},run);
       if(!exactKeys(result,['authorizeUrl','expiresInMs'])||!Number.isSafeInteger(result.expiresInMs)||result.expiresInMs<1||result.expiresInMs>TTL_MS)throw failure('discord/response-invalid');
       const authorize=new URL(result.authorizeUrl);
       const fields=['response_type','client_id','redirect_uri','scope','state','code_challenge','code_challenge_method','prompt'];
@@ -73,12 +76,12 @@
         authorize.searchParams.get('code_challenge_method')!=='S256'||!TOKEN.test(authorize.searchParams.get('state'))||
         !TOKEN.test(authorize.searchParams.get('code_challenge'))||!/^\d{5,32}$/.test(authorize.searchParams.get('client_id'))||
         authorize.searchParams.get('redirect_uri')!==redirect.href||authorize.searchParams.has('client_secret'))throw failure('discord/authorization-url-invalid');
-      assertCurrent(pending);
+      run.check();assertCurrent(pending);
       storage.setItem(REQUEST_KEY,JSON.stringify({...pending,state:authorize.searchParams.get('state'),issuedAt,expiresAt:issuedAt+result.expiresInMs}));
       try{location.assign(authorize.href);}catch{clearPending();throw failure('discord/navigation-failed');}
       return Object.freeze({status:'redirecting'});
     });}
-    async function completeFromLocation(){return exclusive(async()=>{
+    async function completeFromLocation(){return exclusive(async run=>{
       const callback=new URL(location.href),hasCallback=['code','state','error'].some(key=>callback.searchParams.has(key));
       if(!hasCallback)return null;
       // Scrub before storage, network, or validation can throw. Never render provider error text.
@@ -88,7 +91,7 @@
         !['link','sign-in'].includes(pending.operation)||!/^discord-[A-Za-z0-9_-]{43}$/.test(pending.requestId)||
         !TOKEN.test(pending.state)||!Number.isSafeInteger(pending.issuedAt)||!Number.isSafeInteger(pending.expiresAt)||
         pending.expiresAt<=clock()||pending.issuedAt>clock()||pending.expiresAt-pending.issuedAt>TTL_MS)throw failure('discord/continuation-invalid');
-      assertCurrent(pending);
+      run.check();assertCurrent(pending);
       if(callback.searchParams.getAll('iss').length!==1||callback.searchParams.get('iss')!=='https://discord.com'||callback.origin!==redirect.origin||callback.pathname!==redirect.pathname||callback.searchParams.getAll('state').length!==1||callback.searchParams.get('state')!==pending.state)throw failure('discord/callback-invalid');
       if(callback.searchParams.has('error')){
         if(callback.searchParams.has('code')||callback.searchParams.getAll('error').length!==1)throw failure('discord/callback-invalid');
@@ -96,7 +99,7 @@
       }
       const code=callback.searchParams.get('code');
       if(callback.searchParams.getAll('code').length!==1||typeof code!=='string'||code.length<8||code.length>2048||/[\u0000-\u001f\u007f]/.test(code))throw failure('discord/callback-invalid');
-      const result=await request('complete',pending,{code,issuer:callback.searchParams.get('iss'),state:pending.state,requestId:pending.requestId});
+      const result=await request('complete',pending,{code,issuer:callback.searchParams.get('iss'),state:pending.state,requestId:pending.requestId},run);
       if(result.operation!==pending.operation||result.ok!==true)throw failure('discord/response-invalid');
       if(pending.operation==='link'&&exactKeys(result,['ok','operation','status','confirmationToken','discordLabel','expiresInMs'])&&
         result.status==='confirmation-required'&&TOKEN.test(result.confirmationToken)&&typeof result.discordLabel==='string'&&result.discordLabel.length<=80&&
@@ -107,23 +110,23 @@
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status','uid','customToken'])&&result.status==='existing-account'&&
         typeof result.uid==='string'&&/^[A-Za-z0-9_-]{6,128}$/.test(result.uid)&&typeof result.customToken==='string'&&result.customToken.length>=8&&result.customToken.length<=8192){
         if(typeof signInWithCustomToken!=='function')throw failure('discord/sign-in-unavailable');
-        assertCurrent(pending);
+        run.check();assertCurrent(pending);
         // The host must serialize ALL auth actions, including cross-tab changes, with this commit.
-        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,isCurrent:()=>{try{assertCurrent(pending);return true;}catch{return false;}}});
-        return Object.freeze({status:'existing-account'});
+        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,isActive:()=>{try{run.check();return true;}catch{return false;}},isCurrent:()=>{try{run.check();assertCurrent(pending);return true;}catch{return false;}}});
+        run.check();return Object.freeze({status:'existing-account'});
       }
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status'])&&result.status==='onboarding-required')return Object.freeze({status:'onboarding-required'});
       throw failure('discord/response-invalid');
     });}
-    async function confirmLink(){return exclusive(async()=>{
+    async function confirmLink(){return exclusive(async run=>{
       if(!review||clock()>=review.expiresAt)throw failure('discord/confirmation-expired');
       const captured=review;
-      const result=await request('confirm',captured,{confirmationToken:captured.confirmationToken,requestId:captured.requestId});
+      const result=await request('confirm',captured,{confirmationToken:captured.confirmationToken,requestId:captured.requestId},run);
       if(!exactKeys(result,['ok','operation','status','replay'])||result.ok!==true||result.operation!=='link'||
         !['linked','already-linked'].includes(result.status)||typeof result.replay!=='boolean')throw failure('discord/response-invalid');
       review=null;return Object.freeze({status:result.status});
     });}
-    function cancel(){review=null;clearPending();}
+    function cancel(){generation++;const previous=activeRun;activeRun=null;previous?.controller?.abort();review=null;clearPending();}
     return Object.freeze({begin,completeFromLocation,confirmLink,cancel});
   }
   root.discordOAuthPrototypeClient=Object.freeze({REQUEST_KEY,TTL_MS,createDiscordOAuthPrototypeClient});
