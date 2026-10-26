@@ -243,7 +243,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await expect(pikachu).toBeVisible();
   expect(await pikachu.evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
   await expect(pikachu.locator('.background-visual-label')).toHaveCount(0);
-  await expect(pikachu.getByRole('button',{name:'Remove Pikachu'})).toBeVisible();
+  await pikachu.locator('.myrow-edit').click();await expect(page.locator('#wants-remove')).toHaveAttribute('aria-label','Remove Pikachu');await page.keyboard.press('Escape');
   await capture(page,'trusted-journey-my-list-1440x900');
 
   await page.locator('#wants-add-name').fill('Squirtle');
@@ -257,8 +257,8 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await page.locator('#combined-save').click();
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('M');
 
-  page.once('dialog',dialog=>dialog.accept());
-  await page.locator('.myrow[data-name="Squirtle"] .myrow-remove').click();
+  await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
+  await page.locator('#wants-remove').click();
   await expect(page.locator('.myrow[data-name="Squirtle"]')).toHaveCount(0);
   expect(await page.evaluate(id=>accountSyncCanonicalEntities.find(entry=>entry.entityId===id)?.deleted,addedId)).toBe(true);
   expect(await page.evaluate(()=>window.__trustedWrites||[])).toEqual([]);
@@ -354,7 +354,7 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await expect(page.locator('#nav-mylist')).toHaveAttribute('aria-selected','true');
     await expect(page.locator('.myrow').first()).toBeVisible();
     await page.locator('#combined-list .myrow').evaluateAll(rows=>Promise.all(rows.flatMap(row=>row.getAnimations().map(animation=>animation.finished))));
-    const removeBox=await page.locator('.myrow-remove').first().boundingBox();
+    const removeBox=await page.locator('.myrow-edit').first().boundingBox();
     expect(removeBox?.width).toBeGreaterThanOrEqual(viewport.width<=600?43.9:39.9);expect(removeBox?.height).toBeGreaterThanOrEqual(43.9);
     expect(await page.locator('.myrow').first().evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
     await expectNoOverflow(page);

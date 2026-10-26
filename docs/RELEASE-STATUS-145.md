@@ -1,0 +1,13 @@
+# .145 local release checkpoint
+
+The isolated source is `9581a61b8b3127d8fae518b950882871e9f2f954` on `fix/costume-and-list145`. It contains only reviewed Pikachu Shiny artwork/eligibility corrections and approved current-design list/picker/Events-status/More-spacing polish. It is not published or deployed.
+
+Local isolated qualification: 1,944 passing unit tests and 12 existing skips; 34 passing browser cases across Chromium/WebKit; eight original performance tests passing; mandatory frontend release checks passing. Source assets and all supported Shiny genders were decoded and inspected. Existing unsupported saved qualifiers were verified to survive priority-only edits and change only on explicit correction.
+
+The integration branch preserves unpublished main editor/share work. Its independent preflight has 2,003 passing unit tests, 12 existing skips and 11 read-contract failures because .145 is intentionally not yet registered. Its eight artwork and nine UI browser cases pass. Do not treat this as a green aggregate or deploy it.
+
+Automatic approval review denied the exact-source registration/workflow change twice. Neither denied command executed. Do not retry or use an alternate route without materially new applicable user approval. Required approval is for registering this exact SHA under the existing recovery read contract, extending the local release selector to .145, adding positive/unknown-SHA/changed-private-target regression cases, and pinning the isolated-runtime qualification workflow to this source while preserving existing permissions and candidate budgets. No OAuth, database rules, read paths, credentials or production account data changes are proposed.
+
+A read-only semantic comparison against the registered .144 runtime confirmed all 24 read sites, paths, feature gates, audiences and handler hashes are identical. This evidence is not itself release approval. The seven ambiguous costume gaps and baseline expiry `2026-11-02T00:40:09.188Z` remain; the explicitly reviewed baseline delta covers only 76 intended mapping changes and the explicit Detective 2023 record.
+
+Synthetic phone/desktop screenshots were rendered and inspected. Library delivery could not start because the current required prepared-upload companion `library_hosted_apps.py` was unavailable. No upload was attempted and no Library IDs were created for these screenshots.

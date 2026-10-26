@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -668,49 +668,49 @@
       "id": "pokemon:25:costume:beanie-2019",
       "identity": "Pikachu (Winter 2019)",
       "gap": false,
-      "fingerprint": "463fb11c59b8c2a6063a3f086794184d245974216536cb9852f9c475728503bb"
+      "fingerprint": "236c7c0f0867a480cae146c9ecd7f9dca9169bf49d27433092c79fd95e0ce8c3"
     },
     {
       "id": "pokemon:25:costume:cherry-blossom-2023",
       "identity": "Pikachu (Cherry Blossom)",
       "gap": false,
-      "fingerprint": "f8d6c3257abcf3bcd9989b46efd9579d0948786c00b200cd0688efcf11ad69f2"
+      "fingerprint": "6a1f6a25a00dce480ce46c78118b6f33894a4c0b282ab8d1f6b5586b02551fb9"
     },
     {
       "id": "pokemon:25:costume:flower-hat-2020",
       "identity": "Pikachu (Spring)",
       "gap": false,
-      "fingerprint": "a76198c138004da1978db0ceb5d0cff22b51b4d707a0a5ac621356c03f17acd1"
+      "fingerprint": "97949839184193c0be25093c14c16d6ea1bdb043fb574b4afafe17464f91f199"
     },
     {
       "id": "pokemon:25:costume:gofest-2021-meloetta-hat",
       "identity": "Pikachu (Meloetta Hat)",
       "gap": false,
-      "fingerprint": "99cd6c602e9af366e47fa39b7003e3f4f216d2e1a575ab86676c036185221656"
+      "fingerprint": "c991b2d40ffe5686ded0f54519b80d7f5efc38c7e79f343b8e751c05f4cd1e72"
     },
     {
       "id": "pokemon:25:costume:gofest-2022-gracidea",
       "identity": "Pikachu (Shaymin Flower)",
       "gap": false,
-      "fingerprint": "588fa5faa145e6800d716a0407b77ffbce16960f3037a1028b4c72484ab8c91c"
+      "fingerprint": "51fd4f783e6a4c850ac121be55ffb987cb06ccf4b0e40537105e4a18f22b1b01"
     },
     {
       "id": "pokemon:25:costume:gotour-2023-may",
       "identity": "Pikachu (May)",
       "gap": false,
-      "fingerprint": "13f52f7fd1604aa695ed0457576e4940f33d2c19ee2589131b59576f3533b72a"
+      "fingerprint": "1a9ddea136ef316fd33976a5af4009842f83156bf16678669b285f0f834cc0c5"
     },
     {
       "id": "pokemon:25:costume:halloween-2021",
       "identity": "Pikachu (Halloween 2021)",
       "gap": false,
-      "fingerprint": "54a5821c9285fd28d539a3a92a528875ccb01f4242729987f271f3ac71a290ee"
+      "fingerprint": "0b18961fc2cfe81eee1e9d343da5dfd162785da8990b03c11b36d856f0ae423b"
     },
     {
       "id": "pokemon:25:costume:indonesia-football-2025",
       "identity": "Pikachu (Timnas Indonesia)",
       "gap": false,
-      "fingerprint": "a31158ea496c9a980f009375d237b2f271b2b85beaa3986f399cc86c32ea33af"
+      "fingerprint": "5bbfd02e6b1e0f9d2b07b977c3e833f44bb506dffd5280e7480a33ce8b40ff42"
     },
     {
       "id": "pokemon:25:costume:original-cap",
@@ -722,13 +722,13 @@
       "id": "pokemon:25:costume:party-hat-original",
       "identity": "Pikachu (Purple Party)",
       "gap": false,
-      "fingerprint": "ff67c8b6be61915612cea31d3c45d91a0783d6018ccb601f530274bea96f2118"
+      "fingerprint": "d3d1cb3bcba7b87204cf7426d10aa543002cabaca754761c931530dfce8b73fb"
     },
     {
       "id": "pokemon:25:costume:party-top-hat-2023",
       "identity": "Pikachu (Top Hat)",
       "gap": false,
-      "fingerprint": "5949a555b79184059e624701c8b462a21a9cc23b23d81e231f40eccc9528a385"
+      "fingerprint": "6150aec90a1a4c3e21decc5f8223f72f49ba3a2f384d56052b7bb50dd07ec5e4"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
@@ -740,13 +740,13 @@
       "id": "pokemon:25:costume:PIKACHU_BB_2026",
       "identity": "Pikachu (Baseball)",
       "gap": false,
-      "fingerprint": "57353255bd4d4103110742977f9e57cf395a91a22e54677e6e278e029106b5cf"
+      "fingerprint": "fae460a4da8d788c5284507b1655b93151cc7c1736302f84e1aabbc0449efcc6"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_COSTUME_2020",
       "identity": "Pikachu (Flying)",
       "gap": false,
-      "fingerprint": "3162720b25a7abbf23bf86c8115e2cbac5b74e18e1b35b2e3aaba21ddb10aae2"
+      "fingerprint": "cb981b33cf185dd3c0ac7c43d11538141ede863bca4e061cd950acf5ceedbadd"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_DOCTOR",
@@ -758,109 +758,109 @@
       "id": "pokemon:25:costume:PIKACHU_FLYING_01",
       "identity": "Pikachu (Flying Green)",
       "gap": false,
-      "fingerprint": "ca6982495a8bc13629801a9797d9bcec06ff576a6845b07311d8da76f1b77f26"
+      "fingerprint": "9965b6d6c17b875f28d4b909fe4950db9044a5e9503ea2a56b63bcb4156e7905"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_02",
       "identity": "Pikachu (Flying Purple)",
       "gap": false,
-      "fingerprint": "09dc2a194b27404f6a539b64ce51b5124a3120ab10cef22ac7595244abc86a8f"
+      "fingerprint": "88682636d276615b7a13552800c4c9ba8751aab8254cbf06fbe354a7cf903bfd"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_03",
       "identity": "Pikachu Flying 03",
       "gap": false,
-      "fingerprint": "e4c23ee7bebee354d770c6e4c4eef24a035e5a24b2e0bae20d27812495966a12"
+      "fingerprint": "efdb26a834291daa889d0a7142871bba95c7c901f1fa4d737a6d4e5a346b5c31"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_04",
       "identity": "Pikachu (Indonesia Balloon)",
       "gap": false,
-      "fingerprint": "6d4fe322898358b0e6f29abe2beab3928b14fafed5b88737a02c7264c7cc5114"
+      "fingerprint": "651a6b0e73df99e1c3eb06926fc76ae8c5da5f13f6fa01c5bec3419339377c08"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_5TH_ANNIV",
       "identity": "Pikachu (5th Anniversary)",
       "gap": false,
-      "fingerprint": "21b9d0732bc54e320d329f82b1b6d4a9c97871ea2cb03a414b976716d33673ff"
+      "fingerprint": "e7bd8ce6975bc6d0d6d1730f1f79204f0f92bfe7d38ff0feed1c47806c7d569b"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_OKINAWA",
       "identity": "Pikachu (Fly Okinawa)",
       "gap": false,
-      "fingerprint": "f6d997bcce3748c0a2e881f2cf9a9104e1543afd20f1ee51ad0d249c9ded952a"
+      "fingerprint": "821e150c0aba15fc9c71ef0674adcec7569eb5768e0e2210a061e3c149da9f5b"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2022",
       "identity": "Pikachu (Shaymin Scarf)",
       "gap": false,
-      "fingerprint": "ba7483446391132457a8cfca07ad33779cdc6a15a45ce4b54b1510fdc533c78e"
+      "fingerprint": "1beb1ecf60536b2a0a1b1ad22de77f7be052560d9baefd56e3324a238d3bfc8c"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2024_MTIARA",
       "identity": "Pikachu (Moon)",
       "gap": false,
-      "fingerprint": "d63bda0809ec1946bf0ad429c6d1347bd918cfb6bff92ddaeb7ab9a8be6c41fd"
+      "fingerprint": "edeff82abfacffda9f370d5ad721ebc36a9c2591d190c7824c45f0aeb25c1310"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2024_STIARA",
       "identity": "Pikachu (Sun)",
       "gap": false,
-      "fingerprint": "8e150bbd4d1232459c4ef7084db222692054cf42098316bf627719c90bf3d4fb"
+      "fingerprint": "e69ef578188865cc039871c4aa84ddce6cf136923b9821fa142fcc4e230dd8a4"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_GOGGLES_BLUE",
       "identity": "Pikachu (Dapper) Goggles - Blue",
       "gap": false,
-      "fingerprint": "f20facc0ffc43d12e48bcfe14013852ed21c45ee8381f0f99f8ce3b5549e72ec"
+      "fingerprint": "e13af71864e76408ffc1d2ac26fcb67e4ef24041a26e47af59889e89f39045ea"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_GOGGLES_RED",
       "identity": "Pikachu (Dapper) Goggles - Red",
       "gap": false,
-      "fingerprint": "c63ea6287c0c1f50007bda85408ff54b3b7626193013139e1d5929495fc28221"
+      "fingerprint": "969d44fb66b04ba64814081cb316eea5ce889075f17d2c273c3cec814907f3fa"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_GOGGLES_YELLOW",
       "identity": "Pikachu (Dapper) Goggles - Yellow",
       "gap": false,
-      "fingerprint": "a7798c4c507cf87773a31c459fc109debb986382c3f6d5f4f11f280bbdd9a2c7"
+      "fingerprint": "d1f98af27ce841b6c24ca741b9cabaa15d49195ad4777bc21b4d86e106d49dbc"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_MONOCLE_BLUE",
       "identity": "Pikachu (Dapper) Monocle - Blue",
       "gap": false,
-      "fingerprint": "8f5a6486b2c65927232febc9246dc8a7e37649cbe83fb57f7e6a36c82c11e924"
+      "fingerprint": "fb44469dd9c993062cea766d7ab50e20cc6895bd96c4508655c3d0cb6dd51f6a"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_MONOCLE_RED",
       "identity": "Pikachu (Dapper) Monocle - Red",
       "gap": false,
-      "fingerprint": "5c92b7a6f3165903fb12ba49aa8bbb6b9e345a1cf7c77ee9b793d72e1f8c6a84"
+      "fingerprint": "cc72251d407a09a9463d73cd623ca91264bd015675988f790477e4c012ffc007"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOFEST_2025_MONOCLE_YELLOW",
       "identity": "Pikachu (Dapper) Monocle - Yellow",
       "gap": false,
-      "fingerprint": "4ae514df24ff28c0e56df539eb4faee1a1c734e44143f5c1d9d6b83d007a4b6a"
+      "fingerprint": "84e3fc474dcc665731e0576481f9ba37c3d568c19e501162854f065c3f15e670"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOTOUR_2024_B_02",
       "identity": "Pikachu (Akari)",
       "gap": false,
-      "fingerprint": "da62e2746606596ae9c3879330404c8d093279ee1703d17a319cae65314ef4be"
+      "fingerprint": "601db20dd47fefee7aaec3b3891c63c9c7d3ad469512327d4692dfb921b1cb48"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOTOUR_2025_B",
       "identity": "Pikachu (Nate)",
       "gap": false,
-      "fingerprint": "1c686f30ecce313997bc1f484f33fdaec6a2472104ec7057bf11d6d555d0a349"
+      "fingerprint": "ee0a707f49eeeca2e39050187b59e7abb5b88cab653084f7a5af17f527ce11ab"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_GOTOUR_2025_B_02",
       "identity": "Pikachu (Rosa)",
       "gap": false,
-      "fingerprint": "885036aa6f48472fdb5ced17cdf3bdd0bc661e379a067b17c4c0450651aacfb7"
+      "fingerprint": "4ea16bb1bdecadef0e7307426d386ff017821ab2e83898596a2b5b49523e1c3b"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_HORIZONS",
@@ -872,7 +872,7 @@
       "id": "pokemon:25:costume:PIKACHU_KARIYUSHI",
       "identity": "Pikachu (Kariyushi Shirt)",
       "gap": false,
-      "fingerprint": "41e0ca24cfbd376d8db112fcaaded1ab50da773c4a4626500868dd685ce0f24d"
+      "fingerprint": "39db0ba37fc9b4c635b7acd50704e2a8b0427841da30fa448df2aac98a7584fa"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_PXP_2026",
@@ -884,37 +884,37 @@
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_A",
       "identity": "Pikachu (Malachite)",
       "gap": false,
-      "fingerprint": "b4da47904fb391e0277aee168c7e56cb5c2e1e7e7e4428b20ba274ff397cdae6"
+      "fingerprint": "6109c0520f1a31583d3fd8a91a3d00f18fbcbbd540b1fffdedaf7f70963d0910"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_B",
       "identity": "Pikachu (Aquamarine)",
       "gap": false,
-      "fingerprint": "732a6f80e55f4ec02256bb88665f9f5295a13ee5af55dc5139209634619baae2"
+      "fingerprint": "0312ef554d1d4ce473f733ea09d2599ab99325eff34caa184d49c7e9acffffe5"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_C",
       "identity": "Pikachu (Quartz)",
       "gap": false,
-      "fingerprint": "b19d96ec55630343e26f60b5dc181c60d73d0200e34863322742fb84e22ec2fd"
+      "fingerprint": "49ce5c8a1b9bc64c2760f0a526e26f40629e6700f36493ff14733fe3a5d0e721"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_D",
       "identity": "Pikachu (Pyrite)",
       "gap": false,
-      "fingerprint": "c906a139f5ac3c5214c24daa58ea2bb4c02d24bc3152391b852fec3b6cc8a57c"
+      "fingerprint": "aafe3333691cee1abf5bf16bcc37035a0c5559fbe9678f9cac1d60b9528c4f00"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_E",
       "identity": "Pikachu (Amethyst)",
       "gap": false,
-      "fingerprint": "ab0dc8163c95222b10385b4fb57b16c725c8bd5709974d06acff937a30b403c2"
+      "fingerprint": "6c5c82b8885f66184161b0d250b21738e0bdaef9bff3d6f0f6e7ee1465ef3982"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_TSHIRT_01",
       "identity": "Pikachu (Green Shirt)",
       "gap": false,
-      "fingerprint": "001be2844dfacf53f60bce83bf0d55052e159b205eb199d61b68c3fe335be8f8"
+      "fingerprint": "e423695f409f91d454bcc0cb995c9264bbe260e2c379e3486d38c6117e33490a"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_VISOR_2026",
@@ -932,13 +932,13 @@
       "id": "pokemon:25:costume:PIKACHU_WCS_2024",
       "identity": "Pikachu (Scuba)",
       "gap": false,
-      "fingerprint": "e759f7110044f1d394faee6d17cff58f52d69ad907f0b78115eae425ee050823"
+      "fingerprint": "b15d7ce3074a741c5451ea2d3b46c98c6a60d820be239eb504880ee087260b40"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_WCS_2025",
       "identity": "Pikachu (Worlds 2025)",
       "gap": false,
-      "fingerprint": "f57292ea585a9c02ad153877dd57825d76c2d564d17e2ecde8d8169ad8b8a61f"
+      "fingerprint": "c09d8bbc9d61327eb33f0aca40b252c2d4ef642ac7c96e5d3a50638df88aabbf"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_WCS_2026",
@@ -950,49 +950,49 @@
       "id": "pokemon:25:costume:PIKACHU_WINTER_2020",
       "identity": "Pikachu (Holiday 2020)",
       "gap": false,
-      "fingerprint": "60f4f5efbb2c376dad2563eccbba63d32b43a4a3b3696cfee13492fea824f6f0"
+      "fingerprint": "ee80c2e46995baccfdb5b3cea531cf908e53a19723cd4980411d08cd7280fddd"
     },
     {
       "id": "pokemon:25:costume:red-party-hat-2020",
       "identity": "Pikachu (Red Party)",
       "gap": false,
-      "fingerprint": "4b1cf3c9eb199eb23cf13093e1b741e5b55766d080880803252db8cf5b39d7a0"
+      "fingerprint": "24a1eff27e3e1377b5ac33bc2b58b0425166b8c4fa909fb3891fca93fe48ac29"
     },
     {
       "id": "pokemon:25:costume:trick-and-treats-2023",
       "identity": "Pikachu (Halloween 2023)",
       "gap": false,
-      "fingerprint": "4621fb455fafe25283ce2d2dadd452d426e4a821ea740b94016d716c4cda10b2"
+      "fingerprint": "3c8a993b492bf2a5e14232d544955e2be49bdff8999a652cdff7b3dc9cad9d93"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Batik%20Shirt)",
       "identity": "Pikachu (Batik Shirt)",
       "gap": false,
-      "fingerprint": "1f8653b100be92ff3c7d09cc5b9d82e24a2b074ced78c5df0cd1826c147e03c5"
+      "fingerprint": "b9e273f67e4ab48277de1e0dbfeb65ac0d4b27da396a45b4f0395e52cb7c5fbe"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Brendan)",
       "identity": "Pikachu (Brendan)",
       "gap": false,
-      "fingerprint": "6d4d6e084260155bd373f80f7bbcfdee410d85fdc55ba854e4b01887b68e23bf"
+      "fingerprint": "865899b30378ae53581be2876a344156259804c4d1873fe84398f195ba017c38"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Cake%20Hat)",
       "identity": "Pikachu (Cake Hat)",
       "gap": false,
-      "fingerprint": "fe1bae2b5823a82158e6dd765b79f24380683b0f3751be7c9d33f84c5f6399e8"
+      "fingerprint": "967578fb072743bad66d9fb80e2a9b0e4f57eaa5168a535f5669db75100af6f5"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Calem)",
       "identity": "Pikachu (Calem)",
       "gap": false,
-      "fingerprint": "87dfd86fc78a0d751c80d22c7af75bc87592b70198a1dd8a661d637289b6cd71"
+      "fingerprint": "610a93cacef92a28acf593024982fef8707734c83179e949e310c67be0f04d7d"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Charizard)",
       "identity": "Pikachu (Charizard)",
       "gap": false,
-      "fingerprint": "6829198fb132037c4b721f085b83a3a5fd5522e16597894d1a63f2729bdf6e6e"
+      "fingerprint": "c8cf608fba4e5f5bccf32cac8510e86c72a951b7c5d8f92813df6fa27e421b84"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Clone)",
@@ -1004,19 +1004,19 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Dawn)",
       "identity": "Pikachu (Dawn)",
       "gap": false,
-      "fingerprint": "a2bd9c36f6bc636085eb60aa3a402a8e862866b7eb69865c17c4b8ce2373b44a"
+      "fingerprint": "f6417f414e72061c9d529fd14b0094d73128a23378d2cd9d8c231038d18eb107"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Detective)",
       "identity": "Pikachu (Detective)",
       "gap": false,
-      "fingerprint": "0b03bbfb2a5f990ac99ba2f18a1bac7e8b5c5cae1e2219a5ff90500bd1a81333"
+      "fingerprint": "83644d9b0c9f2f5e2c55c53992e8460ca22d80c0566abb8c98cdf4b7134fb5ff"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Ethan)",
       "identity": "Pikachu (Ethan)",
       "gap": false,
-      "fingerprint": "bf6140ef993e3eb0a29b50e7b69c9f199d020cf2905c9a7a5f78586b9896aa4f"
+      "fingerprint": "86192927778773d0b02ef6d421dc14f4ff18b4bff78851317802de82732efc9b"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Explorer)",
@@ -1064,43 +1064,43 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)",
       "identity": "Pikachu (Halloween 2022)",
       "gap": false,
-      "fingerprint": "1e08d8d3dc5bcf9c654d133c5b99e9618f29341aa74f7dbd96d5701d3a30fcba"
+      "fingerprint": "376f29e5ed2847aeab4c544121f037501678ced0fc729a2b9e101697604fc972"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)",
       "identity": "Pikachu (Halloween 2024)",
       "gap": false,
-      "fingerprint": "4a8f3cbb6dc68c16cc5051bcc1f944d5a9eb6a3255b27ca11665d4f4c137564a"
+      "fingerprint": "8148834acda962025f8726c26117a25816cdbf2cf771b205b72d024b6423d6e9"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Hilbert)",
       "identity": "Pikachu (Hilbert)",
       "gap": false,
-      "fingerprint": "84f37c13f45c5b7d2c802c8810a820e41f38f3a29d5ffe4c5dc3eb28d90cbaf1"
+      "fingerprint": "be7905bf94a90c7d2f4ab0e1dd645ace803fb01d0c618b4ef7ade29f4a7409d0"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Hilda)",
       "identity": "Pikachu (Hilda)",
       "gap": false,
-      "fingerprint": "e0c7c8e4c91601b77c4039568db25d66e1270dbd36a8923c9149ca07a513aa47"
+      "fingerprint": "69dbb11be8ec30d45022856f21e15377712381440491394b25134a14c3b5303d"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
       "identity": "Pikachu (Holiday 2022)",
       "gap": false,
-      "fingerprint": "01e69551dac4ac2802c2c3dd5a13a7c330fdf771064adc26e3c85aa2f7d43522"
+      "fingerprint": "e4597dbb225b3f9db7f798fe090c7288f976dc5be1c2899dfe7c8f021525c439"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202023)",
       "identity": "Pikachu (Holiday 2023)",
       "gap": false,
-      "fingerprint": "3bd3b238e4afdc6bf989e897486db056367de5cbd5c43a186e572ef5331df771"
+      "fingerprint": "6593fd5579bde8a28d2203bd9bdda48dbc3f7098f336ab6b84b45e5ca5cfeec3"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)",
       "identity": "Pikachu (Holiday 2024)",
       "gap": false,
-      "fingerprint": "9e50ea89d29997531ed779c0661263a91f19d396855668b07cf57ffa74e9e0e0"
+      "fingerprint": "eb8ccf658a17c446112f30379575658c62077417bc9b91d817f0682a100c76ad"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
@@ -1118,37 +1118,37 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Kurta)",
       "identity": "Pikachu (Kurta)",
       "gap": false,
-      "fingerprint": "354ae1838415fe2fe532229f11109555d76692af159ed9804a1f0e923a846171"
+      "fingerprint": "227954d58e034c8e18446ad01dc26c0bfbc67c07227eae302a06853a4569bacb"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Leaf)",
       "identity": "Pikachu (Leaf)",
       "gap": false,
-      "fingerprint": "903550b6a47835f434e0d8d932f04bdd1e9753f01008c927713b5bbb31f11315"
+      "fingerprint": "9f33ca49374ad653fe70219615dd15dc3718b19059a19edae29d91a4e8072f96"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Lucario)",
       "identity": "Pikachu (Lucario)",
       "gap": false,
-      "fingerprint": "a6191ca3f87113cfaa36fa6453b0276709bb0b3852a597245f781059b80c9ffd"
+      "fingerprint": "72f5839a25e9b9fba409ff04f31739a15694b65b784c2ba2b51a7c9ac118c97a"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Lucas)",
       "identity": "Pikachu (Lucas)",
       "gap": false,
-      "fingerprint": "407875feab4dd1a8a568d4e22cebd99dc63abde75a3acd54390f93c2ece4b20d"
+      "fingerprint": "48b3bb28b571e7e30163f88b7fadc671d625d8c1b0ca46c5f76748b35acbb727"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Lyra)",
       "identity": "Pikachu (Lyra)",
       "gap": false,
-      "fingerprint": "7e78404c6ba2a9e97449b9a80f6b0365212f3c486311d286b28ceae6eb7a5eca"
+      "fingerprint": "c6dd3f0bb6d402fc6a0df29a16456270961f376eef367cd09d4d5bd3b208ebaa"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Mimikyu)",
       "identity": "Pikachu (Mimikyu)",
       "gap": false,
-      "fingerprint": "000d04e8c551b45b6922fc9680596813a8ea2fdcd68ecd25f7cbba29e8492411"
+      "fingerprint": "20d14b682ee84579a5e40422ecb088b6857f4884a2bca9cb9199d29dd1df2ff1"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Mystic)",
@@ -1160,7 +1160,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(New%20Year)",
       "identity": "Pikachu (New Year)",
       "gap": false,
-      "fingerprint": "b5b57f56b59a9d3fc901f7dd8f6c4b26364eceb194360bf62741adc8f1574810"
+      "fingerprint": "770782b4d86a392f487f01df458448a783f639f70fe9db71a3722ade95f51c6b"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Pop%20Star)",
@@ -1172,25 +1172,25 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Purple%20Shirt)",
       "identity": "Pikachu (Purple Shirt)",
       "gap": false,
-      "fingerprint": "a18828f68f3749a461d03b768a930426795c0ebe8d833fa9e207345aae4581a5"
+      "fingerprint": "34e3ccc023450a29fc97b4015b826e3bc7abcd560a060c3a9d942e19db946a3f"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Rayquaza)",
       "identity": "Pikachu (Rayquaza)",
       "gap": false,
-      "fingerprint": "8bd3507833fae7b004ec7d6960f7bc3dfbba4e88527232aae60bf5038dc7a6fc"
+      "fingerprint": "81cb47b93e97345859eb7813d7ff7cefc78cfc22a93e3582269c217b0a89d827"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Red)",
       "identity": "Pikachu (Red)",
       "gap": false,
-      "fingerprint": "bd9d7838452a187fec05ec34c2b89496a33f782562ccc3af677396a5e2518e04"
+      "fingerprint": "effb557bc8c3ec7d679458b285afd5e4a4124037d99e03d27a364beec8c9401f"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Rei)",
       "identity": "Pikachu (Rei)",
       "gap": false,
-      "fingerprint": "7fc233950d5426d4a1fdcfd9689b757554fa2ba0f2a689889dd2e0a6c5d9b506"
+      "fingerprint": "fc0ab7b8aadc86c2888472c6ba2b163d7af62625da520c426b955b132fe66935"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Rock%20Star)",
@@ -1202,7 +1202,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Safari)",
       "identity": "Pikachu (Safari)",
       "gap": false,
-      "fingerprint": "5e7a48753af514d4ad14f0f001496530c1f196b2705e19a3c50d76a7ef6f69f1"
+      "fingerprint": "345a1912700c07479085564dcb020e1926ac81ac14bc3ea1cae1a6adb10b44ac"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Santa)",
@@ -1214,13 +1214,13 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Saree)",
       "identity": "Pikachu (Saree)",
       "gap": false,
-      "fingerprint": "3d414a2f28d47c347d0864af42d4f8f11f3e0254d82b1ff5ff5f003a2ac53c01"
+      "fingerprint": "3c2b1cf61f410ea9094ce48716c5d0bfa1a4b5bc822b5eb99f47f5296e5fd87b"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Serena)",
       "identity": "Pikachu (Serena)",
       "gap": false,
-      "fingerprint": "11441e06b6cdf139ec1ac430cdb3703abf8ca36e623bd9e6be67adf9c3c80e13"
+      "fingerprint": "f1233a63623c32d1114d81363e2e520f4268eab001f3b0f78756e280fd608a5f"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Straw)",
@@ -1238,13 +1238,13 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(TCG)",
       "identity": "Pikachu (TCG)",
       "gap": false,
-      "fingerprint": "3937eca36827ef6059d164965155a715a69bbc0e8fbc81f0f4376363be93e139"
+      "fingerprint": "5f8cd01971e40b7375e940d9e7a68175280c25ec51f82bec51dcdc9c4751a2a4"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Umbreon)",
       "identity": "Pikachu (Umbreon)",
       "gap": false,
-      "fingerprint": "627623567c0dd6e83023448e47be5542a38f654ae7b253ec98818c67370bd4b4"
+      "fingerprint": "9001e29c9f0f48b397657a54ecafd18ef13436effa7da1a76e11311736503340"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Valor)",
@@ -1268,19 +1268,19 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(World)",
       "identity": "Pikachu (World)",
       "gap": false,
-      "fingerprint": "88bb45c1a40e5137387af017a61029eccfb18b5fcc8b6ec710e5dbbea9ba500a"
+      "fingerprint": "9e4948384ac1fd7f51ec2095c99b14f2570a6aec02c309d6ca8d1adec33de922"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Worlds%202022)",
       "identity": "Pikachu (Worlds 2022)",
       "gap": false,
-      "fingerprint": "926cc41274886697735fdb8ad7d8a8386a00380a5b32974752ffd26583ffecac"
+      "fingerprint": "4edaa5abcf629decb1eb7c75b8971d014f5383c38e4e439b252f2c8d0dcc5fbc"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Worlds%202023)",
       "identity": "Pikachu (Worlds 2023)",
       "gap": false,
-      "fingerprint": "0bcdcc117279ef6620d87f74247099ede4f29d21236f74e4790c3a9fbaa5bc76"
+      "fingerprint": "dbb5c38abcae2b179640af5806381df2532cf6c2399214af3986ec7b45390c68"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Beanie",
@@ -2349,6 +2349,12 @@
       "identity": "Gimmighoul 9th Anniversary Coin",
       "gap": false,
       "fingerprint": "9778165fdcaeea3f34f8872631485d378f8369fb07f3e4b5258538ed61075ef3"
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Detective%202023)",
+      "identity": "Pikachu (Detective 2023)",
+      "gap": false,
+      "fingerprint": "6d51727dc9ff195cf882f4b3de3fe0fd62c7ae317510c9e9aca50dd503a25fde"
     }
   ]
 }
