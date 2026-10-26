@@ -287,7 +287,7 @@ test('bounded retained-surface sweep uses populated and anonymous runtime fixtur
         await capture(page,`sweep-favorites-menu-${width}`);
       }
       if(surface==='share'){
-        await page.locator('[data-share-mode="text"]').click();
+        await page.locator('#product-share-format').selectOption('text');
         await capture(page,`sweep-export-text-${width}`);
       }
     }

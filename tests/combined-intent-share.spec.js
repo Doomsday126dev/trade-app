@@ -22,6 +22,7 @@ test('share scope controls output, selection persists across filtering and no da
   await fixture(page);
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(2);
   await expect(page.locator('#combined-list')).not.toContainText('Eevee');
+  await page.locator('#combined-list > [data-wants-section="H"] .contextual-details > summary').click();
   await expect(page.locator('#combined-list > [data-wants-section="H"] [data-wants-copy]')).toBeVisible();
   await expect(page.locator('#wants-selection-tools')).toBeHidden();
   await page.locator('#wants-select-toggle').click();
@@ -32,13 +33,13 @@ test('share scope controls output, selection persists across filtering and no da
   await page.locator('#combined-filter').fill('');
   await expect(page.locator('#combined-list input').first()).toBeChecked();
   await page.evaluate(()=>openProductShare());
-  await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
+  await expect(page.locator('#product-share-format')).toBeVisible();
   for(const scope of ['top','selected']){
     await page.locator('#product-share-scope').selectOption(scope);
-    await expect(page.locator('[data-share-mode="link"]')).toBeHidden();
+    await expect(page.locator('#share-link-action')).toBeDisabled();
     await page.evaluate(()=>setProductShareMode('link'));
-    await expect(page.locator('#product-share-link')).toBeHidden();
-    await page.locator('[data-share-mode="text"]').click();
+    await expect(page.locator('#share-link-action')).toBeDisabled();
+    await page.locator('#product-share-format').selectOption('text');
     await page.locator('#product-share-text button').click();
     const text=await page.evaluate(()=>__copied);
     expect(text).toContain('Pikachu');
@@ -46,7 +47,7 @@ test('share scope controls output, selection persists across filtering and no da
     expect(text).not.toContain('Snom');
   }
   await page.locator('#product-share-scope').selectOption('full');
-  await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
+  await expect(page.locator('#product-share-format')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
 test('signed-in recipient sections preserve special wants and copy only that trainer’s complete section',async({page})=>{

@@ -93,7 +93,7 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await page.locator('#wants-selection-share').click();
   await expect(page.locator('#product-share-scope')).toHaveValue('selected');
   await expect(page.locator('#product-share-preview li')).toHaveCount(2);
-  await expect(page.locator('[data-share-mode="link"]')).toBeHidden();
+  await expect(page.locator('#share-link-action')).toBeDisabled();
   await page.keyboard.press('Escape');
   await page.locator('#wants-selection-tools button[onclick="clearWantsSelection()"] ').click();
   await expect(page.locator('#wants-selection-tools')).toBeHidden();

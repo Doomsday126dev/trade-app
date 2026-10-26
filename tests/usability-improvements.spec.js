@@ -45,10 +45,10 @@ test('slow request checks reuse the pending write and Back prevents late success
 
 test('share goals preserve mode and scope; keyboard and export reach real controls',async({page})=>{
   await fixture(page);await page.evaluate(()=>openSettingsTool('export'));await expect(page.locator('#product-share-modal')).toBeVisible();
-  await page.locator('[data-share-mode="text"]').click();await page.locator('#product-share-scope').selectOption('top');await expect(page.locator('#product-share-text')).toBeVisible();
-  await page.locator('[data-share-mode="link"]').click();await expect(page.locator('#share-link-action')).toBeDisabled();await expect(page.locator('[data-full-list-export]').first()).toBeDisabled();await expect(page.locator('#share-link-scope-help')).toContainText('full list');
-  await page.locator('[data-share-mode="search"]').click();await expect(page.locator('#share-search-output textarea')).toHaveCount(1);await page.locator('#share-game-language').selectOption('ja');await expect(page.locator('#share-search-output textarea')).toContainText('こうかん');
-  await page.keyboard.press('Escape');await page.keyboard.press('n');await expect(page.locator('#wants-add-name')).toBeFocused();await page.locator('#wants-add-name').blur();await page.keyboard.press('s');await expect(page.locator('#product-share-search')).toBeVisible();
+  await page.locator('#product-share-format').selectOption('text');await page.locator('#product-share-scope').selectOption('top');await expect(page.locator('#product-share-text')).toBeVisible();
+  await page.locator('#product-share-format').selectOption('link');await expect(page.locator('#share-link-action')).toBeDisabled();await expect(page.locator('[data-full-list-export]').first()).toBeDisabled();await expect(page.locator('#share-link-scope-help')).toContainText('full list');
+  await page.locator('#product-share-format').selectOption('search');await expect(page.locator('#share-search-output textarea')).toHaveCount(1);await page.locator('#share-game-language').selectOption('ja');await expect(page.locator('#share-search-output textarea')).toContainText('こうかん');
+  await page.keyboard.press('Escape');await expect(page.locator('.wants-list-toolbar button').first()).toBeFocused();await page.keyboard.press('n');await expect(page.locator('#wants-add-name')).toBeFocused();await page.locator('#wants-add-name').blur();await page.keyboard.press('s');await expect(page.locator('#product-share-search')).toBeVisible();
 });
 
 const now=new Date('2026-10-25T12:00:00Z').getTime();

@@ -10606,7 +10606,13 @@ function closeModal(id){
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
   if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
-  const returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  let returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  if(id==='product-share-modal'){
+    const visible=node=>node?.isConnected&&!node.disabled&&(node.tabIndex>=0||node.hasAttribute('tabindex'))&&node.getClientRects().length&&!node.closest('[inert]');
+    // Settings tools may replace their opener while launching Share. Do not
+    // leave focus in a hidden format select after Escape: it eats shortcuts.
+    if(!visible(returnFocus))returnFocus=[...document.querySelectorAll('.wants-list-toolbar button,#nav-more,#nav-mylist')].find(visible);
+  }
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
 }
