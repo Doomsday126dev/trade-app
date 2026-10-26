@@ -1,0 +1,15 @@
+# Ten starter costume Shiny models — local follow-up
+
+This separate branch starts at frozen .145 source `4536e64b26e0a1204bcecefc246704c4e8285ce7`. It does not change that branch, register a release source, push, or deploy.
+
+The ten identities are Bulbasaur (Shedinja, Red Party, Visor), Charmander (Cubone, Red Party, Visor), and Squirtle (Yamask, Red Party, Visor, Sunglasses). The existing exact normal images and their SHA-256 values remain unchanged. Ten original Shiny PNGs are imported from image URLs published by Serebii, with byte hashes, normal reference hashes, source pages and release evidence recorded in `data/starter-costume-shiny-assets.json`. Twenty original normal/Shiny references were downloaded with matching independent research hashes and visually inspected locally with alpha compositing. No image is recoloured, resized, substituted or generated.
+
+Both genders exist, with no visual dimorphism for these three starter species. The same exact Shiny model therefore serves male, female and unspecified requests; this is documented shared-model coverage rather than a male fallback. The validator checks each costume-specific source stem, release evidence, shared model, original bytes, retained normal mapping and the matching review record. Tamper tests reject wrong sources, crossed models, altered evidence and missing reviews. Existing normal asset provenance remains distinct from the added Shiny provenance.
+
+Official Halloween 2019 and Pokémon Day 2020 posts explicitly confirm the Halloween/party starter costumes can be Shiny. Serebii's GO Fest 2020 event page lists the three visor Shiny debuts; the official Squirtle Community Day Classic makeup post confirms Shiny sunglasses Squirtle. Exact URLs are retained in the manifest. Source selection follows the user's bounded fan-use decision; it does not claim a blanket reuse licence, legal certainty or commercial rights. Runtime serves local reviewed images only, with no remote-host expansion or recurring scrape.
+
+Browser qualification uses synthetic accounts and respects the existing one-declaration-per-side rule: normal and Shiny declarations are exercised in separate sessions. Both Chromium and WebKit cover search, selection, add, acknowledged save, reload, editor reopening, public-list rendering, actual PNG decoding, and all forty normal/Shiny × male/female renderer requests. No production account or list is read or written.
+
+This closes ten genuine released Shiny gaps. The original 364 normal-only mapping inventory is reduced to 267: 264 non-Pikachu mappings still need release/identity/source classification, plus Pikachu Clone/Ph.D. (unreleased Shiny) and generic Detective (year unresolved). Seven separate ambiguous catalog identities remain unresolved. This is not complete costume coverage.
+
+Publication still requires approved exact-source registration and immutable runtime qualification, normal required CI, and an explicit review of the ten intended maintenance mapping changes without renewing the existing baseline expiry. No read-contract registration, workflow pin, baseline acknowledgement, release tag or production action is changed by this patch.

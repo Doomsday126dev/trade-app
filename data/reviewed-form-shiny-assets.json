@@ -1,0 +1,1583 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+  "scope": "47 ready Shiny forms only; no normal assets replaced; no source dates independently audited.",
+  "records": [
+    {
+      "name": "Unown (!)",
+      "no": 201,
+      "sourceId": "0201-00-27",
+      "sourceName": "! Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "04/08/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-27%2BS.png",
+      "gitBlobSha": "b36adaf0e9d064300de604a428572a8a422743ae",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-27-shiny.png",
+      "sha256": "d2289c2a6abd7859e4527e9a4b6d9aa17b1eb31c5b4b91e09b2b1e09a197ab9c",
+      "sourceBytes": 3818,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-em.png",
+        "sha256": "9b7d1122bfd8c69a6e6d342279e9fa62ed0a897ac920efc5302ea371e7369927"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-27.png",
+        "sha256": "890d5a269a0f1cf1a6cd3f459a3509e67daf63ad5c305e56752b113d73e0ab6f",
+        "gitBlobSha": "549806ed7bfdcb1d5e05bf6367efb422f6956ab1",
+        "bytes": 3517
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (?)",
+      "no": 201,
+      "sourceId": "0201-00-28",
+      "sourceName": "? Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "30/05/2024",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-28%2BS.png",
+      "gitBlobSha": "59f8e7a1e9b535f89fcba9eae1208d5ac769b583",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-28-shiny.png",
+      "sha256": "ee17ffd0b4a295f442bf629f4fe80621d5a71b5ccfd2eeee56dec422d6c8debc",
+      "sourceBytes": 4692,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-qm.png",
+        "sha256": "38623b23001c40353def1882a2f07a5e6560f0202a9e439fd22d69177140c53a"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-28.png",
+        "sha256": "b7a80caa08797213c60d4edc174f77fefc7e55f184612a0c22e633b3390ceb1b",
+        "gitBlobSha": "627e1cb9e69e0ef0436400dc256fa8c315f432e6",
+        "bytes": 4070
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (A)",
+      "no": 201,
+      "sourceId": "0201-00-01",
+      "sourceName": "A Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/08/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-01%2BS.png",
+      "gitBlobSha": "f2b8ec17a7dc25a4037881caeb6eea5c3ee5d2c0",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-01-shiny.png",
+      "sha256": "e2785e7d0d02b457d40589347300ed38537de2dfac757cd52aa2a4e820600392",
+      "sourceBytes": 4855,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-a.png",
+        "sha256": "a7e1d3d53deedc255e91021d0ce2e857d79bbed26ae3b6e33198a59ac42f0c6e"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-01.png",
+        "sha256": "49afedaf17e3c7881d4535591ff62bb62ad228265769dd4cbe9a7cf191f27405",
+        "gitBlobSha": "8d2d5e19740f872e22aa56dba659c26498756fb3",
+        "bytes": 4617
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (B)",
+      "no": 201,
+      "sourceId": "0201-00-02",
+      "sourceName": "B Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "04/06/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-02%2BS.png",
+      "gitBlobSha": "b98563204d55dcaae3ee85e69819b8c93d9480c2",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-02-shiny.png",
+      "sha256": "20897d5b48de9e0fdd76926ed7308366ec4a7c744c35213c21b90509d410e98f",
+      "sourceBytes": 5069,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-b.png",
+        "sha256": "fb0d3c298e5303e5ef884dccf17dc9086e0adf9777c337403fd2e1fad2b5b052"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-02.png",
+        "sha256": "35d3c173db12c92137cbeb4a424ae532aff6fbd50a2deab9e980a7aa55819b19",
+        "gitBlobSha": "067816042361586353c5335b709f5ca08d820056",
+        "bytes": 4571
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (C)",
+      "no": 201,
+      "sourceId": "0201-00-03",
+      "sourceName": "C Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "22/11/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-03%2BS.png",
+      "gitBlobSha": "2816b0787c9cd0a51118ad2567022d3eea5b4dfb",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-03-shiny.png",
+      "sha256": "16d906ece3fedae5fc1649b2008171b033196591dd8713dd85a92bc1a91de698",
+      "sourceBytes": 5131,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-c.png",
+        "sha256": "95c6d097ff0372fad879e7caf583ae3a03f710acc9e51e0f40241341f2b0be64"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-03.png",
+        "sha256": "b170f8dea4016fb5b83175a16f8b907e599f62fde24170ab18110cf92037dc9f",
+        "gitBlobSha": "544c9c28b3c80c99ae5a5d424abdff3df4084801",
+        "bytes": 4709
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (D)",
+      "no": 201,
+      "sourceId": "0201-00-04",
+      "sourceName": "D Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "17/08/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-04%2BS.png",
+      "gitBlobSha": "389764f6dff0564a5d1e779e4ab82d278fb522f1",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-04-shiny.png",
+      "sha256": "d8972fd13061896b07a439185aedfd13059c807ca0da803d913c39868cce9de8",
+      "sourceBytes": 5947,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-d.png",
+        "sha256": "110ff5933ff6cd3b1f1ff043d9462ae50bf541f04672de6621aa7ef4d8f30f65"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-04.png",
+        "sha256": "b93b08ac4eab487779bbf12ec8141aa24bcfbb1733d1258fbb13637918ad9046",
+        "gitBlobSha": "74f98c99496375f13d3c8d7d81504fea8944bf85",
+        "bytes": 5281
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (E)",
+      "no": 201,
+      "sourceId": "0201-00-05",
+      "sourceName": "E Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "13/05/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-05%2BS.png",
+      "gitBlobSha": "b6510ae924f2302e60a246f5d8613e1bf461ea0d",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-05-shiny.png",
+      "sha256": "950f5cd6892ce0a1403bd03049103db380ff13ab3cbdb82a0e8a112512fdd6d2",
+      "sourceBytes": 5474,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-e.png",
+        "sha256": "419ec6fcbee4cf1fecce344e79502caa12d8bd47cfb1dc36ef316c3c5e7ace5e"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-05.png",
+        "sha256": "5af6da3701d3a5a86121ffff3432a0e30941470549df7fe064e4c7cd2eff86bb",
+        "gitBlobSha": "27fba268a2e66ff30e2280f2a0a0ceaa96b637fa",
+        "bytes": 4913
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (F)",
+      "no": 201,
+      "sourceId": "0201-00-06",
+      "sourceName": "F Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "17/07/2021",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-06%2BS.png",
+      "gitBlobSha": "7431bc59f5b0a3aab84e94b367acc8eb3fe212a4",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-06-shiny.png",
+      "sha256": "402d3e432db52f0772ad27abd05322835fe1ad4e45b2a2b6235e2615c12ba2eb",
+      "sourceBytes": 6015,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-f.png",
+        "sha256": "923c36b5baf099f1243e02b1a0cb4603a234d9daef75d5d6693f4d058442636a"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-06.png",
+        "sha256": "99f78e8763b7f4e678a2dbe3fc3cfb8b37c06b3e49f514cb614f712a70b8a37d",
+        "gitBlobSha": "60e393f311a3199de7b82bb318b6405dffb8011a",
+        "bytes": 5726
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (G)",
+      "no": 201,
+      "sourceId": "0201-00-07",
+      "sourceName": "G Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "25/07/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-07%2BS.png",
+      "gitBlobSha": "4f942f1bfdac930e77e494dae85652a20b4330e2",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-07-shiny.png",
+      "sha256": "4f4d7edf197971fb8e83a50e905fb20b5947acc3332eb8055c6eca05db082f67",
+      "sourceBytes": 5488,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-g.png",
+        "sha256": "e1e1bea417f28186ef9d8ad95e38ad8ced309d1f62099c4f17994a04ed061e3f"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-07.png",
+        "sha256": "b0fae7b17113004cf58703eb49e39283cc09ed4d0966a98cad67dc8f4cf5bd7e",
+        "gitBlobSha": "f00adc2be83729c0f87f3e69c42734e73e41dc31",
+        "bytes": 4868
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (H)",
+      "no": 201,
+      "sourceId": "0201-00-08",
+      "sourceName": "H Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2023",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-08%2BS.png",
+      "gitBlobSha": "ee1301721f3b1745c2143b56c487f2b2ff9d621e",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-08-shiny.png",
+      "sha256": "38dafe5bb04a5eb023774815fe16ea9a7014234a2d13424b8e3e11188a2052ff",
+      "sourceBytes": 7806,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-h.png",
+        "sha256": "0fe3a4f409c3f032b8fee547f6b04640e4729dd2c5aaed1f878ed118da0a5aca"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-08.png",
+        "sha256": "af625d20e6e89b87dbb9a1f2d63894f6c6571eb771073924570aab48385f6a51",
+        "gitBlobSha": "734f16d1322aeab93b10268db9475562a796e310",
+        "bytes": 6886
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (I)",
+      "no": 201,
+      "sourceId": "0201-00-09",
+      "sourceName": "I Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "13/05/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-09%2BS.png",
+      "gitBlobSha": "547b808d863fee0ae24833cc002f613202d257a6",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-09-shiny.png",
+      "sha256": "158422954c8b4e44d31e2444b5ecfe158a2e7909f8bebf04ebec3a83d4f23863",
+      "sourceBytes": 4351,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-i.png",
+        "sha256": "940978f0ee59d9652e569c40ec22e9df11046f00e725bc2026fa1cc280174d45"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-09.png",
+        "sha256": "1305d927ba892d9c882696cd285944c3a5c8add062a2e95a59a888b2924f53ce",
+        "gitBlobSha": "2f28a0124d2fac50c4f74d7ef3d61b74633b4f28",
+        "bytes": 3979
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (J)",
+      "no": 201,
+      "sourceId": "0201-00-10",
+      "sourceName": "J Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "26/02/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-10%2BS.png",
+      "gitBlobSha": "ee264cc3fd560974bd732973a3863d1ac9c59adb",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-10-shiny.png",
+      "sha256": "7ccf1229772f680be007d7f807ed8ace5a8a9730b0b4f042b9db67790b51e2fb",
+      "sourceBytes": 4226,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-j.png",
+        "sha256": "d178945340b496ffe67a23c37c06ccea90b38ad45aa9dee0f968d8ac6b85aa57"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-10.png",
+        "sha256": "632c635a8dab7b9a97c8595264b365f31d1cfdecd2619779c113544c4eaedfba",
+        "gitBlobSha": "e7ca551c077e279c200c10db28e391a52066d8e6",
+        "bytes": 3938
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (K)",
+      "no": 201,
+      "sourceId": "0201-00-11",
+      "sourceName": "K Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/11/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-11%2BS.png",
+      "gitBlobSha": "4e5aeea7eeb8b7f7e12dfeba6aea806a38518ab0",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-11-shiny.png",
+      "sha256": "791d463fe4644140c2910217a824f199566c3d04494c450957e4c187e5d0757a",
+      "sourceBytes": 4960,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-k.png",
+        "sha256": "d199234c249910a1e7f15d9d75abbb5a5b24f65884a2c0c93596693d1b7539b3"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-11.png",
+        "sha256": "77c76591e1e78091566c999cdea5bc2693f0b4920d5bd74a469fe317654a9134",
+        "gitBlobSha": "7b5b3e2f1488c8ed2eda788e4add26061c0d4298",
+        "bytes": 4562
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (L)",
+      "no": 201,
+      "sourceId": "0201-00-12",
+      "sourceName": "L Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/08/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-12%2BS.png",
+      "gitBlobSha": "7ed2622d51267782afc7e0a6624a1ee3f501b06f",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-12-shiny.png",
+      "sha256": "27a4ab1636fab959a368acd9b5b6c21d5b57ddbb4ea027b921f7201fb44b9e0b",
+      "sourceBytes": 4708,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-l.png",
+        "sha256": "05c1448bae2be2ff88e4f41b9d6c73595ae9a279f103444b820e16bac70a8c89"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-12.png",
+        "sha256": "d8c1fee92e4c2d55a83bac3a0880b5357ca4c34bba24d33d18b3083403ab3207",
+        "gitBlobSha": "800323f7807b123dff12728994c035c090f81375",
+        "bytes": 4378
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (M)",
+      "no": 201,
+      "sourceId": "0201-00-13",
+      "sourceName": "M Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "04/08/2023",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-13%2BS.png",
+      "gitBlobSha": "36d0955034a61fc757e407b15e4e2af979892825",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-13-shiny.png",
+      "sha256": "3072e561e167f5a5e87764c82b743b78b9a01786406aeb6fce3e26f31ad97a2d",
+      "sourceBytes": 8372,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-m.png",
+        "sha256": "cf4ec25bb6b8928858f0eb289fdfb4fe1f38811c5c5530914f1f73dfe3e376f1"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-13.png",
+        "sha256": "2ec570d3b73c24bd6ed8e0bc91e5854ee356e98d29c250a29861473a979d82d0",
+        "gitBlobSha": "c3abdfd79430017a950c74e9f505e1ec47f4dae9",
+        "bytes": 7454
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (N)",
+      "no": 201,
+      "sourceId": "0201-00-14",
+      "sourceName": "N Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "17/08/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-14%2BS.png",
+      "gitBlobSha": "65ac4e80953c898d21b0064276572336422a0ed8",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-14-shiny.png",
+      "sha256": "0a4c13c5f3b9910d3ce6878e9b9336807d699890760c7e1b11881403c64ab5fe",
+      "sourceBytes": 6556,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-n.png",
+        "sha256": "a79bef1fefe6293ac99a1d8d3c52880c8496d90c12ac4332817f2b2c83b71cd0"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-14.png",
+        "sha256": "df4b8b07ddc2b6bd64e9829271fc70f94159d780ff03af5e2d29b71234f59269",
+        "gitBlobSha": "57c7bad2441439904c9d42669c877a7a0281f779",
+        "bytes": 5984
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (O)",
+      "no": 201,
+      "sourceId": "0201-00-15",
+      "sourceName": "O Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "25/07/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-15%2BS.png",
+      "gitBlobSha": "eb2bbe1bfb2b8b8c04b43e0e89c38ef7c6000014",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-15-shiny.png",
+      "sha256": "9100100b319e9df34227ea8e0f81acb8b0b5bb10ca174b5305e8ed020a8e2edb",
+      "sourceBytes": 8142,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-o.png",
+        "sha256": "f5d9debb61487f62f633565c361a9e1c36a13db59f3128019788eb038d62a452"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-15.png",
+        "sha256": "74f51fcdc4ad8ad8316886e2b5c18409a6eff10a6e46dd1e157af964fd4336ed",
+        "gitBlobSha": "628d030e34d6cc72886996769d4e89d28d35d92c",
+        "bytes": 7677
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (P)",
+      "no": 201,
+      "sourceId": "0201-00-16",
+      "sourceName": "P Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "27/08/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-16%2BS.png",
+      "gitBlobSha": "a4618ca731c8e168f418421f635beb0067cff266",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-16-shiny.png",
+      "sha256": "676dd6af97c23276be7cb1974311897071380037082d3bba9f2762da42043f57",
+      "sourceBytes": 4805,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-p.png",
+        "sha256": "4612d2254f331424593d8af40771bdcffddb82652ee43cdb4c491d1bc0357316"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-16.png",
+        "sha256": "9beaa9a64c607a593d81dbedbf78f34665bf8cb08e3c9e8845154d18308bad48",
+        "gitBlobSha": "6390af9573ca93a829e4152b402f89d9818a0080",
+        "bytes": 4480
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (Q)",
+      "no": 201,
+      "sourceId": "0201-00-17",
+      "sourceName": "Q Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "25/05/2026",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-17%2BS.png",
+      "gitBlobSha": "b18360cff04a5e18af4948c2508a6d48bbd24749",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-17-shiny.png",
+      "sha256": "4af46948a58f7d7f2438b7d3e9a5ef9900cb7251ef0ca534a85e759e37dbcc76",
+      "sourceBytes": 3666,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-q.png",
+        "sha256": "382d30272dd48c1fbad9459851d3cf0a21a0af149ef8d0db78df2deb0a5473c1"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-17.png",
+        "sha256": "ac40be5dfc24e0e7cf052446d77a9eff0ed1ac29dc18453792989996803a025b",
+        "gitBlobSha": "acb1b59e69bf721e3d0815273afe231051c929f4",
+        "bytes": 3647
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (R)",
+      "no": 201,
+      "sourceId": "0201-00-18",
+      "sourceName": "R Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/08/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-18%2BS.png",
+      "gitBlobSha": "c0f3610336d1f77c257b1043d7ab0928191b0cac",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-18-shiny.png",
+      "sha256": "2993308ca050b30ce6a1f25edd46643ee9a919fc2e8d532bfbf82c53bca4a155",
+      "sourceBytes": 3458,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-r.png",
+        "sha256": "99e559b91cbefa8521f62cde33afcdf9cc25a112ae270a6b13e88abbde25bb13"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-18.png",
+        "sha256": "759484410af864a6285776e2207184ae5c19a7e7bd5539f0c25b18db5eaeaffe",
+        "gitBlobSha": "d57a69e79dfecd3a11f074c9d069f0a036053fa6",
+        "bytes": 3246
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (S)",
+      "no": 201,
+      "sourceId": "0201-00-19",
+      "sourceName": "S Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "13/05/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-19%2BS.png",
+      "gitBlobSha": "a38f0303aa85e3ea697db514e01f27268f0d4f1f",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-19-shiny.png",
+      "sha256": "cac115f45a18c8dd47fa40cbe7a9ac13893a09fab18d2f93d7788304759d8b5f",
+      "sourceBytes": 5676,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-s.png",
+        "sha256": "48f863cdce336f4129bb6450e3b907585a9aa3224b03061f0b3d0107076211b0"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-19.png",
+        "sha256": "269d8221ae843159060182c546d6a7572aae9dc1dfd88cbd19eff09eb7c63983",
+        "gitBlobSha": "a317b87c5bfc36ee61042e35d502e4c038d3487d",
+        "bytes": 4971
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (T)",
+      "no": 201,
+      "sourceId": "0201-00-20",
+      "sourceName": "T Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/08/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-20%2BS.png",
+      "gitBlobSha": "f18f5d19e8c18171946422caf6fa0511b544cb14",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-20-shiny.png",
+      "sha256": "587586389d15c3bbd96b898ed5601b625a25fb94529009d6af2655e299c50c17",
+      "sourceBytes": 4043,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-t.png",
+        "sha256": "a9eb343d2e518f6a7a291cd2da6d17d261952f70c4f397832699e09e8737344c"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-20.png",
+        "sha256": "292ba48a94890b5970d92a4164454b396ab96ecf81b57dacabe3d41b7fc843fe",
+        "gitBlobSha": "9c8aa8428c8836ddcc1945f3c800575803d801d6",
+        "bytes": 3657
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (U)",
+      "no": 201,
+      "sourceId": "0201-00-21",
+      "sourceName": "U Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/08/2020",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-21%2BS.png",
+      "gitBlobSha": "a09f6b9d061b30f2c340ed31e62d9bf42b094c8d",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-21-shiny.png",
+      "sha256": "61e861bef7ded776f8a86c3de39bc5d21061db84322814c50870ccefe732fbef",
+      "sourceBytes": 6831,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-u.png",
+        "sha256": "081ebdbcbb74a5a1f819a35ecf9630cdf7d6a7929f49259cfd568bb0750b852b"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-21.png",
+        "sha256": "2923489dc7c476341a66909e26680eaae8f78b64fad4f07b3ec956152f6e45d8",
+        "gitBlobSha": "6bfe37ae999a1ba31d82032cb77d3947e3c4989c",
+        "bytes": 6260
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (V)",
+      "no": 201,
+      "sourceId": "0201-00-22",
+      "sourceName": "V Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "13/05/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-22%2BS.png",
+      "gitBlobSha": "c92d2fa89778e5ab33cbb743f529ee0d501ee65c",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-22-shiny.png",
+      "sha256": "f2b5c45e4208eb5725e448c922c6bccc1ca6c36b0bbbd9af3a771faec24901eb",
+      "sourceBytes": 5421,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-v.png",
+        "sha256": "ecf0014c01841fcc84d8cbe5fdbf42c6d0bf86c94c850509e8f5644a191327e5"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-22.png",
+        "sha256": "63a35eb7f850e121b7fb25dceb69f99a718a65347ec95bf00b664dfdb571aa53",
+        "gitBlobSha": "cf1d14cf3064270297540450fc302b7d50db559e",
+        "bytes": 5054
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (W)",
+      "no": 201,
+      "sourceId": "0201-00-23",
+      "sourceName": "W Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "07/11/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/gowildarea/nagasaki"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-23%2BS.png",
+      "gitBlobSha": "f44e2a214e6a07931c9ab5f840ef5350dacea264",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-23-shiny.png",
+      "sha256": "9b92c517df47d03f9548f98738d41341828edbe0e01b92ec2f54540712b19359",
+      "sourceBytes": 4342,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-w.png",
+        "sha256": "921105c4b35e34c0c7502b09f94c6a9e867cad58c8aa0a4d03312e0dd8357165"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-23.png",
+        "sha256": "d0834cd2b49ca0946cc4d35293200b637d004941b6a47dbd977832aab8f9488a",
+        "gitBlobSha": "5cfda3aae7206cfd2a30f50f1500ac48da4b5e1c",
+        "bytes": 3772
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Official Nagasaki Shiny availability confirmed by independent parent research; current fetch timed out. Source CSV records November 7, 2025; exact debut date not independently audited."
+    },
+    {
+      "name": "Unown (X)",
+      "no": 201,
+      "sourceId": "0201-00-24",
+      "sourceName": "X Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "27/08/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-24%2BS.png",
+      "gitBlobSha": "cf80db41e2044ee6bc400045c9cae9e91ad6388f",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-24-shiny.png",
+      "sha256": "443aebade5f6c12bcca621238c69856669df939c30134ea9148413d0c48b6deb",
+      "sourceBytes": 4445,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-x.png",
+        "sha256": "e4fcbd998be74435bea0ca74158aab5289e7301dd73e262cb8166e8adbec9d7e"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-24.png",
+        "sha256": "da922bbc14d1c84b5bfe303d9f4dd2b1f8fff4654a57e88497c35bee78ae22e5",
+        "gitBlobSha": "7d2b531f609c292db8d0308a5a997eb90e29a86d",
+        "bytes": 3876
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (Y)",
+      "no": 201,
+      "sourceId": "0201-00-25",
+      "sourceName": "Y Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "26/09/2022",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-25%2BS.png",
+      "gitBlobSha": "4b69279d54683d42878357e45ef3ff2caae698ee",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-25-shiny.png",
+      "sha256": "0f356a9528c4198ea0462f4916da7a1c667d23714ebff62b21627c6f875da097",
+      "sourceBytes": 4662,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-y.png",
+        "sha256": "9676f66ac26383536e511283cd74f9e13316b29ed3c72128990f78da2f9dda5b"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-25.png",
+        "sha256": "5d26a1e0d629e788a814d98fd117ae881f0019c84b521bc80ab071a7e774a747",
+        "gitBlobSha": "82325478a14e920a09eb46bbd19cf70307f5095f",
+        "bytes": 4398
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Unown (Z)",
+      "no": 201,
+      "sourceId": "0201-00-26",
+      "sourceName": "Z Unown",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "20/02/2026",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "genderless",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-26%2BS.png",
+      "gitBlobSha": "d4a0e643a41e4c263c54344d7e344392d1d47f80",
+      "asset": "assets/sprites/go/pogorewind-form-0201-00-26-shiny.png",
+      "sha256": "8c89df16939e12902ad5e9beffc3d5aab80b4675425f824afd8e53963caeb744",
+      "sourceBytes": 4336,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/unown-z.png",
+        "sha256": "d7af616bfa5dfcf58084e50a21c08889306751d17b3f8c93b41ba9beadc8cd4f"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0201-00-26.png",
+        "sha256": "d8afd4977df547811812a487662c0941cc6bbcb72f11062e6d8b8db447a44d3d",
+        "gitBlobSha": "0e05c26bdd4f306aaa29aac7c6ad1879af42c9fd",
+        "bytes": 3941
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Released Shiny does not imply currently encounterable: availability is event-specific."
+    },
+    {
+      "name": "Archipelago",
+      "no": 666,
+      "sourceId": "0666-00-01",
+      "sourceName": "Archipelago Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-01%2BS.png",
+      "gitBlobSha": "fbaa37c810bb7d01d874643f8577cd09a5aac893",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-01-shiny.png",
+      "sha256": "636beb42fa20ab6aba646f79eeefef6e2014fee979e419932265a595d890c5b4",
+      "sourceBytes": 18129,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-archipelago.png",
+        "sha256": "4728f39d9e8ce97153438a2cec42d4e197767b5440b6e781628dfd0126e4e2c9"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-01.png",
+        "sha256": "a2ea65e91964c7a3d449671e4ebddeaf86636e8bd7c566c383053ad50a8915b3",
+        "gitBlobSha": "5a65fe69338b7ef889d21907f6c005951d7d23ae",
+        "bytes": 17885
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Continental",
+      "no": 666,
+      "sourceId": "0666-00-02",
+      "sourceName": "Continental Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-02%2BS.png",
+      "gitBlobSha": "703e6eed1e9ce3de9675d21ba10e4ce76e56f8f6",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-02-shiny.png",
+      "sha256": "b46723062a23e80cc872a3ea11f4e4c6196c337b5ddc4843ed8a7b2049e1bdf8",
+      "sourceBytes": 17859,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-continental.png",
+        "sha256": "ae0d388510462bdbb4479888f8f498ed36fbeea3ce98b6fa919694d3551060cd"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-02.png",
+        "sha256": "877f314fcb8aff938ec8e62968515abbcb2a909de5a5ed4fb538be55087b8bc8",
+        "gitBlobSha": "961e8824f9fa392baa059b7cbc6ca040db02a93b",
+        "bytes": 18120
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Elegant",
+      "no": 666,
+      "sourceId": "0666-00-04",
+      "sourceName": "Elegant Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-04%2BS.png",
+      "gitBlobSha": "8ddffbfc2e2c2778eb43873d9e33b0ee1e4e409e",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-04-shiny.png",
+      "sha256": "922acbfbe77258837a4b1b70c8fb9bcb550f2f01bb8c5d6c824516f5b43a2479",
+      "sourceBytes": 18033,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-elegant.png",
+        "sha256": "5149a07f6b20f32ba861ac1982268d9e031c6e2359d1b2010c0314b0d3caecc2"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-04.png",
+        "sha256": "79286de28e0938415ac3cadcccccd983eac1f769a0433eec27482278cce798b5",
+        "gitBlobSha": "90dd77af1821a1e10906be400567569bb317259e",
+        "bytes": 17922
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Garden",
+      "no": 666,
+      "sourceId": "0666-00-05",
+      "sourceName": "Garden Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-05%2BS.png",
+      "gitBlobSha": "2005728a0913073363ca855a15d35f50d0ff59f9",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-05-shiny.png",
+      "sha256": "1a6aa908f34d540bfced6bd3dd10ccd846d685043fc55d3b07633979467059c5",
+      "sourceBytes": 17488,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-garden.png",
+        "sha256": "ca8cc8f9d6c17aea73d0559ad11c150e516eb9e7027febdf1149737f1729de13"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-05.png",
+        "sha256": "d6df7d1742c60e7a262b99d3d593319a11ed8aa4e8ff03aee29ad7cae45cdfae",
+        "gitBlobSha": "c181f155d892fa19bf21070b111789a8db118b13",
+        "bytes": 17811
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "High Plains",
+      "no": 666,
+      "sourceId": "0666-00-11",
+      "sourceName": "High Plains Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-11%2BS.png",
+      "gitBlobSha": "a8dcd93b9dbf8797a448e9aa4583e2d69cb78e1b",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-11-shiny.png",
+      "sha256": "8c4aac681cc954722e45f606e6dc3be2f1632a7b5731a860d470a71433b30e9b",
+      "sourceBytes": 17543,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-high-plains.png",
+        "sha256": "c400844dd414b72090ae9060fc2b7bcf1d3a9c8dcc0ccf41c6a7fe696fbbf3ce"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-11.png",
+        "sha256": "ff34e10f0ea6925cd2fabf0be2fa61d3364ab4a2b67ef0d6994d6707630c5566",
+        "gitBlobSha": "503816a34a8a763d8cad8180b9f5c0c468dfd1d8",
+        "bytes": 17576
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Icy Snow",
+      "no": 666,
+      "sourceId": "0666-00-09",
+      "sourceName": "Icy Snow Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-09%2BS.png",
+      "gitBlobSha": "e5f4df113c8ae8e21298a341a907c6e807f3159d",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-09-shiny.png",
+      "sha256": "5868738e10018c0b9dcd161681e059e81f98e3c77dcc0f126c8dda2971764457",
+      "sourceBytes": 12379,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-icy-snow.png",
+        "sha256": "848e7c88b060e95b1e13c09f251ae220f8886e6cdbeba3f1975c161763fd8198"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-09.png",
+        "sha256": "a58b6b70f5df2482e81adbdb795b70aadfb05594703ff620289ae1b74808b5d0",
+        "gitBlobSha": "bd81478ca76354b88b3f8729292ee02f10727af5",
+        "bytes": 12655
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Jungle",
+      "no": 666,
+      "sourceId": "0666-00-16",
+      "sourceName": "Jungle Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-16%2BS.png",
+      "gitBlobSha": "0cd62a675d39aa94666f479c9ef3a9c1b46f0c53",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-16-shiny.png",
+      "sha256": "0434f02979d87721afbabf938cc1ef6c436e6d8af720152619a1d6e3eaeaa8e9",
+      "sourceBytes": 16916,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-jungle.png",
+        "sha256": "7e8d086216da2e14f8a6176c1dbb311ba03fb401ddbe11910ff41317b7773ac5"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-16.png",
+        "sha256": "d4bfd7361a19bef3c70043ae5277bdc691faacb52bc3e4a97c1ea0472dad61f2",
+        "gitBlobSha": "eed60021eae23afabfb520e72dc143d9cd45bcdd",
+        "bytes": 16887
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Marine",
+      "no": 666,
+      "sourceId": "0666-00-06",
+      "sourceName": "Marine Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-06%2BS.png",
+      "gitBlobSha": "c4396da34188737c3863882349e8cbb960176a5a",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-06-shiny.png",
+      "sha256": "f405dece6872f3c7bac9ae4769e64cc8e9738ded9b078df433080c395bde5a10",
+      "sourceBytes": 17828,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-marine.png",
+        "sha256": "3b3ba25f9fc10a64896ff7b57848f3ce154d6ea713a281fd61534cd96100eab8"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-06.png",
+        "sha256": "6ad8fd452e5af7b03e3b47b4361e6614bb01aea9e435e054752d27d7214d81c0",
+        "gitBlobSha": "95ede9107d06b66e4f81fc5a86a2d72b118614d3",
+        "bytes": 17791
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Meadow",
+      "no": 666,
+      "sourceId": "0666-00-13",
+      "sourceName": "Meadow Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-13%2BS.png",
+      "gitBlobSha": "97d380dde4383530d6d3621148b9671c7df160ad",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-13-shiny.png",
+      "sha256": "a60ca2661de18ecc9df735d03d53ed441173a37d5ae8a2e4429b0a0d753f053a",
+      "sourceBytes": 17820,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-meadow.png",
+        "sha256": "9d8d303afce20e4ead841cb5c06b5161b969994776b41bed807122a833cbea5b"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-13.png",
+        "sha256": "6b9d77d023bf307bfc3db5120b7dfec56789b3beed55a51c65f4a52e716b980c",
+        "gitBlobSha": "d237d1db67ac3c411f6fa9ec3f89f392c1c8c78b",
+        "bytes": 17877
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Modern",
+      "no": 666,
+      "sourceId": "0666-00-07",
+      "sourceName": "Modern Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-07%2BS.png",
+      "gitBlobSha": "0b1175c68c0294fbcbb9b6d1af2bed21aac91e2a",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-07-shiny.png",
+      "sha256": "2f3eabdafc2c41ea86d5d94431cba514db15e6c6b45fb2b9ecfee94f544c749b",
+      "sourceBytes": 17879,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-modern.png",
+        "sha256": "2e9c24dbbc68d507229562d2817f96940bf12f3c84ec0a90b3e9bdf7a416c2fb"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-07.png",
+        "sha256": "4b92e7e7f6f365507c6ce3a4e13017400e1f292d1ddffc0f1eaf2a363fea06e8",
+        "gitBlobSha": "e36078107a4bc3d3d11a7258956b5158cc5ac7a9",
+        "bytes": 17902
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Monsoon",
+      "no": 666,
+      "sourceId": "0666-00-08",
+      "sourceName": "Monsoon Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-08%2BS.png",
+      "gitBlobSha": "9cd762835461889d81da0547ceef16b893426d16",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-08-shiny.png",
+      "sha256": "7cf9fc3830aa0600066f87f3e81f24588ce3631d4903e5b8c69d8f0c8234e05d",
+      "sourceBytes": 15834,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-monsoon.png",
+        "sha256": "139ee7cb3e48ff3f9c35daf0f3ce065f8c25bccb039b9d0e8f18d49c059c15ab"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-08.png",
+        "sha256": "677d95f4effa53193b13478ac654f505dcab7875e1051c208d8d59ba036ecae9",
+        "gitBlobSha": "9a8d56366d9a1c0ae013dadc679dcff4d5524d55",
+        "bytes": 15855
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Ocean",
+      "no": 666,
+      "sourceId": "0666-00-10",
+      "sourceName": "Ocean Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-10%2BS.png",
+      "gitBlobSha": "8effb0adc830663b7119da6951ba0f7adda1856c",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-10-shiny.png",
+      "sha256": "5363e720e0cb1cc654c2ffee5f0e2aa2cd0105dcc8320930315c7b26f5605b54",
+      "sourceBytes": 19607,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-ocean.png",
+        "sha256": "475043da0d5ddd2ef98ec338a32fa578bc149409b8f13e7b9ac09b47c4bd24d2"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-10.png",
+        "sha256": "7f9cd53daac150fe004880a0f0d671a14a5c93b8fedc5c813947daba517db238",
+        "gitBlobSha": "8e2248674d008ade58761ada4d7b0c032c08f809",
+        "bytes": 19931
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Polar",
+      "no": 666,
+      "sourceId": "0666-00-12",
+      "sourceName": "Polar Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-12%2BS.png",
+      "gitBlobSha": "26360668979e5cc87ea5df18b37b63c645142cd4",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-12-shiny.png",
+      "sha256": "a094bb8dbb1c69cbda95de23701da8460f361b49bd8c674b6d08745b84e749e2",
+      "sourceBytes": 15576,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-polar.png",
+        "sha256": "963b0664355d35a030389aaeff71ff0f512990ddb26e69e78e79ce5e4df48ba4"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-12.png",
+        "sha256": "7276f3a7571c81e92d31fcc4bb0bb505af7bb89560c3fab9fc3ddb7f36be3047",
+        "gitBlobSha": "99ff9b2df1a20c41c6cc0887b19d584f963ad9b1",
+        "bytes": 15801
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "River",
+      "no": 666,
+      "sourceId": "0666-00-14",
+      "sourceName": "River Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-14%2BS.png",
+      "gitBlobSha": "466ed2256b910af72aae06a6528f5ed95601fbe1",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-14-shiny.png",
+      "sha256": "9e7bd81f73d6feedc777b1d2e753ee7802421656df55ecc8a9487135b85c9c8a",
+      "sourceBytes": 16816,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-river.png",
+        "sha256": "e77026da7fb29a2c43ff99b0fd7caa4d6493e8f4d0e5009d2355b49b6833f198"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-14.png",
+        "sha256": "5e352b24f37bf3f431099407085998e5a4b43f90b7f9cd6d8fff365495803a2a",
+        "gitBlobSha": "11d0214d9d81b17f02bd77b67a1c646d485d1cda",
+        "bytes": 16919
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Sandstorm",
+      "no": 666,
+      "sourceId": "0666-00-03",
+      "sourceName": "Sandstorm Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-03%2BS.png",
+      "gitBlobSha": "86d9a83a50119fc486daf91a19f5a4ad8311847b",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-03-shiny.png",
+      "sha256": "5e0f1c7a9034fe4b8beb62c42ab18712a5459856d4110ef8693b1763fe004327",
+      "sourceBytes": 17236,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-sandstorm.png",
+        "sha256": "1edc3dc22a4da990520d76f4eb9027f67d54cded74ce4ced3a4578ead6e844d7"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-03.png",
+        "sha256": "17044274af46d430eeb6dcf27f0c994f05b80a820fac37c58256deb28a8f387b",
+        "gitBlobSha": "cbd6b662576b3b4b7aefef7ba8e949a644cba3a8",
+        "bytes": 17602
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Savanna",
+      "no": 666,
+      "sourceId": "0666-00-15",
+      "sourceName": "Savanna Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-15%2BS.png",
+      "gitBlobSha": "7d4c825714e2c83cfc0adeeb2ed7b17be8845799",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-15-shiny.png",
+      "sha256": "0735dd3d142453e33ef1ec248941c28c2bb31c41b4e71206b6fa39b6e4fb2b28",
+      "sourceBytes": 20009,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-savanna.png",
+        "sha256": "9bccaab5189da8cabba9700fa65d6dda5dc260847969ccca56b35755c44a266f"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-15.png",
+        "sha256": "d5405b2fb57105255b28a848d093cd0bbba43d3d28f72aa13b3df12d2b23ad79",
+        "gitBlobSha": "d06afc517be71f632f1a46d36074e47896dc410b",
+        "bytes": 19940
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Sun",
+      "no": 666,
+      "sourceId": "0666-00-17",
+      "sourceName": "Sun Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-17%2BS.png",
+      "gitBlobSha": "1788269caa1427911ed73828faad58610ba2c9d6",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-17-shiny.png",
+      "sha256": "4f1e14986b3f9a670094babf9ea828013d35a9e6e9704a891cbe98380fff4b3d",
+      "sourceBytes": 18126,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-sun.png",
+        "sha256": "4784582eea94ac02f093ae140ffd71d136ec4d15244771a32599029d842268b4"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-17.png",
+        "sha256": "5e8251077b277c270d01df3c71cf698745705c0be596580efe078eb3de4139a0",
+        "gitBlobSha": "d8b9343e15c9c75c503cfc42b9f4ed106d25b62b",
+        "bytes": 17978
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Tundra",
+      "no": 666,
+      "sourceId": "0666-00-18",
+      "sourceName": "Tundra Vivillon",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "18/02/2025",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/scattered-to-the-winds-2025?hl=en",
+        "https://bulbapedia.bulbagarden.net/wiki/Vivillon_(GO)"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-18%2BS.png",
+      "gitBlobSha": "3b40a19c949e9b710eed76fefd0ab59be17c2937",
+      "asset": "assets/sprites/go/pogorewind-form-0666-00-18-shiny.png",
+      "sha256": "90ac008916bbae2fc7e912a75fa1b1b38d22eb505578ba03ebb4257eab8e5e69",
+      "sourceBytes": 16341,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/vivillon-tundra.png",
+        "sha256": "cc39cb5530b758208eb559035ff08cd71a7ad7f266ff6c1c82035917fd897afd"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0666-00-18.png",
+        "sha256": "878682e9e10f11dab09c42713ba71fa66ef6f4234c57ccd51e5d2ac1ca5c9a8b",
+        "gitBlobSha": "85854581122ad00a99fe0a70ba40fbb7f6e22081",
+        "bytes": 16452
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Both genders share the exact non-dimorphic form model."
+    },
+    {
+      "name": "Spinda (Heart)",
+      "no": 327,
+      "sourceId": "0327-00-09",
+      "sourceName": "#9 Spinda",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "sourceRecordedShinyDate": "14/02/2021",
+      "dateQualification": "Copied source date, not independently audited; eligibility separately reviewed.",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "shinyAvailability": "released",
+      "genderModel": "shared-no-visual-dimorphism",
+      "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0327-00-09%2BS.png",
+      "gitBlobSha": "9bb417de89a4e298f3a9c92e5753ca3e92f4ff2d",
+      "asset": "assets/sprites/go/pogorewind-form-0327-00-09-shiny.png",
+      "sha256": "8950a78f006f77fcf9b27a4161dbc7a8238b6590a3a1661be5cad377d2542232",
+      "sourceBytes": 18238,
+      "retainedNormal": {
+        "asset": "assets/sprites/go/spinda-09.png",
+        "sha256": "230ecf236aecd1a5bb705d85365243d7aa965d86aa3ed097815141dd24a2edcd"
+      },
+      "normalReference": {
+        "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0327-00-09.png",
+        "sha256": "92d4e961434e0b2f0d1cd42fde6fb86e18f99c95b00cb24ef93b56e2130a5539",
+        "gitBlobSha": "ce7affdee13bfb96ffaea580d61d5600f0bb9373",
+        "bytes": 17670
+      },
+      "pixelReview": "All 94 normal/Shiny references locally inspected on four alpha-composited labelled contact sheets. Exact form identity and Shiny colors checked.",
+      "notes": "Heart #9 has the verified broken-heart Shiny; no other numbered Spinda imported."
+    }
+  ],
+  "holds": [
+    {
+      "name": "Vivillon (Fancy)",
+      "releasedNormal": false,
+      "releasedShiny": false,
+      "action": "No import; not a released-art gap"
+    },
+    {
+      "name": "Vivillon (Poké Ball)",
+      "releasedNormal": false,
+      "releasedShiny": false,
+      "action": "No import; not a released-art gap"
+    },
+    {
+      "name": "Spinda (Form 1)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 2)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 3)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 4)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 5)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 6)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 7)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    },
+    {
+      "name": "Spinda (Form 8)",
+      "releasedShiny": true,
+      "action": "Hold: candidate spots differ from current game reports; no import or false unreleased classification"
+    }
+  ]
+}
