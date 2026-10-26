@@ -1,4 +1,5 @@
 const {test,expect}=require('@playwright/test');
+test.use({serviceWorkers:'block'});
 const fs=require('fs');const {normalFixture,settled}=require('./helpers/usability-fixture.cjs');const controls=require('./helpers/current-want-controls.cjs');
 test('actual list and canvas Max comparison',async({page})=>{
 

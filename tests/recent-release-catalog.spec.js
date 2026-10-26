@@ -1,4 +1,5 @@
 const {test,expect}=require('@playwright/test');
+test.use({serviceWorkers:'block'});
 const fs=require('node:fs');
 const {fixture,normalFixture,settled}=require('./helpers/usability-fixture.cjs');
 const controls=require('./helpers/current-want-controls.cjs');

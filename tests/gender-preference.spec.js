@@ -1,4 +1,5 @@
 const {test,expect}=require('@playwright/test');
+test.use({serviceWorkers:'block'});
 const fs=require('fs');const {normalFixture,settled}=require('./helpers/usability-fixture.cjs');
 const source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8');const install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');
 test('unspecified gender remains optional even when costume artwork is female-only',async({page})=>{
