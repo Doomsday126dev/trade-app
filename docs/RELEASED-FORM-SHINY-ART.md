@@ -1,0 +1,15 @@
+# Reviewed Shiny form extension — local only
+
+This separate extension follows starter source `107181fbb42d0c23d9c91e28ba93d401d6616ce4`. Frozen .145 source `4536e64b26e0a1204bcecefc246704c4e8285ce7` is unchanged. No release registration, baseline acknowledgement, push or deployment is included.
+
+The import contains 47 original Shiny PNGs: all 28 Unown letters/punctuation, 18 released regional Vivillon patterns, and Heart Spinda (#9). All 94 normal/Shiny reference files were downloaded from the exact published paths in Gabrielense/pogorewind commit `5c6bb56c4026e5fe3cd146910c7e9dad9f07d716`, checked against that immutable tree's Git blob hashes and visually inspected on four labelled alpha-composited contact sheets. The pinned identity CSV was independently hash-checked against the same tree. Existing correct normal files are byte-identical and retained.
+
+`data/reviewed-form-shiny-assets.json` records every form identity, exact URL, local SHA-256, upstream Git blob hash, retained normal hash and release evidence. A source image existing in a mined repository is not itself release evidence. Independent research matched released forms against the Shiny list, official Vivillon announcement and Unown W's official Nagasaki availability. The current local attempt to retrieve the Nagasaki page timed out; that entry explicitly retains the independent review qualification. Source CSV dates are preserved as source metadata, never represented as independently audited debut dates. Unown's historical Shiny release does not imply current encounter availability.
+
+Unown is genderless. Vivillon and Heart Spinda legitimately share one exact non-dimorphic model across male/female qualifiers; no distinct gender artwork is invented. Shiny form selection never borrows a generic species image, normal coloring or another form. Current saved records/flags and stable catalog identities are untouched.
+
+Fancy and Poké Ball Vivillon are unreleased forms and are not imported. Spinda patterns 1–8 are released Shiny, but their candidate files have historical spot patterns differing from current game reports; those eight remain held and are not falsely marked unreleased. Heart #9's documented broken-heart Shiny is the ready exception. The local manifest records these ten holds without changing their existing saved records or runtime normal assets.
+
+The cumulative original normal-only inventory falls from 364 to 220: 217 non-Pikachu mappings, plus Clone/Ph.D. Pikachu (unreleased Shiny) and generic Detective Pikachu (year unresolved). Within the 217, two Vivillon forms are unreleased, eight Spinda patterns are held for exact-current artwork, and the other 207 still need classification. Seven separate ambiguous catalog identities remain. This is not a full-coverage claim.
+
+Publication requires separately approved exact-source registration and immutable qualification, required CI, and reviewed maintenance mapping deltas with the existing expiry retained. This patch changes none of those controls and does not retry the previously denied operation.

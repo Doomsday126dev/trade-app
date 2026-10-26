@@ -108,6 +108,9 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     if(record.starterShinyArtworkReview){
       try{require('./sprites/starter-shiny-review.cjs').validateStarterShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
     }
+    if(record.formShinyArtworkReview){
+      try{require('./sprites/form-shiny-review.cjs').validateFormShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
     if(record.sourceProvider==='pokemod-reviewed-released'){
       const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-released-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
       if(!reviewed||['sourceCommit','sourcePage','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','identityEvidence','shinyEvidence'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
@@ -136,7 +139,7 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     const page=snapshot.pages.find(row=>row.url===record.sourcePage&&row.dex===record.no);
     if(!page||!page.files.some(row=>row.file===record.sourceFile)||record.sourceUrl!==IMAGE_PREFIX+record.sourceFile||path.posix.basename(record.assets?.default||'')!==record.sourceFile)problems.push({kind:'source-provenance',identity:record.names[0]});
     for(const [key,asset] of Object.entries(record.assets||{})){
-      if((record.shinyArtworkReview||record.pinnedArtworkReview||record.starterShinyArtworkReview)&&['shiny','femaleShiny'].includes(key))continue;
+      if((record.shinyArtworkReview||record.pinnedArtworkReview||record.starterShinyArtworkReview||record.formShinyArtworkReview)&&['shiny','femaleShiny'].includes(key))continue;
       if(!page?.files.some(row=>row.file===path.posix.basename(asset)))problems.push({kind:'asset-source-mapping',identity:record.names[0],asset});
     }
   }

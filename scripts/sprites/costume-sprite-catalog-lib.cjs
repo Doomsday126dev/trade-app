@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {validatePinnedReview}=require('./pinned-pikachu-review.cjs');
 const {validateStarterShinyReview}=require('./starter-shiny-review.cjs');
+const {validateFormShinyReview}=require('./form-shiny-review.cjs');
 
 const SCHEMA_VERSION=1;
 const SOURCE_ID='pokemondb-go-reviewed';
@@ -46,6 +47,7 @@ function validateCatalog(catalog,root){
     if(!entry.assets?.default||!entry.sha256?.default)fail(`Exact sprite entry is missing its default local asset: ${entry.names[0]}`);
     validatePinnedReview(entry,root);
     validateStarterShinyReview(entry,root);
+    validateFormShinyReview(entry,root);
     if(entry.shinyAvailability!==undefined){
       if(!['released','unreleased','needs-identification'].includes(entry.shinyAvailability))fail('Invalid Shiny availability');
       if(entry.shinyAvailability!=='released'&&root){const proof=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-pikachu-shiny-assets.json'))).availability.find(r=>r.name===entry.names[0]);if(!proof||proof.shinyAvailability!==entry.shinyAvailability||!proof.evidence.length)fail('Unreviewed Shiny availability');}
