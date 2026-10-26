@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "Per-costume availability for eleven recent imports and three female-only classic cosplay costumes. No blanket default for all recent costumes.",
+  "scope": "Reviewed per-costume and fixed-species gender availability. No blanket single-gender rule; saved invalid qualifiers require explicit correction.",
   "records": [
     {
       "name": "Pikachu (Cosmog Spacesuit)",
@@ -225,6 +225,152 @@
       ],
       "reviewedAt": "2026-10-26",
       "basis": "Published per-costume availability. Unreleased Shiny is not inferred from mined artwork. Saved conflicting qualifiers remain preserved."
+    },
+    {
+      "name": "Nidorino Party Hat",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/033.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Chansey (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/113.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Blissey (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/242.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Happiny (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/440.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Nidoqueen Crown",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/031.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Nidoking Crown",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/034.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Ditto Blue Party Hat",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/132.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Ditto Yellow Party Hat",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/132.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Smoochum (Bow)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/238.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Falinks Train",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/870.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Gimmighoul 9th Anniversary Coin",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/999.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Plant)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Sandy)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Trash)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
     }
   ],
   "independentVerification": "Cosmog 0% male/100% female and Worlds 100% male/0% female verified directly in source pages. Collector source HTML independently inspected: explicit M=male-only,F=female-only legend and Cosmog F/Worlds M/Astronaut M records. Other eight preserve both genders per linked parent research; shirts have moderate database evidence."
