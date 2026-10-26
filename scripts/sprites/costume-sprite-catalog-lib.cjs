@@ -7,6 +7,7 @@ const {validatePinnedReview}=require('./pinned-pikachu-review.cjs');
 const {validateStarterShinyReview}=require('./starter-shiny-review.cjs');
 const {validateFormShinyReview}=require('./form-shiny-review.cjs');
 const {validateEvolutionShinyReview}=require('./evolution-shiny-review.cjs');
+const {validateCostume20ShinyReview}=require('./costume20-shiny-review.cjs');
 
 const SCHEMA_VERSION=1;
 const SOURCE_ID='pokemondb-go-reviewed';
@@ -50,6 +51,7 @@ function validateCatalog(catalog,root){
     validateStarterShinyReview(entry,root);
     validateFormShinyReview(entry,root);
     validateEvolutionShinyReview(entry,root);
+    validateCostume20ShinyReview(entry,root);
     if(entry.shinyAvailability!==undefined){
       if(!['released','unreleased','needs-identification'].includes(entry.shinyAvailability))fail('Invalid Shiny availability');
       if(entry.shinyAvailability!=='released'&&root){const proof=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-pikachu-shiny-assets.json'))).availability.find(r=>r.name===entry.names[0]);if(!proof||proof.shinyAvailability!==entry.shinyAvailability||!proof.evidence.length)fail('Unreviewed Shiny availability');}
