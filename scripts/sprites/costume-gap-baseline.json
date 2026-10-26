@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -44,19 +44,19 @@
       "id": "pokemon:1:standard:legacy:Bulbasaur%20(Red%20Party)",
       "identity": "Bulbasaur (Red Party)",
       "gap": false,
-      "fingerprint": "f0595b0aa78c4e4bae58a26f135a5ce00b486c91e79bd5bf26f60788b3d46051"
+      "fingerprint": "19be2027e2b35c3a64b5d10267f312244d8a201cc603ff2a3ad70cbbf0be401a"
     },
     {
       "id": "pokemon:1:standard:legacy:Bulbasaur%20(Shedinja)",
       "identity": "Bulbasaur (Shedinja)",
       "gap": false,
-      "fingerprint": "5e4e97b915a19f72d5942f7f5d194f96126cf001ad1386c8b1f37bbab7e160ae"
+      "fingerprint": "8052f8bc5e782e926fcdaee0a21789360ebeb6810304874f82f803fd194e572e"
     },
     {
       "id": "pokemon:1:standard:legacy:Bulbasaur%20(Visor)",
       "identity": "Bulbasaur (Visor)",
       "gap": false,
-      "fingerprint": "973c6fee3bb7ef87f720200106dfe0e8343d3b1ca9b5831baf9c1f5ebfee0880"
+      "fingerprint": "e3e9dfb2fde6b755962f210b380e6194dc719e7c9e67f33d002ddfb19b446c50"
     },
     {
       "id": "pokemon:104:standard:legacy:Cubone%20(Cempasuchil)",
@@ -116,43 +116,43 @@
       "id": "pokemon:133:standard:legacy:Eevee%20(Cherry%20Blossom)",
       "identity": "Eevee (Cherry Blossom)",
       "gap": false,
-      "fingerprint": "d81e4c2ccab70bf00aab878a75e12bafc6f68593bb245ab6cd11404f130766d9"
+      "fingerprint": "6984697fcfcfbe73c640e004febd78509db35613183f971229f81ac5d560968b"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Explorer)",
       "identity": "Eevee (Explorer)",
       "gap": false,
-      "fingerprint": "d17af70bbc33a7c4e1052ccafe864b08e99a0e65dd8dd3e943e6305943b9e647"
+      "fingerprint": "29abc00f75ab5e01f7b3b7fb8bece2652e70a9dec1fb12e97942d66ec1f45a64"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Flower%20Crown)",
       "identity": "Eevee (Flower Crown)",
       "gap": false,
-      "fingerprint": "75cb06aeb938fa1532b075135c64c2d560c0c98e68ac85008ad20111fc36308e"
+      "fingerprint": "09e5ef535986483e5ee7e22611ffa62d257e228d6fdeee76a0d7bbc106b70431"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Holiday)",
       "identity": "Eevee (Holiday)",
       "gap": false,
-      "fingerprint": "23d1057eb328a5775d7eaaad95d5c99ddfb10e2a099a908b8215e3e2d6b8b1a4"
+      "fingerprint": "e3491e4e8d6b2b6fa0391fedf77363a68b1bb6d644affbe1b23db3d64dcc2f2a"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Moon)",
       "identity": "Eevee (Moon)",
       "gap": false,
-      "fingerprint": "fed868b89c0589f580db3ee468ff4229fa0cddff3465add4b8b6bef4b3a7fda3"
+      "fingerprint": "a5f03d5a497981899f291de70c4653e5e6d7909f8732a6330188b4cb9772b6ce"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Red%20Party)",
       "identity": "Eevee (Red Party)",
       "gap": false,
-      "fingerprint": "9ad7c79eb87ed087681537526434a3086103083af4cdf53516c8cf250bcd1f68"
+      "fingerprint": "bded90d2ddb4109f247734946eee69bf67fa7e62e31f8f75ffa9f2d2cf167e72"
     },
     {
       "id": "pokemon:133:standard:legacy:Eevee%20(Sun)",
       "identity": "Eevee (Sun)",
       "gap": false,
-      "fingerprint": "49d1171153ebe5a4b2aa47dc0425fe5e9d4271c626d6cfc62e33639609f8a4f2"
+      "fingerprint": "598fad34862cbdd0cf00cc086552b5e57542d4d3c4d84c6fe8f7c072dea17027"
     },
     {
       "id": "pokemon:134:standard:legacy:Vaporeon%20Cherry%20Blossoms",
@@ -278,55 +278,55 @@
       "id": "pokemon:172:standard:legacy:Pichu%20(Ash)",
       "identity": "Pichu (Ash)",
       "gap": false,
-      "fingerprint": "e5208ddbe81873fb5cf83c85dc567e990125f4f3d79827154fdf11658dbe3fd6"
+      "fingerprint": "ce4398243534ecbabdeecba4927f40a9edc384c9d465bbb6c6000574a9404b68"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Cherry%20Blossom)",
       "identity": "Pichu (Cherry Blossom)",
       "gap": false,
-      "fingerprint": "0fd4dda605c2ac724d516b30c178ea6c9189767d405f1917cd73293b04a3481d"
+      "fingerprint": "f8a72e146c73bfc2cf5dac6f27e7faa4009fa3cf9af06467d4c9981f29a49ab9"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Flower%20Crown)",
       "identity": "Pichu (Flower Crown)",
       "gap": false,
-      "fingerprint": "ae0079de8ba5326aa2a59a0232f47d90c1ca2e73f6521d44a286b72b1e9eef77"
+      "fingerprint": "9d67921e09fa980504d58a5f34222e710359ed6b09ac331c4c7c80c3e29b82aa"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(New%20Year)",
       "identity": "Pichu (New Year)",
       "gap": false,
-      "fingerprint": "27ae63463c71ec3c0f9f7cecbe06af1b428125501fac7c4a1f2874ba79859391"
+      "fingerprint": "5fb021647ca55bfc2477fe345890581e71684a56b971ee006eefa697bceac62d"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Party)",
       "identity": "Pichu (Party)",
       "gap": false,
-      "fingerprint": "9f320a723dd5517683884ffa3997748c246067b63abff732620ef85db79d91a4"
+      "fingerprint": "2648ba52a40a5c2d594cce4e61605f9abf3d5bd24830420d908dd1b5525f8a31"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Santa)",
       "identity": "Pichu (Santa)",
       "gap": false,
-      "fingerprint": "3b0ac3f2a697c2d4c686ac95505525587053a9f63f82b3c41d9775ea83f9cea4"
+      "fingerprint": "b4458af04c08b77a424186cd893be79aa7a339c0e400877c775bd2eca65ccc33"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Summer)",
       "identity": "Pichu (Summer)",
       "gap": false,
-      "fingerprint": "2c6bb117173ec452e639944e93a2c19267a91c8ed9117586c69d21239cd487a5"
+      "fingerprint": "331c85a1d1ab7c18563a77169976a9b2c37fa9380534112a8af571a5ffffc374"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Winter)",
       "identity": "Pichu (Winter)",
       "gap": false,
-      "fingerprint": "e7fab26e696caf42646281a299549d9304ee90a64ed1150eea7f2aaac76fb256"
+      "fingerprint": "06ac652e5ca8be4727462f87e0b6908ade4df40a614bb9e6fc00dfce39fd2a6b"
     },
     {
       "id": "pokemon:172:standard:legacy:Pichu%20(Witch)",
       "identity": "Pichu (Witch)",
       "gap": false,
-      "fingerprint": "933fd380b2076d023e77d5e64aed068021ed27ac57a3f2894c9bc988408a2a6e"
+      "fingerprint": "ce2360856686573481f21e5ce24d1d0f9d998c7e64e89a0db06621cda54d5f05"
     },
     {
       "id": "pokemon:175:standard:legacy:Togepi%20(Flower%20Crown)",
@@ -440,169 +440,169 @@
       "id": "pokemon:201:standard:legacy:Unown%20(!)",
       "identity": "Unown (!)",
       "gap": false,
-      "fingerprint": "0833273806ce8a1394a4d87226b89ef2a17370f3ff5e8a7f7444ade8a8fec2fb"
+      "fingerprint": "f6f9fab7379dfabc71f675de4f0d3cb43b81dfaa2a2e2fc37f0a9a2f0ddd76aa"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(%3F)",
       "identity": "Unown (?)",
       "gap": false,
-      "fingerprint": "6b21b732034f4a283a9e5e716e28b9c89b91abd848c73b7d1a2ab728c6f61c43"
+      "fingerprint": "a21a8537b0dd7f2fa720526a0d3d1e4373ffaf227d7c986b062f202aecf51a53"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(A)",
       "identity": "Unown (A)",
       "gap": false,
-      "fingerprint": "00c5e11ff915314341550df5cc135d3a0cc12ffc60137cdab3757114e03cf448"
+      "fingerprint": "729f7d735f3d98638f86c436f950204387c493157b3307c5db4dca8123607e83"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(B)",
       "identity": "Unown (B)",
       "gap": false,
-      "fingerprint": "ceb8c52c93f41ae9a5acc2e85c80c4c489274bd19ae8590ac01c23ede089bb71"
+      "fingerprint": "f5b4621dde555527d40217500383670b5183ae179712425f338ecf336f52cc07"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(C)",
       "identity": "Unown (C)",
       "gap": false,
-      "fingerprint": "d566c0629933b4075aa414e2f32c4ec48b2ff2817844505195bc3b33d22ee8f9"
+      "fingerprint": "6e70cc96fe8fae021dbf4a2f225b45363efaf49ac42b9d75dadd12b591488f4d"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(D)",
       "identity": "Unown (D)",
       "gap": false,
-      "fingerprint": "f4c0037bb6a706b755250f4377dea451da1c545b477c45aada4effc0df088e12"
+      "fingerprint": "cd469953e7aeb0d4e1a08503a4e5389b8ef7e46b3688d8da156ccc6682803c98"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(E)",
       "identity": "Unown (E)",
       "gap": false,
-      "fingerprint": "0b00790decd83f3e40b4ac87530541ee87862f0ec429c0d252928e4b7ecb70e1"
+      "fingerprint": "0efa232378db3d2d123d98197c7b6ecb6c1940021a98236fb66e370f9622ff46"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(F)",
       "identity": "Unown (F)",
       "gap": false,
-      "fingerprint": "449d135a8b40bcd810988bf268276c2025510c70e0a036d7c86ce50d364d6707"
+      "fingerprint": "d65bebf45a93793d1c72823f015c990d024ce71eeb363d53dd5d2b9983f1715a"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(G)",
       "identity": "Unown (G)",
       "gap": false,
-      "fingerprint": "6e1245463e6621eb72e2c77275f9a6d46a12bc99fdef07a8513571f488b63d6d"
+      "fingerprint": "b8c0a2d6be9c61c8c8bc294c963cd004fdfcf4bed2aa69862e143a498320dc39"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(H)",
       "identity": "Unown (H)",
       "gap": false,
-      "fingerprint": "c51cabb1261c3f6252765d75198a97ad8c49df0493d4268716a773728928dd05"
+      "fingerprint": "7db5e43b4f0c7b9bcb06dec6f1d1a33abc43517e7fff1c1494393d70f3b05065"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(I)",
       "identity": "Unown (I)",
       "gap": false,
-      "fingerprint": "5fd970f6eafd99c2bd875ebf303c2f6624219b9d8f1814b0d2f42383b8856f64"
+      "fingerprint": "2b3271b9625ecfedd2dcf854b96aa3c3f262cb1efe2030568609b804b5b62072"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(J)",
       "identity": "Unown (J)",
       "gap": false,
-      "fingerprint": "13554f1d7501f4dd8ab96b79a94e1250d0263dfda98ae03cbd79552ae3ba1713"
+      "fingerprint": "93b8799551815a52c00f33ed16950f3fcf54cacb84095f03390a20d9f9bad5f4"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(K)",
       "identity": "Unown (K)",
       "gap": false,
-      "fingerprint": "58f601ce3eff9a159814b443dd240fa157b3f8edd3603f6f2860991cf2e4ae3e"
+      "fingerprint": "b3dda627317f115a3f4cab091c7e1c16028304a432fac281fe7e641658f17c6d"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(L)",
       "identity": "Unown (L)",
       "gap": false,
-      "fingerprint": "46ab669fa450d09caab4f8ecc8a5263cc4eff2898bef81a25e55709ded96d5fb"
+      "fingerprint": "c9ff47f46da3e41f4667c362a639221f6c6bc2254bdaf5db4939bfa968546787"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(M)",
       "identity": "Unown (M)",
       "gap": false,
-      "fingerprint": "ef1adbd984bad0afb7cb74fdfd98b8a94f80b0472cfa924c4f2c0dc1151c32ec"
+      "fingerprint": "125a82dc9c1ecced43f5bbddd06de5bd652ef7618ad4ec433e12a4038804fdcf"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(N)",
       "identity": "Unown (N)",
       "gap": false,
-      "fingerprint": "d2fb97e5a6ba7a73909f28278a4922d3848b69cf9575de6bf899738887b22305"
+      "fingerprint": "8afc6d7ccc1c61ac251e7b61d6303e1be0de20e8ba2dafddbf3775284df5ae94"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(O)",
       "identity": "Unown (O)",
       "gap": false,
-      "fingerprint": "1a859044124b831278654c4825696ef7815233d70351ee25ad94303c90e5f262"
+      "fingerprint": "17f13a94da80fafc8ebc467c900ae4d50b552baf743964405fdf07cfa81efe3b"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(P)",
       "identity": "Unown (P)",
       "gap": false,
-      "fingerprint": "4692a4c5b70b00d7e0a3ebf3fd39231beed5bb079066d60bdf16651991cd2310"
+      "fingerprint": "98241fc3b040c77dcfbe94745f49f92098d3d510fa51691ee6bff9ddaf176d94"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(Q)",
       "identity": "Unown (Q)",
       "gap": false,
-      "fingerprint": "380479c3078a31c6f8d6fe14fa0fcbcbfce1811b5e345ae2a3dea89b04428122"
+      "fingerprint": "6c8ddcc00159c2c47eb607054903ddde585edce3c2aab3c6f7034caf5330eb86"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(R)",
       "identity": "Unown (R)",
       "gap": false,
-      "fingerprint": "3f2adab70d99e982e9a5394ce5de861cf4c26e0738846c04dc321cbbdbfec665"
+      "fingerprint": "1affcce19cb5251a5d1775ff8011c0e3e98fe2aaf9e15dd7f668aec07c56734b"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(S)",
       "identity": "Unown (S)",
       "gap": false,
-      "fingerprint": "2240c5443890a09ecb7a9fd810e7a2eeaf80da1d8ceaa134ed29495bacedb4e3"
+      "fingerprint": "62d0d7aa2dd0147fb3040b33c177c2b0580aabbb0368a363da8473ae111921bc"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(T)",
       "identity": "Unown (T)",
       "gap": false,
-      "fingerprint": "42a97514700e7cf04c5cdaa828747e93396d996572d7664b2553ac586e56393b"
+      "fingerprint": "91fac355987691449fbd2806d6b12f7c1ea2995eaf21978e4e384f7964eaa091"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(U)",
       "identity": "Unown (U)",
       "gap": false,
-      "fingerprint": "c48029c3e7b82c184d121de23280dc8490fd895aa09cbb63b8855c5a93d73735"
+      "fingerprint": "255cd3c7f4e4cab8b5936e3d8e30f0b9c73bcb996511bde836a51bcb612900ed"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(V)",
       "identity": "Unown (V)",
       "gap": false,
-      "fingerprint": "896e2c58b2b9cabf56c7ee487ad6bd26c89af8616cabf5d8843fd9b0d84ae3b7"
+      "fingerprint": "e2ae73f211b1caeac9936be8e194f76571db5aaa57e20c55ac3d669a32036d1b"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(W)",
       "identity": "Unown (W)",
       "gap": false,
-      "fingerprint": "c0796c7162ceb59578782e633effe68f0c527fc6776417f4f37babd3ed64b84e"
+      "fingerprint": "8e18d7e2f3b5f32042c30acc47e582bd529e5c13311f33d200babc5709151d28"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(X)",
       "identity": "Unown (X)",
       "gap": false,
-      "fingerprint": "08dc36c96cc9578d888542eb8f1879e97c238bb570424ccb8bc4034ae754ec7d"
+      "fingerprint": "6789935fd868a6c910e3e3b6134235f5086d4732d4b0759a47ccf425f20de979"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(Y)",
       "identity": "Unown (Y)",
       "gap": false,
-      "fingerprint": "509ba7d15fd4856799f2c9eb0a0b0638eb487a4100f9aa6956cd63f8a2e3efeb"
+      "fingerprint": "84147ab23e3b94c6a973a0c657673036666c2bfac96eb2c1dee5ec216dbd3245"
     },
     {
       "id": "pokemon:201:standard:legacy:Unown%20(Z)",
       "identity": "Unown (Z)",
       "gap": false,
-      "fingerprint": "b7363c43a9e52ae54393b34ee1a0fedfd4cf2aa499c9596636525727515f4490"
+      "fingerprint": "78474c8813b1a06bbbb9bde32c830c6c39b6b6d52954cd990131f6744ffe4ec4"
     },
     {
       "id": "pokemon:202:standard:legacy:Wobbuffet%20Party%20Hat",
@@ -1286,13 +1286,13 @@
       "id": "pokemon:26:standard:legacy:Raichu%20Beanie",
       "identity": "Raichu Beanie",
       "gap": false,
-      "fingerprint": "3484115377e8da4b370d289bcf4b4aec40dbbeb33f189b0b55fe99f92c818505"
+      "fingerprint": "2cab263b79d5d064cbc937bef4c59802119137c28a04c191c2228fefb9d10f4f"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Cherry%20Blossoms",
       "identity": "Raichu Cherry Blossoms",
       "gap": false,
-      "fingerprint": "870b9aeb0477673a5e7da39fa62d6ac9d31a438e5950154db2c3d15fe72585f3"
+      "fingerprint": "218055fb45287f3fc10cc01ffc6dfe69dd5b6df6f4fae5209474aeb993e262de"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Detective",
@@ -1304,61 +1304,61 @@
       "id": "pokemon:26:standard:legacy:Raichu%20Flower%20Crown",
       "identity": "Raichu Flower Crown",
       "gap": false,
-      "fingerprint": "2f8e4f978765c458d918e52ac88f5d82528a27bca789a93227256d6fc79291d2"
+      "fingerprint": "0f4bfbc4e07f80049f085d8a80c7b820d6cb5231e08fabe69b1a8a14b940226c"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Fragment%20Cap",
       "identity": "Raichu Fragment Cap",
       "gap": false,
-      "fingerprint": "73b62ce439b4a3fcf61bfd117b5ca33eca3790e5d4e9a8d1331c8780abf34f7b"
+      "fingerprint": "c1b3932b275ed372197fc48d0562c6ae195aa6c7e2262bf7d88a61c55a00f900"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Holiday%202023",
       "identity": "Raichu Holiday 2023",
       "gap": false,
-      "fingerprint": "577aff0adc7e9c38f490f147566efe387c71d5a29baac463d1f3ba2a4863c495"
+      "fingerprint": "0d2994d25e324006d3c0aea95af16ef134f5dd10a8afa362265e3d548ee2584d"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20New%20Year",
       "identity": "Raichu New Year",
       "gap": false,
-      "fingerprint": "33023b26f50c035c59f1eec279ee9ef87c597a79d0c30f15155522498c64a483"
+      "fingerprint": "1209d62bc73e453caa4ef19e7832362932d257c9bd35a08d8dff77d2614dc7ab"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Original%20Cap",
       "identity": "Raichu Original Cap",
       "gap": false,
-      "fingerprint": "a855431445896b8b3e98be57f59812b88cb31ae201ce10e30e76fdcff752f540"
+      "fingerprint": "b9866d7ad261852a7d1e9f51b7df842cde6fef7a812024974dce89d1d328a4b4"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Party%20Hat",
       "identity": "Raichu Party Hat",
       "gap": false,
-      "fingerprint": "80a09a9c7f0bd960cb50fa81662cd916db05328f43d9df365159f7a8fa0eeeaa"
+      "fingerprint": "79b9035d38889efa2b92e6db856236b5f78a108ae3e09bf4d075223d9c3167a5"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Santa%20Hat",
       "identity": "Raichu Santa Hat",
       "gap": false,
-      "fingerprint": "5f6cd6128b9d598ea794f83e84c100852bcbf87bcc96eae2cdf0ca3a0a89a952"
+      "fingerprint": "92d5b5154cf52878ab20655231a64d5d553d4fc2053a3ce729e505576a1a3c23"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Summer%20Style",
       "identity": "Raichu Summer Style",
       "gap": false,
-      "fingerprint": "75db9147da662e3457229e83ba59300fa7234eae73692d7c7a9e0687db6697a4"
+      "fingerprint": "c9195eff554817154d3986c9e30d32aae8dc57d6d016d540162162f6d448d5b8"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Witch%20Hat",
       "identity": "Raichu Witch Hat",
       "gap": false,
-      "fingerprint": "871ebff5f08bd67213ce0523a3e3d7a8a980fbe7abb93830319698d71d032d95"
+      "fingerprint": "2ffbc6948b28f8e0b7c07c23dd67bc1da782bd5869b23d0fb42d60d2800bdb7d"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20World%20Cap",
       "identity": "Raichu World Cap",
       "gap": false,
-      "fingerprint": "01901d23c45d9e38f3f54ff148acc0aac299fd994eb078d483e8772513072ea3"
+      "fingerprint": "9ddf208b10eaacae0d59db2a3ed63103b2e28bd4750af356ae57ebd6d1f21bca"
     },
     {
       "id": "pokemon:263:standard:legacy:G_%20Zigzagoon%20(Meloetta%20Hat)",
@@ -1484,7 +1484,7 @@
       "id": "pokemon:327:standard:legacy:Spinda%20(Heart)",
       "identity": "Spinda (Heart)",
       "gap": false,
-      "fingerprint": "755a6cb809aac4413a1c136d1527cfe7bfbf170f59a574abe76c179ad1e610ec"
+      "fingerprint": "8cb63029af91d7e2bdf4c3368aefd54fd4e9324937efa0b768cc530bd5d9c3d4"
     },
     {
       "id": "pokemon:33:standard:legacy:Nidorino%20Party%20Hat",
@@ -1592,19 +1592,19 @@
       "id": "pokemon:4:standard:legacy:Charmander%20(Cubone)",
       "identity": "Charmander (Cubone)",
       "gap": false,
-      "fingerprint": "4ea3b553daae54eac5a4cad24f1b8ddbdbb8e3d4060e7069c47720a78f6e25e6"
+      "fingerprint": "e8212ccdde2fab1dd40c3f38228370af7c0a040154452e4bf18a7e22f55ba5a1"
     },
     {
       "id": "pokemon:4:standard:legacy:Charmander%20(Red%20Party)",
       "identity": "Charmander (Red Party)",
       "gap": false,
-      "fingerprint": "6fb9fc8b71f882ba2eee590108c1aff2d08395ee10e4a2fe444f36c344f66a71"
+      "fingerprint": "f5646bebc9cf071820e6973d17d9fa58736bfc420c1e691af4f80e6e45c2c4a6"
     },
     {
       "id": "pokemon:4:standard:legacy:Charmander%20(Visor)",
       "identity": "Charmander (Visor)",
       "gap": false,
-      "fingerprint": "2a7254ad701b26ba634b5dc99e2dec6dfad93ef78725e32ad6d077954ebb81d6"
+      "fingerprint": "afac7b9d88827eb399bb7d9455b13272c4e4ad98b5dc9f7b70f9d222b045e377"
     },
     {
       "id": "pokemon:40:standard:legacy:Wigglytuff%20Ribbon",
@@ -1856,19 +1856,19 @@
       "id": "pokemon:666:standard:legacy:Archipelago",
       "identity": "Archipelago",
       "gap": false,
-      "fingerprint": "026bd1c0308ffb7657a11ead04e6b4ea907ea472601be48776f60bd672c1327c"
+      "fingerprint": "d7cf84f42719f714c14def76ed97502e15564e9e4c18457ccce7f4c6a1ce202a"
     },
     {
       "id": "pokemon:666:standard:legacy:Continental",
       "identity": "Continental",
       "gap": false,
-      "fingerprint": "0b6e19f650c2610ba8db1054eba2e0505b0e849ba2bdbf0706cb97526ccb7bf8"
+      "fingerprint": "86e5801b686197f3ffb57d0b85b1ada4aff63b7fa4264316b138540059a97557"
     },
     {
       "id": "pokemon:666:standard:legacy:Elegant",
       "identity": "Elegant",
       "gap": false,
-      "fingerprint": "5fef15d4c739091940bf3ecdfb2ff6a2674e70105215146b18274cd149bd3dc0"
+      "fingerprint": "e8211e98bc039ad8e2029fd99c22db24804755bf3d6f6fa22e27af364a67c9c2"
     },
     {
       "id": "pokemon:666:standard:legacy:Fancy",
@@ -1880,55 +1880,55 @@
       "id": "pokemon:666:standard:legacy:Garden",
       "identity": "Garden",
       "gap": false,
-      "fingerprint": "94795712688e86f5a4be1ad233bad427f9955bc73bdb16e497ae345ca37038d6"
+      "fingerprint": "acd7c920717b7b4470ecab628290f5759e74709ac0e4e04dc0d0611fd72e412b"
     },
     {
       "id": "pokemon:666:standard:legacy:High%20Plains",
       "identity": "High Plains",
       "gap": false,
-      "fingerprint": "cf77648fe23f4cd3fd18cbd65b92ab5c96b65d2ae25315c1b890e3286db96258"
+      "fingerprint": "de632f41f20258e4702ff4d474fc20a1ee20a7221c0c1fdc9ca86aa00c73c48f"
     },
     {
       "id": "pokemon:666:standard:legacy:Icy%20Snow",
       "identity": "Icy Snow",
       "gap": false,
-      "fingerprint": "8c01c3c27c6d7a4d47e5e066d28cacd090ee2454ea44a1863305d0c9fef69177"
+      "fingerprint": "d48425a0ab8960480c32e0c2ac69dc23e62c438d402ebc1621b88442f16a9e1d"
     },
     {
       "id": "pokemon:666:standard:legacy:Jungle",
       "identity": "Jungle",
       "gap": false,
-      "fingerprint": "2205941da0d65ab9f6d4c4343404fac937e57fa0edb9cadbe4e392ca3851cdbb"
+      "fingerprint": "99d65553330626df8c7665343056572b99111c01ad99e30773e0061804e04e99"
     },
     {
       "id": "pokemon:666:standard:legacy:Marine",
       "identity": "Marine",
       "gap": false,
-      "fingerprint": "aea678c3561942d0d1004d106f93d1b650ef25d1380de53ac9ecfabdc70adc43"
+      "fingerprint": "1efe4001f92cf2471351cd211588c936a8b2ece6099711bc44e4f07aaae14a9f"
     },
     {
       "id": "pokemon:666:standard:legacy:Meadow",
       "identity": "Meadow",
       "gap": false,
-      "fingerprint": "5c124151aaf7becf12dc466353f0cd1292d613904008664fbd59b644807fdad5"
+      "fingerprint": "80a549895bda584d92083a4f809436ac3ab86f3290cc84fb536213b8df576536"
     },
     {
       "id": "pokemon:666:standard:legacy:Modern",
       "identity": "Modern",
       "gap": false,
-      "fingerprint": "8ba07c225523f867b263194609f202ed81e1feaa57610afd76d33ea01e94f869"
+      "fingerprint": "afead5c7af27dcf42df6c8f2f2dfd1b71c969525ecdf28b1c60758b442ab6455"
     },
     {
       "id": "pokemon:666:standard:legacy:Monsoon",
       "identity": "Monsoon",
       "gap": false,
-      "fingerprint": "99e463ae2e903a85075c76acc35a623c66acae8ecbf854ae7ae84e5ae3318110"
+      "fingerprint": "778c066ea5f76699ca5f96f31b40554714c4c6320939409f5ef4cffe00f9bf7d"
     },
     {
       "id": "pokemon:666:standard:legacy:Ocean",
       "identity": "Ocean",
       "gap": false,
-      "fingerprint": "f25e2bc05c582d3ef91fb022a0e20a5535a02acba326fab342a1831a273e1298"
+      "fingerprint": "1030b70ab90f104994095a28c354971222e45b4b300553a62e09d52506c63ab9"
     },
     {
       "id": "pokemon:666:standard:legacy:Pok%C3%A9%20Ball",
@@ -1940,37 +1940,37 @@
       "id": "pokemon:666:standard:legacy:Polar",
       "identity": "Polar",
       "gap": false,
-      "fingerprint": "dca35beadcc7aaa53dfb36e4e378a8722b933ad7c5aa91b493caf2257214a32a"
+      "fingerprint": "3dbea68962423857f5a37512a84479c8e6cceafff0656d039381f03f5161d9f4"
     },
     {
       "id": "pokemon:666:standard:legacy:River",
       "identity": "River",
       "gap": false,
-      "fingerprint": "0d8b5583bc9fe2751ad7249e846ed3b205537f03a798db0a2e0a678d14d7432e"
+      "fingerprint": "e6ef3a0292b117bc17868f85704f4c27fb1a12a4cd8a86e7b71ba99926ad2ddf"
     },
     {
       "id": "pokemon:666:standard:legacy:Sandstorm",
       "identity": "Sandstorm",
       "gap": false,
-      "fingerprint": "06f8756b2ff590dd0f7c78515b92da0a434b25bf031e7e86d9c5e651f9d32339"
+      "fingerprint": "008257432373a0b5bbbf4b96a7cbd29d794ed86d6e3053588bcc11e6d8003ce1"
     },
     {
       "id": "pokemon:666:standard:legacy:Savanna",
       "identity": "Savanna",
       "gap": false,
-      "fingerprint": "395586c1dd668e7fa58f5345591af41d2cded5c10c3112d8dbcf1a15bd9d87a0"
+      "fingerprint": "a8932916a3861bdcb1432280c1cc9459cd46f03b8d07aaeae6d9cf7de6777efe"
     },
     {
       "id": "pokemon:666:standard:legacy:Sun",
       "identity": "Sun",
       "gap": false,
-      "fingerprint": "f3ea7e9dca075fd20d4bea76859282294c6fb4f390c7986cdc469ef10f3e1881"
+      "fingerprint": "9f08917d4f319bf1cfe82d54c7843f6b56eed5b0244b2ad74305ea01f74a03ea"
     },
     {
       "id": "pokemon:666:standard:legacy:Tundra",
       "identity": "Tundra",
       "gap": false,
-      "fingerprint": "475701decf0a4909cb9e1ec7e556fbf5257275ca352ba75d3f369722c5ee3821"
+      "fingerprint": "74f37148b040b1a315c0238ee81adb34822637520965cc66a11e8ef0745c1967"
     },
     {
       "id": "pokemon:676:standard:legacy:Furfrou%20(Dandy)",
@@ -2030,25 +2030,25 @@
       "id": "pokemon:7:standard:legacy:Squirtle%20(Red%20Party)",
       "identity": "Squirtle (Red Party)",
       "gap": false,
-      "fingerprint": "23078926b9758a7d80c87246092b7d40f0ae3ccb4e1f7d47d22ebf040fca5081"
+      "fingerprint": "eb7baaa09b5e16b9b2a8bfeb7ad22e8ff7d3cc62fd65c176d95e004448e840c3"
     },
     {
       "id": "pokemon:7:standard:legacy:Squirtle%20(Sunglasses)",
       "identity": "Squirtle (Sunglasses)",
       "gap": false,
-      "fingerprint": "40e01609bc731eff9b162b84c50464092157f829a07caa59fa7b6ec33d67c72d"
+      "fingerprint": "7681ebc84e7bc286268fcfaba2e269b01920bcb4793563ab76809b021ab721ba"
     },
     {
       "id": "pokemon:7:standard:legacy:Squirtle%20(Visor)",
       "identity": "Squirtle (Visor)",
       "gap": false,
-      "fingerprint": "d0a225ff3d850cd7875695ba87d6e5f522efcdceee8fe22a078df3a4ebade814"
+      "fingerprint": "7cc6ec90697a38930863bb832f9fc8dc650ed9e11059d9a0518976d9b9d24d07"
     },
     {
       "id": "pokemon:7:standard:legacy:Squirtle%20(Yamask)",
       "identity": "Squirtle (Yamask)",
       "gap": false,
-      "fingerprint": "16e07770041a9d59a0786b57881939031c6e26e60795373742f86c6c34b6138f"
+      "fingerprint": "afa917d542593a5385b921663cde04c2a152989889f810c049f84f8eac7424fe"
     },
     {
       "id": "pokemon:700:standard:legacy:Sylveon%20Cherry%20Blossoms",
