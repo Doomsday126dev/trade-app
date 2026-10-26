@@ -56,3 +56,9 @@ test('reviewed equivalent forms retain Shiny color without normal fallback',()=>
   assert.deepEqual(Array.from(sprites.publicSpriteUrls(name,'',no,true)),[`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${no}.png`]);
  }
 });
+
+test('a reviewed normal equivalent override cannot replace a requested Shiny chain',()=>{
+ const app=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');const start=app.indexOf('function reviewedEquivalentSpriteOverride('),end=app.indexOf('// ── PER-IMAGE SPRITE NORMALIZATION',start);
+ const vetted=vm.runInNewContext(app.slice(start,end)+';vettedSpriteUrlOverride',{spriteSlugsDomain:sprites,isApprovedRuntimeSpriteUrl:()=>true,publicSpriteUrls:sprites.publicSpriteUrls});
+ for(const [name,no]of [['Scatterbug (Garden)',664],['Rockruff (Dusk)',744]]){const chain=Array.from(sprites.publicSpriteUrls(name,'',no,true));const normal=sprites.verifiedEquivalentSpriteUrl(name,no);assert.equal(vetted(no,name,'',name,normal,chain),'');assert.equal(vetted(no,name,'',name,chain[0],chain),chain[0]);}
+});

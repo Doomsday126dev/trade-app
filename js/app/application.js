@@ -1112,7 +1112,7 @@ function reviewedEquivalentSpriteOverride(no,name,dn,url){
 }
 function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
-  if(reviewedEquivalentSpriteOverride(no,name,dn,url)&&(!spriteSlugsDomain.reviewedDynamaxBase?.(name||dn,no)||chain.includes(url)))return url;
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url)&&chain.includes(url))return url;
   const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
   const exactRequired=identity?.exactRequired??(
     normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
