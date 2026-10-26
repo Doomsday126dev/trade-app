@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -919,8 +919,8 @@
     {
       "id": "pokemon:25:costume:PIKACHU_VISOR_2026",
       "identity": "Pikachu (Marathon)",
-      "gap": true,
-      "fingerprint": "36cca1db348f704ebe1abcefcad28d746dd4346eab5a29427b592f15286c3458"
+      "gap": false,
+      "fingerprint": "4e79f998dfe7be454743db6cc3d163411d5a2e4dd589d665681d23dbda4a470e"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_VS_2019",
@@ -1033,8 +1033,8 @@
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Fossil)",
       "identity": "Pikachu (Fossil)",
-      "gap": true,
-      "fingerprint": "fa2625c6211d14e9b26a36616ae38f45bf7570163eee19513ba37d72e04bd8c1"
+      "gap": false,
+      "fingerprint": "739643888e99e2a96da87d31646c7f2d72f965de9dce8cfe1e909071798fbe17"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Fragment)",
@@ -1105,8 +1105,8 @@
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
       "identity": "Pikachu (Instinct)",
-      "gap": true,
-      "fingerprint": "efbb6563c06ebc5ecbed2ac1df93cb12a2745c4f306bd361d719f28ea4f531b9"
+      "gap": false,
+      "fingerprint": "f31f4d13c9148fd6116b0ec4c0c40d442d90d72e497dcf26729b2d07b913f08f"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Jeju)",
@@ -1153,8 +1153,8 @@
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Mystic)",
       "identity": "Pikachu (Mystic)",
-      "gap": true,
-      "fingerprint": "17c31c7b78c7ba0316fae259962fa93144752258757999313f924e1e9eb54604"
+      "gap": false,
+      "fingerprint": "401c830e4f7a413df42c4db6b77c76bc179bcce7c64968f59c179c1529e64e36"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(New%20Year)",
@@ -1249,8 +1249,8 @@
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Valor)",
       "identity": "Pikachu (Valor)",
-      "gap": true,
-      "fingerprint": "8fe597086832b3e99e463462995d7a51482ded82dd769b130fae8738370201d1"
+      "gap": false,
+      "fingerprint": "202b9ff40adf50803fc27e91f982157ba7ea93c7b52eca2a606935c139dc9f14"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Victor)",

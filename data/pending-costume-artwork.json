@@ -15,9 +15,9 @@
   "maintenanceCandidate": {
     "baseCommit": "bf4a7e437545833e515bd7518fede39f209279e1",
     "canonicalRecords": 391,
-    "exactArtworkRecords": 364,
-    "pendingArtworkRecords": 27,
-    "excludedRows": 27
+    "exactArtworkRecords": 369,
+    "pendingArtworkRecords": 22,
+    "excludedRows": 22
   },
   "reasonCategories": [
     "accepted-source-missing",
@@ -194,39 +194,6 @@
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Fossil)",
-      "displayIdentity": "Pikachu (Fossil)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The official museum event identifies Excavator Pikachu, but the accepted Pikachu gallery has no Excavator/Fossil sprite. Adventure and safari hats are different costumes."
-      },
-      "nextReviewAction": "Review an exact Excavator candidate against the museum identity; never substitute Adventure Hat.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "excavator"
-        ],
-        [
-          "fossil"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Gloria)",
       "displayIdentity": "Pikachu (Gloria)",
       "species": {
@@ -355,36 +322,6 @@
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
-      "displayIdentity": "Pikachu (Instinct)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Team Instinct hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Instinct hat sprite."
-      },
-      "nextReviewAction": "Review only Team Instinct hat artwork, not another team's hat.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "instinct"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Jeju)",
       "displayIdentity": "Pikachu (Jeju)",
       "species": {
@@ -425,70 +362,6 @@
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
-      "canonicalCostumeId": "pokemon:25:costume:PIKACHU_VISOR_2026",
-      "displayIdentity": "Pikachu (Marathon)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The official Spring Marathon announcement confirms a marathon visor. The accepted gallery has Nate and Rosa visors, but no marathon-visor sprite."
-      },
-      "nextReviewAction": "Review the exact marathon visor; Nate/Rosa visors are not substitutes.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "marathon"
-        ],
-        [
-          "visor",
-          "2026"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Mystic)",
-      "displayIdentity": "Pikachu (Mystic)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Team Mystic hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Mystic hat sprite."
-      },
-      "nextReviewAction": "Review only Team Mystic hat artwork, not another team's hat.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "mystic"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
       "canonicalCostumeId": "announcement:2026-pokexciting:pikachu-turquoise",
       "displayIdentity": "Pikachu (PokeXciting Turquoise)",
       "species": {
@@ -512,7 +385,7 @@
         "decision": "not-found",
         "reason": "The primary event evidence confirms this released identity. The October 19 accepted-source review found no exact Pikachu (PokeXciting Turquoise) sprite."
       },
-      "nextReviewAction": "Review only the Turquoise PokéXciting costume when exact artwork appears; do not reuse another regional colour.",
+      "nextReviewAction": "Review only the Turquoise Pok\u00e9Xciting costume when exact artwork appears; do not reuse another regional colour.",
       "lastReviewedDate": "2026-10-19",
       "searchTerms": [
         [
@@ -556,36 +429,6 @@
         [
           "anniversary",
           "2026"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Valor)",
-      "displayIdentity": "Pikachu (Valor)",
-      "species": {
-        "dex": 25,
-        "name": "Pikachu"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "Team Valor hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Valor hat sprite."
-      },
-      "nextReviewAction": "Review only Team Valor hat artwork, not another team's hat.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "valor"
         ]
       ],
       "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
@@ -988,9 +831,9 @@
       "candidate": {
         "exactImageFound": false,
         "decision": "not-found",
-        "reason": "Official announcement confirms PokéXciting Pikachu (Blue); the October 19 accepted Pikachu gallery contains no exact labelled artwork. Other costumes cannot substitute."
+        "reason": "Official announcement confirms Pok\u00e9Xciting Pikachu (Blue); the October 19 accepted Pikachu gallery contains no exact labelled artwork. Other costumes cannot substitute."
       },
-      "nextReviewAction": "Review exact PokéXciting Pikachu (Blue) artwork when it appears in the accepted source.",
+      "nextReviewAction": "Review exact Pok\u00e9Xciting Pikachu (Blue) artwork when it appears in the accepted source.",
       "lastReviewedDate": "2026-10-19",
       "searchTerms": [
         [
@@ -1061,7 +904,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",

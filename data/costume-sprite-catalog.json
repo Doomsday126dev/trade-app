@@ -1093,9 +1093,32 @@
       "names": [
         "Pikachu (Fossil)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm25.fFOSSIL_2026.icon.png",
+      "sourceLabel": "FOSSIL_2026; inspected normal/Shiny and default/female tail variants",
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fFOSSIL_2026.icon.png",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-fossil-2026-default.png",
+        "female": "assets/sprites/go/pikachu-fossil-2026-female.png",
+        "shiny": "assets/sprites/go/pikachu-fossil-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/pikachu-fossil-2026-femaleshiny.png"
+      },
+      "sha256": {
+        "default": "8038a353facd7b0e3a890c0910d01cc21202dadf36a4fa0b7da3cae4eb90f3ab",
+        "female": "08648c9c641fbcb70ada1bbdcf65a64e6d2e67349ce6a8fdfc690e0aa5396f6d",
+        "shiny": "dc8c3881faf09c43202182b00eca8f75a423970e487dfa2cb0fbf45b2ee4f27d",
+        "femaleShiny": "91839831940ddb64a2f6eebe59778342ee8bea13bfe46790e02be0608ff3b3f1"
+      },
+      "sourceFiles": {
+        "default": "pm25.fFOSSIL_2026.icon.png",
+        "female": "pm25.fFOSSIL_2026.g2.icon.png",
+        "shiny": "pm25.fFOSSIL_2026.s.icon.png",
+        "femaleShiny": "pm25.fFOSSIL_2026.g2.s.icon.png"
+      }
     },
     {
       "no": 25,
@@ -1404,9 +1427,32 @@
       "names": [
         "Pikachu (Instinct)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm25.fGOFEST_2026_CAP_YELLOW.icon.png",
+      "sourceLabel": "GOFEST_2026_CAP_YELLOW; inspected normal/Shiny and default/female tail variants",
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fGOFEST_2026_CAP_YELLOW.icon.png",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-instinct-2026-default.png",
+        "female": "assets/sprites/go/pikachu-instinct-2026-female.png",
+        "shiny": "assets/sprites/go/pikachu-instinct-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/pikachu-instinct-2026-femaleshiny.png"
+      },
+      "sha256": {
+        "default": "d8193c2b7a98461f9985994f05a0880f4daebc4a4a1ffae0e8d5592629bc8cfd",
+        "female": "38bdfbbea33078d80e952095d2c1ce09d531e34cf36f7a5d5508801a895a3ed8",
+        "shiny": "8c9eaa6ea2c569f5684d7a5f635fc42bbb9435f13379346c236dcb1622d06d51",
+        "femaleShiny": "71f15492827d104059cd11f0a568769386176eab3efd720033a51fb0c53a9596"
+      },
+      "sourceFiles": {
+        "default": "pm25.fGOFEST_2026_CAP_YELLOW.icon.png",
+        "female": "pm25.fGOFEST_2026_CAP_YELLOW.g2.icon.png",
+        "shiny": "pm25.fGOFEST_2026_CAP_YELLOW.s.icon.png",
+        "femaleShiny": "pm25.fGOFEST_2026_CAP_YELLOW.g2.s.icon.png"
+      }
     },
     {
       "no": 25,
@@ -1585,9 +1631,32 @@
         "Pikachu (Marathon)",
         "Pikachu Marathon Visor"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm25.fVISOR_2026.icon.png",
+      "sourceLabel": "VISOR_2026; inspected normal/Shiny and default/female tail variants",
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fVISOR_2026.icon.png",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-marathon-2026-default.png",
+        "female": "assets/sprites/go/pikachu-marathon-2026-female.png",
+        "shiny": "assets/sprites/go/pikachu-marathon-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/pikachu-marathon-2026-femaleshiny.png"
+      },
+      "sha256": {
+        "default": "7e7e026147052d2b3792df7a3caad0fbbd7e33dd4ba488205a8f419c99d28a5b",
+        "female": "fbaa3484c6c38bcd2246c0ea776ca78d72cebc9ed5f2ff28261ceb39260697a8",
+        "shiny": "bef098c7452ec347eb3efcc2c68f41ceec9110fd5ccc18981d3d712049fe8073",
+        "femaleShiny": "52c36f2cd64701797fc5d28cb3572809ce664554bb562787af7ac0055ceae61d"
+      },
+      "sourceFiles": {
+        "default": "pm25.fVISOR_2026.icon.png",
+        "female": "pm25.fVISOR_2026.g2.icon.png",
+        "shiny": "pm25.fVISOR_2026.s.icon.png",
+        "femaleShiny": "pm25.fVISOR_2026.g2.s.icon.png"
+      }
     },
     {
       "no": 25,
@@ -1681,9 +1750,32 @@
       "names": [
         "Pikachu (Mystic)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm25.fGOFEST_2026_CAP_BLUE.icon.png",
+      "sourceLabel": "GOFEST_2026_CAP_BLUE; inspected normal/Shiny and default/female tail variants",
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fGOFEST_2026_CAP_BLUE.icon.png",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-mystic-2026-default.png",
+        "female": "assets/sprites/go/pikachu-mystic-2026-female.png",
+        "shiny": "assets/sprites/go/pikachu-mystic-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/pikachu-mystic-2026-femaleshiny.png"
+      },
+      "sha256": {
+        "default": "4348372ebe63d73adbc117e7223251e1194944a1d276d5e7ef68d93a3897ad53",
+        "female": "0f37dbdb314ae6900b6bf8ff080d3e32d2bcc5d5bdf190f0b106bebe5db2cf6b",
+        "shiny": "a52730015f67d1252c5ab97a467afe1d7f4fe75d6fdff0fac1559f3d317a2001",
+        "femaleShiny": "e71eebf6f1c35c709f7a024cfdc106ad3cf620fbb2aadf034748ee420767974b"
+      },
+      "sourceFiles": {
+        "default": "pm25.fGOFEST_2026_CAP_BLUE.icon.png",
+        "female": "pm25.fGOFEST_2026_CAP_BLUE.g2.icon.png",
+        "shiny": "pm25.fGOFEST_2026_CAP_BLUE.s.icon.png",
+        "femaleShiny": "pm25.fGOFEST_2026_CAP_BLUE.g2.s.icon.png"
+      }
     },
     {
       "no": 25,
@@ -2318,9 +2410,32 @@
       "names": [
         "Pikachu (Valor)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm25.fGOFEST_2026_CAP_RED.icon.png",
+      "sourceLabel": "GOFEST_2026_CAP_RED; inspected normal/Shiny and default/female tail variants",
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fGOFEST_2026_CAP_RED.icon.png",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-valor-2026-default.png",
+        "female": "assets/sprites/go/pikachu-valor-2026-female.png",
+        "shiny": "assets/sprites/go/pikachu-valor-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/pikachu-valor-2026-femaleshiny.png"
+      },
+      "sha256": {
+        "default": "bc243a04888c1cf0ed08066dc3f82331aea3f8af4dee8697149d085ecd88ab86",
+        "female": "7dfde38a4ebd818cef0801356e6827b5c3eda9d3c5695a43537c81eb24ef7832",
+        "shiny": "cefe2c2e8dba5a0d7c3a88e42e3865e18c4cb0d0714fc959eb8e954deb64049c",
+        "femaleShiny": "fb5cdd215b03342e567afcab501fa4a0841d96e32203d4193539ed8b8c6cb6f7"
+      },
+      "sourceFiles": {
+        "default": "pm25.fGOFEST_2026_CAP_RED.icon.png",
+        "female": "pm25.fGOFEST_2026_CAP_RED.g2.icon.png",
+        "shiny": "pm25.fGOFEST_2026_CAP_RED.s.icon.png",
+        "femaleShiny": "pm25.fGOFEST_2026_CAP_RED.g2.s.icon.png"
+      }
     },
     {
       "no": 25,

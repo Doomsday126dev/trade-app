@@ -97,6 +97,11 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
   for(const record of catalog.entries){
     if(record.status==='unavailable'&&!pending.entries.some(entry=>findEntry(entry.displayIdentity,entry.species.dex)===record))problems.push({kind:'untracked-unavailable',identity:record.names[0]});
     if(record.status!=='exact')continue;
+    if(record.sourceProvider==='pokemod-reviewed'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-reviewed-costume-assets.json'))).records.find(r=>r.identity===record.names[0]);
+      if(!reviewed||['sourceCommit','sourcePage','sourceUrl','sourceFiles','assets','sha256'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
     const page=snapshot.pages.find(row=>row.url===record.sourcePage&&row.dex===record.no);
     if(!page||!page.files.some(row=>row.file===record.sourceFile)||record.sourceUrl!==IMAGE_PREFIX+record.sourceFile||path.posix.basename(record.assets?.default||'')!==record.sourceFile)problems.push({kind:'source-provenance',identity:record.names[0]});
     for(const asset of Object.values(record.assets||{})){
