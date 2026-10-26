@@ -26,6 +26,7 @@ function imageHarness(locale='en'){
     wantSectionLabel:(section,options)=>window.PogoDomain.priorityValues.wantSectionLabel(section,t,options)
   });
   const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
+  vm.runInContext(source.slice(source.indexOf('function maxPresentationType('),source.indexOf('const MAX_CLOUD_URL=')),context);
   const start=source.indexOf('function productShareCategoryLabel('),end=source.indexOf('\nfunction refreshAll()',start);
   assert.ok(start>=0&&end>start);
   vm.runInContext(source.slice(start,end),context);

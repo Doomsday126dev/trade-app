@@ -491,8 +491,8 @@ function renderCombinedList(model=productDeclarations()){
     const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}</span>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${maxPresentationMarkup(e)}${escHtml(maxPresentationName(e.dn))}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
@@ -831,6 +831,10 @@ const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
+function maxPresentationType(entry){return /\(Gigantamax\)/i.test(entry.name||'')?'gmax':/\(Dynamax\)/i.test(entry.name||'')?'dynamax':'';}
+function maxPresentationName(name){return String(name||'').replace(/\s*\((?:Dynamax|Gigantamax)\)/gi,'').trim();}
+function maxPresentationIcon(type){return type==='gmax'?'assets/gigantamax-symbol.png':type==='dynamax'?'assets/dynamax-symbol.png':'';}
+function maxPresentationMarkup(entry){const type=maxPresentationType(entry);return type?`<img src="${maxPresentationIcon(type)}" width="20" height="20" style="object-fit:contain;vertical-align:middle" alt="${type==='gmax'?'Gigantamax':'Dynamax'}" title="${type==='gmax'?'Gigantamax':'Dynamax'}"> `:'';}
 const MAX_CLOUD_URL='assets/max-cloud.svg';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
@@ -933,6 +937,7 @@ const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":
 // Additional form identities. Exact form art is resolved independently; when
 // it is unavailable, consumers must keep the identity and show missing art.
 const EXTRA_FORM_ENTRIES=[
+  {no:774,name:"Minior (Green Core)",displayName:"Minior (Green Core)",users:{}},
   // Spinda — 8 standard spot patterns in Pokémon GO + heart form
   {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"",users:{}},
   {no:327,name:"Spinda (Form 2)",displayName:"Spinda (Form 2)",spriteUrl:"",users:{}},
@@ -6940,7 +6945,8 @@ async function renderProductShareImage(entries,owner){
       const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
       const image=await loadCanvasImageWithFallback(exportSpriteFallbackUrls({...entry,gender,spriteUrl:entrySpriteUrl(entry,entry.name,gender)})).catch(()=>null);
       const name=entry.dn||entry.name||i18nCore.t('contextSearch.unknown');
-      return{entry,image,nameLines:wrap(name),detailLines:wrap(productShareImageDetails(entry,section))};
+      const maxIcon=maxPresentationType(entry)?await loadCanvasImage(maxPresentationIcon(maxPresentationType(entry))):null;
+      return{entry,image,maxIcon,nameLines:wrap(maxPresentationName(name)),detailLines:wrap(productShareImageDetails(entry,section))};
     }));
     const heights=Array.from({length:Math.ceil(items.length/rowColumns)},(_,index)=>96+14*Math.max(...items.slice(index*rowColumns,(index+1)*rowColumns).map(item=>item.nameLines.length+item.detailLines.length)));
     return{section,items,heights,columns:rowColumns};
@@ -6969,12 +6975,13 @@ async function renderProductShareImage(entries,owner){
     drawFittedText(ctx,i18nCore.t('myList.priorityPokemonCount',{count:section.entries.length}),left+sectionWidth-12,y+26,110,{max:12,min:10,weight:500,color:'#a9b1b7'});
     ctx.textAlign='left';
     let rowTop=y+44;
-    items.forEach(({entry,image,nameLines,detailLines},index)=>{
+    items.forEach(({entry,image,maxIcon,nameLines,detailLines},index)=>{
       if(index&&index%rowColumns===0)rowTop+=heights[index/rowColumns-1];
       const x=left+(index%rowColumns)*cellWidth;
       const artX=x+(cellWidth-76)/2;
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
+      if(maxIcon)drawImageContain(ctx,maxIcon,x+4,rowTop+54,22,22);
       if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
       nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));

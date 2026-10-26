@@ -22,7 +22,7 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:393,exact:386,unsupported:7});
+  assert.deepEqual(report.counts,{canonical:396,exact:389,unsupported:7});
   assert.equal(report.candidates.length,7);
   assert.equal(report.coverage.releaseEvidenceEntries,20);
   assert.equal(report.upcomingIdentities.length,3);

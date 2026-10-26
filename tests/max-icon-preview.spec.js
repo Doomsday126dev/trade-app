@@ -1,0 +1,19 @@
+const {test,expect}=require('@playwright/test');
+const fs=require('fs');const {normalFixture,settled}=require('./helpers/usability-fixture.cjs');const controls=require('./helpers/current-want-controls.cjs');
+test('actual list and canvas Max comparison',async({page})=>{
+
+ await normalFixture(page);await page.setViewportSize({width:390,height:844});
+ const cache=JSON.parse(fs.readFileSync('/tmp/trade-recent-catalog-sprite-cache/manifest.json'));
+ await page.route('https://raw.githubusercontent.com/PokeAPI/**',r=>{if(/\/25.png$/.test(r.request().url()))return r.fulfill({path:'/tmp/max-originals/pikachu.png',contentType:'image/png'});const a=cache.find(a=>a.url===r.request().url());return a?r.fulfill({path:a.file,contentType:'image/png'}):r.abort()});
+ for(const [name,shiny,gender] of [['Deino (Dynamax)',true,'f'],['Sizzlipede (Dynamax)',false,'m'],['Charizard (Gigantamax)',true,'m'],['Cinderace (Gigantamax)',true,'f']]){
+ await page.locator('#wants-add-name').fill(name.slice(0,-1));await page.getByRole('option',{name,exact:true}).click();await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();await controls.priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);await controls.genderDetails(page);await page.locator('#combined-gender').selectOption(gender);await page.locator('#combined-save').click();await settled(page);
+ }
+ await page.locator('#wants-add-name').fill('');await page.waitForTimeout(800);await page.locator('#wants-add-name').blur();await page.keyboard.press('Escape');
+ const stage=process.env.MAX_STAGE||'new';
+ if(stage==='old'){const source=fs.readFileSync('/tmp/max-originals/old-application.js','utf8');await page.evaluate(src=>{renderProductShareImage=eval('('+src+')');for(const row of document.querySelectorAll('.wants-row')){row.querySelector('.wants-name').textContent=row.dataset.name;const type=/Gigantamax/.test(row.dataset.name)?'gmax':/Dynamax/.test(row.dataset.name)?'dynamax':'';row.querySelector('.myrow-sprite-wrap').insertAdjacentHTML('beforeend',maxCrownSvg(type));}},source.slice(source.indexOf('async function renderProductShareImage('),source.indexOf('\nfunction refreshAll',source.indexOf('async function renderProductShareImage('))));}
+ await page.locator('#wants-add-name').evaluate(e=>e.blur());await page.locator('.toast').evaluateAll(es=>es.forEach(e=>e.remove()));
+await page.screenshot({path:'/tmp/max-originals/'+stage+'-list.png',fullPage:true});
+ const out=await page.evaluate(async()=>{const rows=productDeclarations().entries;const blob=await renderProductShareImage(rows,'Max comparison');return await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(blob)})});fs.writeFileSync('/tmp/max-originals/'+stage+'-share.png',Buffer.from(out.split(',')[1],'base64'));
+ expect(await page.evaluate(()=>exportSpriteFallbackUrls({name:'Cinderace (Gigantamax)',no:815,shiny:true,gender:'f'}) )).toEqual(['assets/sprites/go/reviewed-cinderace-shiny.png']);
+ await page.evaluate(()=>stopAccountSyncRuntime());
+});

@@ -41,9 +41,9 @@ test('only one reviewed same-origin season redirect is followed',async()=>{
 });
 
 test('known unresolved recent releases stay actionable even when no new announcement arrives',()=>{
- const holds=require('../data/recent-release-review-holds.json').entries;
+ const holds=[{id:'fixture-unresolved',name:'Unreviewed form',source:'https://example.test/release',action:'Verify exact identity'}];
  const findings=compareDiscovery(baseline,baseline,loadCatalog(),now,holds);
- assert.equal(findings.filter(row=>row.kind==='known-release-review-hold').length,2);
+ assert.equal(findings.filter(row=>row.kind==='known-release-review-hold').length,1);
  for(const hold of holds)assert.ok(findings.some(row=>row.id===hold.id&&row.source&&row.action));
 });
 

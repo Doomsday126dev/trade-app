@@ -60,11 +60,11 @@ function sourceRows(){
 }
 
 function runtimeSource({rows,dynamaxIndexes}){
-  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows.map(row=>[row.name,row.no]))};\n  const maxIds=${JSON.stringify(dynamaxIndexes)};\n  function key(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map(rows.map(([name,no])=>[key(name),no]));\n  const dex=value=>byName.get(key(value))||0;\n  const maxByName=new Map(maxIds.map(index=>{const [name,no]=rows[index];return[key(name),{base:name.slice(0,-' (Dynamax)'.length),no}];}));\n  function dynamaxBase(value='',no=0){const item=maxByName.get(key(value));return item&&item.no===Number(no)?item.base:'';}\n  root.publicPokemonDex=Object.freeze({schemaVersion:2,dex,dynamaxBase,size:byName.size,dynamaxSize:maxIds.length});\n})(window);\n`.replace(/\n  /g,'\n');
+  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows.map(row=>[row.name,row.no]))};\n  const maxIds=${JSON.stringify(dynamaxIndexes)};\n  function key(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map(rows.map(([name,no])=>[key(name),no]));\n  const dex=value=>byName.get(key(value))||0;\n  const maxByName=new Map(maxIds.map(index=>{const [name,no]=rows[index];return[key(name),{base:name.slice(0,-' (Dynamax)'.length),no}];}));\n  function dynamaxBase(value='',no=0){const item=maxByName.get(key(value));return item&&item.no===Number(no)?item.base:'';}\n  root.publicPokemonDex=Object.freeze({schemaVersion:2,dex,dynamaxBase,size:byName.size,dynamaxSize:maxIds.length});\n})(window);\n`.replace(/\n  /g,'').replace(/\n/g,'');
 }
 
 function main(){
-  const source=sourceRows(),expected=runtimeSource(source);
+  const source=sourceRows(),expected=runtimeSource(source).replace(/\n  /g,'').replace(/\n/g,'');
   if(process.argv.includes('--check')){
     if(!fs.existsSync(output)||fs.readFileSync(output,'utf8')!==expected)throw new Error('Public sprite dex runtime is stale; run npm run generate:costume-sprites');
     process.stdout.write(`Public sprite dex runtime is current (${source.rows.length} names).\n`);
