@@ -241,3 +241,19 @@ readonly journal capture and canonical import dry runs. See
 - Production Firebase auth configuration reads were denied HTTP 403; existing
   staging/production Cloud Run origins were verified read-only. No security
   setting, credential, OAuth grant or data was changed.
+
+
+## Third candidate milestone
+
+- Scoped independent-review fixes: `f8129217` (operation cancellation and
+  transactionally checked provider/subject lifecycle revisions).
+- Candidate callback/transport composition: 93 local unit checks passed with
+  1 emulator-only skip; 14 desktop/mobile checks passed.
+- Expanded demo Auth/Firestore tests: 10 passed, including real custom-token
+  sign-in to the same UID, in-flight cancellation and second-review-after-unlink.
+- Current callback is source-only and excluded from every release inventory;
+  production app bootstrap and service-worker integration remain explicit gates.
+- Reviewed head `8e85912c` had green auth/product/Favorite CI and one performance
+  failure (202 ms against unchanged 200 ms); paired main/candidate local
+  qualification passed 8/8 each without changing budgets or renderer code.
+  Final-head CI is being monitored independently of this diagnostic evidence.

@@ -74,3 +74,14 @@ test('real Web Locks serialize competing auth commits across browser tabs',async
   ]);
   expect(results.filter(row=>row.ok)).toHaveLength(1);expect(results.find(row=>!row.ok).code).toBe('provider-auth/session-changed');await other.close();
 });
+test('standalone callback scrubs the URL, keeps code only in memory and fails safely after reload',async({page})=>{
+  const requests=[];page.on('request',request=>requests.push(request));
+  await page.goto(`/auth/discord.html?code=synthetic-callback-code&state=${'s'.repeat(43)}&iss=https%3A%2F%2Fdiscord.com`);
+  await expect(page.getByRole('heading',{name:'Return to PoGo Trades'})).toBeVisible();
+  expect(page.url()).not.toMatch(/code=|state=|iss=/);await expect(page.locator('body')).not.toContainText('synthetic-callback-code');
+  expect(await page.evaluate(()=>window.PogoDev.discordCallbackPage.take().code)).toBe('synthetic-callback-code');
+  expect(await page.evaluate(()=>window.PogoDev.discordCallbackPage.take())).toBeNull();
+  const script=requests.find(request=>request.url().includes('discordCallbackPage.js'));expect(script.headers().referer).toBeUndefined();
+  expect(requests.every(request=>request.url().startsWith('http://127.0.0.1:8886/'))).toBe(true);
+  await page.reload();await expect(page.locator('#discord-callback-status')).toContainText('could not be resumed');
+});

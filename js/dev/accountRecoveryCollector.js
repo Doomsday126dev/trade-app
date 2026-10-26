@@ -18,7 +18,7 @@
       const local=await readLocal();if(!sessionCurrent()||local?.owner?.uid!==uid||local.owner.username!==trainerHandle)fail('recovery/session-changed');
       const allowed=['owner','history','retainedHistory','lists','orders','preferences','pendingQueue'];
       if(Object.keys(local).sort().join(',')!==allowed.sort().join(',')||!object(local.orders)||!object(local.preferences)||!object(local.pendingQueue)||TYPES.some(type=>!object(local.lists?.[type])))fail('recovery/local-source-incomplete');
-      for(const history of[local.history,local.retainedHistory].filter(Boolean))if(history.owner?.uid!==uid||history.owner?.username!==trainerHandle||Number(history.version)>3)fail('recovery/history-owner-or-version-invalid');
+      for(const history of[local.history,local.retainedHistory].filter(Boolean))if(history.owner?.uid!==uid||history.owner?.username!==trainerHandle||!Number.isSafeInteger(history.version)||history.version<1||history.version>3)fail('recovery/history-owner-or-version-invalid');
       return{owner:{uid,username:trainerHandle},features:{...features},profile:Object.fromEntries(PROFILE_KEYS.filter(key=>profile[key]!==undefined).map(key=>[key,profile[key]])),
         memberships:memberships||{},sharing:{legacyUrls:TYPES.map(type=>`https://doomsday126dev.github.io/trade-app/?view=${encodeURIComponent(trainerHandle)}&list=${type}`),legacyProjection:share},
         permissions:{legacyRoleReferences:{isAdmin:profile.isAdmin===true,isOwner:profile.isOwner===true},memberships:memberships||{}},

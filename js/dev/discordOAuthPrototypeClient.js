@@ -14,13 +14,15 @@
     fetchImpl=global.fetch.bind(global),location=global.location,history=global.history,
     storage=global.sessionStorage,cryptoApi=global.crypto,clock=()=>Date.now(),
     getAuthorizationHeader=async()=>'',getSessionBinding,signInWithCustomToken,
-    endpointRoot='/__local/discord/oauth',callbackUri
+    endpointRoot='/__local/discord/oauth',callbackUri,candidateMode=false,requestTransport
   }={}){
     if(!fetchImpl||!location||!history||!storage||!cryptoApi?.getRandomValues||typeof getSessionBinding!=='function')throw new TypeError('Discord prototype client dependencies are incomplete');
     const initial=new URL(location.href),origin=initial.origin;
-    if(initial.protocol!=='http:'||!['localhost','127.0.0.1','[::1]'].includes(initial.hostname)||endpointRoot!=='/__local/discord/oauth')throw failure('discord/development-only');
+    if(candidateMode){if(origin!=='https://doomsday126dev.github.io'||typeof requestTransport!=='function')throw failure('discord/candidate-config-invalid');}
+    else if(initial.protocol!=='http:'||!['localhost','127.0.0.1','[::1]'].includes(initial.hostname)||endpointRoot!=='/__local/discord/oauth')throw failure('discord/development-only');
     if(typeof callbackUri!=='string'||!callbackUri)throw failure('discord/callback-invalid');
     const redirect=new URL(callbackUri,origin);
+    if(candidateMode&&redirect.pathname!=='/trade-app/auth/discord.html')throw failure('discord/callback-invalid');
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
     let generation=0,activeRun=null,review=null;
@@ -41,6 +43,12 @@
         const authorization=await getAuthorizationHeader();
         run.check();assertCurrent(pending);
         if(!authorization)throw failure('discord/auth-required');headers.authorization=authorization;
+      }
+      if(candidateMode){
+        const data=await requestTransport(route,{...payload,browserBinding:pending.browserBinding,lifecycleId:pending.lifecycleBinding},{authorization:headers.authorization||'',signal:run.controller?.signal});
+        run.check();assertCurrent(pending);
+        if(data?.ok===false)throw failure(SAFE_REASONS.has(data?.error?.reason)?data.error.reason:'discord/request-failed');
+        return data;
       }
       const response=await fetchImpl(endpoint(route),{method:'POST',credentials:'same-origin',redirect:'error',headers,body:JSON.stringify(payload),...(run.controller?{signal:run.controller.signal}:{})});
       run.check();assertCurrent(pending);
@@ -65,7 +73,7 @@
       if(!['link','sign-in'].includes(operation))throw new TypeError('Invalid Discord operation');
       review=null;clearPending();
       const captured=session(operation),issuedAt=clock();
-      const pending={operation,requestId:`discord-${base64url(cryptoApi.getRandomValues(new Uint8Array(32)))}`,...captured};
+      const pending={operation,requestId:`discord-${base64url(cryptoApi.getRandomValues(new Uint8Array(32)))}`,...captured,...(candidateMode?{browserBinding:base64url(cryptoApi.getRandomValues(new Uint8Array(32)))}:{})};
       const result=await request('begin',pending,{operation,requestId:pending.requestId},run);
       if(!exactKeys(result,['authorizeUrl','expiresInMs'])||!Number.isSafeInteger(result.expiresInMs)||result.expiresInMs<1||result.expiresInMs>TTL_MS)throw failure('discord/response-invalid');
       const authorize=new URL(result.authorizeUrl);
@@ -81,20 +89,21 @@
       try{location.assign(authorize.href);}catch{clearPending();throw failure('discord/navigation-failed');}
       return Object.freeze({status:'redirecting'});
     });}
-    async function completeFromLocation(){return exclusive(async run=>{
-      const callback=new URL(location.href),hasCallback=['code','state','error'].some(key=>callback.searchParams.has(key));
+    async function completeFromLocation(callbackUrl=location.href){return exclusive(async run=>{
+      const callback=new URL(callbackUrl),hasCallback=['code','state','error'].some(key=>callback.searchParams.has(key));
       if(!hasCallback)return null;
       // Scrub before storage, network, or validation can throw. Never render provider error text.
       scrubCallback();
       let pending;try{pending=JSON.parse(storage.getItem(REQUEST_KEY)||'null');}catch{}finally{clearPending();}
-      if(!exactKeys(pending,['operation','requestId','ownerBinding','lifecycleBinding','state','issuedAt','expiresAt'])||
+      if(!exactKeys(pending,['operation','requestId','ownerBinding','lifecycleBinding','state','issuedAt','expiresAt',...(candidateMode?['browserBinding']:[])])||
         !['link','sign-in'].includes(pending.operation)||!/^discord-[A-Za-z0-9_-]{43}$/.test(pending.requestId)||
-        !TOKEN.test(pending.state)||!Number.isSafeInteger(pending.issuedAt)||!Number.isSafeInteger(pending.expiresAt)||
+        !TOKEN.test(pending.state)||(candidateMode&&!TOKEN.test(pending.browserBinding))||!Number.isSafeInteger(pending.issuedAt)||!Number.isSafeInteger(pending.expiresAt)||
         pending.expiresAt<=clock()||pending.issuedAt>clock()||pending.expiresAt-pending.issuedAt>TTL_MS)throw failure('discord/continuation-invalid');
       run.check();assertCurrent(pending);
       if(callback.searchParams.getAll('iss').length!==1||callback.searchParams.get('iss')!=='https://discord.com'||callback.origin!==redirect.origin||callback.pathname!==redirect.pathname||callback.searchParams.getAll('state').length!==1||callback.searchParams.get('state')!==pending.state)throw failure('discord/callback-invalid');
       if(callback.searchParams.has('error')){
         if(callback.searchParams.has('code')||callback.searchParams.getAll('error').length!==1)throw failure('discord/callback-invalid');
+        if(callback.searchParams.get('error')!=='access_denied')throw failure('discord/provider-unavailable');
         return Object.freeze({status:'canceled'});
       }
       const code=callback.searchParams.get('code');

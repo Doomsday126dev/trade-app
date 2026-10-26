@@ -7,6 +7,8 @@ on:
       - 'functions/src/prototype/**'
       - 'functions/test/discord-oauth-prototype.test.cjs'
       - 'js/dev/**'
+      - 'auth/discord.html'
+      - 'tests/discord-candidate-runtime.test.cjs'
       - 'js/data/accountSyncJournal.js'
       - 'tests/account-recovery-collector.test.cjs'
       - 'tests/provider-auth-commit-gate.test.cjs'

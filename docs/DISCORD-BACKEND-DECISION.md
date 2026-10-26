@@ -13,12 +13,15 @@ The browser callback proposal is exactly:
 `https://doomsday126dev.github.io/trade-app/auth/discord.html`
 
 This reuses the existing application origin from
-`scripts/pages/verify-deployment.cjs`. It is a **proposed new static callback
-file**, not a registered or currently working URL. The callback must be built
-and separately qualified before registration. It should contain no analytics,
+`scripts/pages/verify-deployment.cjs`. The candidate file `auth/discord.html` is
+prepared and browser-tested but deliberately excluded from the release inventory.
+It is not registered or live. Its production callback/bootstrap and service-worker
+handling still require a separately reviewed integration before registration. It should contain no analytics,
 remote images, trainer reads or unrelated application bootstrap. It must scrub
 code/state/issuer/error query fields before any asynchronous work, use no-referrer,
-and resume only an exact owner/operation/state/expiry-bound continuation. A
+and resume only an exact owner/operation/state/expiry-bound continuation. The
+source candidate runtime now composes that continuation with the gateway and
+auth commit gate; no Firebase bootstrap or runtime activation is installed. A
 popup may message only its exact same-origin opener; full-page fallback must
 bind the same session metadata. No provider/custom token may appear in a URL,
 storage, logs, screenshots or support output. A local-only callback may use
@@ -155,3 +158,37 @@ specific actions and impacts:
 
 Production activation, broad reminders, provider-first enrollment, cross-UID
 recovery, credential removal and PIN retirement remain separate decisions.
+
+
+## Callback/transport candidate and review reconciliation
+
+The third source milestone adds `discordCandidateRuntime.js`, an injected
+gateway transport and a standalone no-referrer callback page. Backend code,
+continuation, confirmation and exact-UID auth-commit composition are exercised
+without provider credentials. Query values are scrubbed before asynchronous
+work; provider errors are never rendered; code is held in memory only. Popup
+messages require the exact origin and window source. A reload without the
+continuation fails safely. The default is unavailable, and no candidate file is
+added to Pages or service-worker inventories. The deployed application has no
+Discord entry point.
+
+The standalone page does not load Firebase or the protected application. Until
+the reviewed canary bootstrap is installed, full-page callbacks show a restart
+path instead of attempting an unconfigured sign-in. Before a live release,
+explicitly test/bypass generic service-worker HTML fallback for this callback so
+an offline callback cannot boot the ordinary shell with OAuth query values.
+No callback registration should precede that integration review.
+
+Independent review corrections are isolated in commit
+`f812921766a672e07626e8fd69003505f011e473`; see
+[the reproduction and fix record](PROVIDER-MIGRATION-REVIEW-FIXES.md). Later
+callback additions build on those guards, including per-operation generation
+checks in the injected transport. Tests distinguish an expected successful UID
+transition from cancellation: the original signed-out session guard is checked
+before the SDK transition, while an operation-only cancellation guard remains
+valid after the expected transition.
+
+The exact SDK emulator proof now also mints a demo Firebase custom token,
+signs into the original UID, confirms the existing password method is retained,
+and rejects a canceled in-flight custom-token commit before installing a user.
+No service-account key or cloud signing permission is needed by that emulator.
