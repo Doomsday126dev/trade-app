@@ -17,10 +17,10 @@ const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(catalog.entries.length,391);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,369);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,22);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,375);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,16);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,491);
+  assert.equal(assets.length,509);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/img\.pokemondb\.net|pokeminers|serebii|cdn08/i);
@@ -39,7 +39,7 @@ test('exact costumes resolve to distinct self-hosted art and gender variants',()
 });
 
 test('known costumes without reviewed art fail honestly instead of becoming base species',()=>{
-  for(const name of ['Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)','Noibat Headband',"Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)",'Pikachu (PokeXciting Turquoise)']){
+  for(const name of ['Noibat Headband',"Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)"]){
     const result=resolver.resolution({name});
     assert.equal(result.knownVariant,true,name);
     assert.equal(result.status,'unavailable',name);
@@ -82,7 +82,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:407,unavailable:19});
+  assert.deepEqual(statusCounts,{exact:413,unavailable:13});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -171,6 +171,12 @@ test('Pokemod source is pinned and every exact Shiny/gender variant is mandatory
  const rows=catalog.entries.filter(r=>r.sourceProvider==='pokemod-reviewed');assert.equal(rows.length,5);
  for(const row of rows){for(const gender of ['m','f'])for(const shiny of [false,true]){const key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(resolver.resolution({name:row.names[0],gender,shiny}).urls),[row.assets[key]]);}
  for(const mutate of [r=>r.sourceCommit='0'.repeat(40),r=>r.sourceFiles.default='pm25.fWRONG.icon.png',r=>delete r.assets.femaleShiny,r=>r.sourceUrl='https://example.com/base.png']){const changed=structuredClone(catalog);mutate(changed.entries.find(e=>e.names[0]===row.names[0]));assert.throws(()=>validateCatalog(changed,root),/Pokemod/);}}
- assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Astronaut)',shiny:true}).urls),[]);
+ assert.match(resolver.resolution({name:'Pikachu (Astronaut)',shiny:true}).urls[0],/astronaut-shiny/);
  assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',shiny:true}).urls),[]);
+});
+
+test('six Dittobase identities keep distinct exact pixels and explicit female gaps',()=>{
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,6);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(r.urls),row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
+ assert.equal(new Set(urls).size,18);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,3);
+ for(const mutate of [r=>r.sourceUrl='https://example.com/wrong.png',r=>r.sourceFiles.default='25-pikachu.png',r=>r.assets.default=rows[1].assets.default,r=>r.femaleArtworkUnavailable=!r.femaleArtworkUnavailable]){const changed=structuredClone(catalog);mutate(changed.entries.find(r=>r.sourceProvider==='dittobase-reviewed'));assert.throws(()=>validateCatalog(changed,root),/Dittobase|digest/);}
 });

@@ -174,12 +174,12 @@ test('responsive navigation and editor fit',async({page})=>{
 test('every reviewed unavailable costume is absent from both active selectors',async({page})=>{
   await fixture(page);
   const audit=await page.evaluate(()=>{
-    const entries=listSource('wishlist'),active=new Set(_specialAllItems().map(e=>e.name));
+    const entries=costumeSpriteCatalogDomain.records.filter(r=>r.status==='unavailable').map(r=>({no:r.no,name:r.names[0]})),active=new Set(_specialAllItems().map(e=>e.name));
     myListType='wishlist';buildAcItems();const legacy=new Set(acItems.map(e=>e.name));
     const unavailable=entries.filter(e=>spriteCatalogContext(e.no,e.name,e.displayName||e.name,e.catalogId).unresolved);
     return{unavailable:unavailable.map(e=>e.name),leaked:unavailable.filter(e=>active.has(e.name)||legacy.has(e.name)).map(e=>e.name),base:active.has('Pikachu'),exact:active.has('Pikachu (Worlds 2025)')};
   });
-  expect(audit.unavailable).toContain('Pikachu (Worlds 2026)');
+  expect(audit.unavailable).toContain('Pikachu (Gloria)');
   expect(audit.leaked).toEqual([]);expect(audit.base).toBe(true);expect(audit.exact).toBe(true);
 });
 test('image keeps missing art and long exact details without mutating selection',async({page})=>{

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -25,20 +25,20 @@
     {
       "id": "announcement:2026-pokexciting:25:blue",
       "identity": "Pikachu (PokeXciting Blue)",
-      "gap": true,
-      "fingerprint": "3d06fc7f8997e17036729816dcae9cc4e10ef041cce606453d3be0b5bd3461dc"
+      "gap": false,
+      "fingerprint": "4da191a275164e028aa8c3ab8d3ab841c13a3f606859919bfc0b1f11abac0dd0"
     },
     {
       "id": "announcement:2026-pokexciting:pikachu-turquoise",
       "identity": "Pikachu (PokeXciting Turquoise)",
-      "gap": true,
-      "fingerprint": "197da650ddf0273497ca0aef92a1ebcaf740951ac27bdcf03564eaedca6bdf93"
+      "gap": false,
+      "fingerprint": "9d7319c8604a9c7953f254c0e8c12805ee2ca3d3954e59a3722fd74429121f9b"
     },
     {
       "id": "announcement:2026-world-space-week:pikachu-astronaut",
       "identity": "Pikachu (Astronaut)",
-      "gap": true,
-      "fingerprint": "b8ca7540988ac8e6ac5b6511f6d27fef3fb8d0d9eafe9300f667e45d78b58fa6"
+      "gap": false,
+      "fingerprint": "7d6a4f915d789c57894bc52c1fb6f5b6858c195c5fdd20b32ff3429cc9e67bee"
     },
     {
       "id": "pokemon:1:standard:legacy:Bulbasaur%20(Red%20Party)",
@@ -733,8 +733,8 @@
     {
       "id": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
       "identity": "Pikachu (Professor Willow's Assistant)",
-      "gap": true,
-      "fingerprint": "75eec7307a265f585c77ab3d61ae0285a2eb4389a1736dd264871af14d11b3cc"
+      "gap": false,
+      "fingerprint": "7c4864a788995fe9c4fa52a73db55b743c214edf8659575e0a44aa39496b9735"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_BB_2026",
@@ -877,8 +877,8 @@
     {
       "id": "pokemon:25:costume:PIKACHU_PXP_2026",
       "identity": "Pikachu (Cosmog Spacesuit)",
-      "gap": true,
-      "fingerprint": "751098f118e4e9b700c2d3b188e90acec73d0bb11f356c00f652c93443ca78c6"
+      "gap": false,
+      "fingerprint": "4fe29ba0af5a179b897b9431b6e9e044f8b1fda6bd775e4d7753b639b127a7a6"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_SUMMER_2023_A",
@@ -943,8 +943,8 @@
     {
       "id": "pokemon:25:costume:PIKACHU_WCS_2026",
       "identity": "Pikachu (Worlds 2026)",
-      "gap": true,
-      "fingerprint": "83bda168109090e8432e12b30a3896460dba9bf1fc2d8a5b132c5f337b64e007"
+      "gap": false,
+      "fingerprint": "fea99e29704d2473c102203f759ef0f4a82b2bad912c55fc2ae3d036d01e48fa"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_WINTER_2020",

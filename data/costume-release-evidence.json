@@ -15,7 +15,7 @@
       "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
       "evidenceUrl": "https://pokemongo.com/news/world-championships-event-2026?hl=eng",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-09-22T21:21:54Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/world-championships-event-2026?hl=eng",
@@ -39,7 +39,7 @@
       "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
       "evidenceUrl": "https://pokemongo.com/news/world-championships-event-2026?hl=eng",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-09-22T21:21:54Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/world-championships-event-2026?hl=eng",
@@ -148,7 +148,7 @@
       "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
       "evidenceUrl": "https://pokemongo.com/en/news/happy-birthday-professor-willow-2026",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-09-22T21:21:23Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/en/news/happy-birthday-professor-willow-2026",
@@ -233,7 +233,7 @@
       "dateMeaning": "Released during the official September 12–13, 2026 Kuala Lumpur event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-09-22T21:15:29Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026",
@@ -267,7 +267,7 @@
       "dateMeaning": "Announced debut for the official October 4–10, 2026 local-time event",
       "evidenceUrl": "https://pokemongo.com/news/world-space-week-2026",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-10-19T16:43:26.505Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/world-space-week-2026",
@@ -284,7 +284,7 @@
       "dateMeaning": "Confirmed available as of review, not first worldwide debut: official announcement says cross-region stamp encounter is already live; November 7 is the dedicated event start.",
       "evidenceUrl": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
       "lifecycleStatus": "released",
-      "artworkStatus": "unavailable",
+      "artworkStatus": "exact-reviewed",
       "lastVerifiedAt": "2026-10-19T16:43:27.308Z",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",

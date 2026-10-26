@@ -7,7 +7,7 @@ function snapshot(catalog,pending,resolve=()=>null){
  const seen=new Set();return catalog.entries.map(row=>{
   if(!row.names?.length||!['exact','unavailable'].includes(row.status)||!Number.isInteger(row.no))throw Error('Invalid costume identity');
   const detail=pending.entries.find(p=>p.species?.dex===row.no&&row.names.includes(p.displayIdentity));
-  const id=detail?.canonicalCostumeId||row.names.map(n=>resolve(n)?.catalogId).find(Boolean)||`pokemon:${row.no}:standard:legacy:${encodeURIComponent(row.names[0])}`;
+  const id=detail?.canonicalCostumeId||row.reviewIdentityId||row.names.map(n=>resolve(n)?.catalogId).find(Boolean)||`pokemon:${row.no}:standard:legacy:${encodeURIComponent(row.names[0])}`;
   if(seen.has(id))throw Error('Duplicate costume identity '+id);seen.add(id);
   const fields={no:row.no,names:row.names,status:row.status,identityStatus:row.identityStatus||detail?.identityStatus||'',reasonCategory:detail?.reasonCategory||'',assets:row.assets||{},sha256:row.sha256||{},sourceFile:row.sourceFile||'',sourceFemaleFile:row.sourceFemaleFile||'',sourceLabel:row.sourceLabel||'',sourceUrl:row.sourceUrl||'',sourcePage:row.sourcePage||''};
   return{id,identity:row.names[0],gap:row.status==='unavailable',fingerprint:digest(fields)};

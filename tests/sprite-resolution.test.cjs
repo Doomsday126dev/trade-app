@@ -62,7 +62,7 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-go'),true);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pikachu-saree.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2025)','f')),['assets/sprites/go/pikachu-world-champs-2025-f.png']);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2026)')),[]);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2026)')),['assets/sprites/go/dittobase-25-pikachu-wcs-2026.png']);
   assert.equal(sprites.spriteSourceForUrl('assets/sprites/go/pikachu-world-champs-2025.png')?.id,'pokemondb-go');
 });
 
