@@ -2304,6 +2304,8 @@ test.describe('visual smoke', () => {
     await page.getByRole('button',{name:'Edit My List'}).click();
     for(const name of names){
       await page.locator('#wants-add-name').fill(name);
+      await page.locator('#wants-add-name').press('Escape');
+      await expect(page.locator('#wants-add-name-suggestions')).toBeHidden();
       if(await page.locator('[data-wants-add-priority=H]').getAttribute('aria-pressed')!=='true')await page.locator('[data-wants-add-priority=H]').click();
       await page.locator('.wants-add-form').getByRole('button',{name:'Add',exact:true}).click();
       await expect(page.locator('#combined-editor-modal')).toBeHidden();await expect(page.locator('#wants-add-name')).toHaveValue('');await editorFixture.settled(page);
