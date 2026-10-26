@@ -27,7 +27,7 @@ function harness(){
     publicSpriteUrls:(name)=>name==='H-Avalugg'?[exact]:[],
     isApprovedRuntimeSpriteUrl:url=>typeof url==='string'&&(url.startsWith(POKE)||url.startsWith('https://img.pokemondb.net/')),
     spriteCatalogContext:()=>({catalogId:'fixture',override:null,reviewed:{status:'available'}}),
-    spriteFallbackChain:(_no,name)=>name==='H-Avalugg'?[exact]:[],
+    spriteFallbackChain:(_no,name)=>name==='H-Avalugg'?[exact]:name==='Scatterbug (Garden)'?[`${POKE}664.png`]:[],
     i18nCore:{t:(_key,{name})=>`${name} art unavailable`},escAttr:value=>String(value||''),
     effectiveSpriteScale:()=>1,effectiveSpriteOrigin:()=>({cx:.5,cy:.5}),_spriteTransform:()=>({transform:'none',transformOrigin:'center'})
   });

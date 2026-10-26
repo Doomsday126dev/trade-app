@@ -1,4 +1,4 @@
-name: Isolated traffic runtime qualification
+name: Isolated catalog runtime qualification
 on:
   pull_request:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 84e057be83f5de292c660324b156fd07940ec3af
+          ref: 80db1bb90f3132f7125d7c32932b841ab77abf2b
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38

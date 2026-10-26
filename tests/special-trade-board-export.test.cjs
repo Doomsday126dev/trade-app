@@ -68,7 +68,7 @@ test('export domain owns only content-derived dense geometry',()=>{
   assert.deepEqual(Object.keys(domain).sort(),['buildLayout','columnsFor','metrics','schemaVersion']);
 });
 
-test('canvas renderer uses reviewed sprites with unambiguous starbursts and aligned vector gender badges',()=>{
+test('canvas renderer uses reviewed sprites without decorative Shiny markers and with aligned vector gender badges',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
   const start=source.indexOf('async function renderSpecialBoardImage');
   const end=source.indexOf('// ── READ-ONLY SHARE VIEW',start);
@@ -82,7 +82,7 @@ test('canvas renderer uses reviewed sprites with unambiguous starbursts and alig
   assert.match(renderer,/drawStarburst\(x\+6,y\+2,2\.4,\.65,'#67e8f9'\)/);
   assert.match(renderer,/const shinyMarkerY=/);
   assert.match(renderer,/for\(let markerY=7;markerY>=1;markerY--\)/);
-  assert.match(renderer,/drawShinySparkles\(x\+w-11,y\+shinyMarkerY\(img,w\)\)/);
+  assert.doesNotMatch(renderer,/if\(entry.shiny\)drawShinySparkles/);
   assert.doesNotMatch(renderer,/drawStarburst\(x-5\.2,y\+4\.4/);
   assert.match(renderer,/drawGenderMarker/);
   const genderMarker=renderer.slice(renderer.indexOf('const drawGenderMarker'),renderer.indexOf('const drawEntryMarkers'));

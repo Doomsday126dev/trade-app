@@ -29,7 +29,7 @@ test('frozen inventory preserves every normal byte and all 219 held or unrelated
  const scope=require('../data/reviewed-consolidated-artwork-scope.json'),byname=new Map(catalog.entries.map(r=>[r.names[0],r]));
  const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(', ')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+': '+canonical(v[k])).join(', ')+'}':JSON.stringify(v);
  assert.equal(scope.records.length,178);assert.equal(scope.records.filter(r=>r.classification==='released-shiny').length,173);assert.equal(Object.keys(scope.outsideScopeEntryHashes).length,219);
- assert.deepEqual(new Set(byname.keys()),new Set([...Object.keys(scope.outsideScopeEntryHashes),...scope.records.map(r=>r.mappingKey)]));
+ assert.deepEqual(new Set(byname.keys()),new Set([...Object.keys(scope.outsideScopeEntryHashes),...scope.records.map(r=>r.mappingKey),'Pikachu (Orange Hanbok)','Minior (Green Core)','Cinderace (Gigantamax)','Charizard (Gigantamax)']));
  for(const [name,hash]of Object.entries(scope.outsideScopeEntryHashes))assert.equal(crypto.createHash('sha256').update(canonical(byname.get(name)).replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'))).digest('hex'),hash,name);
  for(const r of scope.records){const e=byname.get(r.mappingKey);assert.equal(e.no,r.dex);for(const [key,a]of Object.entries(r.normalAssets)){assert.equal(e.assets[key],a.path);assert.equal(e.sha256[key],a.sha256);assert.equal(crypto.createHash('sha256').update(fs.readFileSync(a.path)).digest('hex'),a.sha256);}if(r.classification==='released-shiny'){assert.equal(r.reviewStatus,'verified-consolidated-manifest');assert(e.assets.shiny);}}
 });

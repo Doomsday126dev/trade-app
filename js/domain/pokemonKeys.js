@@ -97,6 +97,7 @@
   // These relationships come from the reviewed identifier-level costume audit.
   // Historical names remain aliases; only the selectable surface is consolidated.
   const VERIFIED_IDENTITIES=Object.freeze([
+    identity('pokemon:25:costume:orange-hanbok-2026','','Pikachu (Orange Hanbok)',[],['Orange Hanbok Pikachu','Korean Pikachu','Korea Pikachu','Autumn Picnic Pikachu','주황색 한복의 피카츄']),
     identity('pokemon:25:costume:party-hat-original','PIKACHU_PARTY_HAT_ORIGINAL','Pikachu (Purple Party)',['Pikachu Party Hat'],['Pikachu Party Hat']),
     identity('pokemon:25:costume:flower-hat-2020','PIKACHU_FLOWER_HAT_2020','Pikachu (Spring)',['Pikachu Flower Hat'],['Pikachu Flower Hat']),
     identity('pokemon:25:costume:PIKACHU_BB_2026','PIKACHU_BB_2026','Pikachu (Baseball)',['Pikachu Baseball Shirt'],['Baseball Shirt Pikachu']),
@@ -171,6 +172,7 @@
   catalogIdentityDefinitions.forEach(def=>verifiedIdentityByCatalogKey.set(normalizeCatalogKey(def.catalogId),def));
 
   const verifiedMissingEntries=Object.freeze([
+    Object.freeze({no:25,name:'Pikachu (Orange Hanbok)',displayName:'Pikachu (Orange Hanbok)',users:{}}),
     Object.freeze({no:4,name:"Charmander (Friede's Goggles)",displayName:"Charmander (Friede's Goggles)",users:{}}),
     Object.freeze({no:5,name:"Charmeleon (Friede's Goggles)",displayName:"Charmeleon (Friede's Goggles)",users:{}}),
     Object.freeze({no:6,name:"Charizard (Friede's Goggles)",displayName:"Charizard (Friede's Goggles)",users:{}}),

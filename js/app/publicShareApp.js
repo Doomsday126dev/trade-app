@@ -150,7 +150,8 @@
     const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender,shiny});
     if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name}):t('sprite.artUnavailable',{name});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
     const[src,...fallbacks]=urls;
-    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
+    const max=/\(Gigantamax\)/i.test(name)?'Gigantamax':/\(Dynamax\)/i.test(name)?'Dynamax':'';const mark=max?`<span class="sprite-max-symbol"><img src="assets/${max==='Gigantamax'?'gigantamax':'dynamax'}-symbol.png" alt="${max}" title="${max}"></span>`:'';
+    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async">${mark}</div>`;
   }
   function entryCard(name,value,sectionFlags=[]){
     const model=entryModel(value),gender=value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod);
@@ -159,7 +160,7 @@
       gender==='f'?`<span class="share-pcard-flag gender-f" title="${attr(t('share.flagFemale'))}">♀</span>`:'',
       gender==='m'?`<span class="share-pcard-flag gender-m" title="${attr(t('share.flagMale'))}">♂</span>`:'',
       model.lucky&&!sectionFlags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${attr(t('share.flagLucky'))}">⚡</span>`:'',
-      model.shiny&&!sectionFlags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${attr(t('share.flagShiny'))}">✨</span>`:'',
+      model.shiny?`<span class="sr-only">${esc(t('share.flagShiny'))}</span>`:'',
       model.xxl&&!sectionFlags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
