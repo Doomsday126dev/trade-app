@@ -35,10 +35,10 @@ test('list-wide actions are discoverable beside Share and Select in one compact 
   assert.doesNotMatch(toolbar,/mylist-reorder-toggle|speedAdd|bulkEdit/);
 });
 
-test('native catalog lookup is named and does not advertise the removed voice action',()=>{
-  assert.match(add,/id="wants-add-name"[^>]*list="combined-catalog"[^>]*required/);
+test('canonical catalog lookup is named and does not advertise the removed voice action',()=>{
+  assert.match(add,/id="wants-add-name"[^>]*required/);
   assert.match(add,/data-i18n-aria-label="myList\.searchPlaceholder"/);
-  assert.match(html,/id="combined-catalog"/);assert.match(html,/onfocus="prepareWantsCatalog\(\)"/);
+  assert.match(html,/input.setAttribute\('role','combobox'\)/);assert.match(html,/onfocus="prepareWantsCatalog\(\)"/);
   assert.doesNotMatch(add,/voice-btn|toggleVoiceInput/);
 });
 

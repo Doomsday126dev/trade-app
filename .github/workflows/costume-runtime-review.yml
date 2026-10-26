@@ -31,10 +31,14 @@ jobs:
         run: |
           runtime_dir=$(mktemp -d)
           baseline_dir=$(mktemp -d)
-          git worktree add --detach "$runtime_dir" 4bacc23c76c463797b340e7f380ad19438785b97
-          git archive d40923bc02f5f6e7953e91d44c19e8368c4a9b54 | tar -x -C "$baseline_dir"
+          git worktree add --detach "$runtime_dir" 4536e64b26e0a1204bcecefc246704c4e8285ce7
+          git archive 4bacc23c76c463797b340e7f380ad19438785b97 | tar -x -C "$baseline_dir"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$runtime_dir/node_modules"
           ln -s "$GITHUB_WORKSPACE/functions/node_modules" "$runtime_dir/functions/node_modules"
+          # Current interaction harness dismisses suggestions before opening Advanced.
+          # Only tests change; all frontend bytes remain the exact pinned source.
+          cp "$GITHUB_WORKSPACE/tests/released-costume-art.spec.js" "$runtime_dir/tests/released-costume-art.spec.js"
+          git -C "$runtime_dir" diff --exit-code -- index.html css js data.js sw.js assets manifest.json scripts/pages/frontend-files.json
           cd "$runtime_dir"
           node --test tests/*.test.cjs
           npm run check:pages-release
@@ -43,9 +47,11 @@ jobs:
           npx playwright test --config playwright.classic-shiny.config.cjs
           npx playwright test --config playwright.gender-cleanup.config.cjs
           npx playwright test --config playwright.comparison-shiny.config.cjs
-          python3 -m http.server 8878 --bind 127.0.0.1 --directory "$runtime_dir" >/tmp/runtime144-server.log 2>&1 &
+          npx playwright test --config playwright.remaining-pikachu.config.cjs
+          npx playwright test --config playwright.list-polish.config.cjs
+          python3 -m http.server 8878 --bind 127.0.0.1 --directory "$runtime_dir" >/tmp/runtime145-server.log 2>&1 &
           candidate_pid=$!
-          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/runtime143-server.log 2>&1 &
+          python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" >/tmp/runtime144-server.log 2>&1 &
           baseline_pid=$!
           trap 'kill "$candidate_pid" "$baseline_pid"' EXIT
           for port in 8878 8879; do
@@ -55,10 +61,10 @@ jobs:
             done
           done
           set +e
-          echo 'Historical .143 baseline (diagnostic)'
+          echo 'Historical .144 baseline (diagnostic)'
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8879 npm run test:performance:browser
           baseline_status=$?
-          echo 'Exact .144 candidate (all original budgets mandatory)'
+          echo 'Exact .145 candidate (all original budgets mandatory)'
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
           candidate_status=$?
           set -e

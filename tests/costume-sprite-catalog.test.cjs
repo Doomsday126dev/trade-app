@@ -16,11 +16,11 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,391);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,384);
+  assert.equal(catalog.entries.length,392);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,385);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,550);
+  assert.equal(assets.length,695);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -157,7 +157,7 @@ test('search eligibility marks only audited released Pikachu identities without 
   const expected=pending.entries.filter(e=>e.species.dex===25&&e.identityStatus==='released').map(e=>e.displayIdentity).sort();
   const eligible=catalog.entries.filter(e=>e.no===25&&e.identityStatus==='released');
   assert.deepEqual(eligible.filter(e=>e.status==='unavailable').map(e=>e.names[0]).sort(),expected);
-  assert.equal(eligible.length,11);
+  assert.equal(eligible.length,12);
   for(const entry of eligible.filter(e=>e.status==='unavailable')){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (Gloria)')).identityStatus,undefined);
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (GO Fest 2023)')).identityStatus,undefined);

@@ -26,13 +26,13 @@ test('same fixture wide comparison and measured responsive columns',async({page}
     await page.setViewportSize({width,height:900});
     const measured=await metrics(page);measurements.push(measured);
     expect(measured.pageOverflow).toBe(false);
-    if(!baseline)expect(measured.columns).toBe(measured.contentWidth>=64*parseFloat(measured.rootFont)?3:measured.contentWidth>=48*parseFloat(measured.rootFont)?2:1);
+    if(!baseline)expect(measured.columns).toBe(measured.contentWidth>=48*parseFloat(measured.rootFont)?2:1);
     if(!baseline&&[1920,1440].includes(width)){
       expect(measured.shell.width).toBe(1120);
       expect(Math.abs((measured.shell.left+measured.shell.right)/2-width/2)).toBeLessThanOrEqual(1);
       expect(measured.contentWidth).toBe(1056);
-      expect(measured.cardWidth).toBeGreaterThanOrEqual(340);
-      expect(measured.cardWidth).toBeLessThanOrEqual(365);
+      expect(measured.cardWidth).toBeGreaterThanOrEqual(500);
+      expect(measured.cardWidth).toBeLessThanOrEqual(540);
       for(const surface of Object.values(measured.surfaces)){
         expect(surface).not.toBeNull();
         expect(Math.abs(surface.left-measured.surfaces.grid.left)).toBeLessThanOrEqual(1);
@@ -64,10 +64,10 @@ test('compact cards wrap long localized labels beside selection and actions',asy
         whiteSpace:getComputedStyle(name).whiteSpace,overflow:getComputedStyle(name).overflow,fontSize:getComputedStyle(name).fontSize};
     });
     expect(layout.row.width).toBeGreaterThanOrEqual(340);
-    expect(layout.row.width).toBeLessThanOrEqual(365);
+    expect(layout.row.width).toBeLessThanOrEqual(540);
     expect(layout.textRects.length).toBeGreaterThanOrEqual(2);
     expect(layout.whiteSpace).toBe('normal');expect(layout.overflow).toBe('visible');expect(layout.fontSize).toBe('14px');
-    expect(layout.sprite.width).toBe(34);expect(layout.targets).toHaveLength(2);
+    expect(layout.sprite.width).toBe(42);expect(layout.targets).toHaveLength(1);
     for(const target of layout.targets){expect(target.width).toBeGreaterThanOrEqual(40);expect(target.height).toBeGreaterThanOrEqual(44);}
     expect(layout.sprite.right).toBeLessThanOrEqual(layout.name.left+1);
     expect(layout.name.right).toBeLessThanOrEqual(layout.actions.left+1);
@@ -186,7 +186,7 @@ test('long real catalog labels, selection, order, focus and zoom retain usable r
   await page.setViewportSize({width:1440,height:900});
   const row=page.locator('#combined-list .wants-row').first();
   await row.locator('.wants-name').focus();await page.keyboard.press('Tab');await expect(row.locator('.myrow-edit')).toBeFocused();
-  await page.keyboard.press('Tab');await expect(row.locator('.myrow-remove')).toBeFocused();
+  await page.keyboard.press('Enter');await expect(page.locator('#wants-remove')).toBeVisible();await page.keyboard.press('Escape');await expect(row.locator('.myrow-edit')).toBeFocused();
   expect(await page.evaluate(()=>{
     const row=document.querySelector('#combined-list .wants-row'),focused=document.activeElement;
     renderMyList();return row===document.querySelector('#combined-list .wants-row')&&document.activeElement===focused;
@@ -264,7 +264,7 @@ test('Legal and actual Privacy retain readable themes, focus and public-only loa
   await page.goto('./?legal=privacy');
   expect(requests.some(url=>/firebase|application\.js|accountSync/.test(url))).toBe(false);
   await expect(page.locator('#privacy-pg')).toBeVisible();
-  await expect(page.locator('#privacy-pg')).toContainText('Last updated August 31, 2026');
+  await expect(page.locator('#privacy-pg')).toContainText('Last updated October 22, 2026');
   for(const theme of ['dark','light'])for(const width of [1440,390,320]){
     await page.setViewportSize({width,height:900});await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
     expect((await metrics(page)).pageOverflow).toBe(false);await capture(page,`privacy-${theme}-${width}`);
