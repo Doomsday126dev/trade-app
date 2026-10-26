@@ -14,7 +14,7 @@
     fetchImpl=global.fetch.bind(global),location=global.location,history=global.history,
     storage=global.sessionStorage,cryptoApi=global.crypto,clock=()=>Date.now(),
     getAuthorizationHeader=async()=>'',getSessionBinding,signInWithCustomToken,
-    endpointRoot='/__local/discord/oauth',callbackUri,candidateMode=false,requestTransport
+    endpointRoot='/__local/discord/oauth',callbackUri,candidateMode=false,requestTransport,onStatus=()=>{}
   }={}){
     if(!fetchImpl||!location||!history||!storage||!cryptoApi?.getRandomValues||typeof getSessionBinding!=='function')throw new TypeError('Discord prototype client dependencies are incomplete');
     const initial=new URL(location.href),origin=initial.origin;
@@ -26,6 +26,8 @@
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
     let generation=0,activeRun=null,review=null;
+    const getState=()=>Object.freeze({status:activeRun?.committing?'committing':activeRun?'pending':review?'review':'idle',canCancel:!activeRun?.committing});
+    function notify(){try{onStatus(getState());}catch{/* UI observers cannot alter auth decisions. */}}
     function session(operation){
       const value=getSessionBinding();
       if(!exactKeys(value,['ownerBinding','lifecycleBinding'])||!BINDING.test(value.lifecycleBinding)||
@@ -62,7 +64,8 @@
       const run={generation:++generation,controller:global.AbortController?new global.AbortController():null};
       run.check=()=>{if(generation!==run.generation||run.controller?.signal.aborted)throw failure('discord/canceled');};
       activeRun=run;
-      try{return await work(run);}catch(error){run.check();throw error;}finally{if(activeRun===run)activeRun=null;}
+      notify();
+      try{return await work(run);}catch(error){run.check();throw error;}finally{if(activeRun===run){activeRun=null;notify();}}
     }
     function clearPending(){storage.removeItem(REQUEST_KEY);}
     function scrubCallback(){
@@ -121,7 +124,9 @@
         if(typeof signInWithCustomToken!=='function')throw failure('discord/sign-in-unavailable');
         run.check();assertCurrent(pending);
         // The host must serialize ALL auth actions, including cross-tab changes, with this commit.
-        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,isActive:()=>{try{run.check();return true;}catch{return false;}},isCurrent:()=>{try{run.check();assertCurrent(pending);return true;}catch{return false;}}});
+        await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:pending.lifecycleBinding,
+          onCommitBoundary:()=>{run.check();assertCurrent(pending);run.committing=true;notify();},
+          isActive:()=>{try{run.check();return true;}catch{return false;}},isCurrent:()=>{try{run.check();assertCurrent(pending);return true;}catch{return false;}}});
         run.check();return Object.freeze({status:'existing-account'});
       }
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status'])&&result.status==='onboarding-required')return Object.freeze({status:'onboarding-required'});
@@ -135,8 +140,12 @@
         !['linked','already-linked'].includes(result.status)||typeof result.replay!=='boolean')throw failure('discord/response-invalid');
       review=null;return Object.freeze({status:result.status});
     });}
-    function cancel(){generation++;const previous=activeRun;activeRun=null;previous?.controller?.abort();review=null;clearPending();}
-    return Object.freeze({begin,completeFromLocation,confirmLink,cancel});
+    function cancel(){
+      if(activeRun?.committing)return Object.freeze({status:'committing',canCancel:false});
+      generation++;const previous=activeRun;activeRun=null;previous?.controller?.abort();review=null;clearPending();notify();
+      return Object.freeze({status:'canceled',canCancel:true});
+    }
+    return Object.freeze({begin,completeFromLocation,confirmLink,cancel,getState});
   }
   root.discordOAuthPrototypeClient=Object.freeze({REQUEST_KEY,TTL_MS,createDiscordOAuthPrototypeClient});
 })(window);

@@ -40,4 +40,30 @@ test('Firebase 12.14.0 blocking hook rejects wrong-UID sign-in and permits only 
   const secondToken=await adminAuthApi.getAuth(adminApp).createCustomToken(a.user.uid);
   const canceled=canceledGate.commitCustomToken({customToken:secondToken,expectedUid:a.user.uid,expectedLifecycle:lifecycle,isCurrent:()=>active});
   await cancelReady;active=false;cancelRelease();await assert.rejects(canceled,{code:'provider-auth/canceled'});assert.equal(auth.currentUser,null);canceledGate.dispose();
+  let lateEntered,lateRelease,removeLater;
+  const lateReady=new Promise(resolve=>{lateEntered=resolve;}),lateHeld=new Promise(resolve=>{lateRelease=resolve;});
+  const binding=`v1_${'b'.repeat(64)}`;
+  const lateGate=window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,beforeAuthStateChanged:sdk.beforeAuthStateChanged,getLifecycle:()=>binding,
+    signInWithCustomToken:async(a,token)=>{
+      removeLater=sdk.beforeAuthStateChanged(a,async()=>{lateEntered();await lateHeld;});
+      return sdk.signInWithCustomToken(a,token);
+    }});
+  const lateToken=await adminAuthApi.getAuth(adminApp).createCustomToken(a.user.uid);
+  const origin='https://doomsday126dev.github.io',callback=`${origin}/trade-app/auth/discord.html`,state='s'.repeat(43),statuses=[];
+  const capturedAt=Date.now(),continuation={operation:'sign-in',requestId:`discord-${'r'.repeat(43)}`,ownerBinding:'',lifecycleBinding:binding,state,issuedAt:capturedAt,expiresAt:capturedAt+300000,browserBinding:'b'.repeat(43)};
+  const storage=new Map([['pogo.discord.prototype.request',JSON.stringify(continuation)]]);
+  window.btoa=btoa;window.AbortController=AbortController;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/dev/discordOAuthPrototypeClient.js'),'utf8'),{window,Object,Error,String,TypeError,URL,Uint8Array,Date,JSON,Number,Set});
+  const client=window.PogoDev.discordOAuthPrototypeClient.createDiscordOAuthPrototypeClient({candidateMode:true,callbackUri:callback,
+    cryptoApi:require('node:crypto').webcrypto,fetchImpl:async()=>{throw Error('direct network forbidden');},
+    location:{href:callback},history:{replaceState(){}},storage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)},
+    getSessionBinding:()=>({ownerBinding:auth.currentUser?`v1_${'a'.repeat(64)}`:'',lifecycleBinding:binding}),onStatus:value=>statuses.push(value.status),
+    requestTransport:async()=>({ok:true,operation:'sign-in',status:'existing-account',uid:a.user.uid,customToken:lateToken}),
+    signInWithCustomToken:(customToken,context)=>lateGate.commitCustomToken({customToken,...context})});
+  const late=client.completeFromLocation(`${callback}?code=synthetic-late-code&state=${state}&iss=https%3A%2F%2Fdiscord.com`);
+  await lateReady;
+  assert.equal(client.getState().status,'committing');assert.equal(client.cancel().canCancel,false);
+  lateRelease();assert.equal((await late).status,'existing-account');assert.equal(auth.currentUser?.uid,a.user.uid);
+  assert.ok(statuses.includes('committing'));assert.equal(client.getState().status,'idle');
+  removeLater();lateGate.dispose();
 });

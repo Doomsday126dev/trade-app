@@ -39,3 +39,13 @@ test('cancellation after an auth request starts is checked by the blocking SDK h
   const pending=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle,isCurrent:()=>valid},async()=>{entered();await held;await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};});
   await ready;valid=false;release();await assert.rejects(pending,{code:'provider-auth/canceled'});assert.equal(h.auth.currentUser,null);assert.equal(h.hooks.size,0);
 });
+test('later middleware cannot turn an accepted commit into a false cancellation result',async()=>{
+  const h=setup(),gate=h.create();let active=true,boundary=false,entered,release;
+  const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const pending=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle,isActive:()=>active,
+    onCommitBoundary:()=>{boundary=true;}},async()=>{
+    h.hooks.add(async()=>{entered();await held;});await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};
+  });
+  await ready;assert.equal(boundary,true);active=false;release();
+  assert.equal((await pending).user.uid,'synthetic-owner');assert.equal(h.auth.currentUser.uid,'synthetic-owner');
+});

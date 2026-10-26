@@ -8,7 +8,7 @@ inactive candidate. Both were reproduced locally before changing the code.
    where supported, invalidates the auth commit guard and prevents stale
    finally handlers from releasing a newer operation. Checks run after every
    asynchronous boundary. The Firebase blocking hook also checks cancellation,
-   so a request already in flight cannot install the user after cancellation.
+   so cancellation accepted before that hook cannot install the user.
    Cancellation is distinct from a backend confirmation already committed:
    that outcome must be reconciled from the receipt/private method snapshot;
    cancellation does not attempt to undo a prior authorized transaction.
@@ -24,6 +24,30 @@ Regressions cover held begin/completion/commit cancellation, cancellation in the
 real Firebase 12.14.0 custom-token hook, two pending reviews, concurrent claim/
 release and a genuinely fresh relink. Demo Auth/Firestore emulators passed all
 10 tests after the fixes; no real OAuth grant or account was used.
+
+## Later Firebase middleware and the commit boundary
+
+The reviewer subsequently identified a narrower ordering: our blocking hook
+accepts the UID, then a later asynchronous hook waits while Cancel is pressed.
+The pinned Firebase 12.14.0 SDK reproduced this in the demo Auth emulator:
+the old promise rejected as canceled even though `auth.currentUser` was installed.
+Firebase does not rerun earlier middleware after the later hook resolves.
+
+The gate now signals an explicit commit boundary when its middleware accepts
+the transition. Before that boundary Cancel still invalidates the operation and
+the hook rejects the transition. From that boundary until settlement the client
+reports `{status:'committing',canCancel:false}`; `cancel()` returns that same
+nonaccepted outcome and does not invalidate the operation. Hosts must disable
+Cancel and display “Finishing sign-in” during this state. A successful commit
+reports sign-in success, and a later middleware failure reports that actual
+failure. The gate never reports a completed transition as canceled or tries to
+undo it by signing out a possibly newer account. This is a deliberate short
+non-cancelable boundary, not a guarantee Firebase can abort a committed login.
+
+The real-SDK regression registers a later held hook after our hook, presses
+the actual client Cancel while it waits, verifies cancellation is refused, then
+checks the terminal success and exact installed UID. The earlier real-SDK
+regression still proves cancellation before our hook leaves the account signed out.
 
 Performance CI on the reviewed commit reported a 202 ms long task against the
 unchanged 200 ms limit, with all other seven browser checks passing. A paired

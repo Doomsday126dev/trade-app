@@ -14,7 +14,7 @@
       for(const key of['code','state','iss','error'])if(typeof payload[key]==='string')url.searchParams.set(key,payload[key]);
       return client.completeFromLocation(url.href);
     }
-    return Object.freeze({available:true,begin:client.begin,confirmLink:client.confirmLink,cancel:client.cancel,completeCallback,
+    return Object.freeze({available:true,begin:client.begin,confirmLink:client.confirmLink,cancel:client.cancel,getState:client.getState,completeCallback,
       listenForPopup({popup,onResult,onError}={}){
         if(!popup)throw Object.assign(new Error('discord/popup-blocked'),{code:'discord/popup-blocked'});
         const handler=async event=>{
