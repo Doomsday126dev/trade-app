@@ -32,8 +32,7 @@
   const CANONICAL_SPRITE_OVERRIDES=Object.freeze({});
   const UNRESOLVED_SPRITE_KEYS=Object.freeze([
     'Pikachu (Victor)','Pikachu (Gloria)',
-    'Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)',
-    "Pikachu (Professor Willow's Assistant)",'Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)'
+    'Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)'
   ]);
   const unresolvedSpriteLookup=new Set(UNRESOLVED_SPRITE_KEYS.map(normalizeSpriteKey));
   function canonicalSpriteOverride(catalogId=''){

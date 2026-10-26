@@ -758,9 +758,27 @@
         "Pikachu (Cosmog Spacesuit)",
         "Cosmog-themed Spacesuit Pikachu"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-pxp-2026.png",
+      "sourceLabel": "Cosmog Spacesuit",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-pxp-2026",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-pxp-2026.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-pxp-2026.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-pxp-2026-shiny.png"
+      },
+      "sha256": {
+        "default": "ed0ac0f66695f2144c5ead40d25942f5ddae0c03c67174633e41a8122b1a907f",
+        "shiny": "9de3a5d6ce0fd5960d72bf7fae53b35e8f1772cedad425fba960024971c9103c"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-pxp-2026.png",
+        "shiny": "25-pikachu-pxp-2026-shiny.png"
+      },
+      "femaleArtworkUnavailable": true,
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_PXP_2026"
     },
     {
       "no": 25,
@@ -1845,9 +1863,33 @@
         "Pikachu (PokeXciting Turquoise)",
         "PokéXciting Pikachu (Turquoise)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-malaysia-01.png",
+      "sourceLabel": "PokeXciting Turquoise",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-malaysia-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-malaysia-01.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-malaysia-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-malaysia-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-malaysia-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-malaysia-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "b31c625495318e998a81c45f254aa42bda889cdb521cbcd41fec8f7ac059f919",
+        "shiny": "07925d2e9d7fd6f52257056dd6ea13154bf773e609646ce6008d695f29d05a42",
+        "female": "151b1a6c4cdebdb3de552f447811734a816366585ecb6f9b8add25145281abca",
+        "femaleShiny": "03301cfe84395cded142519694c623ac8892b9aa198bc2b970b335efa4a3356e"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-malaysia-01.png",
+        "shiny": "25-pikachu-anniversary-2026-malaysia-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-malaysia-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-malaysia-01-female-shiny.png"
+      },
+      "femaleArtworkUnavailable": false,
+      "reviewIdentityId": "announcement:2026-pokexciting:pikachu-turquoise"
     },
     {
       "no": 25,
@@ -1871,9 +1913,33 @@
       "names": [
         "Pikachu (Professor Willow's Assistant)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026.png",
+      "sourceLabel": "Professor Willow's Assistant",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-female-shiny.png"
+      },
+      "sha256": {
+        "default": "0e3bbaec46290730896661234ef7b10b2ff94d8f30260d60b9859dc1b869ea24",
+        "shiny": "1ccf7b426866ba6fc61c2f3042781258210521a2ca7b47116f3e472e8edba43e",
+        "female": "96c94fd8a9183953adcfc8b160cf9d54930d3ad270ba18c3241d52e96edf2ab3",
+        "femaleShiny": "5312a0834f7f7af6e6ca792f7a27d27a7ef1a1f0353290ad501f470e26c35bcf"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026.png",
+        "shiny": "25-pikachu-anniversary-2026-shiny.png",
+        "female": "25-pikachu-anniversary-2026-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-female-shiny.png"
+      },
+      "femaleArtworkUnavailable": false,
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026"
     },
     {
       "no": 25,
@@ -2579,9 +2645,27 @@
         "Pikachu (Worlds 2026)",
         "World Championships 2026 Pikachu"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-wcs-2026.png",
+      "sourceLabel": "Worlds 2026",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-wcs-2026",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-wcs-2026.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-wcs-2026.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-wcs-2026-shiny.png"
+      },
+      "sha256": {
+        "default": "0da989f6e592e43a765c1d6784afa96a783f43af468434a70cef41cff4055ad7",
+        "shiny": "8e7aca97659df37aaf8dafa511b345810997380c47f26370db725075211e0878"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-wcs-2026.png",
+        "shiny": "25-pikachu-wcs-2026-shiny.png"
+      },
+      "femaleArtworkUnavailable": true,
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_WCS_2026"
     },
     {
       "no": 25,
@@ -7113,9 +7197,27 @@
         "Pikachu (Astronaut)",
         "Astronaut Pikachu"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-astronaut.png",
+      "sourceLabel": "Astronaut",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-astronaut",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-astronaut.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-astronaut.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-astronaut-shiny.png"
+      },
+      "sha256": {
+        "default": "5438153a5857e13c7e2f12252b7b244802a5890484c384f397d07e9decdcf067",
+        "shiny": "3873dddab73f7afa4d818c4041a4507690f9a2c655497b848ea609a52f348412"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-astronaut.png",
+        "shiny": "25-pikachu-astronaut-shiny.png"
+      },
+      "femaleArtworkUnavailable": true,
+      "reviewIdentityId": "announcement:2026-world-space-week:pikachu-astronaut"
     },
     {
       "no": 25,
@@ -7123,9 +7225,33 @@
         "Pikachu (PokeXciting Blue)",
         "PokéXciting Pikachu (Blue)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "Released identity confirmed; no exact, reviewed artwork is available from the approved sprite source.",
-      "identityStatus": "released"
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-singapore-01.png",
+      "sourceLabel": "PokeXciting Blue",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-singapore-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-singapore-01.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-singapore-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "6cb0093724b16e82a929a9e142cf1e92dd3a6d0d1ce0ebf88142c7aac9f79689",
+        "shiny": "915625a3f3e0e1fe71eb5ed97109f40578b85dd1b70067fe1407feaff14b27a9",
+        "female": "235e7f28b4b29421c1dcb2b64ebbda404f10cbdb041a7bae786f541113406792",
+        "femaleShiny": "44d0187326aeac9babc867973698cea65b435c123fa5089e73320eac45ea43a2"
+      },
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-singapore-01.png",
+        "shiny": "25-pikachu-anniversary-2026-singapore-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-singapore-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-singapore-01-female-shiny.png"
+      },
+      "femaleArtworkUnavailable": false,
+      "reviewIdentityId": "announcement:2026-pokexciting:25:blue"
     }
   ]
 }
