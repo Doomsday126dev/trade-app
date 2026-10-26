@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   public-share:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       PRODUCT_BASE_SHA: ${{ github.event.pull_request.base.sha }}

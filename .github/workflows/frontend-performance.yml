@@ -19,7 +19,7 @@ jobs:
     # This isolated draft has a focused recipient-contract check instead.
     # Ready-for-review restores the existing budgets without changing other PRs.
     if: github.event_name != 'pull_request' || github.head_ref != 'product/astra-end-to-end-review' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Check out source
@@ -68,7 +68,7 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:8878
         run: |
-          if [ "${{ github.head_ref }}" != "chore/integrate-events133" ] && [ "${{ github.head_ref }}" != "chore/integrate-events134" ] && [ "${{ github.head_ref }}" != "fix/comparison-shiny-sprites" ]; then
+          if [ "${{ github.head_ref }}" != "chore/integrate-events133" ] && [ "${{ github.head_ref }}" != "chore/integrate-events134" ] && [ "${{ github.head_ref }}" != "fix/comparison-shiny-sprites" ] && [ "${{ github.head_ref }}" != "chore/integrate-costume142" ]; then
             npm run test:performance:browser
             exit 0
           fi
@@ -78,6 +78,7 @@ jobs:
           baseline_sha=ab9a1db2efe6fab16928ca427a06421307aa1a64
           if [ "${{ github.head_ref }}" = "chore/integrate-events134" ]; then baseline_sha=12f759bbeeb5e1c7587a6d5924bc438c62693586; fi
           if [ "${{ github.head_ref }}" = "fix/comparison-shiny-sprites" ]; then baseline_sha=1b1f022fe34857244cb315a4a307af01867faa45; fi
+          if [ "${{ github.head_ref }}" = "chore/integrate-costume142" ]; then baseline_sha=d38983a4b8bf4f50b4e7c0283459d720fcfc0d02; fi
           git archive "$baseline_sha" | tar -x -C "$baseline_dir"
           python3 -m http.server 8879 --bind 127.0.0.1 --directory "$baseline_dir" > /tmp/paired-baseline-server.log 2>&1 &
           baseline_pid=$!
@@ -105,7 +106,7 @@ jobs:
 
   paired-runtime:
     if: github.event_name == 'workflow_dispatch' && github.ref_name == 'chore/integrate-events136'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803

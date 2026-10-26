@@ -12,7 +12,7 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -346,3 +346,10 @@ function costume141Fixture(t){
 test('exact .141 with six exact costume sprite repairs retains exact recovery read contract',t=>{const r=check(costume141Fixture(t),'748ad63a7b0d2e1efbc7689b660483b95fdab4e3');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
 test('exact .141 contract rejects unknown SHA',t=>{assert.notEqual(check(costume141Fixture(t),'b'.repeat(40)).status,0)});
 test('exact .141 rejects changed private target',t=>{const d=costume141Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'748ad63a7b0d2e1efbc7689b660483b95fdab4e3').status,0)});
+
+function costume142Fixture(t){
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'costume142-final-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','2bec47c137361e43867fb5f767d6d1f567a2a0e8','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;
+}
+test('exact .142 with gender and exact Cosmog sprite corrections retains exact recovery read contract',t=>{const r=check(costume142Fixture(t),'2bec47c137361e43867fb5f767d6d1f567a2a0e8');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('exact .142 contract rejects unknown SHA',t=>{assert.notEqual(check(costume142Fixture(t),'b'.repeat(40)).status,0)});
+test('exact .142 rejects changed private target',t=>{const d=costume142Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'2bec47c137361e43867fb5f767d6d1f567a2a0e8').status,0)});

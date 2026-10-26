@@ -148,7 +148,7 @@
     const sprites=global.PogoDomain.spriteSlugs;
     const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name),shiny);
     const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender,shiny});
-    if(!urls.length){const label=t('sprite.artUnavailable',{name});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
+    if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name}):t('sprite.artUnavailable',{name});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
     const[src,...fallbacks]=urls;
     return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
   }
