@@ -138,6 +138,38 @@ test('cancel clears durable onboarding state without deleting the Firebase Auth 
   assert.doesNotMatch(source,/deleteUser|deleteAccount/);
 });
 
+test('cancel during the initial UID digest cannot restart onboarding',async()=>{
+  const pending=deferred(),domain=load(),store=storage();
+  const model=domain.createProviderOnboardingModel({authoritySnapshot:()=>({uid:'uid-new',lifecycleId:'auth-1'}),
+    storage:store,checkHandle:async()=>({available:true}),crypto:{subtle:{digest:()=>pending.promise}}});
+  const beginning=model.begin();model.cancel();pending.resolve(new Uint8Array(32).buffer);
+  await assert.rejects(beginning,error=>error.code==='provider-onboarding/auth-lifecycle-changed');
+  assert.equal(model.snapshot().status,'canceled');assert.equal(store.values.size,0);
+});
+
+for(const outcome of ['available','failed'])test(`a superseded ${outcome} handle check cannot overwrite a new flow for the same UID`,async()=>{
+  const pending=deferred(),domain=load(),store=storage();
+  const model=domain.createProviderOnboardingModel({authoritySnapshot:()=>({uid:'uid-new',lifecycleId:'auth-1'}),storage:store,
+    checkHandle:async()=>{await pending.promise;if(outcome==='failed')throw new Error('offline');return{available:true};}});
+  await beginChoice(model);const choosing=model.chooseHandle('OldTrainer');model.cancel();await beginChoice(model);
+  const saved=store.getItem(domain.STORAGE_KEY);pending.resolve();
+  await assert.rejects(choosing,error=>error.code==='provider-onboarding/auth-lifecycle-changed');
+  assert.equal(model.snapshot().status,'choosing-handle');assert.equal(model.snapshot().handle,'');
+  assert.equal(store.getItem(domain.STORAGE_KEY),saved);
+});
+
+test('a dispatched creation result cannot attach to a replacement onboarding flow',async()=>{
+  const pending=deferred(),domain=load(),store=storage();let dispatches=0;
+  const model=domain.createProviderOnboardingModel({authoritySnapshot:()=>({uid:'uid-new',lifecycleId:'auth-1'}),storage:store,
+    checkHandle:async()=>({available:true}),createAccount:()=>{dispatches++;return pending.promise;}});
+  await beginChoice(model);await model.chooseHandle('OldTrainer');const creating=model.create();
+  model.cancel();await beginChoice(model);const saved=store.getItem(domain.STORAGE_KEY);
+  pending.resolve({status:'account-ready',foundation:foundation('OldTrainer')});
+  await assert.rejects(creating,error=>error.code==='provider-onboarding/auth-lifecycle-changed');
+  assert.equal(dispatches,1);assert.equal(model.snapshot().status,'choosing-handle');
+  assert.equal(store.getItem(domain.STORAGE_KEY),saved);
+});
+
 test('invalid handles are deterministic',async()=>{
   const h=harness();await beginChoice(h.model);
   await assert.rejects(h.model.chooseHandle('bad/name'),error=>error.code==='provider-onboarding/handle-invalid');

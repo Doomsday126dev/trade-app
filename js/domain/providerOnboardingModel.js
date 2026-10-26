@@ -50,7 +50,7 @@
       typeof storage.getItem!=='function'||typeof storage.setItem!=='function'){
       throw new TypeError('Provider onboarding dependencies are incomplete');
     }
-    let binding=null,profile=null,profileInvalid=false,state=Object.freeze({status:'idle',providerKey:'',handle:'',code:''});
+    let generation=0,binding=null,profile=null,profileInvalid=false,state=Object.freeze({status:'idle',providerKey:'',handle:'',code:''});
     function normalizedProfile(value){
       const result=typeof normalizeProfile==='function'?normalizeProfile(value):null;
       const normalized=typeof normalizeProfile==='function'?(result?.ok===true?result.value:null):normalizeOnboardingProfile(value);
@@ -72,13 +72,19 @@
       return state;
     }
     function clear(){try{storage.removeItem(storageKey);}catch{}}
-    function requireCurrent(){
+    function requireGeneration(expected){
+      if(expected!==generation)throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
+    }
+    function requireCurrent(expected=generation){
+      requireGeneration(expected);
       const current=authority(authoritySnapshot());
       if(!authorityCurrent(binding,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
       return current;
     }
     async function begin({providerKey='google'}={}){
+      const operation=++generation;binding=null;profile=null;profileInvalid=false;
       const initial=authority(authoritySnapshot()),uidDigest=await digestUid(initial.uid,crypto),current=authority(authoritySnapshot());
+      requireGeneration(operation);
       if(!authorityCurrent(initial,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
       binding=Object.freeze({...current,uidDigest});profile=null;profileInvalid=false;
       const key=String(providerKey||''),prior=persisted();
@@ -104,15 +110,16 @@
       return save({status:'choosing-handle',providerKey:state.providerKey,handle:state.handle,code:''});
     }
     async function chooseHandle(rawHandle){
+      const operation=generation;
       requireCurrent();
       if(!['choosing-handle','handle-unavailable','retryable-failure'].includes(state.status))throw failure('provider-onboarding/state-invalid');
       const handle=cleanHandle(rawHandle);save({status:'checking-availability',providerKey:state.providerKey,handle,code:''});
       let result;
       try{result=await checkHandle(handle,binding);}catch(error){
-        requireCurrent();return save({status:'retryable-failure',providerKey:state.providerKey,handle,
+        requireCurrent(operation);return save({status:'retryable-failure',providerKey:state.providerKey,handle,
           code:String(error?.code||'provider-onboarding/availability-failed')});
       }
-      requireCurrent();
+      requireCurrent(operation);
       if(result?.available!==true)return save({status:'handle-unavailable',providerKey:state.providerKey,handle,
         code:String(result?.code||'provider-onboarding/handle-unavailable')});
       return save({status:'ready-to-create',providerKey:state.providerKey,handle,code:''});
@@ -137,11 +144,12 @@
         foundation.canonicalTrainerName===state.handle;
     }
     async function finishCreation(work,initialProfile=null){
+      const operation=generation;
       requireCurrent();save({...state,status:'creating',code:''});
       let result;
-      try{result=await work();requireCurrent();}
+      try{result=await work();requireCurrent(operation);}
       catch(error){
-        requireCurrent();const[status,code]=classifyCreationFailure(error);save({...state,status,code});throw error;
+        requireCurrent(operation);const[status,code]=classifyCreationFailure(error);save({...state,status,code});throw error;
       }
       save({...state,status:'verifying',code:''});
       if(!exactCreatedFoundation(result)){
@@ -167,6 +175,7 @@
         providerKey:state.providerKey,handle:state.handle})));
     }
     function cancel(){
+      generation++;
       const providerKey=state.providerKey;binding=null;profile=null;profileInvalid=false;clear();
       state=Object.freeze({status:'canceled',providerKey,handle:'',code:'provider-onboarding/canceled'});return state;
     }
