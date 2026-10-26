@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Provider migration · local preview</title>
+<style>
+:root{font:16px/1.6 system-ui,sans-serif;color:#e7edf8;background:#111726;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:760px;margin:40px auto}.eyebrow{color:#aebcda;font-size:13px;letter-spacing:.04em}h1{font-size:32px;line-height:1.2}h2{font-size:21px;line-height:1.4;margin-top:0}p{color:#c1cbe0}.provider-migration-notice{padding:24px;border:1px solid #62779c;border-radius:16px;background:#1b263c;margin:28px 0;box-shadow:0 12px 36px #0003}.provider-migration-actions{display:flex;gap:12px;flex-wrap:wrap}.btn{padding:12px 16px;border-radius:10px;border:1px solid #8296b9;color:#f3f6ff;background:#2d4167;font:inherit;font-weight:600;cursor:pointer;min-height:46px;margin:4px}.btn:hover{background:#3d5784}.btn:focus-visible,a:focus-visible{outline:3px solid #9dd8ff;outline-offset:4px}.btn:disabled{opacity:.6}.preview-note{border-left:3px solid #8296b9;padding-left:16px}strong{overflow-wrap:anywhere}#feedback{color:#b6f0ce}@media(max-width:520px){body{padding:12px}main{margin:20px auto}h1{font-size:27px}.provider-migration-notice{padding:18px}.provider-migration-actions{display:grid}.btn{margin:3px 0}}
+</style></head><body><main>
+<p class="eyebrow">LOCAL PREVIEW · SYNTHETIC DATA</p><h1>Your trainer account stays yours</h1>
+<p class="preview-note">This isolated preview makes no network auth requests and changes no real accounts. PIN sign-in stays available. Discord is not enabled in production.</p>
+<a href="#list">My List</a><section id="notice"></section><section id="security"></section><p id="feedback" role="status"></p><section id="list"><h2>My List</h2><p>Pikachu · shiny · high priority<br>Favorites: 3 · Groups: 2 · Tags: 4</p></section>
+</main>
+<script src="../../js/dev/providerMigrationOnboarding.js"></script>
+<script>
+const api=window.PogoDev.providerMigrationOnboarding;
+const ownerBinding=`v1_${'a'.repeat(64)}`,lifecycleBinding=`v1_${'b'.repeat(64)}`;
+let session={ownerBinding,lifecycleBinding,accountReady:true,legacyPinUsable:true,linkedProviders:[],availableProviders:['google','discord']};
+let confirms=0,cleanup=()=>{};
+const storageKey=`${api.PREFIX}${ownerBinding}`;
+const controller=api.createProviderMigrationOnboarding({enabled:true,eligibleOwnerBindings:[ownerBinding],getSession:()=>session,
+  openSecurity:async({providerKey,isCurrent})=>{
+    if(!isCurrent())throw Error('session-changed');
+    const container=document.getElementById('security');container.replaceChildren();
+    const heading=document.createElement('h2');heading.textContent='Account & Security · SyntheticTrainer';container.append(heading);
+    const info=document.createElement('p');info.textContent=`Review ${providerKey==='google'?'Google':'Discord'} as another way into this same trainer account. No account data is moved.`;container.append(info);
+    if(providerKey==='google')return;
+    api.mountDiscordLinkReview({container,returnFocus:document.querySelector('#list h2'),discordLabel:providerKey==='discord'?'SyntheticDiscordUser':'SyntheticGoogleUser',
+      confirm:async()=>{if(!isCurrent())throw Error('session-changed');confirms++;session={...session,linkedProviders:[providerKey]};document.getElementById('feedback').textContent='Simulation complete. Same trainer account; all data preserved.';},
+      cancel:()=>{document.getElementById('feedback').textContent='Canceled. No provider linked; PIN still works.';}});
+  }});
+cleanup=api.mountMigrationNotice({container:document.getElementById('notice'),controller,returnFocus:document.querySelector('#list h2')});
+window.preview={controller,get confirms(){return confirms;},storageKey,reset(){localStorage.removeItem(storageKey);location.reload();},switchAccount(){session={...session,ownerBinding:`v1_${'c'.repeat(64)}`};cleanup();},renderMaliciousLabel(){api.mountDiscordLinkReview({container:document.getElementById('security'),discordLabel:'<img src=x onerror=alert(1)>',confirm:async()=>{},cancel:()=>{}});}};
+</script></body></html>

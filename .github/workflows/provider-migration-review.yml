@@ -1,0 +1,40 @@
+name: Provider migration source qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/provider-migration-review.yml'
+      - 'functions/src/prototype/**'
+      - 'functions/test/discord-oauth-prototype.test.cjs'
+      - 'js/dev/**'
+      - 'tests/account-recovery-bundle.test.cjs'
+      - 'tests/discord-oauth-prototype-client.test.cjs'
+      - 'tests/provider-migration-*.test.cjs'
+      - 'tests/provider-migration-preview.spec.js'
+      - 'tests/fixtures/provider-migration-preview.html'
+      - 'playwright.provider-migration.config.cjs'
+permissions:
+  contents: read
+jobs:
+  source-and-synthetic-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:provider-migration
+      - run: npm run test:provider-migration:browser
+      - run: npm run test:google-provider
+      - run: npm run test:account-sync
+      - run: npm run check:durable-auth-readiness
+      - run: npm run test:pages-release
+      - run: npm run test:performance:static
+      - run: npm --prefix functions run check:contract

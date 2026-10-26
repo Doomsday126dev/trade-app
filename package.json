@@ -105,7 +105,10 @@
     "visual:headed": "playwright test --headed",
     "profile:events": "node scripts/profile-events.cjs",
     "test:usability": "node --test tests/usability-import.test.cjs && playwright test tests/usability-improvements.spec.js --project=desktop --workers=1",
-    "test:usability:browsers": "playwright test --config=playwright.usability.config.cjs"
+    "test:usability:browsers": "playwright test --config=playwright.usability.config.cjs",
+    "test:discord-oauth-prototype": "node --test functions/test/discord-oauth-prototype.test.cjs tests/discord-oauth-prototype-client.test.cjs",
+    "test:provider-migration": "node --test functions/test/discord-oauth-prototype.test.cjs tests/discord-oauth-prototype-client.test.cjs tests/provider-migration-onboarding.test.cjs tests/account-recovery-bundle.test.cjs",
+    "test:provider-migration:browser": "playwright test --config=playwright.provider-migration.config.cjs"
   },
   "repository": {
     "type": "git",
