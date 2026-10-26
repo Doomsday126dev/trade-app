@@ -38,7 +38,15 @@ function validateCatalog(catalog,root){
     }
     if(!entry.sourceFile||!entry.sourceLabel)fail(`Exact sprite entry is missing reviewed source evidence: ${entry.names[0]}`);
     if(!entry.assets?.default||!entry.sha256?.default)fail(`Exact sprite entry is missing its default local asset: ${entry.names[0]}`);
-    const variants=[['default',entry.assets.default,entry.sha256.default],['female',entry.assets.female,entry.sha256.female]];
+    if(entry.sourceProvider==='pokemod-reviewed'){
+      const base='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
+      const forms={'Pikachu (Fossil)':'FOSSIL_2026','Pikachu (Marathon)':'VISOR_2026','Pikachu (Mystic)':'GOFEST_2026_CAP_BLUE','Pikachu (Valor)':'GOFEST_2026_CAP_RED','Pikachu (Instinct)':'GOFEST_2026_CAP_YELLOW'};
+      const form=forms[entry.names[0]];
+      if(!form||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca')fail('Unreviewed Pokemod identity/commit');
+      for(const[key,suffix]of Object.entries({default:'',female:'.g2',shiny:'.s',femaleShiny:'.g2.s'}))if(entry.sourceFiles?.[key]!== 'pm25.f'+form+suffix+'.icon.png'||!entry.assets[key]||!entry.sha256[key])fail('Unreviewed Pokemod variant');
+      if(entry.sourceUrl!==base+entry.sourceFiles.default)fail('Unreviewed Pokemod URL');
+    }
+    const variants=['default','female','shiny','femaleShiny'].map(key=>[key,entry.assets[key],entry.sha256[key]]);
     for(const[variant,relative,digest]of variants){
       if(!relative&&!digest)continue;
       if(!relative||!digest)fail(`Incomplete ${variant} asset metadata for ${entry.names[0]}`);
@@ -64,10 +72,11 @@ function runtimeSource(catalog){
     status:entry.status,
     defaultUrl:entry.assets?.default||'',
     femaleUrl:entry.assets?.female||'',
+    ...(entry.assets?.shiny?{shinyUrl:entry.assets.shiny,femaleShinyUrl:entry.assets.femaleShiny||''}:{}),
     sourceLabel:entry.sourceLabel||'',
     unavailableReason:entry.unavailableReason||''
   }));
-  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows)};\n  function normalize(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map();\n  for(const row of rows)for(const name of row.names)byName.set(normalize(name),Object.freeze(row));\n  function resolve(input={}){\n    const names=Array.isArray(input.names)?input.names:[input.name];\n    for(const name of names){const row=byName.get(normalize(name));if(row)return row;}\n    return null;\n  }\n  function resolution(input={}){\n    const row=resolve(input);\n    if(!row)return Object.freeze({knownVariant:false,status:'unknown',urls:Object.freeze([]),record:null});\n    if(row.status!=='exact')return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    const urls=[];\n    if(String(input.gender||'').toLowerCase()==='f'&&row.femaleUrl)urls.push(row.femaleUrl);\n    if(!urls.length&&row.defaultUrl)urls.push(row.defaultUrl);\n    return Object.freeze({knownVariant:true,status:'exact',urls:Object.freeze(urls),record:row});\n  }\n  root.costumeSpriteCatalog=Object.freeze({schemaVersion:${SCHEMA_VERSION},sourceId:${JSON.stringify(SOURCE_ID)},normalize,resolve,resolution,records:Object.freeze(rows)});\n})(window);\n`;
+  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows)};\n  function normalize(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map();\n  for(const row of rows)for(const name of row.names)byName.set(normalize(name),Object.freeze(row));\n  function resolve(input={}){\n    const names=Array.isArray(input.names)?input.names:[input.name];\n    for(const name of names){const row=byName.get(normalize(name));if(row)return row;}\n    return null;\n  }\n  function resolution(input={}){\n    const row=resolve(input);\n    if(!row)return Object.freeze({knownVariant:false,status:'unknown',urls:Object.freeze([]),record:null});\n    if(row.status!=='exact')return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    const urls=[];\n    if(input.shiny===true){const url=String(input.gender||'').toLowerCase()==='f'?row.femaleShinyUrl:row.shinyUrl;return Object.freeze({knownVariant:true,status:url?'exact':'unavailable',urls:Object.freeze(url?[url]:[]),record:row});}\n    if(String(input.gender||'').toLowerCase()==='f'&&row.femaleUrl)urls.push(row.femaleUrl);\n    if(!urls.length&&row.defaultUrl)urls.push(row.defaultUrl);\n    return Object.freeze({knownVariant:true,status:'exact',urls:Object.freeze(urls),record:row});\n  }\n  root.costumeSpriteCatalog=Object.freeze({schemaVersion:${SCHEMA_VERSION},sourceId:${JSON.stringify(SOURCE_ID)},normalize,resolve,resolution,records:Object.freeze(rows)});\n})(window);\n`;
 }
 
 module.exports={SCHEMA_VERSION,SOURCE_ID,normalizeLookupKey,stableJson,sha256File,validateCatalog,runtimeSource};

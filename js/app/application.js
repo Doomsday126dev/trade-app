@@ -492,7 +492,7 @@ function renderCombinedList(model=productDeclarations()){
     const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
+      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
       <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
       <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${uiIconMarkup('trash','ui-icon ui-icon-sm')}</button></div></article>`;
@@ -940,7 +940,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
-  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no);
   if(equivalent)return equivalent;
@@ -1012,13 +1012,13 @@ function pokemondbSpriteUrl(name,dn,gender=''){
 //   2. PokeAPI form/regional/gender variants
 //   3. Pokémon Database HOME render
 //   4. PokeAPI base dex
-function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
+function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   const urls=[];
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return urls;
   push(context.override?.url);
-  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no);
   if(equivalent){push(equivalent);return urls;}
@@ -1255,7 +1255,7 @@ function effectiveSpriteOrigin(url){
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const context=spriteCatalogContext(no,name,dn,opts?.catalogId);
-  const fallbackChain=spriteFallbackChain(no,name,gender,dn,context.catalogId);
+  const fallbackChain=spriteFallbackChain(no,name,gender,dn,context.catalogId,opts.shiny===true);
   const urlOverride=vettedSpriteUrlOverride(no,name,gender,dn,opts?.urlOverride,fallbackChain);
   const urls=[
     ...(context.override?.url?[context.override.url]:[]),
@@ -5602,7 +5602,7 @@ function renderTrainerGroupResults(){
     ${model.members.some(member=>member.status==='available')?`<button type="button" class="btn btn-secondary" data-group-action="checked">${escHtml(groupText('checkedAll'))}</button>`:''}
     <ul class="group-availability">${model.members.map(member=>`<li><button type="button" class="btn btn-ghost" data-group-open-trainer="${escAttr(member.displayName)}">${escHtml(member.displayName)}</button><span>${escHtml(groupChangeLabel(member))}${member.status==='available'&&member.aged?` · ${escHtml(groupAgeLabel(member))}`:''}${member.updatedAt?` · ${escHtml(i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}))}`:''}</span>${member.status==='available'?`<button type="button" class="btn btn-secondary" data-group-checked-trainer="${escAttr(member.displayName)}">${escHtml(groupText('checked'))}</button>`:''}</li>`).join('')}</ul>
     <p class="type-meta">${escHtml(groupText('freshness'))}</p></details>`:''}
-    <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn):''}</div><div><strong>${escHtml([favoriteVariantLabel(entry),entry.note].filter(Boolean).join(' · '))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
+    <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn,{shiny:entry.shiny===true}):''}</div><div><strong>${escHtml([favoriteVariantLabel(entry),entry.note].filter(Boolean).join(' · '))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
     ${model.entries.length>trainerGroupState.limit?`<button class="btn btn-secondary" data-group-action="more">${escHtml(groupText('more'))}</button>`:''}`;
   if(searchOpen&&host.querySelector('.contextual-details'))host.querySelector('.contextual-details').open=true;
 }
@@ -6136,7 +6136,7 @@ function renderFavoriteBrowseResults(){
     ${model.entries.length?'':`<p>${escHtml(i18nCore.t('who.noMatch'))}</p>`}
     <div class="favorite-browse-results who-results">${rows.slice(0,favoriteLookupLimit).map(({entry,match})=>{
       const member=model.members.find(item=>item.key===match.key);
-      return`<article class="favorite-browse-row"><span class="who-sprite">${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,34,'',entry.name,entry.gender||'',entry.dn):''}</span><div class="favorite-browse-main"><button type="button" class="btn btn-ghost" data-trainer="${escAttr(match.displayName)}" data-trainer-action="open">${escHtml(match.displayName)}</button><strong>${escHtml(favoriteVariantLabel(entry))}</strong><span>${escHtml(match.priorities.map(p=>p==='H'?i18nCore.t('phase2.topWant'):p?priLabel(p):favoriteBrowsePriorityText('')).join(' · '))}</span>${entry.note?`<span>${escHtml(entry.note)}</span>`:''}<span class="type-meta">${escHtml([member.aged?groupAgeLabel(member):'',member.updatedAt?i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}):'',...member.groups].filter(Boolean).join(' · '))}</span></div></article>`;
+      return`<article class="favorite-browse-row"><span class="who-sprite">${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,34,'',entry.name,entry.gender||'',entry.dn,{shiny:entry.shiny===true}):''}</span><div class="favorite-browse-main"><button type="button" class="btn btn-ghost" data-trainer="${escAttr(match.displayName)}" data-trainer-action="open">${escHtml(match.displayName)}</button><strong>${escHtml(favoriteVariantLabel(entry))}</strong><span>${escHtml(match.priorities.map(p=>p==='H'?i18nCore.t('phase2.topWant'):p?priLabel(p):favoriteBrowsePriorityText('')).join(' · '))}</span>${entry.note?`<span>${escHtml(entry.note)}</span>`:''}<span class="type-meta">${escHtml([member.aged?groupAgeLabel(member):'',member.updatedAt?i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}):'',...member.groups].filter(Boolean).join(' · '))}</span></div></article>`;
     }).join('')}</div>
     ${rows.length>favoriteLookupLimit?`<button type="button" class="btn btn-secondary" data-lookup-more>${escHtml(groupText('more'))}</button>`:''}
     ${model.entries.length?contextualIntentSearchHtml(model.entries,i18nCore.t('who.search')):''}
@@ -6851,7 +6851,7 @@ function refreshProductShare(){
   const preview=document.getElementById('product-share-preview');
   if(mode==='link'){
     const profile=productSharePublicProfile();
-    preview.innerHTML=`<div class="share-public-profile">${userAvatarHtml(cur,48)}<div><strong>${escHtml(cur)}</strong>${[profile.friendCode,profile.discord,profile.bio].filter(Boolean).map(value=>`<p>${escHtml(value)}</p>`).join('')}</div></div><ul class="share-public-list">${productShareSnapshot.map(entry=>`<li><span>${spriteImg(entry.no,34,'share-sprite',entry.name,entry.gender,entry.dn,{catalogId:entry.catalogId})}</span><div><strong>${escHtml(entry.dn)}</strong><p>${escHtml(productShareDescription({...entry,dn:'',name:''}))}</p></div></li>`).join('')||`<li>${escHtml(t('empty'))}</li>`}</ul>`;
+    preview.innerHTML=`<div class="share-public-profile">${userAvatarHtml(cur,48)}<div><strong>${escHtml(cur)}</strong>${[profile.friendCode,profile.discord,profile.bio].filter(Boolean).map(value=>`<p>${escHtml(value)}</p>`).join('')}</div></div><ul class="share-public-list">${productShareSnapshot.map(entry=>`<li><span>${spriteImg(entry.no,34,'share-sprite',entry.name,entry.gender,entry.dn,{catalogId:entry.catalogId,shiny:entry.shiny===true})}</span><div><strong>${escHtml(entry.dn)}</strong><p>${escHtml(productShareDescription({...entry,dn:'',name:''}))}</p></div></li>`).join('')||`<li>${escHtml(t('empty'))}</li>`}</ul>`;
   }else if(mode==='text'){
     state.output=state.text==='markdown'?productMarkdownText(productTextRows(productShareSnapshot),productSharePublicProfile(),cur):state.text==='csv'?productCSVText(productTextRows(productShareSnapshot)):[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(entry=>'- '+productShareDescription(entry))].join('\n');
     preview.innerHTML=`<pre class="share-text-preview">${escHtml(productShareSnapshot.length?state.output:t('empty'))}</pre>`;
@@ -7939,10 +7939,11 @@ function exportSpriteUrl(e){
 // Build canvas-safe fallback chain for the export image
 // Uses the same multi-source cascade as inline images
 function exportSpriteFallbackUrls(e){
-  const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
+  const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn,e.catalogId,e.shiny===true);
   const context=spriteCatalogContext(e.no,e.spriteName||e.name,e.dn||e.name,e.catalogId);
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
-  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender});
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
+  if(reviewed.knownVariant)return Array.from(reviewed.urls);
   const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
   const compatibilityKeys=[...context.lookupKeys];
   for(const value of [e.spriteName,e.name,e.dn]){
@@ -8070,7 +8071,7 @@ function imageTrimBox(img){
   return box;
 }
 function drawSpriteFallback(ctx,e,x,y,size){
-  const reviewed=costumeSpriteCatalogDomain.resolution({names:[e?.spriteName||e?.name,e?.dn].filter(Boolean),gender:e?.gender});
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:[e?.spriteName||e?.name,e?.dn].filter(Boolean),gender:e?.gender,shiny:e?.shiny===true});
   roundedRect(ctx,x,y,size,size,8);
   ctx.fillStyle='#eef2ff';ctx.fill();
   ctx.strokeStyle=reviewed.knownVariant?'rgba(99,102,241,.5)':'rgba(99,102,241,.22)';ctx.stroke();
@@ -11407,7 +11408,7 @@ function renderDiffModal(){
     const genderHtml=e.gender?`<span class="share-pcard-gender ${e.gender}" style="position:absolute;bottom:-2px;right:-2px">${e.gender==='f'?'♀':'♂'}</span>`:'';
     return`<div class="diff-card${isMismatch?' has-mismatch':''}"  title="${escAttr(e.dn)}">
 
-      <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn):'🎮'}${genderHtml}</div>
+      <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true}):'🎮'}${genderHtml}</div>
       <div class="diff-card-info">
         <span class="diff-card-name">${escHtml(e.dn)}</span>
         ${priHtml?`<span class="diff-card-prio">${priHtml}</span>`:''}
@@ -12542,7 +12543,7 @@ function renderSpecialBoard(){
   renderBoardContextualSearch();
   for(const side of ['lf','ft']){
     const el=document.getElementById(`special-${side}-list`);if(!el)continue;
-    el.innerHTML=entries.filter(e=>e.intent===side).map(e=>`<label class="sb-row"><input type="checkbox" data-key="${escAttr(e.declarationKey)}" ${boardHiddenKeys.has(e.declarationKey)?'':'checked'} onchange="toggleBoardSelection(this.dataset.key,this.checked)">${spriteImg(e.no,34,'sb-row-sprite',e.name,e.gender||'',e.dn)}<span class="sb-row-name">${escHtml(e.dn)}</span>${e.shiny?'<span aria-label="'+escAttr(i18nCore.t('share.flagShiny'))+'">✨</span>':''}</label>`).join('');
+    el.innerHTML=entries.filter(e=>e.intent===side).map(e=>`<label class="sb-row"><input type="checkbox" data-key="${escAttr(e.declarationKey)}" ${boardHiddenKeys.has(e.declarationKey)?'':'checked'} onchange="toggleBoardSelection(this.dataset.key,this.checked)">${spriteImg(e.no,34,'sb-row-sprite',e.name,e.gender||'',e.dn,{shiny:e.shiny===true})}<span class="sb-row-name">${escHtml(e.dn)}</span>${e.shiny?'<span aria-label="'+escAttr(i18nCore.t('share.flagShiny'))+'">✨</span>':''}</label>`).join('');
   }
 }
 async function addSpecialEntry(side){
@@ -13054,7 +13055,7 @@ function renderShareView(username,type,intent){
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
         // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
-          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
         return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
 

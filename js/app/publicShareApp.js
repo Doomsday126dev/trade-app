@@ -144,10 +144,10 @@
   }
 
 
-  function spriteHtml(name,gender){
+  function spriteHtml(name,gender,shiny=false){
     const sprites=global.PogoDomain.spriteSlugs;
-    const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name));
-    const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender});
+    const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name),shiny);
+    const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender,shiny});
     if(!urls.length){const label=t('sprite.artUnavailable',{name});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
     const[src,...fallbacks]=urls;
     return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
@@ -164,7 +164,7 @@
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
     const note=global.PogoDomain.publicSharePublication.publicNoteForDisplay(value?.note);
-    return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
+    return`<article class="share-pcard card-row">${spriteHtml(name,gender,model.shiny)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);

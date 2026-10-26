@@ -17,7 +17,7 @@ test('artwork maintenance inventory matches the current pending source candidate
   assert.equal(inventory.productionBaseline.canonicalRecords,376);
   assert.equal(inventory.productionBaseline.exactArtworkRecords+inventory.productionBaseline.pendingArtworkRecords,inventory.productionBaseline.canonicalRecords);
   assert.equal(inventory.maintenanceCandidate.canonicalRecords,391);
-  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,364);
+  assert.equal(inventory.maintenanceCandidate.exactArtworkRecords,369);
   assert.equal(inventory.maintenanceCandidate.pendingArtworkRecords,inventory.entries.length);
   assert.equal(inventory.maintenanceCandidate.excludedRows,inventory.entries.length);
   assert.equal(inventory.maintenanceCandidate.canonicalRecords,spriteCatalog.entries.length);

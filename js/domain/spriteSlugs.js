@@ -178,10 +178,10 @@
     }
     return publicDexLookup.get(normalizeSpriteKey(name))||0;
   }
-  function publicSpriteUrls(name='',gender='',no=0){
+  function publicSpriteUrls(name='',gender='',no=0,shiny=false){
     const identity=spriteSemanticIdentity(name,gender,no),display=identity.display,base=identity.base,urls=[];
     if(isAmbiguousVisibleForm(name,no))return Object.freeze([]);
-    const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender});
+    const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender,shiny});
     if(reviewed?.knownVariant)return reviewed.urls;
     const equivalent=verifiedEquivalentSpriteUrl(name,no);
     if(equivalent)return Object.freeze([equivalent]);
