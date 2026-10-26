@@ -190,12 +190,12 @@
     const pushPokeapi=(candidateGender='',id=dex)=>{
       if(!Number.isInteger(id)||id<=0)return;
       const genderPath=candidateGender==='f'?'female/':'';
-      const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${genderPath}${id}.png`;
+      const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${genderPath}${id}.png`;
       if(spriteSourceForUrl(url)?.id==='pokeapi'&&!urls.includes(url))urls.push(url);
     };
     const push=(candidate,candidateGender='')=>{
       const slug=pokemondbSlug(candidate,candidate,candidateGender);
-      const url=slug?`https://img.pokemondb.net/sprites/home/normal/${slug}.png`:'';
+      const url=slug?`https://img.pokemondb.net/sprites/home/${shiny?'shiny':'normal'}/${slug}.png`:'';
       if(url&&spriteSourceForUrl(url)?.id==='pokemondb-home'&&!urls.includes(url))urls.push(url);
     };
     if(exactId)pushPokeapi('',exactId);

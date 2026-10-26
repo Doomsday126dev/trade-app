@@ -1,0 +1,38 @@
+--- a/js/app/application.js
++++ b/js/app/application.js
+@@ -496,7 +496,7 @@
+     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
+     const template=document.createElement('template');
+     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
+-    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
++    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
+       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
+       <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
+@@ -6996,7 +6996,7 @@
+       const artX=x+(cellWidth-76)/2;
+       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
+       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
+-      if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
++      
+       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
+       nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
+       ctx.fillStyle='#b8c2c9';
+@@ -12632,7 +12632,7 @@
+     return 1;
+   };
+   const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
+-    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
++    
+     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
+   };
+   const drawGridSection=(entries,xBase,startY)=>{
+@@ -12810,7 +12810,7 @@
+           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
+           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
+           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
+-          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" >${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
++          e.shiny?`<span class="sr-only">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
+           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
+           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
+           ,''

@@ -15,3 +15,11 @@ Qualification: Chromium and WebKit sample tests passed; 67/68 focused tests pass
 Library comparisons: libfile_808f7e4a75248191a8d4a0fa95aa2000 (phone), libfile_dbf780b6b6f0819199a28a74977f5dcb (canvas image).
 
 Final qualification update: aggregate 1,976 passed / 12 existing skips, with four stale inventory/parser expectations subsequently corrected. Focused contract reruns cover those four; public dex is 34,997 bytes under the unchanged 35,000-byte limit. The initial aggregate failures were resolved without changing behavior assertions or budgets. Full protected release qualification is still required before publication.
+
+## Shiny presentation revision
+
+The saved Shiny flag survived model projection. The generic `publicSpriteUrls` helper ignored its Shiny argument when constructing HOME URLs; the export helper additionally prepended normal-color high-quality candidates. Standard Shiny requests now build only Shiny URLs, and export returns that color-specific chain before any normal-color preference. Reviewed costume and Gmax assets retain their earlier exact-variant path. Missing exact art remains unavailable.
+
+My List and shared-card decorative Shiny badges are replaced with screen-reader text; canvas Shiny starbursts are removed. Max icons appear once at the sprite corner. Input/selection controls, filters, text exports and saved flags remain unchanged. The sample adds female Shiny Eevee with verified original female artwork and checks the actual decoded image URL.
+
+`apri-shiny-marker-followup.patch` is a separate, unapplied presentation-only follow-up for PR179. Its explicit pink shared-card Shiny label and My List trait occur at source lines 12813 and 499 in the preserved redesign. Apply the shared resolver correction with this integration before removing those labels. The patch does not activate auth or deploy the redesign.

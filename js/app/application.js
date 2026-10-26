@@ -488,11 +488,11 @@ function renderCombinedList(model=productDeclarations()){
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
-    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${maxPresentationMarkup(e)}${escHtml(maxPresentationName(e.dn))}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
@@ -834,7 +834,7 @@ const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
 function maxPresentationType(entry){return /\(Gigantamax\)/i.test(entry.name||'')?'gmax':/\(Dynamax\)/i.test(entry.name||'')?'dynamax':'';}
 function maxPresentationName(name){return String(name||'').replace(/\s*\((?:Dynamax|Gigantamax)\)/gi,'').trim();}
 function maxPresentationIcon(type){return type==='gmax'?'assets/gigantamax-symbol.png':type==='dynamax'?'assets/dynamax-symbol.png':'';}
-function maxPresentationMarkup(entry){const type=maxPresentationType(entry);return type?`<img src="${maxPresentationIcon(type)}" width="20" height="20" style="object-fit:contain;vertical-align:middle" alt="${type==='gmax'?'Gigantamax':'Dynamax'}" title="${type==='gmax'?'Gigantamax':'Dynamax'}"> `:'';}
+function maxPresentationMarkup(entry){const type=maxPresentationType(entry);return type?`<span class="sprite-max-symbol"><img src="${maxPresentationIcon(type)}" alt="${type==='gmax'?'Gigantamax':'Dynamax'}" title="${type==='gmax'?'Gigantamax':'Dynamax'}"></span>`:'';}
 const MAX_CLOUD_URL='assets/max-cloud.svg';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
@@ -1077,6 +1077,8 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no,gender,shiny);
   if(equivalent){push(equivalent);return urls;}
+  // Shiny requests must never enter the normal-color fallback chain.
+  if(shiny)return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,true));
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
@@ -6981,12 +6983,9 @@ async function renderProductShareImage(entries,owner){
       const artX=x+(cellWidth-76)/2;
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
-      if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
+      if(maxIcon)drawImageContain(ctx,maxIcon,x+cellWidth-22,rowTop+2,18,18);
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
-      nameLines.forEach((line,lineIndex)=>{
-        if(maxIcon&&lineIndex===0){const textWidth=ctx.measureText(line).width,iconSize=12,gap=4;const start=x+(cellWidth-textWidth-iconSize-gap)/2;drawImageContain(ctx,maxIcon,start,rowTop+77,iconSize,iconSize);ctx.textAlign='left';ctx.fillText(line,start+iconSize+gap,rowTop+88);ctx.textAlign='center';}
-        else ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14);
-      });
+      nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
       ctx.fillStyle='#b8c2c9';
       detailLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+(nameLines.length+lineIndex)*14));
       ctx.textAlign='left';
@@ -7892,6 +7891,7 @@ function exportSpriteFallbackUrls(e){
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
   if(reviewed.knownVariant)return Array.from(reviewed.urls);
+  if(e.shiny===true)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   // The reviewed Max chain already carries exact normal-form/Shiny/gender
   // semantics. Do not prepend the older unqualified normal-art preference.
   if(spriteSlugsDomain.reviewedDynamaxBase(e.spriteName||e.name,e.no))return chain.map(canvasSafeSpriteUrl).filter(Boolean);
@@ -12623,7 +12623,7 @@ async function renderSpecialBoardImage(board,username){
     return 1;
   };
   const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
-    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
+
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
@@ -12801,7 +12801,7 @@ function renderShareView(username,type,intent){
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
-          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
+          e.shiny?`<span class="sr-only">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
           ,''
@@ -12811,13 +12811,13 @@ function renderShareView(username,type,intent){
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
         // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
-          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${maxPresentationMarkup(e)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
         return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
 
           ${spriteHtml}
           <div class="share-pcard-info">
-            <span class="share-pcard-name">${escHtml(e.dn)}</span>
+            <span class="share-pcard-name">${escHtml(maxPresentationName(e.dn))}</span>
             ${metaHtml}${e.note?`<p class="share-pcard-mod">${escHtml(e.note)}</p>`:''}
           </div>
         </div>`;
