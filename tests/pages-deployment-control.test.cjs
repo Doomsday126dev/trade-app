@@ -198,7 +198,7 @@ test('workflow permissions remain minimal and deploy/build jobs stay separate',(
 
 test('reviewed frontend allowlist stays exact and excludes control/private trees',()=>{
   const result=validator.validateReleaseCoherence(root,{expectedReleaseId:RELEASE_ID});
-  assert.equal(result.files.length,1092);assert.equal(result.scriptCount,90);
+  assert.equal(result.files.length,1101);assert.equal(result.scriptCount,90);
   assert.equal(result.allowlist.hostedOnlyScriptFiles.length,5);
   assert.equal(result.allowlist.scriptFiles[0],'js/services/traffic.js');
   assert.ok(result.allowlist.lazyScriptFiles.includes('js/app/publicShareApp.js'));
@@ -263,7 +263,7 @@ test('schema 2 artifact records distinct runtime and control provenance without 
   const result=builder.buildArtifact({source:root,output,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,githubRunId:RUN_ID,controlWorkflowSha:CONTROL_SHA});
   assert.equal(result.schema_version,2);assert.equal(result.source_sha,RUNTIME_SHA);assert.equal(result.release_tag,RUNTIME_TAG);
   assert.equal(result.deployment_selector,SELECTOR);assert.equal(result.dispatcher_sha,DISPATCHER_SHA);assert.equal(result.artifact_digest,ARTIFACT_DIGEST);
-  assert.equal(builder.walk(output).length,1093);fs.rmSync(output,{recursive:true,force:true});
+  assert.equal(builder.walk(output).length,1102);fs.rmSync(output,{recursive:true,force:true});
 });
 
 test('artifact builder rejects runtime-tag and selector mismatches and non-empty output',()=>{

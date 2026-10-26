@@ -489,11 +489,11 @@ function renderCombinedList(model=productDeclarations()){
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
-    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
@@ -665,10 +665,17 @@ function refreshCombinedShinyAvailability(){
   box.disabled=!!blocked&&!box.checked;
   hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
 }
+function combinedAllowedGenders(name){
+  const costume=costumeSpriteCatalogDomain.resolve({name});
+  if(costume?.availableGenders)return costume.availableGenders;
+  // Reviewed recent Max additions: the lake guardians are genderless.
+  // This also covers their existing standard entries; saved conflicts survive.
+  return [480,481,482].includes(window.PogoDomain.publicPokemonDex.dex(name))?[]:['f','m'];
+}
 function refreshCombinedGenderOptions(savedValue){
   refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
-  const allowed=costumeSpriteCatalogDomain.resolve({name})?.availableGenders||['f','m'];
+  const allowed=combinedAllowedGenders(name);
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
@@ -766,7 +773,7 @@ async function saveCombinedEditor(remove=false){
   if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
   const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
-  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=costume?.availableGenders;
+  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=combinedAllowedGenders(name);
   const unchangedSavedShiny=draft.entries.length&&draft.entries.every(entry=>entry.shiny===true);
   if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
@@ -855,6 +862,10 @@ const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
+function maxPresentationType(entry){return /\(Gigantamax\)/i.test(entry.name||'')?'gmax':/\(Dynamax\)/i.test(entry.name||'')?'dynamax':'';}
+function maxPresentationName(name){return String(name||'').replace(/\s*\((?:Dynamax|Gigantamax)\)/gi,'').trim();}
+function maxPresentationIcon(type){return type==='gmax'?'assets/gigantamax-symbol.png':type==='dynamax'?'assets/dynamax-symbol.png':'';}
+function maxPresentationMarkup(entry){const type=maxPresentationType(entry);return type?`<span class="sprite-max-symbol"><img src="${maxPresentationIcon(type)}" alt="${type==='gmax'?'Gigantamax':'Dynamax'}" title="${type==='gmax'?'Gigantamax':'Dynamax'}"></span>`:'';}
 const MAX_CLOUD_URL='assets/max-cloud.svg';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
@@ -957,6 +968,7 @@ const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":
 // Additional form identities. Exact form art is resolved independently; when
 // it is unavailable, consumers must keep the identity and show missing art.
 const EXTRA_FORM_ENTRIES=[
+  {no:774,name:"Minior (Green Core)",displayName:"Minior (Green Core)",users:{}},
   // Spinda — 8 standard spot patterns in Pokémon GO + heart form
   {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"",users:{}},
   {no:327,name:"Spinda (Form 2)",displayName:"Spinda (Form 2)",spriteUrl:"",users:{}},
@@ -1016,7 +1028,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no,gender||entry?.gender||'',entry?.shiny===true);
   if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
   const identity=spriteSemanticIdentity(context.canonicalName||resolvedName,gender,entry?.no);
@@ -1035,7 +1047,7 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
   const identity=spriteSemanticIdentity(lookupName,gender,no);
@@ -1094,8 +1106,10 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no);
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no,gender,shiny);
   if(equivalent){push(equivalent);return urls;}
+  // Shiny requests must never enter the normal-color fallback chain.
+  if(shiny)return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,true));
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
@@ -1129,7 +1143,7 @@ function reviewedEquivalentSpriteOverride(no,name,dn,url){
 }
 function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
-  if(reviewedEquivalentSpriteOverride(no,name,dn,url))return url;
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url)&&(!spriteSlugsDomain.reviewedDynamaxBase?.(name||dn,no)||chain.includes(url)))return url;
   const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
   const exactRequired=identity?.exactRequired??(
     normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
@@ -7062,7 +7076,8 @@ async function renderProductShareImage(entries,owner){
       const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
       const image=await loadCanvasImageWithFallback(exportSpriteFallbackUrls({...entry,gender,spriteUrl:entrySpriteUrl(entry,entry.name,gender)})).catch(()=>null);
       const name=entry.dn||entry.name||i18nCore.t('contextSearch.unknown');
-      return{entry,image,nameLines:wrap(name),detailLines:wrap(productShareImageDetails(entry,section))};
+      const maxIcon=maxPresentationType(entry)?await loadCanvasImage(maxPresentationIcon(maxPresentationType(entry))):null;
+      return{entry,image,maxIcon,nameLines:wrap(maxPresentationName(name)),detailLines:wrap(productShareImageDetails(entry,section))};
     }));
     const heights=Array.from({length:Math.ceil(items.length/rowColumns)},(_,index)=>96+14*Math.max(...items.slice(index*rowColumns,(index+1)*rowColumns).map(item=>item.nameLines.length+item.detailLines.length)));
     return{section,items,heights,columns:rowColumns};
@@ -7091,13 +7106,13 @@ async function renderProductShareImage(entries,owner){
     drawFittedText(ctx,i18nCore.t('myList.priorityPokemonCount',{count:section.entries.length}),left+sectionWidth-12,y+26,110,{max:12,min:10,weight:500,color:'#a9b1b7'});
     ctx.textAlign='left';
     let rowTop=y+44;
-    items.forEach(({entry,image,nameLines,detailLines},index)=>{
+    items.forEach(({entry,image,maxIcon,nameLines,detailLines},index)=>{
       if(index&&index%rowColumns===0)rowTop+=heights[index/rowColumns-1];
       const x=left+(index%rowColumns)*cellWidth;
       const artX=x+(cellWidth-76)/2;
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
-      if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
+      if(maxIcon)drawImageContain(ctx,maxIcon,x+cellWidth-22,rowTop+2,18,18);
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
       nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
       ctx.fillStyle='#b8c2c9';
@@ -8019,6 +8034,10 @@ function exportSpriteFallbackUrls(e){
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
   if(reviewed.knownVariant)return Array.from(reviewed.urls);
+  if(e.shiny===true)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
+  // The reviewed Max chain already carries exact normal-form/Shiny/gender
+  // semantics. Do not prepend the older unqualified normal-art preference.
+  if(spriteSlugsDomain.reviewedDynamaxBase(e.spriteName||e.name,e.no))return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
   const compatibilityKeys=[...context.lookupKeys];
   for(const value of [e.spriteName,e.name,e.dn]){
@@ -12942,7 +12961,7 @@ async function renderSpecialBoardImage(board,username){
     return 1;
   };
   const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
-    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
+
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
@@ -13120,7 +13139,7 @@ function renderShareView(username,type,intent){
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
-          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
+          e.shiny?`<span class="sr-only">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
           ,''
@@ -13130,13 +13149,13 @@ function renderShareView(username,type,intent){
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
         // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
-          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${maxPresentationMarkup(e)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
         return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
 
           ${spriteHtml}
           <div class="share-pcard-info">
-            <span class="share-pcard-name">${escHtml(e.dn)}</span>
+            <span class="share-pcard-name">${escHtml(maxPresentationName(e.dn))}</span>
             ${metaHtml}${e.note?`<p class="share-pcard-mod">${escHtml(e.note)}</p>`:''}
           </div>
         </div>`;

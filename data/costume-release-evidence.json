@@ -343,6 +343,24 @@
         "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
         "result": "announced"
       }
+    },
+    {
+      "id": "pokemon:25:costume:orange-hanbok-2026",
+      "catalogName": "Pikachu (Orange Hanbok)",
+      "dex": 25,
+      "releaseDate": "2026-09-18",
+      "dateMeaning": "Official debut September 18, 2026 at 10:00 Korea time; nationwide encounter September 24–26 is not first debut.",
+      "evidenceUrl": "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-26T21:46:57Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026",
+        "retrievedAt": "2026-10-26T21:46:57Z",
+        "sha256": "00cda5247a7b1d2e107350969dcf332bef7350a14953452a1813a5c0d69c2670",
+        "result": "released"
+      },
+      "qualification": "Official announcement explicitly confirms Shiny. Female-only eligibility additionally relies on the documented collector mapping and the inspected female-tail source art; not an official gender statement."
     }
   ],
   "followUpEvidence": [
@@ -466,5 +484,14 @@
         "result": "returning-existing-identity"
       }
     }
-  }
+  },
+  "additionalReviews": [
+    {
+      "reviewedAt": "2026-10-26T21:46:57Z",
+      "ids": [
+        "pokemon:25:costume:orange-hanbok-2026"
+      ],
+      "scope": "Orange Hanbok announcement only; does not refresh older announcement/source reviews."
+    }
+  ]
 }

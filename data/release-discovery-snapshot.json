@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T00:00:00Z",
+  "qualification": "Observed index baseline, not a claim that every linked article was reviewed. Known scoped release expectations are maintained separately.",
+  "news": [
+    {
+      "url": "https://pokemongo.com/news",
+      "links": [
+        "https://pokemongo.com/news/apac-mall-exploration-2026",
+        "https://pokemongo.com/news/chandelure-super-mega-raid-day-2026",
+        "https://pokemongo.com/news/choose-your-path-twilight-trails-2026",
+        "https://pokemongo.com/news/city-safari-boston-rescheduled",
+        "https://pokemongo.com/news/city-safari-boston-update",
+        "https://pokemongo.com/news/city-safari-brisbane-know-before-you-go",
+        "https://pokemongo.com/news/communityday-november-2026-pawniard",
+        "https://pokemongo.com/news/communityday-october-2026-zorua",
+        "https://pokemongo.com/news/dynamax-uxie-mesprit-azelf-max-battle-day-2026",
+        "https://pokemongo.com/news/european-space-agency-event",
+        "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+        "https://pokemongo.com/news/fall-marathon-buddy-trek-2026",
+        "https://pokemongo.com/news/festival-of-lights-2026",
+        "https://pokemongo.com/news/go-pass-november-2026",
+        "https://pokemongo.com/news/go-pass-october-2026",
+        "https://pokemongo.com/news/go-wild-area-stamp-rally-details-2026",
+        "https://pokemongo.com/news/gowa-global-europe-2026",
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://pokemongo.com/news/halloween-part-2-2026",
+        "https://pokemongo.com/news/into-the-wild-2026",
+        "https://pokemongo.com/news/minior-meteor-showers-2026",
+        "https://pokemongo.com/news/pgo-gameplay-update-oct-2026",
+        "https://pokemongo.com/news/pokemon-night-out-irl-details2026",
+        "https://pokemongo.com/news/pokemon-night-out-twitch-drops2026",
+        "https://pokemongo.com/news/pokemon-x-adidas-2026",
+        "https://pokemongo.com/news/pokemongo-iitdelhi-2026",
+        "https://pokemongo.com/news/sandile-hatch-day-2026",
+        "https://pokemongo.com/news/save-the-date-go-tour-2027",
+        "https://pokemongo.com/news/tcg-30th-celebration-event",
+        "https://pokemongo.com/news/world-space-week-2026"
+      ]
+    },
+    {
+      "url": "https://pokemongo.com/ko/news",
+      "links": [
+        "https://pokemongo.com/ko/news/chandelure-super-mega-raid-day-2026",
+        "https://pokemongo.com/ko/news/choose-your-path-twilight-trails-2026",
+        "https://pokemongo.com/ko/news/communityday-november-2026-pawniard",
+        "https://pokemongo.com/ko/news/communityday-october-2026-zorua",
+        "https://pokemongo.com/ko/news/communitydayclassic-gible-september-2026",
+        "https://pokemongo.com/ko/news/dynamax-uxie-mesprit-azelf-max-battle-day-2026",
+        "https://pokemongo.com/ko/news/fall-marathon-buddy-trek-2026",
+        "https://pokemongo.com/ko/news/fc-seoul-2026",
+        "https://pokemongo.com/ko/news/gigantamax-cinderace-max-battle-day-2026",
+        "https://pokemongo.com/ko/news/go-battle-league-twilight-trails",
+        "https://pokemongo.com/ko/news/go-pass-november-2026",
+        "https://pokemongo.com/ko/news/go-pass-october-2026",
+        "https://pokemongo.com/ko/news/gowildarea-sendai-ticket-update",
+        "https://pokemongo.com/ko/news/halloween-part-1-2026",
+        "https://pokemongo.com/ko/news/halloween-part-2-2026",
+        "https://pokemongo.com/ko/news/hangul-nal-2026",
+        "https://pokemongo.com/ko/news/harvest-festival-2026",
+        "https://pokemongo.com/ko/news/harvest-festival-tgr-2026",
+        "https://pokemongo.com/ko/news/into-the-wild-2026",
+        "https://pokemongo.com/ko/news/mega-finale-2026-community",
+        "https://pokemongo.com/ko/news/mega-squads-2026",
+        "https://pokemongo.com/ko/news/minior-meteor-showers-2026",
+        "https://pokemongo.com/ko/news/pgo-gameplay-update-oct-2026",
+        "https://pokemongo.com/ko/news/pokemon-horizons-celebration-event-2026",
+        "https://pokemongo.com/ko/news/pokemon-x-adidas-2026",
+        "https://pokemongo.com/ko/news/sandile-hatch-day-2026",
+        "https://pokemongo.com/ko/news/save-the-date-go-tour-2027",
+        "https://pokemongo.com/ko/news/staraptor-super-mega-raid-day-2026",
+        "https://pokemongo.com/ko/news/weekly-branching-tr-korea-2026",
+        "https://pokemongo.com/ko/news/world-space-week-2026"
+      ]
+    }
+  ],
+  "season": {
+    "url": "https://pokemongo.com/seasons",
+    "entries": [
+      {
+        "type": "dynamax",
+        "name": "Rhyhorn"
+      },
+      {
+        "type": "dynamax",
+        "name": "Sneasel"
+      },
+      {
+        "type": "dynamax",
+        "name": "Sizzlipede"
+      },
+      {
+        "type": "dynamax",
+        "name": "Uxie"
+      },
+      {
+        "type": "dynamax",
+        "name": "Mesprit"
+      },
+      {
+        "type": "dynamax",
+        "name": "Azelf"
+      }
+    ]
+  }
+}

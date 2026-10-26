@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-26",
+  "scope": "Reported July 2026 Deino family plus bounded September–October 26, 2026 Max/costume release audit. Future announcements are not selectable additions.",
+  "records": [
+    {
+      "id": "dynamax:633",
+      "collection": "dynamax",
+      "no": 633,
+      "name": "Deino",
+      "releasedOn": "2026-07-13",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-07-13/"
+      ]
+    },
+    {
+      "id": "dynamax:634",
+      "collection": "dynamax",
+      "no": 634,
+      "name": "Zweilous",
+      "releasedOn": "2026-07-13",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-07-13/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:635",
+      "collection": "dynamax",
+      "no": 635,
+      "name": "Hydreigon",
+      "releasedOn": "2026-07-13",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-07-13/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:111",
+      "collection": "dynamax",
+      "no": 111,
+      "name": "Rhyhorn",
+      "releasedOn": "2026-09-14",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-09-14/"
+      ]
+    },
+    {
+      "id": "dynamax:112",
+      "collection": "dynamax",
+      "no": 112,
+      "name": "Rhydon",
+      "releasedOn": "2026-09-14",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-09-14/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:464",
+      "collection": "dynamax",
+      "no": 464,
+      "name": "Rhyperior",
+      "releasedOn": "2026-09-14",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-09-14/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:850",
+      "collection": "dynamax",
+      "no": 850,
+      "name": "Sizzlipede",
+      "releasedOn": "2026-10-05",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-10-05/"
+      ]
+    },
+    {
+      "id": "dynamax:851",
+      "collection": "dynamax",
+      "no": 851,
+      "name": "Centiskorch",
+      "releasedOn": "2026-10-05",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-10-05/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:215",
+      "collection": "dynamax",
+      "no": 215,
+      "name": "Sneasel",
+      "releasedOn": "2026-10-19",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-10-19/"
+      ]
+    },
+    {
+      "id": "dynamax:461",
+      "collection": "dynamax",
+      "no": 461,
+      "name": "Weavile",
+      "releasedOn": "2026-10-19",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://leekduck.com/events/max-mondays-2026-10-19/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim this evolution debuted in Max Battles."
+    },
+    {
+      "id": "dynamax:480",
+      "collection": "dynamax",
+      "no": 480,
+      "name": "Uxie",
+      "releasedOn": "2026-10-24",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://pokemongo.com/news/dynamax-uxie-mesprit-azelf-max-battle-day-2026?hl=en"
+      ]
+    },
+    {
+      "id": "dynamax:481",
+      "collection": "dynamax",
+      "no": 481,
+      "name": "Mesprit",
+      "releasedOn": "2026-10-24",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://pokemongo.com/news/dynamax-uxie-mesprit-azelf-max-battle-day-2026?hl=en"
+      ]
+    },
+    {
+      "id": "dynamax:482",
+      "collection": "dynamax",
+      "no": 482,
+      "name": "Azelf",
+      "releasedOn": "2026-10-24",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/seasons/twilight-trails",
+        "https://pokemongo.com/news/dynamax-uxie-mesprit-azelf-max-battle-day-2026?hl=en"
+      ]
+    },
+    {
+      "id": "pokemon:25:costume:orange-hanbok-2026",
+      "collection": "costumes",
+      "no": 25,
+      "name": "Pikachu (Orange Hanbok)",
+      "releasedOn": "2026-09-18",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
+      ],
+      "requiredArtwork": {
+        "genders": [
+          "f"
+        ],
+        "shiny": true
+      }
+    }
+  ]
+}
