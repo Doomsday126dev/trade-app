@@ -42,6 +42,15 @@ function validateCatalog(catalog,root){
     }
     if(!entry.sourceFile||!entry.sourceLabel)fail(`Exact sprite entry is missing reviewed source evidence: ${entry.names[0]}`);
     if(!entry.assets?.default||!entry.sha256?.default)fail(`Exact sprite entry is missing its default local asset: ${entry.names[0]}`);
+    if(entry.shinyArtworkReview){
+      const forms={'Ash':['ash','003'],'Santa':['santa','001'],'Witch':['halloween','004'],'Summer':['summer','005'],'Flower Crown':['flowers','007'],'Fragment':['fragment','006'],'Straw':['strawhat','009'],'Explorer':['explorer','022'],'Captain':['captain','063'],'Libre':['libre',null],'Rock Star':['rockstar',null],'Pop Star':['popstar',null]};
+      const short=entry.names[0].match(/^Pikachu \((.*)\)$/)?.[1],form=forms[short],review=entry.shinyArtworkReview;
+      if(!form||review.name!==entry.names[0])fail('Unreviewed classic Shiny identity');
+      const [stem,id]=form,source='https://www.serebii.net/pokemongo/pokemon/shiny/025-'+stem+'.png',female=id?'https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-'+id+'%2BF%2BS.png':source;
+      if(review.sourceUrls.shiny!==source||review.sourceUrls.femaleShiny!==female)fail('Unreviewed classic Shiny source');
+      for(const key of ['shiny','femaleShiny'])if(review.assets[key]!==entry.assets[key]||review.sha256[key]!==entry.sha256[key])fail('Classic Shiny mapping drift');
+      if(root){const proof=JSON.parse(fs.readFileSync(path.join(root,'data/classic-pikachu-shiny-assets.json'))).records.find(r=>r.name===entry.names[0]);if(JSON.stringify(proof)!==JSON.stringify(review))fail('Classic Shiny review evidence changed');}
+    }
     if(entry.sourceProvider==='pokemod-reviewed'){
       const base='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
       const forms={'Pikachu (Fossil)':'FOSSIL_2026','Pikachu (Marathon)':'VISOR_2026','Pikachu (Mystic)':'GOFEST_2026_CAP_BLUE','Pikachu (Valor)':'GOFEST_2026_CAP_RED','Pikachu (Instinct)':'GOFEST_2026_CAP_YELLOW'};
