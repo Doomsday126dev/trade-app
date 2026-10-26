@@ -529,7 +529,7 @@
 "import.ambiguous":"Multiple variants match. They start unselected: choose the exact forms or costumes you want. Select all includes every shown variant.",
 "share.liveList":"Share live list",
 "share.liveCaption":"A public page anyone can open",
-"share.gameSearch":"Find in Pokémon GO",
+
 "share.searchCaption":"Search your own game inventory",
 "share.imageSnapshot":"Share image",
 "share.textSnapshot":"Copy text",
@@ -615,5 +615,13 @@
 "admin.requestDenialUnconfirmed":"Could not confirm denial. Check the latest request status before retrying."
 ,
 "events.groupVenueUnknown":"Venue time unconfirmed"
+    ,"share.format":"Format"
+    ,"share.gameSearch":"Pokémon GO search string"
+    ,"costume.genderOnly":"{gender} only"
+    ,"costume.savedConflict":"saved value needs review"
+    ,"costume.genderConflict":"This saved gender is not a released form of this costume. Your entry is unchanged; choose a valid gender only if you want to correct it."
+    ,"wantEditor.add":"Add want"
+    ,"wantEditor.pokemon":"Pokémon"
+    ,"costume.genderUnsupported":"{name}: the saved gender does not match a released form of this costume."
   });
 })(window);

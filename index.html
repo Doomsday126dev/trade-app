@@ -662,12 +662,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ov" id="product-share-modal" role="dialog" aria-modal="true" aria-labelledby="product-share-title">
   <div class="modal product-share-modal">
     <h3 id="product-share-title" data-i18n="product.share">Share</h3>
-    <div class="share-goals" role="group" data-i18n-aria-label="product.share" aria-label="Share">
-      <button type="button" data-share-mode="link" aria-pressed="true" onclick="setProductShareMode('link')"><strong data-i18n="share.liveList">Share live list</strong><span data-i18n="share.liveCaption">A public page anyone can open</span></button>
-      <button type="button" data-share-mode="search" aria-pressed="false" onclick="setProductShareMode('search')"><strong data-i18n="share.gameSearch">Find in Pokémon GO</strong><span data-i18n="share.searchCaption">Search your own game inventory</span></button>
-      <button type="button" data-share-mode="image" aria-pressed="false" onclick="setProductShareMode('image')"><strong data-i18n="share.imageSnapshot">Share image</strong><span data-i18n="share.snapshotCaption">A snapshot of this selection</span></button>
-      <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')"><strong data-i18n="share.textSnapshot">Copy text</strong><span data-i18n="share.snapshotCaption">A snapshot of this selection</span></button>
-    </div>
+    <label for="product-share-format" data-i18n="share.format">Format</label>
+    <select id="product-share-format" class="field-control" onchange="setProductShareMode(this.value)">
+      <option value="link" data-i18n="share.liveList">Share live list</option>
+      <option value="search" data-i18n="share.gameSearch">Pokémon GO search string</option>
+      <option value="image" data-i18n="share.imageSnapshot">Share image</option>
+      <option value="text" data-i18n="share.textSnapshot">Copy text</option>
+    </select>
     <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
     <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
       <option value="full" data-i18n="phase2.full">Full list</option>
@@ -701,13 +702,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ov" id="combined-editor-modal" role="dialog" aria-modal="true" aria-labelledby="combined-editor-title">
   <form class="modal combined-editor" onsubmit="event.preventDefault();saveCombinedEditor()">
     <h3 id="combined-editor-title" data-i18n="phase2.edit">Trade intent</h3>
-    <label><span data-i18n="myList.searchPlaceholder">Pokémon</span><input class="field-control" id="combined-name" list="combined-catalog" required autocomplete="off"></label>
+    <label><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" oninput="refreshCombinedGenderOptions()" list="combined-catalog" required autocomplete="off"></label>
     <datalist id="combined-catalog"></datalist>
     <label><span data-i18n="myList.priority">Priority</span><select class="field-control" id="combined-priority"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select></label>
-    <div class="wants-special-fields"><span class="add-pri-label" data-i18n="workflow.specialRequirement">Special requirement</span><div class="combined-checks"><label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div></div>
+    <fieldset class="wants-special-fields"><legend data-i18n="workflow.specialRequirement">Special requirement</legend><div class="combined-checks"><label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div></fieldset>
     <details><summary data-i18n="myList.flagsAndDetails">Flags &amp; details</summary>
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160"></label>
-      <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender"><option value="">—</option><option value="f">♀</option><option value="m">♂</option></select></label>
+      <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender" onchange="refreshCombinedGenderOptions()" aria-describedby="combined-gender-hint"><option value="">—</option><option value="f">♀</option><option value="m">♂</option></select></label><p id="combined-gender-hint" class="share-privacy-note" role="status" hidden></p>
 
       <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
     </details>

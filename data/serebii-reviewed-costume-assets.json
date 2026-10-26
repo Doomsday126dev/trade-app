@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "decision": "Targeted exact costume artwork selected at user request for fan use. No blanket license or commercial-rights claim. Two original PNGs only, not a catalogue scrape.",
+  "records": [
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Cosmog Spacesuit)",
+        "Cosmog-themed Spacesuit Pikachu"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-xp26.png",
+      "sourceLabel": "Cosmog Spacesuit",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-xp26.png",
+      "assets": {
+        "default": "assets/sprites/go/serebii-pikachu-xp26-female.png",
+        "female": "assets/sprites/go/serebii-pikachu-xp26-female.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-xp26-female-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-xp26-female-shiny.png"
+      },
+      "sha256": {
+        "default": "8d6de4467a814a25e3b2569bca5302cce4e256b7e4e9f3d72a4313b6eed57be3",
+        "female": "8d6de4467a814a25e3b2569bca5302cce4e256b7e4e9f3d72a4313b6eed57be3",
+        "shiny": "ff80c68cd240954e9d82e6b56339fc1c781201e4f170fe37f8e5c2fce4fc7448",
+        "femaleShiny": "ff80c68cd240954e9d82e6b56339fc1c781201e4f170fe37f8e5c2fce4fc7448"
+      },
+      "sourceFiles": {
+        "default": "025-xp26.png",
+        "shiny": "shiny/025-xp26.png"
+      },
+      "reviewIdentityId": "pokemon:25:costume:PIKACHU_PXP_2026",
+      "availableGenders": [
+        "f"
+      ],
+      "reviewedAt": "2026-10-26",
+      "pixelReview": "Both 120px original normal/Shiny images independently inspected: female heart-notched tail. Supersedes straight-tail DittoBase art; do not relabel that artwork female."
+    }
+  ]
+}

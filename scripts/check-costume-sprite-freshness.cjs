@@ -97,6 +97,11 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
   for(const record of catalog.entries){
     if(record.status==='unavailable'&&!pending.entries.some(entry=>findEntry(entry.displayIdentity,entry.species.dex)===record))problems.push({kind:'untracked-unavailable',identity:record.names[0]});
     if(record.status!=='exact')continue;
+    if(record.sourceProvider==='serebii-reviewed'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/serebii-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
+      if(!reviewed||['sourcePage','sourceUrl','sourceFiles','assets','sha256','availableGenders'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
     if(record.sourceProvider==='dittobase-reviewed'){
       const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/dittobase-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
       if(!reviewed||['sourcePage','sourceUrl','sourceFiles','assets','sha256','femaleArtworkUnavailable'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});

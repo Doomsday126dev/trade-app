@@ -2538,3 +2538,13 @@ html[data-theme="light"]{--action-bg:#6258df;--priority-medium-text:#885000}
 .admin-member-status,.admin-member-meta{min-width:0;overflow-wrap:anywhere}.admin-member-row>.admin-role-badge{justify-self:end;max-width:100%;white-space:normal}
 @media(min-width:601px) and (max-width:900px){.admin-member-row{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 100px}.admin-member-identity{grid-row:1 / span 2}.admin-member-status{grid-column:2;grid-row:1}.admin-member-meta{grid-column:2;grid-row:2}.admin-member-row>.admin-role-badge{grid-column:3;grid-row:1 / span 2}}
 @media(max-width:600px){.admin-member-row{grid-template-columns:minmax(0,1fr) auto}.admin-member-identity{grid-column:1;grid-row:1}.admin-member-status{grid-column:1 / -1;grid-row:2}.admin-member-meta{grid-column:1 / -1;grid-row:3}.admin-member-row>.admin-role-badge{grid-column:2;grid-row:1}}
+
+/* Targeted want-editor requirements: no reserved blank label row. */
+.combined-editor .wants-special-fields{border:1px solid var(--border);border-radius:8px;padding:4px 10px 8px;margin:12px 0}
+.combined-editor .wants-special-fields legend{padding:0 4px;font-size:12px;color:var(--muted);font-weight:600}
+.combined-editor .wants-special-fields .combined-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+.combined-editor .wants-special-fields label{display:flex;align-items:center;gap:8px;min-height:44px;margin:0;font-size:14px}
+.combined-editor .wants-special-fields input{width:18px;height:18px;flex:none}
+#combined-error:empty{display:none}
+#combined-gender-hint{margin:4px 0;font-size:12px}
+#product-share-format{margin-bottom:12px;width:100%}

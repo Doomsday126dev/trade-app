@@ -183,7 +183,7 @@
 "import.ambiguous":"複数の姿が一致しました。未選択で表示します。欲しい姿や衣装を選んでください。「すべて選択」は表示中の全候補を選びます。",
 "share.liveList":"公開リストを共有",
 "share.liveCaption":"誰でも開ける公開ページ",
-"share.gameSearch":"Pokémon GOで探す",
+
 "share.searchCaption":"自分のゲーム内ポケモンを検索",
 "share.imageSnapshot":"画像を共有",
 "share.textSnapshot":"テキストをコピー",
@@ -269,5 +269,13 @@
 "admin.requestDenialUnconfirmed":"申請の拒否を確認できません。最新の状態を確認してから再試行してください。"
 ,
 "events.groupVenueUnknown":"会場時刻は未確認"
+    ,"share.format":"形式"
+    ,"share.gameSearch":"Pokémon GOの検索文字列"
+    ,"costume.genderOnly":"{gender}のみ"
+    ,"costume.savedConflict":"保存済みの値を確認してください"
+    ,"costume.genderConflict":"この衣装では保存された性別が登場していません。登録内容は変更していません。修正する場合のみ、有効な性別を選んでください。"
+    ,"wantEditor.add":"欲しいポケモンを追加"
+    ,"wantEditor.pokemon":"ポケモン"
+    ,"costume.genderUnsupported":"{name}：保存された性別は、この衣装で登場したものと一致しません。"
   });
 })(window);

@@ -23,7 +23,7 @@ test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(assets.length,509);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
-  assert.doesNotMatch(runtime,/img\.pokemondb\.net|pokeminers|serebii|cdn08/i);
+  assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
 });
 
 test('exact costumes resolve to distinct self-hosted art and gender variants',()=>{
@@ -175,8 +175,8 @@ test('Pokemod source is pinned and every exact Shiny/gender variant is mandatory
  assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',shiny:true}).urls),[]);
 });
 
-test('six Dittobase identities keep distinct exact pixels and explicit female gaps',()=>{
- const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,6);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(r.urls),row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
- assert.equal(new Set(urls).size,18);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,3);
+test('five remaining Dittobase identities retain exact pixels and gender boundaries',()=>{
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,5);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(r.urls),row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
+ assert.equal(new Set(urls).size,16);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,0);
  for(const mutate of [r=>r.sourceUrl='https://example.com/wrong.png',r=>r.sourceFiles.default='25-pikachu.png',r=>r.assets.default=rows[1].assets.default,r=>r.femaleArtworkUnavailable=!r.femaleArtworkUnavailable]){const changed=structuredClone(catalog);mutate(changed.entries.find(r=>r.sourceProvider==='dittobase-reviewed'));assert.throws(()=>validateCatalog(changed,root),/Dittobase|digest/);}
 });

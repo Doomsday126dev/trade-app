@@ -32,6 +32,10 @@ function validateCatalog(catalog,root){
       if(prior&&prior!==entry)fail(`Duplicate costume sprite alias: ${name}`);
       aliases.set(key,entry);
     }
+    if(entry.availableGenders){
+      if(!Array.isArray(entry.availableGenders)||!entry.availableGenders.length||entry.availableGenders.some(g=>!['m','f'].includes(g))||new Set(entry.availableGenders).size!==entry.availableGenders.length)fail('Invalid reviewed costume genders');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-costume-genders.json'))).records.find(r=>r.name===entry.names[0]);if(!reviewed||JSON.stringify(reviewed.availableGenders)!==JSON.stringify(entry.availableGenders)||!reviewed.evidence?.length)fail('Costume gender review evidence changed');}
+    }
     if(entry.status==='unavailable'){
       if(entry.assets||entry.sourceFile||entry.sha256)fail(`Unavailable sprite entry contains an asset: ${entry.names[0]}`);
       continue;
@@ -54,6 +58,10 @@ function validateCatalog(catalog,root){
         if(entry.assets[key]&&entry.sourceFiles?.[key]!=='25-'+stem+suffix+'.png')fail('Unreviewed Dittobase variant');
       }
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/dittobase-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','femaleArtworkUnavailable'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Dittobase review evidence changed');}
+    }
+    if(entry.sourceProvider==='serebii-reviewed'){
+      if(entry.names[0]!=='Pikachu (Cosmog Spacesuit)'||entry.sourceUrl!=='https://www.serebii.net/pokemongo/pokemon/025-xp26.png'||entry.sourceFiles?.shiny!=='shiny/025-xp26.png')fail('Unreviewed Serebii identity/source');
+      if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/serebii-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','availableGenders'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Serebii review evidence changed');}
     }
     const variants=['default','female','shiny','femaleShiny'].map(key=>[key,entry.assets[key],entry.sha256[key]]);
     for(const[variant,relative,digest]of variants){
@@ -78,6 +86,7 @@ function runtimeSource(catalog){
     no:entry.no,
     ...(entry.identityStatus?{identityStatus:entry.identityStatus}:{}),
     names:entry.names,
+    ...(entry.availableGenders?{availableGenders:entry.availableGenders}:{}),
     status:entry.status,
     defaultUrl:entry.assets?.default||'',
     femaleUrl:entry.assets?.female||'',
@@ -86,7 +95,7 @@ function runtimeSource(catalog){
     sourceLabel:entry.sourceLabel||'',
     unavailableReason:entry.unavailableReason||''
   }));
-  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows)};\n  function normalize(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map();\n  for(const row of rows)for(const name of row.names)byName.set(normalize(name),Object.freeze(row));\n  function resolve(input={}){\n    const names=Array.isArray(input.names)?input.names:[input.name];\n    for(const name of names){const row=byName.get(normalize(name));if(row)return row;}\n    return null;\n  }\n  function resolution(input={}){\n    const row=resolve(input);\n    if(!row)return Object.freeze({knownVariant:false,status:'unknown',urls:Object.freeze([]),record:null});\n    if(row.status!=='exact')return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    const urls=[];\n    if(String(input.gender||'').toLowerCase()==='f'&&row.femaleArtworkUnavailable)return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    if(input.shiny===true){const url=String(input.gender||'').toLowerCase()==='f'?row.femaleShinyUrl:row.shinyUrl;return Object.freeze({knownVariant:true,status:url?'exact':'unavailable',urls:Object.freeze(url?[url]:[]),record:row});}\n    if(String(input.gender||'').toLowerCase()==='f'&&row.femaleUrl)urls.push(row.femaleUrl);\n    if(!urls.length&&row.defaultUrl)urls.push(row.defaultUrl);\n    return Object.freeze({knownVariant:true,status:'exact',urls:Object.freeze(urls),record:row});\n  }\n  root.costumeSpriteCatalog=Object.freeze({schemaVersion:${SCHEMA_VERSION},sourceId:${JSON.stringify(SOURCE_ID)},normalize,resolve,resolution,records:Object.freeze(rows)});\n})(window);\n`;
+  return`(function(global){\n  'use strict';\n  const root=global.PogoDomain=global.PogoDomain||{};\n  const rows=${JSON.stringify(rows)};\n  function normalize(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map();\n  for(const row of rows)for(const name of row.names)byName.set(normalize(name),Object.freeze(row));\n  function resolve(input={}){\n    const names=Array.isArray(input.names)?input.names:[input.name];\n    for(const name of names){const row=byName.get(normalize(name));if(row)return row;}\n    return null;\n  }\n  function resolution(input={}){\n    const row=resolve(input);\n    if(!row)return Object.freeze({knownVariant:false,status:'unknown',urls:Object.freeze([]),record:null});\n    if(row.status!=='exact')return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    const requested=String(input.gender||'').toLowerCase();\n    if(requested&&row.availableGenders&&!row.availableGenders.includes(requested))return Object.freeze({knownVariant:true,status:'unavailable',reason:'invalid-gender',urls:Object.freeze([]),record:row});\n    const gender=requested||((row.availableGenders?.length===1)?row.availableGenders[0]:'');\n    const urls=[];\n    if(gender==='f'&&row.femaleArtworkUnavailable)return Object.freeze({knownVariant:true,status:'unavailable',urls:Object.freeze([]),record:row});\n    if(input.shiny===true){const url=gender==='f'?row.femaleShinyUrl:row.shinyUrl;return Object.freeze({knownVariant:true,status:url?'exact':'unavailable',urls:Object.freeze(url?[url]:[]),record:row});}\n    if(gender==='f'&&row.femaleUrl)urls.push(row.femaleUrl);\n    if(!urls.length&&row.defaultUrl)urls.push(row.defaultUrl);\n    return Object.freeze({knownVariant:true,status:'exact',urls:Object.freeze(urls),record:row});\n  }\n  root.costumeSpriteCatalog=Object.freeze({schemaVersion:${SCHEMA_VERSION},sourceId:${JSON.stringify(SOURCE_ID)},normalize,resolve,resolution,records:Object.freeze(rows)});\n})(window);\n`;
 }
 
 module.exports={SCHEMA_VERSION,SOURCE_ID,normalizeLookupKey,stableJson,sha256File,validateCatalog,runtimeSource};

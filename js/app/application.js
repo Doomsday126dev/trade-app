@@ -611,8 +611,30 @@ function selectCombinedGroup(index,selected){
 }
 function prepareWantsCatalog(){
   const options=document.getElementById('combined-catalog');
-  if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}" label="${escAttr([e.dn,...(e.searchAliases||[]),...(costumeSpriteCatalogDomain.resolve({name:e.name})?.no===25?['costume Pikachu']:[])].join(' · '))}">${escHtml(e.dn)}</option>`).join('');
+  if(options.childElementCount)return;
+  // This name-only picker cannot distinguish two category IDs with the same
+  // value. Deduplicate its presentation, without merging catalog or list data.
+  const items=new Map();
+  for(const entry of _specialAllItems()){
+    const item=items.get(entry.name)||{...entry,labels:new Set()};
+    for(const label of [entry.dn,...(entry.searchAliases||[]),...(costumeSpriteCatalogDomain.resolve({name:entry.name})?.no===25?['costume Pikachu']:[])])if(label&&normalizeAcText(label)!==normalizeAcText(entry.name))item.labels.add(label);
+    items.set(entry.name,item);
+  }
+  options.innerHTML=[...items.values()].map(e=>`<option value="${escAttr(e.name)}" label="${escAttr([...e.labels].join(' · '))}">${escHtml(e.name)}</option>`).join('');
 }
+function refreshCombinedGenderOptions(savedValue){
+  const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
+  const allowed=costumeSpriteCatalogDomain.resolve({name})?.availableGenders||['f','m'];
+  const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
+  const preserve=conflict&&combinedEditor?.entries?.length>0;
+  const label=g=>g==='f'?'♀':'♂';
+  select.innerHTML=`<option value="">${escHtml(allowed.length===1?i18nCore.t('costume.genderOnly',{gender:label(allowed[0])}):'—')}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
+  select.value=preserve||allowed.includes(value)?value:'';
+  const hint=document.getElementById('combined-gender-hint');
+  hint.hidden=!preserve;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):'';
+  if(preserve)select.closest('details').open=true;
+}
+
 function openWantsAddEditor(){
   openCombinedEditor();
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
@@ -640,9 +662,11 @@ function openCombinedEditor(index){
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
+  const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'phase2.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
   input.value=entry.name||'';input.readOnly=!!entries?.length;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
+  refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
   document.getElementById('combined-priority').value=[...priorities][0]||'';
@@ -670,6 +694,9 @@ async function saveCombinedEditor(remove=false){
   if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
   const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
+  const allowedGenders=costumeSpriteCatalogDomain.resolve({name})?.availableGenders;
+  const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
+  if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
   const priority=document.getElementById('combined-priority').value;
   const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
@@ -1232,7 +1259,8 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
   if(!urls.length){
     const knownUnavailable=context.reviewed?.status==='unavailable';
-    const label=i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
+    const resolution=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny:opts.shiny===true});
+    const label=resolution.reason==='invalid-gender'?i18nCore.t('costume.genderUnsupported',{name:dn||name||'Pokémon'}):i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
     return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}" title="${escAttr(label)}">?</span>`;
   }
   const url=urls[0];
@@ -6767,6 +6795,7 @@ function refreshProductShare(){
 function setProductShareMode(mode){
   if(!['link','image','text','search'].includes(mode))mode='link';
   productShareMode=mode;
+  document.getElementById('product-share-format').value=mode;
   const partial=productShareScope!=='full';
   document.getElementById('share-link-action').disabled=partial;
   document.querySelectorAll('[data-full-list-export]').forEach(button=>button.disabled=partial);
