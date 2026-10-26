@@ -20,7 +20,7 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // against its reviewed .123 contract. Pages always supplies the target SHA;
 // this local-only selection must not downgrade an explicitly identified target.
 const localReleaseSource=runtimeSourceSha?'':readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
-const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146))';/.test(localReleaseSource)
+const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147))';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8']:null;
 const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23\.123|2026-10-19\.12[5-7]|2026-10-20\.128|2026-10-22\.129)';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;

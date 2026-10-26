@@ -1,0 +1,1025 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+  "scope": "Only 20 supplied ready costumes; 22 original Shiny imports, all existing normal assets retained. Local preparation only.",
+  "sourceManifest": {
+    "libraryFileId": "libfile_21478516a7a48191a0b3a58d6c7aeb62",
+    "version": 0,
+    "sha256": "4e259cb44ee4ddcbd8c6dd37d3b4fa3d15166487d67302f50e3fff67bb87f3da"
+  },
+  "records": [
+    {
+      "name": "Butterfree (Bow)",
+      "no": 12,
+      "sourceId": "0012-00-00-01",
+      "sourceName": "Bow Butterfree",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Butterfree (Fashionable)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "distinct-wing-or-whisker-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0012-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0012-00-00-01-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "acfed353e4bcb0d241116ae7cd4e66848f8c3ffdb5a971aa71a24e07fcb21f76",
+        "femaleShiny": "35c197f3a980a1960fc111582ada471e0bef1ae83f124238b71e31399f3a1130"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0012-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0012-00-00-01%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d968d1cb866a787d55c0fe05ba44eb93d064bcaa",
+        "femaleShiny": "d344368f3554ad17e917978dbab9af38babfe863"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0012-00-00-01.png",
+          "sha256": "48561147239f6cc9ecd48ba5e8b4fde30c8158af4c0f02ce9a901f2113554184",
+          "gitBlobSha": "8bc9bfc6f3e8aaa7ff63f3c60955b4ba23798dc4",
+          "bytes": 20107
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0012-00-00-01%2BF.png",
+          "sha256": "4f67e1b8730cdbc326e596e38f751228ab442ea3231238c16efcad51fe8fa7fe",
+          "gitBlobSha": "6dbf5c8ebdb4bb7057bc0b5a606a9120a098e0f1",
+          "bytes": 20011
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/butterfree-fashion.png",
+          "sha256": "e5c6214507c886dd71f6af063ee3ed6c118e9469dcc037e9f5f73ffd9a7125de"
+        },
+        "female": {
+          "asset": "assets/sprites/go/butterfree-fashion-f.png",
+          "sha256": "b5186ca1c090036c318b96ed698238daca725cc76dc62fb1534e0f9efb36325b"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Raticate Party Hat",
+      "no": 20,
+      "sourceId": "0020-00-00-01",
+      "sourceName": "Party hat Raticate",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Raticate (Party Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "distinct-wing-or-whisker-models",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0020-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0020-00-00-01-female-shiny.png"
+      },
+      "sha256": {
+        "shiny": "f299532479bdbd74a8babe3a887da9fa5701d3b75b035b33b9c0a1a9725cdb34",
+        "femaleShiny": "162bd56ce0a267cbad17bf5e600d670ed25d68fe4e14fe5b938dc51f77ca9ecd"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0020-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0020-00-00-01%2BF%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d4216d0f44da0be0048684bc4c718e799926193f",
+        "femaleShiny": "1558602aac0add9c74d2ae6f6bd3589b970d3759"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0020-00-00-01.png",
+          "sha256": "e156dfa8491533022e491bd3c041ca437565a3557d6c1f94dee8b8216dc50a3b",
+          "gitBlobSha": "4138a5501540a4d6ed62c5757680e7bc82632d29",
+          "bytes": 23289
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0020-00-00-01%2BF.png",
+          "sha256": "f8082ed0b3036c3de3b46de00dc06225c617415b2cae8814b44f78054a3239cc",
+          "gitBlobSha": "6e2e00fccbe280e785a571635b77d7326abdf4e8",
+          "bytes": 22686
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/raticate-party-hat.png",
+          "sha256": "dddd9844dc27045a7cef9e6dbedbb31da308fed49fbc4f10d205b95e07e11d97"
+        },
+        "female": {
+          "asset": "assets/sprites/go/raticate-party-hat-f.png",
+          "sha256": "ed9cfa3cf036a1037a261cdba9e15f3649cee0b1dcf8b29b45da275be43739aa"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Nidorino Party Hat",
+      "no": 33,
+      "sourceId": "0033-00-00-01",
+      "sourceName": "Party hat Nidorino",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Nidorino (Party Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0033-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "22c3e64a791a613acaa8b6456bc5352931aeac7cd56e0957dd8c53f0311dc3d8"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0033-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "7d8f436f34283aece5cf2ab2d056829decd6f04d"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0033-00-00-01.png",
+          "sha256": "d7ff60ff54936a0160cac40ab16deb5976a78a58fb7358316518c902522a3b16",
+          "gitBlobSha": "da35f6e45e5aca8cb151c4fb62f1c98dbed53200",
+          "bytes": 17217
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/nidorino-red-party-hat.png",
+          "sha256": "f5b539b98d656dc0b8bb9baef04c7d120b80cbc3360f5ed6af172658571fb7ab"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Vulpix (Halloween)",
+      "no": 37,
+      "sourceId": "0037-00-00-01",
+      "sourceName": "Halloween Vulpix",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Vulpix (Spooky Festival)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0037-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0037-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "91889387111ae7b5cbdab1208db177c86ec88425bada0f4ac3737ee4ae7857ed",
+        "femaleShiny": "91889387111ae7b5cbdab1208db177c86ec88425bada0f4ac3737ee4ae7857ed"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0037-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0037-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "bf7395acaef8c9a1c5c84c2981d9baf3911fbdda",
+        "femaleShiny": "bf7395acaef8c9a1c5c84c2981d9baf3911fbdda"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0037-00-00-01.png",
+          "sha256": "62f82af766000cc600de59e6a40c2fe8a599df638d16fb95b0544b09b941d356",
+          "gitBlobSha": "65854ac6517350d154add1f9e649201bca3af0e1",
+          "bytes": 13411
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/vulpix-spooky-festival.png",
+          "sha256": "4527025972d8397fd3ad8c96c63a97e2b86bd969112e1fcb78e63b04e42268fd"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Ninetales Spooky Festival",
+      "no": 38,
+      "sourceId": "0038-00-00-01",
+      "sourceName": "Halloween Ninetales",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Ninetales (Spooky Festival)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0038-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0038-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "9b46d628c0c024a533ec6a35f662be1a015bd0b11cd81dc87823d69e1266deca",
+        "femaleShiny": "9b46d628c0c024a533ec6a35f662be1a015bd0b11cd81dc87823d69e1266deca"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0038-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0038-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "294972b43935ce22b29d389bf041fca4570ca695",
+        "femaleShiny": "294972b43935ce22b29d389bf041fca4570ca695"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0038-00-00-01.png",
+          "sha256": "e9602f05b495620062a85b0d901da200912811812b967e361b487384436395ff",
+          "gitBlobSha": "65c856c27f24820748c3aa0e7ab18a385313e49b",
+          "bytes": 27277
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/ninetales-spooky-festival.png",
+          "sha256": "f698047f6656a4fb87f45e446d97f23828473a2ff99231c5430ea4d50db6ca67"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Jigglypuff (Ribbon)",
+      "no": 39,
+      "sourceId": "0039-00-00-01",
+      "sourceName": "Ribbon Jigglypuff",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Jigglypuff (Ribbon)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0039-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0039-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "0e9b41f9d0a7e58ac041b04368812df7ba90fc182763b39a232df375ffb228c9",
+        "femaleShiny": "0e9b41f9d0a7e58ac041b04368812df7ba90fc182763b39a232df375ffb228c9"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0039-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0039-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "da3c952efb9dc1e402553085808e28e7697a29e8",
+        "femaleShiny": "da3c952efb9dc1e402553085808e28e7697a29e8"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0039-00-00-01.png",
+          "sha256": "b0e13dccd89020014159f747786e1fc4e1906a370d086d54b830952cb0e8730d",
+          "gitBlobSha": "9596023eec43e0cc63f97a5895cfd5caabaefa01",
+          "bytes": 18470
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/jigglypuff-ribbon.png",
+          "sha256": "a62d0e0030720508536c5c98b718954286f9f7e42cc90076eed15f3d58718631"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Wigglytuff Ribbon",
+      "no": 40,
+      "sourceId": "0040-00-00-01",
+      "sourceName": "Ribbon Wigglytuff",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Wigglytuff (Ribbon)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0040-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0040-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "354ac5e9b34bc3d34a7f41d17ee9943e196f084d7b6f830e11dc0ac55d5ad7d4",
+        "femaleShiny": "354ac5e9b34bc3d34a7f41d17ee9943e196f084d7b6f830e11dc0ac55d5ad7d4"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0040-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0040-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "d211f5db21af0c1d4d460eb5642e4316480953b8",
+        "femaleShiny": "d211f5db21af0c1d4d460eb5642e4316480953b8"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0040-00-00-01.png",
+          "sha256": "b381e011fe44a62eb07f7a489d252c24997a8e7ed2c85744875b4833bd07fb75",
+          "gitBlobSha": "94d56eddbfc70f275624b0be94cddfd4a483a43c",
+          "bytes": 22927
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/wigglytuff-ribbon.png",
+          "sha256": "6dd324861f3691cf73233fabaaad63c1ff9a36575f8399b7b16e2d7cf1ea7b06"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Diglett Fashionable Hat",
+      "no": 50,
+      "sourceId": "0050-00-00-01",
+      "sourceName": "Hat Diglett",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Diglett (Fashionable Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0050-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0050-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "24ba4f6a27f72fb6c9e53756c3ef700747c3416fe014bc357465f80fec4f64a5",
+        "femaleShiny": "24ba4f6a27f72fb6c9e53756c3ef700747c3416fe014bc357465f80fec4f64a5"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0050-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0050-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "767d8babd4be63ed8bf4fc3085d691b344fc1d8f",
+        "femaleShiny": "767d8babd4be63ed8bf4fc3085d691b344fc1d8f"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0050-00-00-01.png",
+          "sha256": "7c6e4e5d48a198b5f877c114732a75973149ff735a59d806463592241d207dcc",
+          "gitBlobSha": "94bc8821f9a5dfe62481f3156b62396c49e4e635",
+          "bytes": 7165
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/diglett-bowler-hat.png",
+          "sha256": "593ffcaf35b1b53e00004d38f577bc0e4cd80637696e0656f092ed09160584b6"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Dugtrio Fashionable Hat",
+      "no": 51,
+      "sourceId": "0051-00-00-01",
+      "sourceName": "Hat Dugtrio",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Dugtrio (Fashionable Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0051-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0051-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "dbf19de92ecae121d9b2030f6d3a9c5a2eb4466132670699a805594c2f3a5156",
+        "femaleShiny": "dbf19de92ecae121d9b2030f6d3a9c5a2eb4466132670699a805594c2f3a5156"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0051-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0051-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "63af1a1ddd7f37a6a0dc00f42859cb63fa2686d7",
+        "femaleShiny": "63af1a1ddd7f37a6a0dc00f42859cb63fa2686d7"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0051-00-00-01.png",
+          "sha256": "2b1463810b655131f33bc8fa7fb94121cfc557f8e31a33200c660a80254f3986",
+          "gitBlobSha": "65b86d037504b5f27abab59e132603d6f20438fa",
+          "bytes": 15766
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/dugtrio-bowler-hat.png",
+          "sha256": "5ae8a44bf8bef1ec9e1bd55ae176cede59ddf55a806d734a41e8a0496607414d"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Grimer (Party Hat)",
+      "no": 88,
+      "sourceId": "0088-00-00-01",
+      "sourceName": "Party hat Grimer",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Grimer (Party Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0088-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0088-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "64290276f4caff700f2ee4250c03f1a7439fcaa5a60cebee7fd09d8ab4e92472",
+        "femaleShiny": "64290276f4caff700f2ee4250c03f1a7439fcaa5a60cebee7fd09d8ab4e92472"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0088-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0088-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "5115d70783e8ef9d8ddcb5d0173374346e7d5c00",
+        "femaleShiny": "5115d70783e8ef9d8ddcb5d0173374346e7d5c00"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0088-00-00-01.png",
+          "sha256": "e5f5f9a93c588630346a7cb596438b4a85b277cc0e0b97d6ac09ccbd138aadc7",
+          "gitBlobSha": "1920e429993d6de16da3ccf5a4461e819658d41e",
+          "bytes": 26398
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/grimer-party-hat.png",
+          "sha256": "851095ce574078f6c80f29ec9c4f3f7c6c70a47f4c9a70a78f8599371742fc00"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Muk Party Hat",
+      "no": 89,
+      "sourceId": "0089-00-00-01",
+      "sourceName": "Party hat Muk",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Muk (Party Hat)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0089-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0089-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "547689ab3a81ff3c2d5a2552a56be6ce75ada42a81fb49ad7ce0bf06a28c7b4a",
+        "femaleShiny": "547689ab3a81ff3c2d5a2552a56be6ce75ada42a81fb49ad7ce0bf06a28c7b4a"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0089-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0089-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "a4fe925aadf685c30db9dd06af470e80ad075d8a",
+        "femaleShiny": "a4fe925aadf685c30db9dd06af470e80ad075d8a"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0089-00-00-01.png",
+          "sha256": "aa34ed124c176dc9b02275db18c1650546f13b6f9bcdc5bdf5325c7e70601e57",
+          "gitBlobSha": "177e3624d18febd12ad2731d6352574a6c2cbc76",
+          "bytes": 29662
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/muk-party-hat.png",
+          "sha256": "63d0f1c8fdabf99ae5ffe6955708379dd7d626f05f988122d5794b0a23956124"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Cubone (Cempasuchil)",
+      "no": 104,
+      "sourceId": "0104-00-00-01",
+      "sourceName": "Cempasúchil Cubone",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Cubone (Cempasúchil Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0104-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0104-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "aba0528cd0083bc4b20c706fab4c201e536ce59f4c5992c208dcc768534ea907",
+        "femaleShiny": "aba0528cd0083bc4b20c706fab4c201e536ce59f4c5992c208dcc768534ea907"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0104-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0104-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "64cb301f95ef9204d71157e5943b578df11effec",
+        "femaleShiny": "64cb301f95ef9204d71157e5943b578df11effec"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0104-00-00-01.png",
+          "sha256": "ce0cadef5c011a09ee2f3fb8ce3eba88eb7c0aa65fff1591a9161a3b8d580c0f",
+          "gitBlobSha": "e54ae23b2bca42e2da855da0508200c7249d7e77",
+          "bytes": 10410
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/cubone-cempasuchil-crown.png",
+          "sha256": "3f667bb784ab5598a0572023169285d4b944c139887692b212cd9faa7864986b"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Marowak Cempasuchil Crown",
+      "no": 105,
+      "sourceId": "0105-00-00-01",
+      "sourceName": "Cempasúchil Marowak",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Marowak (Cempasúchil Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0105-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0105-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "29f1430d1fbf71e2d8e04ad4185863dbf6c249c4acba332c2db85e4f197345a5",
+        "femaleShiny": "29f1430d1fbf71e2d8e04ad4185863dbf6c249c4acba332c2db85e4f197345a5"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0105-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0105-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "610dc1611e33dd2639a1f021f2b3c0ad91baedaf",
+        "femaleShiny": "610dc1611e33dd2639a1f021f2b3c0ad91baedaf"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0105-00-00-01.png",
+          "sha256": "a6cdc5706d0f06987b6a19d3d7e75b92c76476ba39a5909ba2985177025b9bd4",
+          "gitBlobSha": "a306b6d5f7dc258c2f56a9132199cd0cbe8b7874",
+          "bytes": 15537
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/marowak-cempasuchil-crown.png",
+          "sha256": "e0ca34dfddf0cc4024f665564c3be79771714ed7cb123503ef116db13bbd1e73"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Chansey (Flower Crown)",
+      "no": 113,
+      "sourceId": "0113-00-00-01",
+      "sourceName": "Flower crown Chansey",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Chansey (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0113-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0113-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "7d2ae53d7ef1c03b24e09e212f28b02cec3acdae0ff5016510c8ed5d6930e52b",
+        "femaleShiny": "7d2ae53d7ef1c03b24e09e212f28b02cec3acdae0ff5016510c8ed5d6930e52b"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0113-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0113-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "b1b37067e97c0ecff3e8492d5ab505cd30232155",
+        "femaleShiny": "b1b37067e97c0ecff3e8492d5ab505cd30232155"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0113-00-00-01.png",
+          "sha256": "d0d1db353466ac40988e2b55a1bfbb2fa357c909b9d891e12fef885712762767",
+          "gitBlobSha": "676e1f526752dcf57a5251f4897151fea46e77db",
+          "bytes": 20444
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/chansey-flower.png",
+          "sha256": "a5bd433b3a873d779c76089b6b07d90126d8e92f9e2405e16b45b59578400611"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Togepi (Flower Crown)",
+      "no": 175,
+      "sourceId": "0175-00-00-01",
+      "sourceName": "Flower crown Togepi",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Togepi (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0175-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0175-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "f5bea7b11f5a9ccf9b1241416721efc0f2eb6cd104976d7517fa7c6e4b291617",
+        "femaleShiny": "f5bea7b11f5a9ccf9b1241416721efc0f2eb6cd104976d7517fa7c6e4b291617"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0175-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0175-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "11c2f8ffb110ddd8e8d93a084241cda8fb91b47c",
+        "femaleShiny": "11c2f8ffb110ddd8e8d93a084241cda8fb91b47c"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0175-00-00-01.png",
+          "sha256": "80efaa3ec9db5b154ab46b5f0dfbe2e773a11926ad1a1dbed6048884d2690b54",
+          "gitBlobSha": "f54363a93e3d0eae0845a805a7ecab82a6133e60",
+          "bytes": 10182
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/togepi-flower.png",
+          "sha256": "8b0cb897d24ebe8cb937cab1de13e66cfb03874fb17b29cefb1878b9a6d16556"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Togetic (Flower Crown)",
+      "no": 176,
+      "sourceId": "0176-00-00-01",
+      "sourceName": "Flower crown Togetic",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Togetic (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0176-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0176-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "bbb0a4ae5714486eb10d7232b7695191a377b0bfe04009febc84b83f391b8976",
+        "femaleShiny": "bbb0a4ae5714486eb10d7232b7695191a377b0bfe04009febc84b83f391b8976"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0176-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0176-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "7adddf5df11561242c1ec3ec66090e021d8b66cb",
+        "femaleShiny": "7adddf5df11561242c1ec3ec66090e021d8b66cb"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0176-00-00-01.png",
+          "sha256": "2bc9be2461c7f66747f7c76400c3f1105923564dc9f3008fec5071c8afbe8015",
+          "gitBlobSha": "a72d6c87ba02739e179258a24b892d08c3b86fc7",
+          "bytes": 6686
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/togetic-flower.png",
+          "sha256": "e340b1841ab8cfc5a8c25cbd6526d16126245e3cfa92a7b8b4dcad8b143af1e7"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Blissey (Flower Crown)",
+      "no": 242,
+      "sourceId": "0242-00-00-01",
+      "sourceName": "Flower crown Blissey",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Blissey (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0242-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0242-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "dd20180d1d3a637a8cda90c0097f428d01bfb9a3dc72a8e078c31d8208910499",
+        "femaleShiny": "dd20180d1d3a637a8cda90c0097f428d01bfb9a3dc72a8e078c31d8208910499"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0242-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0242-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "a2ab87a1945c4e88d2edcb6d203c9a158c95800c",
+        "femaleShiny": "a2ab87a1945c4e88d2edcb6d203c9a158c95800c"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0242-00-00-01.png",
+          "sha256": "918ce8d6e2ff124e91dc215263c9b097ab8e887d61281c2efac3970e6a5e50a9",
+          "gitBlobSha": "a4e9be71c5e9b1a5b3c7f9aa646ebdf42f307e04",
+          "bytes": 26832
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/blissey-flower.png",
+          "sha256": "d1c8aed507a1f5807a8e83a88768b6717042d960a3c2ad1288664cc35894bea4"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Buneary Flower Crown",
+      "no": 427,
+      "sourceId": "0427-00-00-01",
+      "sourceName": "Flower crown Buneary",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Buneary (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0427-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0427-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "91846a03718c46c9c57dc6dcdf58785386d4100e04b905eee0710eab838a8bfd",
+        "femaleShiny": "91846a03718c46c9c57dc6dcdf58785386d4100e04b905eee0710eab838a8bfd"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0427-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0427-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "fed84d51752d5619237003acc4aa469bf0586bb1",
+        "femaleShiny": "fed84d51752d5619237003acc4aa469bf0586bb1"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0427-00-00-01.png",
+          "sha256": "b4909bec6d4614ddce6b794405e27ef493e4222bfea2d3140b5b637c5cd7d22e",
+          "gitBlobSha": "14410132cb85ad9e85811f9bb5a968fa14dfdc27",
+          "bytes": 9175
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/buneary-flower.png",
+          "sha256": "1e587f9b77d672225350927bacff9e6d5b0e4fb92f7e0437a255e0b285f2af10"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Happiny (Flower Crown)",
+      "no": 440,
+      "sourceId": "0440-00-00-01",
+      "sourceName": "Flower crown Happiny",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Happiny (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0440-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0440-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "e8b545fdb9d8265475483cab812161464f5505f8b6e0a75b91e10daf6f1fcb58",
+        "femaleShiny": "e8b545fdb9d8265475483cab812161464f5505f8b6e0a75b91e10daf6f1fcb58"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0440-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0440-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "952738d0fe44074311e5df36077c07b267fb8621",
+        "femaleShiny": "952738d0fe44074311e5df36077c07b267fb8621"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0440-00-00-01.png",
+          "sha256": "75beb9097d4776a2b8dfccfe9d5b19d468c9acc9351c2df152d85136ed1f3c8a",
+          "gitBlobSha": "78a83ddcdf4ca9765cb74878149fb15507bc929c",
+          "bytes": 10085
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/happiny-flower.png",
+          "sha256": "486ad95a8ab452752ae171301182e9f39f3feeaa9aaed9b3479102a4a3ffe920"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    },
+    {
+      "name": "Togekiss (Flower Crown)",
+      "no": 468,
+      "sourceId": "0468-00-00-01",
+      "sourceName": "Flower crown Togekiss",
+      "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+      "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
+      "shinyAvailability": "released",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "releaseListedName": "Togekiss (Flower Crown)",
+      "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
+      "sourceGenders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "shared-no-visual-dimorphism",
+      "assets": {
+        "shiny": "assets/sprites/go/pogorewind-costume20-0468-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0468-00-00-01-shiny.png"
+      },
+      "sha256": {
+        "shiny": "a3388f89a3acb722e2957d0c314dcdac62898fa4b7a7ca2c31506744d961a2ee",
+        "femaleShiny": "a3388f89a3acb722e2957d0c314dcdac62898fa4b7a7ca2c31506744d961a2ee"
+      },
+      "sourceUrls": {
+        "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0468-00-00-01%2BS.png",
+        "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0468-00-00-01%2BS.png"
+      },
+      "gitBlobShas": {
+        "shiny": "3d75fcd9c2ee1ce986c150fae8eca8481ef530a5",
+        "femaleShiny": "3d75fcd9c2ee1ce986c150fae8eca8481ef530a5"
+      },
+      "normalReferences": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0468-00-00-01.png",
+          "sha256": "3626f5ba7165f38e3abd72c7d60a44d192f0175b553468e34cf1cab09d360153",
+          "gitBlobSha": "a884e058befb7963045005218226ca7f97f4c33a",
+          "bytes": 13276
+        }
+      },
+      "retainedNormal": {
+        "default": {
+          "asset": "assets/sprites/go/togekiss-flower.png",
+          "sha256": "5794d0adb10ab29ff95ba0511826155296c97a5d2270ec94b2c58355a8cdd23e"
+        }
+      },
+      "pixelReview": "All 44 normal/Shiny originals alpha-composited and locally inspected in four labelled sheets. Correct outfits/colors; female Butterfree lower-wing marks and Raticate shorter whiskers checked."
+    }
+  ],
+  "holds": "All prior held identities, variants and unresolved labels remain outside this batch."
+}
