@@ -55,7 +55,7 @@ Preparation verifies current account authority and the source UID, reads the
 server target, computes a fresh dry run and stores a bounded five-minute review.
 Confirmation requires its exact digest and explicit acceptance, verifies current
 authority again, transactionally checks the account foundation and unchanged
-target, revalidates the plan, checks Favorite target foundations, and atomically
+target, revalidates the plan, checks unchanged Favorite target foundation fingerprints, and atomically
 writes additive content plus a durable receipt. Only own canonical generation-1
 trade entries, Favorites and tags can be added. Existing entities, tombstones and
 conflicting lifecycle content require separate review. Duplicate/concurrent
@@ -94,3 +94,27 @@ remain pending explicit action-time approval. Production writer activation,
 unknown-outcome reconciliation, cross-UID ownership recovery, remaining collectors
 and visible recovery UX need further implementation/review; they are not made
 safe merely by supplying provider credentials.
+
+## Focused readback correction after c9999da9
+
+An ordinary domain PATCH preserves the original ADD lifecycle marker/hash.
+Consequently, ADD replay returning `idempotent` proved the operation had already
+happened, but did not prove unchanged current content. The emulator regression
+imports priority H, applies the actual domain PATCH to L, rebuilds a valid bundle
+and replays confirmation; the prior implementation incorrectly returned
+`verified`.
+
+Schema-2 receipts now atomically capture a SHA-256 fingerprint for each exact
+imported entity, including values and revision/mutation metadata. Readback compares
+those fingerprints, so a later PATCH or removal reports
+`committed-content-changed` without rewriting newer owner data. Unrelated section
+changes do not invalidate imported-entity verification. Older receipts without
+that exact evidence report `committed-readback-unavailable`; the executor neither
+upgrades their proof nor reapplies them automatically.
+
+Additional emulator transactions import a tag and Favorite together, retain
+existing tags/Favorites and tag references, preserve every noncanonical section,
+and verify idempotent retry. Review records capture Favorite foundation
+fingerprints; a changed but still valid foundation revision between prepare and
+confirm rejects atomically and requires fresh review. This remains a demo-only
+qualification executor with no production endpoint or activation.

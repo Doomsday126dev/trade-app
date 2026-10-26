@@ -29,7 +29,9 @@ function createRecoveryImportEmulator({enabled=false,firestore,authority,foundat
     await firestore.runTransaction(async tx=>{
       const foundation=await foundationStore.readFoundationInTransaction(tx,{uid:identity.uid}),latest=await tx.get(account(identity.uid));
       if(foundation.accountFingerprint!==identity.accountFingerprint||!latest.exists||latest.data().bundle?.integrity?.digest!==record.targetDigest)fail('recovery/stale-plan');
-      tx.create(reviewRef(identity.uid,reviewId),record);
+      const favoriteFoundations={};
+      for(const operation of plan.operations)if(operation.entityType==='favorite'){const target=await foundationStore.readFoundationInTransaction(tx,{uid:operation.identity.targetUid});favoriteFoundations[operation.identity.targetUid]=target.accountFingerprint;}
+      const reviewed={...record,favoriteFoundations};bounded(reviewed);tx.create(reviewRef(identity.uid,reviewId),reviewed);
     });
     return{reviewId,digest,plan,expiresAt:record.expiresAt,unsupportedSections:Object.keys(source.sections).filter(key=>key!=='canonicalEntities')};
   }
@@ -45,8 +47,11 @@ function createRecoveryImportEmulator({enabled=false,firestore,authority,foundat
       if(receiptSnap.exists){const receipt=receiptSnap.data();if(receipt.digest!==digest||receipt.uid!==identity.uid)fail('recovery/receipt-conflict');return{receipt,replay:true};}
       if(review.status!=='review'||review.expiresAt<=now()||current.integrity.digest!==review.targetDigest)fail('recovery/stale-plan');
       await dryRun.revalidate({plan:review.plan,sourceBundle:review.source,currentBundle:current,targetUid:identity.uid});
-      // Recheck each Favorite's authority in this same transaction, before writes.
-      for(const operation of review.plan.operations)if(operation.entityType==='favorite')await foundationStore.readFoundationInTransaction(tx,{uid:operation.identity.targetUid});
+      // A valid but changed Favorite foundation also requires fresh review.
+      for(const operation of review.plan.operations)if(operation.entityType==='favorite'){
+        const target=await foundationStore.readFoundationInTransaction(tx,{uid:operation.identity.targetUid});
+        if(review.favoriteFoundations?.[operation.identity.targetUid]!==target.accountFingerprint)fail('recovery/favorite-foundation-changed');
+      }
       const entities=new Map(current.sections.canonicalEntities.records.map(row=>[row.id,row.value]));
       for(const operation of review.plan.operations){
         if(operation.ownerUid!==identity.uid||operation.kind!=='add'||!['tradeEntry','favorite','tag'].includes(operation.entityType)||(await model.verifyOperation(operation)).ok!==true)fail('recovery/operation-invalid');
@@ -56,7 +61,8 @@ function createRecoveryImportEmulator({enabled=false,firestore,authority,foundat
       }
       const sections=clone(current.sections);sections.canonicalEntities.records=[...entities].map(([id,value])=>({id,value}));
       const bundle=clone(await bundleModel.create({source:{...current.source,revision:fingerprint(sections)},sections}));bounded(bundle);
-      const receipt={schemaVersion:1,uid:identity.uid,reviewId,digest,sourceDigest:review.source.integrity.digest,resultDigest:bundle.integrity.digest,operations:review.plan.operations,committedAt:now()};
+      const entityDigests=review.plan.operations.map(operation=>{const id=`${operation.entityType}:${operation.entityId}`;return{id,digest:fingerprint(entities.get(id))};});
+      const receipt={schemaVersion:2,entityDigests,uid:identity.uid,reviewId,digest,sourceDigest:review.source.integrity.digest,resultDigest:bundle.integrity.digest,operations:review.plan.operations,committedAt:now()};
       tx.set(account(identity.uid),{...currentSnap.data(),bundle});tx.create(receiptRef(identity.uid,reviewId),receipt);tx.set(reviewRef(identity.uid,reviewId),{...review,status:'applied'});
       return{receipt,replay:false};
     });
@@ -65,9 +71,11 @@ function createRecoveryImportEmulator({enabled=false,firestore,authority,foundat
     try{
       const after=await account(identity.uid).get(),bundle=after.exists?await bundleModel.verify(after.data().bundle):null;
       const current=new Map((bundle?.sections?.canonicalEntities?.records||[]).map(row=>[row.id,row.value]));
-      const verifiedReadback=bundle?.source.ownerUid===identity.uid&&result.receipt.operations.every(operation=>{
-        const proof=merge.mergeOperation(current.get(`${operation.entityType}:${operation.entityId}`)||null,operation,{acceptedAt:now()});return proof.ok&&proof.status==='idempotent';
-      });
+      // ADD replay only proves lifecycle idempotency: later PATCH operations
+      // retain that marker. Compare the exact entities captured in the commit.
+      const expected=result.receipt.entityDigests;
+      if(result.receipt.schemaVersion!==2||!Array.isArray(expected)||expected.length!==result.receipt.operations.length||expected.some((entry,index)=>entry.id!==`${result.receipt.operations[index].entityType}:${result.receipt.operations[index].entityId}`||!/^[a-f0-9]{64}$/.test(entry.digest||'')))fail('recovery/readback-proof-unavailable');
+      const verifiedReadback=bundle?.source.ownerUid===identity.uid&&expected.every(entry=>current.has(entry.id)&&fingerprint(current.get(entry.id))===entry.digest);
       return{...response,status:verifiedReadback?'verified':'committed-content-changed'};
     }catch{
       // The transaction is already committed. Retrying the same review reads its

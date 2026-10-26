@@ -30,6 +30,19 @@ test('server-authorized import stores durable receipts and verifies additive rea
   await db.doc(`recoveryImportSandboxes/${uid}`).set({bundle:JSON.parse(JSON.stringify(target)),sentinel:'preserve'});
   return{uid,authContext,source,target,entityId,api:make()};
  }
+ async function favoriteFixture(){
+  const h=await fixture(),friend=await fixture(),retainedFriend=await fixture();
+  async function entity(entityType,entityId,identity,patch,label){
+   const operation=await model.createOperation({ownerUid:h.uid,entityType,entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:Object.fromEntries(Object.keys(patch).map(key=>[key,0])),patch,clientAt:10,operationId:`op_synthetic_${label}_12345678`});
+   assert.equal(operation.ok,true,JSON.stringify(operation.error));const merged=merge.mergeOperation(null,operation.value,{acceptedAt:11});assert.equal(merged.status,'applied');return{id:`${entityType}:${entityId}`,value:JSON.parse(JSON.stringify(merged.value))};
+  }
+  const retained=[await entity('tag','tag_retained',{tagId:'tag_retained'},{label:'Retained'},'retained_tag'),await entity('favorite',retainedFriend.uid,{targetUid:retainedFriend.uid},{displayName:'Retained Friend','tagIds/tag_retained':true},'retained_favorite')];
+  const additions=[await entity('tag','tag_imported',{tagId:'tag_imported'},{label:'Imported'},'imported_tag'),await entity('favorite',friend.uid,{targetUid:friend.uid},{displayName:'Imported Friend','tagIds/tag_imported':true,'tagIds/tag_retained':true},'imported_favorite')];
+  const targetSections=JSON.parse(JSON.stringify(h.target.sections));targetSections.canonicalEntities.records=retained;targetSections.preferences.records=[{id:'existing-device',value:{theme:'dark'}}];
+  h.target=await bundleModel.create({source:h.target.source,sections:targetSections});await db.doc(`recoveryImportSandboxes/${h.uid}`).set({bundle:JSON.parse(JSON.stringify(h.target)),sentinel:'preserve'});
+  const sourceSections=JSON.parse(JSON.stringify(h.source.sections));sourceSections.canonicalEntities.records.push(...retained,...additions);h.source=await bundleModel.create({source:h.source.source,sections:sourceSections});
+  return{...h,friend,retained,additions};
+ }
  await t.test('explicit confirmation, concurrent replay and process restart preserve data without importing privileges',async()=>{
   const h=await fixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};
   assert.ok(review.unsupportedSections.includes('permissions'));await assert.rejects(h.api.confirm({...input,accepted:false},h.authContext),{code:'recovery/explicit-review-required'});
@@ -51,6 +64,19 @@ test('server-authorized import stores durable receipts and verifies additive rea
   const target=db.doc(`recoveryImportSandboxes/${h.uid}`),data=(await target.get()).data();data.bundle.sections.canonicalEntities.records=[];data.bundle=JSON.parse(JSON.stringify(await bundleModel.create({source:data.bundle.source,sections:data.bundle.sections})));await target.set(data);
   assert.equal((await make().confirm(input,h.authContext)).status,'committed-content-changed');assert.equal((await target.get()).data().bundle.sections.canonicalEntities.records.length,0);
  });
+ await t.test('ordinary domain PATCH after import is changed content despite idempotent ADD replay',async()=>{
+  const h=await fixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};
+  assert.equal((await h.api.confirm(input,h.authContext)).status,'verified');
+  const target=db.doc(`recoveryImportSandboxes/${h.uid}`),data=(await target.get()).data(),row=data.bundle.sections.canonicalEntities.records[0],before=row.value;
+  const patch=await model.createOperation({ownerUid:h.uid,entityType:before.entityType,entityId:before.entityId,kind:'patch',baseGeneration:before.generation,generation:before.generation,baseFieldRevisions:{priority:before.fieldRevisions[model.fieldMetadataPath(before.entityType,'priority')]},patch:{priority:'L'},clientAt:2000,operationId:'op_synthetic_owner_patch_1234'});
+  assert.equal(patch.ok,true,JSON.stringify(patch.error));const updated=merge.mergeOperation(before,patch.value,{acceptedAt:Math.max(Date.now(),before.updatedAt+1)});assert.equal(updated.status,'applied');
+  assert.equal(updated.value.lifecycleMutation,before.lifecycleMutation);assert.equal(updated.value.lifecycleMutationHash,before.lifecycleMutationHash);
+  assert.equal(merge.mergeOperation(updated.value,review.plan.operations[0],{acceptedAt:2002}).status,'idempotent');
+  row.value=JSON.parse(JSON.stringify(updated.value));data.bundle=JSON.parse(JSON.stringify(await bundleModel.create({source:data.bundle.source,sections:data.bundle.sections})));await target.set(data);
+  const beforeRetry=JSON.stringify((await target.get()).data()),receiptRef=db.doc(`recoveryImportReceipts/${h.uid}/receipts/${review.reviewId}`),receiptBefore=JSON.stringify((await receiptRef.get()).data());
+  const result=await make().confirm(input,h.authContext);assert.equal(result.status,'committed-content-changed');assert.equal(result.replay,true);
+  assert.equal(JSON.stringify((await target.get()).data()),beforeRetry);assert.equal(JSON.stringify((await receiptRef.get()).data()),receiptBefore);
+ });
  await t.test('readback outage reports committed outcome and a retry verifies its durable receipt',async()=>{
   const h=await fixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};
   let failReadback=false;
@@ -67,6 +93,34 @@ test('server-authorized import stores durable receipts and verifies additive rea
   await assert.rejects(h.api.prepare({sourceBundle:source},h.authContext),{code:'recovery/no-supported-additions'});
   assert.equal((await db.doc(`recoveryImportSandboxes/${h.uid}`).get()).data().bundle.integrity.digest,h.target.integrity.digest);
   assert.equal((await db.collection(`recoveryImportReceipts/${h.uid}/receipts`).get()).size,0);
+ });
+
+ await t.test('Favorite and tag transaction additions preserve existing entities, references and unrelated data on retry',async()=>{
+  const h=await favoriteFixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};
+  assert.equal(JSON.stringify(review.plan.operations.map(row=>row.entityType)),JSON.stringify(['tag','favorite','tradeEntry']));
+  const first=await h.api.confirm(input,h.authContext);assert.equal(first.status,'verified');const target=db.doc(`recoveryImportSandboxes/${h.uid}`),after=(await target.get()).data();
+  assert.equal(after.bundle.sections.canonicalEntities.records.length,5);assert.equal(after.sentinel,'preserve');
+  for(const row of h.retained)assert.deepEqual(after.bundle.sections.canonicalEntities.records.find(record=>record.id===row.id),row);
+  const favorite=after.bundle.sections.canonicalEntities.records.find(row=>row.id===`favorite:${h.friend.uid}`).value;assert.equal(favorite.identity.targetUid,h.friend.uid);assert.deepEqual(favorite.values.tagIds,{tag_imported:true,tag_retained:true});
+  for(const section of Object.keys(h.target.sections).filter(key=>key!=='canonicalEntities'))assert.deepEqual(after.bundle.sections[section],JSON.parse(JSON.stringify(h.target.sections[section])));
+  const snapshot=JSON.stringify(after);assert.equal((await make().confirm(input,h.authContext)).status,'verified');assert.equal(JSON.stringify((await target.get()).data()),snapshot);assert.equal((await db.collection(`recoveryImportReceipts/${h.uid}/receipts`).get()).size,1);
+ });
+ await t.test('changed Favorite foundation between review and confirm rejects atomically and requires fresh review',async()=>{
+  const h=await favoriteFixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true},target=db.doc(`recoveryImportSandboxes/${h.uid}`),before=JSON.stringify((await target.get()).data());
+  const account=db.doc(`accounts/${h.friend.uid}`),foundation=(await account.get()).data();await account.set({...foundation,revision:foundation.revision+1});
+  await assert.rejects(h.api.confirm(input,h.authContext),{code:'recovery/favorite-foundation-changed'});assert.equal(JSON.stringify((await target.get()).data()),before);assert.equal((await db.collection(`recoveryImportReceipts/${h.uid}/receipts`).get()).size,0);
+  const fresh=await make().prepare({sourceBundle:h.source},h.authContext);assert.equal((await make().confirm({reviewId:fresh.reviewId,digest:fresh.digest,accepted:true},h.authContext)).status,'verified');
+ });
+ await t.test('unrelated post-import preferences do not invalidate exact imported entity readback',async()=>{
+  const h=await fixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};await h.api.confirm(input,h.authContext);
+  const target=db.doc(`recoveryImportSandboxes/${h.uid}`),data=(await target.get()).data();data.bundle.sections.preferences.records=[{id:'owner-preference',value:{theme:'dark'}}];data.bundle=JSON.parse(JSON.stringify(await bundleModel.create({source:data.bundle.source,sections:data.bundle.sections})));await target.set(data);
+  assert.equal((await make().confirm(input,h.authContext)).status,'verified');assert.deepEqual((await target.get()).data(),data);
+ });
+
+ await t.test('older receipts without exact entity evidence report committed but unverifiable without rewriting',async()=>{
+  const h=await fixture(),review=await h.api.prepare({sourceBundle:h.source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};await h.api.confirm(input,h.authContext);
+  const receiptRef=db.doc(`recoveryImportReceipts/${h.uid}/receipts/${review.reviewId}`),receipt=(await receiptRef.get()).data();receipt.schemaVersion=1;delete receipt.entityDigests;await receiptRef.set(receipt);
+  const target=db.doc(`recoveryImportSandboxes/${h.uid}`),before=(await target.get()).data();assert.equal((await make().confirm(input,h.authContext)).status,'committed-readback-unavailable');assert.deepEqual((await target.get()).data(),before);assert.deepEqual((await receiptRef.get()).data(),receipt);
  });
 
 });
