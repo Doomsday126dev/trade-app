@@ -9,7 +9,7 @@ test('plain bonuses and their inline time restrictions remain intact',()=>{
  const text='Remote Raid limit 20, Oct 30 5 p.m.–Oct 31 8 p.m. PDT';const result=groups([text]);assert.equal(result[0].scope,'');assert.equal(result[0].items[0],text);
 });
 test('rank and Deluxe scopes stay inline with every associated benefit in the same list item',()=>{
- const ctx={eventPresentationDomain:{eventFacts:()=>({bonuses:['GO Pass Rank 1: +1 Candy','GO Pass Rank 1: Guaranteed Candy XL','Deluxe Rank 10 — 3× Candy'],bonusSource:null,caveats:['Ticket required.']}),safeHttpsUrl:()=>''},i18nCore:{getLocale:()=> 'en',t:key=>key},escHtml:s=>s,escAttr:s=>s,Intl,eventStableId:()=> 'fixture'};
+ const ctx={eventPresentationDomain:{eventFacts:()=>({bonuses:['GO Pass Rank 1: +1 Candy','GO Pass Rank 1: Guaranteed Candy XL','Deluxe Rank 10 — 3× Candy'],bonusSource:null,bosses:[],encounters:[],caveats:['Ticket required.']}),safeHttpsUrl:()=>''},i18nCore:{getLocale:()=> 'en',t:key=>key},escHtml:s=>s,escAttr:s=>s,Intl,eventStableId:()=> 'fixture'};
  vm.createContext(ctx);vm.runInContext(source.slice(source.indexOf('function eventBonusText('),source.indexOf('function eventsSourceHtml(')),ctx);
  const html=ctx.eventBonusesHtml({},{full:true});
  assert.match(html,/<li><span class="event-benefit-scope">GO Pass Rank 1:<\/span> <span class="event-benefit-text">\+1 Candy; Guaranteed Candy XL<\/span><\/li>/);

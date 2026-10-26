@@ -5547,6 +5547,7 @@ let providerTrainerDirectoryRequests=new Map();
 let providerTrainerDirectoryBinding='';
 let eventTypeFilter='all';
 let eventCalendarDate='';
+let eventAllSchedule=false;
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let trainerOrganizerGeneration=0;
 let trainerOrganizerState={query:'',tagIds:[],username:''};
@@ -6324,6 +6325,15 @@ async function renderPreservedFavoriteEvidence(host){
     }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
   }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
 }
+// Display only an already-loaded public publication timestamp. Never fetch or infer activity.
+function favoritePublicationHtml(favorite){
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt),locale=i18nCore.getLocale();
+  const valid=['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
+  const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
+  const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):'—';
+  const time=valid?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(stamp):'';
+  return`<span class="favorite-publication" tabindex="0" title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:'<span>—</span>'}</span>`;
+}
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
@@ -6356,7 +6366,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))}${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>${favoritePublicationHtml(item)}<div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
@@ -13064,7 +13074,6 @@ function selectSchedDay(isoD){
 }
 
 function setEventTypeFilter(type){
-  eventCalendarDate='';
   eventTypeFilter=eventPresentationDomain.TYPES.includes(type)?type:'all';
   renderEventsOnly();
 }
@@ -13110,7 +13119,8 @@ function eventStateHtml(kind,title,detail='',actionLabel='',action=''){
 }
 function eventStableId(event){return eventLabelsI18n.eventId(event);}
 function setEventCalendarDate(date){
-  eventCalendarDate=eventCalendarDate===date?'':date;
+  eventAllSchedule=false;
+  eventCalendarDate=date||isoDate(new Date());
   renderEventsOnly();
 }
 function moveEventCalendarMonth(delta){
@@ -13128,11 +13138,13 @@ function eventCalendarKeydown(event,dateKey){
   else if(event.key==='End')next.setDate(current.getDate()+(6-current.getDay()));
   else next.setDate(current.getDate()+offsets[event.key]);
   eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);
+  eventAllSchedule=false;
   eventCalendarDate=isoDate(next);
   renderEventsOnly();
   requestAnimationFrame(()=>[...document.querySelectorAll(`.event-calendar-day[data-date="${eventCalendarDate}"]`)].find(node=>node.getClientRects().length)?.focus());
 }
 function jumpToEvent(eventId){
+  eventAllSchedule=true;
   eventCalendarDate='';
   eventTypeFilter='all';
   renderEventsOnly();
@@ -13183,8 +13195,28 @@ function renderEventUpNext(events){
   if(!items.length)return'';
   return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
-function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events,{variant:'desktop'})}${renderEventUpNext(events)}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
-function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function renderEventWeek(){
+  const selected=eventAgendaDate(),date=new Date(`${selected}T12:00:00`),locale=i18nCore.getLocale();
+  const monday=new Date(date);monday.setDate(date.getDate()-(date.getDay()+6)%7);
+  return`<nav class="event-week" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="-1" aria-label="${escAttr(i18nCore.t('apri.previousWeek'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><div class="event-week-days">${Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);const key=isoDate(d);return`<button type="button" class="event-week-day" data-event-action="date" data-date="${key}" aria-pressed="${!eventAllSchedule&&key===selected}" aria-label="${escAttr(new Intl.DateTimeFormat(locale,{dateStyle:'full'}).format(d))}"><span>${escHtml(new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d))}</span><strong>${escHtml(new Intl.DateTimeFormat(locale,{month:'short',day:'numeric'}).format(d))}</strong></button>`;}).join('')}</div><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="1" aria-label="${escAttr(i18nCore.t('apri.nextWeek'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></nav><div class="event-view-mode" role="group" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button class="btn btn-ghost" type="button" data-event-action="day-view" aria-pressed="${!eventAllSchedule}">${escHtml(i18nCore.t('apri.dayView'))}</button><button class="btn btn-ghost" type="button" data-event-action="all-schedule" aria-pressed="${eventAllSchedule}">${escHtml(i18nCore.t('apri.allSchedule'))}</button></div>`;
+}
+function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventUpNext(events)}${renderEventCalendar(events,{variant:'desktop'})}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
+function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${renderEventWeek()}${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function eventSelectedDaySections(events){
+  const agenda=eventPresentationDomain.dayAgenda(events,eventAgendaDate()),seen=new Set();
+  const selected=Object.values(agenda).flat().filter(event=>{const id=eventStableId(event);if(seen.has(id)||eventTypeFilter!=='all'&&eventPresentationDomain.eventType(event)!==eventTypeFilter)return false;seen.add(id);return true;});
+  selected.sort((a,b)=>eventPresentationDomain.eventDate(a.start)-eventPresentationDomain.eventDate(b.start));
+  return selected.length?[{group:'day',events:selected}]:[];
+}
+function eventSelectedDayHours(event,timing){
+  if(timing.zoneUncertain)return eventTimeBasisLabel(event,{compact:true});
+  if(eventPresentationDomain.dateOnly(event.start)||eventPresentationDomain.dateOnly(event.end))return i18nCore.t('events.hoursUnknown');
+  if(!timing.multiDay)return timing.timeLabel||i18nCore.t('events.hoursUnknown');
+  const date=eventAgendaDate(),start=eventPresentationDomain.eventDate(event.start),end=eventPresentationDomain.eventDate(event.end);
+  if(isoDate(end)===date)return i18nCore.t('apri.until',{time:timing.endTimeLabel});
+  if(isoDate(start)===date)return i18nCore.t('apri.from',{time:timing.startTimeLabel});
+  return i18nCore.t('apri.ongoing');
+}
 function syncEventFilterScrollState(row){
   if(!row)return;
   row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
@@ -13223,7 +13255,9 @@ function eventBonusesHtml(event,{full=false}={}){
   const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
   const benefitRows=`<ul class="event-benefit-list">${eventBonusGroups(visible).map(group=>`<li>${group.scope?`<span class="event-benefit-scope">${escHtml(group.scope)}:</span> `:''}<span class="event-benefit-text">${group.items.map(eventBonusText).join('; ')}</span></li>`).join('')}</ul>`;
   const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
-  if(bonuses.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  const featured=facts.bosses.length?facts.bosses:facts.encounters;
+  const featuredHtml=full?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+  if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
   if(features.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
@@ -13264,29 +13298,30 @@ function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
   const disclosureState=new Map([...out.querySelectorAll('[data-event-disclosure]')].map(node=>[node.dataset.eventDisclosure,node.open]));
   const focused=document.activeElement?.closest?.('[data-event-action]'),activeDisclosure=document.activeElement?.tagName==='SUMMARY'?document.activeElement.parentElement?.dataset.eventDisclosure:null;
-  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,calendar:focused.closest('.event-calendar')?.className}:null;
+  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,weekDelta:focused.dataset.eventWeekDelta,calendar:focused.closest('.event-calendar')?.className}:null;
   const restoreInteraction=()=>{
     out.querySelectorAll('[data-event-disclosure]').forEach(node=>{if(disclosureState.has(node.dataset.eventDisclosure))node.open=disclosureState.get(node.dataset.eventDisclosure);});
     if(activeDisclosure){[...out.querySelectorAll('[data-event-disclosure]')].find(node=>node.dataset.eventDisclosure===activeDisclosure)?.querySelector('summary')?.focus({preventScroll:true});return;}
     if(!focusKey)return;
-    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.closest('.event-calendar')?.className===focusKey.calendar);
+    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.dataset.eventWeekDelta===focusKey.weekDelta&&node.closest('.event-calendar')?.className===focusKey.calendar);
     next?.focus({preventScroll:true});
   };
   out.setAttribute('aria-busy',String(_eventLoadState==='loading'||!_eventData));
   if(_eventLoadState==='loading'||!_eventData){out.innerHTML=eventStateHtml('loading',i18nCore.t('events.loading'));return;}
   if(_eventLoadState==='offline'||navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('offline',i18nCore.t('events.offlineTitle'),i18nCore.t('events.offline'),i18nCore.t('events.retry'),'retry');return;}
   if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retry');return;}
-  const allEvents=_eventData.events||[],sections=eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter,date:eventCalendarDate});
+  const allEvents=_eventData.events||[],sections=eventAllSchedule?eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter}):eventSelectedDaySections(allEvents);
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
   const filterHtml=`${eventsSourceHtml()}<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
-  const dateContext=eventCalendarDate?`<p class="event-date-filter">${escHtml(i18nCore.t('events.onDate',{date:new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'full'}).format(new Date(eventCalendarDate+'T12:00:00'))}))}</p>`:'';
-  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
-  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
+  const dayLabel=new Intl.DateTimeFormat(i18nCore.getLocale(),{weekday:'long',month:'long',day:'numeric'}).format(new Date(eventAgendaDate()+'T12:00:00'));
+  const dateContext=!eventAllSchedule?`<h2 class="event-agenda-title">${escHtml(dayLabel)}</h2>`:'';
+  if(!sections.length){const filtered=eventTypeFilter!=='all'||!eventAllSchedule,clear=!eventAllSchedule?'all-schedule':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(!eventAllSchedule?'apri.allSchedule':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
+  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(section.group==='day'?i18nCore.t('apri.dayView'):eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
     const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel&&section.group!=='day'?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));
@@ -13295,9 +13330,16 @@ function renderEventsOnly(){
 function eventsAction(event){
   const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
   const action=control.dataset.eventAction;
+  if(action==='all-schedule'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='day-view'){eventAllSchedule=false;renderEventsOnly();return;}
+  if(action==='week'){
+    const delta=Number(control.dataset.eventWeekDelta);if(delta!==1&&delta!==-1)return;
+    const next=new Date(`${eventAgendaDate()}T12:00:00`);next.setDate(next.getDate()+delta*7);eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);eventAllSchedule=false;eventCalendarDate=isoDate(next);renderEventsOnly();return;
+  }
   if(action==='details'){openEventBrief(control.dataset.eventId,control);return;}
   if(action==='filter'){setEventTypeFilter(control.dataset.type||'all');return;}
-  if(action==='date'||action==='clear-date'){setEventCalendarDate(control.dataset.date||eventCalendarDate);return;}
+  if(action==='clear-date'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='date'){setEventCalendarDate(control.dataset.date);return;}
   if(action==='month'){
     const delta=Number.parseInt(control.dataset.eventMonthDelta||'',10);if(delta===-1||delta===1)moveEventCalendarMonth(delta);return;
   }

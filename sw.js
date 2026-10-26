@@ -120,6 +120,8 @@ const OPTIONAL_SHELL_URLS=[
   `./?v=${RELEASE}`,
   './manifest.json',
   './assets/tradeloop-icon.svg',
+  './assets/brand/apri.webp',
+  './assets/brand/ivory-paper.webp',
   './assets/tradeloop-icon-96.png',
   './assets/tradeloop-icon-180.png',
   './assets/tradeloop-icon-192.png',

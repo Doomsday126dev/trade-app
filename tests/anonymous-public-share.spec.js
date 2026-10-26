@@ -526,7 +526,8 @@ test.describe('anonymous public share bootstrap',()=>{
       wishlist:{
         Snom:{p:'H'},
         'Pikachu (Worlds 2025)':{p:'M'},
-        'Pikachu (Worlds 2026)':{p:'L'}
+        'Pikachu (Worlds 2026)':{p:'L'},
+        'Pikachu (Gloria)':{p:'L'}
       }
     }};
     const requests=await installPublicFirebase(page,{projection});
@@ -550,10 +551,13 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(worlds2025.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
     await expect(worlds2025.locator('img')).toHaveAttribute('data-optical-ready','true');
     expect(await worlds2025.locator('img').evaluate(image=>Number(image.style.transform.match(/[\d.]+/)?.[0]||1))).toBeGreaterThan(1.5);
-    await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
-    await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
-    await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
-    await expect(worlds2026.locator('img')).toHaveCount(0);
+    await expect(worlds2026.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/dittobase-25-pikachu-wcs-2026\.png/);
+    await expect(worlds2026.locator('img')).toHaveAttribute('data-optical-ready','true');
+    const held=page.locator('.share-pcard').filter({hasText:'Pikachu (Gloria)'});
+    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
+    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Gloria)');
+    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Gloria)');
+    await expect(held.locator('img')).toHaveCount(0);
     expect(await page.locator('.public-share-pokemon-sprite').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
   });
 

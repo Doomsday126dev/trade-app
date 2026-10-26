@@ -52,7 +52,7 @@ test('Events expose Now Soon Later hierarchy accessible filters, visible bonuses
   assert.match(source,/ArrowLeft.*ArrowRight.*Home.*End/s);
   assert.match(source,/role="group".*aria-pressed=/s);
   assert.match(source,/data-group="\$\{section\.group\}"/);
-  assert.match(source,/section\.group==='now'\?'is-active'/);
+  assert.match(source,/eventPresentationDomain\.eventGroup\(event\)==='now'\?'is-active'/);
   assert.match(source,/eventPresentationDomain\.eventTiming/);
   assert.match(source,/const tag='article'/);
   assert.match(source,/aria-label=.*events\.openDetailsFor/s);

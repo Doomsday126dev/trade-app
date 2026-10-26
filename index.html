@@ -128,7 +128,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <article id="privacy-pg" class="privacy-page ui-container ui-container-standard" lang="en" aria-labelledby="privacy-title" hidden>
   <header class="privacy-page-header">
-    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
+    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/brand/apri.webp" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
     <a class="btn btn-secondary" href="./">Back to app</a>
   </header>
   <div class="privacy-page-intro">
@@ -167,7 +167,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div style="margin-top:4px"></div>
     <h2 style="font-size:20px;font-weight:700;margin-bottom:5px" data-i18n="setup.title">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6" data-i18n="setup.subtitle">One-time setup. Takes about five minutes.</p>
@@ -187,7 +187,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div id="login-pg" data-bootstrap-pending="true" aria-busy="true">
   <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings" disabled data-bootstrap-disabled="true"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <section id="preauth-pg" class="login-bootstrap-status" aria-labelledby="preauth-title" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
       <h1 class="preauth-title" id="preauth-title" data-i18n="app.preparing">Preparing your trade list</h1>
       <p class="preauth-detail sr-only" id="preauth-detail" data-i18n="app.preparingDetail">Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.</p>
@@ -246,7 +246,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- APP -->
 <div id="app" style="display:none">
   <div class="topbar">
-    <div class="logo"><img class="brand-mark" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="logo"><img class="brand-mark" src="assets/brand/apri.webp" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="topbar-r">
       <div class="topbar-sync-wrap">
         <div class="sync-row" id="sync-pill" data-i18n-title="status.details" title="Open save status details" onclick="openSyncDetail()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSyncDetail()}" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
@@ -298,11 +298,15 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
   <div class="page" id="tab-more">
     <h2 data-i18n="product.more">More</h2>
-    <div class="more-destinations">
-      <button type="button" class="btn btn-secondary" onclick="openSettingsPanel('account',{section:'profile'})"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span data-i18n="settings.sectionProfile">Profile</span></button>
-      <button type="button" class="btn btn-secondary" onclick="openSettingsPanel('account')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-sliders"></use></svg><span data-i18n="settings.title">Settings</span></button>
-      <button type="button" class="btn btn-secondary" id="more-admin-link" hidden onclick="switchTab('admin')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="nav.admin">Admin</span></button>
+    <p class="more-intro" data-i18n="apri.moreIntro">Your account, preferences, and a little help.</p>
+    <button type="button" class="more-profile" onclick="openSettingsPanel('account',{section:'profile',returnFocus:this})"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionProfile">Profile</strong><small data-i18n="settings.profileSummary">Your trainer identity and public profile.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+    <div class="more-grid">
+      <section class="more-group" aria-labelledby="more-preferences"><h3 id="more-preferences" data-i18n="apri.preferences">Account &amp; preferences</h3>
+<button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'security',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-key"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionSecurity">Account & Security</strong><small data-i18n="security.description">Manage how you sign in to this trainer account.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'appearance',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-sun"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionAppearance">Appearance</strong><small data-i18n="settings.appearanceSummary">Choose how the app looks on this device.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'language',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionLanguage">Language</strong><small data-i18n="apri.languageHelp">Choose your display language.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'tools',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionTools">Tools</strong><small data-i18n="settings.toolsSummary">Open occasional list and app utilities.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'data',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionData">App & Data</strong><small data-i18n="apri.dataHelp">Sync status, storage, and app information.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button></section>
+      <section class="more-group" aria-labelledby="more-help"><h3 id="more-help" data-i18n="apri.help">Help &amp; information</h3>
+<button type="button" class="more-entry" onclick="openWhatsNew()"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-sparkles"></use></svg><span class="more-entry-copy"><strong data-i18n="app.whatsNew">What’s new</strong><small data-i18n="apri.releaseHelp">See recent improvements.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSyncDetail()"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-activity"></use></svg><span class="more-entry-copy"><strong data-i18n="apri.syncTitle">Sync status</strong><small data-i18n="apri.syncHelp">Check whether your changes are saved.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openLegalAcknowledgements(this)"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span class="more-entry-copy"><strong data-i18n="legal.title">Legal & acknowledgements</strong><small data-i18n="apri.legalHelp">About this fan-made tool and its sources.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><a class="more-entry" href="?legal=privacy"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span class="more-entry-copy"><strong data-i18n="apri.privacy">Privacy</strong><small data-i18n="apri.privacyHelp">How your information is handled.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></a></section>
     </div>
+    <div class="more-footer"><button type="button" class="btn btn-secondary signout" onclick="logout()" data-i18n="account.signOut">Sign out</button><button type="button" class="btn btn-secondary" id="more-admin-link" hidden onclick="switchTab('admin')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="nav.admin">Admin</span></button></div>
   </div>
   <!-- BROWSE -->
   <div class="page" id="tab-browse">

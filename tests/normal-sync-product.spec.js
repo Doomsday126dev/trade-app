@@ -121,7 +121,10 @@ test('legacy account preserves inert FT while wants edits and publication surviv
 test('wants editor saves and prioritizes through the existing canonical runtime',async({page})=>{
   await install(page);await settled(page);
   await page.evaluate(()=>openCombinedEditor());
-  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-shiny').check();
+  await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name-suggestions').getByRole('option',{name:'Charmander',exact:true}).click();
+  await expect(page.locator('#combined-name-suggestions')).toBeHidden();
+  await page.locator('#combined-shiny').check();
   await page.locator('#combined-save').click();await settled(page);
   await expect(page.locator('#combined-editor-modal')).toBeHidden();
   const entries=await page.evaluate(()=>productDeclarations().entries.filter(e=>e.name==='Charmander'));
