@@ -434,7 +434,7 @@ let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
 let myListIntent='lf';
 let combinedSelection=new Set(),combinedOwner='',combinedEditor=null,combinedLimit=120;
-let wantsSelectionMode=false;
+let wantsSelectionMode=false,wantsPriorityFilter='ALL';
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
 function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
@@ -445,7 +445,7 @@ function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
 }
 const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
-  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
+  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
@@ -453,7 +453,15 @@ function renderCombinedList(model=productDeclarations()){
   const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
-  const sections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const allSections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const counts={ALL:groups.length,H:0,M:0,L:0};
+  for(const entry of byEntry.keys())if(Object.hasOwn(counts,entry.p))counts[entry.p]++;
+  document.querySelectorAll('[data-wants-priority-filter]').forEach(button=>{
+    const key=button.dataset.wantsPriorityFilter;
+    button.setAttribute('aria-pressed',String(wantsPriorityFilter===key));
+    button.querySelector('.wants-filter-count').textContent=i18nCore.formatNumber(counts[key]);
+  });
+  const sections=allSections.filter(section=>wantsPriorityFilter==='ALL'||section.priority===wantsPriorityFilter);
   const current=new Map([...host.querySelectorAll(':scope > section')].map(section=>[section.dataset.wantsSection,section]));
   const active=[],nodes=[];let total=0,hasMore=false;
   const baseLimit=Math.floor(combinedLimit/Math.max(1,sections.length));
@@ -520,13 +528,20 @@ function renderCombinedList(model=productDeclarations()){
   }
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
-  if(!active.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
+  if(!active.length)host.innerHTML=`<p class="empty" role="status">${escHtml(i18nCore.t(wantsPriorityFilter==='ALL'?'contextSearch.empty':'workflow.priorityEmpty',{priority:wantSectionLabel({priority:wantsPriorityFilter,flags:[]})}))}</p>`;
   const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
   for(const [key,cached]of combinedRowCache){if(combinedRowCache.size<=cacheBudget)break;if(!visibleNodes.has(cached.row))combinedRowCache.delete(key);}
   window.__pogoMyListRenderState={complete:true,rendered:nodes.length,total,query,hasMore,usableAt:performance.now()};
   refreshCombinedSearch(model);
+}
+function setWantsPriorityFilter(value){
+  if(!['ALL','H','M','L'].includes(value))return;
+  wantsPriorityFilter=value;
+  // Choosing a priority reveals its rows; selections and copy/export scopes stay intact.
+  if(value!=='ALL')wantsCollapsedSections.delete(value);
+  renderMyList();
 }
 function toggleWantsSection(key){
   if(wantsCollapsedSections.has(key))wantsCollapsedSections.delete(key);else wantsCollapsedSections.add(key);
@@ -554,6 +569,9 @@ function refreshCombinedSearch(model=productDeclarations()){
   toolbar.hidden=!wantsSelectionMode&&!selected.length;
   document.getElementById('wants-select-toggle').hidden=wantsSelectionMode||selected.length>0;
   document.getElementById('combined-selected-count').textContent=selected.length?i18nCore.t('workflow.selected',{count:selected.length}):i18nCore.t('workflow.select');
+  const outside=selected.filter(entry=>wantsPriorityFilter!=='ALL'&&entry.p!==wantsPriorityFilter).length;
+  const scopeNote=document.getElementById('wants-selection-filter-note');
+  scopeNote.hidden=!outside;scopeNote.textContent=outside?i18nCore.t('workflow.selectedOtherPriorities',{count:outside}):'';
   document.getElementById('wants-selection-share').hidden=!selected.length;
   document.getElementById('tab-mylist').classList.toggle('wants-selecting',wantsSelectionMode||selected.length>0);
   const selectedHost=document.getElementById('combined-search');selectedHost.hidden=!selected.length;
@@ -2178,7 +2196,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
-  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
+  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
@@ -13198,14 +13216,17 @@ function renderEventUpNext(events){
 function renderEventWeek(){
   const selected=eventAgendaDate(),date=new Date(`${selected}T12:00:00`),locale=i18nCore.getLocale();
   const monday=new Date(date);monday.setDate(date.getDate()-(date.getDay()+6)%7);
-  return`<nav class="event-week" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="-1" aria-label="${escAttr(i18nCore.t('apri.previousWeek'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><div class="event-week-days">${Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);const key=isoDate(d);return`<button type="button" class="event-week-day" data-event-action="date" data-date="${key}" aria-pressed="${!eventAllSchedule&&key===selected}" aria-label="${escAttr(new Intl.DateTimeFormat(locale,{dateStyle:'full'}).format(d))}"><span>${escHtml(new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d))}</span><strong>${escHtml(new Intl.DateTimeFormat(locale,{month:'short',day:'numeric'}).format(d))}</strong></button>`;}).join('')}</div><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="1" aria-label="${escAttr(i18nCore.t('apri.nextWeek'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></nav><div class="event-view-mode" role="group" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button class="btn btn-ghost" type="button" data-event-action="day-view" aria-pressed="${!eventAllSchedule}">${escHtml(i18nCore.t('apri.dayView'))}</button><button class="btn btn-ghost" type="button" data-event-action="all-schedule" aria-pressed="${eventAllSchedule}">${escHtml(i18nCore.t('apri.allSchedule'))}</button></div>`;
+  return`<div class="event-planner"><nav class="event-week" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="-1" aria-label="${escAttr(i18nCore.t('apri.previousWeek'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><div class="event-week-days">${Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);const key=isoDate(d);return`<button type="button" class="event-week-day" data-event-action="date" data-date="${key}" aria-pressed="${!eventAllSchedule&&key===selected}" aria-label="${escAttr(new Intl.DateTimeFormat(locale,{dateStyle:'full'}).format(d))}"><span>${escHtml(new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d))}</span><strong>${escHtml(new Intl.DateTimeFormat(locale,{month:'short',day:'numeric'}).format(d))}</strong></button>`;}).join('')}</div><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="1" aria-label="${escAttr(i18nCore.t('apri.nextWeek'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></nav><div class="event-view-mode" role="group" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button class="btn btn-ghost" type="button" data-event-action="day-view" aria-pressed="${!eventAllSchedule}">${escHtml(i18nCore.t('apri.dayView'))}</button><button class="btn btn-ghost" type="button" data-event-action="all-schedule" aria-pressed="${eventAllSchedule}">${escHtml(i18nCore.t('apri.allSchedule'))}</button></div></div>`;
 }
 function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventUpNext(events)}${renderEventCalendar(events,{variant:'desktop'})}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
-function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${renderEventWeek()}${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${renderEventWeek()}${eventsFeedIsStale()?eventsSourceHtml():''}${timeline}${eventsFeedIsStale()?'':eventsSourceHtml()}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
 function eventSelectedDaySections(events){
   const agenda=eventPresentationDomain.dayAgenda(events,eventAgendaDate()),seen=new Set();
   const selected=Object.values(agenda).flat().filter(event=>{const id=eventStableId(event);if(seen.has(id)||eventTypeFilter!=='all'&&eventPresentationDomain.eventType(event)!==eventTypeFilter)return false;seen.add(id);return true;});
-  selected.sort((a,b)=>eventPresentationDomain.eventDate(a.start)-eventPresentationDomain.eventDate(b.start));
+  // Lead with today's timed events/boundaries; ongoing seasons remain in the agenda.
+  const actionable=new Set([...agenda.timed,...agenda.starting,...agenda.ending].map(eventStableId));
+  const dayTime=event=>isoDate(eventPresentationDomain.eventDate(event.end))===eventAgendaDate()&&isoDate(eventPresentationDomain.eventDate(event.start))!==eventAgendaDate()?event.end:event.start;
+  selected.sort((a,b)=>Number(actionable.has(eventStableId(b)))-Number(actionable.has(eventStableId(a)))||eventPresentationDomain.eventDate(dayTime(a))-eventPresentationDomain.eventDate(dayTime(b)));
   return selected.length?[{group:'day',events:selected}]:[];
 }
 function eventSelectedDayHours(event,timing){
@@ -13265,8 +13286,9 @@ function eventBonusesHtml(event,{full=false}={}){
   // not mean unannounced, no bonuses, or a successful source check.
   return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
 }
+function eventsFeedIsStale(){const checked=Number(_eventData?.fetchedAt);return Boolean(_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL);}
 function eventsSourceHtml(){
-  const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
+  const checked=Number(_eventData?.fetchedAt),stale=eventsFeedIsStale();
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
   const saved=_eventData?.sourceFallback;
   return`<div class="events-source${stale?' is-stale':''}" role="status"><div>${stale?`<strong>${escHtml(i18nCore.t('events.staleFeed'))}</strong>`:''}<p class="events-checked">${escHtml(i18nCore.t(saved?'events.savedSchedule':'events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
@@ -13312,7 +13334,7 @@ function renderEventsOnly(){
   if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retry');return;}
   const allEvents=_eventData.events||[],sections=eventAllSchedule?eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter}):eventSelectedDaySections(allEvents);
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
-  const filterHtml=`${eventsSourceHtml()}<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
+  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
   const dayLabel=new Intl.DateTimeFormat(i18nCore.getLocale(),{weekday:'long',month:'long',day:'numeric'}).format(new Date(eventAgendaDate()+'T12:00:00'));
   const dateContext=!eventAllSchedule?`<h2 class="event-agenda-title">${escHtml(dayLabel)}</h2>`:'';
   if(!sections.length){const filtered=eventTypeFilter!=='all'||!eventAllSchedule,clear=!eventAllSchedule?'all-schedule':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(!eventAllSchedule?'apri.allSchedule':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
@@ -13321,7 +13343,7 @@ function renderEventsOnly(){
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
     const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel&&section.group!=='day'?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta">${section.group!=='day'||timing.multiDay?`<span class="event-card-date">${escHtml(timing.dateLabel)}</span>`:''}${timing.timeLabel&&section.group!=='day'?`<span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-relative">${escHtml(relative)}</span>`:''}<span class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</span></div>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));

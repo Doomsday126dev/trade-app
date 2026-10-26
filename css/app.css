@@ -26,7 +26,7 @@
 .contextual-copy-status,.contextual-unresolved{color:var(--ac2)}
 :root,html[data-theme="dark"]{
   --bg:#191b20;--bg2:#202329;--card:#25282f;
-  --border:rgba(255,255,255,0.075);--border2:rgba(255,255,255,0.16);
+  --border:rgba(255,255,255,0.075);--border2:rgba(255,255,255,0.16);--control-border:#81858e;
   --text:#f5f3ed;--muted:#b7b8be;--accent:#f7c745;--ac2:#f7c745;
   --action-bg:#f7c745;--action-text:#211c0c;--accent-soft:rgba(247,199,69,.13);--paper:none;
   --H:#ef4444;--M:#f59e0b;--L:#10b981;
@@ -47,7 +47,7 @@
 }
 html[data-theme="light"]{
   --bg:#faf7ef;--bg2:#f3efe5;--card:#fffdf8;
-  --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);
+  --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);--control-border:#85837d;
   --text:#20242d;--muted:#62656d;--accent:#edb926;--ac2:#805900;
   --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp);
   --H:#dc2626;--M:#d97706;--L:#059669;
@@ -60,7 +60,7 @@ html[data-theme="light"]{
 @media(prefers-color-scheme:light){
   :root:not([data-theme]){
     --bg:#faf7ef;--bg2:#f3efe5;--card:#fffdf8;
-    --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);
+    --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);--control-border:#85837d;
     --text:#20242d;--muted:#62656d;--accent:#edb926;--ac2:#805900;
   --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp);
     --H:#dc2626;--M:#d97706;--L:#059669;
@@ -2681,3 +2681,73 @@ html[data-theme="light"] .myrow-trait.lucky{color:#805900}
 .more-entry-icon{width:22px;height:22px;flex:0 0 22px;color:var(--muted)}
 #tab-schedule .event-filter-row{padding-bottom:8px}
 #tab-schedule .event-agenda-title{margin-top:14px}
+
+/* Priority filtering is local presentation; add priority and share scopes stay separate. */
+.wants-priority-filter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--card);margin:0 0 18px}
+.wants-priority-filter button{display:grid;place-content:center;gap:2px;min-height:48px;padding:5px 8px;border-radius:6px;background:transparent;color:var(--text);font:600 13px var(--font)}
+.wants-priority-filter button:hover{background:var(--bg2)}
+.wants-priority-filter button[aria-pressed="true"]{background:var(--action-bg);color:var(--action-text);box-shadow:inset 0 -2px var(--ac2)}
+.wants-filter-count{font-size:11px;font-weight:500}
+.wants-selection-filter-note{flex-basis:100%;font-size:12px;color:var(--muted)}
+.field-control,.app-field,.app-search-input,select,select.field-control,.field select,.sched-form-row select,#tab-admin :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea){border-color:var(--control-border)}
+.field-control:focus,.app-field:focus,.app-search-input:focus{border-color:var(--ac2)}
+.more-entry{min-height:56px;padding-block:10px}
+.more-profile{min-height:64px}
+#events-description{display:none}
+#tab-schedule .sched-hdr{margin-bottom:14px}
+.event-planner{margin-bottom:4px}
+.events-source{gap:8px;align-items:center;font-size:11px}
+.events-source .events-checked{font-size:11px;margin:0}
+.events-source .btn{min-height:44px;padding:6px 8px;font-size:11px;background:transparent;border-color:transparent;color:var(--ac2)}
+.event-agenda-card .event-card-main{gap:3px}
+.event-agenda-card .event-time-basis{margin:0;font-size:11px}
+.event-agenda-card .event-benefits{margin-top:5px}
+.event-agenda-card .event-benefit-list{gap:3px}
+.event-agenda-card .event-type-tag{min-height:0}
+@media(max-width:600px){
+ .event-planner{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center}
+ .event-week{display:contents}
+ .event-week-days{grid-column:1/-1;grid-row:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:4px;gap:0}
+ .event-week-arrow{grid-row:2;width:44px;min-height:44px}.event-week-arrow:last-child{grid-column:3;margin:0}
+ .event-view-mode{grid-column:2;grid-row:2;justify-content:center;gap:4px;margin:0}
+ .event-view-mode .btn{padding-inline:8px}
+ .event-week-day{min-height:48px}
+ .event-agenda-hours{grid-column:1;grid-row:1;padding:0;border:0;font-size:13px;line-height:1.4}
+ .event-agenda-card .event-card-main{grid-column:1;grid-row:2}
+ .event-agenda-card .event-card-cue{grid-row:1/3}
+ .event-agenda-card .event-card-title{font-size:16px;line-height:1.3}
+ #events-out .event-group[data-group="day"] .event-card{padding:12px;gap:4px 6px}
+ #tab-schedule .event-agenda-title{font-size:20px;margin:8px 0 10px}
+ #tab-schedule .event-filter-row{padding-bottom:4px}
+ .event-filter-row .event-filter{min-height:44px}
+}
+/* Save state has a shape as well as a color, including compact phone headers. */
+.sync-dot{display:grid;place-items:center;width:16px;height:16px;background:transparent!important;font-size:14px;font-weight:800;line-height:1}
+.sync-dot.online{color:var(--ok)}.sync-dot.online::before{content:'✓'}
+.sync-dot.syncing{color:var(--warn)}.sync-dot.syncing::before{content:'↻'}
+.sync-dot.offline{color:var(--danger)}.sync-dot.offline::before{content:'!'}
+.sync-dot.localOnly{color:var(--muted)}.sync-dot.localOnly::before{content:'▣'}
+.ac-input,.field :is(input,select,textarea),.frow :is(input,select),.have-filter,.language-field select,.import-textarea,.sched-form-row :is(input,select,textarea){border-color:var(--control-border)}
+.ac-input:focus{border-color:var(--ac2)}
+#combined-list .myrow-trait.shiny,#combined-list .myrow-trait.lucky{width:auto;min-width:0;max-width:none;font-size:11px;padding:1px 6px;min-height:20px}
+#combined-list .myrow-trait.shiny::before,#combined-list .myrow-trait.lucky::before{content:none}
+.event-filter-scroll::after{content:'›';display:grid;place-items:center;font-size:22px;font-weight:600;color:var(--ac2)}
+.event-card-time .event-time-basis{font-weight:400;color:var(--muted)}
+.event-card-time .event-time-basis:not(:first-child)::before{content:'·';margin-right:5px}
+@media(min-width:601px){
+ #tab-schedule{padding-top:24px}
+ .event-week{padding:4px}.event-week-day{min-height:52px}
+ .event-view-mode{margin:0}
+ #tab-schedule .event-agenda-title{margin:8px 0 12px}
+ #events-out .event-group[data-group="day"] .event-card{padding:14px}
+ .event-agenda-card{grid-template-columns:144px minmax(0,1fr) 44px;gap:12px}
+ .event-agenda-hours{font-size:14px;padding-right:12px}
+ .event-agenda-card .event-card-main{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+ .event-agenda-card .event-card-title{grid-column:1;grid-row:1;font-size:16px}
+ .event-agenda-card .event-card-kicker{grid-column:2;grid-row:1;justify-content:flex-end}
+ .event-agenda-card :is(.event-card-time,.event-bonuses,.event-featured,.event-up-next-pokemon-names,.event-information-link){grid-column:1/-1}
+ .event-agenda-card .event-bonuses{margin:2px 0 0}
+}
+#tab-find :is(.field-control,.app-search-input):focus{border-color:var(--ac2)}
+#tab-find :is(.field-control,.app-search-input):focus-visible{outline-color:var(--ac2)}
+@media(max-width:600px){.event-card-time .event-time-basis:not(:first-child)::before{content:none}}

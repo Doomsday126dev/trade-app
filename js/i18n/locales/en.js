@@ -650,5 +650,8 @@
     ,"wantEditor.add":"Add want"
     ,"wantEditor.pokemon":"Pokémon"
     ,"costume.genderUnsupported":"{name}: the saved gender does not match a released form of this costume."
+    ,"workflow.priorityFilter":"Filter list by priority"
+    ,"workflow.priorityEmpty":"No Pokémon with {priority} priority."
+    ,"workflow.selectedOtherPriorities":"{count} selected in other priorities; included when sharing selection."
   });
 })(window);

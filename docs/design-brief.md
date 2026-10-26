@@ -40,3 +40,7 @@ No spreadsheet My List, new routes/models, auth changes, data writes/migrations,
 Direct trainer lookup opens an existing shared list without first saving a Favorite. The Pokémon-demand search currently searches Favorites’ shared wanted lists; it does not establish owned inventory or global community demand. The revised copy makes those differences explicit. An empty result is not advice to transfer a Pokémon. Broader discovery, opt-in directory/location filters, and a calendar image export are separate future decisions.
 
 The user subsequently prioritized design before new login. Existing sign-in remains unchanged; provider onboarding screens, proposed registration flows, provider configuration and auth-owner changes are excluded from this branch.
+
+## Approved priority selector and review corrections (2026-10-26)
+User approved All / High / Medium / Low with live counts (reference libfile_58625fb5a82481918e24a372e02c8af7, viewed). Counts represent distinct rendered wants, independent of Find. All includes unprioritized wants and preserves grouping. Filter is ephemeral, resets on account switch, and never changes saved data or full/selected/top share scopes. Hidden selections remain selected with explicit notice. Selecting a priority opens that section. Add-form priority is separate.
+Independent visual review requested a more compact phone Events header/agenda, removal of repetitive More subtitles, distinct Trainers vs Favorites captures, and 3:1 input boundaries. These are presentation corrections, with truthful time/source/error states retained.
