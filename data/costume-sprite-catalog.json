@@ -5039,7 +5039,13 @@
         "shiny": "0025-00-00-067+S.png",
         "femaleShiny": "0025-00-00-067+S.png"
       },
-      "unavailableReason": ""
+      "unavailableReason": "",
+      "gitBlobShas": {
+        "default": "54e42d3f8c26e595ee29edbbc7d76fb1d7a7e94d",
+        "female": "54e42d3f8c26e595ee29edbbc7d76fb1d7a7e94d",
+        "shiny": "6e840dbcb92b90ef8bd030b8cf9adaf279678f32",
+        "femaleShiny": "6e840dbcb92b90ef8bd030b8cf9adaf279678f32"
+      }
     },
     {
       "no": 25,
@@ -11128,7 +11134,13 @@
       "sourceUrl": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-053.png",
       "sourcePage": "https://pikachugo.vercel.app/",
       "sourceLabel": "Pikachu (Detective 2023)",
-      "unavailableReason": ""
+      "unavailableReason": "",
+      "gitBlobShas": {
+        "default": "5cf630dc8a01745ac5c55b20a1b28e09b9c95b7d",
+        "female": "0c77132143f4c834a004264cba799c9109c0e900",
+        "shiny": "e8a7acd47db06577366645a913b3c6d80eedac92",
+        "femaleShiny": "2574d145ef73b59a05d817ed7cb0785bb334834a"
+      }
     }
   ]
 }

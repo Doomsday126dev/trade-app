@@ -617,6 +617,9 @@ function closeWantsPicker(input){
 function renderWantsPicker(input){
   const list=document.getElementById(input.getAttribute('aria-controls'));if(!list||input.readOnly)return;
   const query=normalizeAcText(input.value);
+  // A fully entered reviewed costume is already an exact choice; keep its
+  // requirements controls reachable. Partial/family queries still show aliases.
+  if(wantsPickerItems.some(item=>normalizeAcText(item.name)===query)&&costumeSpriteCatalogDomain.resolve({name:input.value})){closeWantsPicker(input);return;}
   input._pickerRows=query?rankAutocompleteItems(wantsPickerItems,query,{limit:25}):[];input._pickerIndex=-1;
   list.replaceChildren(...input._pickerRows.map((item,index)=>{const option=document.createElement('div');option.id=list.id+'-'+index;option.className='wants-picker-option';option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.textContent=item.name;option.addEventListener('pointerdown',event=>event.preventDefault());option.addEventListener('click',()=>chooseWantsPicker(input,index));return option;}));
   const open=input._pickerRows.length>0;list.hidden=!open;input.setAttribute('aria-expanded',String(open));input.removeAttribute('aria-activedescendant');
