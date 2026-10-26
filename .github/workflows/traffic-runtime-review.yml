@@ -1,0 +1,44 @@
+name: Isolated traffic runtime qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/traffic-runtime-review.yml'
+permissions:
+  contents: read
+jobs:
+  traffic-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: 84e057be83f5de292c660324b156fd07940ec3af
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions --ignore-scripts
+      - name: Official browser dependency archive
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Exact runtime tests including intercepted traffic privacy journeys
+        run: |
+          node --test tests/*.test.cjs
+          npm run check:pages-release
+      - name: Unchanged browser performance budgets
+        run: |
+          python3 -m http.server 8878 --bind 127.0.0.1 >/tmp/runtime148-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8878/ >/dev/null; then break; fi
+            sleep 1
+          done
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
