@@ -22,7 +22,7 @@ for(const width of [1920,1440,768,390,320])test(`actual More rows fit and remain
           return{id:el.id,box:box(el),content:box(content),text:[...range.getClientRects()].map(r=>({left:r.left,right:r.right})),icons:[...el.querySelectorAll('svg')].map(box)};
         })};
     });
-    measurements.push({locale,...measured});expect(measured.overflow).toBe(false);expect(measured.rows).toHaveLength(7);
+    measurements.push({locale,...measured});expect(measured.overflow).toBe(false);expect(measured.rows.map(row=>row.id)).toEqual(['more-transfer','more-share','more-import','more-profile','more-settings','more-help']);
     expect(measured.columns.split(' ').length).toBe(width>=768?2:1);
     for(const row of measured.rows){
       expect(row.box.height).toBeGreaterThanOrEqual(48);expect(row.icons).toHaveLength(2);

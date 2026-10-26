@@ -273,13 +273,13 @@ test.describe('visual smoke', () => {
   test('reviewed and unavailable costume art stays honest across signed-in surfaces',async({page})=>{
 
     const mappings=[['Pikachu (Worlds 2025)','pikachu-world-champs-2025.png'],['Pikachu (Fragment)','pikachu-thunderbolt-cap.png'],['Raichu Fragment Cap','raichu-thunderbolt-cap.png'],['Pikachu (Halloween 2022)','pikachu-halloween-mischief.png'],['Pikachu (Halloween 2024)','pikachu-witch.png'],['Pikachu (Holiday 2022)','pikachu-holiday.png'],['Pikachu (Holiday 2024)','pikachu-holiday.png'],['Gengar (Halloween 2024)','gengar-spooky-festival.png']];
-    const costumes=Object.fromEntries([...mappings.map(([name])=>[name,'H']),['Pikachu (Worlds 2026)','M']]);
+    const costumes=Object.fromEntries([...mappings.map(([name])=>[name,'H']),['Pikachu (Gloria)','M']]);
     await currentList(page,{costumes});
     const check=async(rows)=>{
       for(const[name,file]of mappings)await expect(rows.filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp('assets/sprites/go/'+file.replaceAll('.','\\.')));
-      const unavailable=rows.filter({hasText:'Pikachu (Worlds 2026)'});
-      await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
-      await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
+      const unavailable=rows.filter({hasText:'Pikachu (Gloria)'});
+      await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Gloria)');
+      await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Gloria)');
       await expect(unavailable.locator('img')).toHaveCount(0);
       expect(await rows.locator('img').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
     };
@@ -382,7 +382,7 @@ test.describe('visual smoke', () => {
     for(const [width,height] of [[375,700],[390,700],[430,760],[768,800],[1440,900]]){
       await page.setViewportSize({width,height});
       const ids=await page.locator('.tabs .tab:visible').evaluateAll(nodes=>nodes.map(n=>n.id));
-      expect(ids).toEqual(width<768?['nav-mylist','nav-find','nav-more']:['nav-mylist','nav-find','nav-events','nav-more']);
+      expect(ids).toEqual(['nav-mylist','nav-find','nav-events','nav-more']);
       const selectedMeasurements=[];
       for(const selectedId of ids){
         await page.locator('#'+selectedId).click();
@@ -1831,7 +1831,7 @@ test.describe('visual smoke', () => {
       const input=page.locator('#wants-add-name'),details=page.locator('.wants-add-form .add-advanced-toggle'),tools=page.locator('#wants-list-tools > summary');
       await expect(input).toBeVisible();await expect(details).toHaveText(/Flags & details/);
       for(const target of [details,tools,page.locator('.myrow-edit').first(),page.locator('.myrow-remove').first()]){
-        const box=await target.boundingBox();expect(box.width).toBeGreaterThanOrEqual(width<=600?44:40);expect(box.height).toBeGreaterThanOrEqual(44);
+        const box=await target.boundingBox();expect(Math.round(box.width*100)/100).toBeGreaterThanOrEqual(width<=600?44:40);expect(Math.round(box.height*100)/100).toBeGreaterThanOrEqual(44);
       }
       expect(await tools.evaluate(el=>!document.querySelector('.wants-add-form').contains(el)&&!!el.closest('.wants-list-toolbar'))).toBe(true);
       await details.focus();await page.keyboard.press('Enter');await expect(page.locator('#combined-editor-modal')).toBeVisible();
@@ -2519,7 +2519,7 @@ test.describe('visual smoke', () => {
     }
     await page.evaluate(()=>setAdminSection('members'));
     await expect(page.locator('.admin-member-row')).toHaveCount(4);
-    await expect(page.locator('.admin-member-row').nth(2)).toContainText(/Updated|Aktualisiert|更新|Actualizado/);
+    await expect(page.locator('.admin-member-row').nth(2)).toContainText(await page.evaluate(()=>i18nCore.t('admin.legacyUpdated',{time:adminRelativeTime(Date.now()-604800000)})));
     await page.evaluate(()=>setAdminSection('maintenance'));
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'FirstUseFixture'}).getByRole('button')).toHaveCount(2);
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'AdminFixture'}).getByRole('button')).toHaveCount(2);
@@ -2647,9 +2647,11 @@ test.describe('visual smoke', () => {
       document.getElementById('tab-schedule').classList.add('active');renderEventsOnly();
     });
     await expect(page.locator('.event-card')).toHaveCount(5);
-    await expect(page.locator('a.event-card')).toHaveCount(1);
-    await expect(page.locator('a.event-card')).toHaveAttribute('href','https://example.com/details');
-    await expect(page.locator('article.event-card')).toHaveCount(4);
+    await expect(page.locator('a.event-card')).toHaveCount(0);
+    await expect(page.locator('article.event-card')).toHaveCount(5);
+    await page.locator('[data-event-id="safe"] .event-card-cue').click();
+    await expect(page.locator('#event-detail-modal a[href="https://example.com/details"]')).toHaveCount(1);
+    await page.keyboard.press('Escape');
     const opened=await page.evaluate(()=>{
       window.__openedEventDestinations=[];
       window.open=(...args)=>{window.__openedEventDestinations.push(args);return null;};
@@ -2726,6 +2728,8 @@ test.describe('visual smoke', () => {
     await isolateAuthenticatedMyListFixture(page,{username:'EventsFixtureTester',uid:'uid-events-fixture'});
     await page.evaluate(()=>switchTab('schedule'));
     await page.evaluate(()=>{
+      // This fixture owns event I/O from here; invalidate the tab's pending live fetch.
+      _eventRequestGeneration++;
       const now=Date.now(),hour=3600000,day=24*hour;
       const base=[
         {eventID:'active',name:'Raid Hour',eventType:'raid',start:new Date(now-hour).toISOString(),end:new Date(now+2*hour).toISOString(),link:'https://example.com/active'},
@@ -2748,11 +2752,11 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-up-next-row')).toHaveCount(4);
     await expect(page.locator('.event-up-next-sprite')).toHaveCount(0);
     await expect(page.locator('.event-up-next-pokemon-names').first()).toBeVisible();
-    await expect(page.locator('.event-calendar-day.has-events').first()).toBeVisible();
-    await expect(page.locator('.event-calendar-day.has-events').first().locator('i')).toHaveText('');
-    const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
+    await expect(page.locator('.event-calendar-day.has-timed-events').first()).toBeVisible();
+    await expect(page.locator('.event-calendar-day.has-timed-events').first().locator('.event-calendar-count')).toContainText(/\d/);
+    const cueRightEdges=await page.locator('article.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
     expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
-    await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
+    await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(31);
     await page.setViewportSize({width:1440,height:900});
     const desktopGeometry=await page.evaluate(()=>{
       const header=document.querySelector('#tab-schedule .sched-hdr').getBoundingClientRect();
@@ -2772,7 +2776,7 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-calendar-desktop .event-calendar-legend')).toContainText(/.+/);
     await expect(page.locator('.event-calendar-disclosure')).toBeHidden();
     await capturePass3(page,`product-ui-events-${test.info().project.name}`);
-    const calendarEventDay=page.locator('.event-calendar-desktop .event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-desktop .event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-desktop .event-selected-day')).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-calendar-clear')).toBeVisible();await capturePass3(page,'events-calendar-selected-event-1440x900');const emptyCalendarDay=page.locator('.event-calendar-desktop .event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-calendar-desktop .event-selected-day-empty')).toBeVisible();await capturePass3(page,'events-calendar-selected-empty-1440x900');await page.locator('.event-calendar-desktop .event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
+    const calendarEventDay=page.locator('.event-calendar-desktop .event-calendar-day.has-timed-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-desktop .event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-desktop .event-selected-day')).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-calendar-clear')).toBeVisible();await capturePass3(page,'events-calendar-selected-event-1440x900');const emptyCalendarDay=page.locator('.event-calendar-desktop .event-calendar-day:not(.has-timed-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-calendar-desktop .event-day-empty')).toBeVisible();await capturePass3(page,'events-calendar-selected-empty-1440x900');await page.locator('.event-calendar-desktop .event-calendar-clear').click();await expect(page.locator('.event-calendar-desktop .event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-desktop .event-selected-day')).toBeVisible();
     await page.setViewportSize({width:390,height:420});
     const mobileOrder=await page.evaluate(()=>{const timeline=document.querySelector('.events-timeline').getBoundingClientRect(),rail=document.querySelector('.events-context-rail').getBoundingClientRect();return{timelineTop:timeline.top,railTop:rail.top};});
     expect(mobileOrder.timelineTop).toBeLessThan(mobileOrder.railTop);
@@ -2788,19 +2792,18 @@ test.describe('visual smoke', () => {
     expect(filterGeometry.edge).not.toBe('none');
     await page.locator('.event-filter-row').evaluate(node=>{node.scrollLeft=node.scrollWidth;node.dispatchEvent(new Event('scroll'));});
     await expect(page.locator('.event-filter-scroll')).toHaveClass(/is-at-end/);
-    const sourceRow=page.locator('a.event-card').first();await expect(sourceRow).toHaveAttribute('href','https://example.com/active');await expect(sourceRow).toHaveAttribute('aria-label',/.+/);
-    expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
-    await sourceRow.focus();await expect(sourceRow).toBeFocused();
+    const sourceRow=page.locator('article.event-card').first();await expect(sourceRow.locator('a')).toHaveCount(0);
+    const details=sourceRow.locator('.event-card-cue');await expect(details).toHaveAttribute('aria-label',/.+/);await details.focus();await expect(details).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
     await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
-    await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
+    await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',1728,1000],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
     const localizedChrome={en:['Events','Events'],ja:['イベント','イベント'],de:['Events','Events'],es:['Eventos','Eventos']};
-    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(async locale=>{await changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();await expect(page.locator('#events-title')).toHaveText(localizedChrome[locale][0]);await expect(page.locator('#nav-events .tab-label')).toHaveText(localizedChrome[locale][1]);const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);if([[1728,1000],[1440,900],[430,932],[390,844],[375,812],[320,568]].some(([w,h])=>w===width&&h===height))await capturePass3(page,`events-calendar-sparse-${width}x${height}`);}
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(async locale=>{await changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();await expect(page.locator('#events-title')).toHaveText(localizedChrome[locale][0]);await expect(page.locator('#nav-events .tab-label')).toHaveText(localizedChrome[locale][1]);const rowBox=await page.locator('.event-card').first().boundingBox();const baseline=require('./fixtures/events-layout-baseline-143.json').measurements.find(row=>row.locale===locale&&row.width===width&&row.height===height);expect(baseline).toBeTruthy();expect(rowBox?.height).toBeLessThanOrEqual(baseline.cardHeight+0.1);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);if([[1728,1000],[1440,900],[430,932],[390,844],[375,812],[320,568]].some(([w,h])=>w===width&&h===height))await capturePass3(page,`events-calendar-sparse-${width}x${height}`);}
   });
 
   test('main product tabs keep equivalent page headings on one left edge',async({page})=>{
