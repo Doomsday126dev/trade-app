@@ -10,6 +10,8 @@ Failures remain substantive for New/Changed, any mapping change, removed identit
 
 Known-only records no longer keep the daily workflow permanently red. The summary leads with all four counts and total unresolved; full known-gap names and details remain in the downloadable costume-maintenance.json artifact. Separate Shiny coverage remains explicitly uncertified; this work does not add an exhaustive Shiny release inventory or artwork verification.
 
-Baseline expiry intentionally makes the next review necessary. Check the expiry in data/costume-gap-baseline.json. No automatic acknowledgement, date extension, art substitution, notification setting change, new credentials or outbound message is added. GitHub email/web delivery still depends on the owner's existing Actions notification preferences and remains unverified.
+Baseline expiry intentionally makes the next review necessary. Check the expiry in scripts/sprites/costume-gap-baseline.json. No automatic acknowledgement, date extension, art substitution, notification setting change, new credentials or outbound message is added. GitHub email/web delivery still depends on the owner's existing Actions notification preferences and remains unverified.
 
 Qualification includes new Astronaut-like omission, changed identity/asset/hash/provenance, resolved and deleted gaps, expiry, future/excessive baseline, unavailable input, failed/stale source report and deployed mismatch. First-run expected partition: New0/Changed0/Known27/Resolved0, unresolved27, zero deployed mismatches, current source input.
+
+The acknowledgement baseline lives beside CI tooling, not runtime data. No performance workflow, planner or threshold was modified. The planner continues requiring performance checks for runtime catalog/data, JavaScript, CSS and HTML changes. Every reviewed frontend file is byte-identical to the PR base; initial unrelated timing failures are retained as evidence rather than retried until green.
