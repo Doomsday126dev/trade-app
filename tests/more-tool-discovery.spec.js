@@ -86,8 +86,8 @@ test('empty import entry needs complete owned data, not an empty filter or pendi
 });
 
 test('More native Tab order, focus ring and repeated Help dismissal stay on the active surface',async({page})=>{
-  await install(page);await page.locator('#more-events').focus();
-  for(const id of ['more-transfer','more-share','more-import','more-profile','more-settings','more-help']){
+  await install(page);await page.locator('#more-transfer').focus();
+  for(const id of ['more-share','more-import','more-profile','more-settings','more-help']){
     await page.keyboard.press('Tab');await expect(page.locator('#'+id)).toBeFocused();
     expect(await page.locator('#'+id).evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');
   }
@@ -152,8 +152,8 @@ test('ordinary/signed-out identities cannot run Admin or backup; protected owner
 });
 
 test('mobile Events remains reachable and More scope/destination labels localize through actual Settings',async({page})=>{
-  await install(page);await page.setViewportSize({width:390,height:900});await expect(page.locator('#nav-events')).toBeHidden();
-  await page.locator('#more-events').click();await expect(page.locator('#tab-schedule')).toBeVisible();await expect(page.locator('#events-title')).toBeFocused();
+  await install(page);await page.setViewportSize({width:390,height:900});await expect(page.locator('#nav-events')).toBeVisible();
+  await page.locator('#nav-events').click();await expect(page.locator('#tab-schedule')).toBeVisible();await expect(page.locator('#nav-events')).toHaveAttribute('aria-selected','true');await expect(page.locator('#more-events')).toHaveCount(0);
   await page.locator('#nav-more').click();
   for(const locale of ['de','ja','es','en']){
     await page.locator('#more-settings').click();await page.locator('[data-settings-target="language"]').click();await page.locator('#settings-language').selectOption(locale);await closeSettings(page);

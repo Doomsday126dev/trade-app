@@ -185,7 +185,6 @@ html:has(#combined-editor-modal.open),body:has(#combined-editor-modal.open){over
 @media(max-width:600px){#combined-editor-modal .want-editor-head{padding:12px 16px 8px}#combined-editor-modal .want-editor-body{padding:4px 16px 16px}#combined-editor-modal .want-editor-footer{padding:12px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#combined-editor-modal #combined-save{grid-column:1/-1;grid-row:1}#combined-editor-modal #wants-remove{margin:0}#combined-editor-modal #wants-remove[hidden]+#combined-cancel{grid-column:1/-1}}
 @media(max-height:480px){#combined-editor-modal .want-editor-head{padding-block:8px 4px}#combined-editor-modal .want-editor-footer{padding-block:8px}}
 .product-share-preview{max-height:320px;overflow:auto;margin:12px 0;border-block:1px solid var(--border)}.product-share-preview ul{padding-left:20px}.product-share-preview li{overflow-wrap:anywhere}.product-share-modal [hidden]{display:none!important}
-@media(max-width:700px){#app>.tabs .desktop-events-tab{display:none}}
 .tab:hover{color:var(--text)}
 .notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;margin-left:4px;vertical-align:middle}
 
@@ -2142,7 +2141,7 @@ body:has(#settings-modal.open),body:has(#legal-dialog[open]){overflow:hidden}
 #tab-mylist.intent-for-trade .mylist-list-tools{display:none}
 .badge.U{color:var(--muted);background:transparent}
 @media(max-width:700px){
-  #app>.tabs{position:fixed;bottom:0;left:0;right:0;top:auto;z-index:120;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:calc(var(--product-nav-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#101417);border-top:1px solid var(--border)}
+  #app>.tabs{position:fixed;bottom:0;left:0;right:0;top:auto;z-index:120;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:calc(var(--product-nav-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#101417);border-top:1px solid var(--border)}
   #app>.tabs .tab{min-width:0;padding:6px 2px;white-space:normal;gap:3px}
   #app>.tabs .tab-label{display:block;position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;font-size:12px;line-height:1.2}
   #app>.tabs .tab-short-label{display:none}

@@ -164,7 +164,7 @@ test('responsive navigation and editor fit',async({page})=>{
   await fixture(page);
   for(const width of [320,390,1440]){
     await page.setViewportSize({width,height:900});
-    if(width<701)await expect(page.locator('#nav-events')).toBeHidden();else await expect(page.locator('#nav-events')).toBeVisible();
+    await expect(page.locator('#nav-events')).toBeVisible();
     await page.evaluate(()=>openCombinedEditor());
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.keyboard.press('Escape');
