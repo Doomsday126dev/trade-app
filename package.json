@@ -107,7 +107,7 @@
     "test:usability": "node --test tests/usability-import.test.cjs && playwright test tests/usability-improvements.spec.js --project=desktop --workers=1",
     "test:usability:browsers": "playwright test --config=playwright.usability.config.cjs",
     "test:discord-oauth-prototype": "node --test functions/test/discord-oauth-prototype.test.cjs tests/discord-oauth-prototype-client.test.cjs",
-    "test:provider-migration": "node --test functions/test/discord-oauth-prototype.test.cjs tests/discord-oauth-prototype-client.test.cjs tests/provider-migration-onboarding.test.cjs tests/account-recovery-bundle.test.cjs functions/test/firestore-discord-store.test.cjs functions/test/discord-access-authority.test.cjs tests/provider-auth-commit-gate.test.cjs tests/account-recovery-collector.test.cjs functions/test/discord-candidate-gateway.test.cjs tests/discord-candidate-runtime.test.cjs",
+    "test:provider-migration": "node --test functions/test/discord-oauth-prototype.test.cjs tests/discord-oauth-prototype-client.test.cjs tests/provider-migration-onboarding.test.cjs tests/account-recovery-bundle.test.cjs functions/test/firestore-discord-store.test.cjs functions/test/discord-access-authority.test.cjs tests/provider-auth-commit-gate.test.cjs tests/account-recovery-collector.test.cjs functions/test/discord-candidate-gateway.test.cjs tests/discord-candidate-runtime.test.cjs tests/provider-migration-host-recovery.test.cjs",
     "test:provider-migration:browser": "playwright test --config=playwright.provider-migration.config.cjs",
     "test:provider-migration:emulator": "bash scripts/check-discord-prototype-emulator.sh"
   },

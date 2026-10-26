@@ -1,0 +1,60 @@
+# Local host and recovery qualification after de4f1a35
+
+This follow-up is not a deployment or a provider activation. The host canary
+flag is absent by default. A local fixture must load providerAuthCommitGate.js
+and providerHostAuthGate.js before application.js, set
+`__POGO_PROVIDER_AUTH_GATE_CANARY__ = true`, and supply an exact dedicated
+`__POGO_PROVIDER_AUTH_GATE_CANARY_UID__`. Missing modules or UID fail closed.
+The host installs the wrapped SDK before assigning every auth mutation used by
+the app. PIN, Google and custom-token sign-in must resolve to that exact UID;
+link, reauthentication, unlink and password changes preserve it. Creation and
+deletion are unavailable in this existing-account canary. Google unlink also
+requires the retained password method. This is not public provider-first
+registration; arbitrary-UID Google sign-in remains outside this canary scope.
+
+All wrapped operations share the Web Lock used by the Discord guard. Overlapping
+local mutations are refused. Sign-out cancels and awaits a still-cancelable
+operation; a commit already accepted by Firebase must settle first. The host
+emits `pogo:auth-commit-state` with `status` and `canCancel`. The late-hook boundary
+and real pinned-SDK test are documented in PROVIDER-MIGRATION-REVIEW-FIXES.md.
+Older unguarded tabs cannot be made cooperative by this flag; live qualification
+must use isolated canary sessions and a reviewed all-host release.
+
+The Discord runtime now offers `startPopup` from a user gesture. It opens the
+window before network work, installs the exact-origin/source listener, then
+navigates that window while retaining host session state. A blocked popup makes
+no gateway call. Explicit cancel closes the popup and clears continuation unless
+the Firebase commit boundary has passed. Closing or reloading the callback does
+not persist OAuth codes; the user can cancel/restart from the retained host.
+Same-window redirect continuation is intentionally not activated: a standalone
+callback without its opener provides a safe restart rather than signing in.
+The service worker routes the exact callback path directly to the network with
+no-store and no referrer, never caches it, and gives a plain failure on offline
+fetch rather than the cached account shell. The callback still is not in the
+release inventory and is not registered with Discord.
+
+`accountRecoverySyntheticApply` is an in-memory qualification executor with no
+database/network writer. It accepts only an explicit accepted, revalidated dry
+run for the current UID/lifecycle, issues an opaque in-memory review ticket,
+and serializes additive application plus idempotent readback before an atomic
+snapshot publish. Repeat/concurrent application of the same ticket returns the
+receipt. Edited plans, forged tickets and switched accounts are refused. Only
+validated canonical trade entries, Favorites and tags can be added. Every other
+section remains untouched, including permission/admin/group membership and
+sharing references. Fresh application tickets are required after reload.
+
+This proves the local algorithm, not production recovery authorization or full
+fidelity. Profile, legacy-only list content, local ordering/history/preferences,
+shared URLs, memberships and permissions remain review/reference data. Enabled
+provider-only/share-visibility/synced-preference collectors still fail closed
+until implemented. A production executor requires separately reviewed server
+identity proof, durable receipts and transaction/readback contracts; an exported
+file's checksum is not ownership evidence.
+
+Morning configuration approvals remain those in DISCORD-BACKEND-DECISION.md:
+owner-selected staging Discord application, identify-only scope, proposed exact
+callback https://doomsday126dev.github.io/trade-app/auth/discord.html, managed
+secret/HMAC material, narrow existing runtime permissions, private-store TTL,
+and dedicated-canary OAuth grant/release. No credential, grant, IAM, Rules or
+Firebase provider changes were made, and Firebase configuration read 403s were
+not bypassed. PIN remains available. No merge or deployment is authorized.
