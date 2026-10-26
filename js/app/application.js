@@ -11087,7 +11087,7 @@ function tradeMatchSearchHtml(entries,key,label,available){
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
   const chip=(it,cls='')=>{
-    const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
+    const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn,{shiny:it.shiny===true}):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qualifiers=tradeIntentQualifierTokens(it);
     if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:''}),cls:'background',backgroundId:it.backgroundId});
