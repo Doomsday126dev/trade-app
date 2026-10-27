@@ -13,20 +13,6 @@
     "groups.manage":"Manage group","groups.memberCount":"{count} trainers","groups.updatedTrainers":"{count} updated","groups.review":"Trainer updates",
     'groups.title':"Groups",'groups.new':'New group name','groups.name':'Group name','groups.create':'Create group','groups.open':'Group','groups.choose':"Choose Favorites or a group",'groups.rename':'Rename','groups.delete':'Delete group','groups.confirmDelete':'Delete this private group? Favorites and their wants are not deleted.','groups.members':'Group members','groups.noFavorites':'Save trainers to Favorites first.','groups.all':"All wants",'groups.refresh':'Refresh wants','groups.available':'Available','groups.stale':'Unavailable: out of date','groups.loading':'Checking…','groups.unavailable':'Unavailable','groups.freshness':"Public wants remain included regardless of publication age. Recheck access after five minutes.",'groups.empty':'No members in this group.','groups.noWants':'No accessible wants in this scope.','groups.search':'Search group wants','groups.more':'Show more','groups.synced':'Private · account sync','groups.local':'Private · this device',
     "workflow.listTools":"List tools",
-    "discovery.intro":"Trading tools and your app.",
-    "discovery.trading":"Trading",
-    "discovery.yourApp":"Your app",
-    "discovery.eventsHelp":"Upcoming dates and event details.",
-    "discovery.transfer":"Transfer review",
-    "discovery.transferHelp":"Review shared wants from trainers you select.",
-    "discovery.shareHelp":"A public link, image or text of your wants.",
-    "discovery.importHelp":"Preview a Pokémon GO search string before adding wants.",
-    "discovery.profileHelp":"Your trainer identity and shared details.",
-    "discovery.settingsHelp":"Language, appearance, account and sync.",
-    "discovery.help":"Help & shortcuts",
-    "discovery.helpDescription":"Get around the app with your keyboard.",
-    "discovery.emptyTitle":"Start with a Pokémon you want",
-    "discovery.emptyImport":"Search above to add one, or import a Pokémon GO search string.",
     "workflow.findInList":"Find in list",
     "workflow.closeFind":"Close find in list",
     "workflow.aboutSearches":"About searches",
@@ -104,7 +90,31 @@
     'product.iOffer':"I can offer what they want",
     'product.offerScope':"Exact For Trade declarations, not an availability guarantee.",
     'product.offersUnavailable':"For Trade declarations are not included in this public link.",
-    'product.savedScope':"Search saved trainers' wants",
+    "apri.moreIntro":"Your account, preferences, and a little help.",
+    "apri.preferences":"Account & preferences",
+    "apri.help":"Help & information",
+    "apri.languageHelp":"Choose your display language.",
+    "apri.dataHelp":"Sync status, storage, and app information.",
+    "apri.releaseHelp":"See recent improvements.",
+    "apri.syncTitle":"Sync status",
+    "apri.syncHelp":"Check whether your changes are saved.",
+    "apri.legalHelp":"About this fan-made tool and its sources.",
+    "apri.privacy":"Privacy",
+    "apri.privacyHelp":"How your information is handled.",
+    "apri.lastUpdated":"Last updated",
+    "apri.publicationHelp":"Last publication of this shared list. Not the trainer\u2019s last sign-in or necessarily their last edit.",
+    "apri.publicationMissing":"Publication time unavailable.",
+    "apri.dayView":"Selected day",
+    "apri.allSchedule":"All upcoming events",
+    "apri.previousWeek":"Previous week",
+    "apri.nextWeek":"Next week",
+    "apri.until":"Until {time}",
+    "apri.from":"From {time}",
+    "apri.ongoing":"Ongoing",
+    "apri.tomorrow":"Tomorrow",
+    "apri.viewDay":"View day",
+    "apri.noEventsDay":"No events listed for this day.",
+    'product.savedScope':"Search your Favorites’ shared wants. Wants do not indicate what they have available.",
     'share.searchUnresolved':"Search unavailable: some entries could not be identified.",
     'share.searchScope':"Pokédex search with the same trade filters as My List. Check forms and qualifiers in the list; this search does not select exact variants.",
     'trainer.discoveryModes':'Trainer discovery sections','trainer.modeTrainers':'Trainers','trainer.modeFavorites':'Favorites','trainer.modePokemon':"Who wants this?",'trainer.favoritesDescription':"Saved trainers and private groups.",'trainer.noVisibleMatch':'No visible trainer matched this search.','trainer.exactMatch':'Exact trainer match','trainer.partialMatches':'{count} visible matches','trainer.match.exact':'Exact match','trainer.match.prefix':'Starts with your search','trainer.match.token_prefix':'Word starts with your search','trainer.match.substring':'Contains your search','trainer.match.fuzzy':'Possible typo match','trainer.theyHaveMyWants':'They Have My Wants','trainer.iHaveTheirWants':'I Have Their Wants','trainer.tradeUsefulness':'Reciprocal trade usefulness',
@@ -210,7 +220,7 @@
     "favoriteAdd.identityUnavailable":"This trainer could not be securely identified. No Favorite was added.",
     "favoriteAdd.unsuccessful":"Favorite not saved. Your selection is retained; reconnect and retry.",
     'trainer.findTitle':'Find Trainer',
-    'trainer.findDescription':'Search for a trainer to view their shared list and compare trades.',
+    'trainer.findDescription':'Search a trainer’s name to view their shared list. No Favorite required.',
     'trainer.findPlaceholder':'Search trainer name',
     'trainer.findAction':'Search',
     'trainer.searchStart':'Start typing a trainer name.',
@@ -251,7 +261,7 @@
     'trainer.changePriority':'{name}: priority changed',
     'trainer.changeCategory':'{name}: moved to another list',
     'trainer.changeDetails':'{name}: published details changed',
-    'trainer.openAction':'Open trainer',
+    'trainer.openAction':'View list',
     'trainer.openTrainerNamed':'Open {trainer}',
     'trainer.suggestionsLabel':'Trainer suggestions',
     'strings.ownDescription':'Your Pokémon GO search strings update automatically from My List.',
@@ -389,14 +399,14 @@
     'settings.shortcutsAction':'Keyboard shortcuts',
     'settings.logoutAction':'Sign out',
     'settings.languageTitle':'Language',
-    "settings.languageDescription":"Saved privately on this device.",
-    "settings.languageLabel":"App language",
+    'settings.languageDescription':'Interface language is saved privately on this device.',
+    'settings.languageLabel':'Interface language',
     'settings.languageSaved':'Language preference saved on this device.',
     'settings.localToolsTitle':'Trainer preferences',
     'settings.localToolsDescription':'Favorites and recent trainers remain private to this device. Private tags and cross-device sync are not active yet.',
     'settings.syncComingLater':'Sync across devices — coming later',
     'security.title':'Account & Security','security.description':'Your Firebase account ID remains the authority for this trainer profile.','security.methodsLabel':'Sign-in methods','security.google':'Google','security.email':'Email','security.discord':'Discord','security.legacyPin':'Legacy PIN','security.notLinked':'Not linked','security.active':'Active','security.futureUnavailable':'Provider linking is not available yet.','security.emailPlanned':'Verified email-link migration is planned for a later rollout.','security.legacyPinHelp':'This remains your active production sign-in method.','security.disabledNotice':'No provider linking, unlinking, or migration action is enabled in this release.',
-    'security.connectedAccounts':'Connected accounts','security.connectedAccountsHelp':'Authentication methods connected to this trainer account.','security.usernamePin':'Username and PIN','security.usernamePinHelp':"Sign in with your trainer name and PIN.",'security.connected':'Connected','security.notConnected':'Not connected','security.connecting':'Connecting','security.waitingBrowser':'Waiting for browser','security.needsAttention':'Needs attention','security.reauthenticate':'Reauthenticate','security.disconnecting':'Disconnecting','security.unavailable':'Unavailable','security.providerDevelopmentOnly':'Available only in development after provider configuration.','security.foundationNotice':'Additional sign-in providers are not enabled in this release.',
+    'security.connectedAccounts':'Connected accounts','security.connectedAccountsHelp':'Authentication methods connected to this trainer account.','security.usernamePin':'Username and PIN','security.usernamePinHelp':'Your existing sign-in remains connected to this Firebase account.','security.connected':'Connected','security.notConnected':'Not connected','security.connecting':'Connecting','security.waitingBrowser':'Waiting for browser','security.needsAttention':'Needs attention','security.reauthenticate':'Reauthenticate','security.disconnecting':'Disconnecting','security.unavailable':'Unavailable','security.providerDevelopmentOnly':'Available only in development after provider configuration.','security.foundationNotice':'Additional sign-in providers are not enabled in this release.',
     'locale.en':'English',
     'locale.ja':'日本語',
     'locale.es':'Español',
@@ -483,7 +493,7 @@
     'accountSync.favoriteTag':'Favorite tag','accountSync.changedValue':'Changed value','accountSync.fieldGender':'Gender','accountSync.fieldLucky':'Lucky','accountSync.fieldXxl':'XXL','accountSync.fieldXxs':'XXS','accountSync.fieldShiny':'Shiny','accountSync.fieldOrder':'Order','accountSync.fieldQuantity':'Quantity','accountSync.fieldNotes':'Notes','accountSync.fieldMirror':'Mirror','accountSync.none':'None','accountSync.on':'On','accountSync.off':'Off','accountSync.syncedItem':'Synced item','accountSync.noConflicts':'There are no unresolved sync changes.','accountSync.deviceValuesQueued':'This device’s values are being saved as new changes.','accountSync.accountValuesAccepted':'The saved account values were kept.',
     'setup.title':'Connect Firebase','setup.subtitle':'One-time setup. Takes about five minutes.','setup.disclaimer':'Unofficial community tool. Not affiliated with, endorsed by, or sponsored by Niantic, Nintendo, or The Pokémon Company.','setup.step1Label':'Step 1','setup.step1':'Create a new project.','setup.step2Label':'Step 2','setup.step2':'Under Build, create a Realtime Database in test mode.','setup.step3Label':'Step 3','setup.step3':'Under Authentication, enable the Email/Password sign-in provider.','setup.step4Label':'Step 4','setup.step4':'Paste the Realtime Database URL:','setup.databaseUrl':'Realtime Database URL','setup.connect':'Connect →','setup.skip':'Skip and use device storage only',
     'request.back':'← Back to sign in','request.title':'Request access','request.subtitle':'An admin will review your request.','request.trainerName':'Your Pokémon GO trainer name','request.trainerPlaceholder':'Exact trainer name','request.note':'Note for admin','request.notePlaceholder':'For example, your local group','request.send':'Send request →','request.sent':'Request sent','request.sentHelp':'An admin will review it and send you a unique first-time PIN.',
-    'common.optional':'(optional)','common.all':'All','common.any':'Any','common.selectAll':'Select all','common.clear':'Clear','common.close':'Close','common.undo':'Undo','common.delete':'Delete','common.done':'Done','common.gotIt':'Got it','common.back':'← Back','common.next':'Next →','common.skipToContent':'Skip to main content',
+    'common.optional':'(Optional)','common.all':'All','common.any':'Any','common.selectAll':'Select all','common.clear':'Clear','common.close':'Close','common.undo':'Undo','common.delete':'Delete','common.done':'Done','common.gotIt':'Got it','common.back':'← Back','common.next':'Next →','common.skipToContent':'Skip to main content',
     'browse.searchPlaceholder':'Search Pokémon name, number, or trainer…','browse.priority':'Priority:','browse.luckyFilter':'Show entries with the Lucky flag','browse.shinyFilter':'Show entries with the Shiny flag','browse.xxlFilter':'Show entries with the XXL flag','browse.xxsFilter':'Show entries with the XXS flag','browse.activity':'Activity:','browse.list':'List:',
     'myList.voiceInput':'Voice input','myList.speakToSearch':'Speak to search','myList.suggestionsLabel':'Pokémon suggestions','myList.notes':'Notes','myList.speedAddHint':'Speed add is on. Priority and flags stay selected after each addition.','myList.filterLabel':'Filter my list','bulk.actions':'Bulk actions',
     'export.classicImage':'Classic image (light)','export.darkImage':'Dark card image','export.specialBoard':'Special Trade Board (LF/FT)','export.markdown':'Markdown (Discord/Reddit)','export.csv':'CSV spreadsheet','export.copyShareLink':'Copy share link',
@@ -505,8 +515,8 @@
     ,'compare.pickAnother':'Choose another trainer.','compare.emptySection':'There are no Pokémon in that section.','myList.noVariants':'No variants found.','myList.allVariantsListed':'All {count} {family} variants are already in your list.','myList.addAllVariantsTitle':'Add all {family} variants','myList.variantsWillAdd':'{count} variants will be added to your {list} list.','myList.alreadyAddedCount':'{count} already added','myList.addAsPriority':'Add with priority:','myList.addCount':'Add {count}','myList.variantsAdded':'Added {count} {family} variants with {priority} priority.','myList.allShownListed':'All shown results are already in your list.','myList.addShownTitle':'Add shown results','myList.shownWillAdd':'{count} visible results will be added to your {list} list.','myList.currentFlags':'Current flags: {flags}','myList.shownAdded':'Added {count} shown results with {priority} priority.','voice.unsupported':'Voice input is not supported here. Try Chrome on desktop or Android.','voice.requiresHttps':'Voice input requires HTTPS.','voice.listeningPlaceholder':'Listening… Say a Pokémon name','voice.listening':'Listening…','voice.heardMatch':'Heard “{heard}” → {name}','voice.heardNoMatch':'Heard “{heard}”, but no Pokémon matched. Try typing.','voice.permissionDenied':'Microphone permission was denied. Enable it in browser settings.','voice.noSpeech':'Nothing was heard. Try again.','voice.noMicrophone':'No microphone was found.','voice.networkError':'Voice recognition had a network error. Check your connection.','voice.serviceBlocked':'The speech service is blocked.','voice.error':'Voice input error: {code}','voice.startFailed':'Voice input could not start.'
     ,'account.tools':"Tools",'inventory.readOnlyBadge':"Read-only",'guidance.findTitle':"Find a trainer and compare",'guidance.findBody':"Open a trainer’s shared list, then Favorite them for quick return. Private tags stay on this device; sync is not active.",'guidance.exploreEvents':"Explore Events",'guidance.myListTitle':"Build your trade list",'guidance.myListBody':"Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.",'guidance.findTrainer':"Find a trainer",'trainer.clearSearch':"Clear search",'trainer.searchAnother':"Search another trainer",'trainer.noMatchRecovery':"No exact trainer match. Check the spelling, clear the search, or try another trainer.",'backup.fileTooLarge':"This backup is larger than {size}. Choose a smaller trusted JSON backup.",'conflict.onDevice':"On this device",'conflict.savedCopy':"Saved copy",'conflict.more':"+{count} more",'conflict.title':"Changes need your attention ({count})",'conflict.help':"Nothing is discarded until you choose. Keep this device preserves your current changes; Use saved copy replaces them. Review later changes nothing so you can preserve both manually first.",'conflict.reviewLater':"Review later",'conflict.useSaved':"Use saved copy",'conflict.keepDevice':"Keep this device",'events.moreBonuses':"+{count} more"
     ,'settings.searchLanguageLabel':'Pokémon GO search language','settings.searchLanguageFollow':'Follow app language','settings.searchLanguageDescription':'Search commands are saved only on this device and can differ from the app language.','settings.searchLanguageSaved':'Pokémon GO search language saved on this device.','settings.searchLanguageAutomatic':'Pokémon GO search commands automatically use this language.','settings.searchLanguageOverride':'Use a different Pokémon GO search language','settings.searchLanguageOverrideHelp':'Turn this on only when Pokémon GO uses a different language from this app.','myList.setHighPriority':'Set {name} to High priority','myList.setMediumPriority':'Set {name} to Medium priority','myList.setLowPriority':'Set {name} to Low priority','myList.toggleLuckyFor':'Toggle Lucky for {name}','myList.toggleShinyFor':'Toggle Shiny for {name}','myList.toggleXxlFor':'Toggle XXL for {name}','myList.toggleXxsFor':'Toggle XXS for {name}','myList.openMoreFor':'Open more options for {name}','myList.editEntry':'Edit','myList.reorderEntry':'Reorder {name}'
-    ,'settings.sectionsLabel':'Settings sections','settings.sectionProfile':'Profile','settings.sectionLanguage':'Language','settings.sectionSecurity':'Account & Security','settings.sectionTools':'Tools',"settings.sectionData":"Sync & storage",'settings.backToSections':'Back to Settings','settings.profileSummary':'Your trainer identity and public profile.','settings.profileIdentityHelp':'This is the trainer name other people see.','settings.toolsSummary':'Open occasional list and app utilities.','settings.dataSummary':"Favorites and tags are saved on this device. Cross-device sync isn't available yet.",'settings.release':'App version {release}','security.description':'Manage how you sign in to this trainer account.','organizer.addTags':"Add groups",'organizer.newTag':"New group",'organizer.newTagAction':"+ New group",'organizer.favoriteSaved':'{trainer} saved to Favorites.','organizer.removeConfirm':"Remove {trainer} from Favorites? Private groups for this trainer will also be removed.",'organizer.tagSelected':"Existing group selected.",'organizer.favorite-limit':'This device has reached the Favorite limit.','organizer.editTags':"Edit groups",'organizer.removeFavorite':'Remove from favorites','organizer.editTagsFor':"Edit groups for {trainer}",'organizer.addTagsFor':"Add groups for {trainer}",'organizer.moreActionsFor':'More actions for {trainer}'
-    ,'settings.exportList':'Export My List','settings.sectionAppearance':'Appearance','settings.appearanceSummary':'Choose how the app looks on this device.','settings.themeLabel':'Theme','settings.themeSystem':'System','settings.themeLight':'Light','settings.themeDark':'Dark','settings.backgroundLabel':'Background','settings.backgroundSummary':'Backgrounds are shown in dark theme. Your choice is kept when light theme is active.','settings.backgroundInactive':'Switch to Dark theme to preview and change backgrounds.','settings.appearanceSaved':'Appearance saved.','settings.wallpaper.mono':'Neutral','settings.wallpaper.aurora':'Aurora','settings.wallpaper.ocean':'Ocean','settings.wallpaper.forest':'Forest','settings.wallpaper.sunset':'Sunset','settings.wallpaper.mist':'Mist','settings.pinTitle':'Update PIN','settings.pinSummary':'Your six-digit PIN remains the active sign-in method.','settings.pinSave':'Update PIN','settings.pinSaved':'PIN updated.','settings.currentIdentity':'Current account','settings.signInOptions':'Sign-in options'
+    ,'settings.sectionsLabel':'Settings sections','settings.sectionProfile':'Profile','settings.sectionLanguage':'Language','settings.sectionSecurity':'Account & Security','settings.sectionTools':'Tools','settings.sectionData':'App & Data','settings.backToSections':'Back to Settings','settings.profileSummary':'Your trainer identity and public profile.','settings.profileIdentityHelp':'This is the trainer name other people see.','settings.toolsSummary':'Open occasional list and app utilities.','settings.dataSummary':"Favorites and tags are saved on this device. Cross-device sync isn't available yet.",'settings.release':'App version {release}','security.description':'Manage how you sign in to this trainer account.','organizer.addTags':"Add groups",'organizer.newTag':"New group",'organizer.newTagAction':"+ New group",'organizer.favoriteSaved':'{trainer} saved to Favorites.','organizer.removeConfirm':"Remove {trainer} from Favorites? Private groups for this trainer will also be removed.",'organizer.tagSelected':"Existing group selected.",'organizer.favorite-limit':'This device has reached the Favorite limit.','organizer.editTags':"Edit groups",'organizer.removeFavorite':'Remove from favorites','organizer.editTagsFor':"Edit groups for {trainer}",'organizer.addTagsFor':"Add groups for {trainer}",'organizer.moreActionsFor':'More actions for {trainer}'
+    ,'settings.exportList':'Export My List','settings.sectionAppearance':'Appearance','settings.appearanceSummary':'Choose how the app looks on this device.','settings.themeLabel':'Theme','settings.themeSystem':'System','settings.themeLight':'Light','settings.themeDark':'Dark','settings.backgroundLabel':'Background','settings.backgroundSummary':'Backgrounds are shown in dark theme. Your choice is kept when light theme is active.','settings.backgroundInactive':'Switch to Dark theme to preview and change backgrounds.','settings.appearanceSaved':'Appearance saved.','settings.wallpaper.mono':'Default','settings.wallpaper.aurora':'Aurora','settings.wallpaper.ocean':'Ocean','settings.wallpaper.forest':'Forest','settings.wallpaper.sunset':'Sunset','settings.wallpaper.mist':'Mist','settings.pinTitle':'Update PIN','settings.pinSummary':'Your six-digit PIN remains the active sign-in method.','settings.pinSave':'Update PIN','settings.pinSaved':'PIN updated.','settings.currentIdentity':'Current account','settings.signInOptions':'Sign-in options'
     ,'admin.title':'Admin','admin.subtitle':'Review members, access, maintenance, and diagnostics without mixing routine scanning with sensitive actions.','admin.sectionsLabel':'Admin sections','admin.overview':'Overview','admin.members':'Members','admin.accessRoles':'Access & Roles','admin.maintenance':'Maintenance','admin.diagnostics':'Diagnostics','admin.overviewHelp':'A compact view of the member data already loaded for this session.','admin.membersHelp':'Scan account readiness, list activity, and current roles. Sensitive actions live in their own sections.','admin.accessHelp':'Approve access, add members, and change roles deliberately.','admin.maintenanceHelp':'Account repair and backup tools are separated from routine member review.','admin.diagnosticsHelp':'Reviewed security metadata and owner maintenance diagnostics.','admin.admins':'Admins','admin.loginReadyAccounts':'Login-ready accounts','admin.activeLists':'Active lists','admin.listEntries':'{count} listed','admin.updated':'Updated {time}','admin.viewed':'Viewed {time}','admin.never':'Never','admin.noMembers':'No members are available.','admin.adminRole':'Admin','admin.removeAdmin':'Remove admin access','admin.makeAdmin':'Make admin','admin.ownerProtected':'Owner access is protected and cannot be changed here.','admin.roleHelp':'Role changes require owner confirmation.','admin.repairAccount':'Repair account','admin.secureRepairRequired':'Established accounts use the identity-preserving secure repair process.','admin.firstUseResetAvailable':'This first-use account can be reset or repaired if sign-in setup is incomplete.','admin.roleChangeConfirm':'Change {trainer} to {role}? This changes administrative access.','admin.loginAuditTitle':'Login repair audit · {count}','admin.loginAuditHelp':'Shows members whose sign-in metadata or login directory is incomplete.','admin.repairDirectoryOnly':'Repair {count} directory-only','admin.repairDirectory':'Repair directory','admin.repairWithPin':'Repair + PIN','admin.emailMismatch':'email mismatch','admin.missingDirectory':'missing login directory','admin.directoryEmailMismatch':'directory email mismatch','admin.directoryVersionMismatch':'directory version mismatch','inventory.archiveTitle':'Read-only archive','inventory.archiveHelp':'Existing inventory data remains available to view and export. Adding and editing inventory has retired.'
     ,'organizer.tagAction':"Group"
     ,'favoriteBrowse.title':"Who wants this?",'favoriteBrowse.disclosureHint':'Search your Favorites by Pokémon','favoriteBrowse.description':'See which Favorites are looking for a Pokémon.','favoriteBrowse.placeholder':'Search Pokémon…','favoriteBrowse.clear':'Clear Pokémon search','favoriteBrowse.suggestionsLabel':'Pokémon suggestions','favoriteBrowse.loading':'Checking {completed} of {total} Favorites…','favoriteBrowse.results.one':'{count} Favorite is looking for {pokemon}','favoriteBrowse.results.other':'{count} Favorites are looking for {pokemon}','favoriteBrowse.noFavoritesTitle':'No Favorites to search yet','favoriteBrowse.noFavoritesBody':'Add trainers to Favorites to search their shared lists.','favoriteBrowse.noSharedTitle':'No shared Favorite lists','favoriteBrowse.noSharedBody':'None of your Favorites currently have a shared list.','favoriteBrowse.noMatchTitle':'No match in Favorites','favoriteBrowse.noMatchBody':'None of your Favorites are looking for {pokemon}.','favoriteBrowse.checked':'Checked just now','favoriteBrowse.refresh':'Refresh','favoriteBrowse.retry':'Retry unavailable','favoriteBrowse.partial':'Results include {checked} of {total} Favorites. {failed} lists could not be checked.','favoriteBrowse.priority.H':'High priority','favoriteBrowse.priority.M':'Medium priority','favoriteBrowse.priority.L':'Low priority','favoriteBrowse.priority.none':'No priority','favoriteBrowse.category.dynamax':'Dynamax','favoriteBrowse.category.gmax':'Gigantamax','favoriteBrowse.category.costumes':'Others'
@@ -536,80 +546,28 @@
     ,'safeTransfer.temporarilyUnavailable':'Safe-transfer search is temporarily unavailable while complete want-list coverage is being verified.'
     ,'safeTransfer.candidate.scope':'Selected scope: {trainers}','safeTransfer.candidate.loading':'Checking server-confirmed shared wants…','safeTransfer.candidate.blocked':'A complete, current scoped snapshot is required before a search can be created.','safeTransfer.candidate.ready':'{candidates} candidate species after protecting {protected} wanted species.','safeTransfer.candidate.empty':'No candidate species remain in this scoped snapshot.','safeTransfer.candidate.copy':'Copy part {part} of {total}','safeTransfer.candidate.copied':'Copied.','safeTransfer.candidate.copyFailed':'Copy failed. The current command is preserved below for manual copy.'
     ,'contextSearch.copyProtected':'Copy protected search','contextSearch.copyBroad':'Copy broad special search','contextSearch.mixedHelp':'Ordinary wants use protected discovery. Special or exact wants use a separate broad species search so requested matches are not excluded.'
-    ,"shareUi.disclosure":"Sharing a link makes your full wants list and public profile available to anyone with the link."
-    ,"shareUi.preview":"Preview"
-    ,"export.listHeading":"{owner} · {list}","export.listCategory":"Category: {category}"
-    ,"shareUi.manualLink":"Link to copy"
-    ,"shareUi.copyLink":"Copy link"
-    ,"shareUi.shareCopy":"Share & copy link"
-    ,"shareUi.include":"Include"
-    ,"shareUi.all":"All wants"
-    ,"shareUi.high":"High priority"
-    ,"shareUi.selected":"Selected ({count})"
-    ,"shareUi.layout":"Layout"
-    ,"shareUi.board":"Wants board"
-    ,"shareUi.classic":"Classic"
-    ,"shareUi.cards":"Dark cards"
-    ,"shareUi.format":"Format"
-    ,"shareUi.plain":"Plain text"
-    ,"shareUi.fullScope":"Includes your full wants list."
-    ,"shareUi.category":"Includes your current category: {category}."
-    ,"shareUi.count":"{count} wants"
-    ,"shareUi.empty":"No wants in this scope. Choose another scope or select wants in My List."
-    ,"shareUi.building":"Preparing preview…"
-    ,"shareUi.working":"Working…"
-    ,"shareUi.downloadImage":"Download image"
-    ,"shareUi.downloadCsv":"Download CSV"
-    ,"shareUi.copyText":"Copy text"
-    ,"shareUi.retryImage":"Try again"
-    ,"shareUi.invalid":"These wants couldn’t be shared. Check their details and try again."
-    ,"shareUi.changed":"Your list changed. Review the updated preview and try again."
-    ,"shareUi.imageFailed":"Couldn’t prepare the image. Try again."
-    ,"shareUi.exportFailed":"Couldn’t export this list. Try again."
-    ,"shareUi.downloaded":"Ready."
-    ,"shareUi.copied":"Copied."
-    ,"shareUi.textCopyFailed":"Couldn’t copy the text. You can select and copy the preview."
-    ,"shareUi.linkCopyFailed":"Couldn’t copy the link. You can copy it below or try again."
-    ,"shareUi.notReady":"Your list hasn’t finished loading. Try again in a moment."
-    ,"shareUi.notSaved":"Your latest changes haven’t saved yet. Try again."
-    ,"shareUi.shareFailed":"Couldn’t share your list. Check your connection and try again."
-    ,"shareUi.title":"Share your wants","shareUi.shareFormat":"Share format"
-    ,"wantEditor.add":"Add want","wantEditor.edit":"Edit want","wantEditor.save":"Save changes","wantEditor.pokemon":"Pokémon","wantEditor.anyGender":"Any","wantEditor.noPriority":"No priority","wantEditor.requirements":"Requirements","wantEditor.note":"Public note"
-    ,"settings.sameAsApp":"Same as app"
-    ,"settings.searchFixed":"Stays in {language} when the app language changes."
-    ,"settings.searchFollows":"Follows the app language ({language})."
-    ,"settings.changePin":"Change PIN"
-    ,"settings.storageSummary":"Your data on this device and your account."
-    ,"settings.onDevice":"On this device"
-    ,"settings.storageCare":"Review sync problems before signing out or clearing browser storage."
-    ,"settings.about":"About PoGo Trades"
-    ,"settings.privacy":"Privacy"
-    ,"settings.installLimits":"Account data still needs a connection to sync."
-    ,"settings.installStandalone":"Opened in standalone mode."
-    ,"settings.installAvailable":"Open PoGo Trades from your home screen or dock."
-    ,"settings.installSafari":"In Safari, open Share, then choose Add to Home Screen."
-    ,"settings.installUnavailable":"This browser hasn’t offered an install prompt. Check its menu for an installation option."
-    ,"request.sending":"Sending…"
-    ,"request.unconfirmed":"Delivery not confirmed yet. Keep this form open and try again to check the same request."
-    ,"import.unsupported":"Unsupported input. Use individual Pokédex numbers, optionally joined with supported English qualifiers using &. No exclusions, ranges, CP or full game queries."
-    ,"import.ambiguous":"Multiple variants match. They start unselected: choose the exact forms or costumes you want. Select all includes every shown variant."
-    ,"share.liveList":"Share live list"
-    ,"share.liveCaption":"A public page anyone can open"
-    ,"share.gameSearch":"Pokémon GO search string"
-    ,"share.searchCaption":"Search your own game inventory"
-    ,"share.imageSnapshot":"Share image"
-    ,"share.textSnapshot":"Copy text"
-    ,"share.snapshotCaption":"A snapshot of this selection"
-    ,"share.partialLink":"Public links include the full list. Choose Full list for a link, or use an image, text or game search for this selection."
-    ,"share.liveHelp":"Anyone can view without an account. Saved changes update the published copy; viewers may need to reconnect. If publishing is pending, keep the owner app open until confirmed."
-    ,"share.publicFields":"Published profile details and want notes are visible. This username-based link is public, not a private invitation."
-    ,"share.gameLanguage":"Pokémon GO language"
-    ,"share.searchLimits":"Species candidates only: check exact forms and requirements. Filters exclude 4★, traded, Shadow, Purified, backgrounds and CP above 2500; sections without shiny wants also exclude shiny."
-    ,"share.textCopied":"Text copied."
-    ,"events.localTime":"Player-local hours · device zone: {zone}"
-    ,"events.fixedTime":"Worldwide instant · shown in {zone}"
-    ,"events.dateOnlyTime":"Date supplied; exact hours not supplied"
-    ,"events.bonusLastKnown":"Last checked details; source recheck needed",
+,
+"request.sending":"Sending…",
+"request.unconfirmed":"Delivery not confirmed yet. Keep this form open and try again to check the same request.",
+"import.unsupported":"Unsupported input. Use individual Pokédex numbers, optionally joined with supported English qualifiers using &. No exclusions, ranges, CP or full game queries.",
+"import.ambiguous":"Multiple variants match. They start unselected: choose the exact forms or costumes you want. Select all includes every shown variant.",
+"share.liveList":"Share live list",
+"share.liveCaption":"A public page anyone can open",
+
+"share.searchCaption":"Search your own game inventory",
+"share.imageSnapshot":"Share image",
+"share.textSnapshot":"Copy text",
+"share.snapshotCaption":"A snapshot of this selection",
+"share.partialLink":"Public links include the full list. Choose Full list for a link, or use an image, text or game search for this selection.",
+"share.liveHelp":"Anyone can view without an account. Saved changes update the published copy; viewers may need to reconnect. If publishing is pending, keep the owner app open until confirmed.",
+"share.publicFields":"Published profile details and want notes are visible. This username-based link is public, not a private invitation.",
+"share.gameLanguage":"Pokémon GO language",
+"share.searchLimits":"Species candidates only: check exact forms and requirements. Filters exclude 4★, traded, Shadow, Purified, backgrounds and CP above 2500; sections without shiny wants also exclude shiny.",
+"share.textCopied":"Text copied.",
+"events.localTime":"Player-local hours · device zone: {zone}",
+"events.fixedTime":"Worldwide instant · shown in {zone}",
+"events.dateOnlyTime":"Date supplied; exact hours not supplied",
+"events.bonusLastKnown":"Last checked details; source recheck needed",
 "events.sourceEnglish":"Source details in English",
 "events.detailsPending":"Open details and source for event features.",
 "events.allBonuses":"All {count} bonuses & conditions",
@@ -627,59 +585,74 @@
 "events.uncertainDay":"Check event time",
 "events.noTimedDay":"No short timed events listed.",
 "events.alsoOngoing":"Also ongoing ({count})",
-"events.bonuses":"Bonuses"
-    ,"events.bonusesUnknown":"Bonus details not supplied by this feed. Check the source; this does not mean no bonuses."
-    ,"events.feedStatus":"Event briefing"
-    ,"events.staleFeed":"Showing saved events"
-    ,"events.checked":"Last checked {date}"
-    ,"events.savedSchedule":"Schedule saved {date}"
-    ,"events.notChecked":"Not confirmed"
-    ,"events.sourceDisclaimer":"Community feed, not official verification. Details may be incomplete or change; source text may remain in English."
-    ,"events.officialNews":"Official news"
-    ,"events.refresh":"Refresh"
-    ,"events.refreshing":"Checking…"
-    ,"events.encounters":"Encounters"
-    ,"events.raidBosses":"Raid bosses"
-    ,"events.research":"Research tasks and rewards"
-    ,"events.tickets":"Free / paid access"
-    ,"events.ticketUnknown":"Ticket price and eligibility are not supplied reliably by this feed. Do not assume these activities or research are free. Check the event source or official announcement."
-    ,"events.detailsUnknown":"Not supplied by this feed. Check the event source for details."
-    ,"events.hoursUnknown":"Exact hours not supplied"
-    ,"events.sourceDetails":"Open event source"
-    ,"share.watching":"Published updates appear here while connected. Owner publication may still be pending."
-    ,"share.offlineCopy":"Offline · showing the last published copy; updates cannot be confirmed."
-    ,"share.refreshCopy":"Published snapshot · reload to check for updates."
-    ,"share.unavailableCopy":"Public list unavailable. Retry to check access again."
-    ,"share.reconnectingCopy":"Connection restored · waiting for published updates."
-    ,"import.conflicting":"Choose only one set of qualifiers for each exact variant. No changes were saved."
-    ,"shortcuts.editWant":"Open a Pokémon name to edit priority and details"
-    ,"shortcuts.saveWant":"Save in the editor; Esc closes without saving"
-    ,"share.previewSelection":"Preview selected wants"
-    ,"events.sources":"Sources and limitations"
-    ,"share.moreFormats":"More formats · full list"
-    ,"share.fullExportsHelp":"These formats export your current full wants list. Markdown also includes your profile contact details. Choose Full list to enable them."
-    ,"share.copyFullMarkdown":"Copy full Markdown"
-    ,"share.downloadFullCsv":"Download full CSV"
-    ,"events.venueUnknown":"Venue-local hours from feed · exact venue timezone not supplied. Countdown unavailable; verify the source."
-    ,"settings.savingChanges":"Saving changes…"
-    ,"profile.savedQueued":"Profile saved on this device; account sync is queued."
-    ,"profile.savedOnDevice":"Profile saved on this device. Account sync is not confirmed here."
-    ,"profile.saveUnconfirmed":"Could not confirm this change. Your draft is kept; check connection and retry."
-    ,"profile.pinMetadataQueued":"PIN updated; account metadata sync is queued. Keep using the new PIN."
-    ,"profile.pinMetadataUnconfirmed":"PIN update was acknowledged, but account metadata sync is unconfirmed. Keep the new PIN and check sync status."
-    ,"settings.appearanceQueued":"Appearance saved on this device; account sync is queued."
-    ,"settings.appearanceLocal":"Appearance saved on this device; account sync is not confirmed."
-    ,"admin.roleNeedsConnection":"Connect before changing account roles. No role change was queued."
-    ,"admin.roleQueued":"Role change queued. Server authorization is not confirmed yet."
-    ,"admin.roleUnconfirmed":"Could not confirm the role change. Check sync status before retrying."
-    ,"admin.requestDenialUnconfirmed":"Could not confirm denial. Check the latest request status before retrying."
-    ,"events.groupVenueUnknown":"Venue time unconfirmed"
+"events.bonuses":"Bonuses",
+"events.bonusesUnknown":"Bonus details not supplied by this feed. Check the source; this does not mean no bonuses.",
+"events.feedStatus":"Event briefing",
+"events.staleFeed":"Showing saved events",
+"events.checked":"Last checked {date}",
+"events.savedSchedule":"Schedule saved {date}",
+"events.notChecked":"Not confirmed",
+"events.sourceDisclaimer":"Community feed, not official verification. Details may be incomplete or change; source text may remain in English.",
+"events.officialNews":"Official news",
+"events.refresh":"Refresh",
+"events.refreshing":"Checking…",
+"events.encounters":"Encounters",
+"events.raidBosses":"Raid bosses",
+"events.research":"Research tasks and rewards",
+"events.tickets":"Free / paid access",
+"events.ticketUnknown":"Ticket price and eligibility are not supplied reliably by this feed. Do not assume these activities or research are free. Check the event source or official announcement.",
+"events.detailsUnknown":"Not supplied by this feed. Check the event source for details.",
+"events.hoursUnknown":"Exact hours not supplied",
+"events.sourceDetails":"Open event source"
+,
+"share.watching":"Published updates appear here while connected. Owner publication may still be pending.",
+"share.offlineCopy":"Offline · showing the last published copy; updates cannot be confirmed.",
+"share.refreshCopy":"Published snapshot · reload to check for updates.",
+"share.unavailableCopy":"Public list unavailable. Retry to check access again.",
+"share.reconnectingCopy":"Connection restored · waiting for published updates."
+,
+"import.conflicting":"Choose only one set of qualifiers for each exact variant. No changes were saved."
+,
+"shortcuts.editWant":"Open a Pokémon name to edit priority and details",
+"shortcuts.saveWant":"Save in the editor; Esc closes without saving"
+,
+"share.previewSelection":"Preview selected wants",
+"events.sources":"Sources and limitations"
+,
+"share.moreFormats":"More formats · full list",
+"share.fullExportsHelp":"These formats export your current full wants list. Markdown also includes your profile contact details. Choose Full list to enable them.",
+"share.copyFullMarkdown":"Copy full Markdown",
+"share.downloadFullCsv":"Download full CSV"
+,
+"events.venueUnknown":"Venue-local hours from feed · exact venue timezone not supplied. Countdown unavailable; verify the source."
+,
+"settings.savingChanges":"Saving changes…",
+"profile.savedQueued":"Profile saved on this device; account sync is queued.",
+"profile.savedOnDevice":"Profile saved on this device. Account sync is not confirmed here.",
+"profile.saveUnconfirmed":"Could not confirm this change. Your draft is kept; check connection and retry.",
+"profile.pinMetadataQueued":"PIN updated; account metadata sync is queued. Keep using the new PIN.",
+"profile.pinMetadataUnconfirmed":"PIN update was acknowledged, but account metadata sync is unconfirmed. Keep the new PIN and check sync status.",
+"settings.appearanceQueued":"Appearance saved on this device; account sync is queued.",
+"settings.appearanceLocal":"Appearance saved on this device; account sync is not confirmed.",
+"admin.roleNeedsConnection":"Connect before changing account roles. No role change was queued.",
+"admin.roleQueued":"Role change queued. Server authorization is not confirmed yet.",
+"admin.roleUnconfirmed":"Could not confirm the role change. Check sync status before retrying.",
+"admin.requestDenialUnconfirmed":"Could not confirm denial. Check the latest request status before retrying."
+,
+"events.groupVenueUnknown":"Venue time unconfirmed"
     ,"share.format":"Format"
+    ,"share.gameSearch":"Pokémon GO search string"
     ,"costume.shinyNotReleased":"Shiny has not been released for this costume."
     ,"costume.shinyYearRequired":"Choose the Detective costume year before requesting Shiny."
     ,"costume.genderOnly":"{gender} only"
     ,"costume.savedConflict":"saved value needs review"
     ,"costume.genderConflict":"This saved gender is not a released form of this costume. Your entry is unchanged; choose a valid gender only if you want to correct it."
+    ,"wantEditor.add":"Add Pokémon"
+    ,"wantEditor.pokemon":"Pokémon"
     ,"costume.genderUnsupported":"{name}: the saved gender does not match a released form of this costume."
+    ,"workflow.priorityFilter":"Filter list by priority"
+    ,"workflow.priorityEmpty":"No Pokémon with {priority} priority."
+    ,"workflow.selectedOtherPriorities":"{count} selected in other priorities; included when sharing selection."
+    ,"wantEditor.options":"Options","wantEditor.listPriority":"List priority","wantEditor.change":"Change","wantEditor.noPriority":"None","wantEditor.preferences":"Preferences","wantEditor.optional":"Optional","wantEditor.morePreferences":"More preferences","wantEditor.genderPreference":"Gender preference","wantEditor.anyGender":"Any gender","wantEditor.genderless":"Not applicable","wantEditor.edit":"Edit Pokémon","wantEditor.addAction":"Add to list","wantEditor.saveChanges":"Save changes","wantEditor.releasedGender":"Released form: {gender}"
   });
 })(window);

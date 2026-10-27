@@ -45,9 +45,9 @@ test('reviewed duplicate inventory has the exact accepted relationship counts',(
   const groups=catalog.VERIFIED_IDENTITIES.filter(def=>def.aliases.length>1);
   const pairRelationships=groups.reduce((sum,def)=>sum+(def.aliases.length*(def.aliases.length-1))/2,0);
   const redundantRows=groups.reduce((sum,def)=>sum+def.aliases.length-1,0);
-  assert.equal(groups.length,48);
-  assert.equal(pairRelationships,50);
-  assert.equal(redundantRows,49);
+  assert.equal(groups.length,49);
+  assert.equal(pairRelationships,51);
+  assert.equal(redundantRows,50);
 });
 
 test('canonical IDs and aliases are unique and display-name independent',()=>{

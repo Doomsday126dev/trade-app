@@ -2,8 +2,8 @@ const {test,expect}=require('@playwright/test');
 
 test.use({serviceWorkers:'block'});
 
-test('Groups reports a partial removal among same-identity notes',async({page})=>{
-  await fixture(page);
+test('Groups reports a partial removal among same-identity notes',async({page,baseURL})=>{
+  await fixture(page,baseURL);
   await page.evaluate(()=>{
     const store=ensureTrainerHistoryStore();store.saveFavoriteOrganization('AuditFriend');
     window.__shareIntegrityEntries=[
@@ -28,17 +28,16 @@ test('Groups reports a partial removal among same-identity notes',async({page})=
   await expect(page.locator('.group-availability')).not.toContainText('No changes');
 });
 
-test('Share publishes a multiline note and copied text distinguishes Max categories once',async({page})=>{
-  await fixture(page);
+test('Share publishes a multiline note and copied text distinguishes Max categories once',async({page,baseURL})=>{
+  await fixture(page,baseURL);
   await page.evaluate(()=>{
     const note='Saturday\nAfter 3 pm';
     allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity',intentDeclarations:[{entityId:'audit-note-entry',name:'Pikachu',side:'lf',p:'H',note}]}}});
-    publishPublicShareNow=async()=>{window.__publishedDeclarations=publicSharePublicationDomain.publicDeclarations(productDeclarations().entries);return{ok:true,status:'published'};};
-    activePublicShareHydrationToken=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur}).token;
-    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
+    publishPublicShareNow=async()=>{window.__publishedDeclarations=publicSharePublicationDomain.publicDeclarations(productDeclarations().entries);return{status:'published'};};
+    publicSharePublicationCurrent=()=>true;
     openProductShare('link');
   });
-  await page.locator('#product-share-primary').click();
+  await page.locator('#product-share-link button').click();
   await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopied');
   const publication=await page.evaluate(()=>({note:window.__publishedDeclarations[0].note,copied:window.__copied}));
   expect(publication.note).toBe('Saturday\u2028After 3 pm');
@@ -48,7 +47,7 @@ test('Share publishes a multiline note and copied text distinguishes Max categor
     allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity'}},wishlist:{AuditViewer:{Bulbasaur:'H'}},dynamax:{AuditViewer:{Bulbasaur:'H'}},gmax:{AuditViewer:{'Gigantamax Charizard':'M'}},costumes:{}});
     openProductShare('text');
   });
-  await page.locator('#product-share-primary').click();
+  await page.locator('#product-share-text button').click();
   const copied=await page.evaluate(()=>window.__copied);
   expect(copied).toContain('- Bulbasaur · High');
   expect(copied).toContain('- Bulbasaur · Dynamax · High');
@@ -56,9 +55,9 @@ test('Share publishes a multiline note and copied text distinguishes Max categor
   expect(copied).not.toContain('Gigantamax Charizard · Gigantamax');
 });
 
-async function fixture(page){
+async function fixture(page,baseURL){
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
+  const origin=new URL(baseURL).origin;
   await page.route('**/*',route=>{
     let sameOrigin=false;try{sameOrigin=new URL(route.request().url()).origin===origin;}catch{}
     return sameOrigin?route.continue():route.abort();

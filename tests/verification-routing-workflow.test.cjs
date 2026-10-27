@@ -35,7 +35,8 @@ test('local release command retains permanent release coverage with existing fil
 });
 
 test('PR planning precedes dependency setup and executes the same changed-area selector',()=>{
-  const steps=YAML.parse(read('.github/workflows/product-review.yml')).jobs['public-share'].steps;
+  const jobs=YAML.parse(read('.github/workflows/product-review.yml')).jobs;
+  const steps=jobs.contracts.steps;
   const plan=steps.findIndex(step=>step.run==='node scripts/select-product-checks.cjs --plan');
   const deps=steps.findIndex(step=>step.run==='npm ci --prefix functions --ignore-scripts');
   const run=steps.findIndex(step=>step.run==='node scripts/ci/product-evidence.cjs node');
@@ -45,5 +46,8 @@ test('PR planning precedes dependency setup and executes the same changed-area s
   const {stageArgs}=require('../scripts/ci/product-evidence.cjs');
   assert.deepEqual(stageArgs('node'),['scripts/select-product-checks.cjs']);
   assert.deepEqual(stageArgs('browser'),['scripts/select-product-checks.cjs','--browser']);
-  assert.equal(steps.find(step=>step.name==='Affected browser journeys').run,'node scripts/ci/product-evidence.cjs browser');
+  const browser=jobs.browser;assert.equal(browser.needs,'contracts');assert.match(browser.if,/needs.contracts.outputs.browser == 'true'/);
+  assert.equal(browser.steps.find(step=>step.name==='Exact single-worker browser shard').run,'node scripts/ci/product-evidence.cjs browser');
+  assert.deepEqual(jobs['public-share'].needs,['contracts','browser']);assert.equal(jobs['public-share'].if,'always()');
+  assert.equal(jobs['public-share'].steps.at(-1).run,'node scripts/ci/product-browser-shards.cjs verify product-browser-evidence');
 });

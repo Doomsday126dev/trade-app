@@ -34,7 +34,7 @@ test('conflict safety requires an explicit choice and inaction never selects sav
 test('contextual wants guidance lives beside the affected actions without a forced tour',()=>{
   const list=block('<!-- MY LIST -->','<!-- SCHEDULE -->');
   assert.match(list,/workflow\.aboutSearches/);assert.match(list,/workflow\.searchHelp/);assert.match(list,/id="wants-about-searches" hidden/);
-  assert.match(list,/myList\.flagsAndDetails/);assert.match(html,/workflow\.needsPriorityHelp/);
+  assert.match(list,/wantEditor\.options/);assert.match(html,/workflow\.needsPriorityHelp/);
   assert.doesNotMatch(html,/id="mylist-guidance-title"|id="find-guidance-title"/);
   const tour=block('function maybeStartTour','// ── EXPOSE');assert.match(tour,/if\(TRAINER_FIRST_INTERIM_ENABLED\)return/);
 });
@@ -52,7 +52,7 @@ test('Events expose Now Soon Later hierarchy accessible filters, visible bonuses
   assert.match(source,/ArrowLeft.*ArrowRight.*Home.*End/s);
   assert.match(source,/role="group".*aria-pressed=/s);
   assert.match(source,/data-group="\$\{section\.group\}"/);
-  assert.match(source,/section\.group==='now'\?'is-active'/);
+  assert.match(source,/eventPresentationDomain\.eventGroup\(event\)==='now'\?'is-active'/);
   assert.match(source,/eventPresentationDomain\.eventTiming/);
   assert.match(source,/const tag='article'/);
   assert.match(source,/aria-label=.*events\.openDetailsFor/s);

@@ -1113,7 +1113,17 @@
     "assets/sprites/go/reviewed-minior.png",
     "assets/sprites/go/reviewed-cinderace.png",
     "assets/sprites/go/reviewed-cinderace-shiny.png",
-    "assets/sprites/go/reviewed-charizard.png"
+    "assets/sprites/go/reviewed-charizard.png",
+    "assets/sprites/go/dittobase-25-pikachu-halloween-2026.png",
+    "assets/sprites/go/dittobase-25-pikachu-halloween-2026-female.png",
+    "assets/sprites/go/dittobase-25-pikachu-halloween-2026-shiny.png",
+    "assets/sprites/go/dittobase-25-pikachu-halloween-2026-female-shiny.png",
+    "assets/sprites/go/dittobase-41-zubat-top-hat.png",
+    "assets/sprites/go/dittobase-41-zubat-top-hat-female.png",
+    "assets/sprites/go/dittobase-41-zubat-top-hat-shiny.png",
+    "assets/sprites/go/dittobase-41-zubat-top-hat-female-shiny.png",
+    "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+    "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

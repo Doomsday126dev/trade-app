@@ -14,20 +14,6 @@
     "groups.manage":"グループ管理","groups.memberCount":"トレーナー {count}人","groups.updatedTrainers":"更新 {count}人","groups.review":"トレーナーの更新",
     'groups.title':"グループ",'groups.new':'新しいグループ名','groups.name':'グループ名','groups.create':'グループ作成','groups.open':'グループ','groups.choose':"お気に入りまたはグループを選択",'groups.rename':'名前変更','groups.delete':'グループ削除','groups.confirmDelete':'このグループを削除しますか？お気に入りや希望リストは削除されません。','groups.members':'メンバー','groups.noFavorites':'まずトレーナーをお気に入りに追加してください。','groups.all':"すべての欲しいポケモン",'groups.refresh':'希望を更新','groups.available':'利用可能','groups.stale':'利用不可：情報が古い','groups.loading':'確認中…','groups.unavailable':'利用不可','groups.freshness':"公開日時が古くても公開中の希望を含みます。5分後にアクセスを再確認してください。",'groups.empty':'メンバーはいません。','groups.noWants':'利用可能な希望はありません。','groups.search':'グループの希望を検索','groups.more':'もっと表示','groups.synced':'非公開 · アカウント同期','groups.local':'非公開 · この端末',
     "workflow.listTools":"リストツール",
-    "discovery.intro":"交換ツールとアプリの設定。",
-    "discovery.trading":"交換",
-    "discovery.yourApp":"アプリ",
-    "discovery.eventsHelp":"今後の予定とイベントの詳細。",
-    "discovery.transfer":"博士に送る前の確認",
-    "discovery.transferHelp":"選んだトレーナーの公開希望リストを確認します。",
-    "discovery.shareHelp":"希望リストをリンク・画像・テキストで共有。",
-    "discovery.importHelp":"Pokémon GOの検索文字列を確認してから希望に追加。",
-    "discovery.profileHelp":"トレーナー情報と公開するプロフィール。",
-    "discovery.settingsHelp":"言語、表示、アカウント、同期。",
-    "discovery.help":"ヘルプとショートカット",
-    "discovery.helpDescription":"キーボードでアプリを操作する方法。",
-    "discovery.emptyTitle":"欲しいポケモンから始めましょう",
-    "discovery.emptyImport":"上の検索欄から追加するか、Pokémon GO の検索文字列を読み込んでください。",
     "workflow.findInList":"リスト内を検索",
     "workflow.closeFind":"リスト内検索を閉じる",
     "workflow.aboutSearches":"検索について",
@@ -123,9 +109,9 @@
     'share.updated':'更新：{time}','share.updatedNever':'更新日時なし','share.listTab':'{label}（{count}）','share.entryCount.one':'{count}件','share.entryCount.other':'{count}件','share.emptyTitle':'このリストには項目がありません','share.emptyHelp':'上の別のリストタブをお試しください。','share.copy':'コピー','share.copied':'コピーしました','share.viewSearch':'検索を表示','share.hideSearch':'検索を隠す','share.copySuccess':'検索文字列をコピーしました。','share.copyFailed':'検索文字列をコピーできませんでした。','share.copySearchAria':'{label}の検索文字列をコピー','share.luckyDex':'キラ図鑑','share.combinedOptions':'組み合わせ','share.combinedAvailable':'{count}通り','share.allPriorities':'すべての優先度','share.priorityCombination':'{first}＋{second}','share.searchLimitTitle':'Pokémon GO の検索上限は約{limit}文字です','share.searchLimitExceeded':'この文字列は Pokémon GO のおおよその上限（{limit}文字）を超えています（{count}文字）。ゲーム内で切り捨てられる可能性があるため、優先度ごとに分割してください。','share.searchLimitApproaching':'この文字列は Pokémon GO のおおよその上限（{limit}文字）に近づいています（{count}文字）。早めの分割をご検討ください。','share.flagFemale':'メス','share.flagMale':'オス','share.flagLucky':'キラ','share.flagShiny':'色違いのみ','share.flagXxl':'特大','share.flagXxs':'極小',
     'inventory.legacyTitle':'旧インベントリ','inventory.legacyDescription':'以前のコレクションを読み取り専用で保存しています。内容を確認したり、必要なときに書き出したりできます。','inventory.legacyEmpty':'このアカウントには旧インベントリがありません。','inventory.legacyReadOnly':'旧インベントリは読み取り専用です。変更は保存されませんでした。','inventory.exportAction':'CSVを書き出す','inventory.filterPlaceholder':'インベントリを絞り込む…','inventory.sectionTitle':'保存済みインベントリ',
     'events.title':'イベント','events.description':'開催中および今後のPokémon GOイベント。','events.loading':'今後のイベントを読み込んでいます…','events.empty':'しばらくしてからもう一度ご確認ください。','events.error':'イベントを読み込めませんでした。後でもう一度お試しください。','events.groupNow':'開催中','events.groupSoon':'まもなく開始','events.groupLater':'今後','events.filterAll':'すべて','events.filterSpotlight':'スポットライトアワー','events.filterRaids':'レイド','events.filterMax':'マックスバトル','events.filterGbl':'GOバトルリーグ','events.filterResearch':'リサーチ','events.filterGeneral':'一般','events.details':'詳細','events.filtersLabel':'イベントの種類','events.filteredEmpty':'別の種類を選ぶか、フィルターを解除してください。','events.offline':'接続後にもう一度お試しください。','events.emptyTitle':'今後のイベントはありません','events.filteredEmptyTitle':'一致するイベントはありません','events.errorTitle':'イベントを利用できません','events.offlineTitle':'イベントはオフラインです','events.retry':'再試行','events.clearFilters':'フィルターを解除','events.nowBadge':'開催中','events.endsRelative':'終了まで{time}','events.startsRelative':'開始まで{time}','events.startsToday':'今日開始','events.startsTomorrow':'明日開始','events.eventCount':'{count}件','events.openDetailsFor':'{event}の詳細を開く','events.context':'イベント概要','events.calendar':'カレンダー','events.previousMonth':'前の月','events.nextMonth':'次の月','events.calendarDate':'{date}、{status}','events.calendarHasEvents':'イベントあり','events.calendarNoEvents':'イベントなし','events.onDate':'{date}のイベント','events.noneOnDate':'{date}にイベントはありません','events.clearDate':'すべての日付を表示','events.upNext':'次のイベント','events.featuredPokemon':'注目のポケモン','settings.profileGroupTrainer':'トレーナー','settings.profileTrainerName':'トレーナー名','settings.profileGroupPokemonGo':'Pokémon GO','settings.profileGroupAbout':'プロフィール',
-    'settings.title':'設定','settings.description':'プロフィール、アプリの状態、表示、セッションを管理します。','settings.profileAction':'プロフィールを編集','settings.healthAction':'アプリの状態','settings.shortcutsAction':'キーボードショートカット','settings.logoutAction':'ログアウト','settings.languageTitle':'言語',"settings.languageDescription":"この端末にのみ保存されます。","settings.languageLabel":"アプリの言語",'settings.languageSaved':'言語設定をこの端末に保存しました。','settings.localToolsTitle':'トレーナー設定','settings.localToolsDescription':'お気に入りと履歴はこの端末内だけに保存されます。非公開タグと端末間同期はまだ有効ではありません。','settings.syncComingLater':'端末間同期 — 今後対応予定',
+    'settings.title':'設定','settings.description':'プロフィール、アプリの状態、表示、セッションを管理します。','settings.profileAction':'プロフィールを編集','settings.healthAction':'アプリの状態','settings.shortcutsAction':'キーボードショートカット','settings.logoutAction':'ログアウト','settings.languageTitle':'言語','settings.languageDescription':'表示言語はこの端末にのみ保存されます。','settings.languageLabel':'表示言語','settings.languageSaved':'言語設定をこの端末に保存しました。','settings.localToolsTitle':'トレーナー設定','settings.localToolsDescription':'お気に入りと履歴はこの端末内だけに保存されます。非公開タグと端末間同期はまだ有効ではありません。','settings.syncComingLater':'端末間同期 — 今後対応予定',
     'security.title':'アカウントとセキュリティ','security.description':'このトレーナープロフィールの権限は、Firebase アカウント ID に紐づいています。','security.methodsLabel':'ログイン方法','security.google':'Google','security.email':'メール','security.discord':'Discord','security.legacyPin':'従来の PIN','security.notLinked':'未連携','security.active':'有効','security.futureUnavailable':'プロバイダー連携はまだ利用できません。','security.emailPlanned':'確認済みメールリンクへの移行は、今後の段階で対応予定です。','security.legacyPinHelp':'現在の本番環境では、この方法でログインします。','security.disabledNotice':'このリリースでは、連携、連携解除、移行の操作は有効になっていません。',
-    'security.connectedAccounts':'連携済みアカウント','security.connectedAccountsHelp':'このトレーナーアカウントに連携されているログイン方法です。','security.usernamePin':'トレーナー名と PIN','security.usernamePinHelp':"トレーナー名とPINでログインします。",'security.connected':'連携済み','security.notConnected':'未連携','security.connecting':'連携中','security.waitingBrowser':'ブラウザでの操作待ち','security.needsAttention':'確認が必要','security.reauthenticate':'再認証','security.disconnecting':'連携解除中','security.unavailable':'利用不可','security.providerDevelopmentOnly':'プロバイダー設定後の開発環境でのみ利用できます。','security.foundationNotice':'このリリースでは追加のログインプロバイダーは有効になっていません。',
+    'security.connectedAccounts':'連携済みアカウント','security.connectedAccountsHelp':'このトレーナーアカウントに連携されているログイン方法です。','security.usernamePin':'トレーナー名と PIN','security.usernamePinHelp':'現在のログイン方法は同じ Firebase アカウントに連携されています。','security.connected':'連携済み','security.notConnected':'未連携','security.connecting':'連携中','security.waitingBrowser':'ブラウザでの操作待ち','security.needsAttention':'確認が必要','security.reauthenticate':'再認証','security.disconnecting':'連携解除中','security.unavailable':'利用不可','security.providerDevelopmentOnly':'プロバイダー設定後の開発環境でのみ利用できます。','security.foundationNotice':'このリリースでは追加のログインプロバイダーは有効になっていません。',
     'myList.listTitle':'マイリスト','myList.filterPlaceholder':'マイリストを絞り込む…','myList.addTitle':'ポケモンを追加','myList.addHelp':'多く追加するときは、優先度とフラグを保持する連続追加を利用できます。','myList.searchPlaceholder':'ポケモンを検索…','myList.priority':'優先度','myList.flags':'フラグ','myList.advanced':'詳細','myList.moreOptions':'その他のオプション','myList.notesPlaceholder':'メモ：メス、オス、コスチューム…','myList.variantDetails':'個体の詳細','myList.variantDetailsPlaceholder':'個体の詳細：メス、オス、コスチューム…','myList.addAction':'追加','myList.importAction':'文字列を読み込む','myList.speedAdd':'連続追加','myList.exportAction':'書き出す','myList.bulkEdit':'一括編集','myList.noMatches':'一致する項目がありません','myList.clearFilter':'すべて表示するには絞り込みを解除してください。','myList.emptyTitle':'まだ何もありません','myList.emptyHelp':'ポケモンを検索し、優先度を選んでこのリストに追加してください。','myList.count':'（{count}件）','myList.filteredCount':'（{total}件中{visible}件）','myList.categories':'マイリストのカテゴリー','myList.categoryTabLabel':'{category}、ポケモン{count}匹','myList.categoryCount':'ポケモン{count}匹','myList.filteredCategoryCount':'{total}匹中{visible}匹','myList.noMatchesInCategory':'{category}に一致する項目はありません','myList.empty.wishlistTitle':'交換ポケモンはまだありません','myList.empty.wishlistHelp':'上からポケモンを追加して交換リストを作成しましょう。','myList.empty.dynamaxTitle':'ダイマックスポケモンはまだありません','myList.empty.dynamaxHelp':'探しているダイマックスポケモンを上から追加できます。','myList.empty.gigantamaxTitle':'キョダイマックスポケモンはまだありません','myList.empty.gigantamaxHelp':'探しているキョダイマックスポケモンを上から追加できます。','myList.empty.othersTitle':'「その他」にポケモンはいません','myList.empty.othersHelp':'ほかのマイリストのカテゴリーは変更されていません。','myList.viewCategory':'{category}を見る（{count}）','myList.viewCategoryLabel':'ポケモンが{count}匹いる{category}を見る',
     'list.wishlist':'交換','list.dynamax':'ダイマックス','list.dynamaxShort':'Dmax','list.gigantamax':'キョダイマックス','list.gigantamaxShort':'Gmax','list.others':'その他','strings.categoryTitle':'{category}の検索文字列','strings.emptyCategoryTitle':'{category}の検索文字列はありません','strings.emptyCategoryHelp':'このカテゴリーにポケモンを追加すると検索文字列が表示されます。','strings.categoryNeedsPriority':'このカテゴリーの項目に優先度または検索用フラグを設定してください。','myList.priorityPokemonCount':'{count}匹','myList.luckyDex':'キラ図鑑','myList.shinyDex':'色違い図鑑','myList.xxlDex':'XXL図鑑','myList.xxsDex':'XXS図鑑','myList.otherPokemon':'その他のポケモン','strings.allPriorities':'すべての優先度','strings.prioritySearch':'優先度「{priority}」の検索文字列','strings.luckyDexSearch':'キラ図鑑の検索文字列','strings.shinyDexSearch':'色違い図鑑の検索文字列','strings.xxlDexSearch':'XXL図鑑の検索文字列','strings.xxsDexSearch':'XXS図鑑の検索文字列','strings.copyScoped':'{label}をコピー','strings.viewString':'検索文字列を表示','strings.hideString':'検索文字列を隠す','strings.tooLongForPokemonGo':'Pokémon GO の上限を超えています','strings.suggestedSplit':'おすすめの分割','strings.suggestedSplitHelp':'すべてのポケモンを漏らさず検索するには、各部分をコピーしてください。','strings.moreCombinations':'その他の組み合わせ','strings.combinedSearch':'優先度を組み合わせた検索','strings.specialSearches':'特別な検索','priority.high':'高','priority.medium':'中','priority.low':'低',
     'status.localOnlyTitle':'端末内モード','status.localOnlyBody':'編集内容はこの端末に安全に保存されています。再ログインすると保留中の変更（{count}件）を同期できます。','status.signBackIn':'再ログイン',
@@ -161,10 +147,10 @@
     ,'compare.pickAnother':'別のトレーナーを選んでください。','compare.emptySection':'この欄にはポケモンがいません。','myList.noVariants':'バリエーションが見つかりません。','myList.allVariantsListed':'{family} の全 {count} 種はすでにリストにあります。','myList.addAllVariantsTitle':'{family} の全バリエーションを追加','myList.variantsWillAdd':'{count} 種を「{list}」リストに追加します。','myList.alreadyAddedCount':'{count} 種は追加済み','myList.addAsPriority':'追加時の優先度：','myList.addCount':'{count} 件を追加','myList.variantsAdded':'{family} の {count} 種を優先度「{priority}」で追加しました。','myList.allShownListed':'表示中の結果はすべてリストにあります。','myList.addShownTitle':'表示中の結果を追加','myList.shownWillAdd':'表示中の {count} 件を「{list}」リストに追加します。','myList.currentFlags':'現在のフラグ：{flags}','myList.shownAdded':'表示中の {count} 件を優先度「{priority}」で追加しました。','voice.unsupported':'この環境では音声入力を利用できません。デスクトップ版 Chrome または Android をお試しください。','voice.requiresHttps':'音声入力には HTTPS が必要です。','voice.listeningPlaceholder':'聞き取り中…ポケモン名を話してください','voice.listening':'聞き取り中…','voice.heardMatch':'「{heard}」と認識 → {name}','voice.heardNoMatch':'「{heard}」と認識しましたが一致するポケモンがありません。文字で入力してください。','voice.permissionDenied':'マイクの使用が拒否されました。ブラウザ設定で許可してください。','voice.noSpeech':'音声を聞き取れませんでした。もう一度お試しください。','voice.noMicrophone':'マイクが見つかりません。','voice.networkError':'音声認識でネットワークエラーが発生しました。接続を確認してください。','voice.serviceBlocked':'音声サービスがブロックされています。','voice.error':'音声入力エラー：{code}','voice.startFailed':'音声入力を開始できませんでした。'
     ,'account.tools':"ツール",'inventory.readOnlyBadge':"読み取り専用",'guidance.findTitle':"トレーナーを探して比較",'guidance.findBody':"トレーナーの共有リストを開き、お気に入りにするとすぐ戻れます。非公開タグはこの端末だけに保存され、同期はまだ有効ではありません。",'guidance.exploreEvents':"イベントを見る",'guidance.myListTitle':"交換リストを作成",'guidance.myListBody':"ポケモンを追加して優先度を設定し、準備ができたらリストを共有できます。お気に入りと非公開タグはこの端末に保存されます。",'guidance.findTrainer':"トレーナーを探す",'trainer.clearSearch':"検索を消去",'trainer.searchAnother':"別のトレーナーを検索",'trainer.noMatchRecovery':"完全に一致するトレーナーが見つかりません。つづりを確認するか、検索を消去して別のトレーナーをお試しください。",'backup.fileTooLarge':"このバックアップは {size} を超えています。より小さい信頼できる JSON バックアップを選んでください。",'conflict.onDevice':"この端末",'conflict.savedCopy':"保存済みコピー",'conflict.more':"ほか {count} 件",'conflict.title':"変更内容の確認が必要です（{count} 件）",'conflict.help':"選択するまでデータは破棄されません。「この端末を保持」は現在の変更を残し、「保存済みコピーを使用」は置き換えます。「あとで確認」は何も変更しないため、先に両方を手動で保存できます。",'conflict.reviewLater':"あとで確認",'conflict.useSaved':"保存済みコピーを使用",'conflict.keepDevice':"この端末を保持",'events.moreBonuses':"ほか {count} 件"
     ,'settings.searchLanguageLabel':'Pokémon GO の検索言語','settings.searchLanguageFollow':'アプリの言語に合わせる','settings.searchLanguageDescription':'検索コマンドの言語はこの端末にのみ保存され、アプリの言語とは別に選べます。','settings.searchLanguageSaved':'Pokémon GO の検索言語をこの端末に保存しました。','settings.searchLanguageAutomatic':'Pokémon GO の検索コマンドも自動的にこの言語を使います。','settings.searchLanguageOverride':'Pokémon GO の検索言語を別に設定する','settings.searchLanguageOverrideHelp':'Pokémon GO をこのアプリとは別の言語で使う場合のみオンにしてください。','myList.setHighPriority':'{name} の優先度を「高」に設定','myList.setMediumPriority':'{name} の優先度を「中」に設定','myList.setLowPriority':'{name} の優先度を「低」に設定','myList.toggleLuckyFor':'{name} のキラ設定を切り替え','myList.toggleShinyFor':'{name} の色違い設定を切り替え','myList.toggleXxlFor':'{name} の XXL 設定を切り替え','myList.toggleXxsFor':'{name} の XXS 設定を切り替え','myList.openMoreFor':'{name} のその他のオプションを開く','myList.editEntry':'編集','myList.reorderEntry':'{name} の順序を変更'
-    ,'settings.sectionsLabel':'設定の項目','settings.sectionProfile':'プロフィール','settings.sectionLanguage':'言語','settings.sectionSecurity':'アカウントとセキュリティ','settings.sectionTools':'ツール',"settings.sectionData":"同期とストレージ",'settings.backToSections':'設定に戻る','settings.profileSummary':'トレーナー情報と公開プロフィールを管理します。','settings.profileIdentityHelp':'ほかの人に表示されるトレーナー名です。','settings.toolsSummary':'必要なときに使うリストとアプリのツールです。','settings.dataSummary':'お気に入りとタグはこの端末に保存されます。端末間同期はまだ利用できません。','settings.release':'アプリのバージョン {release}','security.description':'このトレーナーアカウントへのログイン方法を管理します。','organizer.addTags':"グループを追加",'organizer.newTag':"新しいグループ",'organizer.newTagAction':"+ 新しいグループ",'organizer.favoriteSaved':'{trainer} をお気に入りに保存しました。','organizer.removeConfirm':"{trainer} をお気に入りから削除しますか？このトレーナーの非公開グループも削除されます。",'organizer.tagSelected':"既存のグループを選択しました。",'organizer.favorite-limit':'この端末のお気に入り上限に達しました。','organizer.editTags':"グループを編集",'organizer.removeFavorite':'お気に入りから削除','organizer.editTagsFor':"{trainer} のグループを編集",'organizer.addTagsFor':"{trainer} にグループを追加",'organizer.moreActionsFor':'{trainer} のその他の操作'
+    ,'settings.sectionsLabel':'設定の項目','settings.sectionProfile':'プロフィール','settings.sectionLanguage':'言語','settings.sectionSecurity':'アカウントとセキュリティ','settings.sectionTools':'ツール','settings.sectionData':'アプリとデータ','settings.backToSections':'設定に戻る','settings.profileSummary':'トレーナー情報と公開プロフィールを管理します。','settings.profileIdentityHelp':'ほかの人に表示されるトレーナー名です。','settings.toolsSummary':'必要なときに使うリストとアプリのツールです。','settings.dataSummary':'お気に入りとタグはこの端末に保存されます。端末間同期はまだ利用できません。','settings.release':'アプリのバージョン {release}','security.description':'このトレーナーアカウントへのログイン方法を管理します。','organizer.addTags':"グループを追加",'organizer.newTag':"新しいグループ",'organizer.newTagAction':"+ 新しいグループ",'organizer.favoriteSaved':'{trainer} をお気に入りに保存しました。','organizer.removeConfirm':"{trainer} をお気に入りから削除しますか？このトレーナーの非公開グループも削除されます。",'organizer.tagSelected':"既存のグループを選択しました。",'organizer.favorite-limit':'この端末のお気に入り上限に達しました。','organizer.editTags':"グループを編集",'organizer.removeFavorite':'お気に入りから削除','organizer.editTagsFor':"{trainer} のグループを編集",'organizer.addTagsFor':"{trainer} にグループを追加",'organizer.moreActionsFor':'{trainer} のその他の操作'
     ,'settings.exportList':'マイリストを書き出す'
     ,"data.ownedReadUnavailable":"一部のアカウントデータを更新できませんでした。確認済みのオフラインキャッシュは引き続き利用できます。","app.name":"PoGo Trades","trainer.restrictedFavorites":"承認済みのトレーナーにのみ表示されます。","trainer.publicHint":"トレーナーに最新の共有リンクを依頼するか、後でもう一度お試しください。","trainer.publicInvalid":"有効なトレーナー名または PoGo Trades の共有リンクを入力してください。","trainer.changesAdded":"{count}件追加","trainer.changesRemoved":"{count}件削除","trainer.changesModified":"{count}件変更","trainer.changesTitle":"前回開いてからの変更","trainer.changePriority":"{name}：優先度を変更","trainer.changeCategory":"{name}：別のリストに移動","trainer.changeDetails":"{name}：公開情報を変更","share.publicationUpdated":"公開共有スナップショットを更新しました。","share.publicationPending":"共有リンクをコピーしました。完全なリストを読み込み中です。準備ができ次第、公開を完了します。","share.publicationNotReady":"共有リンクをコピーしましたが、完全なアカウントデータを利用できないため公開リストは変更されませんでした。","share.ownerMissing":"現在の共有コピーが見つかりません。","share.ownerProfileOnly":"共有コピーにはプロフィール情報のみが含まれています。","share.ownerMissingMarkers":"共有コピーが完全性マーカー導入前の形式です。","share.ownerIncomplete":"共有コピーが不完全です。","share.ownerUnsupported":"共有コピーは未対応の形式です。","share.ownerReadError":"共有コピーを確認できませんでした。オンラインで再試行してください。","trainer.tagsTitle":"非公開トレーナータグ","trainer.tagsCreate":"タグを作成","trainer.tagsRename":"タグ名を変更","trainer.tagsDelete":"タグを削除","trainer.tagsFilter":"選択したすべてのタグでお気に入りを絞り込む","trainer.tagsSearch":"トレーナーとタグを検索","trainer.tagsAssign":"タグを割り当て","trainer.tagsRemove":"タグを外す","trainer.tagsDialogLabel":"非公開トレーナータグを編集","trainer.tagsFilterLabel":"非公開タグでお気に入りトレーナーを絞り込む","trainer.syncLoading":"トレーナー設定を同期しています…","trainer.syncOffline":"トレーナー設定の同期は接続を待っています。","trainer.syncUnavailable":"トレーナー設定の端末間同期は今後対応予定です。","trainer.migrationReady":"同期前に端末の設定を確認できます。","trainer.migrationVerifying":"同期したトレーナー設定を確認しています…","trainer.migrationFailed":"同期を確認できなかったため、トレーナー設定をこの端末に保持しました。","share.mode.public":"公開","share.mode.approved_viewers":"承認済みの閲覧者","share.mode.private":"非公開","share.approvedViewersTitle":"承認済みの閲覧者","share.approvedViewersGrant":"閲覧を承認","share.approvedViewersRevoke":"閲覧権限を削除","share.approvedViewersEmpty":"承認済みのトレーナーはいません。","share.visibilityPublic":"公開共有リスト","share.visibilityApproved":"承認済みの閲覧者として表示できます","share.visibilityPrivateOwner":"自分だけに表示される非公開共有リスト","share.visibilityRestricted":"この共有リストは閲覧が制限されています。","share.visibilityPrivate":"この共有リストは非公開です。","share.visibilityUnpublished":"このトレーナーは共有リストを公開していません。","share.visibilityIncomplete":"この共有リストは再公開が必要です。","share.visibilityUnsupported":"この共有リストは未対応の形式です。","share.visibilityReadError":"共有リストを読み込めませんでした。","share.visibilityUnavailable":"共有リストを利用できません。","share.visibilityComingLater":"UID ベースの共有範囲は今後対応予定です。","share.anonymous.public":"リンクを知っている人は誰でも共有リストを表示できます。","share.anonymous.approved_viewers":"承認済みでログイン中のトレーナーのみ共有リストを表示できます。","share.anonymous.private":"この共有リストを表示できるのは自分だけです。","locale.en":"English","locale.ja":"日本語","locale.es":"Español","locale.de":"Deutsch","myList.selectEntry":"{name} を選択","myList.dragEntry":"ドラッグして並べ替え","myList.setPriority":"{name} の優先度を「{priority}」に設定","myList.toggleFlag":"{name} の「{flag}」を切り替え","myList.notesFor":"{name} のメモ","myList.remove":"削除","myList.removeEntry":"{name} を削除","myList.confirmRemove":"「{name}」をこのリストから削除しますか？この変更は他のデバイスにも同期されます。","myList.confirmDelete":"「{name}」をこのリストから削除しますか？この項目には「{notes}」という詳細があります。この変更は他のデバイスにも同期されます。","admin.loading":"オーナー向けメンテナンスデータを読み込んでいます…","admin.establishedResetUnavailable":"Established accounts require the identity-preserving secure reset process. The legacy Reset action is disabled.","admin.securityTitle":"Firebase セキュリティ","admin.securityDeployed":"限定読み取りルールをデプロイ済み","admin.securityDeploymentTime":"デプロイ日時","admin.securityCandidateSha":"候補の SHA-256","admin.securityReviewedArtifact":"レビュー済みアーティファクト","admin.securityRollbackReady":"ロールバック準備状況","admin.securityRollbackReadyValue":"確認済みの非公開ロールバック基準を利用できます。","admin.securityRollbackUnavailableValue":"ロールバック基準の確認が必要です。","admin.securityArtifactWarning":"本番ルールは、レビュー済みのリポジトリアーティファクトからのみ管理してください。ブラウザの状態はルールのソースではありません。","admin.securityCopySha":"候補 SHA をコピー","admin.securityCopyPath":"レビュー済みパスをコピー","admin.communityVerificationFailed":"Server did not confirm the community record. Verify the reviewed Firebase rules artifact and retry.","storage.pendingChangesDiscarded":"アカウントの所有者を確認できなかったため、保留中のオフライン変更を破棄しました。","storage.cacheReset":"アカウントの所有者を確認できなかったため、保存済みセッションデータをリセットしました。","storage.sessionOwnershipMismatch":"保存済みセッションが認証済みアカウントと一致しません。ログアウトしてから、もう一度ログインしてください。","storage.offlineRecoveryUnavailable":"このアカウントを安全に再確認するまで、オフライン復旧は利用できません。"
-    ,'settings.sectionAppearance':'外観','settings.appearanceSummary':'この端末でのアプリの表示を選びます。','settings.themeLabel':'テーマ','settings.themeSystem':'システム','settings.themeLight':'ライト','settings.themeDark':'ダーク','settings.backgroundLabel':'背景','settings.backgroundSummary':'背景はダークテーマで表示されます。ライトテーマ中も選択内容は保持されます。','settings.backgroundInactive':'背景を確認・変更するにはダークテーマに切り替えてください。','settings.appearanceSaved':'外観を保存しました。','settings.wallpaper.mono':'ニュートラル','settings.wallpaper.aurora':'オーロラ','settings.wallpaper.ocean':'オーシャン','settings.wallpaper.forest':'フォレスト','settings.wallpaper.sunset':'サンセット','settings.wallpaper.mist':'ミスト','settings.pinTitle':'PINを変更','settings.pinSummary':'6桁のPINが現在のサインイン方法です。','settings.pinSave':'PINを変更','settings.pinSaved':'PINを変更しました。','settings.currentIdentity':'現在のアカウント','settings.signInOptions':'サインイン方法'
+    ,'settings.sectionAppearance':'外観','settings.appearanceSummary':'この端末でのアプリの表示を選びます。','settings.themeLabel':'テーマ','settings.themeSystem':'システム','settings.themeLight':'ライト','settings.themeDark':'ダーク','settings.backgroundLabel':'背景','settings.backgroundSummary':'背景はダークテーマで表示されます。ライトテーマ中も選択内容は保持されます。','settings.backgroundInactive':'背景を確認・変更するにはダークテーマに切り替えてください。','settings.appearanceSaved':'外観を保存しました。','settings.wallpaper.mono':'デフォルト','settings.wallpaper.aurora':'オーロラ','settings.wallpaper.ocean':'オーシャン','settings.wallpaper.forest':'フォレスト','settings.wallpaper.sunset':'サンセット','settings.wallpaper.mist':'ミスト','settings.pinTitle':'PINを変更','settings.pinSummary':'6桁のPINが現在のサインイン方法です。','settings.pinSave':'PINを変更','settings.pinSaved':'PINを変更しました。','settings.currentIdentity':'現在のアカウント','settings.signInOptions':'サインイン方法'
     ,'trainer.viewedJustNow':'たった今閲覧','trainer.viewedMinutes':'{count}分前に閲覧','trainer.viewedHours':'{count}時間前に閲覧','trainer.viewedDays':'{count}日前に閲覧','trainer.viewedWeeks':'{count}週間前に閲覧','trainer.viewedDate':'{date}に閲覧'
     ,'admin.title':'管理','admin.subtitle':'通常の確認と重要な操作を分けて、メンバー、アクセス、メンテナンス、診断を管理します。','admin.sectionsLabel':'管理セクション','admin.overview':'概要','admin.members':'メンバー','admin.accessRoles':'アクセスと権限','admin.maintenance':'メンテナンス','admin.diagnostics':'診断','admin.overviewHelp':'このセッションですでに読み込まれているメンバーデータの概要です。','admin.membersHelp':'アカウント状態、リスト活動、現在の権限を確認します。重要な操作は別のセクションにあります。','admin.accessHelp':'アクセス承認、メンバー追加、権限変更を慎重に行います。','admin.maintenanceHelp':'アカウント修復とバックアップを通常のメンバー確認から分けています。','admin.diagnosticsHelp':'確認済みのセキュリティ情報とオーナー向け診断です。','admin.admins':'管理者','admin.loginReadyAccounts':'ログイン可能','admin.activeLists':'使用中のリスト','admin.listEntries':'{count}件掲載','admin.updated':'更新: {time}','admin.viewed':'閲覧: {time}','admin.never':'記録なし','admin.noMembers':'メンバーはいません。','admin.adminRole':'管理者','admin.removeAdmin':'管理者権限を外す','admin.makeAdmin':'管理者にする','admin.ownerProtected':'オーナー権限は保護されており、ここでは変更できません。','admin.roleHelp':'権限変更にはオーナーの確認が必要です。','admin.repairAccount':'アカウントを修復','admin.secureRepairRequired':'設定済みアカウントでは、本人情報を保持する安全な修復手順を使います。','admin.firstUseResetAvailable':'初回利用アカウントのログイン設定が未完了の場合は、リセットまたは修復できます。','admin.roleChangeConfirm':'{trainer} の権限を「{role}」に変更しますか？管理アクセスが変わります。','admin.loginAuditTitle':'ログイン修復チェック · {count}','admin.loginAuditHelp':'ログイン情報またはログインディレクトリが未完了のメンバーを表示します。','admin.repairDirectoryOnly':'ディレクトリのみ {count}件修復','admin.repairDirectory':'ディレクトリを修復','admin.repairWithPin':'PIN付きで修復','admin.emailMismatch':'メール不一致','admin.missingDirectory':'ログインディレクトリなし','admin.directoryEmailMismatch':'ディレクトリのメール不一致','admin.directoryVersionMismatch':'ディレクトリのバージョン不一致','inventory.archiveTitle':'読み取り専用アーカイブ','inventory.archiveHelp':'既存の在庫データは表示・書き出しできます。在庫の追加と編集は終了しました。'
     ,'admin.repairPrompt':'{trainer} は Firebase Auth との連携がありません。\n\nアカウントを修復して新しいログインを発行するため、6桁の新しい PIN を入力してください。'
@@ -190,80 +176,28 @@
     ,'safeTransfer.temporarilyUnavailable':'完全な希望リストを確認しているため、安全な転送検索は一時的に利用できません。'
     ,'safeTransfer.candidate.scope':'選択範囲：{trainers}','safeTransfer.candidate.loading':'サーバーで確認済みの共有希望を確認中…','safeTransfer.candidate.blocked':'検索を作成するには、完全で最新の選択範囲スナップショットが必要です。','safeTransfer.candidate.ready':'希望する{protected}種を保護した後の候補は{candidates}種です。','safeTransfer.candidate.empty':'この選択範囲のスナップショットには候補種が残っていません。','safeTransfer.candidate.copy':'{total}個中{part}個目をコピー','safeTransfer.candidate.copied':'コピーしました。','safeTransfer.candidate.copyFailed':'コピーできませんでした。現在の検索文字列を手動コピー用に下に残しました。'
     ,'contextSearch.copyProtected':'保護検索をコピー','contextSearch.copyBroad':'特別条件の広い検索をコピー','contextSearch.mixedHelp':'通常の希望には保護検索を使います。特別条件や正確な姿は、必要な候補を除外しないよう別の広い種族検索を使います。'
-    ,"shareUi.disclosure":"リンクを共有すると、リンクを知っている人は欲しいポケモンの全リストと公開プロフィールを閲覧できます。"
-    ,"shareUi.preview":"プレビュー"
-    ,"export.listHeading":"{owner} · {list}","export.listCategory":"カテゴリ：{category}"
-    ,"shareUi.manualLink":"コピーするリンク"
-    ,"shareUi.copyLink":"リンクをコピー"
-    ,"shareUi.shareCopy":"共有してリンクをコピー"
-    ,"shareUi.include":"対象"
-    ,"shareUi.all":"すべての希望"
-    ,"shareUi.high":"優先度：高"
-    ,"shareUi.selected":"選択済み（{count}）"
-    ,"shareUi.layout":"レイアウト"
-    ,"shareUi.board":"希望ボード"
-    ,"shareUi.classic":"クラシック"
-    ,"shareUi.cards":"ダークカード"
-    ,"shareUi.format":"形式"
-    ,"shareUi.plain":"プレーンテキスト"
-    ,"shareUi.fullScope":"欲しいポケモンの全リストが含まれます。"
-    ,"shareUi.category":"現在のカテゴリが含まれます：{category}。"
-    ,"shareUi.count":"{count}件の希望"
-    ,"shareUi.empty":"この範囲には希望がありません。別の範囲を選ぶか、マイリストで希望を選択してください。"
-    ,"shareUi.building":"プレビューを準備中…"
-    ,"shareUi.working":"処理中…"
-    ,"shareUi.downloadImage":"画像をダウンロード"
-    ,"shareUi.downloadCsv":"CSVをダウンロード"
-    ,"shareUi.copyText":"テキストをコピー"
-    ,"shareUi.retryImage":"再試行"
-    ,"shareUi.invalid":"この希望を共有できませんでした。詳細を確認して再試行してください。"
-    ,"shareUi.changed":"リストが変更されました。更新されたプレビューを確認して再試行してください。"
-    ,"shareUi.imageFailed":"画像を準備できませんでした。再試行してください。"
-    ,"shareUi.exportFailed":"リストを出力できませんでした。再試行してください。"
-    ,"shareUi.downloaded":"準備できました。"
-    ,"shareUi.copied":"コピーしました。"
-    ,"shareUi.textCopyFailed":"テキストをコピーできませんでした。プレビューの文字を選択してコピーできます。"
-    ,"shareUi.linkCopyFailed":"リンクをコピーできませんでした。下のリンクをコピーするか、再試行してください。"
-    ,"shareUi.notReady":"リストの読み込みが完了していません。しばらくしてから再試行してください。"
-    ,"shareUi.notSaved":"最新の変更がまだ保存されていません。再試行してください。"
-    ,"shareUi.shareFailed":"リストを共有できませんでした。接続を確認して再試行してください。"
-    ,"shareUi.title":"ほしいポケモンを共有","shareUi.shareFormat":"共有形式"
-    ,"wantEditor.add":"欲しいポケモンを追加","wantEditor.edit":"欲しいポケモンを編集","wantEditor.save":"変更を保存","wantEditor.pokemon":"ポケモン","wantEditor.anyGender":"指定なし","wantEditor.noPriority":"優先度なし","wantEditor.requirements":"条件","wantEditor.note":"公開メモ"
-    ,"settings.sameAsApp":"アプリと同じ"
-    ,"settings.searchFixed":"アプリの言語を変えても、{language}のままです。"
-    ,"settings.searchFollows":"アプリの言語（{language}）に合わせます。"
-    ,"settings.changePin":"PINを変更"
-    ,"settings.storageSummary":"この端末とアカウントのデータ。"
-    ,"settings.onDevice":"この端末のデータ"
-    ,"settings.storageCare":"サインアウトやブラウザーのデータ削除の前に、同期の問題を確認してください。"
-    ,"settings.about":"PoGo Tradesについて"
-    ,"settings.privacy":"プライバシー"
-    ,"settings.installLimits":"アカウントのデータ同期には接続が必要です。"
-    ,"settings.installStandalone":"単独のアプリとして開いています。"
-    ,"settings.installAvailable":"ホーム画面やDockからPoGo Tradesを開けます。"
-    ,"settings.installSafari":"Safariの共有メニューから「ホーム画面に追加」を選んでください。"
-    ,"settings.installUnavailable":"このブラウザーではインストールの案内がまだありません。ブラウザーのメニューを確認してください。"
-    ,"request.sending":"送信中…"
-    ,"request.unconfirmed":"送信はまだ確認できません。この画面のまま再試行すると同じリクエストを確認します。"
-    ,"import.unsupported":"未対応の入力です。図鑑番号と対応する英語の条件を & で指定してください。除外・範囲・CP・完全な検索式は使えません。"
-    ,"import.ambiguous":"複数の姿が一致しました。未選択で表示します。欲しい姿や衣装を選んでください。「すべて選択」は表示中の全候補を選びます。"
-    ,"share.liveList":"公開リストを共有"
-    ,"share.liveCaption":"誰でも開ける公開ページ"
-    ,"share.gameSearch":"Pokémon GOの検索文字列"
-    ,"share.searchCaption":"自分のゲーム内ポケモンを検索"
-    ,"share.imageSnapshot":"画像を共有"
-    ,"share.textSnapshot":"テキストをコピー"
-    ,"share.snapshotCaption":"選択内容のスナップショット"
-    ,"share.partialLink":"公開リンクは全リストを含みます。リンクには「全リスト」を選択してください。選択分のみなら画像・テキスト・ゲーム検索を使えます。"
-    ,"share.liveHelp":"アカウントなしで閲覧できます。保存した変更が公開版に反映されます。公開待ちの場合は確認されるまで所有者のアプリを開いてください。"
-    ,"share.publicFields":"公開プロフィール情報と欲しいポケモンのメモが表示されます。ユーザー名のリンクは公開用で、非公開の招待ではありません。"
-    ,"share.gameLanguage":"Pokémon GOの言語"
-    ,"share.searchLimits":"種族の候補検索です。姿や条件はゲーム内で確認してください。4★・交換済・シャドウ・リトレーン・背景・CP2500超を除外し、色違い希望がない場合は色違いも除外します。"
-    ,"share.textCopied":"テキストをコピーしました。"
-    ,"events.localTime":"現地時刻の時間帯 · 端末：{zone}"
-    ,"events.fixedTime":"世界同時開催 · {zone}で表示"
-    ,"events.dateOnlyTime":"日付のみ提供、正確な時間は未提供"
-    ,"events.bonusLastKnown":"前回確認した情報（再確認が必要）",
+,
+"request.sending":"送信中…",
+"request.unconfirmed":"送信はまだ確認できません。この画面のまま再試行すると同じリクエストを確認します。",
+"import.unsupported":"未対応の入力です。図鑑番号と対応する英語の条件を & で指定してください。除外・範囲・CP・完全な検索式は使えません。",
+"import.ambiguous":"複数の姿が一致しました。未選択で表示します。欲しい姿や衣装を選んでください。「すべて選択」は表示中の全候補を選びます。",
+"share.liveList":"公開リストを共有",
+"share.liveCaption":"誰でも開ける公開ページ",
+
+"share.searchCaption":"自分のゲーム内ポケモンを検索",
+"share.imageSnapshot":"画像を共有",
+"share.textSnapshot":"テキストをコピー",
+"share.snapshotCaption":"選択内容のスナップショット",
+"share.partialLink":"公開リンクは全リストを含みます。リンクには「全リスト」を選択してください。選択分のみなら画像・テキスト・ゲーム検索を使えます。",
+"share.liveHelp":"アカウントなしで閲覧できます。保存した変更が公開版に反映されます。公開待ちの場合は確認されるまで所有者のアプリを開いてください。",
+"share.publicFields":"公開プロフィール情報と欲しいポケモンのメモが表示されます。ユーザー名のリンクは公開用で、非公開の招待ではありません。",
+"share.gameLanguage":"Pokémon GOの言語",
+"share.searchLimits":"種族の候補検索です。姿や条件はゲーム内で確認してください。4★・交換済・シャドウ・リトレーン・背景・CP2500超を除外し、色違い希望がない場合は色違いも除外します。",
+"share.textCopied":"テキストをコピーしました。",
+"events.localTime":"現地時刻の時間帯 · 端末：{zone}",
+"events.fixedTime":"世界同時開催 · {zone}で表示",
+"events.dateOnlyTime":"日付のみ提供、正確な時間は未提供",
+"events.bonusLastKnown":"前回確認した情報（再確認が必要）",
 "events.sourceEnglish":"情報元の詳細は英語です",
 "events.detailsPending":"イベントの内容は「詳細」と情報元で確認できます。",
 "events.allBonuses":"全{count}件のボーナス・条件",
@@ -281,59 +215,87 @@
 "events.uncertainDay":"開催時刻の確認が必要",
 "events.noTimedDay":"短時間のイベントは掲載されていません。",
 "events.alsoOngoing":"期間中のイベント（{count}件）",
-"events.bonuses":"ボーナス"
-    ,"events.bonusesUnknown":"このフィードにはボーナスの詳細がありません。ボーナスがないという意味ではありません。情報元で確認してください。"
-    ,"events.feedStatus":"イベント情報"
-    ,"events.staleFeed":"保存済みのイベントを表示中"
-    ,"events.checked":"最終確認：{date}"
-    ,"events.savedSchedule":"予定の保存日：{date}"
-    ,"events.notChecked":"未確認"
-    ,"events.sourceDisclaimer":"コミュニティのフィードです。公式確認済みではなく、詳細の不足や変更があります。原文は英語の場合があります。"
-    ,"events.officialNews":"公式ニュース"
-    ,"events.refresh":"更新"
-    ,"events.refreshing":"確認中…"
-    ,"events.encounters":"出会えるポケモン"
-    ,"events.raidBosses":"レイドボス"
-    ,"events.research":"リサーチのタスクと報酬"
-    ,"events.tickets":"無料・有料の参加条件"
-    ,"events.ticketUnknown":"参加料金と条件はこのフィードでは確実に提供されません。無料とは限りません。情報元や公式発表を確認してください。"
-    ,"events.detailsUnknown":"このフィードでは未提供です。イベント情報元で詳細を確認してください。"
-    ,"events.hoursUnknown":"正確な時間は未提供"
-    ,"events.sourceDetails":"イベント情報元を開く"
-    ,"share.watching":"接続中は公開版の更新を表示します。所有者側で公開待ちの場合があります。"
-    ,"share.offlineCopy":"オフライン · 前回の公開版を表示中。更新は確認できません。"
-    ,"share.refreshCopy":"公開スナップショット · 再読み込みで更新を確認。"
-    ,"share.unavailableCopy":"公開リストを利用できません。再試行して確認してください。"
-    ,"share.reconnectingCopy":"接続が戻りました · 公開版の更新を待っています。"
-    ,"import.conflicting":"同じ姿には条件を1組だけ選択してください。変更は保存されていません。"
-    ,"shortcuts.editWant":"ポケモン名から優先度や詳細を編集"
-    ,"shortcuts.saveWant":"編集画面で保存。Esc は保存せず閉じます"
-    ,"share.previewSelection":"選択した希望をプレビュー"
-    ,"events.sources":"情報元と制限"
-    ,"share.moreFormats":"その他の形式 · 全リスト"
-    ,"share.fullExportsHelp":"これらは現在の全希望リストを出力します。Markdown にはプロフィールの連絡先も含まれます。「全リスト」を選ぶと使用できます。"
-    ,"share.copyFullMarkdown":"全リストをMarkdownでコピー"
-    ,"share.downloadFullCsv":"全リストをCSVで保存"
-    ,"events.venueUnknown":"会場の時刻はフィードの値です。会場のタイムゾーンが未提供のためカウントダウンは表示しません。情報元を確認してください。"
-    ,"settings.savingChanges":"変更を保存中…"
-    ,"profile.savedQueued":"プロフィールを端末に保存しました。アカウントへの同期は待機中です。"
-    ,"profile.savedOnDevice":"プロフィールをこの端末に保存しました。アカウントへの同期は未確認です。"
-    ,"profile.saveUnconfirmed":"変更を確認できません。下書きは残っています。接続を確認して再試行してください。"
-    ,"profile.pinMetadataQueued":"PIN を更新しました。アカウント情報の同期は待機中です。新しい PIN を使用してください。"
-    ,"profile.pinMetadataUnconfirmed":"PIN の更新は確認されましたが、アカウント情報の同期は未確認です。新しい PIN を保管し、同期状況を確認してください。"
-    ,"settings.appearanceQueued":"外観を端末に保存しました。アカウント同期は待機中です。"
-    ,"settings.appearanceLocal":"外観をこの端末に保存しました。アカウント同期は未確認です。"
-    ,"admin.roleNeedsConnection":"役割を変更するには接続が必要です。役割の変更は予約されていません。"
-    ,"admin.roleQueued":"役割の変更を予約しました。サーバーでの権限変更は未確認です。"
-    ,"admin.roleUnconfirmed":"役割の変更を確認できません。同期状況を確認してから再試行してください。"
-    ,"admin.requestDenialUnconfirmed":"申請の拒否を確認できません。最新の状態を確認してから再試行してください。"
-    ,"events.groupVenueUnknown":"会場時刻は未確認"
+"events.bonuses":"ボーナス",
+"events.bonusesUnknown":"このフィードにはボーナスの詳細がありません。ボーナスがないという意味ではありません。情報元で確認してください。",
+"events.feedStatus":"イベント情報",
+"events.staleFeed":"保存済みのイベントを表示中",
+"events.checked":"最終確認：{date}",
+"events.savedSchedule":"予定の保存日：{date}",
+"events.notChecked":"未確認",
+"events.sourceDisclaimer":"コミュニティのフィードです。公式確認済みではなく、詳細の不足や変更があります。原文は英語の場合があります。",
+"events.officialNews":"公式ニュース",
+"events.refresh":"更新",
+"events.refreshing":"確認中…",
+"events.encounters":"出会えるポケモン",
+"events.raidBosses":"レイドボス",
+"events.research":"リサーチのタスクと報酬",
+"events.tickets":"無料・有料の参加条件",
+"events.ticketUnknown":"参加料金と条件はこのフィードでは確実に提供されません。無料とは限りません。情報元や公式発表を確認してください。",
+"events.detailsUnknown":"このフィードでは未提供です。イベント情報元で詳細を確認してください。",
+"events.hoursUnknown":"正確な時間は未提供",
+"events.sourceDetails":"イベント情報元を開く"
+,
+"share.watching":"接続中は公開版の更新を表示します。所有者側で公開待ちの場合があります。",
+"share.offlineCopy":"オフライン · 前回の公開版を表示中。更新は確認できません。",
+"share.refreshCopy":"公開スナップショット · 再読み込みで更新を確認。",
+"share.unavailableCopy":"公開リストを利用できません。再試行して確認してください。",
+"share.reconnectingCopy":"接続が戻りました · 公開版の更新を待っています。"
+,
+"import.conflicting":"同じ姿には条件を1組だけ選択してください。変更は保存されていません。"
+,
+"shortcuts.editWant":"ポケモン名から優先度や詳細を編集",
+"shortcuts.saveWant":"編集画面で保存。Esc は保存せず閉じます"
+,
+"share.previewSelection":"選択した希望をプレビュー",
+"events.sources":"情報元と制限"
+,
+"share.moreFormats":"その他の形式 · 全リスト",
+"share.fullExportsHelp":"これらは現在の全希望リストを出力します。Markdown にはプロフィールの連絡先も含まれます。「全リスト」を選ぶと使用できます。",
+"share.copyFullMarkdown":"全リストをMarkdownでコピー",
+"share.downloadFullCsv":"全リストをCSVで保存"
+,
+"events.venueUnknown":"会場の時刻はフィードの値です。会場のタイムゾーンが未提供のためカウントダウンは表示しません。情報元を確認してください。"
+,
+"settings.savingChanges":"変更を保存中…",
+"profile.savedQueued":"プロフィールを端末に保存しました。アカウントへの同期は待機中です。",
+"profile.savedOnDevice":"プロフィールをこの端末に保存しました。アカウントへの同期は未確認です。",
+"profile.saveUnconfirmed":"変更を確認できません。下書きは残っています。接続を確認して再試行してください。",
+"profile.pinMetadataQueued":"PIN を更新しました。アカウント情報の同期は待機中です。新しい PIN を使用してください。",
+"profile.pinMetadataUnconfirmed":"PIN の更新は確認されましたが、アカウント情報の同期は未確認です。新しい PIN を保管し、同期状況を確認してください。",
+"settings.appearanceQueued":"外観を端末に保存しました。アカウント同期は待機中です。",
+"settings.appearanceLocal":"外観をこの端末に保存しました。アカウント同期は未確認です。",
+"admin.roleNeedsConnection":"役割を変更するには接続が必要です。役割の変更は予約されていません。",
+"admin.roleQueued":"役割の変更を予約しました。サーバーでの権限変更は未確認です。",
+"admin.roleUnconfirmed":"役割の変更を確認できません。同期状況を確認してから再試行してください。",
+"admin.requestDenialUnconfirmed":"申請の拒否を確認できません。最新の状態を確認してから再試行してください。"
+,
+"events.groupVenueUnknown":"会場時刻は未確認"
     ,"share.format":"形式"
+    ,"share.gameSearch":"Pokémon GOの検索文字列"
     ,"costume.shinyNotReleased":"この衣装の色違いは未実装です。"
     ,"costume.shinyYearRequired":"色違いを指定する前に、探偵ピカチュウの年を選んでください。"
     ,"costume.genderOnly":"{gender}のみ"
     ,"costume.savedConflict":"保存済みの値を確認してください"
     ,"costume.genderConflict":"この衣装では保存された性別が登場していません。登録内容は変更していません。修正する場合のみ、有効な性別を選んでください。"
+    ,"wantEditor.add":"欲しいポケモンを追加"
+    ,"wantEditor.pokemon":"ポケモン"
     ,"costume.genderUnsupported":"{name}：保存された性別は、この衣装で登場したものと一致しません。"
+    ,"wantEditor.options":"オプション"
+    ,"wantEditor.listPriority":"リストの優先度"
+    ,"wantEditor.change":"変更"
+    ,"wantEditor.noPriority":"なし"
+    ,"wantEditor.preferences":"希望条件"
+    ,"wantEditor.optional":"任意"
+    ,"wantEditor.morePreferences":"その他の希望条件"
+    ,"wantEditor.genderPreference":"性別の希望"
+    ,"wantEditor.anyGender":"指定なし"
+    ,"wantEditor.genderless":"該当なし"
+    ,"wantEditor.edit":"ポケモンを編集"
+    ,"wantEditor.addAction":"リストに追加"
+    ,"wantEditor.saveChanges":"変更を保存"
+    ,"wantEditor.releasedGender":"登場済みの性別：{gender}"
+    ,"workflow.priorityFilter":"優先度で絞り込む"
+    ,"workflow.priorityEmpty":"優先度が{priority}のポケモンはいません。"
+    ,"workflow.selectedOtherPriorities":"他の優先度で{count}件選択中です。選択した項目の共有に含まれます。"
   });
 })(window);

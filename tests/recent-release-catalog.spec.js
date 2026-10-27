@@ -29,7 +29,7 @@ for(const shiny of [false,true])test('released identities add, persist, reload a
  for(const name of targets){
   await page.locator('#wants-add-name').fill(name.slice(0,-1));
   await page.locator('#wants-add-name-suggestions').getByRole('option',{name,exact:true}).click();
-  await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();
+  await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();
   await controls.priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);
   if(['Uxie (Dynamax)','Mesprit (Dynamax)','Azelf (Dynamax)'].includes(name)){await controls.genderDetails(page);expect(await page.locator('#combined-gender option').evaluateAll(os=>os.map(o=>o.value))).toEqual(['']);}
   if(['Rhyhorn','Rhydon','Rhyperior','Sneasel','Weavile'].some(base=>name===base+' (Dynamax)')){await controls.genderDetails(page);await page.locator('#combined-gender').selectOption('f');}

@@ -118,6 +118,8 @@ function changedFiles(base,{cwd=process.cwd()}={}){
   // the old owner and new path. No status filter: deletions and type changes count.
   return execFileSync('git',['diff','--name-only','--no-renames','-z',base,'HEAD'],{cwd,encoding:'utf8'}).split('\0').filter(Boolean);
 }
+function browserArgs(files){return ['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop','--workers=1'];}
+
 function run(command,args){
   const result=spawnSync(command,args,{stdio:'inherit'});if(result.error)throw result.error;
   if(result.status!==0)process.exit(result.status||1);
@@ -146,7 +148,7 @@ if(require.main===module){
   if(process.argv.includes('--plan')){
     if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`browser=${plan.browser.length>0}\nbrowser_dependencies=${plan.browser.length>0||plan.node.includes('tests/account-sync-indexeddb.test.cjs')}\nperformance=${plan.performance}\nfunctions=${plan.functions}\nrules=${plan.rules}\nlegacyReset=${plan.legacyReset}\n`);
   }else if(process.argv.includes('--browser')){
-    if(plan.browser.length)run(process.execPath,['node_modules/@playwright/test/cli.js','test',...plan.browser,'--project=desktop','--workers=1']);
+    if(plan.browser.length)run(process.execPath,browserArgs(plan.browser));
   }else{
     run('git',['diff','--check',base,'HEAD']);
     for(const file of plan.syntax)run(process.execPath,['--check',file]);
@@ -154,4 +156,4 @@ if(require.main===module){
     for(const [command,args]of plan.commands)run(command,args);
   }
 }
-module.exports={select,qualifiedReviewBase,changedFiles};
+module.exports={select,qualifiedReviewBase,changedFiles,browserArgs,reviewBase};
