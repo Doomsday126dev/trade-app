@@ -84,7 +84,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:391,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:399,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{

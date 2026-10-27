@@ -1658,6 +1658,158 @@
       ],
       "artEvidence": "data/catalogue-sources/staged-art.json",
       "reviewedAt": "2026-10-27T14:09:42.737162+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Small Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.417084+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Average Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.418581+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Large Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.419805+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Super Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.420636+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Small Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.421475+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Average Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.422511+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Large Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.423321+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Super Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.424314+00:00"
     }
   ]
 }
