@@ -19,10 +19,10 @@ test('priority views count actual rows, preserve selected/full share scopes and 
  for(const name of ['Pikachu','Charmander','Squirtle','Bulbasaur'])expect(await page.evaluate(()=>__copiedText)).toContain(name);
  await page.locator('#product-share-scope').selectOption('selected');await page.locator('#product-share-text button').click();
  expect(await page.evaluate(()=>__copiedText)).toContain('Pikachu');expect(await page.evaluate(()=>__copiedText)).not.toContain('Charmander');
- await page.locator('.share-more-formats summary').click();
+ await page.locator('#product-share-format').selectOption('markdown');
  await expect(page.locator('[data-full-list-export]').first()).toBeDisabled();await expect(page.locator('[data-full-list-export]').last()).toBeDisabled();
  await page.locator('#product-share-scope').selectOption('full');
- const downloaded=page.waitForEvent('download');await page.locator('[data-full-list-export]').last().click();
+ await page.locator('#product-share-format').selectOption('csv');const downloaded=page.waitForEvent('download');await page.locator('#product-share-csv [data-full-list-export]').click();
  const csv=require('node:fs').readFileSync(await(await downloaded).path(),'utf8');
  for(const name of ['Pikachu','Charmander','Squirtle','Bulbasaur'])expect(csv).toContain(name);
  await page.locator('#product-share-modal .mact button').click();

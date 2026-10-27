@@ -56,6 +56,8 @@ async function installTrustedFixture(page){
       dynamax:{TrustedTester:{}},gmax:{TrustedTester:{}},costumes:{TrustedTester:{}}
     });
     _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
+    const publication=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur});activePublicShareHydrationToken=publication.token;
+    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(publication.token,surface);
     const save=(type,username,list)=>{
       if(!allData[type])allData[type]={};
       allData[type][username]={...(list||{})};
@@ -187,10 +189,10 @@ test('publication state is persistent and copying never precedes confirmed publi
   await expect(page.locator('#share-link-status')).toHaveText('Publishing…');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(0);
   await page.evaluate(()=>window.__finishPublish({ok:false,status:'failed'}));
-  await expect(page.locator('#share-link-status')).toContainText('Not published');
+  await expect(page.locator('#share-link-status')).toContainText('could not be confirmed');
   expect(await page.evaluate(()=>Object.keys(allData.wishlist[cur]).length)).toBe(4);
-  await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toHaveText('Published and link copied.');
+  await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>{rememberPublicLinkConfirmation(publicShareSnapshotForUser(cur).snapshot);window.__finishPublish({ok:true,status:'published'});});
+  await expect(page.locator('#share-link-status')).toHaveText('Link copied.');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
   await page.evaluate(()=>{copyText=async()=>{throw new Error('denied');};void copyShareLink();});
   await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));

@@ -182,15 +182,15 @@
 "request.unconfirmed":"送信はまだ確認できません。この画面のまま再試行すると同じリクエストを確認します。",
 "import.unsupported":"未対応の入力です。図鑑番号と対応する英語の条件を & で指定してください。除外・範囲・CP・完全な検索式は使えません。",
 "import.ambiguous":"複数の姿が一致しました。未選択で表示します。欲しい姿や衣装を選んでください。「すべて選択」は表示中の全候補を選びます。",
-"share.liveList":"公開リストを共有",
+"share.liveList":"公開リンク",
 "share.liveCaption":"誰でも開ける公開ページ",
 
 "share.searchCaption":"自分のゲーム内ポケモンを検索",
-"share.imageSnapshot":"画像を共有",
-"share.textSnapshot":"テキストをコピー",
+"share.imageSnapshot":"画像",
+"share.textSnapshot":"プレーンテキスト",
 "share.snapshotCaption":"選択内容のスナップショット",
 "share.partialLink":"公開リンクは全リストを含みます。リンクには「全リスト」を選択してください。選択分のみなら画像・テキスト・ゲーム検索を使えます。",
-"share.liveHelp":"公開リンク · アカウント不要。",
+"share.liveHelp":"公開リンク",
 "share.publicFields":"公開プロフィールと希望のメモが表示されます。保存した変更はこの公開リンクに反映されます。",
 "share.gameLanguage":"Pokémon GOの言語",
 "share.searchLimits":"種族の候補検索です。姿や条件はゲーム内で確認してください。4★・交換済・シャドウ・リトレーン・背景・CP2500超を除外し、色違い希望がない場合は色違いも除外します。",
@@ -297,6 +297,25 @@
     ,"wantEditor.releasedGender":"登場済みの性別：{gender}"
     ,"workflow.priorityFilter":"優先度で絞り込む"
     ,"workflow.priorityEmpty":"優先度が{priority}のポケモンはいません。"
-    ,"workflow.selectedOtherPriorities":"他の優先度で{count}件選択中です。選択した項目の共有に含まれます。"
-  });
+    ,"workflow.selectedOtherPriorities":"他の優先度で{count}件選択中です。選択した項目の共有に含まれます。",
+"share.markdownFormat":"Markdown",
+"share.csvFormat":"CSV",
+"share.copyPlainText":"プレーンテキストをコピー",
+"share.copyMarkdown":"Markdownをコピー",
+"share.downloadCsv":"CSVを保存",
+"share.fullFormatScope":"MarkdownまたはCSVを出力するには「全リスト」を選択してください。",
+"share.markdownDetails":"プロフィールの連絡先と希望のメモを含む全リスト。",
+"share.csvDetails":"希望の全リストを1項目1行で出力します。",
+"share.copyLink":"リンクをコピー",
+"share.updateCopyLink":"更新してリンクをコピー",
+"share.retryCopyLink":"再試行してリンクをコピー",
+"share.syncPending":"同期を待っています…",
+"share.copyingLink":"コピー中…",
+"share.publicationUnconfirmed":"公開を確認できませんでした。編集内容は保持されています。再試行してください。",
+"share.linkReady":"リンクを利用できます。",
+"share.linkCopied":"リンクをコピーしました。",
+"share.linkCopyFailed":"コピーできませんでした。下の選択されたリンクを使うか、再試行してください。",
+"share.checkListDetails":"リストの詳細を確認",
+"share.linkUnavailable":"共有を利用できません"
+});
 })(window);

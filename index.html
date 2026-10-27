@@ -12,8 +12,8 @@
 <meta name="theme-color" content="#111316">
 <title>PoGo Trade List</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/tradeloop-icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
+<link rel="icon" href="assets/brand/apri-icon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/brand/apri-icon-180.png" sizes="180x180">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
 window.__POGO_RELEASE_ID='2026-10-27.154';
@@ -674,10 +674,12 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <h3 id="product-share-title" data-i18n="product.share">Share</h3>
     <label for="product-share-format" data-i18n="share.format">Format</label>
     <select id="product-share-format" class="field-control" onchange="setProductShareMode(this.value)">
-      <option value="link" data-i18n="share.liveList">Share live list</option>
+      <option value="link" data-i18n="share.liveList">Public link</option>
       <option value="search" data-i18n="share.gameSearch">Pokémon GO search string</option>
-      <option value="image" data-i18n="share.imageSnapshot">Share image</option>
-      <option value="text" data-i18n="share.textSnapshot">Copy text</option>
+      <option value="image" data-i18n="share.imageSnapshot">Image</option>
+      <option value="text" data-i18n="share.textSnapshot">Plain text</option>
+      <option value="markdown" data-i18n="share.markdownFormat">Markdown</option>
+      <option value="csv" data-i18n="share.csvFormat">CSV</option>
     </select>
     <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
     <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
@@ -702,9 +704,17 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" class="btn btn-primary" onclick="exportProductShareImage()" data-i18n="specialBoard.export">Export as image</button>
     </section>
     <section id="product-share-text" hidden class="share-format-actions">
-      <button type="button" class="btn btn-secondary" onclick="copyProductShareText()" data-i18n="phase2.copyText">Copy text</button>
+      <button type="button" class="btn btn-secondary" onclick="copyProductShareText()" data-i18n="share.copyPlainText">Copy plain text</button>
     </section>
-    <details class="share-more-formats"><summary data-i18n="share.moreFormats">More formats · full list</summary><p class="share-privacy-note" data-i18n="share.fullExportsHelp">These formats export your current full wants list. Markdown also includes your profile contact details. Choose Full list to enable them.</p><div class="share-extra-actions"><button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('markdown')" data-i18n="share.copyFullMarkdown">Copy full Markdown</button><button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('csv')" data-i18n="share.downloadFullCsv">Download full CSV</button></div></details>
+    <p id="share-full-format-scope-help" class="share-privacy-note" data-i18n="share.fullFormatScope" hidden>Choose Full list to export Markdown or CSV.</p>
+    <section id="product-share-markdown" hidden class="share-format-actions">
+      <p class="share-privacy-note" data-i18n="share.markdownDetails">Full list, including profile contact details and want notes.</p>
+      <button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('markdown')" data-i18n="share.copyMarkdown">Copy Markdown</button>
+    </section>
+    <section id="product-share-csv" hidden class="share-format-actions">
+      <p class="share-privacy-note" data-i18n="share.csvDetails">Full wants list, with one row per entry.</p>
+      <button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('csv')" data-i18n="share.downloadCsv">Download CSV</button>
+    </section>
     <div class="mact"><button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button></div>
   </div>
 </div>

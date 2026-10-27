@@ -1127,7 +1127,13 @@
     "assets/brand/apri.webp",
     "assets/brand/ivory-paper.webp",
     "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
-    "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png"
+    "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
+    "assets/brand/apri-icon-32.png",
+    "assets/brand/apri-icon-96.png",
+    "assets/brand/apri-icon-180.png",
+    "assets/brand/apri-icon-192.png",
+    "assets/brand/apri-icon-512.png",
+    "assets/brand/apri-icon-512-maskable.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

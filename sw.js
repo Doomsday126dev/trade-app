@@ -126,6 +126,12 @@ const OPTIONAL_SHELL_URLS=[
   './assets/tradeloop-icon-180.png',
   './assets/tradeloop-icon-192.png',
   './assets/tradeloop-icon-512.png',
+  './assets/brand/apri-icon-32.png',
+  './assets/brand/apri-icon-96.png',
+  './assets/brand/apri-icon-180.png',
+  './assets/brand/apri-icon-192.png',
+  './assets/brand/apri-icon-512.png',
+  './assets/brand/apri-icon-512-maskable.png',
   './assets/max-cloud.svg'
 ];
 const OPTIONAL_RUNTIME_PATHS=new Set(OPTIONAL_SHELL_URLS.filter(path=>!path.startsWith('./?')).map(path=>new URL(path,self.location.href).pathname));

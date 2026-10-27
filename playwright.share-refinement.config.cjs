@@ -1,0 +1,5 @@
+const{defineConfig}=require('@playwright/test'),fs=require('node:fs');
+const{buildArtifact}=require('./scripts/pages/build-artifact.cjs'),{validateReleaseCoherence}=require('./scripts/pages/validate-release.cjs');
+const release=validateReleaseCoherence(__dirname),out=fs.mkdtempSync('/tmp/trade154-share-packaged-');
+buildArtifact({source:__dirname,output:out,runtimeSourceSha:'0'.repeat(40),runtimeReleaseId:release.releaseId,runtimeReleaseTag:'release-'+release.releaseId,dispatcherSha:'2'.repeat(40),controlSelectorTag:'release-pages-control-'+'2'.repeat(40),controlWorkflowSha:'1'.repeat(40),githubRunId:'0'});
+module.exports=defineConfig({testDir:'./tests',testMatch:['favorite-publication-order.spec.js','apri-app-icons.spec.js','share-publication-state.spec.js'],timeout:45000,workers:1,reporter:'list',outputDir:'/tmp/trade154-share-qa/results',use:{baseURL:'http://127.0.0.1:4496',serviceWorkers:'block'},webServer:{command:'python3 -m http.server 4496 --bind 127.0.0.1 --directory '+out,url:'http://127.0.0.1:4496',reuseExistingServer:false},projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}]});
