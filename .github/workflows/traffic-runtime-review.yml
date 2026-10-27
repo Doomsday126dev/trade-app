@@ -1,4 +1,4 @@
-name: Isolated Favorites metadata runtime qualification
+name: Isolated scoped UI refinement qualification
 on:
   pull_request:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 8bf0fd8b2de333bb8bb3a58c5e959cf566746957
+          ref: c847782d345b9d880cc44ce8b67826082eb8b5ae
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -48,3 +48,5 @@ jobs:
           npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
       - name: Decode actual packaged brand assets and verify unprimed Favorites
         run: npx playwright test -c playwright.apri151.config.cjs
+      - name: Approved Share Events and list-feedback regressions
+        run: npx playwright test -c playwright.ui153.config.cjs
