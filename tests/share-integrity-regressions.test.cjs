@@ -39,16 +39,16 @@ test('public link action publishes multiline notes and catches other invalid tex
     console,cur:'Owner',auth:{currentUser:{uid:'owner-uid'}},publicLinkAttempt:0,myListType:'wishlist',location:{origin:'https://example.test',pathname:'/trade/'},
     document:{getElementById:id=>id==='product-share-modal'?{classList:{contains:()=>false}}:id==='share-public-url'?input:null},
     productDeclarations:()=>({entries}),publicSharePublicationDomain:domain.publicSharePublication,
-    linkPublicationStatus:key=>{status=key;},publishPublicShareNow:async()=>{published++;return{status:'published'};},
+    linkPublicationStatus:key=>{status=key;},publishPublicShareNow:async()=>{published++;context.rememberPublicLinkConfirmation(context.publicShareSnapshotForUser('Owner').snapshot);return{status:'published'};},
     publicSharePublicationCurrent:()=>true,copyText:async value=>{copied=value;}
   };
-  vm.createContext(context);vm.runInContext(copy,context);
+  vm.createContext(context);require('./helpers/share-link-vm.cjs')(source,context,domain.publicSharePublication);vm.runInContext(copy,context);
   await context.copyShareLink();
-  assert.equal(published,1);assert.equal(status,'product.publishedCopied');assert.equal(copied,'https://example.test/trade/?view=Owner&list=wishlist');
+  assert.equal(published,1);assert.equal(status,'share.linkCopied');assert.equal(copied,'https://example.test/trade/?view=Owner&list=wishlist');
 
   entries=[row({note:'invalid\tcontrol'})];published=0;copied='';status='';
   await context.copyShareLink();
-  assert.equal(published,0);assert.equal(copied,'');assert.equal(status,'product.publishFailed');
+  assert.equal(published,0);assert.equal(copied,'');assert.equal(status,'share.publicationPending');
 });
 
 test('shared semantic labels distinguish ordinary, Dynamax and Gigantamax without duplicate Max wording',()=>{

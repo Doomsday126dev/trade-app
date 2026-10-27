@@ -131,13 +131,15 @@ test('every supplemental signed-in legendary has the same anonymous dex identity
 });
 
 test('a declaration edit during publication prevents copying an out-of-date URL as current',async()=>{
-  let declarations=[{name:'Pikachu',intent:'lf'}],copies=0;const statuses=[];
+  let declarations=[{name:'Pikachu',intent:'lf',category:'wishlist'}],copies=0;const statuses=[];
+  const {domain}=harness();
   const c=vm.createContext({cur:'Owner',auth:{currentUser:{uid:'owner'}},myListType:'wishlist',
     location:{origin:'https://example.test',pathname:'/'},publicLinkAttempt:0,
     publicSharePublicationDomain:{publicDeclarations:rows=>rows},productDeclarations:()=>({entries:declarations}),
     document:{getElementById:()=>null},linkPublicationStatus:key=>statuses.push(key),
-    publishPublicShareNow:async()=>{declarations=[...declarations,{name:'Eevee',intent:'ft'}];return{status:'published'};},
+    publishPublicShareNow:async()=>{const issued=c.publicShareSnapshotForUser('Owner').snapshot;declarations=[...declarations,{name:'Eevee',intent:'ft',category:'wishlist'}];c.rememberPublicLinkConfirmation(issued);return{status:'published'};},
     publicSharePublicationCurrent:()=>true,copyText:async()=>{copies++;}});
+  require('./helpers/share-link-vm.cjs')(app,c,domain.publicSharePublication);
   vm.runInContext(app.slice(app.indexOf('async function copyShareLink('),app.indexOf('// ── SPECIAL TRADE BOARD')),c);
   await c.copyShareLink();
   assert.equal(copies,0);assert.equal(statuses.at(-1),'share.publicationPending');
