@@ -8,18 +8,21 @@ const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 test('product evidence keeps job permissions, whole selector, failure status and always-upload boundaries',()=>{
   const workflow=YAML.parse(read('.github/workflows/product-review.yml'));
   assert.deepEqual(workflow.permissions,{contents:'read',actions:'read'});
-  assert.deepEqual(Object.keys(workflow.jobs),['public-share']);
+  assert.deepEqual(Object.keys(workflow.jobs),['contracts','browser','public-share']);
   assert.deepEqual(workflow.on.pull_request.types,['opened','synchronize','reopened','ready_for_review']);
-  const steps=workflow.jobs['public-share'].steps;
-  assert.equal(workflow.jobs['public-share']['timeout-minutes'],15);
-  assert.equal(steps.find(step=>step.name==='Affected browser journeys').env.PRODUCT_BROWSER_WORKERS,'4');
+  const steps=workflow.jobs.contracts.steps;
+  for(const job of Object.values(workflow.jobs))assert.equal(job['timeout-minutes'],15);
+  assert.equal(workflow.jobs.browser.steps.find(step=>step.name==='Exact single-worker browser shard').env.PRODUCT_BROWSER_WORKERS,'1');
+  assert.equal(workflow.jobs.browser.strategy['fail-fast'],false);assert.deepEqual(workflow.jobs.browser.strategy.matrix.shard,[1,2,3,4]);
+  assert.deepEqual(workflow.jobs['public-share'].needs,['contracts','browser']);assert.equal(workflow.jobs['public-share'].if,'always()');
+  assert.match(workflow.jobs['public-share'].steps.at(-1).run,/product-browser-shards.cjs verify/);
   assert.ok(!steps.some(step=>step['continue-on-error']));
   const scrub=steps.find(step=>step.id==='evidence');assert.equal(scrub.if,'always()');
-  const upload=steps.find(step=>step.uses?.startsWith('actions/upload-artifact@'));
+  const upload=steps.find(step=>step.name==='Retain product qualification evidence');
   assert.match(upload.uses,/@[a-f0-9]{40}$/);assert.equal(upload.if,"always() && steps.evidence.outcome == 'success'");
   assert.equal(upload.with.path,'product-ci-artifacts/\ntest-results/\n');
   assert.equal(upload.with['if-no-files-found'],'error');assert.equal(upload.with['retention-days'],30);
-  assert.equal(upload.with.name,'product-contracts-${{ github.run_id }}-${{ github.run_attempt }}');
+  assert.equal(upload.with.name,'product-contracts-${{ github.run_id }}-${{ github.run_attempt }}-contracts');
   assert.ok(!upload.with.overwrite&&!upload.with['include-hidden-files']);
 });
 

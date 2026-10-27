@@ -1,6 +1,6 @@
 # Combined Apri / Halloween .150 preparation
 
-Runtime: `586d0bc61e934e795f3a88f9bff09fe7ac86eb6d` (`release/apri-halloween150-runtime`, `/tmp/trade150-design-halloween-runtime`).
+Runtime: `0e474feb24e5d43f85b64d533acc340a70332c57` (`release/apri-halloween150-runtime`, `/tmp/trade150-design-halloween-runtime`).
 
 Preserved design source: `5e2a94703aa00a3c5b73d32ad914b9cd42d6d411`; preserved stamped design runtime: `d9a6a0d0232c065465fb8084ed8d010699b0fbbb`. Live expected baseline remains verified .149 `80db1bb90f3132f7125d7c32932b841ab77abf2b`; recheck before any later release action. No branch or tag has been pushed by this preparation.
 
@@ -21,3 +21,11 @@ Hosted isolated run40441485736 passed the runtime aggregate, Pages and performan
 Product run40442299907 was cancelled at the15-minute job limit (03:22:02UTC), with59/187browser cases passed and no assertion failure before cancellation. Logs show continuous36–40second consolidated-art cases, not a hung command. The product CI browser invocation now explicitly uses four independent workers and fully parallel case scheduling, with all187cases retained, the same viewport/retries/assertions and the same15-minute job limit. Default local invocation remains one worker. Existing separate performance budgets, permissions, failure propagation and evidence sanitation/upload remain unchanged.
 
 Parallel safety evidence: two20-entry normal/Shiny consolidated-art cases passed together in18.5seconds with isolated browser contexts and unique output names.29CI selection/evidence tests passed. The temporary local probe initially served the wrong directory and was stopped; its corrected server explicitly used this candidate. No product defect was inferred from that harness setup error.
+
+## Diagnosed CI recovery
+
+The serial cancelled run completed 59 cases without an assertion failure. Four workers sharing one runner then inflated 20-entry artwork cases from 36–40 seconds to about two minutes; that run reported 62 passes and three failures before cancellation. A one-worker reproduction identified two real corrections: explicit Japanese/Spanish/German editor translations (including an unspecified optional gender) and a stale fieldset assertion. The approved fieldset is 133px locally and 134px on Linux, with exactly four 44px minimum targets; the compactness contract now permits the measured 1px platform rounding. No control or application layout changed. All four diagnosed cases pass in the actual CI Chromium configuration (26.6s); 29 localization tests pass.
+
+The product workflow now discovers the complete 187-case desktop universe once, allocates it by successful serial durations to four isolated one-worker runners, and requires a final exact-union evidence check. Native Playwright list roundtrips verify 47/46/47/47 cases, with 520.9/521.0/521.2/520.9 estimated seconds. The timing weights affect allocation only. Missing, duplicate, stale, failed, incomplete or retried evidence cannot pass the aggregate. Existing case/job timeouts, retries, performance budgets, permissions and protected release controls are unchanged. The original four-worker runner contention attempt is superseded, not silently counted as passing qualification.
+
+Runtime 5fe7b578 adds only the three locale dictionaries and their focused test corrections to frozen runtime586d0bc6. All application handlers, read calls, catalogue records, artwork bytes and CSS are unchanged. Exact-source registration retains every previous entry and original expiry.

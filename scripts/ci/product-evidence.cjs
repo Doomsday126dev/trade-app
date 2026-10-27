@@ -1,15 +1,16 @@
 // Runs the existing selector once, retaining diagnostics without changing its result.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {spawn,execFileSync}=require('node:child_process');
-const stageArgs=stage=>{
+const stageArgs=(stage,env=process.env)=>{
   if(!['node','browser'].includes(stage))throw new Error('Expected node or browser stage');
+  if(stage==='browser'&&env.PRODUCT_BROWSER_SHARD){if(!/^[1-4]$/.test(env.PRODUCT_BROWSER_SHARD))throw new Error('Invalid product browser shard');return ['scripts/ci/product-browser-shards.cjs','run',env.PRODUCT_BROWSER_SHARD];}
   return ['scripts/select-product-checks.cjs',...(stage==='browser'?['--browser']:[])];
 };
-async function run(stage,{cwd=process.cwd(),env=process.env,command=process.execPath,args=stageArgs(stage)}={}){
-  stageArgs(stage);
+async function run(stage,{cwd=process.cwd(),env=process.env,command=process.execPath,args=stageArgs(stage,env)}={}){
+  stageArgs(stage,env);
   const dir=path.join(cwd,'product-ci-artifacts');fs.mkdirSync(dir,{recursive:true});
   const git=(...args)=>execFileSync('git',args,{cwd,encoding:'utf8'}).trim();
-  const metadata={stage,browserWorkers:stage==='browser'?String(env.PRODUCT_BROWSER_WORKERS||'1'):null,started:new Date().toISOString(),node:process.version,platform:process.platform,
+  const metadata={stage,browserWorkers:stage==='browser'?String(env.PRODUCT_BROWSER_WORKERS||'1'):null,browserShard:env.PRODUCT_BROWSER_SHARD||null,started:new Date().toISOString(),node:process.version,platform:process.platform,
     os:os.release(),checkout:git('rev-parse','HEAD'),base:env.PRODUCT_BASE_SHA||null,
     workflowHeadRef:env.GITHUB_HEAD_REF||null,workflowCheckout:env.GITHUB_SHA||null,
     run:env.GITHUB_RUN_ID||null,attempt:env.GITHUB_RUN_ATTEMPT||null,

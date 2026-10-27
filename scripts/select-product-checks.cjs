@@ -118,11 +118,8 @@ function changedFiles(base,{cwd=process.cwd()}={}){
   // the old owner and new path. No status filter: deletions and type changes count.
   return execFileSync('git',['diff','--name-only','--no-renames','-z',base,'HEAD'],{cwd,encoding:'utf8'}).split('\0').filter(Boolean);
 }
-function browserArgs(files,{workers=process.env.PRODUCT_BROWSER_WORKERS||'1'}={}){
-  const count=String(workers);
-  if(!/^[1-4]$/.test(count))throw new Error('PRODUCT_BROWSER_WORKERS must be an integer from 1 to 4');
-  return ['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop',`--workers=${count}`,...(count==='1'?[]:['--fully-parallel'])];
-}
+function browserArgs(files){return ['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop','--workers=1'];}
+
 function run(command,args){
   const result=spawnSync(command,args,{stdio:'inherit'});if(result.error)throw result.error;
   if(result.status!==0)process.exit(result.status||1);
@@ -159,4 +156,4 @@ if(require.main===module){
     for(const [command,args]of plan.commands)run(command,args);
   }
 }
-module.exports={select,qualifiedReviewBase,changedFiles,browserArgs};
+module.exports={select,qualifiedReviewBase,changedFiles,browserArgs,reviewBase};
