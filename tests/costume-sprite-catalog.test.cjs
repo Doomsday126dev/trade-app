@@ -16,12 +16,12 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,407);
+  assert.equal(catalog.entries.length,402);
   assert.equal(require('../data/pending-costume-artwork.json').maintenanceCandidate.canonicalRecords,catalog.entries.length);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,400);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,395);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,1036);
+  assert.equal(assets.length,1034);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -84,7 +84,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:399,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:400,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -125,17 +125,15 @@ test('reviewed event aliases retain distinct canonical identity through serializ
   const restored=JSON.parse(JSON.stringify(firstPass));
   const secondPass=pokemonCatalog.canonicalizeEntries(restored);
 
-  assert.equal(firstPass.length,7);
-  assert.equal(secondPass.length,7);
-  assert.equal(new Set(secondPass.map(entry=>entry.catalogId)).size,7);
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(secondPass.map(entry=>[entry.name,entry.no,entry.catalogId,entry.mod]))),
-    expected.map(([name,no,catalogId])=>[name,no,catalogId,name])
-  );
+  assert.equal(firstPass.length,6);
+  assert.equal(secondPass.length,6);
+  assert.equal(new Set(secondPass.map(entry=>entry.catalogId)).size,6);
+  for(const [name,no] of expected){const entry=pokemonCatalog.entryForLegacyKey(secondPass,name);assert.ok(entry,name);assert.equal(entry.no,no);}
+  assert.equal(stored.length,7);assert.equal(stored[4].name,'Pikachu (Holiday 2022)');assert.equal(stored[5].name,'Pikachu (Holiday 2024)');
 
-  const holiday2022=secondPass.find(entry=>entry.name==='Pikachu (Holiday 2022)');
-  const holiday2024=secondPass.find(entry=>entry.name==='Pikachu (Holiday 2024)');
-  assert.notEqual(holiday2022.catalogId,holiday2024.catalogId);
+  const holiday2022=pokemonCatalog.entryForLegacyKey(secondPass,'Pikachu (Holiday 2022)');
+  const holiday2024=pokemonCatalog.entryForLegacyKey(secondPass,'Pikachu (Holiday 2024)');
+  assert.equal(holiday2022.catalogId,holiday2024.catalogId);
   assert.deepEqual(
     Array.from(resolver.resolution({name:holiday2022.name}).urls),
     Array.from(resolver.resolution({name:holiday2024.name}).urls)

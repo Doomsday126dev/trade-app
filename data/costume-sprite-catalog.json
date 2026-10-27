@@ -3437,7 +3437,8 @@
       "no": 25,
       "names": [
         "Pikachu (Halloween 2021)",
-        "Pikachu Halloween Mischief"
+        "Pikachu Halloween Mischief",
+        "Pikachu (Halloween 2022)"
       ],
       "status": "exact",
       "sourceFile": "pikachu-halloween-mischief.png",
@@ -3494,69 +3495,31 @@
         "reviewedAt": "2026-10-26",
         "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
       },
-      "shinyAvailability": "released"
-    },
-    {
-      "no": 25,
-      "names": [
-        "Pikachu (Halloween 2022)"
-      ],
-      "status": "exact",
-      "sourceFile": "pikachu-halloween-mischief.png",
-      "sourceFemaleFile": "pikachu-halloween-mischief-f.png",
-      "sourceLabel": "Halloween Mischief",
-      "sourcePage": "https://pokemondb.net/sprites/pikachu",
-      "assets": {
-        "default": "assets/sprites/go/pikachu-halloween-mischief.png",
-        "female": "assets/sprites/go/pikachu-halloween-mischief-f.png",
-        "shiny": "assets/sprites/go/pogorewind-pikachu-029-shiny.png",
-        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-029-female-shiny.png"
-      },
-      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-halloween-mischief.png",
-      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-halloween-mischief-f.png",
-      "sha256": {
-        "default": "b058fa28a81698943288ca501a2b957b6900ab791b894eb30368622a9ed5ab08",
-        "female": "81803dd1379dbc9cbb6c5485858e3ce1d4ebfa12fa4d04a4a4ce917f18dca84b",
-        "shiny": "cc6226b41b95b7242f3ab9cf5c2914dd74418bdd06cf8e5e84a7aa82697d0402",
-        "femaleShiny": "4d7c8c425d45d37bd11f61eb39a9883a3a77a59b8723e4cdefce7ffe34113c21"
-      },
-      "pinnedArtworkReview": {
-        "name": "Pikachu (Halloween 2022)",
-        "sourceId": "0025-00-00-029",
-        "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
-        "sourcePage": "https://pikachugo.vercel.app/",
-        "releaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
-        "notes": "2022 returns2021 Mischief outfit, official https://pokemongo.com/news/halloween-2022-event-details-part-2",
-        "sourceGenders": [
-          "m",
-          "f"
-        ],
-        "full": false,
-        "shinyAvailability": "released",
-        "assets": {
-          "shiny": "assets/sprites/go/pogorewind-pikachu-029-shiny.png",
-          "femaleShiny": "assets/sprites/go/pogorewind-pikachu-029-female-shiny.png"
-        },
-        "sha256": {
-          "shiny": "cc6226b41b95b7242f3ab9cf5c2914dd74418bdd06cf8e5e84a7aa82697d0402",
-          "femaleShiny": "4d7c8c425d45d37bd11f61eb39a9883a3a77a59b8723e4cdefce7ffe34113c21"
-        },
-        "gitBlobShas": {
-          "shiny": "567a27c82a03a327d9f4053d55ffd3f342c7f0c3",
-          "femaleShiny": "726866915ac5e8573ca06fdee3d02284e8a61042"
-        },
-        "sourceFiles": {
-          "shiny": "0025-00-00-029+S.png",
-          "femaleShiny": "0025-00-00-029+F+S.png"
-        },
-        "sourceUrls": {
-          "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-029%2BS.png",
-          "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-029%2BF%2BS.png"
-        },
-        "reviewedAt": "2026-10-26",
-        "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
-      },
-      "shinyAvailability": "released"
+      "shinyAvailability": "released",
+      "returnYearAliasEvidence": {
+        "qualification": "Same independently named outfit and GO coded identity; year labels are saved aliases. Original exact art records retained here as provenance, never substituted across costumes.",
+        "records": [
+          {
+            "names": [
+              "Pikachu (Halloween 2022)"
+            ],
+            "assets": {
+              "default": "assets/sprites/go/pikachu-halloween-mischief.png",
+              "female": "assets/sprites/go/pikachu-halloween-mischief-f.png",
+              "shiny": "assets/sprites/go/pogorewind-pikachu-029-shiny.png",
+              "femaleShiny": "assets/sprites/go/pogorewind-pikachu-029-female-shiny.png"
+            },
+            "sha256": {
+              "default": "b058fa28a81698943288ca501a2b957b6900ab791b894eb30368622a9ed5ab08",
+              "female": "81803dd1379dbc9cbb6c5485858e3ce1d4ebfa12fa4d04a4a4ce917f18dca84b",
+              "shiny": "cc6226b41b95b7242f3ab9cf5c2914dd74418bdd06cf8e5e84a7aa82697d0402",
+              "femaleShiny": "4d7c8c425d45d37bd11f61eb39a9883a3a77a59b8723e4cdefce7ffe34113c21"
+            },
+            "sourceFile": "pikachu-halloween-mischief.png",
+            "sourceLabel": "Halloween Mischief"
+          }
+        ]
+      }
     },
     {
       "no": 25,
@@ -3615,68 +3578,6 @@
         "sourceUrls": {
           "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-054%2BS.png",
           "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-054%2BF%2BS.png"
-        },
-        "reviewedAt": "2026-10-26",
-        "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
-      },
-      "shinyAvailability": "released"
-    },
-    {
-      "no": 25,
-      "names": [
-        "Pikachu (Halloween 2024)"
-      ],
-      "status": "exact",
-      "sourceFile": "pikachu-witch.png",
-      "sourceFemaleFile": "pikachu-witch-f.png",
-      "sourceLabel": "Witch Hat",
-      "sourcePage": "https://pokemondb.net/sprites/pikachu",
-      "assets": {
-        "default": "assets/sprites/go/pikachu-witch.png",
-        "female": "assets/sprites/go/pikachu-witch-f.png",
-        "shiny": "assets/sprites/go/pogorewind-pikachu-004-shiny.png",
-        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-004-female-shiny.png"
-      },
-      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-witch.png",
-      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-witch-f.png",
-      "sha256": {
-        "default": "8e0ed30a163807274a6b825b6b69682df7e3dd28bed8bd047aad8bb109c81493",
-        "female": "89702828550b34912bf21022b7cda18ce19abd66bd5428522d74598cacaf0969",
-        "shiny": "a823d9fe1acc5ca895af0b341c9b864cf3327c613a71590ab0af859c1fd46763",
-        "femaleShiny": "dfbd5d791f8d1b2e9f73cbab58c12f0089bcca408e60d53a43bd108cc7e645de"
-      },
-      "pinnedArtworkReview": {
-        "name": "Pikachu (Halloween 2024)",
-        "sourceId": "0025-00-00-004",
-        "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
-        "sourcePage": "https://pikachugo.vercel.app/",
-        "releaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
-        "notes": "ReturnsWitch004; do not conflate withMischief029",
-        "sourceGenders": [
-          "m",
-          "f"
-        ],
-        "full": false,
-        "shinyAvailability": "released",
-        "assets": {
-          "shiny": "assets/sprites/go/pogorewind-pikachu-004-shiny.png",
-          "femaleShiny": "assets/sprites/go/pogorewind-pikachu-004-female-shiny.png"
-        },
-        "sha256": {
-          "shiny": "a823d9fe1acc5ca895af0b341c9b864cf3327c613a71590ab0af859c1fd46763",
-          "femaleShiny": "dfbd5d791f8d1b2e9f73cbab58c12f0089bcca408e60d53a43bd108cc7e645de"
-        },
-        "gitBlobShas": {
-          "shiny": "b5550adeedebd90fcb09061d605fff44611d50a1",
-          "femaleShiny": "b2201ad622b7666dfeb9d15a34c5b8c15ab346ba"
-        },
-        "sourceFiles": {
-          "shiny": "0025-00-00-004+S.png",
-          "femaleShiny": "0025-00-00-004+F+S.png"
-        },
-        "sourceUrls": {
-          "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-004%2BS.png",
-          "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-004%2BF%2BS.png"
         },
         "reviewedAt": "2026-10-26",
         "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
@@ -3811,7 +3712,9 @@
       "no": 25,
       "names": [
         "Pikachu (Holiday 2020)",
-        "Pikachu Winter Carnival Outfit"
+        "Pikachu Winter Carnival Outfit",
+        "Pikachu (Holiday 2022)",
+        "Pikachu (Holiday 2024)"
       ],
       "status": "exact",
       "sourceFile": "pikachu-holiday.png",
@@ -3868,69 +3771,50 @@
         "reviewedAt": "2026-10-26",
         "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
       },
-      "shinyAvailability": "released"
-    },
-    {
-      "no": 25,
-      "names": [
-        "Pikachu (Holiday 2022)"
-      ],
-      "status": "exact",
-      "sourceFile": "pikachu-holiday.png",
-      "sourceFemaleFile": "pikachu-holiday-f.png",
-      "sourceLabel": "Winter Carnival",
-      "sourcePage": "https://pokemondb.net/sprites/pikachu",
-      "assets": {
-        "default": "assets/sprites/go/pikachu-holiday.png",
-        "female": "assets/sprites/go/pikachu-holiday-f.png",
-        "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
-        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
-      },
-      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday.png",
-      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday-f.png",
-      "sha256": {
-        "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
-        "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853",
-        "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
-        "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
-      },
-      "pinnedArtworkReview": {
-        "name": "Pikachu (Holiday 2022)",
-        "sourceId": "0025-00-00-023",
-        "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
-        "sourcePage": "https://pikachugo.vercel.app/",
-        "releaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
-        "notes": "",
-        "sourceGenders": [
-          "m",
-          "f"
-        ],
-        "full": false,
-        "shinyAvailability": "released",
-        "assets": {
-          "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
-          "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
-        },
-        "sha256": {
-          "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
-          "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
-        },
-        "gitBlobShas": {
-          "shiny": "b7c13e4b363c111045dcb0dca8a9fe35affe6bd0",
-          "femaleShiny": "7c9c30bb5f285b655ce2e6df7c078bc39de2e394"
-        },
-        "sourceFiles": {
-          "shiny": "0025-00-00-023+S.png",
-          "femaleShiny": "0025-00-00-023+F+S.png"
-        },
-        "sourceUrls": {
-          "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-023%2BS.png",
-          "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-023%2BF%2BS.png"
-        },
-        "reviewedAt": "2026-10-26",
-        "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
-      },
-      "shinyAvailability": "released"
+      "shinyAvailability": "released",
+      "returnYearAliasEvidence": {
+        "qualification": "Same independently named outfit and GO coded identity; year labels are saved aliases. Original exact art records retained here as provenance, never substituted across costumes.",
+        "records": [
+          {
+            "names": [
+              "Pikachu (Holiday 2022)"
+            ],
+            "assets": {
+              "default": "assets/sprites/go/pikachu-holiday.png",
+              "female": "assets/sprites/go/pikachu-holiday-f.png",
+              "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
+              "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
+            },
+            "sha256": {
+              "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
+              "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853",
+              "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
+              "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
+            },
+            "sourceFile": "pikachu-holiday.png",
+            "sourceLabel": "Winter Carnival"
+          },
+          {
+            "names": [
+              "Pikachu (Holiday 2024)"
+            ],
+            "assets": {
+              "default": "assets/sprites/go/pikachu-holiday.png",
+              "female": "assets/sprites/go/pikachu-holiday-f.png",
+              "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
+              "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
+            },
+            "sha256": {
+              "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
+              "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853",
+              "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
+              "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
+            },
+            "sourceFile": "pikachu-holiday.png",
+            "sourceLabel": "Winter Carnival"
+          }
+        ]
+      }
     },
     {
       "no": 25,
@@ -3988,68 +3872,6 @@
         "sourceUrls": {
           "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-055%2BS.png",
           "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-055%2BF%2BS.png"
-        },
-        "reviewedAt": "2026-10-26",
-        "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
-      },
-      "shinyAvailability": "released"
-    },
-    {
-      "no": 25,
-      "names": [
-        "Pikachu (Holiday 2024)"
-      ],
-      "status": "exact",
-      "sourceFile": "pikachu-holiday.png",
-      "sourceFemaleFile": "pikachu-holiday-f.png",
-      "sourceLabel": "Winter Carnival",
-      "sourcePage": "https://pokemondb.net/sprites/pikachu",
-      "assets": {
-        "default": "assets/sprites/go/pikachu-holiday.png",
-        "female": "assets/sprites/go/pikachu-holiday-f.png",
-        "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
-        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
-      },
-      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday.png",
-      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday-f.png",
-      "sha256": {
-        "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
-        "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853",
-        "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
-        "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
-      },
-      "pinnedArtworkReview": {
-        "name": "Pikachu (Holiday 2024)",
-        "sourceId": "0025-00-00-023",
-        "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
-        "sourcePage": "https://pikachugo.vercel.app/",
-        "releaseEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
-        "notes": "",
-        "sourceGenders": [
-          "m",
-          "f"
-        ],
-        "full": false,
-        "shinyAvailability": "released",
-        "assets": {
-          "shiny": "assets/sprites/go/pogorewind-pikachu-023-shiny.png",
-          "femaleShiny": "assets/sprites/go/pogorewind-pikachu-023-female-shiny.png"
-        },
-        "sha256": {
-          "shiny": "24f055b019a8169282c1d2a1713f47c5779f8aa6d983382c2774cb925f7f1bb1",
-          "femaleShiny": "262eaae20dd3e2a82c413eb5f382ac2a2ccb123e6f1f1f115cccbaebb407de90"
-        },
-        "gitBlobShas": {
-          "shiny": "b7c13e4b363c111045dcb0dca8a9fe35affe6bd0",
-          "femaleShiny": "7c9c30bb5f285b655ce2e6df7c078bc39de2e394"
-        },
-        "sourceFiles": {
-          "shiny": "0025-00-00-023+S.png",
-          "femaleShiny": "0025-00-00-023+F+S.png"
-        },
-        "sourceUrls": {
-          "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-023%2BS.png",
-          "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-023%2BF%2BS.png"
         },
         "reviewedAt": "2026-10-26",
         "pixelReview": "All four released variants (or the two valid single-gender variants) inspected in labelled alpha-composited contact sheets. Costume details, normal/Shiny color and gender tails verified; no recolouring or fallback."
@@ -5114,7 +4936,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Turquoise)",
-        "PokéXciting Pikachu (Turquoise)"
+        "Pok\u00e9Xciting Pikachu (Turquoise)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -6872,7 +6694,8 @@
     {
       "no": 25,
       "names": [
-        "Pikachu (Witch)"
+        "Pikachu (Witch)",
+        "Pikachu (Halloween 2024)"
       ],
       "status": "exact",
       "sourceFile": "pikachu-witch.png",
@@ -6914,6 +6737,30 @@
           "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0025-00-00-004%2BF%2BS.png"
         },
         "pixelReview": "Published source pixels viewed in labelled 21-image contact sheet: exact costume retained, male straight-tail and female heart-notch distinguished. Libre/Rock Star/Pop Star have black heart-tipped female tails."
+      },
+      "returnYearAliasEvidence": {
+        "qualification": "Same independently named outfit and GO coded identity; year labels are saved aliases. Original exact art records retained here as provenance, never substituted across costumes.",
+        "records": [
+          {
+            "names": [
+              "Pikachu (Halloween 2024)"
+            ],
+            "assets": {
+              "default": "assets/sprites/go/pikachu-witch.png",
+              "female": "assets/sprites/go/pikachu-witch-f.png",
+              "shiny": "assets/sprites/go/pogorewind-pikachu-004-shiny.png",
+              "femaleShiny": "assets/sprites/go/pogorewind-pikachu-004-female-shiny.png"
+            },
+            "sha256": {
+              "default": "8e0ed30a163807274a6b825b6b69682df7e3dd28bed8bd047aad8bb109c81493",
+              "female": "89702828550b34912bf21022b7cda18ce19abd66bd5428522d74598cacaf0969",
+              "shiny": "a823d9fe1acc5ca895af0b341c9b864cf3327c613a71590ab0af859c1fd46763",
+              "femaleShiny": "dfbd5d791f8d1b2e9f73cbab58c12f0089bcca408e60d53a43bd108cc7e645de"
+            },
+            "sourceFile": "pikachu-witch.png",
+            "sourceLabel": "Witch Hat"
+          }
+        ]
       }
     },
     {
@@ -9932,91 +9779,6 @@
     {
       "no": 94,
       "names": [
-        "Gengar (Halloween 2024)"
-      ],
-      "status": "exact",
-      "sourceFile": "gengar-spooky-festival.png",
-      "sourceLabel": "Spooky Festival",
-      "sourcePage": "https://pokemondb.net/sprites/gengar",
-      "assets": {
-        "default": "assets/sprites/go/gengar-spooky-festival.png",
-        "shiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png",
-        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png"
-      },
-      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/gengar-spooky-festival.png",
-      "sha256": {
-        "default": "b989f0ff4e6adfeb38782f08fdaf9047433e84a43fe0736d07dd44f0c14f1109",
-        "shiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885",
-        "femaleShiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885"
-      },
-      "shinyAvailability": "released",
-      "consolidatedShinyArtworkReview": {
-        "name": "Gengar (Halloween 2024)",
-        "no": 94,
-        "sourceId": "0094-00-00-03",
-        "sourceName": "Halloween 2022 Gengar",
-        "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
-        "sourceGenders": [
-          "m",
-          "f"
-        ],
-        "genderModel": "shared-no-visual-dimorphism",
-        "shinyAvailability": "released",
-        "releaseEvidence": [
-          "https://www.serebii.net/pokemongo/shiny.shtml"
-        ],
-        "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
-        "identityNote": "Catalog normal URL/hash exactly matches SpookyFestival/Halloween2022 row. Preserve saved labels; same costume return-year alias, not evidence of distinct2024 form.",
-        "pixelReview": "All 33 source contact sheets inspected; original bytes verified; no recoloring or substitution.",
-        "retainedNormal": {
-          "default": {
-            "asset": "assets/sprites/go/gengar-spooky-festival.png",
-            "sha256": "b989f0ff4e6adfeb38782f08fdaf9047433e84a43fe0736d07dd44f0c14f1109"
-          }
-        },
-        "sourceReferences": {
-          "default": {
-            "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0094-00-00-03.png",
-            "sha256": "11cd863438f60a314904b643687e41bcef73e7effc299564128131cf566091cf",
-            "bytes": 27968,
-            "size": [
-              166,
-              188
-            ],
-            "archivePath": "assets/0094-00-00-03.png"
-          },
-          "shiny": {
-            "url": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0094-00-00-03%2BS.png",
-            "sha256": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885",
-            "bytes": 27373,
-            "size": [
-              166,
-              188
-            ],
-            "archivePath": "assets/0094-00-00-03+S.png"
-          }
-        },
-        "assets": {
-          "shiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png",
-          "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png"
-        },
-        "sha256": {
-          "shiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885",
-          "femaleShiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885"
-        },
-        "sourceUrls": {
-          "shiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0094-00-00-03%2BS.png",
-          "femaleShiny": "https://raw.githubusercontent.com/Gabrielense/pogorewind/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/sprites/0094-00-00-03%2BS.png"
-        },
-        "gitBlobShas": {
-          "shiny": "6a7343fa5d316446b7f935a9ab856833c3a0e6e8",
-          "femaleShiny": "6a7343fa5d316446b7f935a9ab856833c3a0e6e8"
-        }
-      }
-    },
-    {
-      "no": 94,
-      "names": [
         "Gengar (Mega Banette)"
       ],
       "status": "exact",
@@ -10105,7 +9867,8 @@
         "Gengar (Spooky Hat)",
         "Gengar (Halloween 2022)",
         "Gengar Halloween",
-        "Gengar Spooky Festival"
+        "Gengar Spooky Festival",
+        "Gengar (Halloween 2024)"
       ],
       "status": "exact",
       "sourceFile": "gengar-spooky-festival.png",
@@ -10185,6 +9948,28 @@
           "shiny": "6a7343fa5d316446b7f935a9ab856833c3a0e6e8",
           "femaleShiny": "6a7343fa5d316446b7f935a9ab856833c3a0e6e8"
         }
+      },
+      "returnYearAliasEvidence": {
+        "qualification": "Same independently named outfit and GO coded identity; year labels are saved aliases. Original exact art records retained here as provenance, never substituted across costumes.",
+        "records": [
+          {
+            "names": [
+              "Gengar (Halloween 2024)"
+            ],
+            "assets": {
+              "default": "assets/sprites/go/gengar-spooky-festival.png",
+              "shiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png",
+              "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png"
+            },
+            "sha256": {
+              "default": "b989f0ff4e6adfeb38782f08fdaf9047433e84a43fe0736d07dd44f0c14f1109",
+              "shiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885",
+              "femaleShiny": "014e09622e8a3e58f08da3dc68d2c073a34e75abf05bb25193d0f62e405a9885"
+            },
+            "sourceFile": "gengar-spooky-festival.png",
+            "sourceLabel": "Spooky Festival"
+          }
+        ]
       }
     },
     {
@@ -10280,7 +10065,7 @@
       ],
       "status": "exact",
       "sourceFile": "cubone-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/cubone",
       "assets": {
         "default": "assets/sprites/go/cubone-cempasuchil-crown.png",
@@ -10298,14 +10083,14 @@
         "name": "Cubone (Cempasuchil)",
         "no": 104,
         "sourceId": "0104-00-00-01",
-        "sourceName": "Cempasúchil Cubone",
+        "sourceName": "Cempas\u00fachil Cubone",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
         "shinyAvailability": "released",
         "releaseEvidence": [
           "https://www.serebii.net/pokemongo/shiny.shtml"
         ],
-        "releaseListedName": "Cubone (Cempasúchil Crown)",
+        "releaseListedName": "Cubone (Cempas\u00fachil Crown)",
         "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
         "sourceGenders": [
           "m",
@@ -10352,7 +10137,7 @@
       ],
       "status": "exact",
       "sourceFile": "marowak-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/marowak",
       "assets": {
         "default": "assets/sprites/go/marowak-cempasuchil-crown.png",
@@ -10370,14 +10155,14 @@
         "name": "Marowak Cempasuchil Crown",
         "no": 105,
         "sourceId": "0105-00-00-01",
-        "sourceName": "Cempasúchil Marowak",
+        "sourceName": "Cempas\u00fachil Marowak",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
         "shinyAvailability": "released",
         "releaseEvidence": [
           "https://www.serebii.net/pokemongo/shiny.shtml"
         ],
-        "releaseListedName": "Marowak (Cempasúchil Crown)",
+        "releaseListedName": "Marowak (Cempas\u00fachil Crown)",
         "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
         "sourceGenders": [
           "m",
@@ -18119,7 +17904,7 @@
       ],
       "status": "exact",
       "sourceFile": "duskull-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/duskull",
       "assets": {
         "default": "assets/sprites/go/duskull-cempasuchil-crown.png",
@@ -18137,7 +17922,7 @@
         "name": "Duskull (Cempasuchil)",
         "no": 355,
         "sourceId": "0355-00-00-01",
-        "sourceName": "Cempasúchil Duskull",
+        "sourceName": "Cempas\u00fachil Duskull",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -18204,7 +17989,7 @@
       ],
       "status": "exact",
       "sourceFile": "dusclops-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/dusclops",
       "assets": {
         "default": "assets/sprites/go/dusclops-cempasuchil-crown.png",
@@ -18222,7 +18007,7 @@
         "name": "Dusclops Cempasuchil Crown",
         "no": 356,
         "sourceId": "0356-00-00-01",
-        "sourceName": "Cempasúchil Dusclops",
+        "sourceName": "Cempas\u00fachil Dusclops",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -20909,7 +20694,7 @@
       ],
       "status": "exact",
       "sourceFile": "dusknoir-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/dusknoir",
       "assets": {
         "default": "assets/sprites/go/dusknoir-cempasuchil-crown.png",
@@ -20927,7 +20712,7 @@
         "name": "Dusknoir Cempasuchil Crown",
         "no": 477,
         "sourceId": "0477-00-00-01",
-        "sourceName": "Cempasúchil Dusknoir",
+        "sourceName": "Cempas\u00fachil Dusknoir",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -22539,8 +22324,8 @@
     {
       "no": 666,
       "names": [
-        "Poké Ball",
-        "Vivillon (Poké Ball)"
+        "Pok\u00e9 Ball",
+        "Vivillon (Pok\u00e9 Ball)"
       ],
       "status": "exact",
       "sourceFile": "vivillon-pokeball.png",
@@ -22557,7 +22342,7 @@
         "shiny": "b838e14324247289714ad403f7e2dd7d3aca303bcf37f803b3b07e6e5f543c5d",
         "femaleShiny": "b838e14324247289714ad403f7e2dd7d3aca303bcf37f803b3b07e6e5f543c5d"
       },
-      "variantArtworkReview": "Poké Ball"
+      "variantArtworkReview": "Pok\u00e9 Ball"
     },
     {
       "no": 666,
@@ -25317,7 +25102,7 @@
         "name": "Oricorio (Baile)",
         "no": 741,
         "sourceId": "0741-00-03",
-        "sourceName": "Baile Oricório",
+        "sourceName": "Baile Oric\u00f3rio",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -26443,7 +26228,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Blue)",
-        "PokéXciting Pikachu (Blue)"
+        "Pok\u00e9Xciting Pikachu (Blue)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -26892,7 +26677,7 @@
       "no": 10,
       "names": [
         "Caterpie (Poke Ball Hat)",
-        "Caterpie Poké Ball Hat",
+        "Caterpie Pok\u00e9 Ball Hat",
         "Caterpie Pokeball Hat"
       ],
       "status": "exact",
@@ -26908,7 +26693,7 @@
       },
       "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
       "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm10.fGOFEST_2026.icon.png",
-      "sourceLabel": "Caterpie wearing a Poké Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
+      "sourceLabel": "Caterpie wearing a Pok\u00e9 Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
       "assets": {
         "default": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
         "shiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
@@ -27059,7 +26844,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Taiwan)",
-        "Pikachu (PokéXciting Taiwan)",
+        "Pikachu (Pok\u00e9Xciting Taiwan)",
         "Pikachu (PokeXciting Pink)"
       ],
       "status": "exact",
@@ -27103,7 +26888,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Philippines)",
-        "Pikachu (PokéXciting Philippines)",
+        "Pikachu (Pok\u00e9Xciting Philippines)",
         "Pikachu (PokeXciting Orange)"
       ],
       "status": "exact",

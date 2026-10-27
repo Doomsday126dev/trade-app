@@ -5657,6 +5657,618 @@
         }
       ],
       "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 1012,
+      "names": [
+        "Poltchageist (Artisan Form)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-f954fcffdfec341b59c6.png",
+        "shiny": "assets/sprites/go/catalogue-25db147b39fe8274297d.png"
+      },
+      "sha256": {
+        "default": "f954fcffdfec341b59c6fd0f9a4cdac5cfb411e63ad00a96151c24564ded9d54",
+        "shiny": "25db147b39fe8274297da1dc1f4947cc4c5c0e96d05018e69df38f3f38417c5f"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm1012.fARTISAN.icon.png",
+          "sha256": "f954fcffdfec341b59c6fd0f9a4cdac5cfb411e63ad00a96151c24564ded9d54",
+          "bytes": 8718,
+          "observedAt": "2026-10-27T16:57:00.543Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 1260,
+            "pixelHash": "47ba0eac"
+          },
+          "sourcePath": "Addressable Assets/pm1012.fARTISAN.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm1012.fARTISAN.s.icon.png",
+          "sha256": "25db147b39fe8274297da1dc1f4947cc4c5c0e96d05018e69df38f3f38417c5f",
+          "bytes": 8736,
+          "observedAt": "2026-10-27T16:57:00.543Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 1265,
+            "pixelHash": "f7242d59"
+          },
+          "sourcePath": "Addressable Assets/pm1012.fARTISAN.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": -1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "wishlist",
+      "normalRelease": "released",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:form:1012:artisan",
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/pokemon/1012.shtml",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "GO formSettings and current Serebii GO detail page explicitly separate the rare form; only generic/default identity is selectable. Frontal sprite does not independently display an authenticity stamp. Exact source filenames preserve form provenance. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.919265+00:00"
+    },
+    {
+      "no": 1013,
+      "names": [
+        "Sinistcha (Masterpiece Form)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-3c770029f10dc06868c6.png",
+        "shiny": "assets/sprites/go/catalogue-5b8b18cfb3d8f6a0ee59.png"
+      },
+      "sha256": {
+        "default": "3c770029f10dc06868c6b7f1bb760989f2c27034815879ee9df98769db45de46",
+        "shiny": "5b8b18cfb3d8f6a0ee5916e4969eb4f8dbde80cf8aa4db022aeb6090e90adea9"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm1013.fMASTERPIECE.icon.png",
+          "sha256": "3c770029f10dc06868c6b7f1bb760989f2c27034815879ee9df98769db45de46",
+          "bytes": 9740,
+          "observedAt": "2026-10-27T16:57:00.544Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 1984,
+            "pixelHash": "1794d57f"
+          },
+          "sourcePath": "Addressable Assets/pm1013.fMASTERPIECE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm1013.fMASTERPIECE.s.icon.png",
+          "sha256": "5b8b18cfb3d8f6a0ee5916e4969eb4f8dbde80cf8aa4db022aeb6090e90adea9",
+          "bytes": 9814,
+          "observedAt": "2026-10-27T16:57:00.765Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 1963,
+            "pixelHash": "342fbef6"
+          },
+          "sourcePath": "Addressable Assets/pm1013.fMASTERPIECE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": -1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "wishlist",
+      "normalRelease": "released",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:form:1013:masterpiece",
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/pokemon/1013.shtml",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "GO formSettings and current Serebii GO detail page explicitly separate the rare form; only generic/default identity is selectable. Frontal sprite does not independently display an authenticity stamp. Exact source filenames preserve form provenance. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.920196+00:00"
+    },
+    {
+      "no": 2,
+      "names": [
+        "Ivysaur (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-caff74ef4d049c189616.png",
+        "shiny": "assets/sprites/go/catalogue-ca6b0cff7fb8cb3ae865.png"
+      },
+      "sha256": {
+        "default": "caff74ef4d049c189616c9c1fd718a42dbbc5595b62d75d58551a81f4c5c291a",
+        "shiny": "ca6b0cff7fb8cb3ae86587b9052eac8a834112335ccd32035d49f295897283e8"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm2.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "caff74ef4d049c189616c9c1fd718a42dbbc5595b62d75d58551a81f4c5c291a",
+          "bytes": 26680,
+          "observedAt": "2026-10-27T16:34:13.498Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 10142,
+            "pixelHash": "1056a601"
+          },
+          "sourcePath": "Addressable Assets/pm2.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm2.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "ca6b0cff7fb8cb3ae86587b9052eac8a834112335ccd32035d49f295897283e8",
+          "bytes": 27299,
+          "observedAt": "2026-10-27T16:57:03.239Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 10159,
+            "pixelHash": "cf0b456a"
+          },
+          "sourcePath": "Addressable Assets/pm2.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:2:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm2.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.921246+00:00"
+    },
+    {
+      "no": 3,
+      "names": [
+        "Venusaur (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-3a6f9ec5fd1b802b6fb8.png",
+        "shiny": "assets/sprites/go/catalogue-e0158c19ac6fefae4864.png"
+      },
+      "sha256": {
+        "default": "3a6f9ec5fd1b802b6fb850566ed39eff0c27230623b6d120f642eabf5c434737",
+        "shiny": "e0158c19ac6fefae4864e334081f2370d276f1078a4aa7a57ece9903c463aa97"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm3.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "3a6f9ec5fd1b802b6fb850566ed39eff0c27230623b6d120f642eabf5c434737",
+          "bytes": 44287,
+          "observedAt": "2026-10-27T16:34:15.492Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 21003,
+            "pixelHash": "54fbce53"
+          },
+          "sourcePath": "Addressable Assets/pm3.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm3.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "e0158c19ac6fefae4864e334081f2370d276f1078a4aa7a57ece9903c463aa97",
+          "bytes": 43895,
+          "observedAt": "2026-10-27T16:57:03.242Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 20853,
+            "pixelHash": "5e31ffa0"
+          },
+          "sourcePath": "Addressable Assets/pm3.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:3:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm3.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.922166+00:00"
+    },
+    {
+      "no": 5,
+      "names": [
+        "Charmeleon (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-6dc263c43a560385e3eb.png",
+        "shiny": "assets/sprites/go/catalogue-91e846336ccedaa2b8ff.png"
+      },
+      "sha256": {
+        "default": "6dc263c43a560385e3eb71af71a8c753d78606a924a42a2712f59a3aa4110b7e",
+        "shiny": "91e846336ccedaa2b8ffea1dd2c9afb5694fc038eee3f420a8f87e09ee7ce7cc"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm5.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "6dc263c43a560385e3eb71af71a8c753d78606a924a42a2712f59a3aa4110b7e",
+          "bytes": 23802,
+          "observedAt": "2026-10-27T16:34:16.650Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 8158,
+            "pixelHash": "dc382ee0"
+          },
+          "sourcePath": "Addressable Assets/pm5.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm5.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "91e846336ccedaa2b8ffea1dd2c9afb5694fc038eee3f420a8f87e09ee7ce7cc",
+          "bytes": 24938,
+          "observedAt": "2026-10-27T16:57:03.243Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 8116,
+            "pixelHash": "8dc23836"
+          },
+          "sourcePath": "Addressable Assets/pm5.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:5:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm5.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.923021+00:00"
+    },
+    {
+      "no": 6,
+      "names": [
+        "Charizard (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-20fc749925e050cdae32.png",
+        "shiny": "assets/sprites/go/catalogue-6eaa5bc42a746a399a1a.png"
+      },
+      "sha256": {
+        "default": "20fc749925e050cdae3258b7d5d2aa6ab3d601d0b724d05dd84190c805f197a3",
+        "shiny": "6eaa5bc42a746a399a1a28b74a6e5c351a228017f504c25c31c70f43f2b5a8eb"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm6.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "20fc749925e050cdae3258b7d5d2aa6ab3d601d0b724d05dd84190c805f197a3",
+          "bytes": 32831,
+          "observedAt": "2026-10-27T16:34:16.981Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9688,
+            "pixelHash": "3a4226ae"
+          },
+          "sourcePath": "Addressable Assets/pm6.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm6.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "6eaa5bc42a746a399a1a28b74a6e5c351a228017f504c25c31c70f43f2b5a8eb",
+          "bytes": 32908,
+          "observedAt": "2026-10-27T16:57:03.327Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9701,
+            "pixelHash": "6fded7a1"
+          },
+          "sourcePath": "Addressable Assets/pm6.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:6:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm6.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.923570+00:00"
+    },
+    {
+      "no": 8,
+      "names": [
+        "Wartortle (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-81e090cd49c064834e30.png",
+        "shiny": "assets/sprites/go/catalogue-58d49aa97318d6c7610c.png"
+      },
+      "sha256": {
+        "default": "81e090cd49c064834e30dfe477d37012196eafe9e7674ed7308829c3c7429f11",
+        "shiny": "58d49aa97318d6c7610c8c8b773b431b3e0b07917f538b530f39603053559ffb"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm8.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "81e090cd49c064834e30dfe477d37012196eafe9e7674ed7308829c3c7429f11",
+          "bytes": 23875,
+          "observedAt": "2026-10-27T16:34:17.594Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 10009,
+            "pixelHash": "c01474b1"
+          },
+          "sourcePath": "Addressable Assets/pm8.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm8.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "58d49aa97318d6c7610c8c8b773b431b3e0b07917f538b530f39603053559ffb",
+          "bytes": 24056,
+          "observedAt": "2026-10-27T16:57:03.334Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 10157,
+            "pixelHash": "be7ae6a0"
+          },
+          "sourcePath": "Addressable Assets/pm8.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:8:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm8.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.924225+00:00"
+    },
+    {
+      "no": 892,
+      "names": [
+        "Urshifu (Rapid Strike Style)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-e2cf2f6d7334544cef7e.png",
+        "shiny": "assets/sprites/go/catalogue-d061eb234a17f82edb91.png"
+      },
+      "sha256": {
+        "default": "e2cf2f6d7334544cef7ebb5f684db79912ddb526175da4ab753109eb88228161",
+        "shiny": "d061eb234a17f82edb9174dcdfae4243fa4fb34f1ceb9e50a51e72e6184b5dba"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10191.png",
+          "sha256": "e2cf2f6d7334544cef7ebb5f684db79912ddb526175da4ab753109eb88228161",
+          "bytes": 116033,
+          "observedAt": "2026-10-27T01:14:46.890914+00:00",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 74752,
+            "pixelHash": "70497004"
+          },
+          "sourcePath": "sprites/pokemon/other/home/10191.png",
+          "sourceCommit": null
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10191.png",
+          "sha256": "d061eb234a17f82edb9174dcdfae4243fa4fb34f1ceb9e50a51e72e6184b5dba",
+          "bytes": 115659,
+          "observedAt": "2026-10-27T01:14:46.890914+00:00",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 74759,
+            "pixelHash": "3e7d7f6e"
+          },
+          "sourcePath": "sprites/pokemon/other/home/shiny/10191.png",
+          "sourceCommit": null
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "wishlist",
+      "normalRelease": "released",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:form:892:rapid-strike",
+      "evidence": [
+        {
+          "url": "https://pokemongo.com/news/final-strike-2025",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Generic ordinary Urshifu uses Single Strike default model; Rapid Strike is selectable only in the separate Max identities. Normal and Shiny HOME model10191 are already byte-qualified; do not use a Gmax model. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.924742+00:00"
+    },
+    {
+      "no": 9,
+      "names": [
+        "Blastoise (Pikachu Visor)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-8773e0fde6ae79850503.png",
+        "shiny": "assets/sprites/go/catalogue-c8ebcf54f15a14834f62.png"
+      },
+      "sha256": {
+        "default": "8773e0fde6ae798505039a1ad1cf9e32758874b4a7632086f3b73fc5bd79fb3e",
+        "shiny": "c8ebcf54f15a14834f621a6cd3eb1602622f04255f6d9c67e0a550873013edce"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm9.cSPRING_2020_NOEVOLVE.icon.png",
+          "sha256": "8773e0fde6ae798505039a1ad1cf9e32758874b4a7632086f3b73fc5bd79fb3e",
+          "bytes": 39661,
+          "observedAt": "2026-10-27T16:34:17.896Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 17403,
+            "pixelHash": "97c6d18b"
+          },
+          "sourcePath": "Addressable Assets/pm9.cSPRING_2020_NOEVOLVE.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm9.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sha256": "c8ebcf54f15a14834f621a6cd3eb1602622f04255f6d9c67e0a550873013edce",
+          "bytes": 39082,
+          "observedAt": "2026-10-27T16:57:03.339Z",
+          "http": 200,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 17530,
+            "pixelHash": "f534d075"
+          },
+          "sourcePath": "Addressable Assets/pm9.cSPRING_2020_NOEVOLVE.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-exact-model-no-optional-gender-assertion",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "genderRate": 1,
+        "qualification": "Optional gender not offered without exact-art qualification."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "sourceId": "variant-followup:upstream165:costume:9:pikachu-visor",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm9.cSPRING_2020_NOEVOLVE.icon.png",
+          "role": "Form-specific secondary/official evidence; asset presence alone never establishes release."
+        }
+      ],
+      "qualification": "Original art visibly has Pikachu visor; current options include ordinary and party/other costumes, not this visor. Distinct from conical party hat. Release evidence does not restrict early wants.",
+      "reviewedAt": "2026-10-27T17:34:22.927735+00:00"
     }
   ]
 }

@@ -516,6 +516,8 @@
   }
   function reviewedPreferredForm(name='',no=0){return !!reviewedPreferredFormUrl(name,no);}
   function publicSpriteUrls(name='',gender='',no=0,shiny=false){
+    // Confirmed return-year aliases must use the same exact outfit route for saved and anonymous records.
+    if(/^(?:Pikachu \((?:Holiday 202[24]|Halloween 202[24])\)|Gengar \(Halloween 2024\))$/.test(name))name=root.pokemonCatalog?.resolveLegacyKey(name)?.canonicalKey||name;
     const plainSize=reviewedPreferredFormUrl(name,no,shiny);if(plainSize)return Object.freeze([plainSize]);
     const eligibility=root.publicPokemonDex?.variantStatus?.(name);
     if(eligibility&&gender&&!eligibility.genders.includes(gender))return Object.freeze([]);
