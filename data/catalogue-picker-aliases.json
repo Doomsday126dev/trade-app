@@ -448,27 +448,31 @@
         "Gengar (Halloween 2022)",
         "Gengar (Spooky Hat)",
         "Gengar Halloween",
-        "Gengar Spooky Festival"
+        "Gengar Spooky Festival",
+        "Gengar (Halloween 2024)"
       ],
       "catalogIds": [
         "pokemon:94:standard:legacy:Gengar%20(Halloween%202022)",
         "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
         "pokemon:94:standard:legacy:Gengar%20Halloween",
-        "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival"
+        "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival",
+        "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)"
       ],
       "source": "https://pokemondb.net/sprites/gengar",
       "recordNames": [
         "Gengar (Spooky Hat)",
         "Gengar (Halloween 2022)",
         "Gengar Halloween",
-        "Gengar Spooky Festival"
+        "Gengar Spooky Festival",
+        "Gengar (Halloween 2024)"
       ],
       "canonicalCatalogId": "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
       "legacyIdsByName": {
         "Gengar (Halloween 2022)": "pokemon:94:standard:legacy:Gengar%20(Halloween%202022)",
         "Gengar (Spooky Hat)": "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
         "Gengar Halloween": "pokemon:94:standard:legacy:Gengar%20Halloween",
-        "Gengar Spooky Festival": "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival"
+        "Gengar Spooky Festival": "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival",
+        "Gengar (Halloween 2024)": "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)"
       },
       "sourceFile": "gengar-spooky-festival.png",
       "exactAssetProof": {
@@ -1411,6 +1415,90 @@
         "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png",
         "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png"
       }
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Holiday 2020)",
+      "names": [
+        "Pikachu (Holiday 2020)",
+        "Pikachu Winter Carnival Outfit",
+        "Pikachu (Holiday 2022)",
+        "Pikachu (Holiday 2024)"
+      ],
+      "recordNames": [
+        "Pikachu (Holiday 2020)",
+        "Pikachu Winter Carnival Outfit",
+        "Pikachu (Holiday 2022)",
+        "Pikachu (Holiday 2024)"
+      ],
+      "canonicalCatalogId": "pokemon:25:costume:PIKACHU_WINTER_2020",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202020)",
+        "pokemon:25:standard:legacy:Pikachu%20Winter%20Carnival%20Outfit",
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Holiday 2020)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202020)",
+        "Pikachu Winter Carnival Outfit": "pokemon:25:standard:legacy:Pikachu%20Winter%20Carnival%20Outfit",
+        "Pikachu (Holiday 2022)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
+        "Pikachu (Holiday 2024)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Halloween 2021)",
+      "names": [
+        "Pikachu (Halloween 2021)",
+        "Pikachu Halloween Mischief",
+        "Pikachu (Halloween 2022)"
+      ],
+      "recordNames": [
+        "Pikachu (Halloween 2021)",
+        "Pikachu Halloween Mischief",
+        "Pikachu (Halloween 2022)"
+      ],
+      "canonicalCatalogId": "pokemon:25:costume:halloween-2021",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202021)",
+        "pokemon:25:standard:legacy:Pikachu%20Halloween%20Mischief",
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Halloween 2021)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202021)",
+        "Pikachu Halloween Mischief": "pokemon:25:standard:legacy:Pikachu%20Halloween%20Mischief",
+        "Pikachu (Halloween 2022)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Witch)",
+      "names": [
+        "Pikachu (Witch)",
+        "Pikachu (Halloween 2024)"
+      ],
+      "recordNames": [
+        "Pikachu (Witch)",
+        "Pikachu (Halloween 2024)"
+      ],
+      "canonicalCatalogId": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Witch)": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+        "Pikachu (Halloween 2024)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
     }
   ]
 }

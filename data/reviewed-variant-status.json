@@ -2712,6 +2712,123 @@
         "https://www.serebii.net/pokemongo/shiny.shtml"
       ],
       "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 1012,
+      "name": "Poltchageist (Artisan Form)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/pokemon/1012.shtml"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.919265+00:00"
+    },
+    {
+      "no": 1013,
+      "name": "Sinistcha (Masterpiece Form)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/pokemon/1013.shtml"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.920196+00:00"
+    },
+    {
+      "no": 2,
+      "name": "Ivysaur (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm2.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.921246+00:00"
+    },
+    {
+      "no": 3,
+      "name": "Venusaur (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm3.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.922166+00:00"
+    },
+    {
+      "no": 5,
+      "name": "Charmeleon (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm5.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.923021+00:00"
+    },
+    {
+      "no": 6,
+      "name": "Charizard (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm6.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.923570+00:00"
+    },
+    {
+      "no": 8,
+      "name": "Wartortle (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm8.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.924225+00:00"
+    },
+    {
+      "no": 892,
+      "name": "Urshifu (Rapid Strike Style)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/final-strike-2025"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.924742+00:00"
+    },
+    {
+      "no": 9,
+      "name": "Blastoise (Pikachu Visor)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm9.cSPRING_2020_NOEVOLVE.icon.png"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T17:34:22.927735+00:00"
     }
   ]
 }

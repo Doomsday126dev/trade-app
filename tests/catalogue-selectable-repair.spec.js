@@ -8,7 +8,7 @@ for(const shiny of [false,true])test('all61 ordinary identities select, persist 
  await normalFixture(page);
  await page.route('**/*',route=>{const file=files.get(route.request().url());return file?route.fulfill({path:file,contentType:'image/png',headers:{'access-control-allow-origin':'*'}}):route.fallback();});
  await page.evaluate(urls=>Promise.all(urls.map(async url=>{const img=new Image;img.src=url;await img.decode();})),[...files.keys()]);
- const expected=require('../scripts/reconcile-catalogue.cjs').loadIdentities().all.map(r=>r.catalogId).sort();expect(await page.evaluate(()=>_specialAllItems().map(r=>r.catalogId).sort())).toEqual(expected);expect(expected.length).toBe(1749);
+ const expected=require('../scripts/reconcile-catalogue.cjs').loadIdentities().all.map(r=>r.catalogId).sort();expect(await page.evaluate(()=>_specialAllItems().map(r=>r.catalogId).sort())).toEqual(expected);expect(expected.length).toBe(1753);
  const names=records.map(r=>r.name);expect(await page.evaluate(names=>names.filter(name=>!_specialAllItems().some(e=>e.name===name)),names)).toEqual([]);
  expect(await page.evaluate(({names,shiny})=>addManagedIntentEntries('lf',names.map(name=>({name,p:'H',shiny}))),{names,shiny})).toBe(true);await page.evaluate(()=>managedAccountSyncRuntime.controller.drain());await settled(page);
  const result=await page.evaluate(async({names,shiny})=>{

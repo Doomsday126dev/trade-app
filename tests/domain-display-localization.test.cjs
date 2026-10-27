@@ -88,14 +88,14 @@ test('structured form supplements localize official terminology without changing
   assert.equal(pokemon.structuredFormSource.kind,'curated-official-form-supplement');
 });
 
-test('all 1506 canonical entries have measurable full partial and fallback coverage',()=>{
+test('all 1515 canonical entries have measurable full partial and fallback coverage',()=>{
   const baseline={full:620,partial:0,fallback:346};
-  const expected={ja:{full:1245,partial:261,fallback:0},es:{full:1204,partial:302,fallback:0},de:{full:1241,partial:265,fallback:0}};
+  const expected={ja:{full:1245,partial:270,fallback:0},es:{full:1204,partial:311,fallback:0},de:{full:1241,partial:274,fallback:0}};
   for(const locale of ['ja','es','de']){
     const report=JSON.parse(JSON.stringify(pokemon.variantCoverage(appEntries,locale)));
-    assert.equal(report.total,1506);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
+    assert.equal(report.total,1515);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
     assert.deepEqual(baseline,{full:620,partial:0,fallback:346});
-    assert.equal(report.categories['app-specific-costume'].partial,259);
+    assert.equal(report.categories['app-specific-costume'].partial,268);
     assert.equal(report.categories['vivillon-pattern'].total,20);
     assert.equal(report.categories['gigantamax'].total,31);
   }
@@ -154,7 +154,7 @@ test('coverage reports are explicit and do not claim a complete catalog',()=>{
 });
 
 test('generated catalogs completely cover every stable species ID in data.js',()=>{
-  assert.equal(appEntries.length,1506);
+  assert.equal(appEntries.length,1515);
   assert.equal(appSpeciesIds.length,941);
   assert.equal(appEntries.filter(entry=>!Number.isInteger(Number(entry.no))||Number(entry.no)<=0).length,0);
   for(const locale of ['en','ja','es','de']){

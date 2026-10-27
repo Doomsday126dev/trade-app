@@ -44,7 +44,7 @@ test('reviewed missing identity counts cannot retain an already integrated exact
 });
 
 test('finite queue art stays hash-pinned, Shiny duplicates stay blocked, and Zen labels survive line breaks',()=>{
- const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,77);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
+ const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,86);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
  const input=inputs();input.sources.data['normal-inventory']=[];assert.equal(reconcile(input).status,'reconciled');const html='<img src="/pokemongo/pokemon/555-gz.png"><td class="fooinfo"><a href="/pokemongo/pokemon/555.shtml">Darmanitan</a> (Galarian Form<br />Zen Mode)</td>';assert.equal(parseGOInventory(html,'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal')[0].name,'Darmanitan (Galarian Form Zen Mode)');
 });
 
@@ -65,14 +65,14 @@ test('Spooky Festival sources preserve all eight sizes and reject crossed size, 
  try{fs.mkdirSync(path.join(root,'data'));fs.symlinkSync(path.join(__dirname,'../assets'),path.join(root,'assets'));
  const rows=original.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:'));assert.equal(rows.length,8);assert.equal(new Set(rows.flatMap(r=>Object.values(r.assets))).size,16);
  const validate=mutate=>{const data=structuredClone(original);mutate(data.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:')));fs.writeFileSync(path.join(root,'data/catalogue-reviewed-assets.json'),JSON.stringify(data));return validateReviewedAssets(root);};
- assert.equal(validate(()=>{}).length,77);
+ assert.equal(validate(()=>{}).length,86);
  for(const mutate of [r=>r[0].artProof.default.url=r[1].artProof.default.url,r=>r[0].artProof.shiny.url=r[1].artProof.shiny.url,r=>r[0].no=711,r=>r[0].artProof.shiny.url=r[0].artProof.default.url])assert.throws(()=>validate(mutate),/Wrong Spooky Festival/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 
 test('selectable denominator follows runtime picker seeds and cannot be satisfied by sprite names alone',()=>{
  const {loadIdentities}=require('../scripts/reconcile-catalogue.cjs'),current=loadIdentities(),repairs=require('../data/catalogue-selectable-repair.json').records;
- assert.equal(current.all.length,1749);assert.equal(repairs.length,61);
+ assert.equal(current.all.length,1753);assert.equal(repairs.length,61);
  for(const row of repairs)assert.ok(current.all.some(e=>e.name===row.name&&e.no===row.no),row.name);
  const database=JSON.parse(JSON.stringify(current.database));database.wishlist=database.wishlist.filter(r=>r.name!=='Ivysaur');const missing=loadIdentities({database});
  assert.ok(missing.publicAll.some(e=>e.name==='Ivysaur'));assert.ok(!missing.all.some(e=>e.name==='Ivysaur'));

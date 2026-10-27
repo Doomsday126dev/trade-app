@@ -4,7 +4,7 @@ for(const shiny of [false,true])test('Spooky Festival size identities persist an
  test.setTimeout(150000);await normalFixture(page);
  expect(await page.evaluate(()=>_specialAllItems().filter(e=>[494,649,801].includes(e.no)).length)).toBe(0);
  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Genesect (Shock Drive)',p:'H',shiny:true}]))).toBe(false);
- const names=records.filter(r=>!r.tradeEligibility).map(r=>r.names[0]);const available=await page.evaluate(()=>_specialAllItems().map(e=>e.name));expect(names.filter(name=>!available.includes(name))).toEqual([]);expect(available.length).toBe(1749);expect(new Set(available).size).toBe(1749);
+ const names=records.filter(r=>!r.tradeEligibility).map(r=>r.names[0]);const available=await page.evaluate(()=>_specialAllItems().map(e=>e.name));expect(names.filter(name=>!available.includes(name))).toEqual([]);expect(available.length).toBe(1753);expect(new Set(available).size).toBe(1753);
  expect(await page.evaluate(({names,shiny})=>addManagedIntentEntries('lf',names.map(name=>({name,p:'H',shiny}))),{names,shiny})).toBe(true);
  // Await the existing persistence completion barrier before reading saved state.
  // Await their existing completion barrier first; retain the same saved-state assertion and timeouts.
