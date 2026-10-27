@@ -512,6 +512,42 @@
           "claim": "Exact Citrus Shirt label, Available when encountered"
         }
       ]
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+      "catalogName": "Pikachu (PokeXciting Taiwan)",
+      "dex": 25,
+      "releaseDate": "2026-10-10",
+      "evidenceUrl": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T10:06:58.122544+00:00",
+      "artReview": "data/dittobase-reviewed-costume-assets.json",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+        "retrievedAt": "2026-10-27T09:41:55.893980+00:00",
+        "sha256": "f3dd7765c376f2fbda0721a4228f386a3a207dcd61ca107eefa428173b12c8bc",
+        "result": "official-regional-costume-and-shiny-announcement"
+      },
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29",
+      "catalogName": "Pikachu (PokeXciting Philippines)",
+      "dex": 25,
+      "releaseDate": "2027-01-23",
+      "evidenceUrl": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "lifecycleStatus": "announced",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T10:06:58.122544+00:00",
+      "artReview": "data/dittobase-reviewed-costume-assets.json",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+        "retrievedAt": "2026-10-27T09:41:55.893980+00:00",
+        "sha256": "f3dd7765c376f2fbda0721a4228f386a3a207dcd61ca107eefa428173b12c8bc",
+        "result": "official-regional-costume-and-shiny-announcement"
+      },
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
     }
   ],
   "followUpEvidence": [
@@ -720,6 +756,14 @@
       ],
       "reviewedAt": "2026-10-27T09:16:05.293197+00:00",
       "scope": "Two independently reviewed historical costume additions; retired official Jeju source remains explicit."
+    },
+    {
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "ids": [
+        "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+        "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29"
+      ],
+      "scope": "Taiwan and Philippines exact regional identities; announced Philippines wants remain selectable."
     }
   ]
 }

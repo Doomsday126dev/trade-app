@@ -37,3 +37,8 @@ test('owner summary deduplicates variants while retaining every unresolved row a
 test('new Shiny release evidence stays urgent even when existing identity and exact art already match',()=>{
  const input=inputs();input.sources.data['normal-inventory']=[];input.sources.data['shiny-inventory']=[{no:999,name:'New Species',sourceSprite:'https://example.test/999.png',source:'https://example.test/shiny',statusText:'Available when encountered'}];input.identities.all=[{no:999,name:'New Species',catalogId:'one'}];input.forms.records=[{id:999,speciesId:999,name:'New Species'}];input.verifiedArt=[{no:999,shiny:true,status:'verified-bytes',decoded:true}];input.eligibility=[{no:999,name:'New Species',normal:'released',shiny:'unverified'}];const result=reconcile(input);assert.equal(result.coverage['shiny-inventory'].identityMatched,1);assert.ok(result.queue.some(r=>r.disposition==='variant-release-evidence-review-required'&&r.priority==='urgent'));assert.equal(result.status,'review-required');
 });
+
+test('reviewed missing identity counts cannot retain an already integrated exact canonical label',()=>{
+ const {loadIdentities,identityKey}=require('../scripts/reconcile-catalogue.cjs');const {all}=loadIdentities(),reviews=require('../data/catalogue-sources/identity-reviews.json'),seen=new Set();
+ for(const row of reviews.missingIdentities){assert.ok(!seen.has(row.id),'duplicate missing identity '+row.name);seen.add(row.id);assert.ok(!all.some(entry=>entry.no===row.no&&identityKey(entry.name)===identityKey(row.name)),'already integrated '+row.name);assert.ok(row.source&&row.action&&row.artState);assert.notEqual(row.disposition,'unavailable');}
+});

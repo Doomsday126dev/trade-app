@@ -22,9 +22,9 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:404,exact:397,unsupported:7});
+  assert.deepEqual(report.counts,{canonical:406,exact:399,unsupported:7});
   assert.equal(report.candidates.length,7);
-  assert.equal(report.coverage.releaseEvidenceEntries,24);
+  assert.equal(report.coverage.releaseEvidenceEntries,26);
   assert.equal(report.upcomingIdentities.length,0);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
   assert.equal(buildReport({...inputs(),online:true}).status,'no-new-findings');
@@ -109,10 +109,10 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   assert.equal(sources.worldsOfficial.result,'released');
   const released=data.releases.entries.filter(row=>row.lifecycleStatus==='released');
   const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
-  assert.equal(released.length,24);assert.equal(announced.length,0);
+  assert.equal(released.length,25);assert.equal(announced.length,1);
   assert.ok(released.every(row=>['unavailable','exact-reviewed'].includes(row.artworkStatus)));
   assert.ok(data.releases.entries.every(row=>{const supplement=data.releases.additionalReviews?.find(review=>review.ids.includes(row.id));const reviewTime=supplement?Date.parse(supplement.reviewedAt):reviewedAt;return Date.parse(row.lastVerifiedAt)<=reviewTime&&row.evidenceRetrieval.url===row.evidenceUrl;}));
-  assert.deepEqual(announced,[]);
+  assert.equal(announced[0].catalogName,'Pikachu (PokeXciting Philippines)');
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'exact-reviewed');
 });

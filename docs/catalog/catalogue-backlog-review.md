@@ -4,7 +4,7 @@ The .154 candidate `b44e842d2a1f514f6cd1bc4a4e8983738b0ce637` remains unchanged.
 
 ## Qualified local follow-up
 
-Based on live .154 runtime `cdf0171c08508940a34f53df2eb6653e878b2574`, the follow-up adds fifteen standard identities with official normal-release evidence and two exact costumes. All 1,346 existing seed rows are byte-for-byte preserved as objects; no existing user choices or labels change. The candidate is not published by this task.
+Based on live .154 runtime `cdf0171c08508940a34f53df2eb6653e878b2574`, the follow-up adds fifteen standard identities, two previously held Hisuian forms and four exact costumes. All 1,346 existing seed rows are byte-for-byte preserved as objects; no existing user choices or labels change. The candidate is not published by this task.
 
 Normal and Shiny wants remain selectable for all fifteen standard identities. Their exact normal/Shiny HOME originals are independently decoded and hash-pinned. The small `reviewed-variant-status.json` register records evidence, not permission to request an entry. “Release unverified” appears in the existing personal, shared and exported views for their Shiny variants. It does not claim confirmed unreleased or unavailable. No artwork preview interface or new request restriction ships.
 
@@ -32,14 +32,21 @@ The [2026 Halloween announcement](https://pokemongo.com/news/halloween-part-2-20
 
 **Pikachu (Blue Shirt (Citrus))** has four exact male/female normal/Shiny originals, [historical GO Hub release evidence](https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/) and independent Serebii/PokémonDB art evidence. The original official event URL's 404 remains recorded. It is a new explicit costume and does not reinterpret saved generic Jeju labels.
 
-## Remaining urgent additions
+## Integrated regional and Hisuian identities
 
-Further independent Dittobase form inventory review found two distinct regional costumes with four original decoded assets each (normal, Shiny, female, female Shiny). They are retained as urgent actionable entries with source hashes and discovery times in `identity-reviews.json`; all eight unmodified PNGs are staged. They are not aliases of the existing Malaysia or Singapore costumes.
+Taiwan and Philippines are integrated as separate canonical regional costumes, each with four original decoded images (normal, Shiny, female, female Shiny). The final labels are **Pikachu (PokeXciting Taiwan)** and **Pikachu (PokeXciting Philippines)**, with reviewed color/region source aliases in the art catalogue. Existing Malaysia and Singapore identities are preserved.
 
-- **Taiwan pink-hair Pikachu:** dedicated event October 10–11, 2026, already past. [Official regional announcement](https://pokemongo.com/news/event-apac-30th-anniversary-2026), [exact form page](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01).
-- **Philippines orange-hair Pikachu:** dedicated event January 23–24, 2027, announced. [Exact form page](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01). Earlier cross-region stamp obtainability is unverified; a future dedicated event date alone does not establish that the variant cannot already be obtained. Available art must remain available for wants with passive evidence labels when integrated.
+Taiwan's dedicated event occurred October 10–11, 2026, with independent GO Shiny inventory corroboration. Philippines' dedicated event is January 23–24, 2027. Its earlier cross-region obtainability is unverified; the registry says Announced for both variants, allows wants, and retains a conflicting secondary release claim for review. Sources: [official APAC announcement](https://pokemongo.com/news/event-apac-30th-anniversary-2026), explicit [Taiwan](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01) and [Philippines](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01) art pages.
 
-Final canonical display labels and integration of these two additions remain the next review unit. Bangkok is announced for February 2027 but no exact Thai mapping is established here. Do not merge these distinct regional labels based only on “PokéXciting.” Hisuian Zoroark Shiny evidence and upcoming Hisuian Goodra retain the earlier explicit review states.
+The previously held **H-Zoroark** and **H-Goodra** are also integrated using the cached, byte-verified exact form IDs 10239 and 10242. Hisuian Zoroark's normal release is established; its Shiny state remains unverified. Hisuian Goodra remains Announced for normal and unverified for Shiny. Both variants remain selectable for wants. Only default art is qualified; optional gender choices are not offered as new verified options and saved choices are preserved. This is not a genderless assertion.
+
+## Actual remaining canonical absence
+
+The practical reconciliation now lists **67 absent source identities**, individually named with provenance and explicit next actions in `identity-reviews.json`: 64 standard/form/costume identities plus three announced Dynamax identities. The 64 are absent from the complete current app identity inventory after removing reviewed aliases and separating ambiguous/default labels and represented gender options. It is a canonical absence count, not a blanket claim of GO release or exact-art qualification.
+
+Of the other unmatched non-Mega/Primal/Eternamax units, six are battle/transformation eligibility questions, five are existing gender options whose exact routes need qualification, and four are ambiguous existing defaults/year labels. These remain visible. Nine newly reviewed identity aliases add thirteen source rows to the existing alias review, for 147 alias rows total; no raw art/release row is erased by that classification. Mega/Primal/Eternamax and remaining miner groups retain separate coverage limits.
+
+The remaining normal-only gaps include Victini, Gastrodon, Sandaconda, Kilowattrel, Mabosstiff, Brambleghast, Glimmora and Dudunsparce. Those source-listed release claims still need independent release checks and exact normal/Shiny byte qualification. Source entries with uncertain GO release, such as several newer species and forms, remain distinct from confirmed released gaps. Do not turn an uncertain release into an unavailable state or block an early want.
 
 ## The 2,799 source rows
 
@@ -78,8 +85,12 @@ An additional read-only evidence check found the public PokeMiners HEAD at `c2a6
 
 The denied female Alolan Raticate URL was not retried or accessed through another route. Its optional female-art issue remains open. The previously denied PoGoAPI endpoints also remain excluded.
 
-## Current denominator and limits
+## Coverage limits
 
-After the seventeen candidate additions, the cached-source reconciliation reports normal inventory 1,333 rows: 1,111 identity matches, 26 ambiguous and 196 unmatched; Shiny inventory 1,363 rows: 1,146 matches, 63 ambiguous and 154 unmatched. Dynamax is 135/138; Gigantamax is 16/16 for its incomplete secondary table. Pokemod covers 1,597 addressable file groups (920 mapped, 677 unresolved), plus 1,112 legacy groups (682 mapped, 430 unresolved). Matching is identity presence only, not blanket art/release approval.
+Normal, Shiny, Dynamax and Gigantamax source denominators remain 1,333 / 1,363 / 138 / 16. Gigantamax's secondary table is incomplete. Pokemod has 1,597 addressable groups and 1,112 legacy groups. Canonical identity matching never automatically approves exact variant art or released/tradeable status.
 
-The current offline monitor queue has 2682 rows and no cached-source integrity/staleness failure at qualification time. It deliberately omits 85 live news leads; compare it only with the original offline run, not the 2,799-row live baseline. It remains review-required. The newer PokeMiners tree and Dittobase regional inventory checks are supplemental, not claimed as a continuously monitored complete independent source. Existing monitoring retains failure states and the unmatched queue. No new scheduler, account, credential or paid service is introduced.
+The source-backed missing list now complements the retained raw queue. The independent inventories still do not fully reconcile. The current offline monitor deliberately omits 85 live news leads and must not be compared with the 2,799-row live baseline as if every difference were a resolved identity. It remains review-required. The newer PokeMiners tree and Dittobase checks are supplemental, not continuously monitored complete sources. The existing scheduled check remains daily; no new scheduler, credentials, permissions or owner-alert publication change is introduced here.
+
+Final cached reconciliation after all twenty-one additions: normal 1,113/1,333 identity matches (26 ambiguous, 194 unmatched); Shiny 1,148/1,363 (63 ambiguous, 152 unmatched); Dynamax 135/138; Gigantamax 16/16 for the incomplete secondary table. The offline monitor retains 2,679 raw rows in 2,076 groups, with 147 identity-alias rows and 67 individually named absent canonical identities. No cached source-integrity/staleness failure was observed at qualification; this is not a live-source success claim.
+
+The 67 absence entries carry distinct evidence states: 50 secondary released-source claims requiring independent confirmation, 14 uncertain, and 3 announced Max entries. Their source sprites are listed but exact bytes are not yet qualified, unlike the integrated candidates. Artwork and release must be checked independently before integration; no entry is closed as unavailable.

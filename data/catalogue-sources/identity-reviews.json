@@ -2666,6 +2666,188 @@
         ]
       },
       "qualification": "Identity alias only. Variant art, optional gender, current release and trade eligibility remain independently qualified; no queue row is silently closed."
+    },
+    {
+      "rowId": "normal:421|https://www.serebii.net/pokemongo/pokemon/421-s.png|Cherrim (Sunshine Form)",
+      "no": 421,
+      "sourceName": "Cherrim (Sunshine Form)",
+      "targetName": "Cherrim (Sunny)",
+      "catalogId": "pokemon:421:standard:legacy:Cherrim%20(Sunny)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/421-s.png",
+        "canonicalName": "Cherrim (Sunny)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "normal:422|https://www.serebii.net/pokemongo/pokemon/422-e.png|Shellos (East Sea)",
+      "no": 422,
+      "sourceName": "Shellos (East Sea)",
+      "targetName": "Shellos (Blue)",
+      "catalogId": "pokemon:422:standard:legacy:Shellos%20(Blue)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/422-e.png",
+        "canonicalName": "Shellos (Blue)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "normal:571|https://www.serebii.net/pokemongo/pokemon/571.png|Zoroark (Normal Form)",
+      "no": 571,
+      "sourceName": "Zoroark (Normal Form)",
+      "targetName": "Zoroark",
+      "catalogId": "pokemon:571:standard:legacy:Zoroark",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/571.png",
+        "canonicalName": "Zoroark"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "normal:888|https://www.serebii.net/pokemongo/pokemon/888-c.png|Zacian (Crowned Sword)",
+      "no": 888,
+      "sourceName": "Zacian (Crowned Sword)",
+      "targetName": "Zacian (Crowned)",
+      "catalogId": "pokemon:888:standard:legacy:Zacian%20(Crowned)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/888-c.png",
+        "canonicalName": "Zacian (Crowned)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "normal:889|https://www.serebii.net/pokemongo/pokemon/889-c.png|Zamazenta (Crowned Shield)",
+      "no": 889,
+      "sourceName": "Zamazenta (Crowned Shield)",
+      "targetName": "Zamazenta (Crowned)",
+      "catalogId": "pokemon:889:standard:legacy:Zamazenta%20(Crowned)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/889-c.png",
+        "canonicalName": "Zamazenta (Crowned)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "normal:999|https://www.serebii.net/pokemongo/pokemon/999-r.png|Gimmighoul (Roaming Form)",
+      "no": 999,
+      "sourceName": "Gimmighoul (Roaming Form)",
+      "targetName": "Gimmighoul",
+      "catalogId": "pokemon:999:standard:legacy:Gimmighoul",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/999-r.png",
+        "canonicalName": "Gimmighoul"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:25|https://www.serebii.net/pokemongo/pokemon/shiny/025-halloween2023.png|Pikachu (Tricks & Treats)",
+      "no": 25,
+      "sourceName": "Pikachu (Tricks & Treats)",
+      "targetName": "Trick and Treats Pikachu",
+      "catalogId": "pokemon:25:standard:legacy:Trick%20and%20Treats%20Pikachu",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/025-halloween2023.png",
+        "canonicalName": "Trick and Treats Pikachu"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:25|https://www.serebii.net/pokemongo/pokemon/shiny/025-pokexcitingmalaysia.png|Pikachu (Pok\u00e9Xciting Malaysia)",
+      "no": 25,
+      "sourceName": "Pikachu (Pok\u00e9Xciting Malaysia)",
+      "targetName": "Pikachu (PokeXciting Turquoise)",
+      "catalogId": "pokemon:25:standard:legacy:Pikachu%20(PokeXciting%20Turquoise)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/025-pokexcitingmalaysia.png",
+        "canonicalName": "Pikachu (PokeXciting Turquoise)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:25|https://www.serebii.net/pokemongo/pokemon/shiny/025-pokexcitingsingapore.png|Pikachu (Pok\u00e9Xciting Singapore)",
+      "no": 25,
+      "sourceName": "Pikachu (Pok\u00e9Xciting Singapore)",
+      "targetName": "Pikachu (PokeXciting Blue)",
+      "catalogId": "pokemon:25:standard:legacy:Pikachu%20(PokeXciting%20Blue)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/025-pokexcitingsingapore.png",
+        "canonicalName": "Pikachu (PokeXciting Blue)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:421|https://www.serebii.net/pokemongo/pokemon/shiny/421-s.png|Cherrim (Sunshine Form)",
+      "no": 421,
+      "sourceName": "Cherrim (Sunshine Form)",
+      "targetName": "Cherrim (Sunny)",
+      "catalogId": "pokemon:421:standard:legacy:Cherrim%20(Sunny)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/421-s.png",
+        "canonicalName": "Cherrim (Sunny)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:422|https://www.serebii.net/pokemongo/pokemon/shiny/422-e.png|Shellos (East Sea)",
+      "no": 422,
+      "sourceName": "Shellos (East Sea)",
+      "targetName": "Shellos (Blue)",
+      "catalogId": "pokemon:422:standard:legacy:Shellos%20(Blue)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/422-e.png",
+        "canonicalName": "Shellos (Blue)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:888|https://www.serebii.net/pokemongo/pokemon/shiny/888-c.png|Zacian (Crowned Sword)",
+      "no": 888,
+      "sourceName": "Zacian (Crowned Sword)",
+      "targetName": "Zacian (Crowned)",
+      "catalogId": "pokemon:888:standard:legacy:Zacian%20(Crowned)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/888-c.png",
+        "canonicalName": "Zacian (Crowned)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
+    },
+    {
+      "rowId": "shiny:889|https://www.serebii.net/pokemongo/pokemon/shiny/889-c.png|Zamazenta (Crowned Shield)",
+      "no": 889,
+      "sourceName": "Zamazenta (Crowned Shield)",
+      "targetName": "Zamazenta (Crowned)",
+      "catalogId": "pokemon:889:standard:legacy:Zamazenta%20(Crowned)",
+      "method": "reviewed-exact-identity-wording-and-existing-canonical-label",
+      "evidence": {
+        "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sourceSprite": "https://www.serebii.net/pokemongo/pokemon/shiny/889-c.png",
+        "canonicalName": "Zamazenta (Crowned)"
+      },
+      "qualification": "Identity wording only; every source row remains visible. Does not qualify exact normal/Shiny/gender art or GO release."
     }
   ],
   "qualifiedCandidateAdditions": [
@@ -2933,14 +3115,11 @@
       "artState": "exact-normal-and-shiny-qualified",
       "action": "Include in serialized follow-up release after checks; preserve all saved records and allow early Shiny wants with passive evidence labels.",
       "disposition": "qualified-local-candidate-not-yet-published"
-    }
-  ],
-  "candidateBaseline": "cdf0171c08508940a34f53df2eb6653e878b2574",
-  "missingIdentities": [
+    },
     {
       "id": "missing:25:pokexciting-taiwan",
       "no": 25,
-      "name": "Pikachu (Pink Hair (Taiwan))",
+      "name": "Pikachu (PokeXciting Taiwan)",
       "sourceNames": [
         "pikachu-anniversary-2026-taiwan-01"
       ],
@@ -2948,18 +3127,19 @@
       "shinyReleaseState": "released",
       "source": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
       "discoveredAt": "2026-10-27T09:41:55Z",
-      "artState": "exact-four-variants-staged-and-decoded",
+      "artState": "exact-four-variants-integrated",
       "artSource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
       "eventStart": "2026-10-10",
       "priority": "urgent",
-      "disposition": "exact-identity-addition-required",
-      "action": "Add separate canonical costume preserving existing regional saved labels; allow normal/Shiny wants. Philippines early cross-region obtainability is unverified; do not infer it from its dedicated event date or artwork.",
-      "qualification": "Separate Dittobase form page identifies normal/Shiny/female/female-Shiny originals. Actual regional identity is distinct from existing Malaysia and Singapore costumes; exact final display label remains a review item."
+      "disposition": "qualified-local-candidate-not-yet-published",
+      "action": "Include in coherent serialized follow-up candidate; preserve normal/Shiny wants and existing regional identities.",
+      "qualification": "Separate Dittobase form page identifies normal/Shiny/female/female-Shiny originals. Actual regional identity is distinct from existing Malaysia and Singapore costumes; exact final display label remains a review item.",
+      "canonicalName": "Pikachu (PokeXciting Taiwan)"
     },
     {
       "id": "missing:25:pokexciting-philippine",
       "no": 25,
-      "name": "Pikachu (Orange Hair (Philippines))",
+      "name": "Pikachu (PokeXciting Philippines)",
       "sourceNames": [
         "pikachu-anniversary-2026-philippine-01"
       ],
@@ -2967,13 +3147,2661 @@
       "shinyReleaseState": "announced",
       "source": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
       "discoveredAt": "2026-10-27T09:41:55Z",
-      "artState": "exact-four-variants-staged-and-decoded",
+      "artState": "exact-four-variants-integrated",
       "artSource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
       "eventStart": "2027-01-23",
       "priority": "urgent",
-      "disposition": "exact-identity-addition-required",
-      "action": "Add separate canonical costume preserving existing regional saved labels; allow normal/Shiny wants. Philippines early cross-region obtainability is unverified; do not infer it from its dedicated event date or artwork.",
-      "qualification": "Separate Dittobase form page identifies normal/Shiny/female/female-Shiny originals. Actual regional identity is distinct from existing Malaysia and Singapore costumes; exact final display label remains a review item."
+      "disposition": "qualified-local-candidate-not-yet-published",
+      "action": "Include in coherent serialized follow-up candidate; preserve normal/Shiny wants and existing regional identities.",
+      "qualification": "Separate Dittobase form page identifies normal/Shiny/female/female-Shiny originals. Actual regional identity is distinct from existing Malaysia and Singapore costumes; exact final display label remains a review item.",
+      "canonicalName": "Pikachu (PokeXciting Philippines)"
+    },
+    {
+      "id": "qualified-form:10239",
+      "no": 571,
+      "name": "H-Zoroark",
+      "source": "https://pokemongo.com/news/ultra-unlock-hisui",
+      "releaseState": "released",
+      "shinyReleaseState": "unverified",
+      "artState": "exact-normal-and-shiny-qualified",
+      "disposition": "qualified-local-candidate-not-yet-published",
+      "action": "Include previously held identity with passive evidence label and early normal/Shiny wants; optional gender artwork not qualified."
+    },
+    {
+      "id": "qualified-form:10242",
+      "no": 706,
+      "name": "H-Goodra",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "releaseState": "announced",
+      "shinyReleaseState": "unverified",
+      "artState": "exact-normal-and-shiny-qualified",
+      "disposition": "qualified-local-candidate-not-yet-published",
+      "action": "Include previously held identity with passive evidence label and early normal/Shiny wants; optional gender artwork not qualified."
     }
-  ]
+  ],
+  "candidateBaseline": "cdf0171c08508940a34f53df2eb6653e878b2574",
+  "missingIdentities": [
+    {
+      "id": "canonical-missing:1024:stellar terapagos",
+      "no": 1024,
+      "name": "Terapagos (Stellar Form)",
+      "sourceNames": [
+        "Terapagos (Stellar Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:1024|https://www.serebii.net/pokemongo/pokemon/1024-s.png|Terapagos (Stellar Form)"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:1024:terapagos terastal",
+      "no": 1024,
+      "name": "Terapagos (Terastal Form)",
+      "sourceNames": [
+        "Terapagos (Terastal Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:1024|https://www.serebii.net/pokemongo/pokemon/1024-t.png|Terapagos (Terastal Form)"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:423:east gastrodon sea",
+      "no": 423,
+      "name": "Gastrodon (East Sea)",
+      "sourceNames": [
+        "Gastrodon (East Sea)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+      "sourceRows": [
+        "normal:423|https://www.serebii.net/pokemongo/pokemon/423-e.png|Gastrodon (East Sea)",
+        "shiny:423|https://www.serebii.net/pokemongo/pokemon/shiny/423-e.png|Gastrodon (East Sea)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:423:gastrodon",
+      "no": 423,
+      "name": "Gastrodon",
+      "sourceNames": [
+        "Gastrodon"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+      "sourceRows": [
+        "normal:423|https://www.serebii.net/pokemongo/pokemon/423.png|Gastrodon",
+        "shiny:423|https://www.serebii.net/pokemongo/pokemon/shiny/423.png|Gastrodon"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:494:victini",
+      "no": 494,
+      "name": "Victini",
+      "sourceNames": [
+        "Victini"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:494|https://www.serebii.net/pokemongo/pokemon/494.png|Victini"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:646:black kyurem kyurem",
+      "no": 646,
+      "name": "Kyurem (Black Kyurem)",
+      "sourceNames": [
+        "Kyurem (Black Kyurem)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:646|https://www.serebii.net/pokemongo/pokemon/646-b.png|Kyurem (Black Kyurem)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:646:kyurem kyurem white",
+      "no": 646,
+      "name": "Kyurem (White Kyurem)",
+      "sourceNames": [
+        "Kyurem (White Kyurem)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:646|https://www.serebii.net/pokemongo/pokemon/646-w.png|Kyurem (White Kyurem)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:649:drive genesect shock",
+      "no": 649,
+      "name": "Genesect (Shock Drive)",
+      "sourceNames": [
+        "Genesect (Shock Drive)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:649|https://www.serebii.net/pokemongo/pokemon/649-e.png|Genesect (Shock Drive)",
+        "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-e.png|Genesect (Shock Drive)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:649:burn drive genesect",
+      "no": 649,
+      "name": "Genesect (Burn Drive)",
+      "sourceNames": [
+        "Genesect (Burn Drive)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:649|https://www.serebii.net/pokemongo/pokemon/649-f.png|Genesect (Burn Drive)",
+        "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-f.png|Genesect (Burn Drive)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:649:chill drive genesect",
+      "no": 649,
+      "name": "Genesect (Chill Drive)",
+      "sourceNames": [
+        "Genesect (Chill Drive)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:649|https://www.serebii.net/pokemongo/pokemon/649-i.png|Genesect (Chill Drive)",
+        "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-i.png|Genesect (Chill Drive)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:649:douse drive genesect",
+      "no": 649,
+      "name": "Genesect (Douse Drive)",
+      "sourceNames": [
+        "Genesect (Douse Drive)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "sourceRows": [
+        "normal:649|https://www.serebii.net/pokemongo/pokemon/649-w.png|Genesect (Douse Drive)",
+        "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-w.png|Genesect (Douse Drive)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:670:blue floette flower",
+      "no": 670,
+      "name": "Floette (Blue Flower)",
+      "sourceNames": [
+        "Floette (Blue Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:670|https://www.serebii.net/pokemongo/pokemon/670-b.png|Floette (Blue Flower)",
+        "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-b.png|Floette (Blue Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:670:eternal floette flower",
+      "no": 670,
+      "name": "Floette (Eternal Flower)",
+      "sourceNames": [
+        "Floette (Eternal Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:670|https://www.serebii.net/pokemongo/pokemon/670-e.png|Floette (Eternal Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:670:floette flower orange",
+      "no": 670,
+      "name": "Floette (Orange Flower)",
+      "sourceNames": [
+        "Floette (Orange Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:670|https://www.serebii.net/pokemongo/pokemon/670-o.png|Floette (Orange Flower)",
+        "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-o.png|Floette (Orange Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:670:floette flower white",
+      "no": 670,
+      "name": "Floette (White Flower)",
+      "sourceNames": [
+        "Floette (White Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:670|https://www.serebii.net/pokemongo/pokemon/670-w.png|Floette (White Flower)",
+        "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-w.png|Floette (White Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:670:floette flower yellow",
+      "no": 670,
+      "name": "Floette (Yellow Flower)",
+      "sourceNames": [
+        "Floette (Yellow Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:670|https://www.serebii.net/pokemongo/pokemon/670-y.png|Floette (Yellow Flower)",
+        "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-y.png|Floette (Yellow Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:671:blue florges flower",
+      "no": 671,
+      "name": "Florges (Blue Flower)",
+      "sourceNames": [
+        "Florges (Blue Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:671|https://www.serebii.net/pokemongo/pokemon/671-b.png|Florges (Blue Flower)",
+        "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-b.png|Florges (Blue Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:671:florges flower orange",
+      "no": 671,
+      "name": "Florges (Orange Flower)",
+      "sourceNames": [
+        "Florges (Orange Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:671|https://www.serebii.net/pokemongo/pokemon/671-o.png|Florges (Orange Flower)",
+        "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-o.png|Florges (Orange Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:671:florges flower white",
+      "no": 671,
+      "name": "Florges (White Flower)",
+      "sourceNames": [
+        "Florges (White Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:671|https://www.serebii.net/pokemongo/pokemon/671-w.png|Florges (White Flower)",
+        "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-w.png|Florges (White Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:671:florges flower yellow",
+      "no": 671,
+      "name": "Florges (Yellow Flower)",
+      "sourceNames": [
+        "Florges (Yellow Flower)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:671|https://www.serebii.net/pokemongo/pokemon/671-y.png|Florges (Yellow Flower)",
+        "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-y.png|Florges (Yellow Flower)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:681:aegislash blade",
+      "no": 681,
+      "name": "Aegislash (Blade Forme)",
+      "sourceNames": [
+        "Aegislash (Blade Forme)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:681|https://www.serebii.net/pokemongo/pokemon/681-b.png|Aegislash (Blade Forme)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:681:aegislash",
+      "no": 681,
+      "name": "Aegislash",
+      "sourceNames": [
+        "Aegislash"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "sourceRows": [
+        "normal:681|https://www.serebii.net/pokemongo/pokemon/681.png|Aegislash",
+        "shiny:681|https://www.serebii.net/pokemongo/pokemon/shiny/681.png|Aegislash"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:745:dusk lycanroc",
+      "no": 745,
+      "name": "Lycanroc (Dusk Form)",
+      "sourceNames": [
+        "Lycanroc (Dusk Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:745|https://www.serebii.net/pokemongo/pokemon/745-d.png|Lycanroc (Dusk Form)",
+        "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745-d.png|Lycanroc (Dusk Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:745:lycanroc midnight",
+      "no": 745,
+      "name": "Lycanroc (Midnight Form)",
+      "sourceNames": [
+        "Lycanroc (Midnight Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:745|https://www.serebii.net/pokemongo/pokemon/745-m.png|Lycanroc (Midnight Form)",
+        "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745-m.png|Lycanroc (Midnight Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:745:lycanroc",
+      "no": 745,
+      "name": "Lycanroc",
+      "sourceNames": [
+        "Lycanroc"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:745|https://www.serebii.net/pokemongo/pokemon/745.png|Lycanroc",
+        "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745.png|Lycanroc"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:blue core minior",
+      "no": 774,
+      "name": "Minior (Blue Core)",
+      "sourceNames": [
+        "Minior (Blue Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-b.png|Minior (Blue Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:core indigo minior",
+      "no": 774,
+      "name": "Minior (Indigo Core)",
+      "sourceNames": [
+        "Minior (Indigo Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-i.png|Minior (Indigo Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:core minior orange",
+      "no": 774,
+      "name": "Minior (Orange Core)",
+      "sourceNames": [
+        "Minior (Orange Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-o.png|Minior (Orange Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:core minior red",
+      "no": 774,
+      "name": "Minior (Red Core)",
+      "sourceNames": [
+        "Minior (Red Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-r.png|Minior (Red Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:core minior violet",
+      "no": 774,
+      "name": "Minior (Violet Core)",
+      "sourceNames": [
+        "Minior (Violet Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-v.png|Minior (Violet Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:774:core minior yellow",
+      "no": 774,
+      "name": "Minior (Yellow Core)",
+      "sourceNames": [
+        "Minior (Yellow Core)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:774|https://www.serebii.net/pokemongo/pokemon/774-y.png|Minior (Yellow Core)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:801:color magearna original",
+      "no": 801,
+      "name": "Magearna (Original Color)",
+      "sourceNames": [
+        "Magearna (Original Color)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "sourceRows": [
+        "normal:801|https://www.serebii.net/pokemongo/pokemon/801-o.png|Magearna (Original Color)"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:834:drednaw",
+      "no": 834,
+      "name": "Drednaw",
+      "sourceNames": [
+        "Drednaw"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "sourceRows": [
+        "normal:834|https://www.serebii.net/pokemongo/pokemon/834.png|Drednaw"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:844:sandaconda",
+      "no": 844,
+      "name": "Sandaconda",
+      "sourceNames": [
+        "Sandaconda"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "sourceRows": [
+        "normal:844|https://www.serebii.net/pokemongo/pokemon/844.png|Sandaconda"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:853:grapploct",
+      "no": 853,
+      "name": "Grapploct",
+      "sourceNames": [
+        "Grapploct"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "sourceRows": [
+        "normal:853|https://www.serebii.net/pokemongo/pokemon/853.png|Grapploct"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:869:alcremie",
+      "no": 869,
+      "name": "Alcremie",
+      "sourceNames": [
+        "Alcremie"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "sourceRows": [
+        "normal:869|https://www.serebii.net/pokemongo/pokemon/869.png|Alcremie"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:879:copperajah",
+      "no": 879,
+      "name": "Copperajah",
+      "sourceNames": [
+        "Copperajah"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "sourceRows": [
+        "normal:879|https://www.serebii.net/pokemongo/pokemon/879.png|Copperajah"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:901:bloodmoon ursaluna",
+      "no": 901,
+      "name": "Ursaluna (Bloodmoon)",
+      "sourceNames": [
+        "Ursaluna (Bloodmoon)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+      "sourceRows": [
+        "normal:901|https://www.serebii.net/pokemongo/pokemon/901-b.png|Ursaluna (Bloodmoon)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:902:basculegion female",
+      "no": 902,
+      "name": "Basculegion (Female)",
+      "sourceNames": [
+        "Basculegion (Female)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+      "sourceRows": [
+        "normal:902|https://www.serebii.net/pokemongo/pokemon/902-f.png|Basculegion (Female)"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:902:basculegion",
+      "no": 902,
+      "name": "Basculegion",
+      "sourceNames": [
+        "Basculegion"
+      ],
+      "source": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+      "sourceRows": [
+        "normal:902|https://www.serebii.net/pokemongo/pokemon/902.png|Basculegion"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:925:family four maushold of",
+      "no": 925,
+      "name": "Maushold (Family of Four)",
+      "sourceNames": [
+        "Maushold (Family of Four)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:925|https://www.serebii.net/pokemongo/pokemon/925-f.png|Maushold (Family of Four)",
+        "shiny:925|https://www.serebii.net/pokemongo/pokemon/shiny/925-f.png|Maushold (Family of Four)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:925:maushold",
+      "no": 925,
+      "name": "Maushold",
+      "sourceNames": [
+        "Maushold"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:925|https://www.serebii.net/pokemongo/pokemon/925.png|Maushold",
+        "shiny:925|https://www.serebii.net/pokemongo/pokemon/shiny/925.png|Maushold"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:941:kilowattrel",
+      "no": 941,
+      "name": "Kilowattrel",
+      "sourceNames": [
+        "Kilowattrel"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:941|https://www.serebii.net/pokemongo/pokemon/941.png|Kilowattrel"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:943:mabosstiff",
+      "no": 943,
+      "name": "Mabosstiff",
+      "sourceNames": [
+        "Mabosstiff"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:943|https://www.serebii.net/pokemongo/pokemon/943.png|Mabosstiff"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:947:brambleghast",
+      "no": 947,
+      "name": "Brambleghast",
+      "sourceNames": [
+        "Brambleghast"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:947|https://www.serebii.net/pokemongo/pokemon/947.png|Brambleghast"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:952:scovillain",
+      "no": 952,
+      "name": "Scovillain",
+      "sourceNames": [
+        "Scovillain"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:952|https://www.serebii.net/pokemongo/pokemon/952.png|Scovillain"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:954:rabsca",
+      "no": 954,
+      "name": "Rabsca",
+      "sourceNames": [
+        "Rabsca"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:954|https://www.serebii.net/pokemongo/pokemon/954.png|Rabsca"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:964:hero palafin",
+      "no": 964,
+      "name": "Palafin (Hero Form)",
+      "sourceNames": [
+        "Palafin (Hero Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:964|https://www.serebii.net/pokemongo/pokemon/964-h.png|Palafin (Hero Form)"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:964:palafin",
+      "no": 964,
+      "name": "Palafin",
+      "sourceNames": [
+        "Palafin"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:964|https://www.serebii.net/pokemongo/pokemon/964.png|Palafin"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:970:glimmora",
+      "no": 970,
+      "name": "Glimmora",
+      "sourceNames": [
+        "Glimmora"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:970|https://www.serebii.net/pokemongo/pokemon/970.png|Glimmora"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:981:farigiraf",
+      "no": 981,
+      "name": "Farigiraf",
+      "sourceNames": [
+        "Farigiraf"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:981|https://www.serebii.net/pokemongo/pokemon/981.png|Farigiraf"
+      ],
+      "releaseState": "uncertain",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:982:dudunsparce",
+      "no": 982,
+      "name": "Dudunsparce",
+      "sourceNames": [
+        "Dudunsparce"
+      ],
+      "source": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "sourceRows": [
+        "normal:982|https://www.serebii.net/pokemongo/pokemon/982.png|Dudunsparce",
+        "shiny:982|https://www.serebii.net/pokemongo/pokemon/shiny/982.png|Dudunsparce"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:169:crobat hat top",
+      "no": 169,
+      "name": "Crobat (Top hat)",
+      "sourceNames": [
+        "Crobat (Top hat)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:169|https://www.serebii.net/pokemongo/pokemon/shiny/169-tophat.png|Crobat (Top hat)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:42:golbat hat top",
+      "no": 42,
+      "name": "Golbat (Top hat)",
+      "sourceNames": [
+        "Golbat (Top hat)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:42|https://www.serebii.net/pokemongo/pokemon/shiny/042-tophat.png|Golbat (Top hat)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:555:darmanitan galarian",
+      "no": 555,
+      "name": "Darmanitan (Galarian Form)",
+      "sourceNames": [
+        "Darmanitan (Galarian Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:555|https://www.serebii.net/pokemongo/pokemon/shiny/555-g.png|Darmanitan (Galarian Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:586:autumn sawsbuck",
+      "no": 586,
+      "name": "Sawsbuck (Autumn Form)",
+      "sourceNames": [
+        "Sawsbuck (Autumn Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-a.png|Sawsbuck (Autumn Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:586:sawsbuck summer",
+      "no": 586,
+      "name": "Sawsbuck (Summer Form)",
+      "sourceNames": [
+        "Sawsbuck (Summer Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-s.png|Sawsbuck (Summer Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:586:sawsbuck winter",
+      "no": 586,
+      "name": "Sawsbuck (Winter Form)",
+      "sourceNames": [
+        "Sawsbuck (Winter Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-w.png|Sawsbuck (Winter Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:79:cowboy slowpoke",
+      "no": 79,
+      "name": "Slowpoke (Cowboy)",
+      "sourceNames": [
+        "Slowpoke (Cowboy)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:79|https://www.serebii.net/pokemongo/pokemon/shiny/079-cowboy.png|Slowpoke (Cowboy)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:854:antique sinistea",
+      "no": 854,
+      "name": "Sinistea (Antique Form)",
+      "sourceNames": [
+        "Sinistea (Antique Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:854|https://www.serebii.net/pokemongo/pokemon/shiny/854.png|Sinistea (Antique Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:855:antique bow halloween polteageist",
+      "no": 855,
+      "name": "Polteageist (Halloween Bow - Antique Form)",
+      "sourceNames": [
+        "Polteageist (Halloween Bow - Antique Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855-bow.png|Polteageist (Halloween Bow - Antique Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:855:bow halloween phony polteageist",
+      "no": 855,
+      "name": "Polteageist (Halloween Bow - Phony Form)",
+      "sourceNames": [
+        "Polteageist (Halloween Bow - Phony Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855-bow.png|Polteageist (Halloween Bow - Phony Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:855:antique polteageist",
+      "no": 855,
+      "name": "Polteageist (Antique Form)",
+      "sourceNames": [
+        "Polteageist (Antique Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855.png|Polteageist (Antique Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:982:dudunsparce segment three",
+      "no": 982,
+      "name": "Dudunsparce (Three-Segment Form)",
+      "sourceNames": [
+        "Dudunsparce (Three-Segment Form)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "sourceRows": [
+        "shiny:982|https://www.serebii.net/pokemongo/pokemon/shiny/982-t.png|Dudunsparce (Three-Segment Form)"
+      ],
+      "releaseState": "released-source-claim-needs-independent-confirmation",
+      "shinyReleaseState": "separate-source-evidence-review-required",
+      "artState": "source-listed-exact-bytes-unqualified",
+      "priority": "urgent",
+      "disposition": "canonical-identity-absent-needs-exact-qualification",
+      "action": "Verify exact canonical form and normal/Shiny bytes; reconcile independent GO release evidence, then add with passive status while allowing early wants. No generic substitution or unavailable closure."
+    },
+    {
+      "id": "canonical-missing:dynamax:808",
+      "no": 808,
+      "name": "Meltan (Dynamax)",
+      "sourceNames": [
+        "Meltan (Dynamax)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+      "releaseState": "announced",
+      "artState": "exact-default-art-qualification-needed",
+      "priority": "urgent",
+      "disposition": "announced-max-identity-absent",
+      "action": "Use existing exact Max rendering path after qualifying the underlying species art; preserve announced release evidence and early wants."
+    },
+    {
+      "id": "canonical-missing:dynamax:809",
+      "no": 809,
+      "name": "Melmetal (Dynamax)",
+      "sourceNames": [
+        "Melmetal (Dynamax)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+      "releaseState": "announced",
+      "artState": "exact-default-art-qualification-needed",
+      "priority": "urgent",
+      "disposition": "announced-max-identity-absent",
+      "action": "Use existing exact Max rendering path after qualifying the underlying species art; preserve announced release evidence and early wants."
+    },
+    {
+      "id": "canonical-missing:dynamax:895",
+      "no": 895,
+      "name": "Regidrago (Dynamax)",
+      "sourceNames": [
+        "Regidrago (Dynamax)"
+      ],
+      "source": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+      "releaseState": "announced",
+      "artState": "exact-default-art-qualification-needed",
+      "priority": "urgent",
+      "disposition": "announced-max-identity-absent",
+      "action": "Use existing exact Max rendering path after qualifying the underlying species art; preserve announced release evidence and early wants."
+    }
+  ],
+  "canonicalPresenceReview": {
+    "reviewedAt": "2026-10-27T10:18:21.771Z",
+    "basis": "All unmatched normal/Shiny inventory rows minus reviewed identity aliases, deduplicated by species and normalized complete form/costume label. Mega/Primal/Eternamax remain separate battle-form review units.",
+    "counts": {
+      "missing-canonical-identity": 64,
+      "battle-or-transformation-eligibility-review": 6,
+      "represented-gender-option-exact-route-review": 5,
+      "existing-canonical-default-or-year-ambiguity": 4
+    },
+    "groups": [
+      {
+        "no": 1024,
+        "names": [
+          "Terapagos (Stellar Form)"
+        ],
+        "rows": [
+          "normal:1024|https://www.serebii.net/pokemongo/pokemon/1024-s.png|Terapagos (Stellar Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 1024,
+        "names": [
+          "Terapagos (Terastal Form)"
+        ],
+        "rows": [
+          "normal:1024|https://www.serebii.net/pokemongo/pokemon/1024-t.png|Terapagos (Terastal Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 423,
+        "names": [
+          "Gastrodon (East Sea)"
+        ],
+        "rows": [
+          "normal:423|https://www.serebii.net/pokemongo/pokemon/423-e.png|Gastrodon (East Sea)",
+          "shiny:423|https://www.serebii.net/pokemongo/pokemon/shiny/423-e.png|Gastrodon (East Sea)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 423,
+        "names": [
+          "Gastrodon"
+        ],
+        "rows": [
+          "normal:423|https://www.serebii.net/pokemongo/pokemon/423.png|Gastrodon",
+          "shiny:423|https://www.serebii.net/pokemongo/pokemon/shiny/423.png|Gastrodon"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 494,
+        "names": [
+          "Victini"
+        ],
+        "rows": [
+          "normal:494|https://www.serebii.net/pokemongo/pokemon/494.png|Victini"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 555,
+        "names": [
+          "Darmanitan (Zen Mode)"
+        ],
+        "rows": [
+          "normal:555|https://www.serebii.net/pokemongo/pokemon/555-d.png|Darmanitan (Zen Mode)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 646,
+        "names": [
+          "Kyurem (Black Kyurem)"
+        ],
+        "rows": [
+          "normal:646|https://www.serebii.net/pokemongo/pokemon/646-b.png|Kyurem (Black Kyurem)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 646,
+        "names": [
+          "Kyurem (White Kyurem)"
+        ],
+        "rows": [
+          "normal:646|https://www.serebii.net/pokemongo/pokemon/646-w.png|Kyurem (White Kyurem)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 648,
+        "names": [
+          "Meloetta (Pirouette Forme)"
+        ],
+        "rows": [
+          "normal:648|https://www.serebii.net/pokemongo/pokemon/648-s.png|Meloetta (Pirouette Forme)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 649,
+        "names": [
+          "Genesect (Shock Drive)"
+        ],
+        "rows": [
+          "normal:649|https://www.serebii.net/pokemongo/pokemon/649-e.png|Genesect (Shock Drive)",
+          "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-e.png|Genesect (Shock Drive)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 649,
+        "names": [
+          "Genesect (Burn Drive)"
+        ],
+        "rows": [
+          "normal:649|https://www.serebii.net/pokemongo/pokemon/649-f.png|Genesect (Burn Drive)",
+          "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-f.png|Genesect (Burn Drive)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 649,
+        "names": [
+          "Genesect (Chill Drive)"
+        ],
+        "rows": [
+          "normal:649|https://www.serebii.net/pokemongo/pokemon/649-i.png|Genesect (Chill Drive)",
+          "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-i.png|Genesect (Chill Drive)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 649,
+        "names": [
+          "Genesect (Douse Drive)"
+        ],
+        "rows": [
+          "normal:649|https://www.serebii.net/pokemongo/pokemon/649-w.png|Genesect (Douse Drive)",
+          "shiny:649|https://www.serebii.net/pokemongo/pokemon/shiny/649-w.png|Genesect (Douse Drive)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 658,
+        "names": [
+          "Greninja (Ash-Greninja)"
+        ],
+        "rows": [
+          "normal:658|https://www.serebii.net/pokemongo/pokemon/658-a.png|Greninja (Ash-Greninja)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 670,
+        "names": [
+          "Floette (Blue Flower)"
+        ],
+        "rows": [
+          "normal:670|https://www.serebii.net/pokemongo/pokemon/670-b.png|Floette (Blue Flower)",
+          "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-b.png|Floette (Blue Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 670,
+        "names": [
+          "Floette (Eternal Flower)"
+        ],
+        "rows": [
+          "normal:670|https://www.serebii.net/pokemongo/pokemon/670-e.png|Floette (Eternal Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 670,
+        "names": [
+          "Floette (Orange Flower)"
+        ],
+        "rows": [
+          "normal:670|https://www.serebii.net/pokemongo/pokemon/670-o.png|Floette (Orange Flower)",
+          "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-o.png|Floette (Orange Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 670,
+        "names": [
+          "Floette (White Flower)"
+        ],
+        "rows": [
+          "normal:670|https://www.serebii.net/pokemongo/pokemon/670-w.png|Floette (White Flower)",
+          "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-w.png|Floette (White Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 670,
+        "names": [
+          "Floette (Yellow Flower)"
+        ],
+        "rows": [
+          "normal:670|https://www.serebii.net/pokemongo/pokemon/670-y.png|Floette (Yellow Flower)",
+          "shiny:670|https://www.serebii.net/pokemongo/pokemon/shiny/670-y.png|Floette (Yellow Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 671,
+        "names": [
+          "Florges (Blue Flower)"
+        ],
+        "rows": [
+          "normal:671|https://www.serebii.net/pokemongo/pokemon/671-b.png|Florges (Blue Flower)",
+          "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-b.png|Florges (Blue Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 671,
+        "names": [
+          "Florges (Orange Flower)"
+        ],
+        "rows": [
+          "normal:671|https://www.serebii.net/pokemongo/pokemon/671-o.png|Florges (Orange Flower)",
+          "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-o.png|Florges (Orange Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 671,
+        "names": [
+          "Florges (White Flower)"
+        ],
+        "rows": [
+          "normal:671|https://www.serebii.net/pokemongo/pokemon/671-w.png|Florges (White Flower)",
+          "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-w.png|Florges (White Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 671,
+        "names": [
+          "Florges (Yellow Flower)"
+        ],
+        "rows": [
+          "normal:671|https://www.serebii.net/pokemongo/pokemon/671-y.png|Florges (Yellow Flower)",
+          "shiny:671|https://www.serebii.net/pokemongo/pokemon/shiny/671-y.png|Florges (Yellow Flower)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 678,
+        "names": [
+          "Meowstic (Female)"
+        ],
+        "rows": [
+          "normal:678|https://www.serebii.net/pokemongo/pokemon/678-f.png|Meowstic (Female)",
+          "shiny:678|https://www.serebii.net/pokemongo/pokemon/shiny/678-f.png|Meowstic (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "represented-gender-option-exact-route-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 681,
+        "names": [
+          "Aegislash (Blade Forme)"
+        ],
+        "rows": [
+          "normal:681|https://www.serebii.net/pokemongo/pokemon/681-b.png|Aegislash (Blade Forme)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 681,
+        "names": [
+          "Aegislash"
+        ],
+        "rows": [
+          "normal:681|https://www.serebii.net/pokemongo/pokemon/681.png|Aegislash",
+          "shiny:681|https://www.serebii.net/pokemongo/pokemon/shiny/681.png|Aegislash"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 711,
+        "names": [
+          "Gourgeist"
+        ],
+        "rows": [
+          "normal:711|https://www.serebii.net/pokemongo/pokemon/711.png|Gourgeist",
+          "shiny:711|https://www.serebii.net/pokemongo/pokemon/shiny/711.png|Gourgeist"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "existing-canonical-default-or-year-ambiguity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 745,
+        "names": [
+          "Lycanroc (Dusk Form)"
+        ],
+        "rows": [
+          "normal:745|https://www.serebii.net/pokemongo/pokemon/745-d.png|Lycanroc (Dusk Form)",
+          "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745-d.png|Lycanroc (Dusk Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 745,
+        "names": [
+          "Lycanroc (Midnight Form)"
+        ],
+        "rows": [
+          "normal:745|https://www.serebii.net/pokemongo/pokemon/745-m.png|Lycanroc (Midnight Form)",
+          "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745-m.png|Lycanroc (Midnight Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 745,
+        "names": [
+          "Lycanroc"
+        ],
+        "rows": [
+          "normal:745|https://www.serebii.net/pokemongo/pokemon/745.png|Lycanroc",
+          "shiny:745|https://www.serebii.net/pokemongo/pokemon/shiny/745.png|Lycanroc"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Blue Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-b.png|Minior (Blue Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Indigo Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-i.png|Minior (Indigo Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Orange Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-o.png|Minior (Orange Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Red Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-r.png|Minior (Red Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Violet Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-v.png|Minior (Violet Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 774,
+        "names": [
+          "Minior (Yellow Core)"
+        ],
+        "rows": [
+          "normal:774|https://www.serebii.net/pokemongo/pokemon/774-y.png|Minior (Yellow Core)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 800,
+        "names": [
+          "Ultra Necrozma"
+        ],
+        "rows": [
+          "normal:800|https://www.serebii.net/pokemongo/pokemon/800-u.png|Ultra Necrozma"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 801,
+        "names": [
+          "Magearna (Original Color)"
+        ],
+        "rows": [
+          "normal:801|https://www.serebii.net/pokemongo/pokemon/801-o.png|Magearna (Original Color)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 834,
+        "names": [
+          "Drednaw"
+        ],
+        "rows": [
+          "normal:834|https://www.serebii.net/pokemongo/pokemon/834.png|Drednaw"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 844,
+        "names": [
+          "Sandaconda"
+        ],
+        "rows": [
+          "normal:844|https://www.serebii.net/pokemongo/pokemon/844.png|Sandaconda"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 853,
+        "names": [
+          "Grapploct"
+        ],
+        "rows": [
+          "normal:853|https://www.serebii.net/pokemongo/pokemon/853.png|Grapploct"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 869,
+        "names": [
+          "Alcremie"
+        ],
+        "rows": [
+          "normal:869|https://www.serebii.net/pokemongo/pokemon/869.png|Alcremie"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 875,
+        "names": [
+          "Eiscue (Noice Face)"
+        ],
+        "rows": [
+          "normal:875|https://www.serebii.net/pokemongo/pokemon/875-n.png|Eiscue (Noice Face)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 876,
+        "names": [
+          "Indeedee (Female)"
+        ],
+        "rows": [
+          "normal:876|https://www.serebii.net/pokemongo/pokemon/876-f.png|Indeedee (Female)",
+          "shiny:876|https://www.serebii.net/pokemongo/pokemon/shiny/876-f.png|Indeedee (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "represented-gender-option-exact-route-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 877,
+        "names": [
+          "Morpeko (Hangry Mode)"
+        ],
+        "rows": [
+          "normal:877|https://www.serebii.net/pokemongo/pokemon/877-h.png|Morpeko (Hangry Mode)",
+          "shiny:877|https://www.serebii.net/pokemongo/pokemon/shiny/877-h.png|Morpeko (Hangry Mode)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "battle-or-transformation-eligibility-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 879,
+        "names": [
+          "Copperajah"
+        ],
+        "rows": [
+          "normal:879|https://www.serebii.net/pokemongo/pokemon/879.png|Copperajah"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 901,
+        "names": [
+          "Ursaluna (Bloodmoon)"
+        ],
+        "rows": [
+          "normal:901|https://www.serebii.net/pokemongo/pokemon/901-b.png|Ursaluna (Bloodmoon)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 902,
+        "names": [
+          "Basculegion (Female)"
+        ],
+        "rows": [
+          "normal:902|https://www.serebii.net/pokemongo/pokemon/902-f.png|Basculegion (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 902,
+        "names": [
+          "Basculegion"
+        ],
+        "rows": [
+          "normal:902|https://www.serebii.net/pokemongo/pokemon/902.png|Basculegion"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 916,
+        "names": [
+          "Oinkologne (Female)"
+        ],
+        "rows": [
+          "normal:916|https://www.serebii.net/pokemongo/pokemon/916-f.png|Oinkologne (Female)",
+          "shiny:916|https://www.serebii.net/pokemongo/pokemon/shiny/916-f.png|Oinkologne (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "represented-gender-option-exact-route-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 925,
+        "names": [
+          "Maushold (Family of Four)"
+        ],
+        "rows": [
+          "normal:925|https://www.serebii.net/pokemongo/pokemon/925-f.png|Maushold (Family of Four)",
+          "shiny:925|https://www.serebii.net/pokemongo/pokemon/shiny/925-f.png|Maushold (Family of Four)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 925,
+        "names": [
+          "Maushold"
+        ],
+        "rows": [
+          "normal:925|https://www.serebii.net/pokemongo/pokemon/925.png|Maushold",
+          "shiny:925|https://www.serebii.net/pokemongo/pokemon/shiny/925.png|Maushold"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 941,
+        "names": [
+          "Kilowattrel"
+        ],
+        "rows": [
+          "normal:941|https://www.serebii.net/pokemongo/pokemon/941.png|Kilowattrel"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 943,
+        "names": [
+          "Mabosstiff"
+        ],
+        "rows": [
+          "normal:943|https://www.serebii.net/pokemongo/pokemon/943.png|Mabosstiff"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 947,
+        "names": [
+          "Brambleghast"
+        ],
+        "rows": [
+          "normal:947|https://www.serebii.net/pokemongo/pokemon/947.png|Brambleghast"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 952,
+        "names": [
+          "Scovillain"
+        ],
+        "rows": [
+          "normal:952|https://www.serebii.net/pokemongo/pokemon/952.png|Scovillain"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 954,
+        "names": [
+          "Rabsca"
+        ],
+        "rows": [
+          "normal:954|https://www.serebii.net/pokemongo/pokemon/954.png|Rabsca"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 964,
+        "names": [
+          "Palafin (Hero Form)"
+        ],
+        "rows": [
+          "normal:964|https://www.serebii.net/pokemongo/pokemon/964-h.png|Palafin (Hero Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 964,
+        "names": [
+          "Palafin"
+        ],
+        "rows": [
+          "normal:964|https://www.serebii.net/pokemongo/pokemon/964.png|Palafin"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 970,
+        "names": [
+          "Glimmora"
+        ],
+        "rows": [
+          "normal:970|https://www.serebii.net/pokemongo/pokemon/970.png|Glimmora"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 978,
+        "names": [
+          "Tatsugiri"
+        ],
+        "rows": [
+          "normal:978|https://www.serebii.net/pokemongo/pokemon/978.png|Tatsugiri"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "existing-canonical-default-or-year-ambiguity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 981,
+        "names": [
+          "Farigiraf"
+        ],
+        "rows": [
+          "normal:981|https://www.serebii.net/pokemongo/pokemon/981.png|Farigiraf"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+        ],
+        "releaseStates": [
+          "uncertain"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 982,
+        "names": [
+          "Dudunsparce"
+        ],
+        "rows": [
+          "normal:982|https://www.serebii.net/pokemongo/pokemon/982.png|Dudunsparce",
+          "shiny:982|https://www.serebii.net/pokemongo/pokemon/shiny/982.png|Dudunsparce"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 169,
+        "names": [
+          "Crobat (Top hat)"
+        ],
+        "rows": [
+          "shiny:169|https://www.serebii.net/pokemongo/pokemon/shiny/169-tophat.png|Crobat (Top hat)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 25,
+        "names": [
+          "Pikachu (Holidays)"
+        ],
+        "rows": [
+          "shiny:25|https://www.serebii.net/pokemongo/pokemon/shiny/025-holidays2023.png|Pikachu (Holidays)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "existing-canonical-default-or-year-ambiguity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 42,
+        "names": [
+          "Golbat (Top hat)"
+        ],
+        "rows": [
+          "shiny:42|https://www.serebii.net/pokemongo/pokemon/shiny/042-tophat.png|Golbat (Top hat)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 555,
+        "names": [
+          "Darmanitan (Galarian Form)"
+        ],
+        "rows": [
+          "shiny:555|https://www.serebii.net/pokemongo/pokemon/shiny/555-g.png|Darmanitan (Galarian Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 586,
+        "names": [
+          "Sawsbuck (Autumn Form)"
+        ],
+        "rows": [
+          "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-a.png|Sawsbuck (Autumn Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 586,
+        "names": [
+          "Sawsbuck (Summer Form)"
+        ],
+        "rows": [
+          "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-s.png|Sawsbuck (Summer Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 586,
+        "names": [
+          "Sawsbuck (Winter Form)"
+        ],
+        "rows": [
+          "shiny:586|https://www.serebii.net/pokemongo/pokemon/shiny/586-w.png|Sawsbuck (Winter Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 592,
+        "names": [
+          "Frillish (Female)"
+        ],
+        "rows": [
+          "shiny:592|https://www.serebii.net/pokemongo/pokemon/shiny/592-f.png|Frillish (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "represented-gender-option-exact-route-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 593,
+        "names": [
+          "Jellicent (Female)"
+        ],
+        "rows": [
+          "shiny:593|https://www.serebii.net/pokemongo/pokemon/shiny/593-f.png|Jellicent (Female)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "represented-gender-option-exact-route-review",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 79,
+        "names": [
+          "Slowpoke (Cowboy)"
+        ],
+        "rows": [
+          "shiny:79|https://www.serebii.net/pokemongo/pokemon/shiny/079-cowboy.png|Slowpoke (Cowboy)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 854,
+        "names": [
+          "Sinistea (Antique Form)"
+        ],
+        "rows": [
+          "shiny:854|https://www.serebii.net/pokemongo/pokemon/shiny/854.png|Sinistea (Antique Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 855,
+        "names": [
+          "Polteageist (Halloween Bow - Antique Form)"
+        ],
+        "rows": [
+          "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855-bow.png|Polteageist (Halloween Bow - Antique Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 855,
+        "names": [
+          "Polteageist (Halloween Bow - Phony Form)"
+        ],
+        "rows": [
+          "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855-bow.png|Polteageist (Halloween Bow - Phony Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 855,
+        "names": [
+          "Polteageist (Antique Form)"
+        ],
+        "rows": [
+          "shiny:855|https://www.serebii.net/pokemongo/pokemon/shiny/855.png|Polteageist (Antique Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 94,
+        "names": [
+          "Gengar (Tricks & Treats)"
+        ],
+        "rows": [
+          "shiny:94|https://www.serebii.net/pokemongo/pokemon/shiny/094-halloween2023.png|Gengar (Tricks & Treats)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "existing-canonical-default-or-year-ambiguity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      },
+      {
+        "no": 982,
+        "names": [
+          "Dudunsparce (Three-Segment Form)"
+        ],
+        "rows": [
+          "shiny:982|https://www.serebii.net/pokemongo/pokemon/shiny/982-t.png|Dudunsparce (Three-Segment Form)"
+        ],
+        "sources": [
+          "https://www.serebii.net/pokemongo/shiny.shtml"
+        ],
+        "releaseStates": [
+          "released-source-claim"
+        ],
+        "category": "missing-canonical-identity",
+        "qualification": "Canonical presence comparison only. Source release claims are not independently confirmed release. Optional gender options do not prove exact sprite routes."
+      }
+    ]
+  }
 }

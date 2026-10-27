@@ -1004,6 +1004,82 @@
       },
       "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
       "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "no": 10239,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10239.png",
+      "observedAt": "2026-10-27T07:20:01.319929+00:00",
+      "http": 200,
+      "sha256": "a21e596d0e1d9572cc3fed5a4088afdfd8f4feb6b12676c80b7fea630e9a1d4b",
+      "gitBlobSha": "948e53fb9fa9624b239c70c7f7a33826aca6c2b2",
+      "bytes": 124648,
+      "path": "10239.png",
+      "asset": "proposals/catalogue-art-review/10239.png",
+      "decoded": {
+        "status": "decoded",
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 69544,
+        "pixelHash": "548fbde7"
+      },
+      "qualification": "Original cached exact Hisuian form image; original visually inspected. Art availability does not establish Shiny release."
+    },
+    {
+      "no": 10239,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10239.png",
+      "observedAt": "2026-10-27T07:20:01.319929+00:00",
+      "http": 200,
+      "sha256": "c0be797d2392acd4ff12a5712697407e6a57a639a114a7a947e53dc583df8880",
+      "gitBlobSha": "e6ce680e4ad7017f0adffde2a4ddbb51c8ce2794",
+      "bytes": 130123,
+      "path": "shiny-10239.png",
+      "asset": "proposals/catalogue-art-review/shiny-10239.png",
+      "decoded": {
+        "status": "decoded",
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 69557,
+        "pixelHash": "d27761fb"
+      },
+      "qualification": "Original cached exact Hisuian form image; original visually inspected. Art availability does not establish Shiny release."
+    },
+    {
+      "no": 10242,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10242.png",
+      "observedAt": "2026-10-27T07:20:01.319929+00:00",
+      "http": 200,
+      "sha256": "47f2f9f14c02c59420c34e18eb3990d9cb4dfd44856cfc4b888d43dc3ecdb08f",
+      "gitBlobSha": "bb76cd99f1b87a5f32a0bbe47319b2ccf853a425",
+      "bytes": 150152,
+      "path": "10242.png",
+      "asset": "proposals/catalogue-art-review/10242.png",
+      "decoded": {
+        "status": "decoded",
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 97924,
+        "pixelHash": "e65a86f8"
+      },
+      "qualification": "Original cached exact Hisuian form image; original visually inspected. Art availability does not establish Shiny release."
+    },
+    {
+      "no": 10242,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10242.png",
+      "observedAt": "2026-10-27T07:20:01.319929+00:00",
+      "http": 200,
+      "sha256": "1c83cb6b09ab9554c1718b2a23d2f7c74b57e9fd9021a44e9e70b436e74f0042",
+      "gitBlobSha": "9b298ef620d2a84a7b464ba9754e0f4c9e90c97f",
+      "bytes": 148995,
+      "path": "shiny-10242.png",
+      "asset": "proposals/catalogue-art-review/shiny-10242.png",
+      "decoded": {
+        "status": "decoded",
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 97935,
+        "pixelHash": "add6e0a"
+      },
+      "qualification": "Original cached exact Hisuian form image; original visually inspected. Art availability does not establish Shiny release."
     }
   ]
 }

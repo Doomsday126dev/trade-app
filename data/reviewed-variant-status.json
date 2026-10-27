@@ -304,6 +304,72 @@
         "eventStart": "2026-11-01T10:00:00-local",
         "qualification": "Related evolution-family announcement; not direct Houndstone Shiny evidence. Keep Houndstone Shiny unverified pending confirmation, preserve artwork access and wants."
       }
+    },
+    {
+      "category": "costume",
+      "no": 25,
+      "name": "Pikachu (PokeXciting Taiwan)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/event-apac-30th-anniversary-2026"
+      ],
+      "artEvidence": "data/dittobase-reviewed-costume-assets.json",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
+    },
+    {
+      "category": "costume",
+      "no": 25,
+      "name": "Pikachu (PokeXciting Philippines)",
+      "normal": "announced",
+      "shiny": "announced",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/event-apac-30th-anniversary-2026"
+      ],
+      "artEvidence": "data/dittobase-reviewed-costume-assets.json",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
+    },
+    {
+      "category": "form",
+      "artId": 10239,
+      "no": 571,
+      "name": "H-Zoroark",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "optionalGenderState": "not-qualified; default exact art only, not a genderless assertion",
+      "releaseEvidence": [
+        "https://pokemongo.com/news/ultra-unlock-hisui"
+      ],
+      "artEvidence": "data/catalogue-art-checks.json",
+      "reviewedAt": "2026-10-27T10:16:04.042331+00:00",
+      "qualification": "Previously held and independently verified exact form. Shiny release remains unverified and wants remain selectable. Default normal/Shiny form images only; saved optional gender choices preserved."
+    },
+    {
+      "category": "form",
+      "artId": 10242,
+      "no": 706,
+      "name": "H-Goodra",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "optionalGenderState": "not-qualified; default exact art only, not a genderless assertion",
+      "releaseEvidence": [
+        "https://pokemongo.com/gowildarea/sendai/gameplay"
+      ],
+      "artEvidence": "data/catalogue-art-checks.json",
+      "reviewedAt": "2026-10-27T10:16:04.042331+00:00",
+      "qualification": "Previously held and independently verified exact form. Shiny release remains unverified and wants remain selectable. Default normal/Shiny form images only; saved optional gender choices preserved."
     }
   ]
 }

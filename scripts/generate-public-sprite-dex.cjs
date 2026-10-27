@@ -58,9 +58,17 @@ function sourceRows(){
   }))];
   const eligibility=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-variant-status.json'),'utf8'));
   if(eligibility.schemaVersion!==1||!Array.isArray(eligibility.records))throw Error('Invalid reviewed variant eligibility');
-  const seen=new Set();for(const row of eligibility.records){const name=normalize(row.name),entry=byName.get(name);if(seen.has(name)||!entry||entry.no!==row.no||row.normal!=='released'||!['released','unverified','announced'].includes(row.shiny)||!row.releaseEvidence?.length||(!Array.isArray(row.genders)||row.genders.some(g=>!['f','m'].includes(g))||new Set(row.genders).size!==row.genders.length))throw Error('Incomplete or conflicting variant eligibility: '+row.name);seen.add(name);}
+  const seen=new Set();for(const row of eligibility.records){const name=normalize(row.name),entry=byName.get(name);if(seen.has(name)||!entry||entry.no!==row.no||!['released','announced','unverified'].includes(row.normal)||row.category&&!['costume','form'].includes(row.category)||!['released','unverified','announced'].includes(row.shiny)||!row.releaseEvidence?.length||(!Array.isArray(row.genders)||row.genders.some(g=>!['f','m'].includes(g))||new Set(row.genders).size!==row.genders.length))throw Error('Incomplete or conflicting variant eligibility: '+row.name);seen.add(name);}
   const artChecks=JSON.parse(fs.readFileSync(path.join(root,'data/catalogue-art-checks.json'),'utf8')).records;
-  for(const row of eligibility.records)for(const shiny of [false,true])if(!artChecks.some(proof=>proof.no===row.no&&proof.shiny===shiny&&!proof.gender&&proof.status==='verified-bytes'&&proof.decoded&&/^[0-9a-f]{64}$/.test(proof.sha256||'')))throw Error('Reviewed variant lacks exact decoded art proof: '+row.name);
+  const reviewedCostumes=JSON.parse(fs.readFileSync(path.join(root,'data/costume-sprite-catalog.json'),'utf8'));
+  require('./sprites/costume-sprite-catalog-lib.cjs').validateCatalog(reviewedCostumes,root);
+  const staged=JSON.parse(fs.readFileSync(path.join(root,'data/catalogue-sources/staged-art.json'),'utf8')).records;
+  for(const row of eligibility.records){
+    if(row.category==='costume'){
+      const exact=reviewedCostumes.entries.find(entry=>entry.no===row.no&&entry.names[0]===row.name&&entry.status==='exact');
+      if(!exact||['default','shiny','female','femaleShiny'].some(key=>!exact.sha256[key]||!staged.some(proof=>proof.sha256===exact.sha256[key]&&proof.decoded?.status==='decoded')))throw Error('Reviewed costume lacks exact four-variant proof: '+row.name);
+    }else {if(row.category==='form'&&!JSON.parse(fs.readFileSync(path.join(root,'data/public-form-sprite-identities.json'),'utf8')).records.some(proof=>proof.id===row.artId&&proof.speciesId===row.no&&[proof.name,...proof.aliases||[]].includes(row.name)))throw Error('Unreviewed exact form status: '+row.name);for(const shiny of [false,true])if(!artChecks.some(proof=>proof.no===(row.artId||row.no)&&proof.shiny===shiny&&!proof.gender&&proof.status==='verified-bytes'&&proof.decoded&&/^[0-9a-f]{64}$/.test(proof.sha256||'')))throw Error('Reviewed variant lacks exact decoded art proof: '+row.name);}
+  }
   return{rows,dynamaxIndexes,eligibility:eligibility.records.map(({name,normal,shiny,genders})=>({name,normal,shiny,genders}))};
 }
 
