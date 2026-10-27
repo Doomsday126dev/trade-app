@@ -11,3 +11,9 @@ for(const shiny of [false,true])test('new exact variants select, persist and ren
 test('explicit years and styles coexist without reinterpreting saved ambiguous generic identities',async({page})=>{
  await normalFixture(page);const results=await page.evaluate(names=>({pool:_specialAllItems().filter(e=>names.includes(e.name)).map(e=>({name:e.name,id:e.catalogId})),generic:['Pikachu (Detective)','Urshifu (Gigantamax)'].map(name=>({name,shiny:Array.from(publicSpriteUrls(name,'',name.startsWith('Pikachu')?25:892,true))}))}),explicitNames);expect(results.pool).toHaveLength(5);expect(new Set(results.pool.map(r=>r.id)).size).toBe(5);for(const r of results.generic)expect(r.shiny).toEqual([]);await page.evaluate(()=>stopAccountSyncRuntime());
 });
+
+test('eleven nonnumeric legacy form filenames never precede their verified exact sources',async({page})=>{
+ await normalFixture(page);const rows=require('../data/catalogue-variant-route-review.json').otherForms;const actual=await page.evaluate(rows=>rows.map(r=>{const e={no:r.no,name:r.name};return{name:r.name,inline:entrySpriteUrl(e),public:Array.from(publicSpriteUrls(r.name,'',r.no)),export:exportSpriteFallbackUrls(e),list:new DOMParser().parseFromString(spriteImg(r.no,44,'',r.name),'text/html').querySelector('img')?.getAttribute('src')};}),rows);
+ for(const r of rows){const got=actual.find(x=>x.name===r.name);expect(got.inline).toBe(r.normal);expect(got.list).toBe(r.normal);expect(got.public[0]).toBe(r.normal);expect(got.export[0]).toContain(encodeURIComponent(r.normal.replace(/^https?:\/\//,'')));expect(got.export.some(u=>/other\/home\/(?:412-|421-|422-|585-|669-)/.test(u))).toBe(false);}
+ await page.evaluate(()=>stopAccountSyncRuntime());
+});

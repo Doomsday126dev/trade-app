@@ -104,7 +104,9 @@
     "gigantamaxExactModelMappings": 28,
     "scatterbugHomeRoutes": 18,
     "rockruffOwnTempoModel": 10151,
-    "cherrim": "sunny alias resolves to published sunshine assets; old 404 evidence preserved"
+    "cherrim": "sunny alias resolves to published sunshine assets; old 404 evidence preserved",
+    "fabricatedLegacyFormRoutesRemoved": 11,
+    "exportCorrection": "Remove eleven nonnumeric pseudo IDs from the legacy numeric map; preferred/list/public/export now choose the reviewed exact form source first, never HOME paths synthesized from a species-plus-suffix string."
   },
   "homeRows": [
     {
