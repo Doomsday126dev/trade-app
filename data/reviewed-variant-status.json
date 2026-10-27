@@ -297,7 +297,13 @@
         "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
         "genderRate": 4
       },
-      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "relatedAnnouncement": {
+        "url": "https://pokemongo.com/news/halloween-part-2-2026",
+        "claimedIdentity": "Shiny Greavard",
+        "eventStart": "2026-11-01T10:00:00-local",
+        "qualification": "Related evolution-family announcement; not direct Houndstone Shiny evidence. Keep Houndstone Shiny unverified pending confirmation, preserve artwork access and wants."
+      }
     }
   ]
 }
