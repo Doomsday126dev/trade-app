@@ -1,355 +1,715 @@
 {
   "schemaVersion": 1,
-  "qualification": "Successful serial .149 run and completed passing cases in serial .150 run; four-worker contention measurements excluded. Weights affect allocation only, never eligibility or timeouts.",
+  "qualification": "Passing single-worker cases from .149 and .150, including all 168 completed passing cases on isolated runners in run40448872423. Failed cases and four-worker contention measurements excluded. Weights affect allocation only, never eligibility or timeouts. New bounded identity groups use measured local CI-Chromium durations, explicitly labelled in each record.",
   "defaultSeconds": 12,
   "records": {
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › reviewed Max and Rockruff shared art works without private catalog data and never guesses a Gmax style": {
-      "seconds": 1.6,
-      "run": "40442299907"
+      "seconds": 2.1,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › all 27 pattern identities load through anonymous bootstrap and image failures cannot remove search species": {
-      "seconds": 2.4,
-      "run": "40442299907"
+      "seconds": 1.9,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › public section copy preserves priority, standalone requirements and distinct same-species wants": {
-      "seconds": 3.4,
-      "run": "40442299907"
+      "seconds": 4.2,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › one thousand public wants stay bounded and section copy includes entries beyond the visible page": {
-      "seconds": 7.1,
-      "run": "40442299907"
+      "seconds": 7.4,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › legacy FT remains inert while public wants copy is localized and scoped": {
-      "seconds": 1.9,
-      "run": "40442299907"
+      "seconds": 2.2,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › unprioritized special entries keep their meaning and friend-code copy needs no account": {
-      "seconds": 0.923,
-      "run": "40442299907"
+      "seconds": 0.735,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › viewer locale, category and clipboard behavior use the canonical search on the anonymous route": {
       "seconds": 2.3,
-      "run": "40442299907"
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › regional-form clipboard policy is independent of interface and Pokémon GO languages": {
-      "seconds": 2.1,
-      "run": "40442299907"
+      "seconds": 1.6,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › locale fallback and four responsive sizes preserve a usable public action": {
-      "seconds": 3.5,
-      "run": "40442299907"
+      "seconds": 2.9,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › empty categories offer no search and unknown entries never silently disappear from a query": {
-      "seconds": 0.954,
-      "run": "40442299907"
+      "seconds": 1.2,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › direct signed-out link renders only the public projection after App Check": {
-      "seconds": 1.1,
-      "run": "40442299907"
+      "seconds": 0.889,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › fresh visitor context and mobile viewport keep the public route independent of login": {
-      "seconds": 0.875,
-      "run": "40442299907"
+      "seconds": 0.848,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › provider-only public share resolves through the anonymous callable without Auth or RTDB fallback": {
-      "seconds": 0.838,
-      "run": "40442299907"
+      "seconds": 1.6,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › costume art stays exact and transparent-canvas sprites normalize without shifting cards": {
-      "seconds": 1.4,
-      "run": "40442299907"
+      "seconds": 1.7,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › invalid links fail publicly without requesting Firebase": {
-      "seconds": 0.759,
-      "run": "40442299907"
+      "seconds": 0.777,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › anonymous public share bootstrap › nonexistent public projections show a clean public empty state": {
-      "seconds": 0.774,
-      "run": "40442299907"
+      "seconds": 1.3,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › exact public listener updates, clears unavailable data and releases on pagehide": {
-      "seconds": 0.953,
-      "run": "40442299907"
+      "seconds": 0.999,
+      "run": "40448872423"
     },
     "tests/anonymous-public-share.spec.js › late initial rejection cannot erase a successful bfcache-resumed public view": {
-      "seconds": 0.858,
-      "run": "40442299907"
+      "seconds": 0.966,
+      "run": "40448872423"
     },
     "tests/gender-preference.spec.js › unspecified gender remains optional even when costume artwork is female-only": {
-      "seconds": 2.3,
-      "run": "40420356298"
+      "seconds": 3.8,
+      "run": "40448872423"
     },
     "tests/max-icon-preview.spec.js › actual list and canvas Max comparison": {
-      "seconds": 8.6,
-      "run": "40420356298"
+      "seconds": 13.2,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › legacy account preserves inert FT while wants edits and publication survive IndexedDB reopen": {
-      "seconds": 1.6,
-      "run": "40420356298"
+      "seconds": 2.3,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › wants editor saves and prioritizes through the existing canonical runtime": {
-      "seconds": 1.3,
-      "run": "40420356298"
+      "seconds": 3.5,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › normal product authority rejects broken identity and unresolved recovery without fallback writes": {
-      "seconds": 0.694,
-      "run": "40420356298"
+      "seconds": 1.2,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › canonical publication ignores unneeded legacy reads, reports failure and automatically retries before reload": {
-      "seconds": 3.3,
-      "run": "40420356298"
+      "seconds": 3.7,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › publication cannot follow an account switch while its activity transaction is pending": {
-      "seconds": 0.733,
-      "run": "40420356298"
+      "seconds": 0.744,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › stale offline profile edit and old queued replay cannot overwrite canonical activity": {
-      "seconds": 0.681,
-      "run": "40420356298"
+      "seconds": 0.934,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › auth binding preserves the newer server activity summary": {
-      "seconds": 0.692,
-      "run": "40420356298"
+      "seconds": 0.745,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › a delayed legacy public queue cannot overwrite a newer canonical publication": {
-      "seconds": 1.2,
-      "run": "40420356298"
+      "seconds": 1.5,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › canonical public queue retains failed work and reports publication pending": {
-      "seconds": 0.707,
-      "run": "40420356298"
+      "seconds": 0.971,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › same-account runtime replacement recovers a held save without waiting for its old transport": {
-      "seconds": 1.0,
-      "run": "40420356298"
+      "seconds": 1.3,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › another device repairs the public list through the product allowlist": {
-      "seconds": 2.6,
-      "run": "40420356298"
+      "seconds": 2.8,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › late public write is reconciled after runtime-replaced": {
-      "seconds": 0.977,
-      "run": "40420356298"
+      "seconds": 1.3,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › late public write is reconciled after deadline-expired": {
-      "seconds": 0.774,
-      "run": "40420356298"
+      "seconds": 0.896,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › late-write observer handles settled deadline races and refuses another owner": {
-      "seconds": 0.697,
-      "run": "40420356298"
+      "seconds": 0.9420000000000001,
+      "run": "40448872423"
     },
     "tests/normal-sync-product.spec.js › sustained slow public acknowledgements converge without a rewrite loop and proof is one-use": {
-      "seconds": 1.6,
-      "run": "40420356298"
+      "seconds": 1.9,
+      "run": "40448872423"
     },
     "tests/recent-release-catalog.spec.js › independent release inventory is selectable and public Max identities are allowlisted": {
-      "seconds": 3.4,
-      "run": "40420356298"
+      "seconds": 3.7,
+      "run": "40448872423"
     },
     "tests/recent-release-catalog.spec.js › released identities add, persist, reload and share with exact costume and Max state false": {
-      "seconds": 7.1,
-      "run": "40420356298"
+      "seconds": 17.4,
+      "run": "40448872423"
     },
     "tests/recent-release-catalog.spec.js › released identities add, persist, reload and share with exact costume and Max state true": {
-      "seconds": 7.4,
-      "run": "40420356298"
+      "seconds": 19.1,
+      "run": "40448872423"
     },
     "tests/signed-in-boot-dependencies.spec.js › fresh Username/PIN login and restored authenticated session use the reduced graph": {
-      "seconds": 1.7,
-      "run": "40420356298"
+      "seconds": 2.2,
+      "run": "40448872423"
     },
     "tests/signed-in-boot-dependencies.spec.js › non-English feature loading retains translations without disabled modules": {
-      "seconds": 0.88,
-      "run": "40420356298"
+      "seconds": 0.864,
+      "run": "40448872423"
     },
     "tests/signed-in-boot-dependencies.spec.js › installed offline shell retains the independent public-route code without private application loading": {
-      "seconds": 0.788,
-      "run": "40420356298"
+      "seconds": 1.3,
+      "run": "40448872423"
     },
     "tests/trusted-readiness.spec.js › approved intent, More and Share paths preserve one canonical declaration view": {
-      "seconds": 7.0,
-      "run": "40420356298"
+      "seconds": 5.6,
+      "run": "40448872423"
     },
     "tests/trusted-readiness.spec.js › legacy editing retains originals and Board PNG consumes the deduplicated unified selection": {
-      "seconds": 3.8,
-      "run": "40420356298"
+      "seconds": 5,
+      "run": "40448872423"
     },
     "tests/trusted-readiness.spec.js › sharing feedback stays practical and copying never precedes verified publication": {
       "seconds": 3.4,
       "run": "40420356298"
     },
     "tests/trusted-readiness.spec.js › empty flag search sets never emit a prefilter-only search block": {
-      "seconds": 3.2,
-      "run": "40420356298"
+      "seconds": 3.8,
+      "run": "40448872423"
     },
     "tests/trusted-readiness.spec.js › safe owner journey covers the pre-trusted product contract": {
-      "seconds": 5.5,
-      "run": "40420356298"
+      "seconds": 7.9,
+      "run": "40448872423"
     },
     "tests/trusted-readiness.spec.js › priority surfaces preserve geometry at every supported viewport": {
-      "seconds": 5.3,
-      "run": "40420356298"
+      "seconds": 6,
+      "run": "40448872423"
     },
     "tests/apri-options.spec.js › approved options are legible, exact and optional at 390": {
-      "seconds": 5.2,
-      "run": "40442299907"
+      "seconds": 4.7,
+      "run": "40448872423"
     },
     "tests/apri-options.spec.js › approved options are legible, exact and optional at 820": {
       "seconds": 4.8,
-      "run": "40442299907"
+      "run": "40448872423"
     },
     "tests/apri-options.spec.js › approved options are legible, exact and optional at 1440": {
-      "seconds": 5.0,
-      "run": "40442299907"
+      "seconds": 5.3,
+      "run": "40448872423"
     },
     "tests/apri-options.spec.js › quick adds, name changes, explicit preference and edits save/reopen without changing optional gender": {
-      "seconds": 5.5,
-      "run": "40442299907"
+      "seconds": 4.4,
+      "run": "40448872423"
     },
     "tests/apri-options.spec.js › picker preserves composing input and optional empty-priority special wants": {
-      "seconds": 3.3,
-      "run": "40442299907"
+      "seconds": 2.7,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › Apri themes preserve 36-row list and tab layout at 390": {
-      "seconds": 6.7,
-      "run": "40442299907"
+      "seconds": 6.6,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › Apri themes preserve 36-row list and tab layout at 820": {
-      "seconds": 6.7,
-      "run": "40442299907"
+      "seconds": 7.2,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › Apri themes preserve 36-row list and tab layout at 1440": {
-      "seconds": 7.0,
-      "run": "40442299907"
+      "seconds": 10,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › Trainers distinguish direct lookup, saved demand, and publication time without extra reads": {
-      "seconds": 5.2,
-      "run": "40442299907"
+      "seconds": 5.5,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › populated trainer lookup opens the selected published list with keyboard and no owner writes": {
-      "seconds": 4.9,
-      "run": "40442299907"
+      "seconds": 5.6,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › event headline dedup retains exact forms, multiple identities and full details": {
       "seconds": 3.5,
-      "run": "40442299907"
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › day navigation, details, all events and load/error/offline states remain truthful": {
-      "seconds": 4.0,
-      "run": "40442299907"
+      "seconds": 4,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › theme contrast, system preference, reduced motion and keyboard More actions": {
-      "seconds": 6.1,
-      "run": "40442299907"
+      "seconds": 7.3,
+      "run": "40448872423"
     },
     "tests/apri-presentation.spec.js › high-density phone header and empty list remain clear": {
-      "seconds": 3.6,
-      "run": "40442299907"
+      "seconds": 4,
+      "run": "40448872423"
     },
     "tests/classic-pikachu-shiny-art.spec.js › all twelve Shiny costumes add and retain exact gendered art after reopen, with public rendering": {
-      "seconds": 21.7,
-      "run": "40442299907"
+      "seconds": 28.7,
+      "run": "40448872423"
     },
     "tests/classic-pikachu-shiny-art.spec.js › male Shiny and female-only safeguards use the exact renderer without normal fallback": {
-      "seconds": 1.7,
-      "run": "40442299907"
+      "seconds": 1.8,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › share scope controls output, selection persists across filtering and no data changes": {
-      "seconds": 1.6,
-      "run": "40442299907"
+      "seconds": 1.4,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › signed-in recipient sections preserve special wants and copy only that trainer’s complete section": {
-      "seconds": 1.9,
-      "run": "40442299907"
+      "seconds": 2.7,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › large signed-in recipient sections page cards while preserving the full search": {
-      "seconds": 1.4,
-      "run": "40442299907"
+      "seconds": 1.2,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › wants-only add is one canonical batch, failed save retains the draft": {
-      "seconds": 1.9,
-      "run": "40442299907"
+      "seconds": 1.5,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › unchanged rows retain keyboard focus and an open selection search stays scoped": {
-      "seconds": 0.975,
-      "run": "40442299907"
+      "seconds": 1.4,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › a remotely changed declaration blocks a stale editor without submitting mutations": {
-      "seconds": 1.9,
-      "run": "40442299907"
+      "seconds": 1.8,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › responsive navigation and editor fit": {
-      "seconds": 2.2,
-      "run": "40442299907"
+      "seconds": 2.8,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › every reviewed unavailable costume is absent from both active selectors": {
-      "seconds": 1.1,
-      "run": "40442299907"
+      "seconds": 1.2,
+      "run": "40448872423"
     },
     "tests/combined-intent-share.spec.js › image keeps missing art and long exact details without mutating selection": {
-      "seconds": 1.1,
-      "run": "40442299907"
+      "seconds": 1.4,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 0–20 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.3,
-      "run": "40442299907"
+      "seconds": 37.3,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 0–20 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 38.8,
-      "run": "40442299907"
+      "seconds": 38.1,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 20–40 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 37.1,
-      "run": "40442299907"
+      "seconds": 46.4,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 20–40 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 39.7,
-      "run": "40442299907"
+      "seconds": 49.3,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 40–60 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.9,
-      "run": "40442299907"
+      "seconds": 35.7,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 40–60 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 40.0,
-      "run": "40442299907"
+      "seconds": 39.3,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 60–80 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.8,
-      "run": "40442299907"
+      "seconds": 27.8,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 60–80 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 38.3,
-      "run": "40442299907"
+      "seconds": 30,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 80–100 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.2,
-      "run": "40442299907"
+      "seconds": 36.5,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 80–100 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 38.1,
-      "run": "40442299907"
+      "seconds": 48.6,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 100–120 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 35.9,
-      "run": "40442299907"
+      "seconds": 45.3,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 100–120 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 39.1,
-      "run": "40442299907"
+      "seconds": 30.8,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 120–140 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.5,
-      "run": "40442299907"
+      "seconds": 45.4,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 120–140 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 38.3,
-      "run": "40442299907"
+      "seconds": 38,
+      "run": "40448872423"
     },
     "tests/consolidated-shiny-art.spec.js › consolidated 140–160 normal costumes select valid genders, save/reload and render exact shared-list art": {
-      "seconds": 36.1,
-      "run": "40442299907"
+      "seconds": 28.5,
+      "run": "40448872423"
+    },
+    "tests/consolidated-shiny-art.spec.js › consolidated 140–160 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
+      "seconds": 38,
+      "run": "40448872423"
+    },
+    "tests/consolidated-shiny-art.spec.js › all 664 normal/Shiny and valid gender models decode with exact costume identity": {
+      "seconds": 20.7,
+      "run": "40448872423"
+    },
+    "tests/consolidated-shiny-art.spec.js › legacy invalid genders survive priority edit and reload; cancellation writes nothing": {
+      "seconds": 16,
+      "run": "40448872423"
+    },
+    "tests/costume-gender-cleanup.spec.js › localized dark dialogs preserve optional gender and copy the configured search": {
+      "seconds": 4.3,
+      "run": "40448872423"
+    },
+    "tests/costume20-shiny-art.spec.js › 20 normal costumes select valid genders, save/reload and render exact shared-list art": {
+      "seconds": 36.5,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › BROWSER-01 Settings history traverses sections and closes consistently": {
+      "seconds": 2.9,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-01 zoom-enabled effective narrow width keeps shell and Admin navigation operable": {
+      "seconds": 1.3,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-05 confirmed light-theme metadata meets text contrast": {
+      "seconds": 0.9500000000000001,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › dialog and account surfaces contain focus and restore their concrete opener": {
+      "seconds": 1.3,
+      "run": "40448872423"
+    },
+    "tests/events-current-source.spec.js › current public event source snapshot shows useful bonuses (en)": {
+      "seconds": 4.2,
+      "run": "40448872423"
+    },
+    "tests/events-details-control.spec.js › Details stays aligned and returns focus at 390px (en)": {
+      "seconds": 3.9,
+      "run": "40448872423"
+    },
+    "tests/evolution-costume-shiny-art.spec.js › both genders normal and Shiny decode with exact costume and no silent substitution": {
+      "seconds": 3.9,
+      "run": "40448872423"
+    },
+    "tests/halloween2026-art.spec.js › Halloween exact optional-gender selection persists and shared/canvas sprites decode true": {
+      "seconds": 7.5,
+      "run": "40448872423"
+    },
+    "tests/mobile-events-navigation.spec.js › Events is direct and selected at 390px without overflow or duplicate More action": {
+      "seconds": 4,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › priority and special sections preserve all semantic rows, qualifiers and compact actions": {
+      "seconds": 1.2,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › Combine searches combinations are explicit independent scopes, without repetitive variant guidance": {
+      "seconds": 1.4,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › unresolved-only wants cannot imply an empty list or a match-all query": {
+      "seconds": 0.923,
+      "run": "40448872423"
+    },
+    "tests/my-list-simplification.spec.js › Combine uses compact wrapping accessible toggles and unchanged independent union scopes": {
+      "seconds": 3.6,
+      "run": "40448872423"
+    },
+    "tests/priority-filter.spec.js › priority views count actual rows, preserve selected/full share scopes and update after canonical edits": {
+      "seconds": 3.1,
+      "run": "40448872423"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › existing unsupported saved Shiny is preserved on priority edit and only corrected explicitly": {
+      "seconds": 2.7,
+      "run": "40448872423"
+    },
+    "tests/starter-costume-shiny-art.spec.js › all ten normal costumes search/add/reload/public exact art": {
+      "seconds": 18.1,
+      "run": "40448872423"
+    },
+    "tests/costume20-shiny-art.spec.js › 20 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
+      "seconds": 49.5,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-02 public Settings controls render 48px targets and visible keyboard focus": {
+      "seconds": 3.3,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › BROWSER-02 keyboard focus order stays on visible shell and Settings controls": {
+      "seconds": 1.6,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-06 both Pokémon comboboxes expose and clear active options with keyboard input": {
+      "seconds": 3.1,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › standalone-style browser contexts keep compatibility storage isolated": {
+      "seconds": 1.4,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › fieldless sync conflicts expose only canonical saved-copy acceptance": {
+      "seconds": 1.4,
+      "run": "40448872423"
+    },
+    "tests/events-current-source.spec.js › current public event source snapshot shows useful bonuses (ja)": {
+      "seconds": 4.9,
+      "run": "40448872423"
+    },
+    "tests/events-details-control.spec.js › Details stays aligned and returns focus at 390px (ja)": {
+      "seconds": 4.4,
+      "run": "40448872423"
+    },
+    "tests/halloween2026-art.spec.js › anonymous Halloween forms retain exact gender art and private-read boundary false": {
+      "seconds": 1.3,
+      "run": "40448872423"
+    },
+    "tests/list-row-polish.spec.js › 48-entry list is continuous with reachable edit/remove and comfortable targets": {
+      "seconds": 5.1,
+      "run": "40448872423"
+    },
+    "tests/mobile-events-navigation.spec.js › Events is direct and selected at 700px without overflow or duplicate More action": {
+      "seconds": 4.6,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › priority edit moves the canonical normal want and its exact alias without mutating Lucky": {
+      "seconds": 2.9,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › editor cancellation preserves the list and clipboard failure opens only that section for manual recovery": {
+      "seconds": 1.9,
+      "run": "40448872423"
+    },
+    "tests/my-list-simplification.spec.js › 48 variant-heavy High wants have direct copies and optional tools at desktop, mobile and narrow widths": {
+      "seconds": 2.4,
+      "run": "40448872423"
+    },
+    "tests/my-list-simplification.spec.js › Find opens focused, preserves full copies through no matches and collapse, and closes without hidden filtering": {
+      "seconds": 2.8,
+      "run": "40448872423"
+    },
+    "tests/released-costume-art.spec.js › add, server acknowledgement, reopen and public projection preserve nine exact identities and Shiny flags": {
+      "seconds": 13,
+      "run": "40448872423"
+    },
+    "tests/released-form-shiny-art.spec.js › all normal/Shiny form models decode with exact form and legitimate gender sharing": {
+      "seconds": 5.8,
+      "run": "40448872423"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › unreleased Shiny and unspecified Detective year stay blocked while ordinary choices recover": {
+      "seconds": 5,
+      "run": "40448872423"
+    },
+    "tests/settings-direct-profile-return.spec.js › mobile direct Profile returns to Settings sections and browser Back/Forward remains coherent": {
+      "seconds": 4.3,
+      "run": "40448872423"
+    },
+    "tests/starter-costume-shiny-art.spec.js › all ten Shiny costumes search/add/reload/public exact art": {
+      "seconds": 24.5,
+      "run": "40448872423"
+    },
+    "tests/trusted-readiness.spec.js › publication state is persistent and copying never precedes confirmed publication": {
+      "seconds": 4.1,
+      "run": "40448872423"
+    },
+    "tests/consolidated-shiny-art.spec.js › consolidated 160–173 Shiny costumes select valid genders, save/reload and render exact shared-list art": {
+      "seconds": 20.3,
+      "run": "40448872423"
+    },
+    "tests/costume-gender-cleanup.spec.js › gender picker restricts only reviewed costumes; cancellation writes nothing; exact images decode": {
+      "seconds": 2.3,
+      "run": "40448872423"
+    },
+    "tests/costume-gender-cleanup.spec.js › Share has one explicit search Copy action, format switch and working keyboard/cancel; requirements retain inline validation": {
+      "seconds": 4,
+      "run": "40448872423"
+    },
+    "tests/costume-pikachu.spec.js › released costume search, actual add, canonical acknowledgement, reopen and public output": {
+      "seconds": 4.2,
+      "run": "40448872423"
+    },
+    "tests/costume20-shiny-art.spec.js › legacy invalid genders survive priority edit and reload; cancellation writes nothing": {
+      "seconds": 4.9,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › BROWSER-01 mobile history returns to the Settings landing before leaving": {
+      "seconds": 1.4,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › BROWSER-02 representative navigation, autocomplete, and Admin focus stays visible": {
+      "seconds": 1.3,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-04 and A11Y-06 Login, skip navigation, and request access are keyboard semantic": {
+      "seconds": 1.1,
+      "run": "40448872423"
+    },
+    "tests/events-category-filter.spec.js › visible selected day stays selected when filtering; all upcoming remains available": {
+      "seconds": 3.9,
+      "run": "40448872423"
+    },
+    "tests/events-details-control.spec.js › Details stays aligned and returns focus at 1440px (en)": {
+      "seconds": 3.7,
+      "run": "40448872423"
+    },
+    "tests/evolution-costume-shiny-art.spec.js › 28 normal/male costumes search/save/reload/public exact art": {
+      "seconds": 38.1,
+      "run": "40448872423"
+    },
+    "tests/halloween2026-art.spec.js › anonymous Halloween forms retain exact gender art and private-read boundary true": {
+      "seconds": 0.847,
+      "run": "40448872423"
+    },
+    "tests/list-row-polish.spec.js › canonical-name picker keeps alias matching, pointer, keyboard and composition behavior": {
+      "seconds": 4.7,
+      "run": "40448872423"
+    },
+    "tests/mobile-events-navigation.spec.js › Events is direct and selected at 701px without overflow or duplicate More action": {
+      "seconds": 3.7,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › new special wants save without priority; new normal wants require classification and existing legacy is preserved": {
+      "seconds": 4.8,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › responsive rows, selection and Combine searches tools fit 1440, 390 and 320 in both themes": {
+      "seconds": 2.9,
+      "run": "40448872423"
+    },
+    "tests/my-list-simplification.spec.js › About searches is optional and Import still opens the existing preview flow": {
+      "seconds": 1.2,
+      "run": "40448872423"
+    },
+    "tests/my-list-simplification.spec.js › real omissions name excluded entries, split queries remain bounded, and failed copy selects the exact part": {
+      "seconds": 1.2,
+      "run": "40448872423"
+    },
+    "tests/released-costume-art.spec.js › all nine released costumes are searchable and exact normal/Shiny/gender sprites decode in actual list renderer": {
+      "seconds": 4,
+      "run": "40448872423"
+    },
+    "tests/share-integrity-browser.spec.js › Groups reports a partial removal among same-identity notes": {
+      "seconds": 0.8140000000000001,
+      "run": "40448872423"
+    },
+    "tests/starter-costume-shiny-art.spec.js › normal/Shiny renderer uses exact shared models for both genders, with no cross-costume fallback": {
+      "seconds": 1.7,
+      "run": "40448872423"
+    },
+    "tests/consolidated-shiny-art.spec.js › consolidated 160–173 normal costumes select valid genders, save/reload and render exact shared-list art": {
+      "seconds": 23.7,
+      "run": "40448872423"
+    },
+    "tests/costume-gender-cleanup.spec.js › picker has unique canonical names and invisible searchable aliases": {
+      "seconds": 3.6,
+      "run": "40448872423"
+    },
+    "tests/costume-gender-cleanup.spec.js › existing invalid saved gender stays selected and unchanged through priority edit; explicit correction is required": {
+      "seconds": 3.8,
+      "run": "40448872423"
+    },
+    "tests/costume20-shiny-art.spec.js › all 72 normal/Shiny and valid gender models decode with exact costume identity": {
+      "seconds": 3.2,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › BROWSER-02 signed-out Settings restores the concrete opener on Escape": {
+      "seconds": 1.2,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › A11Y-03 feedback stays bounded, polite, focus-safe, and operable": {
+      "seconds": 1.5,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › account sync recovery is keyboard operable and exposes only a bounded mobile diagnostic": {
+      "seconds": 1.2,
+      "run": "40448872423"
+    },
+    "tests/cross-browser-accessibility.spec.js › audit cross-browser contracts › projection-incomplete preserved review exposes restart before saved-copy review": {
+      "seconds": 0.9580000000000001,
+      "run": "40448872423"
+    },
+    "tests/events-current-source.spec.js › cold start source outage keeps dated bundled facts and a stale status": {
+      "seconds": 3.7,
+      "run": "40448872423"
+    },
+    "tests/events-details-control.spec.js › Details stays aligned and returns focus at 1440px (ja)": {
+      "seconds": 4,
+      "run": "40448872423"
+    },
+    "tests/evolution-costume-shiny-art.spec.js › 28 Shiny/female costumes search/save/reload/public exact art": {
+      "seconds": 52,
+      "run": "40448872423"
+    },
+    "tests/halloween2026-art.spec.js › Halloween exact optional-gender selection persists and shared/canvas sprites decode false": {
+      "seconds": 7.1,
+      "run": "40448872423"
+    },
+    "tests/list-row-polish.spec.js › More heading has spacing and Events status distinguishes saved from live data quietly": {
+      "seconds": 3.8,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › per-section Copy Search stays full-section across filtering, collapse and search locale changes": {
+      "seconds": 3.7,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › selection is contextual, survives filters, and copies/shares only selected declarations": {
+      "seconds": 1.6,
+      "run": "40448872423"
+    },
+    "tests/my-list-priority-workflow.spec.js › classified wants cannot become legacy; genuine legacy edits persist and classification removes the maintenance section": {
+      "seconds": 3,
+      "run": "40448872423"
+    },
+    "tests/priority-filter.spec.js › priority selection is local to account, all includes unprioritized rows, empty choices remain usable": {
+      "seconds": 3.8,
+      "run": "40448872423"
+    },
+    "tests/released-costume-art.spec.js › quick-add advanced editor initializes reviewed gender choices after prefill and preserves cancellation": {
+      "seconds": 4.6,
+      "run": "40448872423"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › every reviewed Shiny costume/gender renders its exact local bytes": {
+      "seconds": 4.8,
+      "run": "40448872423"
+    },
+    "tests/released-form-shiny-art.spec.js › 47 exact forms select, save Shiny, reload and render publicly without form crossover — group 1": {
+      "seconds": 15.9,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-all-shard-failures-targeted.log"
+    },
+    "tests/released-form-shiny-art.spec.js › 47 exact forms select, save Shiny, reload and render publicly without form crossover — group 2": {
+      "seconds": 15.8,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-all-shard-failures-targeted.log"
+    },
+    "tests/released-form-shiny-art.spec.js › 47 exact forms select, save Shiny, reload and render publicly without form crossover — group 3": {
+      "seconds": 14.7,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-all-shard-failures-targeted.log"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group 1": {
+      "seconds": 15.3,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-final-scoped-recovery.log"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group 2": {
+      "seconds": 15.3,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-final-scoped-recovery.log"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group 3": {
+      "seconds": 15.2,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-final-scoped-recovery.log"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group 4": {
+      "seconds": 15.1,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-final-scoped-recovery.log"
+    },
+    "tests/remaining-pikachu-shiny-art.spec.js › all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group 5": {
+      "seconds": 12.8,
+      "evidence": "Local actual CI Chromium configuration, one worker; trade150-final-scoped-recovery.log"
     }
   }
 }

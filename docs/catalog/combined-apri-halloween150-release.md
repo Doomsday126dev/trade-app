@@ -1,6 +1,6 @@
 # Combined Apri / Halloween .150 preparation
 
-Runtime: `0e474feb24e5d43f85b64d533acc340a70332c57` (`release/apri-halloween150-runtime`, `/tmp/trade150-design-halloween-runtime`).
+Runtime: `fd74ad68cf196117a0bc479998f7ba1ea29d1bd5` (`release/apri-halloween150-runtime`, `/tmp/trade150-design-halloween-runtime`).
 
 Preserved design source: `5e2a94703aa00a3c5b73d32ad914b9cd42d6d411`; preserved stamped design runtime: `d9a6a0d0232c065465fb8084ed8d010699b0fbbb`. Live expected baseline remains verified .149 `80db1bb90f3132f7125d7c32932b841ab77abf2b`; recheck before any later release action. No branch or tag has been pushed by this preparation.
 
@@ -31,3 +31,13 @@ The product workflow now discovers the complete 187-case desktop universe once, 
 Runtime 5fe7b578 adds only the three locale dictionaries and their focused test corrections to frozen runtime586d0bc6. All application handlers, read calls, catalogue records, artwork bytes and CSS are unchanged. Exact-source registration retains every previous entry and original expiry.
 
 Final hosted recovery first stopped on one stale workflow-routing test (710pass,1skip,1failure): it still searched for all setup and execution steps inside public-share. The corrected contract now verifies dependency ordering in contracts, the dependent isolated browser job, and always-running complete-union aggregate. All72 targeted routing/shard/dispatcher checks pass locally. No runtime or workflow behavior changed for this assertion-only correction.
+
+## Terminal isolated-run corrections
+
+Run40448872423 completed all187 original cases inside the 15-minute budgets:168 passed,12 existing opt-in skips,7 failed. The isolated runners finished in5.6–7.9minutes; contention/time-budget cancellation was resolved. Remaining failures were a real3px account-trigger overflow at375px, stale Pikachu counts102/12 versus approved additions104/14, a generic ambiguous Detective fixture that no longer selected exact released art, an obsolete Share primary selector, and two bulk123-record journeys exceeding60seconds.
+
+Runtimefd74ad68 fixes mobile flex allocation: the touch-control cluster retains its width and brand text can truncate; no touch target is reduced. Original bounds/48px target/menu keyboard assertions pass all seven320–430px widths in Chromium and WebKit, with actual375px screenshot inspected. The image-failure fixture now uses exact Detective2023 and blocks service workers so cache cannot bypass network fault injection; all four costume cases pass17.7s. Existing qualified Share selectors/publication stub are restored byte-for-byte from the frozen runtime.
+
+No case timeout was raised. Two bulk journeys are partitioned into eight16-record groups; every prior selection/save/acknowledgement/reload/public-render/art assertion remains, and global cross-alias conflict validation remains before Pikachu partitioning. All eight groups pass locally(about12–16seconds each). This makes193 discovered cases, preserving coverage of the original187 rather than dropping long cases. The final exact-union gate checks the full193-case universe. Successful isolated CI measurements and explicitly labelled local bounded-group measurements rebalance the shards; failed-case and contended measurements are excluded.
+
+These corrections add no catalogue entries, art files, auth changes or private reads. Broader catalogue work remains separate. Original release guards, registry entries, expiry, performance budgets, retries and permissions are preserved.
