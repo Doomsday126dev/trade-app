@@ -52,3 +52,18 @@ test('copy feedback and selectable URL expire after profile, list, scope or iden
  await action(page).click();expect(await page.evaluate(()=>__linkWrites)).toBe(3);await page.evaluate(()=>{auth.currentUser={uid:'different-fixture-owner'};refreshPublicLinkAction();});await expect(status).toBeEmpty();await expect(url).toBeHidden();await expect(url).toHaveValue('');expect(await page.evaluate(()=>__linkWrites)).toBe(3);
  await setup(page);await page.setViewportSize({width:390,height:844});await action(page).click();await page.evaluate(()=>{allData.users[cur].bio='Changed after copy';refreshPublicLinkAction();applyTheme('dark');});await expect(page.locator('#product-share-format')).toHaveCSS('background-color','rgb(25, 27, 32)');await page.screenshot({path:`/tmp/trade154-share-qa/${info.project.name}-share-stale-cleared.png`,animations:'disabled'});
 });
+
+test('first publication clipboard failure retains the verified manual-copy URL',async({page})=>{
+ await setup(page);await page.evaluate(()=>__failClipboard=true);const expected=await page.evaluate(()=>`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=wishlist`);await action(page).click();await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopyFailed');await expect(page.locator('#share-public-url')).toBeVisible();await expect(page.locator('#share-public-url')).toHaveValue(expected);await page.evaluate(()=>__failClipboard=false);await action(page).click();expect(await page.evaluate(()=>[__linkWrites,__linkCopied.length])).toEqual([1,1]);
+});
+for(const cancel of ['scope','reopen'])test('publication completion releases the matching busy action after '+cancel,async({page})=>{
+ await setup(page);await page.evaluate(()=>{window.__writeGate=new Promise(resolve=>window.__finishWrite=resolve);});await action(page).click();await expect(action(page)).toBeDisabled();
+ if(cancel==='scope'){await page.locator('#product-share-scope').selectOption('top');await page.locator('#product-share-scope').selectOption('full');}else{await page.locator('#product-share-modal .mact button').click();await page.evaluate(()=>openProductShare('link'));}
+ await page.evaluate(()=>__finishWrite());await expect.poll(()=>page.evaluate(()=>__linkWrites)).toBe(1);await expect(action(page)).toBeEnabled();await expect(action(page)).toHaveText('Copy link');expect(await page.evaluate(()=>__linkCopied.length)).toBe(0);await action(page).click();expect(await page.evaluate(()=>[__linkWrites,__linkCopied.length])).toEqual([1,1]);
+});
+
+
+test('a payload change during failed clipboard access cannot restore stale fallback feedback',async({page})=>{
+ await setup(page);await page.evaluate(()=>{window.__clipboardGate=new Promise(resolve=>window.__finishClipboard=resolve);copyText=async()=>{await __clipboardGate;throw Error('synthetic clipboard failure');};});await action(page).click();await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.published');
+ await page.evaluate(()=>{allData.users[cur].bio='Changed while clipboard was pending';refreshPublicLinkAction();__finishClipboard();});await expect(action(page)).toHaveText('Update and copy link');await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','share.publicationPending');await expect(page.locator('#share-public-url')).toBeHidden();await expect(page.locator('#share-public-url')).toHaveValue('');expect(await page.evaluate(()=>__linkWrites)).toBe(1);
+});

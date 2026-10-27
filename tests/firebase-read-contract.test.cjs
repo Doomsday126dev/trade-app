@@ -13,7 +13,8 @@ const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
+const localCatalogue=/2026-10-27\.156/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const current=requestedRuntimeSha||(localCatalogue?'86ccaf11066ce91dc223ab0b6cd93bd3288aad8e':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
@@ -440,3 +441,18 @@ test('UI155 still rejects a changed private target',t=>{const d=ui155Fixture(t);
 function ui155OriginalFixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ui155-original-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','94b29e428fc4771917b3cca99d42f9ac58ba4642','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
 test('UI155 original-style exact runtime retains reviewed24reads without new publication reads',t=>{const r=check(ui155OriginalFixture(t),'94b29e428fc4771917b3cca99d42f9ac58ba4642');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
 test('UI155 original-style still rejects a changed private target',t=>{const d=ui155OriginalFixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'94b29e428fc4771917b3cca99d42f9ac58ba4642').status,0)});
+test('catalogue legacy-ID adapter changes no migration read path, guard or side effect',()=>{
+  const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8'),acorn=require('acorn'),crypto=require('node:crypto');
+  const node=acorn.parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='FunctionDeclaration'&&n.id.name==='accountSyncReadLegacySources');
+  const handler=source.slice(node.start,node.end),adapter='catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw)';
+  assert.equal(handler.split(adapter).length-1,1);
+  const previous=handler.replace(adapter,'catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw)');
+  const hash=value=>crypto.createHash('sha256').update(require('../scripts/lib/firebase-read-sites.cjs').expressionKey(value)).digest('hex');
+  assert.equal(hash(previous),'47362d8f67a5afae6330665c71f7cf18c197c71ace8146181cdc2a5a2aecdb0f','only the reviewed catalogue adapter differs from live .154');
+  assert.equal(hash(handler),'8ebcda51428eb247434f7f5d762c0fae8534ec29032cfbc9ac63a1aed927fce2');
+});
+
+function catalogue156Fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'catalogue156-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','86ccaf11066ce91dc223ab0b6cd93bd3288aad8e','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
+test('catalogue156 exact reviewed handler preserves 24 owner-scoped read sites',t=>{const r=check(catalogue156Fixture(t),'86ccaf11066ce91dc223ab0b6cd93bd3288aad8e');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('catalogue156 rejects a reverted identity adapter and private path tampering',t=>{for(const [before,after]of [['catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw)','catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw)'],['get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))']]){const d=catalogue156Fixture(t);change(d,'js/app/application.js',before,after);assert.notEqual(check(d,'86ccaf11066ce91dc223ab0b6cd93bd3288aad8e').status,0);}});
+test('historical UI155 cannot accept the new catalogue adapter signature',t=>{const d=ui155OriginalFixture(t);change(d,'js/app/application.js','catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw)','catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw)');assert.match(check(d,'94b29e428fc4771917b3cca99d42f9ac58ba4642').stderr,/path bindings or execution semantics changed/);});

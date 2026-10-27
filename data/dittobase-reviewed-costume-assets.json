@@ -65,7 +65,7 @@
       "reviewedAt": "2026-10-26T01:52:14.912Z",
       "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution.",
       "supersededBy": "data/serebii-reviewed-costume-assets.json",
-      "correction": "Historical straight-tail artwork does not represent the released female-only PokémonXP costume. Kept as provenance history only; no longer used by runtime catalog."
+      "correction": "Historical straight-tail artwork does not represent the released female-only Pok\u00e9monXP costume. Kept as provenance history only; no longer used by runtime catalog."
     },
     {
       "no": 25,
@@ -137,7 +137,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Turquoise)",
-        "PokéXciting Pikachu (Turquoise)"
+        "Pok\u00e9Xciting Pikachu (Turquoise)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -172,7 +172,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Blue)",
-        "PokéXciting Pikachu (Blue)"
+        "Pok\u00e9Xciting Pikachu (Blue)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -291,6 +291,154 @@
         "https://www.serebii.net/pokemongo/shiny.shtml"
       ],
       "genderQualification": "Published costume model metadata explicitly labels male/female artwork, not inferred from species ratio. Gender is an optional trade preference, never synthesized from the default sprite. Dittobase release badge remains unreleased at retrieval; release eligibility is independently based on official local start and current Serebii event/Shiny listings, not asset existence."
+    },
+    {
+      "no": 999,
+      "names": [
+        "Gimmighoul (10th Anniversary Coin)",
+        "Gimmighoul (Roaming Form (10th Anniversary Coin))"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "999-gimmighoul-10th-anniversary-coin.png",
+      "sourceFiles": {
+        "default": "999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sourceLabel": "10th Anniversary Coin",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/gimmighoul-10th-anniversary-coin",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/999-gimmighoul-10th-anniversary-coin.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sha256": {
+        "default": "0f7359eace1dcf1d10d695cdaf6190cafbb682a4b591ab6ae38d4d8e2df68322",
+        "shiny": "2185cee8b4aa4d87ae19af9e12e52adf989131c712b48431df039973661f388a"
+      },
+      "availableGenders": [],
+      "genderModel": "genderless",
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "shinyEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original normal/Shiny art inspected. Normal tenth-anniversary image differs from independently labelled ninth-anniversary reference by 1206 decoded pixels on the same 60x75 canvas. Not a relabelled ninth/default icon.",
+      "anniversaryPixelProof": {
+        "images": [
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2119
+          },
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin-shiny",
+            "width": 61,
+            "height": 74,
+            "visiblePixels": 2126
+          },
+          {
+            "name": "999-gimmighoul-9th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2126
+          }
+        ],
+        "normalVsShiny": {
+          "differentDimensions": true
+        },
+        "tenthVsNinth": {
+          "differentPixels": 1206
+        }
+      },
+      "reviewIdentityId": "pokemon:999:standard:legacy:Gimmighoul%20(10th%20Anniversary%20Coin)"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Taiwan)",
+        "Pikachu (Pok\u00e9Xciting Taiwan)",
+        "Pikachu (PokeXciting Pink)"
+      ],
+      "status": "exact",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-taiwan-01.png",
+      "sourceLabel": "PokeXciting Taiwan (Pink Hair)",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01.png",
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-taiwan-01.png",
+        "shiny": "25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-taiwan-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-taiwan-01-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "7726f41c8e2003ba3111bd94d2d2cbe7d589098d37892733ca7286ca076e124f",
+        "shiny": "4d9f7f5fee282d39b27cd9be7d42a41a0b61b234c98dfc1583887f7b953f4629",
+        "female": "390977dcf232633b5edc2fd323aad37d0e2ecd06ad0ff0b9c12c179864aee546",
+        "femaleShiny": "7d6d647262e1667290c4078a76bec61225255497f62aad02f998540d47623a07"
+      },
+      "femaleArtworkUnavailable": false,
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "identityEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "shinyEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "pixelReview": "Four original images visually reviewed against explicit region form page; pink Taiwan and orange Philippines hair remain separate identities. Correct female tails; normal/Shiny pairs distinct. No substitutions.",
+      "reviewIdentityId": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+      "identityStatus": "released",
+      "shinyAvailability": "released"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Philippines)",
+        "Pikachu (Pok\u00e9Xciting Philippines)",
+        "Pikachu (PokeXciting Orange)"
+      ],
+      "status": "exact",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-philippine-01.png",
+      "sourceLabel": "PokeXciting Philippines (Orange Hair)",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01.png",
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-philippine-01.png",
+        "shiny": "25-pikachu-anniversary-2026-philippine-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-philippine-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-philippine-01-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "6ac49e0ac3049c8d03a4151e76c3ead9cf5f3f4989f8b8689a9a50abc8b6b29d",
+        "shiny": "9dbcc6c636d2ca7d8afeb87f7e31eade0cfda31db42822aad849caa9ba92f680",
+        "female": "d6b3214465dc6a4c8252bc8e12870d08a1855264ea80463cb876762c21e21c11",
+        "femaleShiny": "b84c5b0f3d107fb9c0331dc98156b487fbfd2efbc2f09df9b3e99abf73460743"
+      },
+      "femaleArtworkUnavailable": false,
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "identityEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "shinyEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "pixelReview": "Four original images visually reviewed against explicit region form page; pink Taiwan and orange Philippines hair remain separate identities. Correct female tails; normal/Shiny pairs distinct. No substitutions.",
+      "reviewIdentityId": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29"
     }
   ]
 }

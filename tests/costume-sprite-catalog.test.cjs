@@ -16,12 +16,12 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,402);
+  assert.equal(catalog.entries.length,406);
   assert.equal(require('../data/pending-costume-artwork.json').maintenanceCandidate.canonicalRecords,catalog.entries.length);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,395);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,399);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,1001);
+  assert.equal(assets.length,1015);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -52,7 +52,7 @@ test('known costumes without reviewed art fail honestly instead of becoming base
 test('every selectable costume is reviewed before runtime fallback can reach base species',()=>{
   const productWindow={};
   const context=vm.createContext({window:productWindow,Object,Map});
-  for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js']){
+  for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js','js/domain/publicPokemonDex.js']){
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   }
   const application=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
@@ -80,10 +80,11 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     const decorated=pokemonCatalog.decorateCatalogEntry(entry);
     const names=[decorated.name,...(decorated.spriteLookupKeys||[]),entry.name,entry.displayName].filter(Boolean);
     const result=reviewedCatalog.resolution({names});
+    if(!result.knownVariant){const exact=productWindow.PogoDomain.publicPokemonDex.variantStatus(entry.name);assert.ok(exact?.assets?.default,`${entry.name} lacks independent exact art`);statusCounts.exact++;continue;}
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:428,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:390,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -158,7 +159,7 @@ test('search eligibility marks only audited released Pikachu identities without 
   const expected=pending.entries.filter(e=>e.species.dex===25&&e.identityStatus==='released').map(e=>e.displayIdentity).sort();
   const eligible=catalog.entries.filter(e=>e.no===25&&e.identityStatus==='released');
   assert.deepEqual(eligible.filter(e=>e.status==='unavailable').map(e=>e.names[0]).sort(),expected);
-  assert.equal(eligible.length,14);
+  assert.equal(eligible.length,16);
   for(const entry of eligible.filter(e=>e.status==='unavailable')){assert.equal(entry.status,'unavailable');assert.deepEqual(Array.from(resolver.resolution({name:entry.names[0]}).urls),[]);}
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (Gloria)')).identityStatus,undefined);
   assert.equal(catalog.entries.find(e=>e.names.includes('Pikachu (GO Fest 2023)')).identityStatus,undefined);
@@ -177,7 +178,7 @@ test('Pokemod source is pinned and every exact Shiny/gender variant is mandatory
 });
 
 test('reviewed Dittobase identities retain exact pixels and gender boundaries',()=>{
- const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,7);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(r.urls),row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
- assert.equal(new Set(urls).size,24);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,0);
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,10);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');const allowed=!row.availableGenders||row.availableGenders.includes(gender);assert.deepEqual(Array.from(r.urls),allowed&&row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
+ assert.equal(new Set(urls).size,32);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,0);
  for(const mutate of [r=>r.sourceUrl='https://example.com/wrong.png',r=>r.sourceFiles.default='25-pikachu.png',r=>r.assets.default=rows[1].assets.default,r=>r.femaleArtworkUnavailable=!r.femaleArtworkUnavailable]){const changed=structuredClone(catalog);mutate(changed.entries.find(r=>r.sourceProvider==='dittobase-reviewed'));assert.throws(()=>validateCatalog(changed,root),/Dittobase|digest/);}
 });

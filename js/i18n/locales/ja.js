@@ -273,6 +273,8 @@
 "events.groupVenueUnknown":"会場時刻は未確認"
     ,"share.format":"形式"
     ,"share.gameSearch":"Pokémon GOの検索文字列"
+    ,"catalogue.releaseUnverified":"実装未確認"
+    ,"catalogue.releaseAnnounced":"発表済み"
     ,"costume.shinyNotReleased":"この衣装の色違いは未実装です。"
     ,"costume.shinyYearRequired":"色違いを指定する前に、探偵ピカチュウの年を選んでください。"
     ,"costume.genderOnly":"{gender}のみ"
