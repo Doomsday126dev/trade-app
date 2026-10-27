@@ -326,3 +326,11 @@ test('reviewed costume formatting preserves existing full Japanese labels and tr
  }
  assert.equal(names.resolveDisplayName({no:163,name:'Hoothoot New Years'},{locale:'ja'}).status,'partial');
 });
+
+test('reused locale collators preserve full catalogue order and numeric/case behavior',()=>{
+ for(const locale of ['en','ja','es','de']){
+  const entries=[...appEntries,{no:25,name:'Pikachu (Test 2)'},{no:25,name:'Pikachu (Test 10)'}],reference=new Intl.Collator(locale,{numeric:true,sensitivity:'base'});
+  const expected=entries.slice().sort((a,b)=>reference.compare(pokemon.displayName(a,{locale}),pokemon.displayName(b,{locale}))).map(e=>e.name);
+  assert.deepEqual(entries.slice().sort((a,b)=>pokemon.compareDisplay(a,b,{locale})).map(e=>e.name),expected,locale);
+ }
+});

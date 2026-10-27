@@ -120,9 +120,12 @@
       ...(entry?.legacyAliases||[]),...(entry?.searchAliases||[]),String(entry?.no||'')
     ].map(value=>String(value||'').trim()).filter(Boolean))]);
   }
+  // Four immutable locale comparators; no per-comparison Intl allocation.
+  const displayCollators=Object.freeze(Object.fromEntries(supported.map(lang=>[lang,new Intl.Collator(lang,{numeric:true,sensitivity:'base'})])));
   function compareDisplay(a,b,{locale='en'}={}){
-    return new Intl.Collator(localeKey(locale),{numeric:true,sensitivity:'base'}).compare(displayName(a,{locale}),displayName(b,{locale}));
+    return displayCollators[localeKey(locale)].compare(displayName(a,{locale}),displayName(b,{locale}));
   }
+
   function coverage(entries,locale){
     const ids=[...new Set((entries||[]).map(entry=>String(Number(entry?.no)||'')).filter(Boolean))];
     const lang=localeKey(locale),translated=ids.filter(id=>Object.prototype.hasOwnProperty.call(catalogs[lang]||{},id));
