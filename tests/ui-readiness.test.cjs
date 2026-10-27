@@ -158,7 +158,7 @@ test('Browse Favorites is Favorite-scoped, memory-only, and free of broad remote
   const setup=html.slice(html.indexOf('function ensureFavoriteShareSessionCache'),html.indexOf('function trainerSearchCompatibility'));
   const browse=html.slice(html.indexOf('function favoriteBrowseCatalog'),html.indexOf('function closeFavoriteCardActions'));
   assert.match(browse,/store\.read\(\)[\s\S]*\.favorites/);
-  assert.match(setup,/concurrency:4,maxFavorites:favoriteShareSessionCacheData\.DEFAULT_MAX_FAVORITES/);
+  assert.match(setup,/concurrency:2,readDeadlineMs:35000,maxFavorites:favoriteShareSessionCacheData\.DEFAULT_MAX_FAVORITES/);
   assert.match(cache,/DEFAULT_MAX_FAVORITES=global\.PogoDomain\?\.productLimits\?\.MAX_FAVORITES/);
   assert.match(cache,/DEFAULT_READ_DEADLINE_MS=5000/);
   assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),physicalReads=new Map\(\),readEpochs=new Map\(\),candidateKeys=new Set\(\),candidateBindings=new Map\(\),queue=\[\],activeEntries=new Set\(\)/);

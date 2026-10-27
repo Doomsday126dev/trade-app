@@ -264,6 +264,8 @@ let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
 let favoritePublicationObserver=null;
+let favoriteIdentityResolverSession=null;
+const favoritePublicationRetries=new WeakMap();
 // Enrollment can pause without removing authority from initialized accounts.
 const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
 const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
@@ -3751,9 +3753,13 @@ function resolveLegacyFavoriteIdentity(displayName,expectedTargetUid=''){
 }
 async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid='',{allowIncidentResolver=true}={}){
   if(allowIncidentResolver&&window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
-    const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
-    const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation});
-    const row=(await client.resolve([displayName]))[0];
+    if(!favoriteIdentityResolverSession?.current()){
+      const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
+      const current=()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation;
+      const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:current});
+      favoriteIdentityResolverSession={current,queue:window.PogoServices.favoriteResolverClient.createSessionIdentityQueue({resolve:handles=>client.resolve(handles),sessionCurrent:current})};
+    }
+    const row=await favoriteIdentityResolverSession.queue.resolve(displayName);
     return row.status==='resolved'&&(!expectedTargetUid||row.targetUid===expectedTargetUid)?Object.freeze({targetUid:row.targetUid,canonicalTrainerName:row.canonicalHandle}):null;
   }
   return PROVIDER_CAPABILITIES.providerPublicReadSupport
@@ -5860,7 +5866,7 @@ function ensureFavoriteShareSessionCache(){
       repository:favoriteRepository,
       validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,
       projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot,
-      concurrency:4,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES
+      concurrency:2,readDeadlineMs:35000,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES
     });
   }
   favoriteShareSessionCache.activate({uid,username:cur});
@@ -6404,10 +6410,11 @@ async function renderPreservedFavoriteEvidence(host){
 function favoritePublicationHtml(favorite){
   const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt),locale=i18nCore.getLocale();
   const valid=record?.targetUid===(favorite.targetUid||'')&&['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
+  const failed=record?.status==='transport_error';
   const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
-  const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):'—';
+  const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):failed?i18nCore.t('groups.unavailable'):'—';
   const time=valid?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(stamp):'';
-  return`<span class="favorite-publication"${valid?' tabindex="0"':' hidden'} title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:'<span>—</span>'}</span>`;
+  return`<span class="favorite-publication"${valid||failed?' tabindex="0"':' hidden'} title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:`<span>${escHtml(date)}</span>`}</span>`;
 }
 function observeFavoritePublications(){
   favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
@@ -6419,7 +6426,11 @@ function observeFavoritePublications(){
   const load=async card=>{
     const favorite=favorites.find(item=>canonicalTrainerName(item.displayName)===card.dataset.trainer);
     if(!favorite)return;
-    try{await cache.readFavorite(favorite);}catch{return;}
+    const retries=favoritePublicationRetries.get(cache)||new Set();favoritePublicationRetries.set(cache,retries);
+    const previous=cache.peek(favorite),key=canonicalTrainerName(favorite.displayName);
+    const retry=previous?.retryable===true&&!retries.has(key)&&!/(?:rate-limited|busy)/.test(previous.error?.code||'');
+    if(retry)retries.add(key);
+    try{await cache.readFavorite(favorite,{force:retry});}catch{return;}
     if(!current()||!card.isConnected)return;
     const field=card.querySelector('.favorite-publication');if(!field)return;
     const markup=favoritePublicationHtml(favorite);if(field.outerHTML===markup)return;
