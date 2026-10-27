@@ -1,4 +1,5 @@
 name: Isolated catalogue repair qualification
+# Requalify the pinned runtime alongside the compact-name monitor control fix.
 on:
   pull_request:
     branches: [main]

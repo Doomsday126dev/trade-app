@@ -24,7 +24,9 @@ function loadSources(now=new Date(),readFile=fs.readFileSync){
 function loadIdentities(){
  const window={},ctx=vm.createContext({window});for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
  const publicText=fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8');
- const names=JSON.parse(publicText.match(/const names=(\[.*?\]);/s)[1]);const rows=names.map(name=>[name,window.PogoDomain.publicPokemonDex.dex(name)]);
+ const assignment=publicText.match(/const names=(.*?);/s);if(!assignment)throw new Error('Public dex name encoding is missing');
+ const names=vm.runInNewContext(assignment[1],{},{timeout:1000});if(!Array.isArray(names)||!names.length||names.some(name=>typeof name!=='string'||!name.trim())||new Set(names).size!==names.length)throw new Error('Public dex name encoding is invalid');
+ const rows=names.map(name=>[name,window.PogoDomain.publicPokemonDex.dex(name)]);
  const all=window.PogoDomain.pokemonCatalog.canonicalizeEntries(rows.map(([name,no])=>({name,no})));
  return{all,catalog:window.PogoDomain.pokemonCatalog,database:window.POGO_TRADE_DB};
 }
