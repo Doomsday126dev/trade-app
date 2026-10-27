@@ -1,4 +1,4 @@
-name: Isolated logo and Trainers runtime qualification
+name: Isolated Favorites metadata runtime qualification
 on:
   pull_request:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 351ebcafe42b1cb3558355aa238c189e55bb09b6
+          ref: 8bf0fd8b2de333bb8bb3a58c5e959cf566746957
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
