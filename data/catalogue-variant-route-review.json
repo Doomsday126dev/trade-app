@@ -64,7 +64,7 @@
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/deerling-autumn.png"
     },
     {
-      "name": "Flabébé (Yellow Flower)",
+      "name": "Flab\u00e9b\u00e9 (Yellow Flower)",
       "no": 669,
       "normal": "https://img.pokemondb.net/sprites/home/normal/flabebe-yellow.png",
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/flabebe-yellow.png"
@@ -76,19 +76,19 @@
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/deerling-summer.png"
     },
     {
-      "name": "Flabébé (White Flower)",
+      "name": "Flab\u00e9b\u00e9 (White Flower)",
       "no": 669,
       "normal": "https://img.pokemondb.net/sprites/home/normal/flabebe-white.png",
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/flabebe-white.png"
     },
     {
-      "name": "Flabébé (Orange Flower)",
+      "name": "Flab\u00e9b\u00e9 (Orange Flower)",
       "no": 669,
       "normal": "https://img.pokemondb.net/sprites/home/normal/flabebe-orange.png",
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/flabebe-orange.png"
     },
     {
-      "name": "Flabébé (Blue Flower)",
+      "name": "Flab\u00e9b\u00e9 (Blue Flower)",
       "no": 669,
       "normal": "https://img.pokemondb.net/sprites/home/normal/flabebe-blue.png",
       "shiny": "https://img.pokemondb.net/sprites/home/shiny/flabebe-blue.png"
@@ -7268,21 +7268,6 @@
       "runtimeTreatment": "Generic normal/Shiny artwork withheld through the existing ambiguous-form guard; picker choice, saved IDs and early wants remain available. Numbered GO patterns are unaffected."
     },
     {
-      "id": "variant-route:1024:Terapagos (Stellar Form)",
-      "no": 1024,
-      "name": "Terapagos (Stellar Form)",
-      "discoveredAt": "2026-10-27T14:18:09.026340+00:00",
-      "releaseState": "uncertain",
-      "artState": "source-normal-shiny-identical",
-      "reason": "Fresh immutable HOME tree and cached PNG Git-blob checks show exactly identical normal and Shiny source bytes. The supposed Shiny file is not qualified.",
-      "sources": [
-        "https://github.com/PokeAPI/sprites/tree/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home",
-        "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar"
-      ],
-      "nextAction": "Locate or await independently exact Shiny artwork; do not serve normal as Shiny.",
-      "state": "owner-attention-required"
-    },
-    {
       "id": "variant-route:25:Pikachu (Detective)",
       "no": 25,
       "name": "Pikachu (Detective)",
@@ -7371,5 +7356,29 @@
       "legacyEquivalent": 19
     },
     "qualification": "648 canonical HOME rows, 28 explicitly mapped Gigantamax rows, 11 exact other form pairs, 18 Scatterbug equivalents and one Own Tempo Rockruff model qualified. Generic Spinda is held separately. Artwork evidence never confirms release."
-  }
+  },
+  "resolvedSameAppearance": [
+    {
+      "name": "Terapagos (Stellar Form)",
+      "evidence": "data/stellar-same-appearance-evidence.json",
+      "evidenceSha256": "9e8fd86caf90e20c4a6765902dbd5644c22119679b037e20a913b058886d9c38",
+      "priorIssue": {
+        "id": "variant-route:1024:Terapagos (Stellar Form)",
+        "no": 1024,
+        "name": "Terapagos (Stellar Form)",
+        "discoveredAt": "2026-10-27T14:18:09.026340+00:00",
+        "releaseState": "uncertain",
+        "artState": "source-normal-shiny-identical",
+        "reason": "Fresh immutable HOME tree and cached PNG Git-blob checks show exactly identical normal and Shiny source bytes. The supposed Shiny file is not qualified.",
+        "sources": [
+          "https://github.com/PokeAPI/sprites/tree/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home",
+          "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar"
+        ],
+        "nextAction": "Locate or await independently exact Shiny artwork; do not serve normal as Shiny.",
+        "state": "owner-attention-required"
+      },
+      "artState": "exact-separately-labelled-shiny-original",
+      "releaseState": "unverified"
+    }
+  ]
 }

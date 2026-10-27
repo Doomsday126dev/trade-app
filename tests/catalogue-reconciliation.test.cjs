@@ -45,7 +45,7 @@ test('reviewed missing identity counts cannot retain an already integrated exact
 });
 
 test('finite queue art stays hash-pinned, Shiny duplicates stay blocked, and Zen labels survive line breaks',()=>{
- const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,86);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
+ const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,86);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,stellar.assets.default);assert.equal(stellar.sameAppearanceEvidence,'stellar-palette-10277-v1');assert.equal(stellar.blockedVariants,undefined);assert.equal(records.filter(row=>row.assets.shiny).length,66);
  const input=inputs();input.sources.data['normal-inventory']=[];assert.equal(reconcile(input).status,'reconciled');const html='<img src="/pokemongo/pokemon/555-gz.png"><td class="fooinfo"><a href="/pokemongo/pokemon/555.shtml">Darmanitan</a> (Galarian Form<br />Zen Mode)</td>';assert.equal(parseGOInventory(html,'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal')[0].name,'Darmanitan (Galarian Form Zen Mode)');
 });
 
@@ -63,7 +63,7 @@ test('exact variant owner blockers survive source matches and cannot disappear i
 test('Spooky Festival sources preserve all eight sizes and reject crossed size, species or Shiny paths',()=>{
  const os=require('node:os'),path=require('node:path'),{validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs');
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'spooky-source-guard-')),original=require('../data/catalogue-reviewed-assets.json');
- try{fs.mkdirSync(path.join(root,'data'));fs.symlinkSync(path.join(__dirname,'../assets'),path.join(root,'assets'));
+ try{fs.mkdirSync(path.join(root,'data'));fs.symlinkSync(path.join(__dirname,'../assets'),path.join(root,'assets'));fs.copyFileSync(path.join(__dirname,'../data/stellar-same-appearance-evidence.json'),path.join(root,'data/stellar-same-appearance-evidence.json'));
  const rows=original.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:'));assert.equal(rows.length,8);assert.equal(new Set(rows.flatMap(r=>Object.values(r.assets))).size,16);
  const validate=mutate=>{const data=structuredClone(original);mutate(data.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:')));fs.writeFileSync(path.join(root,'data/catalogue-reviewed-assets.json'),JSON.stringify(data));return validateReviewedAssets(root);};
  assert.equal(validate(()=>{}).length,86);

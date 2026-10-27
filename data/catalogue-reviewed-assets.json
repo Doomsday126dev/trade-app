@@ -9,10 +9,12 @@
       ],
       "status": "exact",
       "assets": {
-        "default": "assets/sprites/go/catalogue-b75a0f0b5290c0ac531d.png"
+        "default": "assets/sprites/go/catalogue-b75a0f0b5290c0ac531d.png",
+        "shiny": "assets/sprites/go/catalogue-b75a0f0b5290c0ac531d.png"
       },
       "sha256": {
-        "default": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901"
+        "default": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901",
+        "shiny": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901"
       },
       "artProof": {
         "default": {
@@ -28,6 +30,20 @@
             "pixelHash": "349761b2",
             "status": "decoded"
           }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10277.png",
+          "observedAt": "2026-10-27T10:33:44.315177+00:00",
+          "sha256": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901",
+          "bytes": 255555,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 106507,
+            "pixelHash": "349761b2",
+            "status": "decoded"
+          },
+          "http": 200
         }
       },
       "genders": [],
@@ -47,29 +63,17 @@
           "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
         }
       ],
-      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants.",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants. Stellar same-appearance treatment is source/hash-bound in data/stellar-same-appearance-evidence.json; the labelled Shiny original is qualified without a GO release claim.",
       "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
       "sourceId": "canonical-missing:1024:stellar terapagos",
-      "blockedVariants": {
-        "shiny": {
-          "state": "owner-attention-required",
-          "reason": "Serebii exact Shiny URL returns 404. Independently labelled PokeAPI and Dittobase normal/Shiny assets decode to identical pixels; no evidence establishes a separate Shiny appearance. Do not substitute normal art or assume that duplicate upstream pixels qualify the Shiny variant.",
-          "sources": [
-            "https://www.serebii.net/pokemongo/pokemon/shiny/1024-s.png",
-            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10277.png",
-            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10277.png",
-            "https://assets.dittobase.com/go/pokemon-unpadded/1024-terapagos-stellar-shiny.png"
-          ],
-          "nextAction": "Verify upstream exact Shiny model or explicit authoritative same-appearance evidence; keep normal artwork and Shiny wants available, but return no unverified Shiny sprite."
-        }
-      },
       "independentFormIdentity": {
         "id": 10277,
         "identifier": "terapagos-stellar",
         "speciesId": 1024,
         "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
         "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
-      }
+      },
+      "sameAppearanceEvidence": "stellar-palette-10277-v1"
     },
     {
       "no": 1024,

@@ -1,5 +1,16 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const STELLAR_EVIDENCE_SHA='9e8fd86caf90e20c4a6765902dbd5644c22119679b037e20a913b058886d9c38';
+function validateSameAppearanceException(row,root){
+ if(!row.sameAppearanceEvidence)return false;
+ const reject=()=>{throw Error('Invalid same-appearance exception: '+row.names?.[0]);};
+ const hash='b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901';
+ if(row.sameAppearanceEvidence!=='stellar-palette-10277-v1'||row.no!==1024||JSON.stringify(row.names)!=='["Terapagos (Stellar Form)"]'||row.sourceId!=='canonical-missing:1024:stellar terapagos'||row.normalRelease!=='unverified'||row.shinyRelease!=='unverified'||row.independentFormIdentity?.id!==10277||row.independentFormIdentity?.speciesId!==1024||row.independentFormIdentity?.identifier!=='terapagos-stellar'||JSON.stringify(row.genders)!=='[]')reject();
+ for(const key of ['default','shiny'])if(row.sha256?.[key]!==hash||row.artProof?.[key]?.sha256!==hash||row.assets?.[key]!=='assets/sprites/go/catalogue-'+hash.slice(0,20)+'.png'||row.artProof[key].url!=='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/'+(key==='shiny'?'shiny/':'')+'10277.png')reject();
+ const evidence=fs.readFileSync(path.join(root,'data/stellar-same-appearance-evidence.json'));
+ if(crypto.createHash('sha256').update(evidence).digest('hex')!==STELLAR_EVIDENCE_SHA)reject();
+ return true;
+}
 function validateReviewedAssets(root){
  const data=JSON.parse(fs.readFileSync(path.join(root,'data/catalogue-reviewed-assets.json'),'utf8')),seen=new Set();if(data.schemaVersion!==1||!Array.isArray(data.records))throw Error('Invalid reviewed catalogue assets');
  for(const row of data.records){
@@ -18,8 +29,9 @@ function validateReviewedAssets(root){
    if(!approved||parsed.search||parsed.hash||((key==='shiny')!==(/\/shiny\/|-shiny\.png$|\.s\.icon\.png$/.test(parsed.pathname))))throw Error('Wrong reviewed variant/source: '+row.names[0]);
    const bytes=fs.readFileSync(path.join(root,file));if(bytes.length!==proof.bytes||crypto.createHash('sha256').update(bytes).digest('hex')!==proof.sha256)throw Error('Reviewed catalogue digest mismatch: '+file);
   }
-  if(row.artProof.shiny&&row.artProof.default.decoded.pixelHash===row.artProof.shiny.decoded.pixelHash)throw Error('Unqualified identical normal/Shiny art: '+row.names[0]);
+  const sameAppearance=validateSameAppearanceException(row,root);
+  if(row.artProof.shiny&&(row.artProof.default.sha256===row.artProof.shiny.sha256||row.artProof.default.decoded.pixelHash===row.artProof.shiny.decoded.pixelHash)&&!sameAppearance)throw Error('Unqualified identical normal/Shiny art: '+row.names[0]);
  }
  return data.records;
 }
-module.exports={validateReviewedAssets};
+module.exports={validateReviewedAssets,validateSameAppearanceException};
