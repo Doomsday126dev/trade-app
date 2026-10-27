@@ -35,7 +35,11 @@
           const response=await fetch(ENDPOINT,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',signal:abort.signal,
             headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`,'X-Firebase-AppCheck':appToken.token},body:JSON.stringify({handles})});current();
           const text=await response.text();current();if(text.length>32768)throw failure('favorite/response-invalid');
-          let value;try{value=JSON.parse(text);}catch{throw failure('favorite/response-invalid');}
+          let value;try{value=JSON.parse(text);}catch{
+            // Infrastructure failures may return HTML instead of the service JSON contract.
+            // Keep malformed successful responses and non-transient failures fail-closed.
+            throw failure(!response.ok&&response.status>=500&&response.status<=599?'favorite/unavailable':'favorite/response-invalid');
+          }
           if(!response.ok){
             const allowed=['favorite/auth-required','favorite/app-check-required','favorite/caller-unavailable','favorite/rate-limited','favorite/busy','favorite/not-enabled','favorite/unavailable','favorite/quota-unavailable'];
             const code=exact(value,['code'])&&allowed.includes(value.code)?value.code:'favorite/unavailable';
