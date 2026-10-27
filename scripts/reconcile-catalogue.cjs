@@ -24,15 +24,19 @@ function loadSources(now=new Date(),readFile=fs.readFileSync){
 function loadIdentities(){
  const window={},ctx=vm.createContext({window});for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
  const publicText=fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8');
- const names=JSON.parse(publicText.match(/const names=(\[.*?\]);/s)[1]);const rows=names.map(name=>[name,window.PogoDomain.publicPokemonDex.dex(name)]);
+ const array=publicText.match(/const names=(\[.*?\]);/s),compact=publicText.match(/const names=("(?:\\.|[^"\\])*")\.split\('\|'\);/);
+ const names=array?JSON.parse(array[1]):compact?JSON.parse(compact[1]).split('|'):null;if(!Array.isArray(names))throw Error('Unsupported generated public dex names; coverage is unknown');const rows=names.map(name=>[name,window.PogoDomain.publicPokemonDex.dex(name)]);
  const all=window.PogoDomain.pokemonCatalog.canonicalizeEntries(rows.map(([name,no])=>({name,no})));
  return{all,catalog:window.PogoDomain.pokemonCatalog,database:window.POGO_TRADE_DB};
 }
-function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],pendingArt=[],now=new Date()}){
+function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],pendingArt=[],eligibility=[],now=new Date()}){
  const queue=[],coverage={},keys=new Map(),byName=new Map(),knownArt=new Map();
  const add=(key,item)=>{const list=keys.get(key)||new Map();list.set(item.catalogId,item);keys.set(key,list);};
  for(const item of identities.all){byName.set(item.name,item);for(const label of [item.name,...item.legacyAliases||[],...item.searchAliases||[]])add(item.no+'|'+identityKey(label),item);}
  for(const item of art.entries)for(const label of item.names){const key=item.no+'|'+identityKey(label),rows=knownArt.get(key)||new Set();rows.add(item);knownArt.set(key,rows);}
+ // Reviewed art aliases can relate to an existing identity only when all
+ // matched names select one canonical ID. Ambiguous legacy records stay open.
+ for(const row of art.entries){const targets=identities.all.filter(item=>row.names.includes(item.name));const ids=new Set(targets.map(item=>item.catalogId));if(ids.size===1)for(const name of row.names)add(row.no+'|'+identityKey(name),targets[0]);}
  const verified=new Set(verifiedArt.filter(r=>r.status==='verified-bytes'&&r.decoded).map(r=>r.no+'|'+(r.shiny?'shiny':'normal')+'|'+(r.gender||'')));
  const defaults=new Map(forms.records.filter(r=>r.id===r.speciesId).map(r=>[r.speciesId,r.name]));
  const dispositionsById=new Map();for(const d of dispositions){if(!d.id||dispositionsById.has(d.id)||!d.reason||!d.sources?.length)throw Error('Incomplete or duplicate reviewed disposition');dispositionsById.set(d.id,d);}
@@ -57,6 +61,8 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
    const numeric=new RegExp('/0*'+row.no+'\\.png$').test(row.sourceSprite);
    const formIds=[...new Set(forms.records.filter(r=>r.speciesId===row.no&&matches.length===1&&[r.name,...r.aliases||[]].some(name=>identityKey(name)===identityKey(matches[0].name))).map(r=>r.id))];
    const checked=!sourceAmbiguous&&!artAmbiguous&&matches.length===1&&(numeric&&verified.has(row.no+'|'+kind+'|')||formIds.length===1&&verified.has(formIds[0]+'|'+kind+'|'));
+   const guarded=eligibility.find(item=>item.no===row.no&&[item.name,...item.aliases||[]].some(name=>identityKey(name)===identityKey(row.name)||matches.length===1&&name===matches[0].name));
+   if(kind==='shiny'&&releaseState==='released-source-claim'&&guarded&&guarded.shiny!=='released')push({id:'variant-release:'+sourceId,source,sourceUrl:row.source,sourceSprite:row.sourceSprite,discoveredAt:row.discoveredAt||sourceDate(source),no:row.no,name:row.name,releaseState,artState:exact?'reviewed-local':checked?'verified-remote':'needs-exact-review',priority:'urgent',disposition:'variant-release-evidence-review-required',reason:'Source now lists a Shiny encounter but the reviewed eligibility guard is still '+guarded.shiny,nextAction:'Verify the exact variant release, update reviewed eligibility, then regenerate runtime. Art success alone cannot change eligibility.'});
    if(sourceAmbiguous||artAmbiguous||matches.length>1)ambiguous++;else if(matches.length===1)matched++;
    if(sourceAmbiguous||artAmbiguous||matches.length!==1||!exact&&!checked)push({id,source,sourceUrl:row.source,sourceSprite:row.sourceSprite,discoveredAt:row.discoveredAt||sourceDate(source),no:row.no,name:row.name,releaseState,artState:exact?'reviewed-local':checked?'verified-remote':'available-at-source-needs-exact-review',matches:matches.map(r=>({name:r.name,catalogId:r.catalogId})),priority:releaseState==='released-source-claim'?'urgent':'review',disposition:sourceAmbiguous?'ambiguous-source-label':artAmbiguous?'ambiguous-art-identity':matches.length>1?'ambiguous-identity':matches.length===0?'unmatched-identity':'exact-art-verification-required'});
   }
@@ -123,7 +129,7 @@ function summarizeReview(report,reviews){
 
 function build(now=new Date(),sources=loadSources(now)){
  const read=f=>JSON.parse(fs.readFileSync(path.join(root,f)));
- return reconcile({sources,identities:loadIdentities(),art:read('data/costume-sprite-catalog.json'),pendingArt:read('data/pending-costume-artwork.json').entries,forms:read('data/public-form-sprite-identities.json'),verifiedArt:fs.existsSync(path.join(root,'data/catalogue-art-checks.json'))?read('data/catalogue-art-checks.json').records:[],dispositions:fs.existsSync(path.join(directory,'dispositions.json'))?read('data/catalogue-sources/dispositions.json').records:[],now});
+ return reconcile({sources,identities:loadIdentities(),art:read('data/costume-sprite-catalog.json'),pendingArt:read('data/pending-costume-artwork.json').entries,eligibility:fs.existsSync(path.join(root,'data/reviewed-variant-eligibility.json'))?read('data/reviewed-variant-eligibility.json').records:[],forms:read('data/public-form-sprite-identities.json'),verifiedArt:fs.existsSync(path.join(root,'data/catalogue-art-checks.json'))?read('data/catalogue-art-checks.json').records:[],dispositions:fs.existsSync(path.join(directory,'dispositions.json'))?read('data/catalogue-sources/dispositions.json').records:[],now});
 }
 if(require.main===module){const report=build();fs.writeFileSync(path.join(root,'catalogue-reconciliation.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({status:report.status,coverage:report.coverage,open:report.queue.length,sourceIssues:report.sourceIssues},null,2));if(report.status!=='reconciled'&&!process.argv.includes('--report-only'))process.exitCode=1;}
 module.exports={identityKey,loadSources,loadIdentities,reconcile,build,summarizeReview};

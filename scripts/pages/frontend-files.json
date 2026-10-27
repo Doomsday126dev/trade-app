@@ -1127,7 +1127,13 @@
     "assets/brand/apri.webp",
     "assets/brand/ivory-paper.webp",
     "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
-    "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png"
+    "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
+    "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin-shiny.png",
+    "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin.png",
+    "assets/sprites/go/reviewed-pikachu-citrus-shirt-female-shiny.png",
+    "assets/sprites/go/reviewed-pikachu-citrus-shirt-female.png",
+    "assets/sprites/go/reviewed-pikachu-citrus-shirt-shiny.png",
+    "assets/sprites/go/reviewed-pikachu-citrus-shirt.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

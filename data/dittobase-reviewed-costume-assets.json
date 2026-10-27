@@ -65,7 +65,7 @@
       "reviewedAt": "2026-10-26T01:52:14.912Z",
       "pixelReview": "Normal/Shiny and any published female variants inspected in labelled contact sheet against official identities. Missing female images are unavailable, never male substitution.",
       "supersededBy": "data/serebii-reviewed-costume-assets.json",
-      "correction": "Historical straight-tail artwork does not represent the released female-only PokémonXP costume. Kept as provenance history only; no longer used by runtime catalog."
+      "correction": "Historical straight-tail artwork does not represent the released female-only Pok\u00e9monXP costume. Kept as provenance history only; no longer used by runtime catalog."
     },
     {
       "no": 25,
@@ -137,7 +137,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Turquoise)",
-        "PokéXciting Pikachu (Turquoise)"
+        "Pok\u00e9Xciting Pikachu (Turquoise)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -172,7 +172,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Blue)",
-        "PokéXciting Pikachu (Blue)"
+        "Pok\u00e9Xciting Pikachu (Blue)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -291,6 +291,68 @@
         "https://www.serebii.net/pokemongo/shiny.shtml"
       ],
       "genderQualification": "Published costume model metadata explicitly labels male/female artwork, not inferred from species ratio. Gender is an optional trade preference, never synthesized from the default sprite. Dittobase release badge remains unreleased at retrieval; release eligibility is independently based on official local start and current Serebii event/Shiny listings, not asset existence."
+    },
+    {
+      "no": 999,
+      "names": [
+        "Gimmighoul (10th Anniversary Coin)",
+        "Gimmighoul (Roaming Form (10th Anniversary Coin))"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "999-gimmighoul-10th-anniversary-coin.png",
+      "sourceFiles": {
+        "default": "999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sourceLabel": "10th Anniversary Coin",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/gimmighoul-10th-anniversary-coin",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/999-gimmighoul-10th-anniversary-coin.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sha256": {
+        "default": "0f7359eace1dcf1d10d695cdaf6190cafbb682a4b591ab6ae38d4d8e2df68322",
+        "shiny": "2185cee8b4aa4d87ae19af9e12e52adf989131c712b48431df039973661f388a"
+      },
+      "availableGenders": [],
+      "genderModel": "genderless",
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "shinyEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original normal/Shiny art inspected. Normal tenth-anniversary image differs from independently labelled ninth-anniversary reference by 1206 decoded pixels on the same 60x75 canvas. Not a relabelled ninth/default icon.",
+      "anniversaryPixelProof": {
+        "images": [
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2119
+          },
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin-shiny",
+            "width": 61,
+            "height": 74,
+            "visiblePixels": 2126
+          },
+          {
+            "name": "999-gimmighoul-9th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2126
+          }
+        ],
+        "normalVsShiny": {
+          "differentDimensions": true
+        },
+        "tenthVsNinth": {
+          "differentPixels": 1206
+        }
+      },
+      "reviewIdentityId": "pokemon:999:standard:legacy:Gimmighoul%20(10th%20Anniversary%20Coin)"
     }
   ]
 }

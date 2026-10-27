@@ -14,8 +14,8 @@
   },
   "maintenanceCandidate": {
     "baseCommit": "bf4a7e437545833e515bd7518fede39f209279e1",
-    "canonicalRecords": 402,
-    "exactArtworkRecords": 395,
+    "canonicalRecords": 404,
+    "exactArtworkRecords": 397,
     "pendingArtworkRecords": 7,
     "excludedRows": 7
   },
@@ -370,7 +370,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",

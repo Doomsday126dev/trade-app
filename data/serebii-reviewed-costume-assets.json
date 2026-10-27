@@ -197,6 +197,59 @@
       ],
       "genderModel": "genderless",
       "availableGenders": []
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Blue Shirt (Citrus))",
+        "Citrus Shirt Pikachu"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-jeju.png",
+      "sourceFiles": {
+        "default": "025-jeju.png",
+        "shiny": "shiny/025-jeju.png"
+      },
+      "sourceLabel": "Blue Shirt (Citrus)",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-jeju.png",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-pikachu-citrus-shirt.png",
+        "shiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-shiny.png",
+        "female": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female.png",
+        "femaleShiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female-shiny.png"
+      },
+      "sha256": {
+        "default": "ce7b0e3687e22c128c6027e5b1daa3e754172787899380c61160d77fa0a13c1a",
+        "shiny": "9fb20358e69fe33d61bb2f66a6c341d7b928a91c85a7004ed531ffec31bd1fd1",
+        "female": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+        "femaleShiny": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127"
+      },
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/",
+      "shinyEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original male and female normal/Shiny Citrus Shirt PNGs inspected. Female artwork has a heart-notched tail. Generic Jeju label remains unresolved and separate.",
+      "femaleArtworkReview": [
+        {
+          "id": "citrus-female-normal",
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.634701+00:00",
+          "http": 200,
+          "sha256": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+          "bytes": 4930
+        },
+        {
+          "id": "citrus-female-shiny",
+          "url": "https://img.pokemondb.net/sprites/go/shiny/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.709951+00:00",
+          "http": 200,
+          "sha256": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127",
+          "bytes": 4814
+        }
+      ]
     }
   ]
 }

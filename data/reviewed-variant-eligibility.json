@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "qualification": "GO normal release is independently verified. Shiny artwork exists but a Shiny release is unverified, not asserted unreleased. Only reviewed exact names are restricted; existing saved values remain intact.",
+  "records": [
+    {
+      "no": 1013,
+      "name": "Sinistcha",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": -1
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 825,
+      "name": "Dottler",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/bug-out-2026"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 826,
+      "name": "Orbeetle",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/bug-out-2026"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 886,
+      "name": "Drakloak",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/go-out-galar-region"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 887,
+      "name": "Dragapult",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/go-out-galar-region"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 933,
+      "name": "Naclstack",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/journey-to-paldea-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 934,
+      "name": "Garganacl",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/journey-to-paldea-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 830,
+      "name": "Eldegoss",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/spring-into-spring-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 836,
+      "name": "Boltund",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/yampers-paw-prints-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 838,
+      "name": "Carkol",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/winter-holiday-part2-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 839,
+      "name": "Coalossal",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/winter-holiday-part2-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 847,
+      "name": "Barraskewda",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/water-festival-2026"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 918,
+      "name": "Spidops",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/enchanted-hollow-2025"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 956,
+      "name": "Espathra",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/spring-marathon-2026"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    },
+    {
+      "no": 972,
+      "name": "Houndstone",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2023"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4
+      },
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00"
+    }
+  ]
+}

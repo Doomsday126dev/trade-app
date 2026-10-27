@@ -56,12 +56,17 @@ function sourceRows(){
     if(index===undefined||rows[index].no!==Number(entry.no))throw new Error(`Missing public Dynamax identity: ${name}`);
     return index;
   }))];
-  return{rows,dynamaxIndexes};
+  const eligibility=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-variant-eligibility.json'),'utf8'));
+  if(eligibility.schemaVersion!==1||!Array.isArray(eligibility.records))throw Error('Invalid reviewed variant eligibility');
+  const seen=new Set();for(const row of eligibility.records){const name=normalize(row.name),entry=byName.get(name);if(seen.has(name)||!entry||entry.no!==row.no||row.normal!=='released'||!['released','unverified','announced'].includes(row.shiny)||!row.releaseEvidence?.length||(!Array.isArray(row.genders)||row.genders.some(g=>!['f','m'].includes(g))||new Set(row.genders).size!==row.genders.length))throw Error('Incomplete or conflicting variant eligibility: '+row.name);seen.add(name);}
+  const artChecks=JSON.parse(fs.readFileSync(path.join(root,'data/catalogue-art-checks.json'),'utf8')).records;
+  for(const row of eligibility.records)for(const shiny of [false,true])if(!artChecks.some(proof=>proof.no===row.no&&proof.shiny===shiny&&!proof.gender&&proof.status==='verified-bytes'&&proof.decoded&&/^[0-9a-f]{64}$/.test(proof.sha256||'')))throw Error('Reviewed variant lacks exact decoded art proof: '+row.name);
+  return{rows,dynamaxIndexes,eligibility:eligibility.records.map(({name,normal,shiny,genders})=>({name,normal,shiny,genders}))};
 }
 
-function runtimeSource({rows,dynamaxIndexes}){
+function runtimeSource({rows,dynamaxIndexes,eligibility}){
   if(rows.some(row=>row.name.includes('|')))throw new Error('Public sprite name contains compact delimiter');
-  return`(function(g){\n  'use strict';\n  const root=g.PogoDomain=g.PogoDomain||{};\n  const names=${JSON.stringify(rows.map(row=>row.name).join('|'))}.split('|');\n  const nos=${JSON.stringify(rows.map(row=>row.no))};\n  const maxIds=${JSON.stringify(dynamaxIndexes)};\n  function key(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map(names.map((name,i)=>[key(name),nos[i]]));\n  const dex=value=>byName.get(key(value))||0;\n  const maxByName=new Map(maxIds.map(index=>{const name=names[index],no=nos[index];return[key(name),{base:name.slice(0,-' (Dynamax)'.length),no}];}));\n  function dynamaxBase(value='',no=0){const item=maxByName.get(key(value));return item&&item.no===Number(no)?item.base:'';}\n  root.publicPokemonDex=Object.freeze({schemaVersion:2,dex,dynamaxBase,size:byName.size,dynamaxSize:maxIds.length});\n})(window);\n`.replace(/\n  /g,'').replace(/\n/g,'');
+  return`(function(g){\n  'use strict';\n  const root=g.PogoDomain=g.PogoDomain||{};\n  const names=${JSON.stringify(rows.map(row=>row.name).join('|'))}.split('|');\n  const nos=${JSON.stringify(rows.map(row=>row.no))};\n  const maxIds=${JSON.stringify(dynamaxIndexes)};\n  const eligibility=${JSON.stringify(eligibility)};\n  function key(value=''){return String(value||'').normalize('NFKC').trim().toLowerCase().replace(/\\s+/g,' ');}\n  const byName=new Map(names.map((name,i)=>[key(name),nos[i]]));\n  const dex=value=>byName.get(key(value))||0;\n  const maxByName=new Map(maxIds.map(index=>{const name=names[index],no=nos[index];return[key(name),{base:name.slice(0,-' (Dynamax)'.length),no}];}));\n  function dynamaxBase(value='',no=0){const item=maxByName.get(key(value));return item&&item.no===Number(no)?item.base:'';}\n  const eligibilityByName=new Map(eligibility.map(row=>[key(row.name),Object.freeze({...row,genders:Object.freeze(row.genders)})]));\n  const variantEligibility=value=>eligibilityByName.get(key(value))||null;\n  root.publicPokemonDex=Object.freeze({schemaVersion:2,dex,dynamaxBase,variantEligibility,size:byName.size,dynamaxSize:maxIds.length});\n})(window);\n`.replace(/\n  /g,'').replace(/\n/g,'');
 }
 
 function main(){

@@ -472,6 +472,8 @@
     return publicDexLookup.get(normalizeSpriteKey(name))||0;
   }
   function publicSpriteUrls(name='',gender='',no=0,shiny=false){
+    const eligibility=root.publicPokemonDex?.variantEligibility?.(name);
+    if(eligibility&&gender&&!eligibility.genders.includes(gender))return Object.freeze([]);
     const identity=spriteSemanticIdentity(name,gender,no),display=identity.display,base=identity.base,urls=[];
     if(isAmbiguousVisibleForm(name,no))return Object.freeze([]);
     const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender,shiny});
