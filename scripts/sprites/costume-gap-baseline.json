@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.; 2026-10-27 finite-67 review accepts only the independently verified Slowpoke (Cowboy) alias for existing Detective Slowpoke. Exact normal/Shiny assets and all other mapping fingerprints, seven ambiguous gaps and original expiry retained.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -1932,7 +1932,7 @@
     },
     {
       "id": "pokemon:666:standard:legacy:Pok%C3%A9%20Ball",
-      "identity": "Poké Ball",
+      "identity": "Pok\u00e9 Ball",
       "gap": false,
       "fingerprint": "3a2eb534a924610fc940dada87b7eb22240baa685cd9e10a2caa9444a43a9ebb"
     },
@@ -2228,7 +2228,7 @@
       "id": "pokemon:79:standard:legacy:Slowpoke%20(Detective)",
       "identity": "Slowpoke (Detective)",
       "gap": false,
-      "fingerprint": "668a36e25415b46293fcaf23c172b06b30358edb2da6af2fc9df805477151c74"
+      "fingerprint": "1baf6cc2b045f4076b35a219323c84b7118f89732ed2efe8cfd21dea54e0d517"
     },
     {
       "id": "pokemon:79:standard:legacy:Slowpoke%20(New%20Year)",

@@ -210,3 +210,14 @@ test('Find by Pokemon keyboard contract traverses and scrolls the full rendered 
   assert.match(html,/\.favorite-browse-search \.ac-dropdown\{z-index:350\}/);
   assert.match(html,/\.ac-dropdown\{[^}]*overflow-y:auto/);
 });
+
+test('indexed legacy alias lookups preserve every reviewed stored ID and return independent arrays',()=>{
+ const rows=JSON.parse(source('js/domain/pokemonKeys.js').match(/const REVIEWED_PICKER_ALIASES=Object.freeze\((\[.*?\])\);/s)[1]);
+ for(const row of rows){
+  assert.deepEqual(Array.from(catalog.legacyCatalogIds(row.id)),Object.values(row.old));
+  const copy=catalog.legacyCatalogIds(row.id);copy.length=0;assert.equal(catalog.legacyCatalogIds(row.id).length,Object.keys(row.old).length);
+  for(const [name,id] of Object.entries(row.old)){assert.equal(catalog.legacyCatalogIdForName(name),id);assert.equal(catalog.legacyCatalogIdForName(' '+name.toUpperCase()+' '),id);}
+  const entries=Object.keys(row.old).map(name=>({no:row.no,name})),merged=catalog.canonicalizeEntries(entries);assert.equal(merged.length,1);assert.equal(merged[0].name,row.primary);assert.equal(merged[0].catalogId,row.id);
+ }
+ assert.equal(catalog.legacyCatalogIdForName('Unreviewed future costume'),'');assert.deepEqual(Array.from(catalog.legacyCatalogIds('unknown')),[]);
+});

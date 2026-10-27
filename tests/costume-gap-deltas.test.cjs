@@ -13,3 +13,15 @@ test('reviewed twenty-one-identity update preserves seven ambiguous gaps and ori
 test('offline review cannot masquerade as a scheduled live-source check',()=>{const r={status:'offline-check-passed',checkedAt:now.toISOString()};assert.throws(()=>validateSource(r,now),/unavailable/);assert.equal(validateSource(r,now,{allowOffline:true}),'offline-check-passed')});
 
 test('promotion preserves its explicitly reviewed maintenance identity without pending register inference',()=>{const c={entries:[{no:25,names:['Pikachu (Reviewed Costume)'],status:'exact',reviewIdentityId:'announcement:reviewed-costume',assets:{default:'exact.png'}}]};assert.equal(snapshot(c,{entries:[]})[0].id,'announcement:reviewed-costume');});
+
+test('finite-67 alias acknowledgement preserves exact Slowpoke art and cannot cover another mapping change',()=>{
+ const fs=require('fs'),vm=require('vm'),root=require('path').join(__dirname,'..'),read=n=>JSON.parse(fs.readFileSync(root+'/data/'+n)),catalog=read('costume-sprite-catalog.json'),pending=read('pending-costume-artwork.json'),baseline=JSON.parse(fs.readFileSync(root+'/scripts/sprites/costume-gap-baseline.json')),window={};
+ vm.runInNewContext(fs.readFileSync(root+'/js/domain/pokemonKeys.js','utf8'),{window});const resolve=window.PogoDomain.pokemonCatalog.resolveLegacyKey,at=new Date(Date.parse(baseline.reviewedAt)+1000),row=catalog.entries.find(r=>r.names.includes('Slowpoke (Detective)'));
+ assert.deepEqual(row.names,['Slowpoke (Detective)','Slowpoke Hat','Slowpoke (Cowboy)']);
+ const evidence=read('catalogue-sources/identity-resolution-67.json').records.find(r=>r.sourceName==='Slowpoke (Cowboy)');
+ assert.equal(evidence.disposition,'verified-existing-identity-alias');assert.equal(evidence.art,'existing exact normal/Shiny retained');
+ assert.equal(baseline.reviewedAt,'2026-10-26T00:40:09.188Z');assert.equal(baseline.expiresAt,'2026-11-02T00:40:09.188Z');
+ const prior=structuredClone(catalog);prior.entries.find(r=>r.names.includes('Slowpoke (Detective)')).names.pop();
+ const previous=snapshot(prior,pending,resolve).find(r=>r.identity==='Slowpoke (Detective)');assert.equal(previous.fingerprint,'668a36e25415b46293fcaf23c172b06b30358edb2da6af2fc9df805477151c74');
+ row.assets.default='assets/wrong-costume.png';const result=partition(snapshot(catalog,pending,resolve),baseline,at);assert.equal(result.mappingChanges.length,1);assert.equal(result.requiresReview,true);
+});
