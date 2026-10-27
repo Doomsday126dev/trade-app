@@ -1065,6 +1065,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||resolvedName,entry?.no))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
   if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName)?.assets)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
   if(entry?.shiny!==true&&isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
@@ -1086,6 +1087,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return null;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return publicSpriteUrls(context.canonicalName||name,gender,no)[0]||null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
@@ -1152,6 +1154,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return urls;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}

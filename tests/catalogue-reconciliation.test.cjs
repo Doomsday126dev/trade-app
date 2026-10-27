@@ -70,3 +70,24 @@ test('Spooky Festival sources preserve all eight sizes and reject crossed size, 
  for(const mutate of [r=>r[0].artProof.default.url=r[1].artProof.default.url,r=>r[0].artProof.shiny.url=r[1].artProof.shiny.url,r=>r[0].no=711,r=>r[0].artProof.shiny.url=r[0].artProof.default.url])assert.throws(()=>validate(mutate),/Wrong Spooky Festival/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('selectable denominator follows runtime picker seeds and cannot be satisfied by sprite names alone',()=>{
+ const {loadIdentities}=require('../scripts/reconcile-catalogue.cjs'),current=loadIdentities(),repairs=require('../data/catalogue-selectable-repair.json').records;
+ assert.equal(current.all.length,1749);assert.equal(repairs.length,61);
+ for(const row of repairs)assert.ok(current.all.some(e=>e.name===row.name&&e.no===row.no),row.name);
+ const database=JSON.parse(JSON.stringify(current.database));database.wishlist=database.wishlist.filter(r=>r.name!=='Ivysaur');const missing=loadIdentities({database});
+ assert.ok(missing.publicAll.some(e=>e.name==='Ivysaur'));assert.ok(!missing.all.some(e=>e.name==='Ivysaur'));
+ const input=inputs();input.identities=missing;input.sources.data['normal-inventory']=[{no:2,name:'Ivysaur',sourceSprite:'https://www.serebii.net/pokemongo/pokemon/002.png',source:'https://www.serebii.net/pokemongo/gen1pokemon.shtml',availabilityClaim:'listed-without-unavailable-marker'}];input.sources.data['shiny-inventory']=[];input.art.entries=[];
+ const result=reconcile(input);assert.equal(result.coverage['normal-inventory'].unmatched,1);assert.ok(result.queue.some(r=>r.no===2&&r.disposition==='unmatched-identity'&&r.priority==='urgent'));
+});
+
+test('compact variant status preserves every original status and gender boundary',()=>{
+ const vm=require('node:vm'),path=require('node:path'),window={};for(const file of ['js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js','js/domain/publicPokemonDex.js'])vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),{window});
+ for(const row of require('../data/reviewed-variant-status.json').records){const actual=window.PogoDomain.publicPokemonDex.variantStatus(row.name);assert.equal(actual.normal,row.normal,row.name);assert.equal(actual.shiny,row.shiny,row.name);assert.deepEqual(Array.from(actual.genders),row.genders,row.name);}
+ assert.equal(window.PogoDomain.publicPokemonDex.variantStatus('Centiskorch').shiny,'unverified');assert.deepEqual(Array.from(window.PogoDomain.publicPokemonDex.variantStatus('Blissey').genders),['f']);
+});
+
+test('actual selectable reconciliation retains explicit existing Mythical policy exclusions',()=>{
+ const input=inputs();input.identities.isTradeableForWishlist=entry=>entry.no!==151;input.sources.data['shiny-inventory']=[];input.sources.data['normal-inventory']=[{no:151,name:'Mew',sourceSprite:'https://example.test/151.png',source:'https://example.test/inventory',availabilityClaim:'listed-without-unavailable-marker'}];
+ const report=reconcile(input);assert.equal(report.coverage['normal-inventory'].policyExcluded,1);assert.equal(report.coverage['normal-inventory'].unmatched,0);assert.ok(report.queue.some(r=>r.no===151&&r.disposition==='excluded-existing-trade-policy'&&r.priority==='review'));
+});
