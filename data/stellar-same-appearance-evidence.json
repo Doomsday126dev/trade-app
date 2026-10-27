@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "id": "stellar-palette-10277-v1",
+  "identity": {
+    "no": 1024,
+    "name": "Terapagos (Stellar Form)",
+    "homeModelId": 10277
+  },
+  "claim": "Stellar Form has no distinct Shiny palette; separately labelled original art is identical. This does not establish Pokemon GO release.",
+  "reference": {
+    "source": "https://bulbapedia.bulbagarden.net/wiki/Shiny_Pok%C3%A9mon",
+    "retrieval": "Successful web tool read turn72view1, lines1775-1778, before direct HTTP403. This is an excerpt snapshot, not a full HTML capture.",
+    "excerpt": "Stellar Form Terapagos lack distinct Shiny color palettes.",
+    "context": "Article lists explicit exceptions to distinct Shiny coloration in main-series games; its following GO-specific Pikachu caveat does not establish a GO Terapagos release.",
+    "observedAt": "2026-10-27T19:14:16.200293+00:00",
+    "directHttpSnapshot": "403; not retried or bypassed"
+  },
+  "originals": [
+    {
+      "candidateId": "canonical-missing:1024:stellar terapagos",
+      "id": 10277,
+      "shiny": false,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10277.png",
+      "observedAt": "2026-10-27T10:33:44.314676+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "cached": false,
+      "sha256": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901",
+      "bytes": 255555,
+      "width": 512,
+      "height": 512,
+      "decoded": {
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 106507,
+        "pixelHash": "349761b2",
+        "status": "decoded"
+      }
+    },
+    {
+      "candidateId": "canonical-missing:1024:stellar terapagos",
+      "id": 10277,
+      "shiny": true,
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10277.png",
+      "observedAt": "2026-10-27T10:33:44.315177+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "cached": false,
+      "sha256": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901",
+      "bytes": 255555,
+      "width": 512,
+      "height": 512,
+      "decoded": {
+        "width": 512,
+        "height": 512,
+        "visiblePixels": 106507,
+        "pixelHash": "349761b2",
+        "status": "decoded"
+      }
+    },
+    {
+      "name": "Terapagos (Stellar Form)",
+      "shiny": false,
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/1024-terapagos-stellar.png",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar",
+      "pageSha256": "edd25d7fa32d7217d0f9cae7d8dcdfbcccaa922260dc1af18c7bc19ac0af28b5",
+      "observedAt": "2026-10-27T10:58:55.734962+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "e5e73253e5b19ebe52a058567a5adad45ce591ef7c21c74774f89fb500e44f97",
+      "bytes": 51323,
+      "decoded": {
+        "width": 166,
+        "height": 192,
+        "visiblePixels": 15851,
+        "pixelHash": "1c96616",
+        "status": "decoded"
+      }
+    },
+    {
+      "name": "Terapagos (Stellar Form)",
+      "shiny": true,
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/1024-terapagos-stellar-shiny.png",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar",
+      "pageSha256": "edd25d7fa32d7217d0f9cae7d8dcdfbcccaa922260dc1af18c7bc19ac0af28b5",
+      "observedAt": "2026-10-27T10:58:55.939688+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "e5e73253e5b19ebe52a058567a5adad45ce591ef7c21c74774f89fb500e44f97",
+      "bytes": 51323,
+      "decoded": {
+        "width": 166,
+        "height": 192,
+        "visiblePixels": 15851,
+        "pixelHash": "1c96616",
+        "status": "decoded"
+      }
+    }
+  ],
+  "release": {
+    "normal": "unverified",
+    "shiny": "unverified"
+  },
+  "priorBlocker": {
+    "state": "owner-attention-required",
+    "reason": "Serebii exact Shiny URL returns 404. Independently labelled PokeAPI and Dittobase normal/Shiny assets decode to identical pixels; no evidence establishes a separate Shiny appearance. Do not substitute normal art or assume that duplicate upstream pixels qualify the Shiny variant.",
+    "sources": [
+      "https://www.serebii.net/pokemongo/pokemon/shiny/1024-s.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10277.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10277.png",
+      "https://assets.dittobase.com/go/pokemon-unpadded/1024-terapagos-stellar-shiny.png"
+    ],
+    "nextAction": "Verify upstream exact Shiny model or explicit authoritative same-appearance evidence; keep normal artwork and Shiny wants available, but return no unverified Shiny sprite."
+  }
+}
