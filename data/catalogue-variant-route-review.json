@@ -7264,7 +7264,8 @@
         "https://www.dittobase.com/pokemon-go/pokedex/spinda"
       ],
       "nextAction": "Resolve whether the saved generic request intentionally accepts any pattern; review a clearly disclosed GO default illustration without aliasing it to a numbered pattern.",
-      "state": "owner-attention-required"
+      "state": "owner-attention-required",
+      "runtimeTreatment": "Generic normal/Shiny artwork withheld through the existing ambiguous-form guard; picker choice, saved IDs and early wants remain available. Numbered GO patterns are unaffected."
     },
     {
       "id": "variant-route:1024:Terapagos (Stellar Form)",

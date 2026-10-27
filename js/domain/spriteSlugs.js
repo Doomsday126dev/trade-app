@@ -113,7 +113,9 @@
   function isAmbiguousVisibleForm(name='',no=0){
     // The selectable legacy key omits Single/Rapid Strike style, whose Gmax
     // artwork differs. Neither style may be guessed from the species number.
-    return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax';
+    // Generic Spinda also omits its GO pattern; main-series spot art is not
+    // a verified substitute. Keep the want/ID and use the existing placeholder.
+    return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax'||Number(no)===327&&normalizeSpriteKey(name)==='spinda';
   }
   function verifiedEquivalentSpriteUrl(name='',no=0,gender='',shiny=false){
     if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return shiny?SCATTERBUG_EQUIVALENT_URL.replace('/home/','/home/shiny/'):SCATTERBUG_EQUIVALENT_URL;
