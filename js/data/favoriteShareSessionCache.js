@@ -191,6 +191,7 @@
       for(const favorite of favorites)records.delete(trainerKey(favorite?.key||favorite?.displayName));
     }
     function reset(){cancelQueued();activeIdentity='';generation++;records=new Map();inflight=new Map();physicalReads=new Map();readEpochs=new Map();candidateKeys=new Set();candidateBindings=new Map();}
+    function hasPhysicalRead(favorite){const state=physicalReads.get(trainerKey(favorite?.key||favorite?.displayName));return!!(state?.primary||state?.replacement);}
     function peek(favorite){return records.get(trainerKey(favorite?.key||favorite?.displayName))||null;}
     function snapshot(){
       const physicalReferences=[...physicalReads.values()].reduce((count,state)=>count+Number(!!state.primary)+Number(!!state.replacement),0);
@@ -198,7 +199,7 @@
       return Object.freeze({active:!!activeIdentity,size:records.size,activeReads,queuedReads:queue.length,physicalReferences,physicalReferencesByKey,unresolvedPhysicalReads:activeEntries.size,readEpochs:new Map(readEpochs),records:new Map(records)});
     }
 
-    return Object.freeze({activate,syncFavorites,readFavorite,hydrate,retryUnavailable,summary,invalidate,reset,peek,snapshot});
+    return Object.freeze({activate,syncFavorites,readFavorite,hydrate,retryUnavailable,summary,invalidate,reset,peek,hasPhysicalRead,snapshot});
   }
 
   root.favoriteShareSessionCache=Object.freeze({DEFAULT_CONCURRENCY,DEFAULT_READ_DEADLINE_MS,DEFAULT_MAX_FAVORITES,retryableReadError,createFavoriteShareSessionCache});

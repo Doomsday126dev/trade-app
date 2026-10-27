@@ -6517,7 +6517,8 @@ function observeFavoritePublications(){
     const retries=favoritePublicationRetries.get(cache)||new Set();favoritePublicationRetries.set(cache,retries);
     const previous=cache.peek(favorite),key=canonicalTrainerName(favorite.displayName);
     const retry=previous?.retryable===true&&!retries.has(key)&&!/(?:rate-limited|busy)/.test(previous.error?.code||'');
-    if(retry)retries.add(key);
+    // Rejoining an outstanding request does not spend the one fresh-read retry.
+    if(retry&&!cache.hasPhysicalRead(favorite))retries.add(key);
     try{await cache.readFavorite(favorite,{force:retry});}catch{return;}
     if(!current()||!card.isConnected)return;
     const field=card.querySelector('.favorite-publication');if(!field)return;
