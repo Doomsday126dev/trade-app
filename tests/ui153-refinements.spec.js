@@ -38,3 +38,28 @@ test('Upcoming controls share the content edge, compact rows retain details, bon
  const positions=await page.evaluate(()=>['#tab-schedule .sched-hdr','.event-filter-row','.event-card'].map(s=>document.querySelector(s).getBoundingClientRect().x));expect(Math.max(...positions)-Math.min(...positions)).toBeLessThanOrEqual(1.5);expect((await card.boundingBox()).height).toBeLessThan(220);expect(await card.locator('.event-card-cue').evaluate(el=>el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
  await card.locator('[data-event-action="details"]').click();await expect(page.locator('#event-detail-modal')).toBeVisible();await expect(page.locator('#event-detail-body')).toContainText('2× catch Candy');await expect(page.locator('#event-detail-body a.btn[href="https://pokemongo.com/news"]')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#event-detail-modal')).toBeHidden();await expect(card.locator('[data-event-action="details"]')).toBeFocused();
 });
+test('phone category hint has a separate track and never covers scrolled or keyboard-focused labels',async({page},info)=>{
+ await fixture(page);
+ for(const width of[375,390,430])for(const theme of['light','dark']){
+  await page.setViewportSize({width,height:844});await page.evaluate(({events,theme})=>{applyTheme(theme);_eventData={events,raids:[],fetchedAt:Date.now()};_eventLoadState='ready';eventAllSchedule=true;eventTypeFilter='all';switchTab('schedule');renderEventsOnly();}, {events,theme});
+  const row=page.locator('.event-filter-row'),general=row.locator('[data-type="general"]');
+  const geometry=await row.evaluate(el=>{const box=el.getBoundingClientRect(),wrap=el.parentElement.getBoundingClientRect(),hint=getComputedStyle(el.parentElement,'::after');return{right:box.right,edge:wrap.right,width:parseFloat(hint.width),position:hint.position};});expect(geometry.position).toBe('static');expect(geometry.edge-geometry.width-geometry.right).toBeGreaterThanOrEqual(3);
+  for(const button of await row.locator('button').all()){const box=await button.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);expect(box.width).toBeGreaterThanOrEqual(44);}
+  await page.screenshot({path:`${out}/arrow-${info.project.name}-${width}-${theme}.png`,animations:'disabled'});
+  await general.focus();await expect(general).toBeFocused();await expect.poll(async()=>row.evaluate(el=>el.scrollLeft)).toBeGreaterThan(0);const bounds=await row.evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right})),focused=await general.boundingBox();expect(focused.x).toBeGreaterThanOrEqual(bounds.left-1);expect(focused.x+focused.width).toBeLessThanOrEqual(bounds.right+1);
+  await page.keyboard.press('Enter');await expect(page.locator('.event-filter[data-type="general"]')).toHaveAttribute('aria-pressed','true');await page.keyboard.press('ArrowLeft');await expect(page.locator('.event-filter[data-type="research"]')).toBeFocused();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});
+
+test('active pull indicator has a temporary clear lane above a long phone trainer name',async({page},info)=>{
+ await fixture(page);await page.setViewportSize({width:390,height:844});
+ for(const theme of['light','dark']){
+  await page.evaluate(theme=>{applyTheme(theme);switchTab('mylist');scrollTo(0,0);window.__pullRefreshes=0;syncFromLocal=()=>__pullRefreshes++;fbOn=false;},theme);
+  const name=page.locator('#tab-mylist .my-uname'),before=await name.boundingBox();
+  await page.evaluate(()=>{ptrStart({touches:[{clientY:20}]});ptrMove({touches:[{clientY:110}],preventDefault(){}});});
+  const indicator=page.locator('#ptr-indicator');await expect(indicator).toHaveClass(/pulling/);await indicator.evaluate(async el=>{getComputedStyle(el).transform;await Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{})));});const box=await indicator.boundingBox(),title=await name.boundingBox();expect(box.y+box.height).toBeLessThanOrEqual(title.y);expect(await page.evaluate(()=>scrollY)).toBe(0);
+  await page.screenshot({path:`${out}/pull-${info.project.name}-390-${theme}.png`,animations:'disabled'});
+  await page.evaluate(()=>ptrEnd());await expect(indicator).not.toHaveClass(/visible/);await expect(page.locator('#feedback-status')).toHaveText('View updated.');await expect(page.locator('#toast')).not.toHaveClass(/show/);expect(Math.abs((await name.boundingBox()).y-before.y)).toBeLessThanOrEqual(1);expect(await page.evaluate(()=>__pullRefreshes)).toBe(1);
+  await page.evaluate(()=>{ptrStart({touches:[{clientY:20}]});ptrMove({touches:[{clientY:50}],preventDefault(){}});ptrEnd();});await expect(indicator).not.toHaveClass(/visible/);expect(Math.abs((await name.boundingBox()).y-before.y)).toBeLessThanOrEqual(1);expect(await page.evaluate(()=>__pullRefreshes)).toBe(1);
+ }
+});

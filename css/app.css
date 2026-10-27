@@ -2419,7 +2419,7 @@ html[data-theme="light"] .myrow-trait.lucky{color:#805900}
 #events-out .event-group[data-group="day"] .event-card{padding:12px;gap:4px 6px}
 #tab-schedule .event-agenda-title{font-size:20px;margin:8px 0 10px}
 #tab-schedule .event-filter-row{padding-bottom:4px}
-.event-filter-row .event-filter{min-height:44px}
+.event-filter-row .event-filter{min-height:44px;min-width:44px}
 }
 .sync-dot{display:grid;place-items:center;width:16px;height:16px;background:transparent!important;font-size:14px;font-weight:800;line-height:1}
 .sync-dot.online{color:var(--ok)}.sync-dot.online::before{content:'✓'}
@@ -2557,4 +2557,6 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 #events-out .event-card-time{font-size:12px;line-height:1.45;font-weight:400;color:var(--muted);gap:3px 7px}
 #events-out .event-card .event-time-basis{margin:0}
 @media(max-width:1080px){#events-out .event-agenda-card{grid-template-columns:100px minmax(0,1fr) 44px}}
-@media(max-width:600px){#events-out .event-agenda-card{grid-template-columns:minmax(0,1fr) 44px}#events-out .event-filter-row{padding-right:30px}#events-out .event-group-title{font-size:17px}}
+@media(max-width:600px){#events-out .event-agenda-card{grid-template-columns:minmax(0,1fr) 44px}#tab-schedule .event-filter-scroll{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:4px}#tab-schedule .event-filter-row{min-width:0;padding-right:0}#tab-schedule .event-filter-scroll::after{position:static;grid-column:2;grid-row:1;width:36px;height:44px;background:none}#events-out .event-group-title{font-size:17px}}
+
+@media(max-width:600px){.ptr-indicator{top:calc(var(--topbar-h) + 6px)}body:has(#ptr-indicator.visible) #app .page.active{padding-top:calc(var(--space-3) + 48px)}}
