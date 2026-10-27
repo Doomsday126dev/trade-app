@@ -25,7 +25,7 @@ const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-2
 const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23\.123|2026-10-19\.12[5-7]|2026-10-20\.128|2026-10-22\.129)';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
 const localCatalogueContract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-10-27\.156';/.test(localReleaseSource)
-  ?SOURCE_CALL_CONTRACTS['c3b6e35c434aeedb632865472077eafd6c0e4d31']:null;
+  ?SOURCE_CALL_CONTRACTS['9852e03b8abee42035fbadd3ff33b2e5ee15822c']:null;
 const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
