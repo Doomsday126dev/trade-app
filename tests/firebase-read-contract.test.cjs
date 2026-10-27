@@ -12,7 +12,7 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -432,3 +432,7 @@ test('visual UI153 rejects a changed private target',t=>{const d=ui153VisualFixt
 function catalog154Fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'catalog154-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','cdf0171c08508940a34f53df2eb6653e878b2574','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
 test('catalogue154 runtime retains the reviewed 24-read contract',t=>{const r=check(catalog154Fixture(t),'cdf0171c08508940a34f53df2eb6653e878b2574');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
 test('catalogue154 rejects a changed private target',t=>{const d=catalog154Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'cdf0171c08508940a34f53df2eb6653e878b2574').status,0)});
+
+function ui155Fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ui155-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','03cd734f40bd5e2c68f18cc0ce61cbfebe721ed3','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
+test('UI155 exact runtime retains reviewed24reads without new publication reads',t=>{const r=check(ui155Fixture(t),'03cd734f40bd5e2c68f18cc0ce61cbfebe721ed3');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('UI155 still rejects a changed private target',t=>{const d=ui155Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'03cd734f40bd5e2c68f18cc0ce61cbfebe721ed3').status,0)});

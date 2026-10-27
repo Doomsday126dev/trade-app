@@ -1,5 +1,5 @@
-name: Isolated catalogue repair qualification
-# Requalify the pinned runtime alongside the compact-name monitor control fix.
+name: Isolated UI refinement qualification
+# Qualify the exact approved UI runtime; publication remains protected separately.
 on:
   pull_request:
     branches: [main]
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: cdf0171c08508940a34f53df2eb6653e878b2574
+          ref: 03cd734f40bd5e2c68f18cc0ce61cbfebe721ed3
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -57,3 +57,5 @@ jobs:
         run: |
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
+      - name: Exact Share states Favorites order and Apri install icon qualification
+        run: npx playwright test -c playwright.share-refinement.config.cjs
