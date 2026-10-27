@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    "feedback.viewUpdated":"View updated.",
     "accountSync.publishing":"Saved; updating shared list",
     "accountSync.publishingDetail":"Your private changes are saved. Your shared list is updating automatically.",
     "accountSync.publicationPending":"Saved; sharing pending",
@@ -75,7 +76,7 @@
     'product.publishing':"Publishing…",
     'product.published':"Published. Ready to copy.",
     'product.publishedCopied':"Published and link copied.",
-    'product.publishedCopyFailed':"Published, but copying failed. Select the link below.",
+    'product.publishedCopyFailed':"Published. Copy failed; use the selected link below.",
     'product.publishFailed':"Not published. Your list edits are retained. Retry publishing.",
     'product.publishCopy':"Publish and copy link",
     'product.linkScope':"Public link includes Looking For and For Trade declarations.",
@@ -273,7 +274,7 @@
     'strings.copySuccess':'Search string copied.',
     'strings.copyFailed':'Copy failed. Select the text manually.',
     'share.publicationUpdated':'Public share snapshot updated.',
-    'share.publicationPending':'Share link copied. Your complete lists are still loading; publication will finish after they are ready.',
+    'share.publicationPending':"Publishing is pending. Keep this app open until confirmed.",
     'share.publicationNotReady':'Share link copied, but the public list was not changed because complete account data is unavailable.',
     'share.listTitle':'{username}’s trade list',
     'share.publicTryAgain':'Refresh the page or try again in a moment.',
@@ -559,8 +560,8 @@
 "share.textSnapshot":"Copy text",
 "share.snapshotCaption":"A snapshot of this selection",
 "share.partialLink":"Public links include the full list. Choose Full list for a link, or use an image, text or game search for this selection.",
-"share.liveHelp":"Anyone can view without an account. Saved changes update the published copy; viewers may need to reconnect. If publishing is pending, keep the owner app open until confirmed.",
-"share.publicFields":"Published profile details and want notes are visible. This username-based link is public, not a private invitation.",
+"share.liveHelp":"Public link · no account needed.",
+"share.publicFields":"Published profile details and want notes are visible. Saved changes update this public link.",
 "share.gameLanguage":"Pokémon GO language",
 "share.searchLimits":"Species candidates only: check exact forms and requirements. Filters exclude 4★, traded, Shadow, Purified, backgrounds and CP above 2500; sections without shiny wants also exclude shiny.",
 "share.textCopied":"Text copied.",

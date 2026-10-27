@@ -49,7 +49,7 @@ html[data-theme="light"]{
   --bg:#faf7ef;--bg2:#f3efe5;--card:#fffdf8;
   --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);--control-border:#85837d;
   --text:#20242d;--muted:#62656d;--accent:#edb926;--ac2:#805900;
-  --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp?v=2026-10-27.152);
+  --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp?v=2026-10-27.153);
   --H:#dc2626;--M:#d97706;--L:#059669;
   --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
   --danger:#dc2626;--warn:#d97706;--ok:#059669;
@@ -62,7 +62,7 @@ html[data-theme="light"]{
     --bg:#faf7ef;--bg2:#f3efe5;--card:#fffdf8;
     --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);--control-border:#85837d;
     --text:#20242d;--muted:#62656d;--accent:#edb926;--ac2:#805900;
-  --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp?v=2026-10-27.152);
+  --action-bg:#ffd047;--action-text:#211c0c;--accent-soft:rgba(198,144,0,.10);--paper:url(../assets/brand/ivory-paper.webp?v=2026-10-27.153);
     --H:#dc2626;--M:#d97706;--L:#059669;
     --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
     --danger:#dc2626;--warn:#d97706;--ok:#059669;
@@ -2807,3 +2807,32 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
  #tab-find .favorite-card-footer{grid-row:1;align-self:start}
  .favorite-publication-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
+
+/* Keep Combine's second-tap state distinct even with WebKit's sticky hover. */
+.wants-custom-toggles .btn[aria-pressed="false"]:is(:hover,:focus){background:var(--bg);border-color:var(--control-border);color:var(--text)}
+.wants-custom-toggles .btn[aria-pressed="true"]{background:var(--action-bg);border-color:var(--accent);color:var(--action-text);font-weight:800}
+.wants-custom-toggles .btn:focus-visible{outline:3px solid var(--ac2);outline-offset:3px}
+
+/* Selected-day and upcoming rows use the same Apri surfaces and rhythm. */
+#tab-schedule .event-filter-scroll{margin-inline:0}
+#tab-schedule .event-filter-row{padding-inline:0;gap:6px}
+#tab-schedule .event-view-mode{gap:18px;margin:6px 0 8px}
+#tab-schedule .event-view-mode .btn{padding-inline:0}
+#events-out .event-group{margin-bottom:18px}
+#events-out .event-group-heading{margin-bottom:8px}
+#events-out .event-group-title{color:var(--text)}
+#events-out .event-card-grid{gap:10px;border:0;overflow:visible}
+#events-out .event-card{grid-template-columns:minmax(0,1fr) 44px;min-height:0;padding:14px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);box-shadow:none}
+#events-out .event-agenda-card{grid-template-columns:124px minmax(0,1fr) 44px}
+#events-out .event-card-title{font-size:17px;line-height:1.4}
+#events-out .event-card-cue{width:44px;min-width:44px;justify-content:center;background:transparent}
+#events-out .event-card-cue-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#events-out .event-current-badge{background:var(--accent-soft);border-color:var(--border2);color:var(--text)}
+#events-out .event-card.is-active .event-card-relative{color:var(--muted)}
+#events-out .event-type-tag{background:transparent;border:0;padding:0;color:var(--muted)}
+#events-out .event-benefit-list li{background:transparent;border-left-color:var(--accent);padding:2px 8px}
+#events-out .event-benefits h4{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+#events-out .event-card-time{font-size:12px;line-height:1.45;font-weight:400;color:var(--muted);gap:3px 7px}
+#events-out .event-card .event-time-basis{margin:0}
+@media(max-width:1080px){#events-out .event-agenda-card{grid-template-columns:100px minmax(0,1fr) 44px}}
+@media(max-width:600px){#events-out .event-agenda-card{grid-template-columns:minmax(0,1fr) 44px}#events-out .event-filter-row{padding-right:30px}#events-out .event-group-title{font-size:17px}}
