@@ -1,12 +1,10 @@
-const currentControls=require('./helpers/current-want-controls.cjs');
 const {test,expect}=require('@playwright/test'),{normalFixture,settled}=require('./helpers/usability-fixture.cjs'),rows=require('../data/starter-costume-shiny-assets.json').records;
 const fs=require('fs'),source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8'),install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');
 for(const shiny of [false,true])test('all ten '+(shiny?'Shiny':'normal')+' costumes search/add/reload/public exact art',async({page},info)=>{
- test.setTimeout(180000); // Existing dedicated artwork-suite budget for the complete save/reload matrix.
  await normalFixture(page);
  for(const r of rows){
   const input=page.locator('#wants-add-name');await input.fill(r.name.split(' (')[0]);await expect(page.locator('#wants-add-name-suggestions').getByRole('option',{name:r.name,exact:true})).toBeVisible();await page.locator('#wants-add-name-suggestions').getByRole('option',{name:r.name,exact:true}).click();
-  await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();await currentControls.genderDetails(page);await currentControls.priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);await page.locator('#combined-gender').selectOption(shiny?'f':'m');await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
+  await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();if(!await page.locator('#combined-editor-modal details').evaluate(e=>e.open))await page.locator('#combined-editor-modal details summary').click();await require('./helpers/current-want-controls.cjs').priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);await page.locator('#combined-gender').selectOption(shiny?'f':'m');await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
  }
  const saved=await page.evaluate(()=>structuredClone(__normal.remote));await page.evaluate(()=>stopAccountSyncRuntime());await install(page,saved);await settled(page);
  for(const r of rows){

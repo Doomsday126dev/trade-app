@@ -434,7 +434,7 @@ let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
 let myListIntent='lf';
 let combinedSelection=new Set(),combinedOwner='',combinedEditor=null,combinedLimit=120;
-let wantsSelectionMode=false;
+let wantsSelectionMode=false,wantsPriorityFilter='ALL';
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
 function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
@@ -445,8 +445,7 @@ function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
 }
 const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
-  if(combinedEditor&&combinedEditor.owner!==cur)closeModal('combined-editor-modal');
-  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
+  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
@@ -454,7 +453,15 @@ function renderCombinedList(model=productDeclarations()){
   const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
-  const sections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const allSections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const counts={ALL:groups.length,H:0,M:0,L:0};
+  for(const entry of byEntry.keys())if(Object.hasOwn(counts,entry.p))counts[entry.p]++;
+  document.querySelectorAll('[data-wants-priority-filter]').forEach(button=>{
+    const key=button.dataset.wantsPriorityFilter;
+    button.setAttribute('aria-pressed',String(wantsPriorityFilter===key));
+    button.querySelector('.wants-filter-count').textContent=i18nCore.formatNumber(counts[key]);
+  });
+  const sections=allSections.filter(section=>wantsPriorityFilter==='ALL'||section.priority===wantsPriorityFilter);
   const current=new Map([...host.querySelectorAll(':scope > section')].map(section=>[section.dataset.wantsSection,section]));
   const active=[],nodes=[];let total=0,hasMore=false;
   const baseLimit=Math.floor(combinedLimit/Math.max(1,sections.length));
@@ -493,8 +500,8 @@ function renderCombinedList(model=productDeclarations()){
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
@@ -521,13 +528,20 @@ function renderCombinedList(model=productDeclarations()){
   }
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
-  if(!active.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
+  if(!active.length)host.innerHTML=`<p class="empty" role="status">${escHtml(i18nCore.t(wantsPriorityFilter==='ALL'?'contextSearch.empty':'workflow.priorityEmpty',{priority:wantSectionLabel({priority:wantsPriorityFilter,flags:[]})}))}</p>`;
   const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
   for(const [key,cached]of combinedRowCache){if(combinedRowCache.size<=cacheBudget)break;if(!visibleNodes.has(cached.row))combinedRowCache.delete(key);}
   window.__pogoMyListRenderState={complete:true,rendered:nodes.length,total,query,hasMore,usableAt:performance.now()};
   refreshCombinedSearch(model);
+}
+function setWantsPriorityFilter(value){
+  if(!['ALL','H','M','L'].includes(value))return;
+  wantsPriorityFilter=value;
+  // Choosing a priority reveals its rows; selections and copy/export scopes stay intact.
+  if(value!=='ALL')wantsCollapsedSections.delete(value);
+  renderMyList();
 }
 function toggleWantsSection(key){
   if(wantsCollapsedSections.has(key))wantsCollapsedSections.delete(key);else wantsCollapsedSections.add(key);
@@ -555,6 +569,9 @@ function refreshCombinedSearch(model=productDeclarations()){
   toolbar.hidden=!wantsSelectionMode&&!selected.length;
   document.getElementById('wants-select-toggle').hidden=wantsSelectionMode||selected.length>0;
   document.getElementById('combined-selected-count').textContent=selected.length?i18nCore.t('workflow.selected',{count:selected.length}):i18nCore.t('workflow.select');
+  const outside=selected.filter(entry=>wantsPriorityFilter!=='ALL'&&entry.p!==wantsPriorityFilter).length;
+  const scopeNote=document.getElementById('wants-selection-filter-note');
+  scopeNote.hidden=!outside;scopeNote.textContent=outside?i18nCore.t('workflow.selectedOtherPriorities',{count:outside}):'';
   document.getElementById('wants-selection-share').hidden=!selected.length;
   document.getElementById('tab-mylist').classList.toggle('wants-selecting',wantsSelectionMode||selected.length>0);
   const selectedHost=document.getElementById('combined-search');selectedHost.hidden=!selected.length;
@@ -586,7 +603,9 @@ function resetWantsToolsDisclosure(tools){
 }
 function toggleWantsSearchHelp(){
   const help=document.getElementById('wants-about-searches');help.hidden=!help.hidden;
-  document.getElementById('wants-about-searches-toggle').setAttribute('aria-expanded',String(!help.hidden));
+  const toggle=document.getElementById('wants-about-searches-toggle');
+  toggle.setAttribute('aria-expanded',String(!help.hidden));
+  toggle.focus({preventScroll:true});
 }
 function setWantsFindOpen(open){
   closeWantsListTools();
@@ -601,7 +620,7 @@ document.addEventListener('click',event=>{
 function toggleWantsCustomScope(key){if(wantsCustomScopes.has(key))wantsCustomScopes.delete(key);else wantsCustomScopes.add(key);refreshCombinedSearch();}
 function startWantsSelection(){wantsSelectionMode=true;refreshCombinedSearch();}
 function clearWantsSelection(){combinedSelection.clear();wantsSelectionMode=false;renderMyList();}
-function shareWantsSelection(trigger){openProductShare('image','selected',trigger);}
+function shareWantsSelection(){openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();}
 function selectCombinedGroup(index,selected){
   const model=productDeclarations(),groups=combinedGroups(model);
   const group=typeof index==='string'?groups.find(g=>combinedKey(g[0])===index):groups[index];
@@ -627,7 +646,7 @@ function renderWantsPicker(input){
 }
 function chooseWantsPicker(input,index){
   const item=input._pickerRows?.[index];if(!item)return;
-  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name')refreshCombinedGenderOptions();input.focus({preventScroll:true});
+  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name'){refreshCombinedGenderOptions();finishCombinedPokemonChoice();}else input.focus({preventScroll:true});
 }
 function prepareWantsCatalog(){
   if(!wantsPickerItems.length){
@@ -664,6 +683,7 @@ function refreshCombinedShinyAvailability(){
   const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
   box.disabled=!!blocked&&!box.checked;
   hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
+  renderCombinedPokemonSummary();
 }
 function combinedAllowedGenders(name){
   const costume=costumeSpriteCatalogDomain.resolve({name});
@@ -679,18 +699,52 @@ function refreshCombinedGenderOptions(savedValue){
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
-  select.innerHTML=`<option value="">${escHtml(allowed.length===1?i18nCore.t('costume.genderOnly',{gender:label(allowed[0])}):'—')}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
+  select.innerHTML=`<option value="">${escHtml(i18nCore.t(allowed.length?'wantEditor.anyGender':'wantEditor.genderless'))}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
   select.value=preserve||allowed.includes(value)?value:'';
   const hint=document.getElementById('combined-gender-hint');
-  hint.hidden=!preserve;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):'';
+  hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
+  renderCombinedPokemonSummary();
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
-function openWantsAddEditor(invoker){
-  openCombinedEditor(undefined,invoker);
+function setCombinedPriority(value){
+  if(!['','H','M','L'].includes(value))return;
+  document.getElementById('combined-priority').value=value;
+  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
+}
+function renderCombinedPokemonSummary(){
+  const host=document.getElementById('combined-identity'),input=document.getElementById('combined-name'),field=document.getElementById('combined-name-field');
+  if(!host||!input||!field)return;
+  const entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
+  const show=!!entry&&!field.dataset.editing;
+  host.hidden=!show;field.hidden=show;
+  if(!show)return;
+  const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
+  document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
+  document.getElementById('combined-identity-art').innerHTML=entry.no?spriteImg(entry.no,60,'combined-identity-sprite',name,gender,entry.dn||entry.displayName||name,{shiny,catalogId:entry.catalogId}):'';
+  const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
+  form.replaceChildren();form.hidden=!type;
+  if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
+  document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
+}
+function changeCombinedPokemon(){
+  if(combinedEditor?.entries?.length)return;
+  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;
+  document.getElementById('combined-identity').hidden=true;
+  const input=document.getElementById('combined-name');input.focus();input.select();
+}
+function finishCombinedPokemonChoice(){
+  const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
+  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
+  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();
+  if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
+}
+function openWantsAddEditor(opener=document.activeElement){
+  openCombinedEditor(undefined,{returnFocus:opener});
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
   refreshCombinedGenderOptions();
-  setCombinedEditorPriority(document.getElementById('wants-add-priority').value);
+  setCombinedPriority(document.getElementById('wants-add-priority').value);
+  finishCombinedPokemonChoice();
 }
 function setWantsAddPriority(priority){
   const input=document.getElementById('wants-add-priority');input.value=input.value===priority?'':priority;
@@ -701,59 +755,37 @@ async function submitWantsAdd(){
   const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
   button.disabled=true;
   try{
-    openWantsAddEditor(input);await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
+    openWantsAddEditor(button);await saveCombinedEditor();
+    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';input.focus({preventScroll:true});}
   }finally{button.disabled=false;}
 }
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
-  renderCombinedList();openProductShare('image','selected');
+  renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
-function setCombinedEditorPriority(value){
-  document.getElementById('combined-priority').value=value;
-  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
-}
-function combinedEditorSessionCurrent(draft){
-  return draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&
-    draft.sessionGeneration===_sessionTransientGeneration&&draft.runtimeGeneration===accountSyncRuntimeGeneration&&draft.runtime===managedAccountSyncRuntime;
-}
-function openCombinedEditor(index,invoker){
+function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  const modal=document.getElementById('combined-editor-modal'),focused=document.activeElement;
-  const opener=invoker?.isConnected?invoker:modal.contains(focused)?_modalPrevFocus:focused;
-  const previousInert=combinedEditor?.appInert??document.getElementById('app').inert;
-  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries),runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,sessionGeneration:_sessionTransientGeneration,appInert:previousInert};
+  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
-  input.value=entry.name||'';input.readOnly=!!entries?.length;
+  const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
+  input.value=entry.name||'';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
+  if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';
+  document.getElementById('combined-preferences').open=false;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   refreshCombinedShinyAvailability();
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
-  setCombinedEditorPriority([...priorities][0]||'');
+  setCombinedPriority([...priorities][0]||'');
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
-  const editing=!!entries?.length,titleKey=editing?'wantEditor.edit':'wantEditor.add',saveKey=editing?'wantEditor.save':'wantEditor.add';
-  for(const [id,key]of [['combined-editor-title',titleKey],['combined-save',saveKey]]){
-    const node=document.getElementById(id);node.dataset.i18n=key;node.textContent=i18nCore.t(key);
-  }
-  document.getElementById('combined-name-field').hidden=editing;
-  const identity=document.getElementById('combined-identity');identity.hidden=!editing;
-  identity.innerHTML=editing?`<strong>${escHtml([entry.dn||entry.name,productShareCategoryLabel(entry)].filter(Boolean).join(' · '))}</strong>`:'';
-  document.getElementById('combined-note-details').open=Boolean(entry.note);
-  combinedEditor.initialFields=Object.fromEntries(['mod','note','gender'].map(field=>[field,document.getElementById('combined-'+field).value]));
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
-  document.getElementById('combined-save').disabled=false;
-  document.getElementById('wants-remove').disabled=false;
+  const save=document.getElementById('combined-save');save.disabled=false;save.dataset.i18n=entries?.length?'wantEditor.saveChanges':'wantEditor.addAction';save.textContent=i18nCore.t(save.dataset.i18n);
+  renderCombinedPokemonSummary();
   document.getElementById('wants-remove').hidden=!entries?.length;
   document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
-  document.getElementById('app').inert=true;
-  // A replacement editor draft owns its explicit invoker even while this same
-  // modal is already open. Do not change other modals' return-focus behavior.
-  if(_modalActiveId==='combined-editor-modal')_modalPrevFocus=opener;
-  openModal('combined-editor-modal',{initialFocus:editing?'#combined-close':'#combined-name',returnFocus:opener});
-  document.querySelector('#combined-editor-modal .want-editor-body').scrollTop=0;
+  openModal('combined-editor-modal',{returnFocus:options.returnFocus,initialFocus:document.getElementById('combined-name-field').hidden?'#combined-priorities input:checked':'#combined-name'});
 }
 function combinedSourceEntity(entry){
   const ref=entry.ref;if(ref?.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
@@ -764,8 +796,8 @@ function combinedSourceEntity(entry){
 }
 async function saveCombinedEditor(remove=false){
   const draft=combinedEditor,error=document.getElementById('combined-error'),button=document.getElementById('combined-save');
-  if(!draft||draft.busy||button.disabled)return;
-  const fail=key=>{if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;error.textContent=i18nCore.t(key);button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;};
+  if(!draft||button.disabled)return;
+  const fail=key=>{error.textContent=i18nCore.t(key);button.disabled=false;};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -783,11 +815,10 @@ async function saveCombinedEditor(remove=false){
   const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
-  button.disabled=true;draft.busy=true;document.getElementById('wants-remove').disabled=true;
+  button.disabled=true;
   try{
-    if(!combinedEditorSessionCurrent(draft))return fail('phase2.changed');
     const authority=await accountSyncMutationAuthority();
-    if(!combinedEditorSessionCurrent(draft)||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
+    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
     for(const side of ['lf']){
@@ -801,7 +832,7 @@ async function saveCombinedEditor(remove=false){
           for(const [field,value] of Object.entries(changes)){
             const empty=['shiny','lucky','xxl','xxs'].includes(field)?false:'';
             // A priority-only edit must not overwrite differing saved notes or flags.
-            if(value!==(draft.initialFields?.[field]??draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
+            if(value!==(draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
           }
           if(side==='lf'&&priority!=='mixed'&&priority!==entry.p)patch.priority=priority;
           // Keep the existing list encoder's gender representation coherent.
@@ -820,15 +851,11 @@ async function saveCombinedEditor(remove=false){
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
-    // A durable queued mutation is already accepted, even if transport readiness
-    // changes immediately afterward. Only a superseded draft/session may not finish.
-    if(!combinedEditorSessionCurrent(draft))return;
+    if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
-    renderMyList();
-    if(!_modalPrevFocus?.isConnected)_modalPrevFocus=document.getElementById('wants-add-name');
-    closeModal('combined-editor-modal');
+    closeModal('combined-editor-modal');renderMyList();
   }catch(error){fail(accountSyncEditFailureKey(error?.code));}
-  finally{if(draft===combinedEditor){button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;}}
+  finally{button.disabled=false;}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
@@ -2172,10 +2199,12 @@ function syncPokemonGoSearchLanguageControl(){
   const override=preference!=='follow-app';
   if(override)_pokemonGoSearchOverrideDraft=preference;
   else if(!pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(_pokemonGoSearchOverrideDraft))_pokemonGoSearchOverrideDraft=pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());
+  const checkbox=document.getElementById('settings-search-language-override');
+  const row=document.getElementById('settings-search-language-override-row');
   const select=document.getElementById('settings-search-language');
-  if(select){select.disabled=false;select.value=preference;}
-  const help=document.getElementById('settings-search-language-help');
-  if(help)help.textContent=i18nCore.t(override?'settings.searchFixed':'settings.searchFollows',{language:i18nCore.t(`locale.${pokemonGoSearchLocale()}`)});
+  if(checkbox){checkbox.checked=override;checkbox.setAttribute('aria-expanded',String(override));}
+  if(row)row.hidden=!override;
+  if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
@@ -2221,11 +2250,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
-  if(typeof taskToolOrigin!=='undefined'&&taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
-  for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.setAttribute('hidden','');
-  closeModal('product-share-modal');
-  closeModal('combined-editor-modal');
-  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
+  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
@@ -5578,7 +5603,6 @@ async function changeInterfaceLocale(locale){
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
     if(document.getElementById('special-board-modal')?.classList.contains('open'))renderSpecialBoard();
-    if(productShareIsOpen())refreshProductShare();
     renderSafeTransferOutput();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5595,6 +5619,7 @@ let providerTrainerDirectoryRequests=new Map();
 let providerTrainerDirectoryBinding='';
 let eventTypeFilter='all';
 let eventCalendarDate='';
+let eventAllSchedule=false;
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let trainerOrganizerGeneration=0;
 let trainerOrganizerState={query:'',tagIds:[],username:''};
@@ -6080,17 +6105,16 @@ async function trainerSearchKeydown(event){
   }
   if(event.key==='Enter'){
     event.preventDefault();clearTimeout(trainerSuggestionTimer);
-    const input=event.currentTarget;
     let best;
     try{
-      let lookup=input.value;
+      let lookup=event.currentTarget.value;
       try{const parsed=new URL(String(lookup||''),location.href);lookup=parsed.searchParams.get('view')||lookup;}catch{}
       await ensureProviderTrainerDirectory(lookup);
-      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),input.value,trainerSuggestionOptions());
+      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),event.currentTarget.value,trainerSuggestionOptions());
     }
     catch(error){showTrainerSearchError();return;}
-    if(best){input.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
-    else openTrainerPublicShare(input.value);
+    if(best){event.currentTarget.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
+    else openTrainerPublicShare(event.currentTarget.value);
     return;
   }
   if(event.key==='Escape'){event.preventDefault();closeTrainerSuggestions();}
@@ -6373,6 +6397,15 @@ async function renderPreservedFavoriteEvidence(host){
     }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
   }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
 }
+// Display only an already-loaded public publication timestamp. Never fetch or infer activity.
+function favoritePublicationHtml(favorite){
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt),locale=i18nCore.getLocale();
+  const valid=['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
+  const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
+  const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):'—';
+  const time=valid?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(stamp):'';
+  return`<span class="favorite-publication" tabindex="0" title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:'<span>—</span>'}</span>`;
+}
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
@@ -6405,7 +6438,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))}${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>${favoritePublicationHtml(item)}<div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
@@ -6839,7 +6872,6 @@ function refreshBadgesAndLightChrome(){
   checkWhatsNew();
 }
 function switchTab(t,opts={}){
-  if(taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
   if(t==='have')t='mylist';
   const previous=activeTabName();
   if(t!=='admin')closeExistingPinReset();
@@ -6855,51 +6887,20 @@ function switchTab(t,opts={}){
   if(!page)return;
   if(tabBtn){tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');}
   page.classList.add('active');
-  if(t==='more')for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.toggleAttribute('hidden',!protectedOwnerSession());
+  if(t==='more')document.getElementById('more-admin-link')?.toggleAttribute('hidden',!protectedOwnerSession());
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
 }
-let productShareScope='full',productShareSnapshot=[],productShareOwner='';
-let productShareUi={generation:0,mode:'link',text:'plain',image:'board',busy:false,receipt:null,blob:null,blobUrl:'',fingerprint:'',category:'wishlist',intent:'lf'};
-function productShareIsOpen(){return document.getElementById('product-share-modal')?.classList.contains('open');}
-function clearProductShareRecovery(){
-  productShareUi.receipt=null;
-  const input=document.getElementById('share-public-url');if(input)input.value='';
-  document.getElementById('share-manual-link')?.setAttribute('hidden','');
-}
-function invalidateProductShare(){
-  productShareUi.generation++;publicLinkAttempt++;productShareUi.busy=false;
-  clearProductShareRecovery();
-  if(productShareUi.blobUrl)URL.revokeObjectURL(productShareUi.blobUrl);
-  productShareUi.blobUrl='';productShareUi.blob=null;productShareUi.imageError=false;
-  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
-}
-function productSharePublicProfile(){
-  const profile=allData.users?.[cur]||{};
-  return{friendCode:String(profile.friendCode||'').slice(0,32),discord:String(profile.discord||'').slice(0,40),bio:String(profile.bio||'').slice(0,120),avatarPokemon:String(profile.avatarPokemon||'').slice(0,80)};
-}
-function productShareFingerprint(){
-  return JSON.stringify([productSharePublicProfile(),publicSharePublicationDomain.publicDeclarations(productDeclarations().entries)]);
-}
-function productShareContext(){
-  const selected=productShareScope==='selected'&&(productShareUi.mode==='image'&&productShareUi.image==='board'||productShareUi.mode==='text'&&productShareUi.text==='plain');
-  return{owner:cur,uid:String(auth?.currentUser?.uid||''),session:_sessionTransientGeneration,token:activePublicShareHydrationToken,runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,generation:productShareUi.generation,fingerprint:productShareFingerprint(),selection:selected?JSON.stringify([...combinedSelection].sort()):null};
-}
-function productShareContextCurrent(context){
-  try{return productShareIsOpen()&&context.generation===productShareUi.generation&&context.owner===cur&&context.uid===String(auth?.currentUser?.uid||'')&&context.session===_sessionTransientGeneration&&context.token===activePublicShareHydrationToken&&context.runtime===managedAccountSyncRuntime&&context.runtimeGeneration===accountSyncRuntimeGeneration&&context.fingerprint===productShareFingerprint()&&(context.selection===null||context.selection===JSON.stringify([...combinedSelection].sort()));}catch{return false;}
-}
+let productShareScope='full',productShareSnapshot=[],productShareOwner='',productShareMode='link';
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
   return scope==='top'?entries.filter(e=>e.intent==='lf'&&e.p==='H'):scope==='selected'?entries.filter(e=>combinedSelection.has(productSelectionKey(e))):entries;
 }
-function openProductShare(mode='link',scope='full',returnFocus){
-  invalidateProductShare();
-  productShareScope=['full','top','selected'].includes(scope)?scope:'full';productShareOwner=cur;
-  Object.assign(productShareUi,{mode:['link','image','text'].includes(mode)?mode:'link',text:'plain',image:'board',category:myListType,intent:myListIntent});
-  openModal('product-share-modal',{initialFocus:'[data-share-mode="'+productShareUi.mode+'"]',returnFocus});
-  if(productShareUi.appInert===undefined){productShareUi.appInert=document.getElementById('app').inert;document.getElementById('app').inert=true;}
-  refreshProductShare();
+function openProductShare(mode='link'){
+  productShareScope='full';productShareOwner=cur;
+  document.getElementById('product-share-scope').value='full';
+  productShareMode=mode;document.getElementById('product-share-preview-wrap').open=mode==='image';openModal('product-share-modal');refreshProductShare();
 }
 function productShareCategoryLabel(entry){
   const category=entry.category||entry.type||entry.ref?.type;
@@ -6913,123 +6914,61 @@ function productShareDescription(entry){
   return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
-  if(!productShareIsOpen())return;
-  const focus=document.activeElement?.id;
-  invalidateProductShare();
-  const state=productShareUi,mode=state.mode;
-  const scoped=mode==='image'&&state.image==='board'||mode==='text'&&state.text==='plain';
-  const category=mode==='image'&&state.image!=='board';
-  let entries=category?productDeclarations().entries.filter(e=>e.intent===state.intent&&e.category===state.category):productScopeEntries(scoped?productShareScope:'full');
-  try{
-    // Keep only the established public projection plus catalog display fields. Never copy private profile/provenance into a preview.
-    productShareSnapshot=publicSharePublicationDomain.publicDeclarations(entries).map((entry,index)=>({...entry,dn:entries[index].dn||entry.name,no:entries[index].no||null,catalogId:entries[index].catalogId||entries[index].ref?.catalogId||'',note:publicSharePublicationDomain.publicNoteForDisplay(entry.note)}));
-    state.fingerprint=productShareFingerprint();state.context=productShareContext();
-  }catch{productShareSnapshot=[];state.fingerprint='';state.context=null;}
-  const choices=(name,legend,values,selected,tiles=false)=>`<fieldset class="share-choice-group"><legend>${escHtml(i18nCore.t(legend))}</legend><div class="share-choices ${tiles?'choice-tiles':'choice-segments'}">${values.map(([value,label])=>`<label class="share-choice"><input type="radio" id="share-${name}-${value}" name="share-${name}" value="${value}" ${selected===value?'checked':''} onchange="setProductShareOption('${name}',this.value)"><span class="choice-mark" aria-hidden="true">${uiIconMarkup('check')}</span><span class="choice-label">${escHtml(label)}</span></label>`).join('')}</div></fieldset>`;
-  const t=key=>i18nCore.t(`shareUi.${key}`);
-  let options='';
-  if(scoped)options+=choices('scope','shareUi.include',[['full',t('all')],['top',t('high')],['selected',i18nCore.t('shareUi.selected',{count:productScopeEntries('selected').length})]],productShareScope);
-  else if(mode!=='link')options+=`<p class="share-fixed-scope">${escHtml(category?i18nCore.t('shareUi.category',{category:listLabel(state.category)}):t('fullScope'))}</p>`;
-  if(mode==='image')options+=choices('image','shareUi.layout',[['board',t('board')],['classic',t('classic')],['cards',t('cards')]],state.image,true);
-  if(mode==='text')options+=choices('text','shareUi.format',[['plain',t('plain')],['markdown','Markdown'],['csv','CSV']],state.text);
-  document.getElementById('product-share-options').innerHTML=options;
-  document.getElementById('product-share-disclosure').hidden=mode!=='link';
-  document.getElementById('product-share-count').textContent=i18nCore.t('shareUi.count',{count:productShareSnapshot.length});
-  document.querySelectorAll('[data-share-mode]').forEach(button=>{button.setAttribute('aria-selected',String(button.dataset.shareMode===mode));button.tabIndex=button.dataset.shareMode===mode?0:-1;});
-  document.getElementById('product-share-body').setAttribute('aria-labelledby','product-share-tab-'+mode);
+  productShareScope=document.getElementById('product-share-scope').value;
+  productShareSnapshot=accountSyncClone(productScopeEntries());
+  document.getElementById('share-link-status').textContent='';
+  document.getElementById('share-public-url').value='';publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
-  if(mode==='link'){
-    const profile=productSharePublicProfile();
-    preview.innerHTML=`<div class="share-public-profile">${userAvatarHtml(cur,48)}<div><strong>${escHtml(cur)}</strong>${[profile.friendCode,profile.discord,profile.bio].filter(Boolean).map(value=>`<p>${escHtml(value)}</p>`).join('')}</div></div><ul class="share-public-list">${productShareSnapshot.map(entry=>`<li><span>${spriteImg(entry.no,34,'share-sprite',entry.name,entry.gender,entry.dn,{catalogId:entry.catalogId,shiny:entry.shiny===true})}</span><div><strong>${escHtml(entry.dn)}</strong><p>${escHtml(productShareDescription({...entry,dn:'',name:''}))}</p></div></li>`).join('')||`<li>${escHtml(t('empty'))}</li>`}</ul>`;
-  }else if(mode==='text'){
-    state.output=state.text==='markdown'?productMarkdownText(productTextRows(productShareSnapshot),productSharePublicProfile(),cur):state.text==='csv'?productCSVText(productTextRows(productShareSnapshot)):[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(entry=>'- '+productShareDescription(entry))].join('\n');
-    preview.innerHTML=`<pre class="share-text-preview">${escHtml(productShareSnapshot.length?state.output:t('empty'))}</pre>`;
-  }else{
-    preview.innerHTML=`<p class="share-preview-message">${escHtml(productShareSnapshot.length?t('building'):t('empty'))}</p>`;
-    if(productShareSnapshot.length&&state.context)buildProductShareImage(state.context);
-  }
-  if(!state.context)linkPublicationStatus('shareUi.invalid');
-  updateProductShareAction();
-  if(focus?.startsWith('share-'))document.getElementById(focus)?.focus({preventScroll:true});
+  preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
+  setProductShareMode(productShareMode);
 }
 function setProductShareMode(mode){
-  if(!['link','image','text'].includes(mode)||productShareUi.mode===mode)return;
-  productShareUi.mode=mode;refreshProductShare();
-}
-function productShareFormatKeydown(event){
-  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-  event.preventDefault();
-  const modes=['link','image','text'],index=modes.indexOf(productShareUi.mode);
-  const mode=event.key==='Home'?'link':event.key==='End'?'text':modes[(index+(event.key==='ArrowRight'?1:2))%3];
-  setProductShareMode(mode);document.getElementById('product-share-tab-'+mode).focus({preventScroll:true});
-}
-function setProductShareOption(name,value){
-  const allowed={scope:['full','top','selected'],text:['plain','markdown','csv'],image:['board','classic','cards']};
-  if(!allowed[name]?.includes(value))return;
-  if(name==='scope')productShareScope=value;else productShareUi[name]=value;
-  refreshProductShare();
-  // WebKit pointer activation need not focus a radio before change fires. The
-  // refreshed native input remains the keyboard continuation point either way.
-  document.getElementById('share-'+name+'-'+value)?.focus({preventScroll:true});
-}
-function updateProductShareAction(){
-  const state=productShareUi,button=document.getElementById('product-share-primary');if(!button)return;
-  const firstShare=ownerPublicShareReview.generation===activePublicShareHydrationToken?.generation&&ownerPublicShareReview.status==='missing_projection';
-  const key=state.busy?'working':state.mode==='link'?(firstShare&&!state.receipt?'shareCopy':'copyLink'):state.mode==='image'?(state.imageError?'retryImage':'downloadImage'):state.text==='csv'?'downloadCsv':'copyText';
-  button.textContent=i18nCore.t(`shareUi.${key}`);
-  button.disabled=state.busy||!state.context||state.mode!=='link'&&!productShareSnapshot.length||state.mode==='image'&&!state.blob&&!state.imageError;
-  button.setAttribute('aria-busy',String(state.busy));
-}
-async function buildProductShareImage(context){
-  productShareUi.imageError=false;
-  try{
-    const state=productShareUi,entries=accountSyncClone(productShareSnapshot);
-    const blob=state.image==='board'?await renderProductShareImage(entries,context.owner):await renderListImage(entries,state.category,context.owner,state.image,state.intent);
-    if(!productShareContextCurrent(context))return;
-    state.blob=blob;state.blobUrl=URL.createObjectURL(blob);
-    const image=document.createElement('img');image.src=state.blobUrl;image.alt=i18nCore.t('shareUi.preview');image.className='share-image-preview';
-    document.getElementById('product-share-preview').replaceChildren(image);
-  }catch{
-    if(!productShareContextCurrent(context))return;
-    productShareUi.imageError=true;linkPublicationStatus('shareUi.imageFailed');
-    document.getElementById('product-share-preview').textContent=i18nCore.t('shareUi.imageFailed');
+  if(!['link','image','text','search'].includes(mode))mode='link';
+  productShareMode=mode;
+  document.getElementById('product-share-format').value=mode;
+  const partial=productShareScope!=='full';
+  document.getElementById('share-link-action').disabled=partial;
+  document.querySelectorAll('[data-full-list-export]').forEach(button=>button.disabled=partial);
+  document.getElementById('share-link-scope-help').textContent=i18nCore.t(partial?'share.partialLink':'share.liveHelp');
+  document.getElementById('product-share-preview-wrap').hidden=mode==='search';
+  if(mode==='search')refreshProductShareSearch();
+  for(const name of ['link','image','text','search']){
+    document.getElementById(`product-share-${name}`).hidden=name!==mode;
+    document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
   }
-  if(productShareContextCurrent(context))updateProductShareAction();
 }
-async function activateProductShare(){
-  if(productShareUi.mode==='link')return copyShareLink();
-  if(productShareUi.mode==='image')return exportProductShareImage();
-  return copyProductShareText();
+function exportFullProductFormat(format){
+  if(productShareScope!=='full')return;
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  if(format==='markdown')void exportMyListMarkdown();
+  else if(format==='csv')exportMyListCSV();
 }
-async function runProductShareExport(action){
-  if(productShareUi.busy||!productShareSnapshot.length)return;
-  const context=productShareUi.context;
-  if(!context||!productShareContextCurrent(context)){refreshProductShare();linkPublicationStatus('shareUi.changed');return;}
-  productShareUi.busy=true;updateProductShareAction();
-  try{await action(context);}
-  catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.exportFailed');}
-  finally{if(context.generation===productShareUi.generation&&productShareIsOpen()){
-    if(productShareContextCurrent(context)){productShareUi.busy=false;updateProductShareAction();}
-    else if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||''))closeModal('product-share-modal');
-    else{refreshProductShare();linkPublicationStatus('shareUi.changed');}
-  }}
+function refreshProductShareSearch(){
+  const host=document.getElementById('share-search-output');
+  document.getElementById('share-game-language').value=pokemonGoSearchLocale();
+  host.innerHTML=contextualIntentSearchHtml(productShareSnapshot,i18nCore.t('share.gameSearch'));
+}
+function setShareGameLanguage(value){
+  if(!['en','ja','es','de'].includes(value))return;
+  changePokemonGoSearchLocale(value);refreshProductShareSearch();
+}
+function productShareSnapshotCurrent(){
+  return productShareOwner===cur&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
 }
 async function copyProductShareText(){
-  return runProductShareExport(async context=>{
-    const text=productShareUi.output;
-    if(productShareUi.text==='csv'){downloadBlob(new Blob([text],{type:'text/csv;charset=utf-8'}),`pogo-${safeFilePart(context.owner)}-wants.csv`);linkPublicationStatus('shareUi.downloaded');return;}
-    try{await copyText(text,{isCurrent:()=>productShareContextCurrent(context)});if(productShareContextCurrent(context))linkPublicationStatus('shareUi.copied');}
-    catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.textCopyFailed');}
-  });
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  const text=[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(e=>'- '+productShareDescription(e))].join('\n');
+  try{await copyText(text);toast(i18nCore.t('share.textCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 async function exportProductShareImage(){
-  if(productShareUi.imageError){refreshProductShare();return;}
-  if(!productShareUi.blob)return;
-  return runProductShareExport(async context=>{
-    const state=productShareUi,filename=state.image==='board'?`pogo-${safeFilePart(context.owner)}-${productShareScope}.png`:listImageFilename(context.owner,state.category,state.image);
-    const result=await deliverImageBlob(state.blob,filename,i18nCore.t('product.share'));
-    if(productShareContextCurrent(context))linkPublicationStatus(result==='cancelled'?'export.cancelled':'shareUi.downloaded');
-  });
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  if(!productShareSnapshot.length){toast(i18nCore.t('export.entriesRequired'));return;}
+  const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope;
+  try{
+    const blob=await renderProductShareImage(entries,owner);
+    if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent())return;
+    await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}.png`,i18nCore.t('product.share'));
+  }catch{toast(i18nCore.t('export.failed'));}
 }
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
@@ -7981,9 +7920,6 @@ function waitForMyListRender(){
   return Promise.resolve(true);
 }
 function renderMyList(filterVal,options={}){
-  if(productShareIsOpen()){
-    try{if(productShareUi.fingerprint!==productShareFingerprint()||productShareUi.receipt&&!managedPublicSharePublication.authorize(activePublicShareHydrationToken,'explicit_share').ok)refreshProductShare();}catch{refreshProductShare();}
-  }
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
@@ -7992,17 +7928,6 @@ function renderMyList(filterVal,options={}){
   // One fresh model drives both the visible wants and their copy action.
   const declarations=productDeclarations();
   renderCombinedList(declarations);
-  // Empty-account guidance uses the unfiltered model and proven owned hydration.
-  // Merely looking at this state must not subscribe, publish, or start a write.
-  const activeOwner=managedSessionCache?.snapshot?.().activeOwner;
-  const owned=!!cur&&!!auth?.currentUser?.uid&&activeOwner?.uid===auth.currentUser.uid&&activeOwner?.username===cur;
-  const hydrated=owned&&(accountSyncProjectionReady()||_firstSyncDone&&['users',...OWNED_MY_LIST_TYPES].every(type=>_pathLoadState[type]==='loaded'));
-  const emptyImport=document.getElementById('wants-empty-import');
-  if(emptyImport){
-    const hide=!hydrated||declarations.entries.length!==0;
-    if(hide&&emptyImport.contains(document.activeElement))document.getElementById('wants-add-name')?.focus();
-    emptyImport.hidden=hide;
-  }
   renderIntentEntries('',declarations);
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',declarations.entries.length>0);
   if(options.reason!=='filter'){
@@ -8357,85 +8282,17 @@ function _familySort(a,b){
   return String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
 }
 
-// A readable caption is part of the export, not an optional/truncated sprite
-// annotation. Both legacy layouts use the same public description as Share.
-function listImageContentRows(ctx,entries,cols,cellW,spriteH){
-  const wrap=text=>String(text||'').split(/\r\n?|\n|\u2028/u).flatMap(paragraph=>{
-    const lines=[];let line='';
-    for(const word of paragraph.split(/\s+/u).filter(Boolean)){
-      const candidate=line?line+' '+word:word;
-      if(ctx.measureText(candidate).width<=cellW-16){line=candidate;continue;}
-      if(line){lines.push(line);line='';}
-      for(const char of word){
-        if(line&&ctx.measureText(line+char).width>cellW-16){lines.push(line);line='';}
-        line+=char;
-      }
-    }
-    lines.push(line);return lines;
-  });
-  const items=entries.map(entry=>{
-    ctx.font='700 12px sans-serif';
-    const name=wrap(entry.dn||entry.name);
-    ctx.font='12px sans-serif';
-    const details=productShareDescription({...entry,name:'',dn:'',p:'',note:''});
-    const note=publicSharePublicationDomain.publicNoteForDisplay(entry.note);
-    const lines=[...name.map(text=>({text,bold:true})),...(details?wrap(details).map(text=>({text})):[]),...(note?wrap(note).map(text=>({text})):[])];
-    return{entry,lines,height:spriteH+12+lines.length*16};
-  });
-  const rows=[];
-  for(let i=0;i<items.length;i+=cols){const cells=items.slice(i,i+cols);rows.push({cells,height:Math.max(...cells.map(item=>item.height))});}
-  return rows;
-}
-function drawListImageCaption(ctx,item,x,y,{dark=false}={}){
-  ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  item.lines.forEach((line,index)=>{
-    ctx.font=line.bold?'700 12px sans-serif':'12px sans-serif';
-    ctx.fillStyle=dark?(line.bold?'#ffffff':'#d5d5e8'):(line.bold?'#111827':'#334155');
-    ctx.fillText(line.text,x+8,y+14+index*16);
-  });
-}
-function listImageHeading(owner,intent='lf'){
-  return i18nCore.t('export.listHeading',{owner,list:i18nCore.t(intent==='ft'?'product.ft':'wants.title')});
-}
-function listImageHeader(ctx,owner,type,intent,style){
-  const dark=style==='cards',width=dark?536:528,titleSize=dark?22:20;
-  // Keep the exact identity and localized context, wrapping rather than shrinking
-  // or clipping the heading. Only the header grows; export cells stay unchanged.
-  const wrap=(text,font)=>{
-    ctx.font=font;const lines=[];let line='';
-    for(const char of String(text)){
-      if(line&&ctx.measureText(line+char).width>width){
-        const space=line.lastIndexOf(' ');
-        if(space>0){lines.push(line.slice(0,space+1));line=line.slice(space+1);}
-        else{lines.push(line);line='';}
-      }
-      line+=char;
-    }
-    lines.push(line);return lines;
-  };
-  const titleFont=`800 ${titleSize}px Space Grotesk, sans-serif`;
-  const contextFont='600 12px Space Grotesk, sans-serif';
-  const title=wrap(listImageHeading(owner,intent),titleFont);
-  const category=i18nCore.t(({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'})[type]||'list.others');
-  const context=wrap(i18nCore.t('export.listCategory',{category}),contextFont);
-  const titleY=dark?30:28,contextY=titleY+(title.length-1)*28+22;
-  const metaY=contextY+(context.length-1)*18+20;
-  return{title,context,titleFont,contextFont,titleY,contextY,metaY,height:metaY+(dark?32:16)};
-}
-async function renderListImage(entries,type,username,style='classic',intent='lf'){
-  if(style==='cards')return renderListImageCards(entries,type,username,intent);
-  const W=560,frame=0,pad=6,gap=0,cols=3;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,spriteH=72,sprSize=68;
+async function renderListImage(entries,type,username,style='classic'){
+  if(style==='cards')return renderListImageCards(entries,type,username);
+  const W=560,frame=0,pad=6,gap=0,cols=6;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
+  const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
+  let H=frame+headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+sectionPad*2+Math.ceil(g.entries.length/cols)*cellH+sectionGap;});
   const canvas=document.createElement('canvas');
-  const measure=canvas.getContext('2d');
-  const header=listImageHeader(measure,username,type,intent,'classic'),headerH=header.height;
-  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
-  const H=frame+headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+sectionPad*2+g.rows.reduce((sum,row)=>sum+row.height,0)+sectionGap,0);
-  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8457,15 +8314,13 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
   // Accent line below header
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
 
-  ctx.textAlign='center';ctx.font=header.titleFont;ctx.fillStyle='#ffffff';
-  header.title.forEach((line,index)=>ctx.fillText(line,W/2,header.titleY+index*28));
-  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
-  header.context.forEach((line,index)=>ctx.fillText(line,W/2,header.contextY+index*18));
+  const title=`${username}'s ${listLabel(type)} List`;
+  drawCenteredFittedText(ctx,title,W/2,28,W-32,{max:20,min:14,color:'#ffffff'});
   ctx.font='600 11px Space Grotesk, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.6)';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   ctx.textAlign='center';
-  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,header.metaY);
+  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
   ctx.textAlign='left';
 
   // Load with cascading fallback — try PokeAPI → Serebii for each entry
@@ -8495,21 +8350,22 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
     ctx.font='600 12px Space Grotesk, sans-serif';
     ctx.fillText(`${group.entries.length}`,frame+14+ctx.measureText(group.label).width+8,y+18);
     y+=groupTitleH;
-    const contentH=group.rows.reduce((sum,row)=>sum+row.height,0);
-    const areaH=sectionPad*2+contentH;
+    const rows=Math.ceil(group.entries.length/cols);
+    const areaH=sectionPad*2+rows*cellH;
     // White background with subtle priority tint
     ctx.fillStyle='#ffffff';ctx.fillRect(frame,y,W-frame*2,areaH);
     ctx.fillStyle=priBgColors[group.p]||'rgba(0,0,0,0)';ctx.fillRect(frame,y,W-frame*2,areaH);
     y+=sectionPad;
-    let rowTop=y;
-    group.rows.forEach(row=>{
-     row.cells.forEach((item,col)=>{
-      const e=item.entry,x=frame+pad+col*(cellW+gap),cy=rowTop;
-      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2;
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawListImageCaption(ctx,item,x,cy+spriteH);
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW);
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
+      // Export is a clean H/M/L view — Lucky/shiny indicators stay omitted; size notes are labeled below the sprite.
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
@@ -8538,28 +8394,24 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
         ctx.textBaseline='alphabetic';
         ctx.textAlign='left';
       }
-     });
-     rowTop+=row.height;
     });
-    y+=contentH+sectionPad+sectionGap;
+    y+=rows*cellH+sectionPad+sectionGap;
   });
   return canvasBlob(canvas);
 }
-// Dark-card style: content-sized grid where each Pokémon sits in its own bordered card
+// Dark-card style: 8-column grid where each Pokémon sits in its own bordered card
 // with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
 // + trim/scale logic as the classic style, so icons stay consistent across both.
-async function renderListImageCards(entries,type,username,intent='lf'){
-  const W=560,frame=12,pad=0,gap=6,cols=3;
-  const cellW=(W-frame*2-(cols-1)*gap)/cols,spriteH=64,sprSize=50;
+async function renderListImageCards(entries,type,username){
+  const W=560,frame=12,pad=0,gap=6,cols=8;
+  const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const groupTitleH=26,sectionGap=12,bottomPad=16;
+  const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
+  let H=headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*cellH+(Math.ceil(g.entries.length/cols)-1)*gap+sectionGap;});
+
   const canvas=document.createElement('canvas');
-  const measure=canvas.getContext('2d');
-  const header=listImageHeader(measure,username,type,intent,'cards'),headerH=header.height;
-  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
-  const H=headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+g.rows.reduce((sum,row)=>sum+row.height,0)+(g.rows.length-1)*gap+sectionGap,0);
-  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8574,19 +8426,17 @@ async function renderListImageCards(entries,type,username,intent='lf'){
   // Title block (left-aligned, large)
   ctx.textAlign='left';
   ctx.fillStyle='#ffffff';
-  ctx.font=header.titleFont;
-  header.title.forEach((line,index)=>ctx.fillText(line,frame,header.titleY+index*28));
-  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
-  header.context.forEach((line,index)=>ctx.fillText(line,frame,header.contextY+index*18));
+  ctx.font='800 22px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,frame,30);
   ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.font='500 12px Space Grotesk, sans-serif';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,header.metaY);
+  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,48);
   // "PoGo Trades" branding top-right
   ctx.textAlign='right';
   ctx.fillStyle='#a78bfa';
   ctx.font='700 13px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo Trades',W-frame,header.metaY+20);
+  ctx.fillText('PoGo Trades',W-frame,30);
   ctx.textAlign='left';
 
   // Load sprites with cascading fallback (same as classic)
@@ -8617,22 +8467,23 @@ async function renderListImageCards(entries,type,username,intent='lf'){
     ctx.fillText(`${group.entries.length}`,frame+12+labelW+6,y+18);
     y+=groupTitleH;
 
-    let rowTop=y;
-    group.rows.forEach(row=>{
-     row.cells.forEach((item,col)=>{
-      const e=item.entry,x=frame+col*(cellW+gap),cy=rowTop;
+    const rows=Math.ceil(group.entries.length/cols);
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=frame+col*(cellW+gap),cy=y+row*(cellH+gap);
       // Card background
       ctx.fillStyle='#1e1e35';
-      roundedRect(ctx,x,cy,cellW,row.height,8);ctx.fill();
+      roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
       // Sprite (trimmed + scaled — same logic as classic)
-      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2+1;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2+1;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawListImageCaption(ctx,item,x,cy+spriteH,{dark:true});
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -8660,18 +8511,12 @@ async function renderListImageCards(entries,type,username,intent='lf'){
         ctx.fillText(isF?'♀':'♂',bx+5.5,by+6);
         ctx.textBaseline='alphabetic';ctx.textAlign='left';
       }
-     });
-     rowTop+=row.height+gap;
     });
-    y=rowTop-gap+sectionGap;
+    y+=rows*cellH+(rows-1)*gap+sectionGap;
   });
   return canvasBlob(canvas);
 }
 
-function listImageFilename(owner,type,style){
-  const styleTag=style==='cards'?'-darkcards':'';
-  return `pogo-${safeFilePart(owner)}-${safeFilePart(listLabel(type))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
-}
 async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
@@ -8679,9 +8524,11 @@ async function exportMyListImage(style='classic'){
   if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   try{
     if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
-    const blob=await renderListImage(entries,myListType,cur,style,myListIntent);
-    const filename=listImageFilename(cur,myListType,style);
-    const delivery=await deliverImageBlob(blob,filename,listImageHeading(cur,myListIntent));
+    const intentLabel=i18nCore.t(myListIntent==='ft'?'product.ft':'product.lf');
+    const blob=await renderListImage(entries,myListType,cur+' · '+intentLabel,style);
+    const styleTag=style==='cards'?'-darkcards':'';
+    const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
+    const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
     if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));
@@ -10252,14 +10099,6 @@ async function saveProfile(event){
     if(_profileSaveOperation===operation){_profileSaveOperation=null;if(session.uiCurrent()){syncProfileDirtyState();if(failed){err.classList.add('is-error');err.textContent=i18nCore.t('profile.saveUnconfirmed');}}}
   }
 }
-function toggleSettingsPinForm(open,restoreFocus=false){
-  const form=document.getElementById('settings-pin-form'),button=document.getElementById('settings-pin-toggle'),panel=document.getElementById('settings-security-pin-panel');
-  if(!form||!button)return;
-  const show=usernamePinAccessUsable()&&(open===undefined?form.hidden:open===true);
-  form.hidden=!show;if(panel)panel.hidden=!show;button.setAttribute('aria-expanded',String(show));
-  if(show)document.getElementById('np1')?.focus();
-  else{for(const id of ['np1','np2']){const input=document.getElementById(id);if(input)input.value='';}const error=document.getElementById('pin-err');if(error)error.textContent='';if(restoreFocus&&!button.hidden)button.focus();}
-}
 async function savePinSettings(){
   if(_pinSaveOperation?.session.uiCurrent())return;
   const p1=document.getElementById('np1')?.value||'',p2=document.getElementById('np2')?.value||'',err=document.getElementById('pin-err');if(err)err.textContent='';
@@ -10704,12 +10543,10 @@ function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
   const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','prepared','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
   const usernamePinAvailable=usernamePinAccessUsable();
-  const pinToggle=document.getElementById('settings-pin-toggle');if(pinToggle)pinToggle.hidden=!usernamePinAvailable;
-  if(!usernamePinAvailable)toggleSettingsPinForm(false);
+  const pinPanel=document.getElementById('settings-security-pin-panel');if(pinPanel)pinPanel.hidden=!usernamePinAvailable;
   const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable,operationStates}):[
     {key:'username-pin',visible:true,state:usernamePinAvailable?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
   ];
-  const notice=document.querySelector('#settings-account-security .account-security-notice');if(notice)notice.hidden=methods.some(method=>method.key!=='username-pin'&&method.visible);
   for(const method of methods){
     const row=document.querySelector(`#settings-account-security [data-provider="${method.key}"]`);if(!row)continue;
     const presentation=method.key==='google'?googleProviderPresentation(method,controllerState):Object.freeze({state:method.state,labelKey:PROVIDER_LINKING_STATUS_KEYS[method.state],detailKey:method.key==='username-pin'&&!usernamePinAvailable?'security.usernamePinNotConfigured':method.detailKey,action:'',actionKey:'',disabled:true});
@@ -10783,27 +10620,21 @@ function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
   const route=parseSettingsRoute();
   document.getElementById('settings-layout')?.classList.add('mobile-list');
-  // The supported legacy Tools route has a detail panel but no section-list
-  // destination. Normalize the remembered selection along with the fallback
-  // focus so a later reopen or desktop resize cannot revive that panel.
-  if(!document.querySelector(`[data-settings-target="${_settingsSection}"]`))selectSettingsSection('profile',{focus:false,keepList:true,updateHistory:false});
   if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&Number(history.state?.settingsDepth)>1&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
   if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
-  requestAnimationFrame(()=>(document.querySelector(`[data-settings-target="${_settingsSection}"]`)||document.querySelector('[data-settings-target="profile"]'))?.focus({preventScroll:true}));
+  requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
 }
 function settingsDetailIsOpenOnMobile(){return!matchMedia(SETTINGS_DESKTOP_QUERY).matches&&!document.getElementById('settings-layout')?.classList.contains('mobile-list')&&_settingsContext==='account';}
 function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
-  const route=parseSettingsRoute();
-  const requestedSection=accountContext&&SETTINGS_SECTIONS.includes(options.section)?options.section:null;
-  if(requestedSection)_settingsSection=requestedSection;
-  else if(accountContext&&route.section)_settingsSection=route.section;
+  const route=parseSettingsRoute(),requested=accountContext&&SETTINGS_SECTIONS.includes(options.section)?options.section:null;
+  if(requested)_settingsSection=requested;else if(accountContext&&route.section)_settingsSection=route.section;
   const returnFocus=options.returnFocus||(accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null));
   closeAccountMenu(false);renderInterimProductLabels();configureSettingsPanel(accountContext?'account':'public');
-  if(requestedSection||accountContext&&route.valid&&route.section&&!settingsUsesPageMode())selectSettingsSection(requestedSection||route.section,{focus:false,updateHistory:false});
+  if(accountContext&&(requested||route.valid&&route.section)&&!settingsUsesPageMode())selectSettingsSection(requested||route.section,{focus:false,updateHistory:false});
   const modal=document.getElementById('settings-modal');
   if(!modal?.classList.contains('open')){_settingsDraftGeneration++;if(options.captureScroll!==false)captureSettingsScrollSnapshot();}
-  const section=accountContext&&(requestedSection||settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
+  const section=accountContext&&(requested||settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
   const target=settingsRouteUrl(true,section);
   if(options.updateHistory!==false)writeSettingsRoute(section);
   else if(route.matches&&(!route.valid||!accountContext&&route.section||accountContext&&settingsUsesPageMode()&&!route.section))writeSettingsRoute(section,{mode:'replace'});
@@ -10821,7 +10652,6 @@ function closeSettingsRoute(){
   return false;
 }
 function syncSettingsRoute(options={}){
-  if(taskToolOrigin?.settings&&taskToolOrigin.route!==location.href)closeModal(taskToolOrigin.modal,{restoreTool:false});
   const modal=document.getElementById('settings-modal');if(!modal)return;
   const route=parseSettingsRoute();
   if(route.valid&&route.section&&!_authStateKnown&&!cur){
@@ -10847,45 +10677,23 @@ function syncPendingSettingsRouteAfterAuth(){
   if(!_pendingSettingsRouteSection&&!parseSettingsRoute().matches)return;
   setTimeout(()=>syncSettingsRoute({captureScroll:false}),0);
 }
-let taskToolOrigin=null;
-function taskNavigationIdentity(){return cur&&auth?.currentUser?.uid&&currentAuthUid===auth.currentUser.uid?{owner:cur,uid:auth.currentUser.uid,generation:_sessionTransientGeneration}:null;}
-function taskNavigationCurrent(origin){
-  const identity=taskNavigationIdentity();
-  return !!identity&&identity.owner===origin.owner&&identity.uid===origin.uid&&identity.generation===origin.generation&&origin.tab===activeTabName()&&origin.route===location.href;
-}
-function openMoreDestination(destination,invoker){
-  if(!taskNavigationIdentity())return false;
-  if(destination==='profile'||destination==='settings')openSettingsPanel('account',{returnFocus:invoker,...(destination==='profile'?{section:'profile'}:{})});
-  else if(destination==='events'){switchTab('schedule');const heading=document.getElementById('events-title');heading.tabIndex=-1;heading.focus();}
-  else if(destination==='admin'&&protectedOwnerSession()){switchTab('admin');document.querySelector('.tab[data-tab="more"]')?.focus();}
-  else return false;
-  return true;
-}
-function openTaskTool(tool,invoker,options={}){
-  const identity=taskNavigationIdentity();if(!identity)return false;
-  const modal={import:'import-modal',share:'product-share-modal',export:'product-share-modal',transfer:'safe-transfer-modal',help:'shortcuts-modal',health:'login-health-modal'}[tool];
-  if(!modal||tool==='health'&&!options.settings)return false;
-  if(taskToolOrigin||anyOpenModal()&&!options.settings)return false;
-  const origin={...identity,modal,invoker:invoker||document.activeElement,tab:activeTabName(),route:location.href,settings:options.settings===true,section:_settingsSection,settingsReturnFocus:_modalPrevFocus,appInert:document.getElementById('app').inert};
-  if(origin.settings){closeModal('settings-modal',{route:false});origin.appInert=document.getElementById('app').inert;}
-  if(!taskNavigationCurrent(origin))return false;
-  // Dispatch synchronously. There is no timer carrying an old account or route.
-  if(tool==='import')openImport(origin.invoker);
-  else if(tool==='share'||tool==='export')openProductShare(tool==='export'?'image':'link','full',origin.invoker);
-  else if(tool==='transfer')openSafeTransferModal({returnFocus:origin.invoker,explicitSelection:true});
-  else if(tool==='help')openModal(modal,{returnFocus:origin.invoker});
-  else if(tool==='health')void openLoginHealthCheck();
-  if(_modalActiveId!==modal)return false;
-  taskToolOrigin=origin;document.getElementById('app').inert=true;return true;
-}
-function openSettingsTool(tool,invoker){
-  if(!taskNavigationIdentity()||!document.getElementById('settings-modal')?.classList.contains('open'))return false;
-  if(tool==='backup')return protectedOwnerSession()?exportData():false;
-  return openTaskTool({'safe-transfer':'transfer',shortcuts:'help'}[tool]||tool,invoker,{settings:true});
+function openSettingsTool(tool){
+  if(!cur)return;
+  const session=captureSettingsMutationSession();
+  closeModal('settings-modal',{route:false});
+  if(parseSettingsRoute().matches)history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
+  setTimeout(()=>{
+    if(!session.current())return;
+    if(tool==='health')openLoginHealthCheck();
+    else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
+    else if(tool==='import')openImport();
+    else if(tool==='export'){switchTab('mylist');openProductShare();}
+    else if(tool==='safe-transfer')openSafeTransferModal();
+    else if(tool==='backup'&&protectedOwnerSession())exportData();
+  },0);
 }
 function openModal(id,options={}){
   const m=document.getElementById(id);if(!m)return;
-  if(id==='shortcuts-modal'){renderHelpAppInformation();options={initialFocus:'.mact button',...options};}
   if(_modalActiveId&&_modalActiveId!==id){
     const active=document.getElementById(_modalActiveId);
     if(_modalActiveId==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(_modalActiveId,{route:false});
@@ -10911,22 +10719,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
-    // Help can open the existing native Legal dialog; its own focus/escape
-    // handling takes precedence until it returns focus to the Help invoker.
-    if(id==='shortcuts-modal'&&document.getElementById('legal-dialog')?.open)return;
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
-    if(id==='product-share-modal'||id==='combined-editor-modal'){
-      // Keep the dialog's explicit keyboard sequence inside the modal even on
-      // WebKit/macOS configurations that skip controls during native tabbing.
-      // A native radio group contributes its checked (or first) input only;
-      // arrow-key selection remains the browser's native behavior.
-      const controls=[...m.querySelectorAll(id==='combined-editor-modal'?'button,input,select,textarea,summary,[tabindex]':'button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null&&(id!=='combined-editor-modal'||(el.getClientRects().length>0&&(!el.closest('details:not([open])')||el.tagName==='SUMMARY'))));
-      const stops=controls.filter(el=>el.type!=='radio'||el===(controls.find(other=>other.type==='radio'&&other.name===el.name&&other.checked)||controls.find(other=>other.type==='radio'&&other.name===el.name)));
-      if(stops.length){const index=stops.indexOf(document.activeElement),next=index<0?(ev.shiftKey?stops.length-1:0):(index+(ev.shiftKey?-1:1)+stops.length)%stops.length;ev.preventDefault();stops[next].focus();}
-      return;
-    }
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,a[href],summary,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10937,19 +10732,8 @@ function openModal(id,options={}){
 }
 function closeModal(id){
   const options=arguments[1]||{};
-  const toolOrigin=taskToolOrigin?.modal===id?taskToolOrigin:null;
-  if(toolOrigin){taskToolOrigin=null;document.getElementById('app').inert=toolOrigin.appInert;}
-  if(id==='combined-editor-modal'){
-    if(combinedEditor?.appInert!==undefined)document.getElementById('app').inert=combinedEditor.appInert;
-    combinedEditor=null;
-  }
-  if(id==='settings-modal')toggleSettingsPinForm(false);
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
-  if(id==='product-share-modal'){
-    invalidateProductShare();
-    if(productShareUi.appInert!==undefined){document.getElementById('app').inert=productShareUi.appInert;delete productShareUi.appInert;}
-  }
   if(id==='settings-modal'&&document.getElementById(id)?.classList.contains('open'))_settingsDraftGeneration++;
   document.getElementById(id)?.classList.remove('open');
   if(_modalActiveId!==id)return;
@@ -10957,15 +10741,13 @@ function closeModal(id){
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
   if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
-  const toolReturn=toolOrigin&&options.restoreTool!==false&&taskNavigationCurrent(toolOrigin);
-  let returnFocus=toolOrigin?(toolReturn?toolOrigin.invoker:null):_modalPrevFocus;_modalPrevFocus=null;
-  if(toolReturn&&toolOrigin.settings){
-    openSettingsPanel('account',{section:toolOrigin.section,returnFocus:toolOrigin.settingsReturnFocus,updateHistory:false,captureScroll:false});
+  let returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  if(id==='product-share-modal'){
+    const visible=node=>node?.isConnected&&!node.disabled&&(node.tabIndex>=0||node.hasAttribute('tabindex'))&&node.getClientRects().length&&!node.closest('[inert]');
+    // Settings tools may replace their opener while launching Share. Do not
+    // leave focus in a hidden format select after Escape: it eats shortcuts.
+    if(!visible(returnFocus))returnFocus=[...document.querySelectorAll('.wants-list-toolbar button'),...document.querySelectorAll('#nav-more,#nav-mylist')].find(visible);
   }
-  // Import clicks dismiss the background disclosure through its existing
-  // outside-click handler. Restore it before focusing the actual launcher.
-  if(toolReturn&&returnFocus?.closest('#wants-list-tools'))document.getElementById('wants-list-tools').open=true;
-  if(toolReturn&&returnFocus?.closest('#wants-empty-import')&&!returnFocus.getClientRects().length)returnFocus=document.getElementById('wants-add-name');
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
 }
@@ -11205,7 +10987,7 @@ function renderTradeMatchModal(){
   if(!_activeTradeMatch)return;
   const{them}=_activeTradeMatch;
   const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" aria-labelledby="trade-match-title" onclick="if(event.target===this)closeTradeMatchModal()">
-    <div class="diff-modal trade-match-modal">
+    <div class="diff-modal trade-match-modal" onclick="event.stopPropagation()">
       <div class="diff-hdr">
         <div class="diff-hdr-title" id="trade-match-title">${escHtml(i18nCore.t('tradeMatch.title',{trainer:them}))}</div>
         <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="${escAttr(i18nCore.t('common.close'))}">×</button>
@@ -11323,15 +11105,14 @@ function _safeTransferSelectedMembers(model=_safeTransferScopeModel()){
   return model.members.filter(item=>selected.has(_safeTransferMemberKey(item)));
 }
 function _safeTransferAllTrainers(){return _safeTransferScopeModel().members.map(item=>item.displayName);}
-function openSafeTransferModal(options={}){
+function openSafeTransferModal(){
   const model=_safeTransferScopeModel(),active=new Set(model.members.map(_safeTransferMemberKey));
   if(!_safeTransferSelected){
-    const saved=options.explicitSelection?null:_loadSafeTransferDefault();
-    _safeTransferSelected=options.explicitSelection?new Set():saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
+    const saved=_loadSafeTransferDefault();
+    _safeTransferSelected=saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
   }
   [..._safeTransferSelected].forEach(key=>{if(!active.has(key))_safeTransferSelected.delete(key);});
-  document.getElementById('stb-save-default').hidden=options.explicitSelection===true;
-  openModal('safe-transfer-modal',{returnFocus:options.returnFocus});
+  openModal('safe-transfer-modal');
   const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox){checkbox.checked=true;checkbox.disabled=true;}
   renderSafeTransferTrainers();renderSafeTransferOutput();
 }
@@ -11341,7 +11122,7 @@ function renderSafeTransferTrainers(){
   if(!model.members.length){grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;return;}
   grid.innerHTML=model.members.map(item=>{
     const key=_safeTransferMemberKey(item),on=_safeTransferSelected.has(key);
-    return`<button type="button" class="stb-trainer-chip${on?' on':''}" aria-pressed="${on}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
+    return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
   }).join('');
 }
 document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
@@ -11752,7 +11533,7 @@ function pokeballLoader(text=''){
 
 // ── WALLPAPER (#32) ───────────────────────────────────────────
 const WALLPAPERS=[
-  {key:'mono',label:'Neutral'},
+  {key:'mono',label:'Default'},
   {key:'aurora',label:'Aurora'},
   {key:'ocean',label:'Ocean'},
   {key:'forest',label:'Forest'},
@@ -12014,25 +11795,14 @@ function reloadForUpdate(){
 
 // ── PWA INSTALL PROMPT (#1) ──────────────────────────────────
 let _deferredInstallPrompt=null;
-function renderHelpAppInformation(){
-  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const safari=ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  const key=standalone?'settings.installStandalone':_deferredInstallPrompt?'settings.installAvailable':safari?'settings.installSafari':'settings.installUnavailable';
-  const status=document.getElementById('help-install-status');if(status)status.textContent=i18nCore.t(key);
-  const button=document.getElementById('settings-install');if(button)button.hidden=standalone||!_deferredInstallPrompt;
-  const release=document.getElementById('settings-release-id');if(release)release.textContent=i18nCore.t('settings.release',{release:clientReleaseDomain.RELEASE_ID});
-}
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   _deferredInstallPrompt=e;
   document.getElementById('install-btn')?.classList.add('show');
-  renderHelpAppInformation();
 });
 window.addEventListener('appinstalled',()=>{
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
-  renderHelpAppInformation();
   toast(i18nCore.t('install.installed'));
 });
 async function triggerInstall(){
@@ -12042,7 +11812,6 @@ async function triggerInstall(){
   if(outcome==='accepted'){toast(i18nCore.t('install.installing'));}
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
-  renderHelpAppInformation();
 }
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
@@ -12406,8 +12175,8 @@ function closeExportMenu(){
   document.getElementById('export-menu-btn')?.setAttribute('aria-expanded','false');
   document.removeEventListener('click',_closeExportOnOutside);
 }
-function productTextRows(entries=productDeclarations().entries){
-  return entries.map(e=>({
+function productTextRows(){
+  return productDeclarations().entries.map(e=>({
     intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
@@ -12415,25 +12184,18 @@ function productTextRows(entries=productDeclarations().entries){
 async function exportMyListMarkdown(){
   const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const profile=allData.users?.[cur]||{};
-  const text=productMarkdownText(entries,profile,cur);
+  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
-function productMarkdownText(entries,profile,username){
-  return ['## '+username,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
-}
-function productCSVText(entries){
-  if(!entries.length)return'';
+function exportMyListCSV(){
+  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const cell=value=>{
     let text=String(value??'');
     if(/^[=+@-]/.test(text))text="'"+text;
     return '"'+text.replace(/"/g,'""')+'"';
   };
   const rows=[Object.keys(entries[0]),...entries.map(e=>Object.values(e))];
-  return rows.map(row=>row.map(cell).join(',')).join('\n');
-}
-function exportMyListCSV(){
-  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
-  const csv=productCSVText(entries);
+  const csv=rows.map(row=>row.map(cell).join(',')).join('\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-wants.csv`;
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -12445,64 +12207,32 @@ function linkPublicationStatus(key,options={}){
   if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
 }
 async function copyShareLink(){
-  if(!productShareIsOpen()||productShareUi.mode!=='link'||productShareUi.busy)return;
-  let context;
-  try{context=productShareContext();}catch{clearProductShareRecovery();linkPublicationStatus('shareUi.invalid');return;}
-  const attempt=++publicLinkAttempt;
-  const current=()=>attempt===publicLinkAttempt&&productShareContextCurrent(context);
-  const ready=()=>publicShareSessionMatches(context.owner)&&managedPublicSharePublication.authorize(context.token,'explicit_share').ok;
-  const receipt=productShareUi.receipt;
-  if(receipt&&(receipt.context.runtime!==context.runtime||receipt.context.runtimeGeneration!==context.runtimeGeneration)){
-    clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;
-  }
-  // A receipt exists only after verified publication followed by clipboard failure.
-  // It is never persisted, and normal actions still use the authorized sharing flow.
-  const retry=receipt&&productShareContextCurrent(receipt.context);
-  if(!retry)clearProductShareRecovery();
-  productShareUi.busy=true;updateProductShareAction();linkPublicationStatus('shareUi.working');
+  if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
+  const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
+  const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
+  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
+  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
+  linkPublicationStatus('product.publishing');
+  const input=document.getElementById('share-public-url');if(input)input.value=url;
   try{
-    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
-    const runtime=managedAccountSyncRuntime;
-    if(runtime){
-      const state=await runtime.snapshot();
-      if(!current())return;
-      if(runtime.ownerUid!==context.uid||state.pendingCount||state.blockedCount||state.conflictCount){clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;}
-    }
-    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
-    let url;
-    if(retry){
-      if(!fbOn||!db){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');return;}
-      url=receipt.url;
-    }else{
-      const result=await publishPublicShareNow(context.owner,'explicit_share');
-      if(!current())return;
-      if(!publicSharePublicationCurrent(result)){
-        clearProductShareRecovery();linkPublicationStatus(result?.status==='pending'?'shareUi.notSaved':'shareUi.shareFailed');return;
-      }
-      if(!ready()){linkPublicationStatus('shareUi.notReady');return;}
-      url=`${location.origin}${location.pathname}?view=${encodeURIComponent(context.owner)}&list=${productShareUi.category}`;
-    }
+    const initialDeclarations=declarationState();
+    const result=await publishPublicShareNow(username,'explicit_share');
     if(!current())return;
+    if(declarationState()!==initialDeclarations){
+      linkPublicationStatus('share.publicationPending');return;
+    }
+    if(!publicSharePublicationCurrent(result)){
+      linkPublicationStatus(result?.status==='pending'?'share.publicationPending':'product.publishFailed');return;
+    }
+    linkPublicationStatus('product.published');
     try{
-      await copyText(url,{isCurrent:()=>current()&&ready()});
-      if(current()&&ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.copied',{state:'product.publishedCopied'});}
+      await copyText(url);
+      if(current())linkPublicationStatus('product.publishedCopied');
     }catch{
-      if(current()&&ready()){
-        productShareUi.receipt={url,context};
-        const input=document.getElementById('share-public-url');input.value=url;
-        document.getElementById('share-manual-link').hidden=false;
-        linkPublicationStatus('shareUi.linkCopyFailed',{state:'product.publishedCopyFailed'});input.focus();input.select();
-      }
+      if(current()){linkPublicationStatus('product.publishedCopyFailed');input?.focus();input?.select();}
     }
-    if(current()&&!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');}
-  }catch{
-    if(current()){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');}
-  }finally{
-    if(attempt===publicLinkAttempt&&productShareIsOpen()){
-      if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||'')||context.session!==_sessionTransientGeneration||context.token!==activePublicShareHydrationToken)closeModal('product-share-modal');
-      else if(!current()){refreshProductShare();linkPublicationStatus('shareUi.changed');}
-      else{productShareUi.busy=false;updateProductShareAction();}
-    }
+  }catch(error){
+    if(current())linkPublicationStatus('product.publishFailed');
   }
 }
 
@@ -13421,7 +13151,6 @@ function selectSchedDay(isoD){
 }
 
 function setEventTypeFilter(type){
-  eventCalendarDate='';
   eventTypeFilter=eventPresentationDomain.TYPES.includes(type)?type:'all';
   renderEventsOnly();
 }
@@ -13467,7 +13196,8 @@ function eventStateHtml(kind,title,detail='',actionLabel='',action=''){
 }
 function eventStableId(event){return eventLabelsI18n.eventId(event);}
 function setEventCalendarDate(date){
-  eventCalendarDate=eventCalendarDate===date?'':date;
+  eventAllSchedule=false;
+  eventCalendarDate=date||isoDate(new Date());
   renderEventsOnly();
 }
 function moveEventCalendarMonth(delta){
@@ -13485,11 +13215,13 @@ function eventCalendarKeydown(event,dateKey){
   else if(event.key==='End')next.setDate(current.getDate()+(6-current.getDay()));
   else next.setDate(current.getDate()+offsets[event.key]);
   eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);
+  eventAllSchedule=false;
   eventCalendarDate=isoDate(next);
   renderEventsOnly();
   requestAnimationFrame(()=>[...document.querySelectorAll(`.event-calendar-day[data-date="${eventCalendarDate}"]`)].find(node=>node.getClientRects().length)?.focus());
 }
 function jumpToEvent(eventId){
+  eventAllSchedule=true;
   eventCalendarDate='';
   eventTypeFilter='all';
   renderEventsOnly();
@@ -13540,8 +13272,31 @@ function renderEventUpNext(events){
   if(!items.length)return'';
   return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
-function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events,{variant:'desktop'})}${renderEventUpNext(events)}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
-function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function renderEventWeek(){
+  const selected=eventAgendaDate(),date=new Date(`${selected}T12:00:00`),locale=i18nCore.getLocale();
+  const monday=new Date(date);monday.setDate(date.getDate()-(date.getDay()+6)%7);
+  return`<div class="event-planner"><nav class="event-week" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="-1" aria-label="${escAttr(i18nCore.t('apri.previousWeek'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><div class="event-week-days">${Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);const key=isoDate(d);return`<button type="button" class="event-week-day" data-event-action="date" data-date="${key}" aria-pressed="${!eventAllSchedule&&key===selected}" aria-label="${escAttr(new Intl.DateTimeFormat(locale,{dateStyle:'full'}).format(d))}"><span>${escHtml(new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d))}</span><strong>${escHtml(new Intl.DateTimeFormat(locale,{month:'short',day:'numeric'}).format(d))}</strong></button>`;}).join('')}</div><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="1" aria-label="${escAttr(i18nCore.t('apri.nextWeek'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></nav><div class="event-view-mode" role="group" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button class="btn btn-ghost" type="button" data-event-action="day-view" aria-pressed="${!eventAllSchedule}">${escHtml(i18nCore.t('apri.dayView'))}</button><button class="btn btn-ghost" type="button" data-event-action="all-schedule" aria-pressed="${eventAllSchedule}">${escHtml(i18nCore.t('apri.allSchedule'))}</button></div></div>`;
+}
+function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventUpNext(events)}${renderEventCalendar(events,{variant:'desktop'})}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
+function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${renderEventWeek()}${eventsFeedIsStale()?eventsSourceHtml():''}${timeline}${eventsFeedIsStale()?'':eventsSourceHtml()}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function eventSelectedDaySections(events){
+  const agenda=eventPresentationDomain.dayAgenda(events,eventAgendaDate()),seen=new Set();
+  const selected=Object.values(agenda).flat().filter(event=>{const id=eventStableId(event);if(seen.has(id)||eventTypeFilter!=='all'&&eventPresentationDomain.eventType(event)!==eventTypeFilter)return false;seen.add(id);return true;});
+  // Lead with today's timed events/boundaries; ongoing seasons remain in the agenda.
+  const actionable=new Set([...agenda.timed,...agenda.starting,...agenda.ending].map(eventStableId));
+  const dayTime=event=>isoDate(eventPresentationDomain.eventDate(event.end))===eventAgendaDate()&&isoDate(eventPresentationDomain.eventDate(event.start))!==eventAgendaDate()?event.end:event.start;
+  selected.sort((a,b)=>Number(actionable.has(eventStableId(b)))-Number(actionable.has(eventStableId(a)))||eventPresentationDomain.eventDate(dayTime(a))-eventPresentationDomain.eventDate(dayTime(b)));
+  return selected.length?[{group:'day',events:selected}]:[];
+}
+function eventSelectedDayHours(event,timing){
+  if(timing.zoneUncertain)return eventTimeBasisLabel(event,{compact:true});
+  if(eventPresentationDomain.dateOnly(event.start)||eventPresentationDomain.dateOnly(event.end))return i18nCore.t('events.hoursUnknown');
+  if(!timing.multiDay)return timing.timeLabel||i18nCore.t('events.hoursUnknown');
+  const date=eventAgendaDate(),start=eventPresentationDomain.eventDate(event.start),end=eventPresentationDomain.eventDate(event.end);
+  if(isoDate(end)===date)return i18nCore.t('apri.until',{time:timing.endTimeLabel});
+  if(isoDate(start)===date)return i18nCore.t('apri.from',{time:timing.startTimeLabel});
+  return i18nCore.t('apri.ongoing');
+}
 function syncEventFilterScrollState(row){
   if(!row)return;
   row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
@@ -13580,7 +13335,14 @@ function eventBonusesHtml(event,{full=false}={}){
   const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
   const benefitRows=`<ul class="event-benefit-list">${eventBonusGroups(visible).map(group=>`<li>${group.scope?`<span class="event-benefit-scope">${escHtml(group.scope)}:</span> `:''}<span class="event-benefit-text">${group.items.map(eventBonusText).join('; ')}</span></li>`).join('')}</ul>`;
   const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
-  if(bonuses.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  const featured=facts.bosses.length?facts.bosses:facts.encounters;
+  // Suppress only an exact single-identity headline, never a base-species
+  // substring that could conceal a form, multiple bosses, or additional facts.
+  const headline=eventLabelsI18n.localizeEvent(event,i18nCore.getLocale()).localizedTitle;
+  const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
+  const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
+  const featuredHtml=full||headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+  if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
   if(features.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
@@ -13588,8 +13350,9 @@ function eventBonusesHtml(event,{full=false}={}){
   // not mean unannounced, no bonuses, or a successful source check.
   return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
 }
+function eventsFeedIsStale(){const checked=Number(_eventData?.fetchedAt);return Boolean(_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL);}
 function eventsSourceHtml(){
-  const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
+  const checked=Number(_eventData?.fetchedAt),stale=eventsFeedIsStale();
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
   const saved=_eventData?.sourceFallback;
   return`<div class="events-source${stale?' is-stale':''}" role="status"><div>${stale?`<strong>${escHtml(i18nCore.t('events.staleFeed'))}</strong>`:''}<p class="events-checked">${escHtml(i18nCore.t(saved?'events.savedSchedule':'events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
@@ -13621,29 +13384,30 @@ function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
   const disclosureState=new Map([...out.querySelectorAll('[data-event-disclosure]')].map(node=>[node.dataset.eventDisclosure,node.open]));
   const focused=document.activeElement?.closest?.('[data-event-action]'),activeDisclosure=document.activeElement?.tagName==='SUMMARY'?document.activeElement.parentElement?.dataset.eventDisclosure:null;
-  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,calendar:focused.closest('.event-calendar')?.className}:null;
+  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,weekDelta:focused.dataset.eventWeekDelta,calendar:focused.closest('.event-calendar')?.className}:null;
   const restoreInteraction=()=>{
     out.querySelectorAll('[data-event-disclosure]').forEach(node=>{if(disclosureState.has(node.dataset.eventDisclosure))node.open=disclosureState.get(node.dataset.eventDisclosure);});
     if(activeDisclosure){[...out.querySelectorAll('[data-event-disclosure]')].find(node=>node.dataset.eventDisclosure===activeDisclosure)?.querySelector('summary')?.focus({preventScroll:true});return;}
     if(!focusKey)return;
-    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.closest('.event-calendar')?.className===focusKey.calendar);
+    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.dataset.eventWeekDelta===focusKey.weekDelta&&node.closest('.event-calendar')?.className===focusKey.calendar);
     next?.focus({preventScroll:true});
   };
   out.setAttribute('aria-busy',String(_eventLoadState==='loading'||!_eventData));
   if(_eventLoadState==='loading'||!_eventData){out.innerHTML=eventStateHtml('loading',i18nCore.t('events.loading'));return;}
   if(_eventLoadState==='offline'||navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('offline',i18nCore.t('events.offlineTitle'),i18nCore.t('events.offline'),i18nCore.t('events.retry'),'retry');return;}
   if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retry');return;}
-  const allEvents=_eventData.events||[],sections=eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter,date:eventCalendarDate});
+  const allEvents=_eventData.events||[],sections=eventAllSchedule?eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter}):eventSelectedDaySections(allEvents);
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
-  const filterHtml=`${eventsSourceHtml()}<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
-  const dateContext=eventCalendarDate?`<p class="event-date-filter">${escHtml(i18nCore.t('events.onDate',{date:new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'full'}).format(new Date(eventCalendarDate+'T12:00:00'))}))}</p>`:'';
-  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
-  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
+  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
+  const dayLabel=new Intl.DateTimeFormat(i18nCore.getLocale(),{weekday:'long',month:'long',day:'numeric'}).format(new Date(eventAgendaDate()+'T12:00:00'));
+  const dateContext=!eventAllSchedule?`<h2 class="event-agenda-title">${escHtml(dayLabel)}</h2>`:'';
+  if(!sections.length){const filtered=eventTypeFilter!=='all'||!eventAllSchedule,clear=!eventAllSchedule?'all-schedule':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(!eventAllSchedule?'apri.allSchedule':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
+  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(section.group==='day'?i18nCore.t('apri.dayView'):eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
     const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta">${section.group!=='day'||timing.multiDay?`<span class="event-card-date">${escHtml(timing.dateLabel)}</span>`:''}${timing.timeLabel&&section.group!=='day'?`<span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-relative">${escHtml(relative)}</span>`:''}<span class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</span></div>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));
@@ -13652,9 +13416,16 @@ function renderEventsOnly(){
 function eventsAction(event){
   const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
   const action=control.dataset.eventAction;
+  if(action==='all-schedule'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='day-view'){eventAllSchedule=false;renderEventsOnly();return;}
+  if(action==='week'){
+    const delta=Number(control.dataset.eventWeekDelta);if(delta!==1&&delta!==-1)return;
+    const next=new Date(`${eventAgendaDate()}T12:00:00`);next.setDate(next.getDate()+delta*7);eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);eventAllSchedule=false;eventCalendarDate=isoDate(next);renderEventsOnly();return;
+  }
   if(action==='details'){openEventBrief(control.dataset.eventId,control);return;}
   if(action==='filter'){setEventTypeFilter(control.dataset.type||'all');return;}
-  if(action==='date'||action==='clear-date'){setEventCalendarDate(control.dataset.date||eventCalendarDate);return;}
+  if(action==='clear-date'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='date'){setEventCalendarDate(control.dataset.date);return;}
   if(action==='month'){
     const delta=Number.parseInt(control.dataset.eventMonthDelta||'',10);if(delta===-1||delta===1)moveEventCalendarMonth(delta);return;
   }
@@ -14924,7 +14695,7 @@ function showConflictModal(conflicts,onLocal,onRemote,{savedOnly=false}={}){
 let importPri='M';
 let importMatches=[],importOwner='',importUid='',importCategory='wishlist',importSaving=false,importSession=0;
 
-function openImport(invoker){
+function openImport(){
   importSession++;importPri='M';importMatches=[];importOwner=cur;importUid=auth?.currentUser?.uid;importSaving=false;
   document.getElementById('import-category').value=myListType;
   document.getElementById('import-str-input').value='';
@@ -14937,7 +14708,7 @@ function openImport(invoker){
     b.classList.remove('sel','H','M','L');
     if(b.dataset.pri==='M')b.classList.add('sel','M');
   });
-  openModal('import-modal',{returnFocus:invoker});
+  openModal('import-modal');
 }
 
 function setImportPri(p){
@@ -15102,12 +14873,12 @@ function _handleGlobalShortcut(ev){
   switch(ev.key.toLowerCase()){
     case'b':switchTab('find');ev.preventDefault();break;
     case'm':switchTab('mylist');ev.preventDefault();break;
-    case's':switchTab('mylist',{render:false});renderMyList();document.querySelector('#combined-list [data-wants-copy]')?.focus();ev.preventDefault();break;
+    case's':switchTab('mylist');openProductShare('search');ev.preventDefault();break;
     case'h':case'i':switchTab('have');ev.preventDefault();break;
     case'c':switchTab('schedule');ev.preventDefault();break;
     case'n':
       switchTab('mylist');
-      document.getElementById('wants-add-name')?.focus();
+      setTimeout(()=>document.getElementById('wants-add-name')?.focus(),60);
       ev.preventDefault();break;
     case'/':
       ev.preventDefault();
@@ -15170,7 +14941,7 @@ function maybeStartTour(){
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
   setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,
-  openProductShare,setProductShareMode,setProductShareOption,productShareFormatKeydown,activateProductShare,toggleBoardSelection,
+  openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,clearTrainerSearch,focusTrainerSearch,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,

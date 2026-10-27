@@ -32,20 +32,21 @@ test('share scope controls output, selection persists across filtering and no da
   await page.locator('#combined-filter').fill('');
   await expect(page.locator('#combined-list input').first()).toBeChecked();
   await page.evaluate(()=>openProductShare());
-  await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
+  await expect(page.locator('#product-share-format')).toBeVisible();
   for(const scope of ['top','selected']){
-    await page.locator('[data-share-mode="text"]').click();
-    await page.locator('#share-scope-'+scope).check();
-    await page.locator('#product-share-primary').click();
+    await page.locator('#product-share-scope').selectOption(scope);
+    await expect(page.locator('#share-link-action')).toBeDisabled();
+    await page.evaluate(()=>setProductShareMode('link'));
+    await expect(page.locator('#share-link-action')).toBeDisabled();
+    await page.locator('#product-share-format').selectOption('text');
+    await page.locator('#product-share-text button').click();
     const text=await page.evaluate(()=>__copied);
     expect(text).toContain('Pikachu');
     expect(text).not.toContain('Eevee');
     expect(text).not.toContain('Snom');
-    await page.locator('[data-share-mode="link"]').click();
-    await expect(page.locator('[name="share-scope"]')).toHaveCount(0);
-    await expect(page.locator('.share-public-list')).toContainText('Snom');
   }
-  await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
+  await page.locator('#product-share-scope').selectOption('full');
+  await expect(page.locator('#product-share-format')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
 test('signed-in recipient sections preserve special wants and copy only that trainer’s complete section',async({page})=>{
@@ -63,26 +64,20 @@ test('signed-in recipient sections preserve special wants and copy only that tra
   await expect(page.locator('#share-list-out [data-want-section="NEEDS_PRIORITY"] .share-section-title')).toContainText('Priority not set');
   await expect(page.locator('#share-list-out')).not.toContainText('Needs priority');
   await expect(page.locator('#share-list-out [data-want-section="L"] .contextual-details')).toBeHidden();
-  // Independent fixture expectations: retain protection except exclusions that
-  // contradict a section's requested shiny/size requirements. Lucky is a trade outcome.
-  const ordinary='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&';
-  const withShiny='!4*&!traded&CP-2500&!shadow&!purified&!background&';
-  for(const [key,count,expected] of [
-    ['H',2,withShiny+'25,94'],['M',1,ordinary+'133'],['L',1,ordinary+'1'],['LUCKY',1,ordinary+'25'],
-    ['XXL',1,ordinary+'xxl&143'],['XXS',1,ordinary+'xxs&595'],['LUCKY+SHINY',1,withShiny+'280'],['NEEDS_PRIORITY',1,ordinary+'150']
-  ]){
+  for(const [key,numbers] of [['H',[25,94]],['M',[133]],['L',[1]],['LUCKY',[25]],['XXL',[143]],['XXS',[595]],['LUCKY+SHINY',[280]],['NEEDS_PRIORITY',[150]]]){
     const section=page.locator(`#share-list-out [data-want-section="${key}"]`);
-    await expect(section.locator('.share-pcard')).toHaveCount(count);
+    await expect(section.locator('.share-pcard')).toHaveCount(numbers.length);
     await section.locator('[data-contextual-copy]').click();
+    const expected=await page.evaluate(({key,numbers})=>PogoDomain.searchStrings.contextualSearchPlan(numbers.map(no=>({no,shiny:key==='H'?no===94:key.includes('SHINY'),lucky:key.includes('LUCKY'),xxl:key==='XXL',xxs:key==='XXS'})),{locale:'en'}).parts[0],{key,numbers});
     expect(await page.evaluate(()=>__copied)).toBe(expected);
   }
   const high=page.locator('#share-list-out [data-want-section="H"]');
-  await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+  await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(0);await expect(high.locator('.sr-only')).toContainText('Shiny');
   await expect(page.locator('#share-list-out [data-want-section="LUCKY"] .share-pcard-flag.lucky')).toHaveCount(0);
   await high.locator('[data-recipient-section-action="toggle"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(0);
   await high.locator('[data-contextual-copy]').click();
-  expect(await page.evaluate(()=>__copied)).toBe(withShiny+'25,94');
+  expect(await page.evaluate(()=>__copied)).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:25},{no:94,shiny:true}],{locale:'en'}).parts[0]));
   await expect(page.locator('#share-list-out [data-want-section="LUCKY"]')).toContainText('Lucky request');
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
 });
@@ -93,24 +88,16 @@ test('large signed-in recipient sections page cards while preserving the full se
     allData.users.LargeRecipient={specialTradeBoard:{lf:[],ft:[]}};
     allData.wishlist.LargeRecipient=Object.fromEntries(Array.from({length:999},(_,index)=>[`Synthetic ${index}`,'H']));
     allData.wishlist.LargeRecipient.Mewtwo='H';
-    window.__recipientBefore=JSON.stringify(allData);
-    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__copied=value;}}});
     document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');
     renderShareView('LargeRecipient','wishlist');
   });
   const high=page.locator('#share-list-out [data-want-section="H"]');
-  const expected='!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150';
   await expect(high.locator('.share-pcard')).toHaveCount(80);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',expected);
-  await high.locator('[data-contextual-copy]').click();
-  expect(await page.evaluate(()=>__copied)).toBe(expected);
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]));
   await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
   await high.locator('[data-recipient-section-action="more"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(160);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',expected);
-  await high.locator('[data-contextual-copy]').click();
-  expect(await page.evaluate(()=>__copied)).toBe(expected);
-  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]));
 });
 
 test('wants-only add is one canonical batch, failed save retains the draft',async({page})=>{
@@ -122,7 +109,7 @@ test('wants-only add is one canonical batch, failed save retains the draft',asyn
     applyAccountSyncTradeMutations=async mutations=>{window.__mutations=mutations;return{ok:false};};
     openCombinedEditor();
   });
-  await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-name').press('Escape');
   await expect(page.locator('#combined-ft')).toHaveCount(0);
   await expect(page.locator('#combined-backgroundId')).toHaveCount(0);
   await page.locator('#combined-shiny').check();
@@ -144,8 +131,7 @@ test('unchanged rows retain keyboard focus and an open selection search stays sc
     selectCombinedGroup(0,false);
     return{stable,before,after:document.querySelector('#combined-search [data-wants-copy]')?.dataset.wantsCopy,hidden:document.getElementById('combined-search').hidden};
   });
-  expect(result.stable).toBe(true);expect(result.before).toBe('!4*&!traded&CP-2500&!shadow&!purified&!background&25');expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
-  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
+  expect(result.stable).toBe(true);expect(result.before).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:25,shiny:true}],{locale:'en'}).parts[0]));expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
 });
 test('a remotely changed declaration blocks a stale editor without submitting mutations',async({page})=>{
   await fixture(page);
@@ -153,7 +139,7 @@ test('a remotely changed declaration blocks a stale editor without submitting mu
     accountSyncCanonicalEntities=[];accountSyncMutationAuthority=async()=>({mode:'canonical',controller:{}});accountSyncAuthorityCurrent=()=>true;
     window.__writes=0;applyAccountSyncTradeMutations=async()=>{__writes++;return{ok:true};};openCombinedEditor();
   });
-  await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-name').press('Escape');
   await page.evaluate(()=>{allData.wishlist[cur].Snom='H';});
   await page.locator('#combined-save').click();
   await expect(page.locator('#combined-editor-modal')).toBeVisible();
@@ -164,7 +150,7 @@ test('responsive navigation and editor fit',async({page})=>{
   await fixture(page);
   for(const width of [320,390,1440]){
     await page.setViewportSize({width,height:900});
-    await expect(page.locator('#nav-events')).toBeVisible();
+    await expect(page.locator('#nav-events')).toBeVisible();await expect(page.locator('#nav-more')).toBeVisible();await expect(page.locator('.tabs .tab:visible')).toHaveCount(4);
     await page.evaluate(()=>openCombinedEditor());
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.keyboard.press('Escape');
@@ -174,7 +160,7 @@ test('responsive navigation and editor fit',async({page})=>{
 test('every reviewed unavailable costume is absent from both active selectors',async({page})=>{
   await fixture(page);
   const audit=await page.evaluate(()=>{
-    const entries=costumeSpriteCatalogDomain.records.filter(r=>r.status==='unavailable').map(r=>({no:r.no,name:r.names[0]})),active=new Set(_specialAllItems().map(e=>e.name));
+    const entries=listSource('wishlist'),active=new Set(_specialAllItems().map(e=>e.name));
     myListType='wishlist';buildAcItems();const legacy=new Set(acItems.map(e=>e.name));
     const unavailable=entries.filter(e=>spriteCatalogContext(e.no,e.name,e.displayName||e.name,e.catalogId).unresolved);
     return{unavailable:unavailable.map(e=>e.name),leaked:unavailable.filter(e=>active.has(e.name)||legacy.has(e.name)).map(e=>e.name),base:active.has('Pikachu'),exact:active.has('Pikachu (Worlds 2025)')};

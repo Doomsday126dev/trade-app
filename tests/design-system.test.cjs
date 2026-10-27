@@ -15,7 +15,7 @@ test('design tokens define the bounded spacing, container, radius, type, control
   for(const [name,value] of Object.entries({
     'space-1':'4px','space-2':'8px','space-3':'12px','space-4':'16px','space-5':'24px','space-6':'32px',
     'container-narrow':'480px','container-standard':'760px','container-wide':'1120px',
-    'radius-sm':'4px','radius-md':'6px','radius-lg':'8px','radius-pill':'999px',
+    'radius-sm':'6px','radius-md':'9px','radius-lg':'12px','radius-pill':'999px',
     'control-min':'48px'
   }))assert.match(css,new RegExp(`--${name}:${value.replace(/[()]/g,'\\$&')}`));
   for(const role of ['page','section','card','body','meta','utility'])assert.match(css,new RegExp(`--type-${role}:`));

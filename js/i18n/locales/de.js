@@ -14,20 +14,6 @@
     "groups.manage":"Gruppe verwalten","groups.memberCount":"{count} Trainer","groups.updatedTrainers":"{count} aktualisiert","groups.review":"Trainer-Updates",
     'groups.title':"Gruppen",'groups.new':'Neuer Gruppenname','groups.name':'Gruppenname','groups.create':'Gruppe erstellen','groups.open':'Gruppe','groups.choose':"Favoriten oder Gruppe wählen",'groups.rename':'Umbenennen','groups.delete':'Gruppe löschen','groups.confirmDelete':'Diese Gruppe löschen? Favoriten und Wunschlisten bleiben erhalten.','groups.members':'Mitglieder','groups.noFavorites':'Speichere zuerst Trainer als Favoriten.','groups.all':"Alle Gesuche",'groups.refresh':'Wünsche aktualisieren','groups.available':'Verfügbar','groups.stale':'Nicht verfügbar: veraltet','groups.loading':'Wird geprüft…','groups.unavailable':'Nicht verfügbar','groups.freshness':"Öffentliche Gesuche bleiben unabhängig vom Veröffentlichungsalter enthalten. Zugriff nach fünf Minuten erneut prüfen.",'groups.empty':'Diese Gruppe hat keine Mitglieder.','groups.noWants':'Keine zugänglichen Wünsche.','groups.search':'Gruppenwünsche suchen','groups.more':'Mehr anzeigen','groups.synced':'Privat · Kontosynchronisierung','groups.local':'Privat · dieses Gerät',
     "workflow.listTools":"Listenwerkzeuge",
-    "discovery.intro":"Tauschwerkzeuge und deine App.",
-    "discovery.trading":"Tauschen",
-    "discovery.yourApp":"Deine App",
-    "discovery.eventsHelp":"Kommende Termine und Veranstaltungsdetails.",
-    "discovery.transfer":"Prüfung vor dem Verschicken",
-    "discovery.transferHelp":"Prüfe geteilte Wünsche der von dir ausgewählten Trainer.",
-    "discovery.shareHelp":"Ein öffentlicher Link, Bild oder Text deiner Wünsche.",
-    "discovery.importHelp":"Prüfe einen Pokémon-GO-Suchtext, bevor du Wünsche hinzufügst.",
-    "discovery.profileHelp":"Deine Traineridentität und geteilten Angaben.",
-    "discovery.settingsHelp":"Sprache, Darstellung, Konto und Synchronisierung.",
-    "discovery.help":"Hilfe und Tastenkürzel",
-    "discovery.helpDescription":"Mit der Tastatur durch die App navigieren.",
-    "discovery.emptyTitle":"Beginne mit einem Pokémon, das du suchst",
-    "discovery.emptyImport":"Füge es oben über die Suche hinzu oder importiere einen Pokémon-GO-Suchtext.",
     "workflow.findInList":"In Liste suchen",
     "workflow.closeFind":"Listensuche schließen",
     "workflow.aboutSearches":"Über die Suche",
@@ -124,9 +110,9 @@
     'inventory.legacyTitle':'Altes Inventar','inventory.legacyDescription':'Ein bewahrter Stand deiner früheren Sammlung. Du kannst ihn ansehen oder exportieren; die Bearbeitung bleibt eingestellt.','inventory.legacyEmpty':'Für dieses Konto sind keine alten Inventareinträge gespeichert.','inventory.legacyReadOnly':'Das alte Inventar ist schreibgeschützt. Es wurden keine Änderungen gespeichert.','inventory.exportAction':'Inventar als CSV exportieren','inventory.filterPlaceholder':'Inventar filtern…','inventory.sectionTitle':'Gespeichertes Inventar',
     'events.filterSpotlight':'Rampenlicht-Stunden',
     'events.title':'Events','events.description':'Aktuelle und kommende Pokémon-GO-Events.','events.loading':'Kommende Events werden geladen…','events.empty':'Schau später noch einmal vorbei.','events.error':'Events konnten nicht geladen werden. Bitte später erneut versuchen.','events.groupNow':'Läuft jetzt','events.groupSoon':'Beginnt bald','events.groupLater':'Später','events.filterAll':'Alle','events.filterRaids':'Raids','events.filterMax':'Dyna-Kämpfe','events.filterGbl':'GO-Kampfliga','events.filterResearch':'Forschung','events.filterGeneral':'Allgemein','events.details':'Details','events.filtersLabel':'Eventtypen','events.filteredEmpty':'Wähle einen anderen Typ oder lösche die Filter.','events.offline':'Versuche es nach dem Verbinden erneut.','events.emptyTitle':'Keine kommenden Events','events.filteredEmptyTitle':'Keine passenden Events','events.errorTitle':'Events nicht verfügbar','events.offlineTitle':'Events sind offline','events.retry':'Erneut versuchen','events.clearFilters':'Filter löschen','events.nowBadge':'Jetzt','events.endsRelative':'Endet {time}','events.startsRelative':'Beginnt {time}','events.startsToday':'Beginnt heute','events.startsTomorrow':'Beginnt morgen','events.eventCount':'{count} Events','events.openDetailsFor':'Details zu {event} öffnen','events.context':'Eventübersicht','events.calendar':'Kalender','events.previousMonth':'Vorheriger Monat','events.nextMonth':'Nächster Monat','events.calendarDate':'{date}, {status}','events.calendarHasEvents':'Events verfügbar','events.calendarNoEvents':'keine Events','events.onDate':'Events am {date}','events.noneOnDate':'Keine Events am {date}','events.clearDate':'Alle Daten anzeigen','events.upNext':'Als Nächstes','events.featuredPokemon':'Vorgestellte Pokémon','settings.profileGroupTrainer':'Trainer','settings.profileTrainerName':'Trainername','settings.profileGroupPokemonGo':'Pokémon GO','settings.profileGroupAbout':'Über dich',
-    'settings.title':'Einstellungen','settings.description':'Verwalte Profil, App-Status, Darstellung und Sitzung.','settings.profileAction':'Profil bearbeiten','settings.healthAction':'App-Status','settings.shortcutsAction':'Tastenkürzel','settings.logoutAction':'Abmelden','settings.languageTitle':'Sprache',"settings.languageDescription":"Wird nur auf diesem Gerät gespeichert.","settings.languageLabel":"Sprache der Anwendung",'settings.languageSaved':'Spracheinstellung auf diesem Gerät gespeichert.','settings.localToolsTitle':'Trainereinstellungen','settings.localToolsDescription':'Favoriten und zuletzt angesehene Trainer bleiben privat auf diesem Gerät. Private Tags und geräteübergreifende Synchronisierung sind noch nicht aktiv.','settings.syncComingLater':'Geräteübergreifende Synchronisierung — später verfügbar',
+    'settings.title':'Einstellungen','settings.description':'Verwalte Profil, App-Status, Darstellung und Sitzung.','settings.profileAction':'Profil bearbeiten','settings.healthAction':'App-Status','settings.shortcutsAction':'Tastenkürzel','settings.logoutAction':'Abmelden','settings.languageTitle':'Sprache','settings.languageDescription':'Die Oberflächensprache wird privat auf diesem Gerät gespeichert.','settings.languageLabel':'Oberflächensprache','settings.languageSaved':'Spracheinstellung auf diesem Gerät gespeichert.','settings.localToolsTitle':'Trainereinstellungen','settings.localToolsDescription':'Favoriten und zuletzt angesehene Trainer bleiben privat auf diesem Gerät. Private Tags und geräteübergreifende Synchronisierung sind noch nicht aktiv.','settings.syncComingLater':'Geräteübergreifende Synchronisierung — später verfügbar',
     'security.title':'Konto und Sicherheit','security.description':'Die Firebase-Konto-ID bleibt die maßgebliche Identität für dieses Trainerprofil.','security.methodsLabel':'Anmeldemethoden','security.google':'Google','security.email':'E-Mail','security.discord':'Discord','security.legacyPin':'Bisherige PIN','security.notLinked':'Nicht verknüpft','security.active':'Aktiv','security.futureUnavailable':'Das Verknüpfen von Anbietern ist noch nicht verfügbar.','security.emailPlanned':'Die Umstellung auf einen bestätigten E-Mail-Link ist für eine spätere Phase vorgesehen.','security.legacyPinHelp':'Dies bleibt vorerst deine aktive Anmeldemethode in der Produktivumgebung.','security.disabledNotice':'In dieser Version sind keine Aktionen zum Verknüpfen, Trennen oder Migrieren aktiviert.',
-    'security.connectedAccounts':'Verknüpfte Konten','security.connectedAccountsHelp':'Anmeldemethoden, die mit diesem Trainerkonto verknüpft sind.','security.usernamePin':'Benutzername und PIN','security.usernamePinHelp':"Melde dich mit deinem Trainernamen und deiner PIN an.",'security.connected':'Verknüpft','security.notConnected':'Nicht verknüpft','security.connecting':'Wird verknüpft','security.waitingBrowser':'Wartet auf Browser','security.needsAttention':'Überprüfung nötig','security.reauthenticate':'Erneut authentifizieren','security.disconnecting':'Verknüpfung wird getrennt','security.unavailable':'Nicht verfügbar','security.providerDevelopmentOnly':'Nur in der Entwicklung nach Anbieterkonfiguration verfügbar.','security.foundationNotice':'Zusätzliche Anmeldeanbieter sind in dieser Version nicht aktiviert.',
+    'security.connectedAccounts':'Verknüpfte Konten','security.connectedAccountsHelp':'Anmeldemethoden, die mit diesem Trainerkonto verknüpft sind.','security.usernamePin':'Benutzername und PIN','security.usernamePinHelp':'Deine bestehende Anmeldung bleibt mit demselben Firebase-Konto verknüpft.','security.connected':'Verknüpft','security.notConnected':'Nicht verknüpft','security.connecting':'Wird verknüpft','security.waitingBrowser':'Wartet auf Browser','security.needsAttention':'Überprüfung nötig','security.reauthenticate':'Erneut authentifizieren','security.disconnecting':'Verknüpfung wird getrennt','security.unavailable':'Nicht verfügbar','security.providerDevelopmentOnly':'Nur in der Entwicklung nach Anbieterkonfiguration verfügbar.','security.foundationNotice':'Zusätzliche Anmeldeanbieter sind in dieser Version nicht aktiviert.',
     'myList.listTitle':'Meine Liste','myList.filterPlaceholder':'Meine Liste filtern…','myList.addTitle':'Pokémon hinzufügen','myList.addHelp':'Bei längeren Sitzungen behält die Schnellerfassung Priorität und Markierungen bei.','myList.searchPlaceholder':'Pokémon suchen…','myList.priority':'Priorität','myList.flags':'Markierungen','myList.advanced':'Erweitert','myList.moreOptions':'Weitere Optionen','myList.notesPlaceholder':'Notizen: weiblich, männlich, Kostüm…','myList.variantDetails':'Variantendetails','myList.variantDetailsPlaceholder':'Variantendetails: weiblich, männlich, Kostüm…','myList.addAction':'Hinzufügen','myList.importAction':'Zeichenfolge importieren','myList.speedAdd':'Schnellerfassung','myList.exportAction':'Exportieren','myList.bulkEdit':'Mehrfach bearbeiten','myList.noMatches':'Keine Treffer','myList.clearFilter':'Entferne den Filter, um alle Einträge anzuzeigen.','myList.emptyTitle':'Noch keine Einträge','myList.emptyHelp':'Suche ein Pokémon, wähle eine Priorität und füge es dieser Liste hinzu.','myList.count':'({count})','myList.filteredCount':'({visible} von {total})','myList.categories':'Kategorien in Meine Liste','myList.categoryTabLabel':'{category}, {count} Pokémon','myList.categoryCount':'{count} Pokémon','myList.filteredCategoryCount':'{visible} von {total} Pokémon','myList.noMatchesInCategory':'Keine Treffer in {category}','myList.empty.wishlistTitle':'Noch keine Tausch-Pokémon','myList.empty.wishlistHelp':'Füge oben Pokémon hinzu, um deine Tauschliste zu beginnen.','myList.empty.dynamaxTitle':'Noch keine Dynamax-Pokémon','myList.empty.dynamaxHelp':'Füge oben gesuchte Dynamax-Pokémon hinzu.','myList.empty.gigantamaxTitle':'Noch keine Gigadynamax-Pokémon','myList.empty.gigantamaxHelp':'Füge oben gesuchte Gigadynamax-Pokémon hinzu.','myList.empty.othersTitle':'Keine Pokémon in Andere','myList.empty.othersHelp':'Deine anderen Kategorien in Meine Liste bleiben unverändert.','myList.viewCategory':'{category} ansehen ({count})','myList.viewCategoryLabel':'{category} mit {count} Pokémon ansehen',
     'list.wishlist':'Tausche','list.dynamax':'Dynamax','list.dynamaxShort':'Dmax','list.gigantamax':'Gigadynamax','list.gigantamaxShort':'Gmax','list.others':'Andere','strings.categoryTitle':'Suchzeichenfolgen für {category}','strings.emptyCategoryTitle':'Keine Suchzeichenfolgen für {category}','strings.emptyCategoryHelp':'Suchzeichenfolgen erscheinen, sobald diese Kategorie Pokémon enthält.','strings.categoryNeedsPriority':'Wähle für Einträge in dieser Kategorie eine Priorität oder Suchmarkierung.','myList.priorityPokemonCount':'{count} Pokémon','myList.luckyDex':'Glücks-Dex','myList.shinyDex':'Shiny-Dex','myList.xxlDex':'XXL-Dex','myList.xxsDex':'XXS-Dex','myList.otherPokemon':'Andere Pokémon','strings.allPriorities':'Alle Prioritäten','strings.prioritySearch':'Suchstring für Priorität {priority}','strings.luckyDexSearch':'Glücks-Dex-Suchstring','strings.shinyDexSearch':'Shiny-Dex-Suchstring','strings.xxlDexSearch':'XXL-Dex-Suchstring','strings.xxsDexSearch':'XXS-Dex-Suchstring','strings.copyScoped':'{label} kopieren','strings.viewString':'Suchstring anzeigen','strings.hideString':'Suchstring ausblenden','strings.tooLongForPokemonGo':'Zu lang für Pokémon GO','strings.suggestedSplit':'Empfohlene Aufteilung','strings.suggestedSplitHelp':'Kopiere jeden Teil, damit alle Pokémon ohne Überschreitung des Limits erfasst werden.','strings.moreCombinations':'Weitere Kombinationen','strings.combinedSearch':'Kombinierte Suche','strings.specialSearches':'Spezielle Suchen','priority.high':'Hoch','priority.medium':'Mittel','priority.low':'Niedrig',
     'status.localOnlyTitle':'Nur-lokal-Modus','status.localOnlyBody':'Deine Änderungen bleiben sicher auf diesem Gerät. Melde dich erneut an, um {count} ausstehende Änderungen zu synchronisieren.','status.signBackIn':'Erneut anmelden',
@@ -162,10 +148,10 @@
     ,'compare.pickAnother':'Wähle einen anderen Trainer.','compare.emptySection':'In diesem Abschnitt gibt es keine Pokémon.','myList.noVariants':'Keine Varianten gefunden.','myList.allVariantsListed':'Alle {count} {family}-Varianten sind bereits in deiner Liste.','myList.addAllVariantsTitle':'Alle {family}-Varianten hinzufügen','myList.variantsWillAdd':'{count} Varianten werden deiner {list}-Liste hinzugefügt.','myList.alreadyAddedCount':'{count} bereits hinzugefügt','myList.addAsPriority':'Mit Priorität hinzufügen:','myList.addCount':'{count} hinzufügen','myList.variantsAdded':'{count} {family}-Varianten mit Priorität {priority} hinzugefügt.','myList.allShownListed':'Alle angezeigten Ergebnisse sind bereits in deiner Liste.','myList.addShownTitle':'Angezeigte Ergebnisse hinzufügen','myList.shownWillAdd':'{count} sichtbare Ergebnisse werden deiner {list}-Liste hinzugefügt.','myList.currentFlags':'Aktuelle Markierungen: {flags}','myList.shownAdded':'{count} angezeigte Ergebnisse mit Priorität {priority} hinzugefügt.','voice.unsupported':'Spracheingabe wird hier nicht unterstützt. Probiere Chrome auf dem Desktop oder Android.','voice.requiresHttps':'Spracheingabe benötigt HTTPS.','voice.listeningPlaceholder':'Hört zu… Sage einen Pokémon-Namen','voice.listening':'Hört zu…','voice.heardMatch':'„{heard}“ erkannt → {name}','voice.heardNoMatch':'„{heard}“ erkannt, aber kein Pokémon passt. Versuche die Texteingabe.','voice.permissionDenied':'Der Mikrofonzugriff wurde verweigert. Aktiviere ihn in den Browsereinstellungen.','voice.noSpeech':'Es wurde nichts erkannt. Versuche es erneut.','voice.noMicrophone':'Kein Mikrofon gefunden.','voice.networkError':'Bei der Spracherkennung ist ein Netzwerkfehler aufgetreten. Prüfe die Verbindung.','voice.serviceBlocked':'Der Sprachdienst ist blockiert.','voice.error':'Fehler bei der Spracheingabe: {code}','voice.startFailed':'Die Spracheingabe konnte nicht gestartet werden.'
     ,'account.tools':"Werkzeuge",'inventory.readOnlyBadge':"Schreibgeschützt",'guidance.findTitle':"Trainer suchen und vergleichen",'guidance.findBody':"Öffne die geteilte Liste eines Trainers und speichere ihn als Favoriten. Private Tags bleiben auf diesem Gerät; die Synchronisierung ist nicht aktiv.",'guidance.exploreEvents':"Events ansehen",'guidance.myListTitle':"Erstelle deine Tauschliste",'guidance.myListBody':"Füge Pokémon hinzu, lege Prioritäten fest und teile deine Liste, wenn du bereit bist. Favoriten und private Tags bleiben auf diesem Gerät.",'guidance.findTrainer':"Trainer suchen",'trainer.clearSearch':"Suche löschen",'trainer.searchAnother':"Anderen Trainer suchen",'trainer.noMatchRecovery':"Kein exakt passender Trainer gefunden. Prüfe die Schreibweise, lösche die Suche oder suche nach einem anderen Trainer.",'backup.fileTooLarge':"Dieses Backup ist größer als {size}. Wähle ein kleineres vertrauenswürdiges JSON-Backup.",'conflict.onDevice':"Auf diesem Gerät",'conflict.savedCopy':"Gespeicherte Kopie",'conflict.more':"+{count} weitere",'conflict.title':"Änderungen benötigen deine Aufmerksamkeit ({count})",'conflict.help':"Bis zu deiner Auswahl wird nichts verworfen. Dieses Gerät behalten bewahrt deine Änderungen; Gespeicherte Kopie verwenden ersetzt sie. Später prüfen ändert nichts, damit du vorher beide Kopien manuell sichern kannst.",'conflict.reviewLater':"Später prüfen",'conflict.useSaved':"Gespeicherte Kopie verwenden",'conflict.keepDevice':"Dieses Gerät behalten",'events.moreBonuses':"+{count} weitere"
     ,'settings.searchLanguageLabel':'Sprache der Pokémon-GO-Suche','settings.searchLanguageFollow':'App-Sprache übernehmen','settings.searchLanguageDescription':'Die Sprache der Suchbefehle wird nur auf diesem Gerät gespeichert und kann von der App-Sprache abweichen.','settings.searchLanguageSaved':'Sprache der Pokémon-GO-Suche auf diesem Gerät gespeichert.','settings.searchLanguageAutomatic':'Pokémon-GO-Suchbefehle verwenden automatisch diese Sprache.','settings.searchLanguageOverride':'Andere Sprache für Pokémon-GO-Suchbefehle verwenden','settings.searchLanguageOverrideHelp':'Aktiviere dies nur, wenn du Pokémon GO in einer anderen Sprache als diese App verwendest.','myList.setHighPriority':'Hohe Priorität für {name} festlegen','myList.setMediumPriority':'Mittlere Priorität für {name} festlegen','myList.setLowPriority':'Niedrige Priorität für {name} festlegen','myList.toggleLuckyFor':'Glücks-Markierung für {name} umschalten','myList.toggleShinyFor':'Schillernd-Markierung für {name} umschalten','myList.toggleXxlFor':'XXL-Markierung für {name} umschalten','myList.toggleXxsFor':'XXS-Markierung für {name} umschalten','myList.openMoreFor':'Weitere Optionen für {name} öffnen','myList.reorderEntry':'{name} neu anordnen'
-    ,'settings.sectionsLabel':'Einstellungsbereiche','settings.sectionProfile':'Profil','settings.sectionLanguage':'Sprache','settings.sectionSecurity':'Konto und Sicherheit','settings.sectionTools':'Werkzeuge',"settings.sectionData":"Synchronisierung und Speicher",'settings.backToSections':'Zurück zu Einstellungen','settings.profileSummary':'Deine Traineridentität und dein öffentliches Profil.','settings.profileIdentityHelp':'Diesen Trainernamen sehen andere Personen.','settings.toolsSummary':'Gelegentlich benötigte Listen- und App-Werkzeuge.','settings.dataSummary':'Favoriten und Tags werden auf diesem Gerät gespeichert. Die geräteübergreifende Synchronisierung ist noch nicht verfügbar.','settings.release':'App-Version {release}','security.description':'Verwalte, wie du dich bei diesem Trainerkonto anmeldest.','organizer.addTags':"Gruppen hinzufügen",'organizer.newTag':"Neuer Gruppe",'organizer.newTagAction':"+ Neuer Gruppe",'organizer.favoriteSaved':'{trainer} wurde als Favorit gespeichert.','organizer.removeConfirm':"{trainer} aus den Favoriten entfernen? Private Gruppen dieses Trainers werden ebenfalls gelöscht.",'organizer.tagSelected':"Vorhandener Gruppe ausgewählt.",'organizer.favorite-limit':'Dieses Gerät hat das Favoritenlimit erreicht.','organizer.editTags':"Gruppen bearbeiten",'organizer.removeFavorite':'Aus Favoriten entfernen','organizer.editTagsFor':"Gruppen für {trainer} bearbeiten",'organizer.addTagsFor':"Gruppen für {trainer} hinzufügen",'organizer.moreActionsFor':'Weitere Aktionen für {trainer}'
+    ,'settings.sectionsLabel':'Einstellungsbereiche','settings.sectionProfile':'Profil','settings.sectionLanguage':'Sprache','settings.sectionSecurity':'Konto und Sicherheit','settings.sectionTools':'Werkzeuge','settings.sectionData':'App und Daten','settings.backToSections':'Zurück zu Einstellungen','settings.profileSummary':'Deine Traineridentität und dein öffentliches Profil.','settings.profileIdentityHelp':'Diesen Trainernamen sehen andere Personen.','settings.toolsSummary':'Gelegentlich benötigte Listen- und App-Werkzeuge.','settings.dataSummary':'Favoriten und Tags werden auf diesem Gerät gespeichert. Die geräteübergreifende Synchronisierung ist noch nicht verfügbar.','settings.release':'App-Version {release}','security.description':'Verwalte, wie du dich bei diesem Trainerkonto anmeldest.','organizer.addTags':"Gruppen hinzufügen",'organizer.newTag':"Neuer Gruppe",'organizer.newTagAction':"+ Neuer Gruppe",'organizer.favoriteSaved':'{trainer} wurde als Favorit gespeichert.','organizer.removeConfirm':"{trainer} aus den Favoriten entfernen? Private Gruppen dieses Trainers werden ebenfalls gelöscht.",'organizer.tagSelected':"Vorhandener Gruppe ausgewählt.",'organizer.favorite-limit':'Dieses Gerät hat das Favoritenlimit erreicht.','organizer.editTags':"Gruppen bearbeiten",'organizer.removeFavorite':'Aus Favoriten entfernen','organizer.editTagsFor':"Gruppen für {trainer} bearbeiten",'organizer.addTagsFor':"Gruppen für {trainer} hinzufügen",'organizer.moreActionsFor':'Weitere Aktionen für {trainer}'
     ,'settings.exportList':'Meine Liste exportieren'
     ,"data.ownedReadUnavailable":"Einige Kontodaten konnten nicht aktualisiert werden. Dein geprüfter Offline-Cache bleibt verfügbar.","app.name":"PoGo Trades","trainer.restrictedFavorites":"Nur für freigegebene Trainer sichtbar.","trainer.publicHint":"Bitte den Trainer um einen aktuellen Freigabelink oder versuche es später erneut.","trainer.publicInvalid":"Gib einen gültigen Trainernamen oder PoGo-Trades-Freigabelink ein.","trainer.changesAdded":"{count} hinzugefügt","trainer.changesRemoved":"{count} entfernt","trainer.changesModified":"{count} geändert","trainer.changesTitle":"Änderungen seit dem letzten Öffnen","trainer.changePriority":"{name}: Priorität geändert","trainer.changeCategory":"{name}: in eine andere Liste verschoben","trainer.changeDetails":"{name}: veröffentlichte Details geändert","share.publicationUpdated":"Die öffentliche Freigabekopie wurde aktualisiert.","share.publicationPending":"Der Link wurde kopiert. Deine vollständigen Listen werden noch geladen; die Veröffentlichung wird danach abgeschlossen.","share.publicationNotReady":"Der Link wurde kopiert, aber die öffentliche Liste wurde nicht geändert, da die vollständigen Kontodaten nicht verfügbar sind.","share.ownerMissing":"Keine aktuelle geteilte Kopie gefunden.","share.ownerProfileOnly":"Die geteilte Kopie enthält nur Profilinformationen.","share.ownerMissingMarkers":"Die geteilte Kopie ist älter als die Vollständigkeitsmarkierungen.","share.ownerIncomplete":"Die geteilte Kopie ist unvollständig.","share.ownerUnsupported":"Die geteilte Kopie verwendet ein nicht unterstütztes Format.","share.ownerReadError":"Die geteilte Kopie konnte nicht geprüft werden. Versuche es online erneut.","trainer.tagsTitle":"Private Trainer-Tags","trainer.tagsCreate":"Tag erstellen","trainer.tagsRename":"Tag umbenennen","trainer.tagsDelete":"Tag löschen","trainer.tagsFilter":"Favoriten nach allen ausgewählten Tags filtern","trainer.tagsSearch":"Trainer und Tags suchen","trainer.tagsAssign":"Tags zuweisen","trainer.tagsRemove":"Tag entfernen","trainer.tagsDialogLabel":"Private Trainer-Tags bearbeiten","trainer.tagsFilterLabel":"Favorisierte Trainer nach privaten Tags filtern","trainer.syncLoading":"Trainereinstellungen werden synchronisiert…","trainer.syncOffline":"Die Synchronisierung der Trainereinstellungen wartet auf eine Verbindung.","trainer.syncUnavailable":"Die geräteübergreifende Synchronisierung der Trainereinstellungen folgt später.","trainer.migrationReady":"Die Geräteeinstellungen können vor der Synchronisierung geprüft werden.","trainer.migrationVerifying":"Synchronisierte Trainereinstellungen werden geprüft…","trainer.migrationFailed":"Die Trainereinstellungen wurden auf diesem Gerät behalten, weil die Synchronisierung nicht bestätigt werden konnte.","share.mode.public":"Öffentlich","share.mode.approved_viewers":"Freigegebene Betrachter","share.mode.private":"Privat","share.approvedViewersTitle":"Freigegebene Betrachter","share.approvedViewersGrant":"Betrachter freigeben","share.approvedViewersRevoke":"Zugriff entfernen","share.approvedViewersEmpty":"Noch keine Trainer freigegeben.","share.visibilityPublic":"Öffentliche geteilte Liste","share.visibilityApproved":"Für diesen freigegebenen Betrachter verfügbar","share.visibilityPrivateOwner":"Private geteilte Liste, für dich sichtbar","share.visibilityRestricted":"Diese geteilte Liste ist eingeschränkt.","share.visibilityPrivate":"Diese geteilte Liste ist privat.","share.visibilityUnpublished":"Dieser Trainer hat keine geteilte Liste veröffentlicht.","share.visibilityIncomplete":"Diese geteilte Liste muss erneut veröffentlicht werden.","share.visibilityUnsupported":"Diese geteilte Liste verwendet ein nicht unterstütztes Format.","share.visibilityReadError":"Die geteilte Liste konnte nicht geladen werden.","share.visibilityUnavailable":"Die geteilte Liste ist nicht verfügbar.","share.visibilityComingLater":"UID-basierte Sichtbarkeit ist später verfügbar.","share.anonymous.public":"Alle mit dem Link können die geteilte Liste sehen.","share.anonymous.approved_viewers":"Nur freigegebene angemeldete Trainer können die geteilte Liste sehen.","share.anonymous.private":"Nur du kannst die geteilte Liste sehen.","locale.en":"English","locale.ja":"日本語","locale.es":"Español","locale.de":"Deutsch","myList.selectEntry":"{name} auswählen","myList.dragEntry":"Zum Sortieren ziehen","myList.setPriority":"Priorität von {name} auf {priority} setzen","myList.toggleFlag":"{flag} für {name} umschalten","myList.notesFor":"Notizen für {name}","myList.remove":"Entfernen","myList.removeEntry":"{name} entfernen","myList.confirmRemove":"„{name}“ aus dieser Liste entfernen? Diese Änderung wird mit deinen anderen Geräten synchronisiert.","myList.confirmDelete":"„{name}“ aus dieser Liste entfernen? Dieser Eintrag enthält die Details „{notes}“. Diese Änderung wird mit deinen anderen Geräten synchronisiert.","admin.loading":"Wartungsdaten für die Administration werden geladen…","admin.establishedResetUnavailable":"Established accounts require the identity-preserving secure reset process. The legacy Reset action is disabled.","admin.securityTitle":"Firebase-Sicherheit","admin.securityDeployed":"Regeln mit eingeschränktem Lesezugriff bereitgestellt","admin.securityDeploymentTime":"Bereitstellungszeit","admin.securityCandidateSha":"Kandidaten-SHA-256","admin.securityReviewedArtifact":"Geprüftes Artefakt","admin.securityRollbackReady":"Rollback-Bereitschaft","admin.securityRollbackReadyValue":"Die geprüfte private Rollback-Basis ist bereit","admin.securityRollbackUnavailableValue":"Die Rollback-Basis muss geprüft werden","admin.securityArtifactWarning":"Produktionsregeln dürfen nur aus geprüften Repository-Artefakten verwaltet werden. Der Browserstatus ist keine Regelquelle.","admin.securityCopySha":"Kandidaten-SHA kopieren","admin.securityCopyPath":"Geprüften Pfad kopieren","admin.communityVerificationFailed":"Server did not confirm the community record. Verify the reviewed Firebase rules artifact and retry.","storage.pendingChangesDiscarded":"Ausstehende Offline-Änderungen wurden verworfen, da die Kontozugehörigkeit nicht bestätigt werden konnte.","storage.cacheReset":"Gespeicherte Sitzungsdaten wurden zurückgesetzt, da die Kontozugehörigkeit nicht bestätigt werden konnte.","storage.sessionOwnershipMismatch":"Diese gespeicherte Sitzung passt nicht zum authentifizierten Konto. Melde dich ab und erneut an.","storage.offlineRecoveryUnavailable":"Die Offline-Wiederherstellung ist erst nach einer erneuten sicheren Kontoprüfung verfügbar."
-    ,'settings.sectionAppearance':'Darstellung','settings.appearanceSummary':'Lege fest, wie die App auf diesem Gerät aussieht.','settings.themeLabel':'Design','settings.themeSystem':'System','settings.themeLight':'Hell','settings.themeDark':'Dunkel','settings.backgroundLabel':'Hintergrund','settings.backgroundSummary':'Hintergründe werden im dunklen Design angezeigt. Deine Auswahl bleibt im hellen Design erhalten.','settings.backgroundInactive':'Wechsle zum dunklen Design, um Hintergründe anzusehen und zu ändern.','settings.appearanceSaved':'Darstellung gespeichert.','settings.wallpaper.mono':'Neutral','settings.wallpaper.aurora':'Aurora','settings.wallpaper.ocean':'Ozean','settings.wallpaper.forest':'Wald','settings.wallpaper.sunset':'Sonnenuntergang','settings.wallpaper.mist':'Nebel','settings.pinTitle':'PIN aktualisieren','settings.pinSummary':'Deine sechsstellige PIN bleibt die aktive Anmeldemethode.','settings.pinSave':'PIN aktualisieren','settings.pinSaved':'PIN aktualisiert.','settings.currentIdentity':'Aktuelles Konto','settings.signInOptions':'Anmeldeoptionen'
+    ,'settings.sectionAppearance':'Darstellung','settings.appearanceSummary':'Lege fest, wie die App auf diesem Gerät aussieht.','settings.themeLabel':'Design','settings.themeSystem':'System','settings.themeLight':'Hell','settings.themeDark':'Dunkel','settings.backgroundLabel':'Hintergrund','settings.backgroundSummary':'Hintergründe werden im dunklen Design angezeigt. Deine Auswahl bleibt im hellen Design erhalten.','settings.backgroundInactive':'Wechsle zum dunklen Design, um Hintergründe anzusehen und zu ändern.','settings.appearanceSaved':'Darstellung gespeichert.','settings.wallpaper.mono':'Standard','settings.wallpaper.aurora':'Aurora','settings.wallpaper.ocean':'Ozean','settings.wallpaper.forest':'Wald','settings.wallpaper.sunset':'Sonnenuntergang','settings.wallpaper.mist':'Nebel','settings.pinTitle':'PIN aktualisieren','settings.pinSummary':'Deine sechsstellige PIN bleibt die aktive Anmeldemethode.','settings.pinSave':'PIN aktualisieren','settings.pinSaved':'PIN aktualisiert.','settings.currentIdentity':'Aktuelles Konto','settings.signInOptions':'Anmeldeoptionen'
     ,'trainer.viewedJustNow':'Gerade angesehen','trainer.viewedMinutes':'Vor {count} Min. angesehen','trainer.viewedHours':'Vor {count} Std. angesehen','trainer.viewedDays':'Vor {count} T. angesehen','trainer.viewedWeeks':'Vor {count} Wo. angesehen','trainer.viewedDate':'Am {date} angesehen'
     ,'admin.title':'Administration','admin.subtitle':'Mitglieder, Zugriff, Wartung und Diagnose prüfen, ohne Routineübersicht und sensible Aktionen zu vermischen.','admin.sectionsLabel':'Administrationsbereiche','admin.overview':'Übersicht','admin.members':'Mitglieder','admin.accessRoles':'Zugriff & Rollen','admin.maintenance':'Wartung','admin.diagnostics':'Diagnose','admin.overviewHelp':'Kompakte Übersicht der in dieser Sitzung bereits geladenen Mitgliederdaten.','admin.membersHelp':'Anmeldestatus, Listenaktivität und aktuelle Rollen prüfen. Sensible Aktionen sind separat angeordnet.','admin.accessHelp':'Zugriffe freigeben, Mitglieder hinzufügen und Rollen bewusst ändern.','admin.maintenanceHelp':'Kontoreparatur und Sicherungen sind von der normalen Mitgliederprüfung getrennt.','admin.diagnosticsHelp':'Geprüfte Sicherheitsmetadaten und Diagnosewerkzeuge für den Eigentümer.','admin.admins':'Administratoren','admin.loginReadyAccounts':'Anmeldebereite Konten','admin.activeLists':'Aktive Listen','admin.listEntries':'{count} gelistet','admin.updated':'Aktualisiert {time}','admin.viewed':'Angesehen {time}','admin.never':'Nie','admin.noMembers':'Keine Mitglieder verfügbar.','admin.adminRole':'Administrator','admin.removeAdmin':'Adminzugriff entfernen','admin.makeAdmin':'Zum Admin machen','admin.ownerProtected':'Der Eigentümerzugriff ist geschützt und kann hier nicht geändert werden.','admin.roleHelp':'Rollenänderungen erfordern die Bestätigung des Eigentümers.','admin.repairAccount':'Konto reparieren','admin.secureRepairRequired':'Eingerichtete Konten verwenden den sicheren, identitätserhaltenden Reparaturprozess.','admin.firstUseResetAvailable':'Dieses Erstanmeldekonto kann zurückgesetzt oder repariert werden, wenn die Einrichtung unvollständig ist.','admin.roleChangeConfirm':'{trainer} auf {role} ändern? Dadurch ändert sich der administrative Zugriff.','admin.loginAuditTitle':'Anmeldereparatur · {count}','admin.loginAuditHelp':'Zeigt Mitglieder mit unvollständigen Anmeldemetadaten oder Verzeichniseinträgen.','admin.repairDirectoryOnly':'{count} Verzeichniseinträge reparieren','admin.repairDirectory':'Verzeichnis reparieren','admin.repairWithPin':'Reparieren + PIN','admin.emailMismatch':'E-Mail stimmt nicht überein','admin.missingDirectory':'Anmeldeverzeichnis fehlt','admin.directoryEmailMismatch':'Verzeichnis-E-Mail stimmt nicht','admin.directoryVersionMismatch':'Verzeichnisversion stimmt nicht','inventory.archiveTitle':'Schreibgeschütztes Archiv','inventory.archiveHelp':'Vorhandene Inventardaten können weiterhin angesehen und exportiert werden. Hinzufügen und Bearbeiten ist eingestellt.'
     ,'admin.repairPrompt':'{trainer} ist nicht mit Firebase Auth verknüpft.\n\nGib eine neue 6-stellige PIN ein, um das Konto zu reparieren und eine neue Anmeldung bereitzustellen.'
@@ -191,80 +177,28 @@
     ,'safeTransfer.temporarilyUnavailable':'Die sichere Transfersuche ist vorübergehend nicht verfügbar, während die vollständige Abdeckung der Wunschlisten geprüft wird.'
     ,'safeTransfer.candidate.scope':'Ausgewählter Bereich: {trainers}','safeTransfer.candidate.loading':'Serverbestätigte geteilte Wünsche werden geprüft…','safeTransfer.candidate.blocked':'Vor dem Erstellen einer Suche ist eine vollständige, aktuelle Momentaufnahme des Bereichs erforderlich.','safeTransfer.candidate.ready':'{candidates} mögliche Arten nach dem Schutz von {protected} gewünschten Arten.','safeTransfer.candidate.empty':'In dieser Bereichs-Momentaufnahme sind keine möglichen Arten mehr übrig.','safeTransfer.candidate.copy':'Teil {part} von {total} kopieren','safeTransfer.candidate.copied':'Kopiert.','safeTransfer.candidate.copyFailed':'Kopieren fehlgeschlagen. Der aktuelle Suchbegriff bleibt unten zum manuellen Kopieren erhalten.'
     ,'contextSearch.copyProtected':'Geschützte Suche kopieren','contextSearch.copyBroad':'Breite Spezialsuche kopieren','contextSearch.mixedHelp':'Normale Gesuche verwenden die geschützte Suche. Besondere oder genaue Gesuche verwenden eine getrennte breite Artensuche, damit gewünschte Treffer nicht ausgeschlossen werden.'
-    ,"shareUi.disclosure":"Mit einem Link werden deine vollständige Wunschliste und dein öffentliches Profil für alle mit diesem Link zugänglich."
-    ,"shareUi.preview":"Vorschau"
-    ,"export.listHeading":"{owner} · {list}","export.listCategory":"Kategorie: {category}"
-    ,"shareUi.manualLink":"Link zum Kopieren"
-    ,"shareUi.copyLink":"Link kopieren"
-    ,"shareUi.shareCopy":"Teilen und Link kopieren"
-    ,"shareUi.include":"Inhalt"
-    ,"shareUi.all":"Alle Wünsche"
-    ,"shareUi.high":"Hohe Priorität"
-    ,"shareUi.selected":"Ausgewählt ({count})"
-    ,"shareUi.layout":"Layout"
-    ,"shareUi.board":"Wunschübersicht"
-    ,"shareUi.classic":"Klassisch"
-    ,"shareUi.cards":"Dunkle Karten"
-    ,"shareUi.format":"Format"
-    ,"shareUi.plain":"Klartext"
-    ,"shareUi.fullScope":"Enthält deine vollständige Wunschliste."
-    ,"shareUi.category":"Enthält deine aktuelle Kategorie: {category}."
-    ,"shareUi.count":"{count} Wünsche"
-    ,"shareUi.empty":"Keine Wünsche in diesem Bereich. Wähle einen anderen Bereich oder Einträge in „Meine Liste“."
-    ,"shareUi.building":"Vorschau wird vorbereitet…"
-    ,"shareUi.working":"Wird bearbeitet…"
-    ,"shareUi.downloadImage":"Bild herunterladen"
-    ,"shareUi.downloadCsv":"CSV herunterladen"
-    ,"shareUi.copyText":"Text kopieren"
-    ,"shareUi.retryImage":"Erneut versuchen"
-    ,"shareUi.invalid":"Diese Wünsche konnten nicht geteilt werden. Prüfe die Angaben und versuche es erneut."
-    ,"shareUi.changed":"Deine Liste hat sich geändert. Prüfe die aktualisierte Vorschau und versuche es erneut."
-    ,"shareUi.imageFailed":"Das Bild konnte nicht vorbereitet werden. Versuche es erneut."
-    ,"shareUi.exportFailed":"Die Liste konnte nicht exportiert werden. Versuche es erneut."
-    ,"shareUi.downloaded":"Bereit."
-    ,"shareUi.copied":"Kopiert."
-    ,"shareUi.textCopyFailed":"Der Text konnte nicht kopiert werden. Du kannst den Text in der Vorschau auswählen und kopieren."
-    ,"shareUi.linkCopyFailed":"Der Link konnte nicht kopiert werden. Kopiere ihn unten oder versuche es erneut."
-    ,"shareUi.notReady":"Deine Liste wird noch geladen. Versuche es gleich erneut."
-    ,"shareUi.notSaved":"Deine letzten Änderungen sind noch nicht gespeichert. Versuche es erneut."
-    ,"shareUi.shareFailed":"Deine Liste konnte nicht geteilt werden. Prüfe deine Verbindung und versuche es erneut."
-    ,"shareUi.title":"Gesuchte Pokémon teilen","shareUi.shareFormat":"Format zum Teilen"
-    ,"wantEditor.add":"Gesuch hinzufügen","wantEditor.edit":"Gesuch bearbeiten","wantEditor.save":"Änderungen speichern","wantEditor.pokemon":"Pokémon","wantEditor.anyGender":"Beliebig","wantEditor.noPriority":"Keine Priorität","wantEditor.requirements":"Anforderungen","wantEditor.note":"Öffentliche Notiz"
-    ,"settings.sameAsApp":"Wie die Anwendung"
-    ,"settings.searchFixed":"Bleibt auf {language}, auch wenn du die App-Sprache änderst."
-    ,"settings.searchFollows":"Folgt der App-Sprache ({language})."
-    ,"settings.changePin":"PIN ändern"
-    ,"settings.storageSummary":"Deine Daten auf diesem Gerät und in deinem Konto."
-    ,"settings.onDevice":"Auf diesem Gerät"
-    ,"settings.storageCare":"Prüfe Synchronisierungsprobleme, bevor du dich abmeldest oder Browserdaten löschst."
-    ,"settings.about":"Über PoGo Trades"
-    ,"settings.privacy":"Datenschutz"
-    ,"settings.installLimits":"Kontodaten benötigen zum Synchronisieren weiterhin eine Verbindung."
-    ,"settings.installStandalone":"Im eigenständigen App-Modus geöffnet."
-    ,"settings.installAvailable":"Öffne PoGo Trades vom Startbildschirm oder Dock."
-    ,"settings.installSafari":"Öffne in Safari das Teilen-Menü und wähle Zum Home-Bildschirm."
-    ,"settings.installUnavailable":"Dieser Browser hat noch keine Installation angeboten. Prüfe die Optionen in seinem Menü."
-    ,"request.sending":"Wird gesendet…"
-    ,"request.unconfirmed":"Zustellung noch nicht bestätigt. Formular offen lassen und dieselbe Anfrage erneut prüfen."
-    ,"import.unsupported":"Nicht unterstützte Eingabe. Einzelne Pokédex-Nummern mit englischen Merkmalen und & verwenden. Keine Ausschlüsse, Bereiche, WP oder vollständigen Abfragen."
-    ,"import.ambiguous":"Mehrere Varianten passen und sind zunächst nicht ausgewählt. Gewünschte Formen oder Kostüme wählen. Alle auswählen umfasst jede angezeigte Variante."
-    ,"share.liveList":"Live-Liste teilen"
-    ,"share.liveCaption":"Öffentliche Seite ohne Konto"
-    ,"share.gameSearch":"Pokémon GO-Suchstring"
-    ,"share.searchCaption":"Eigene Pokémon im Spiel suchen"
-    ,"share.imageSnapshot":"Bild teilen"
-    ,"share.textSnapshot":"Text kopieren"
-    ,"share.snapshotCaption":"Momentaufnahme der Auswahl"
-    ,"share.partialLink":"Öffentliche Links enthalten die ganze Liste. Dafür Ganze Liste wählen; Auswahl als Bild, Text oder Spielsuche verwenden."
-    ,"share.liveHelp":"Ohne Konto lesbar. Gespeicherte Änderungen aktualisieren die veröffentlichte Kopie. Bei ausstehender Veröffentlichung die Besitzer-App bis zur Bestätigung offen lassen."
-    ,"share.publicFields":"Veröffentlichte Profildaten und Wunsch-Notizen sind sichtbar. Der namensbasierte Link ist öffentlich und keine private Einladung."
-    ,"share.gameLanguage":"Pokémon-GO-Sprache"
-    ,"share.searchLimits":"Nur Art-Kandidaten: Formen und Anforderungen prüfen. Ausgeschlossen: 4★, getauscht, Crypto, erlöst, Hintergründe und über 2500 WP; ohne schillernde Wünsche auch schillernde Pokémon."
-    ,"share.textCopied":"Text kopiert."
-    ,"events.localTime":"Spielerlokale Uhrzeit · Gerätezone: {zone}"
-    ,"events.fixedTime":"Weltweiter Zeitpunkt · angezeigt in {zone}"
-    ,"events.dateOnlyTime":"Datum vorhanden; genaue Uhrzeit nicht angegeben"
-    ,"events.bonusLastKnown":"Zuletzt geprüfte Details; Quelle erneut prüfen",
+,
+"request.sending":"Wird gesendet…",
+"request.unconfirmed":"Zustellung noch nicht bestätigt. Formular offen lassen und dieselbe Anfrage erneut prüfen.",
+"import.unsupported":"Nicht unterstützte Eingabe. Einzelne Pokédex-Nummern mit englischen Merkmalen und & verwenden. Keine Ausschlüsse, Bereiche, WP oder vollständigen Abfragen.",
+"import.ambiguous":"Mehrere Varianten passen und sind zunächst nicht ausgewählt. Gewünschte Formen oder Kostüme wählen. Alle auswählen umfasst jede angezeigte Variante.",
+"share.liveList":"Live-Liste teilen",
+"share.liveCaption":"Öffentliche Seite ohne Konto",
+
+"share.searchCaption":"Eigene Pokémon im Spiel suchen",
+"share.imageSnapshot":"Bild teilen",
+"share.textSnapshot":"Text kopieren",
+"share.snapshotCaption":"Momentaufnahme der Auswahl",
+"share.partialLink":"Öffentliche Links enthalten die ganze Liste. Dafür Ganze Liste wählen; Auswahl als Bild, Text oder Spielsuche verwenden.",
+"share.liveHelp":"Ohne Konto lesbar. Gespeicherte Änderungen aktualisieren die veröffentlichte Kopie. Bei ausstehender Veröffentlichung die Besitzer-App bis zur Bestätigung offen lassen.",
+"share.publicFields":"Veröffentlichte Profildaten und Wunsch-Notizen sind sichtbar. Der namensbasierte Link ist öffentlich und keine private Einladung.",
+"share.gameLanguage":"Pokémon-GO-Sprache",
+"share.searchLimits":"Nur Art-Kandidaten: Formen und Anforderungen prüfen. Ausgeschlossen: 4★, getauscht, Crypto, erlöst, Hintergründe und über 2500 WP; ohne schillernde Wünsche auch schillernde Pokémon.",
+"share.textCopied":"Text kopiert.",
+"events.localTime":"Spielerlokale Uhrzeit · Gerätezone: {zone}",
+"events.fixedTime":"Weltweiter Zeitpunkt · angezeigt in {zone}",
+"events.dateOnlyTime":"Datum vorhanden; genaue Uhrzeit nicht angegeben",
+"events.bonusLastKnown":"Zuletzt geprüfte Details; Quelle erneut prüfen",
 "events.sourceEnglish":"Quelldetails auf Englisch",
 "events.detailsPending":"Details und Quelle zeigen die Eventinhalte.",
 "events.allBonuses":"Alle {count} Boni und Bedingungen",
@@ -282,59 +216,70 @@
 "events.uncertainDay":"Uhrzeit prüfen",
 "events.noTimedDay":"Keine kurzen Events mit Uhrzeit gelistet.",
 "events.alsoOngoing":"Außerdem laufend ({count})",
-"events.bonuses":"Boni"
-    ,"events.bonusesUnknown":"Keine Bonusdetails im Feed. Quelle prüfen; dies bedeutet nicht, dass es keine Boni gibt."
-    ,"events.feedStatus":"Event-Überblick"
-    ,"events.staleFeed":"Gespeicherte Events werden angezeigt"
-    ,"events.checked":"Zuletzt geprüft: {date}"
-    ,"events.savedSchedule":"Zeitplan gespeichert: {date}"
-    ,"events.notChecked":"Nicht bestätigt"
-    ,"events.sourceDisclaimer":"Community-Feed, keine offizielle Bestätigung. Angaben können fehlen oder sich ändern; Quelltext kann Englisch sein."
-    ,"events.officialNews":"Offizielle Nachrichten"
-    ,"events.refresh":"Aktualisieren"
-    ,"events.refreshing":"Wird geprüft…"
-    ,"events.encounters":"Begegnungen"
-    ,"events.raidBosses":"Raid-Bosse"
-    ,"events.research":"Forschungsaufgaben und Belohnungen"
-    ,"events.tickets":"Kostenloser / kostenpflichtiger Zugang"
-    ,"events.ticketUnknown":"Preis und Teilnahmebedingungen fehlen im Feed. Aktivitäten oder Forschung nicht als kostenlos annehmen. Event-Quelle oder offizielle Ankündigung prüfen."
-    ,"events.detailsUnknown":"Nicht im Feed vorhanden. Details in der Event-Quelle prüfen."
-    ,"events.hoursUnknown":"Genaue Uhrzeit nicht angegeben"
-    ,"events.sourceDetails":"Event-Quelle öffnen"
-    ,"share.watching":"Veröffentlichte Änderungen erscheinen bei Verbindung. Veröffentlichung beim Besitzer kann noch ausstehen."
-    ,"share.offlineCopy":"Offline · letzte veröffentlichte Kopie; Aktualisierungen unbestätigt."
-    ,"share.refreshCopy":"Veröffentlichte Kopie · für Änderungen neu laden."
-    ,"share.unavailableCopy":"Öffentliche Liste nicht verfügbar. Zugriff erneut prüfen."
-    ,"share.reconnectingCopy":"Verbindung wiederhergestellt · warte auf veröffentlichte Änderungen."
-    ,"import.conflicting":"Pro exakter Variante nur einen Merkmalssatz wählen. Keine Änderungen gespeichert."
-    ,"shortcuts.editWant":"Pokémon-Namen öffnen, um Priorität und Details zu bearbeiten"
-    ,"shortcuts.saveWant":"Im Editor speichern; Esc schließt ohne Speichern"
-    ,"share.previewSelection":"Ausgewählte Wünsche ansehen"
-    ,"events.sources":"Quellen und Einschränkungen"
-    ,"share.moreFormats":"Weitere Formate · ganze Liste"
-    ,"share.fullExportsHelp":"Diese Formate exportieren die aktuelle gesamte Wunschliste. Markdown enthält auch Profil-Kontaktdaten. Zum Aktivieren Ganze Liste wählen."
-    ,"share.copyFullMarkdown":"Ganze Liste als Markdown kopieren"
-    ,"share.downloadFullCsv":"Ganze Liste als CSV herunterladen"
-    ,"events.venueUnknown":"Ortszeit laut Feed; genaue Veranstaltungszeitzone fehlt. Kein Countdown; Quelle prüfen."
-    ,"settings.savingChanges":"Änderungen werden gespeichert…"
-    ,"profile.savedQueued":"Profil auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend."
-    ,"profile.savedOnDevice":"Profil auf diesem Gerät gespeichert. Kontosynchronisierung hier nicht bestätigt."
-    ,"profile.saveUnconfirmed":"Änderung nicht bestätigt. Entwurf bleibt erhalten; Verbindung prüfen und erneut versuchen."
-    ,"profile.pinMetadataQueued":"PIN aktualisiert; Kontodaten-Synchronisierung ausstehend. Neue PIN verwenden."
-    ,"profile.pinMetadataUnconfirmed":"PIN-Änderung bestätigt, Kontodaten-Synchronisierung unbestätigt. Neue PIN behalten und Synchronisierung prüfen."
-    ,"settings.appearanceQueued":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend."
-    ,"settings.appearanceLocal":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung unbestätigt."
-    ,"admin.roleNeedsConnection":"Vor Rollenänderungen verbinden. Keine Rollenänderung vorgemerkt."
-    ,"admin.roleQueued":"Rollenänderung vorgemerkt. Serverberechtigung noch nicht bestätigt."
-    ,"admin.roleUnconfirmed":"Rollenänderung nicht bestätigt. Vor erneutem Versuch Synchronisierung prüfen."
-    ,"admin.requestDenialUnconfirmed":"Ablehnung nicht bestätigt. Vor erneutem Versuch aktuellen Anfragestatus prüfen."
-    ,"events.groupVenueUnknown":"Veranstaltungszeit unbestätigt"
+"events.bonuses":"Boni",
+"events.bonusesUnknown":"Keine Bonusdetails im Feed. Quelle prüfen; dies bedeutet nicht, dass es keine Boni gibt.",
+"events.feedStatus":"Event-Überblick",
+"events.staleFeed":"Gespeicherte Events werden angezeigt",
+"events.checked":"Zuletzt geprüft: {date}",
+"events.savedSchedule":"Zeitplan gespeichert: {date}",
+"events.notChecked":"Nicht bestätigt",
+"events.sourceDisclaimer":"Community-Feed, keine offizielle Bestätigung. Angaben können fehlen oder sich ändern; Quelltext kann Englisch sein.",
+"events.officialNews":"Offizielle Nachrichten",
+"events.refresh":"Aktualisieren",
+"events.refreshing":"Wird geprüft…",
+"events.encounters":"Begegnungen",
+"events.raidBosses":"Raid-Bosse",
+"events.research":"Forschungsaufgaben und Belohnungen",
+"events.tickets":"Kostenloser / kostenpflichtiger Zugang",
+"events.ticketUnknown":"Preis und Teilnahmebedingungen fehlen im Feed. Aktivitäten oder Forschung nicht als kostenlos annehmen. Event-Quelle oder offizielle Ankündigung prüfen.",
+"events.detailsUnknown":"Nicht im Feed vorhanden. Details in der Event-Quelle prüfen.",
+"events.hoursUnknown":"Genaue Uhrzeit nicht angegeben",
+"events.sourceDetails":"Event-Quelle öffnen"
+,
+"share.watching":"Veröffentlichte Änderungen erscheinen bei Verbindung. Veröffentlichung beim Besitzer kann noch ausstehen.",
+"share.offlineCopy":"Offline · letzte veröffentlichte Kopie; Aktualisierungen unbestätigt.",
+"share.refreshCopy":"Veröffentlichte Kopie · für Änderungen neu laden.",
+"share.unavailableCopy":"Öffentliche Liste nicht verfügbar. Zugriff erneut prüfen.",
+"share.reconnectingCopy":"Verbindung wiederhergestellt · warte auf veröffentlichte Änderungen."
+,
+"import.conflicting":"Pro exakter Variante nur einen Merkmalssatz wählen. Keine Änderungen gespeichert."
+,
+"shortcuts.editWant":"Pokémon-Namen öffnen, um Priorität und Details zu bearbeiten",
+"shortcuts.saveWant":"Im Editor speichern; Esc schließt ohne Speichern"
+,
+"share.previewSelection":"Ausgewählte Wünsche ansehen",
+"events.sources":"Quellen und Einschränkungen"
+,
+"share.moreFormats":"Weitere Formate · ganze Liste",
+"share.fullExportsHelp":"Diese Formate exportieren die aktuelle gesamte Wunschliste. Markdown enthält auch Profil-Kontaktdaten. Zum Aktivieren Ganze Liste wählen.",
+"share.copyFullMarkdown":"Ganze Liste als Markdown kopieren",
+"share.downloadFullCsv":"Ganze Liste als CSV herunterladen"
+,
+"events.venueUnknown":"Ortszeit laut Feed; genaue Veranstaltungszeitzone fehlt. Kein Countdown; Quelle prüfen."
+,
+"settings.savingChanges":"Änderungen werden gespeichert…",
+"profile.savedQueued":"Profil auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend.",
+"profile.savedOnDevice":"Profil auf diesem Gerät gespeichert. Kontosynchronisierung hier nicht bestätigt.",
+"profile.saveUnconfirmed":"Änderung nicht bestätigt. Entwurf bleibt erhalten; Verbindung prüfen und erneut versuchen.",
+"profile.pinMetadataQueued":"PIN aktualisiert; Kontodaten-Synchronisierung ausstehend. Neue PIN verwenden.",
+"profile.pinMetadataUnconfirmed":"PIN-Änderung bestätigt, Kontodaten-Synchronisierung unbestätigt. Neue PIN behalten und Synchronisierung prüfen.",
+"settings.appearanceQueued":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung ausstehend.",
+"settings.appearanceLocal":"Darstellung auf diesem Gerät gespeichert; Kontosynchronisierung unbestätigt.",
+"admin.roleNeedsConnection":"Vor Rollenänderungen verbinden. Keine Rollenänderung vorgemerkt.",
+"admin.roleQueued":"Rollenänderung vorgemerkt. Serverberechtigung noch nicht bestätigt.",
+"admin.roleUnconfirmed":"Rollenänderung nicht bestätigt. Vor erneutem Versuch Synchronisierung prüfen.",
+"admin.requestDenialUnconfirmed":"Ablehnung nicht bestätigt. Vor erneutem Versuch aktuellen Anfragestatus prüfen."
+,
+"events.groupVenueUnknown":"Veranstaltungszeit unbestätigt"
     ,"share.format":"Format"
+    ,"share.gameSearch":"Pokémon GO-Suchstring"
     ,"costume.shinyNotReleased":"Die schillernde Variante dieses Kostüms wurde noch nicht veröffentlicht."
     ,"costume.shinyYearRequired":"Wähle das Jahr des Detektiv-Kostüms, bevor du Schillernd anforderst."
     ,"costume.genderOnly":"Nur {gender}"
     ,"costume.savedConflict":"Gespeicherten Wert prüfen"
     ,"costume.genderConflict":"Das gespeicherte Geschlecht ist für dieses Kostüm nicht erschienen. Dein Eintrag bleibt unverändert; wähle nur dann ein gültiges Geschlecht, wenn du ihn korrigieren möchtest."
+    ,"wantEditor.add":"Wunsch hinzufügen"
+    ,"wantEditor.pokemon":"Pokémon"
     ,"costume.genderUnsupported":"{name}: Das gespeicherte Geschlecht gehört nicht zu einer erschienenen Form dieses Kostüms."
   });
 })(window);

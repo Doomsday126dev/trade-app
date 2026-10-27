@@ -5,7 +5,7 @@ const source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'u
 test('unspecified gender remains optional even when costume artwork is female-only',async({page})=>{
  await normalFixture(page);
  for(const name of ['Eevee','Pikachu (Orange Hanbok)']){
-  await page.locator('#wants-add-name').fill(name.slice(0,-1));await page.getByRole('option',{name,exact:true}).click();await page.keyboard.press('Escape');await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();await require('./helpers/current-want-controls.cjs').priority(page,'H');await page.locator('#combined-save').focus();await page.keyboard.press('Enter');await settled(page);
+  await page.locator('#wants-add-name').fill(name.slice(0,-1));await page.getByRole('option',{name,exact:true}).click();await page.keyboard.press('Escape');await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();await require('./helpers/current-want-controls.cjs').priority(page,'H');await page.locator('#combined-save').focus();await page.keyboard.press('Enter');await settled(page);
  }
  const saved=await page.evaluate(()=>structuredClone(__normal.remote));await page.evaluate(()=>stopAccountSyncRuntime());await install(page,saved);await settled(page);
  const result=await page.evaluate(()=>productDeclarations().entries.filter(e=>['Eevee','Pikachu (Orange Hanbok)'].includes(e.name)).map(e=>({name:e.name,gender:e.gender||'',mod:e.mod||'',detail:productShareImageDetails(e,{priority:'H'}),urls:exportSpriteFallbackUrls(e)})));

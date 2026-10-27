@@ -2,8 +2,8 @@ const {test,expect}=require('@playwright/test');
 
 test.use({serviceWorkers:'block'});
 
-test('Groups reports a partial removal among same-identity notes',async({page})=>{
-  await fixture(page);
+test('Groups reports a partial removal among same-identity notes',async({page,baseURL})=>{
+  await fixture(page,baseURL);
   await page.evaluate(()=>{
     const store=ensureTrainerHistoryStore();store.saveFavoriteOrganization('AuditFriend');
     window.__shareIntegrityEntries=[
@@ -28,8 +28,8 @@ test('Groups reports a partial removal among same-identity notes',async({page})=
   await expect(page.locator('.group-availability')).not.toContainText('No changes');
 });
 
-test('Share publishes a multiline note and copied text distinguishes Max categories once',async({page})=>{
-  await fixture(page);
+test('Share publishes a multiline note and copied text distinguishes Max categories once',async({page,baseURL})=>{
+  await fixture(page,baseURL);
   await page.evaluate(()=>{
     const note='Saturday\nAfter 3 pm';
     allData=normalizeData({users:{AuditViewer:{authUid:'local-share-integrity',intentDeclarations:[{entityId:'audit-note-entry',name:'Pikachu',side:'lf',p:'H',note}]}}});
@@ -56,9 +56,9 @@ test('Share publishes a multiline note and copied text distinguishes Max categor
   expect(copied).not.toContain('Gigantamax Charizard · Gigantamax');
 });
 
-async function fixture(page){
+async function fixture(page,baseURL){
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
+  const origin=new URL(baseURL).origin;
   await page.route('**/*',route=>{
     let sameOrigin=false;try{sameOrigin=new URL(route.request().url()).origin===origin;}catch{}
     return sameOrigin?route.continue():route.abort();

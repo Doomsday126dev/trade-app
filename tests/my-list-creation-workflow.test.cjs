@@ -23,7 +23,7 @@ test('normal add hierarchy keeps lookup, priority, Add, and per-entry details to
   assert.match(add,/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
   assert.match(add,/class="add-pri-group"/);
   assert.match(add,/class="bsave"[^>]+myList\.addAction/);
-  assert.match(add,/myList\.flagsAndDetails/);
+  assert.match(add,/wantEditor\.options/);
   assert.doesNotMatch(add,/aria-controls="export-menu"/);
 });
 

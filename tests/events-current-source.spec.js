@@ -4,6 +4,7 @@ const events=require('./fixtures/events-source/events-2026-10-25.json');
 for(const locale of ['en','ja'])test(`current public event source snapshot shows useful bonuses (${locale})`,async({page})=>{
  await fixture(page);await page.clock.install({time:new Date('2026-10-25T12:00:00Z')});
  await page.evaluate(async({events,locale})=>{await changeInterfaceLocale(locale);_eventData={events,raids:[],fetchedAt:Date.now()};_eventLoadState='ready';eventCalendarDate='';switchTab('schedule');renderEventsOnly();},{events,locale});
+ await page.locator('[data-event-action="all-schedule"]').first().click();
  const season=page.locator('.event-card[data-event-id="season-24-twilight-trails"]');
  await expect(season).toContainText('GO Pass Rank 1');await expect(season).toContainText('31+');
  await expect(season.locator('.event-bonus-source a')).toHaveAttribute('href','https://pokemongo.com/seasons/twilight-trails');
