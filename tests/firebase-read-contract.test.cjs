@@ -126,3 +126,14 @@ test('an unregistered source cannot select the historical rollback contract',t=>
   }
   assert.match(check(dir,future).stderr,/inventory changed/);
 });
+
+test('catalogue legacy-ID adapter changes no migration read path, guard or side effect',()=>{
+  const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8'),acorn=require('acorn'),crypto=require('node:crypto');
+  const node=acorn.parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.find(n=>n.type==='FunctionDeclaration'&&n.id.name==='accountSyncReadLegacySources');
+  const handler=source.slice(node.start,node.end),adapter='catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw)';
+  assert.equal(handler.split(adapter).length-1,1);
+  const previous=handler.replace(adapter,'catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw)');
+  const hash=value=>crypto.createHash('sha256').update(require('../scripts/lib/firebase-read-sites.cjs').expressionKey(value)).digest('hex');
+  assert.equal(hash(previous),'47362d8f67a5afae6330665c71f7cf18c197c71ace8146181cdc2a5a2aecdb0f','only the reviewed catalogue adapter differs from live .154');
+  assert.equal(hash(handler),'8ebcda51428eb247434f7f5d762c0fae8534ec29032cfbc9ac63a1aed927fce2');
+});

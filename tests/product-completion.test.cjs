@@ -9,12 +9,12 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 function harness(){
   const window={btoa:value=>Buffer.from(value,'binary').toString('base64')};
   const context=vm.createContext({window,console});
-  for(const file of ['accountSyncModel','accountSyncProduct','tradeListComparison','publicSharePublication','providerPublicProjection']){
+  for(const file of ['pokemonSearchTerms','pokemonEntryRules','publicPokemonDex','accountSyncModel','accountSyncProduct','tradeListComparison','publicSharePublication','providerPublicProjection']){
     vm.runInContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),context);
   }
   const domain=window.PogoDomain;
   Object.assign(context,{cur:'Owner',selectedTrainerRuntime:{},allData:{},OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],
-    tradeListComparisonDomain:domain.tradeListComparison,accountSyncProduct:domain.accountSyncProduct,accountSyncModel:domain.accountSyncModel,
+    isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist,tradeListComparisonDomain:domain.tradeListComparison,accountSyncProduct:domain.accountSyncProduct,accountSyncModel:domain.accountSyncModel,
     accountSyncCatalogEntryForName:(_type,name)=>({name,no:{Pikachu:25,Eevee:133,Mew:151,Charmander:4}[name]}),
     pokemonCatalogDomain:{catalogKey:value=>value.toLowerCase()},normalizeTradeQualifier:value=>String(value||'').toLowerCase(),
     maxTypeForEntry:()=> 'wishlist',pokemonDisplayName:entry=>entry.name,entryGender:()=>'',parsePri:value=>typeof value==='string'?{p:value,mod:''}:value});

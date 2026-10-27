@@ -23,9 +23,7 @@ function loadSources(now=new Date(),readFile=fs.readFileSync){
 }
 function loadIdentities(){
  const window={},ctx=vm.createContext({window});for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
- const publicText=fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8');
- const array=publicText.match(/const names=(\[.*?\]);/s),compact=publicText.match(/const names=("(?:\\.|[^"\\])*")\.split\('\|'\);/);
- const names=array?JSON.parse(array[1]):compact?JSON.parse(compact[1]).split('|'):null;if(!Array.isArray(names))throw Error('Unsupported generated public dex names; coverage is unknown');const rows=names.map(name=>[name,window.PogoDomain.publicPokemonDex.dex(name)]);
+ const rows=window.PogoDomain.publicPokemonDex.entries?.();if(!Array.isArray(rows)||!rows.length)throw Error('Public dex inventory unavailable; coverage is unknown');
  const all=window.PogoDomain.pokemonCatalog.canonicalizeEntries(rows.map(([name,no])=>({name,no})));
  return{all,catalog:window.PogoDomain.pokemonCatalog,database:window.POGO_TRADE_DB};
 }
