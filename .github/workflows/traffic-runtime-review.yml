@@ -1,4 +1,4 @@
-name: Isolated Apri and Halloween runtime qualification
+name: Isolated logo and Trainers runtime qualification
 on:
   pull_request:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: fd74ad68cf196117a0bc479998f7ba1ea29d1bd5
+          ref: 351ebcafe42b1cb3558355aa238c189e55bb09b6
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -46,3 +46,5 @@ jobs:
         run: |
           npx playwright test -c playwright.halloween.config.cjs
           npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
+      - name: Decode actual packaged brand assets and verify unprimed Favorites
+        run: npx playwright test -c playwright.apri151.config.cjs
