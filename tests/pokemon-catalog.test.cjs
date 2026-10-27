@@ -46,8 +46,8 @@ test('reviewed duplicate inventory has the exact accepted relationship counts',(
   const pairRelationships=groups.reduce((sum,def)=>sum+(def.aliases.length*(def.aliases.length-1))/2,0);
   const redundantRows=groups.reduce((sum,def)=>sum+def.aliases.length-1,0);
   assert.equal(groups.length,49);
-  assert.equal(pairRelationships,51);
-  assert.equal(redundantRows,50);
+  assert.equal(pairRelationships,58);
+  assert.equal(redundantRows,53);
 });
 
 test('canonical IDs and aliases are unique and display-name independent',()=>{
@@ -102,11 +102,11 @@ test('all seven Flying Pikachu identities remain distinct',()=>{
   assert.equal(new Set(ids).size,7);
 });
 
-test('the eight identity-unresolved rows remain separate and are never guessed as aliases',()=>{
-  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,8);
+test('the four identity-unresolved rows remain separate and are never guessed as aliases',()=>{
+  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,4);
   const rows=selectablePikachu.filter(entry=>catalog.UNRESOLVED_COSTUME_KEYS.includes(entry.name));
-  assert.equal(rows.length,8);
-  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,8);
+  assert.equal(rows.length,4);
+  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,4);
   for(const key of catalog.UNRESOLVED_COSTUME_KEYS)assert.equal(catalog.resolveLegacyKey(key),null,key);
 });
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.; 2026-10-27 finite-67 review accepts only the independently verified Slowpoke (Cowboy) alias for existing Detective Slowpoke. Exact normal/Shiny assets and all other mapping fingerprints, seven ambiguous gaps and original expiry retained.; 2026-10-27 reviewed variant art accepts only the 15 existing exact Shiny mapping fingerprints bound to proof register a5fb87a7c13f5d655e4cbffe48d999720accf2afb9b4fff831ad3bdbd00a456a. Retained normal art, aliases, source evidence, seven ambiguous gaps and original expiry preserved; artwork availability is not a GO release claim.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.; 2026-10-27 finite-67 review accepts only the independently verified Slowpoke (Cowboy) alias for existing Detective Slowpoke. Exact normal/Shiny assets and all other mapping fingerprints, seven ambiguous gaps and original expiry retained.; 2026-10-27 reviewed variant art accepts only the 15 existing exact Shiny mapping fingerprints bound to proof register a5fb87a7c13f5d655e4cbffe48d999720accf2afb9b4fff831ad3bdbd00a456a. Retained normal art, aliases, source evidence, seven ambiguous gaps and original expiry preserved; artwork availability is not a GO release claim.; .158 reviewed four same-outfit return-year alias families: four canonical fingerprints and five redundant maintenance rows consolidated; all nine prior source/baseline records retained in data/upstream-identity-repair.json and data/catalogue158-maintenance-review.json, exact canonical art and original expiry unchanged.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -704,7 +704,7 @@
       "id": "pokemon:25:costume:halloween-2021",
       "identity": "Pikachu (Halloween 2021)",
       "gap": false,
-      "fingerprint": "0b18961fc2cfe81eee1e9d343da5dfd162785da8990b03c11b36d856f0ae423b"
+      "fingerprint": "59d55d959e3988f34c82073ad1d6dbbc856a7d560b5560b78a5963626091dd7f"
     },
     {
       "id": "pokemon:25:costume:indonesia-football-2025",
@@ -950,7 +950,7 @@
       "id": "pokemon:25:costume:PIKACHU_WINTER_2020",
       "identity": "Pikachu (Holiday 2020)",
       "gap": false,
-      "fingerprint": "ee80c2e46995baccfdb5b3cea531cf908e53a19723cd4980411d08cd7280fddd"
+      "fingerprint": "2db04662836af13cef2b1eb462b38672a6df3e07433712fe5057fd4f38623f09"
     },
     {
       "id": "pokemon:25:costume:red-party-hat-2020",
@@ -1061,18 +1061,6 @@
       "fingerprint": "80256de383d2169ffb4d85e916a5db264f8a92dc178bbe810335dd561b9e669d"
     },
     {
-      "id": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)",
-      "identity": "Pikachu (Halloween 2022)",
-      "gap": false,
-      "fingerprint": "376f29e5ed2847aeab4c544121f037501678ced0fc729a2b9e101697604fc972"
-    },
-    {
-      "id": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)",
-      "identity": "Pikachu (Halloween 2024)",
-      "gap": false,
-      "fingerprint": "8148834acda962025f8726c26117a25816cdbf2cf771b205b72d024b6423d6e9"
-    },
-    {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Hilbert)",
       "identity": "Pikachu (Hilbert)",
       "gap": false,
@@ -1085,22 +1073,10 @@
       "fingerprint": "69dbb11be8ec30d45022856f21e15377712381440491394b25134a14c3b5303d"
     },
     {
-      "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
-      "identity": "Pikachu (Holiday 2022)",
-      "gap": false,
-      "fingerprint": "e4597dbb225b3f9db7f798fe090c7288f976dc5be1c2899dfe7c8f021525c439"
-    },
-    {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202023)",
       "identity": "Pikachu (Holiday 2023)",
       "gap": false,
       "fingerprint": "6593fd5579bde8a28d2203bd9bdda48dbc3f7098f336ab6b84b45e5ca5cfeec3"
-    },
-    {
-      "id": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)",
-      "identity": "Pikachu (Holiday 2024)",
-      "gap": false,
-      "fingerprint": "eb8ccf658a17c446112f30379575658c62077417bc9b91d817f0682a100c76ad"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
@@ -1262,7 +1238,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
       "identity": "Pikachu (Witch)",
       "gap": false,
-      "fingerprint": "fa73391e42e1d7dec9da8bf5e3ca6ab6277b5393943399302b662b31bcbbb39c"
+      "fingerprint": "8a924831cf2b3565374efe3dfee1533c71680909423bf4cef00bfbbacf1ad197"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(World)",
@@ -2321,12 +2297,6 @@
       "fingerprint": "1edb67ed3c0509c1336cb7beb0d8cd58841687f54381db74cc76e96414f752f7"
     },
     {
-      "id": "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)",
-      "identity": "Gengar (Halloween 2024)",
-      "gap": false,
-      "fingerprint": "4281f9edca0bd0a2ea6c1fa5b1bc64ed4add1125e8d96903f7ae24db4bc0b15c"
-    },
-    {
       "id": "pokemon:94:standard:legacy:Gengar%20(Mega%20Banette)",
       "identity": "Gengar (Mega Banette)",
       "gap": false,
@@ -2336,7 +2306,7 @@
       "id": "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
       "identity": "Gengar (Spooky Hat)",
       "gap": false,
-      "fingerprint": "a22fc1960e715d42156b238d83c586ed269ff69e17370b9825c08675ec4cda14"
+      "fingerprint": "e972b511a9191073fff13e02ff167525c2058e52ada081d20243cb3ea62ba6f0"
     },
     {
       "id": "pokemon:94:standard:legacy:Gengar%20Party%20Hat",

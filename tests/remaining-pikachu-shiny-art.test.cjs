@@ -5,7 +5,7 @@ const catalog=require('../data/costume-sprite-catalog.json'),proof=require('../d
 const window={};vm.runInNewContext(fs.readFileSync('js/domain/costumeSpriteCatalog.js','utf8'),{window});const api=window.PogoDomain.costumeSpriteCatalog;
 test('76 reviewed names retain exact released Shiny models for every supported gender',()=>{
  assert.equal(proof.records.length,76);validateCatalog(catalog,process.cwd());
- for(const r of proof.records)for(const g of r.sourceGenders){const key=g==='f'?'femaleShiny':'shiny';const result=api.resolution({name:r.name,gender:g,shiny:true});assert.equal(result.status,'exact',r.name);assert.deepEqual(Array.from(result.urls),[r.assets[key]],r.name);}
+ for(const r of proof.records)for(const g of r.sourceGenders){const key=g==='f'?'femaleShiny':'shiny';const result=api.resolution({name:r.name,gender:g,shiny:true});assert.equal(result.status,'exact',r.name);const record=catalog.entries.find(e=>e.names.includes(r.name));const consolidated=require('../data/upstream-identity-repair.json').priorCostumeRecords.some(e=>e.names.includes(r.name));assert.deepEqual(Array.from(result.urls),[consolidated?record.assets[key]:r.assets[key]],r.name);if(consolidated)assert.ok(fs.existsSync(r.assets[key]),'Retained original '+r.name);}
 });
 test('single-gender forms never cross to impossible gender or normal art',()=>{
  for(const [name,g]of [['Kurta','m'],['Mimikyu','m'],['Saree','f']])for(const shiny of [false,true]){const n='Pikachu ('+name+')';assert.deepEqual(Array.from(api.resolve({name:n}).availableGenders),[g]);assert.deepEqual(Array.from(api.resolution({name:n,shiny}).urls),Array.from(api.resolution({name:n,gender:g,shiny}).urls));assert.equal(api.resolution({name:n,gender:g==='m'?'f':'m',shiny}).reason,'invalid-gender');}
