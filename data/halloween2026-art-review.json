@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-27T02:22:42.222324+00:00",
-  "scope": "Evidence-only: three hold species, four distinct form identities, six original PNGs; no runtime mapping or release metadata override.",
+  "reviewedAt": "2026-10-27T02:36:33.145209+00:00",
+  "scope": "Five exact runtime mappings for three hold species: four explicit selectable identities and one preserved form-unspecified Bow identity; ten runtime PNG files.",
   "officialEvidence": {
     "url": "https://pokemongo.com/news/halloween-part-1-2026",
     "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
@@ -124,55 +124,242 @@
   ],
   "records": [
     {
-      "name": "Pikachu (Hat and Capelet)",
       "no": 25,
-      "sourceName": "Pikachu (Halloween 2026)",
-      "defaultImageGender": "male: straight tail",
-      "explicitFemaleArt": "unverified",
-      "genderReleaseRestrictions": "not established; no inference from base ratio",
-      "status": "hold-gender-qualification"
+      "names": [
+        "Pikachu (Hat and Capelet)",
+        "Pikachu (Halloween 2026)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-halloween-2026.png",
+      "sourceLabel": "Hat and Capelet",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-halloween-2026",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-halloween-2026.png",
+      "sourceFiles": {
+        "default": "25-pikachu-halloween-2026.png",
+        "female": "25-pikachu-halloween-2026-female.png",
+        "shiny": "25-pikachu-halloween-2026-shiny.png",
+        "femaleShiny": "25-pikachu-halloween-2026-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-halloween-2026.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-halloween-2026-female.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-halloween-2026-shiny.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-halloween-2026-female-shiny.png"
+      },
+      "sha256": {
+        "default": "5a6bcbe2e22bdbc01c8396836236debbf460508ea8c3cc2d86936131d0012271",
+        "female": "cc9c6af27d29aad2f964ab753ba786641ac01c34ed88b444b7fcf9de9bfc1dea",
+        "shiny": "dec60a57ede4a2b9922c860b28ba22341cf27323021d78ad6290fc5e05bd3320",
+        "femaleShiny": "59beffac6d5469e590d8f10525bc9db7337acd8bb53147b94887c46e685b34d0"
+      },
+      "reviewIdentityId": "pokemon:25:costume:halloween-2026",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original published gender-labelled normal/Shiny PNGs inspected. Pikachu straight/heart tail and Zubat long/short fang distinctions retained. No recolouring or fallback.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderQualification": "Published costume model metadata explicitly labels male/female artwork, not inferred from species ratio. Gender is an optional trade preference, never synthesized from the default sprite. Dittobase release badge remains unreleased at retrieval; release eligibility is independently based on official local start and current Serebii event/Shiny listings, not asset existence."
     },
     {
-      "name": "Zubat (Top Hat)",
       "no": 41,
-      "sourceName": "Zubat (Top hat)",
-      "defaultImageGender": "not independently established; species is dimorphic",
-      "explicitFemaleArt": "unverified",
-      "genderReleaseRestrictions": "not established; no claim female encounters are unreleased",
-      "status": "hold-gender-qualification"
+      "names": [
+        "Zubat (Top Hat)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "41-zubat-top-hat.png",
+      "sourceLabel": "Top Hat",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/zubat-top-hat",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/41-zubat-top-hat.png",
+      "sourceFiles": {
+        "default": "41-zubat-top-hat.png",
+        "female": "41-zubat-top-hat-female.png",
+        "shiny": "41-zubat-top-hat-shiny.png",
+        "femaleShiny": "41-zubat-top-hat-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-41-zubat-top-hat.png",
+        "female": "assets/sprites/go/dittobase-41-zubat-top-hat-female.png",
+        "shiny": "assets/sprites/go/dittobase-41-zubat-top-hat-shiny.png",
+        "femaleShiny": "assets/sprites/go/dittobase-41-zubat-top-hat-female-shiny.png"
+      },
+      "sha256": {
+        "default": "e4a5da836394ca67ac35677d09f6693192791757fc282ee920f9bb22fe7da6bc",
+        "female": "d4ecfd1426b04586639c0cc4f3ef92ea38cc11cc40075ed90c41973c22aa5208",
+        "shiny": "5e5ffffcd8064595e41c7931ffb38adcc4df9fad35ab8cc542ea2d8bb454181a",
+        "femaleShiny": "31076f2ede2ddfc1fa8080951b61cf011971f0abcc9291abef9590f7349aa30c"
+      },
+      "reviewIdentityId": "pokemon:41:costume:halloween-2026",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original published gender-labelled normal/Shiny PNGs inspected. Pikachu straight/heart tail and Zubat long/short fang distinctions retained. No recolouring or fallback.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderQualification": "Published costume model metadata explicitly labels male/female artwork, not inferred from species ratio. Gender is an optional trade preference, never synthesized from the default sprite. Dittobase release badge remains unreleased at retrieval; release eligibility is independently based on official local start and current Serebii event/Shiny listings, not asset existence."
     },
     {
-      "name": "Sinistea (Bow, Phony)",
       "no": 854,
-      "sourceName": "Sinistea (Halloween Bow - Phony Form)",
-      "gender": "genderless",
-      "status": "ready-for-explicit-form-integration",
-      "sharedFrontArt": "The source explicitly assigns the same published front PNG to both forms. The distinguishing stamp is not visible; preserve separate semantic identities."
+      "names": [
+        "Sinistea (Bow)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow (form unspecified)",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:unspecified",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
     },
     {
-      "name": "Sinistea (Bow, Antique)",
       "no": 854,
-      "sourceName": "Sinistea (Halloween Bow - Antique Form)",
-      "gender": "genderless",
-      "status": "ready-for-explicit-form-integration",
-      "sharedFrontArt": "The source explicitly assigns the same published front PNG to both forms. The distinguishing stamp is not visible; preserve separate semantic identities."
+      "names": [
+        "Sinistea (Bow, Phony)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Phony Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:phony",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow, Antique)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Antique Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:antique",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
     }
   ],
   "visualQA": {
-    "imagesInspected": 6,
+    "imagesInspected": 14,
     "normalShinyDistinct": true,
     "observations": [
       "Pikachu hat/capelet and straight tail visible; normal/Shiny colors differ.",
       "Zubat top hat retained in purple normal and green Shiny.",
-      "Sinistea bow and cup retained; normal/Shiny cup colors differ; shared Phony/Antique front view is explicitly source-mapped."
+      "Sinistea bow and cup retained; normal/Shiny cup colors differ; shared Phony/Antique front view is explicitly source-mapped.",
+      "Eight Dittobase gender-labelled originals inspected; female Pikachu heart tail and shorter Zubat fangs verified."
     ],
     "byteQA": "All six SHA256 values retained;120x120 8-bit RGBA originals. No generated/recolored pixels."
   },
-  "minimalRuntimePatch": "Register reviewed assets/provenance and separate Sinistea forms, then qualify all renderer/save paths. Do not clear gender gaps or use default art for an explicit female preference. Any policy to permit unspecified-gender-only display pending gender qualification needs explicit coverage documentation.",
-  "remainingHolds": [
-    "Pikachu exact female artwork and release gender qualification",
-    "Zubat exact female artwork and release gender qualification",
-    "Runtime integration and affected browser qualification not implemented in this evidence-only candidate"
+  "minimalRuntimePatch": "Implemented and qualified locally: five exact mappings, four selectable canonical identities, ten runtime PNGs. No publication.",
+  "remainingHolds": [],
+  "preservation": "No saved data, prior normal references, original expiry or unrelated holds changed. Generic Bow remains unspecified; no alias to either explicit form.",
+  "sourceDiscrepancy": "Dittobase cached unreleased badge conflicts with active official regional start and current Serebii listings. Use Dittobase only for exact model identity/pixels; release evidence remains official+Serebii.",
+  "artPageSnapshots": [
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-halloween-2026",
+      "sha256": "8e531fe7f76806eadaa3ffc6b206798d843bb4c687dc1b47bd71c2ab098dab3e"
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/zubat-top-hat",
+      "sha256": "2dfc3e0a964861f6cfe8c028056007b11d89e51675bf8a8679a00ee8ebda31b6"
+    }
   ],
-  "preservation": "No saved rows, expiry, baseline, app logic, runtime eligibility or other holds changed."
+  "qualification": {
+    "browser": "8 Chromium/WebKit cases passed (26.9s), synthetic localhost only",
+    "preservedOriginalCatalogRecords": 396,
+    "publicDexBytes": 32376,
+    "publicDexBudgetBytes": 35000,
+    "freshness": "offline-check-passed; no problems, missing identities or stale reviews at 2026-10-27T02:41:27Z; no fresh PokemonDB fetch claimed"
+  }
 }

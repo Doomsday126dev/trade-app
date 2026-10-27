@@ -80,6 +80,123 @@
       "shinyEvidence": [
         "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
       ]
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow (form unspecified)",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:unspecified",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow, Phony)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Phony Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:phony",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow, Antique)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Antique Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:antique",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
     }
   ]
 }

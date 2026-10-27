@@ -14,7 +14,7 @@
   },
   "maintenanceCandidate": {
     "baseCommit": "bf4a7e437545833e515bd7518fede39f209279e1",
-    "canonicalRecords": 396,
+    "canonicalRecords": 401,
     "exactArtworkRecords": 389,
     "pendingArtworkRecords": 7,
     "excludedRows": 7
