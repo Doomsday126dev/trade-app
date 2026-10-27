@@ -31,14 +31,24 @@ test('multiline notes use a gateway-compatible line separator and preserve displ
 });
 
 test('public link action publishes multiline notes and catches other invalid text before publication',async()=>{
-  let entries=[row({note:'Saturday\nAfter 3 pm'})],published=0,copied='';
-  const {context}=require('./helpers/share-link-vm.cjs').shareLinkHarness({entries:()=>entries,publish:async()=>{published++;return{ok:true,status:'published'};},copy:async value=>{copied=value;}});
+  const domain=loadDomains(),source=fs.readFileSync('js/app/application.js','utf8');
+  const copy=source.slice(source.indexOf('async function copyShareLink('),source.indexOf('// ── SPECIAL TRADE BOARD'));
+  let entries=[row({note:'Saturday\nAfter 3 pm'})],published=0,copied='',status='';
+  const input={value:'',focus(){},select(){}};
+  const context={
+    console,cur:'Owner',auth:{currentUser:{uid:'owner-uid'}},publicLinkAttempt:0,myListType:'wishlist',location:{origin:'https://example.test',pathname:'/trade/'},
+    document:{getElementById:id=>id==='product-share-modal'?{classList:{contains:()=>false}}:id==='share-public-url'?input:null},
+    productDeclarations:()=>({entries}),publicSharePublicationDomain:domain.publicSharePublication,
+    linkPublicationStatus:key=>{status=key;},publishPublicShareNow:async()=>{published++;context.rememberPublicLinkConfirmation(context.publicShareSnapshotForUser('Owner').snapshot);return{status:'published'};},
+    publicSharePublicationCurrent:()=>true,copyText:async value=>{copied=value;}
+  };
+  vm.createContext(context);require('./helpers/share-link-vm.cjs')(source,context,domain.publicSharePublication);vm.runInContext(copy,context);
   await context.copyShareLink();
-  assert.equal(published,1);assert.equal(context.statuses.at(-1),'product.publishedCopied');assert.equal(copied,'https://example.test/trade/?view=Owner&list=wishlist');
+  assert.equal(published,1);assert.equal(status,'share.linkCopied');assert.equal(copied,'https://example.test/trade/?view=Owner&list=wishlist');
 
-  entries=[row({note:'invalid\tcontrol'})];published=0;copied='';
+  entries=[row({note:'invalid\tcontrol'})];published=0;copied='';status='';
   await context.copyShareLink();
-  assert.equal(published,0);assert.equal(copied,'');assert.equal(context.statuses.at(-1),'shareUi.invalid');
+  assert.equal(published,0);assert.equal(copied,'');assert.equal(status,'share.publicationPending');
 });
 
 test('shared semantic labels distinguish ordinary, Dynamax and Gigantamax without duplicate Max wording',()=>{

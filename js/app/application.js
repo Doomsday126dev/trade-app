@@ -264,6 +264,7 @@ let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
 let favoritePublicationObserver=null;
+let favoritePublicationSortTimer=0,favoritePublicationSortPending=false;
 let favoriteIdentityResolverSession=null;
 const favoritePublicationRetries=new WeakMap();
 // Enrollment can pause without removing authority from initialized accounts.
@@ -294,6 +295,7 @@ const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
 let ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
+let publicLinkConfirmation=null,publicLinkConfirmationEpoch=0,publicLinkBusy=null,publicLinkPublicationError=null,publicLinkFeedback=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.38";
@@ -2384,6 +2386,7 @@ function activateOwnedSession(uid,username){
     error.code=hydration.error.code;
     throw error;
   }
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=hydration.token;
   ownerPublicShareReview={generation:hydration.token.generation,status:'waiting_for_hydration',republishRequired:false,busy:false};
   return result;
@@ -2400,6 +2403,7 @@ function suspendOwnedSession(reason='auth_loss'){
   invalidateAccountSyncRecovery(reason);
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate(reason);
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=null;
   ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.suspend(reason);
@@ -2410,6 +2414,7 @@ function clearOwnedSession(){
   invalidateAccountSyncRecovery('logout');
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate('logout');
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=null;
   ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.clearForLogout();
@@ -2976,6 +2981,7 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
+    rememberPublicLinkConfirmation(built.snapshot);
     return{ok:true,status:'published'};
   }
   return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
@@ -3007,6 +3013,42 @@ async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
   if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username)||!normalized.ok||!expected.ok||accountSyncModel.canonicalJson(normalized.snapshot)!==accountSyncModel.canonicalJson(expected.snapshot))throw new Error('share-publication/not-current');
 }
 
+function currentPublicLinkConfirmation(){
+  const proof=publicLinkConfirmation,token=activePublicShareHydrationToken;
+  return proof&&proof.token===token&&proof.uid===auth?.currentUser?.uid&&proof.username===cur&&publicShareSessionMatches(cur)?proof:null;
+}
+function rememberPublicLinkConfirmation(snapshot,token=activePublicShareHydrationToken){
+  if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(snapshot?.username))return false;
+  const contentKey=publicSnapshotContentKey(snapshot,snapshot.username);if(contentKey===null)return false;
+  publicLinkConfirmation={token,uid:token.uid,username:token.username,contentKey};publicLinkConfirmationEpoch++;publicLinkPublicationError=null;
+  refreshPublicLinkAction();return true;
+}
+function publicLinkPublicationState(ignoreBusy=false){
+  const token=activePublicShareHydrationToken,proof=currentPublicLinkConfirmation();
+  if(!ignoreBusy&&publicLinkBusy?.token===token&&publicLinkBusy.uid===auth?.currentUser?.uid&&publicLinkBusy.username===cur)return{kind:publicLinkBusy.copyOnly?'copying':'publishing',disabled:true};
+  const built=publicShareSnapshotForUser(cur,allData,'explicit_share',accountSyncProjectionReady());
+  const state=accountSyncUiState||{},pending=Number(state.pendingCount)||Number(state.blockedCount)||Number(state.conflictCount)||managedAccountSyncRuntime?.publicProjectionPending;
+  const paths=[`users/${cur}`,`publicShares/${cur}`,`trainerShares/${auth?.currentUser?.uid||''}`,...PUBLIC_SHARE_TYPES.map(type=>`${type}/${cur}`)];
+  const queued=Object.values(syncQueue||{}).some(item=>paths.some(path=>item?.path===path||String(item?.path||'').startsWith(path+'/')));
+  if(!built.ok){
+    const code=built.error?.code||'';
+    return{kind:/source-invalid|declarations-invalid/.test(code)?'invalid':/hydration-failed/.test(code)?'unavailable':'pending',disabled:true};
+  }
+  if(pending||queued)return{kind:'pending',disabled:true};
+  const contentKey=publicSnapshotContentKey(built.snapshot,cur);
+  if(contentKey===null)return{kind:'pending',disabled:true};
+  if(proof?.contentKey===contentKey)return{kind:'current',contentKey};
+  if(publicLinkPublicationError?.token===token&&publicLinkPublicationError.contentKey===contentKey)return{kind:'failed',contentKey};
+  return{kind:proof?'changed':'first',contentKey};
+}
+function refreshPublicLinkAction(){
+  const button=document.getElementById('share-link-action');if(!button)return;
+  const state=publicLinkPublicationState(),feedbackState=publicLinkBusy?publicLinkPublicationState(true):state,feedback=publicLinkFeedback;
+  if(feedback&&(feedback.token!==activePublicShareHydrationToken||feedback.uid!==auth?.currentUser?.uid||feedback.username!==cur||feedback.contentKey!==feedbackState.contentKey||feedback.scope!==productShareScope||feedback.listType!==myListType))clearPublicLinkFeedback();
+  const keys={current:'share.copyLink',changed:'share.updateCopyLink',first:'product.publishCopy',pending:'share.syncPending',publishing:'product.publishing',copying:'share.copyingLink',invalid:'share.checkListDetails',unavailable:'share.linkUnavailable',failed:'share.retryCopyLink'};
+  button.dataset.publicationState=state.kind;button.dataset.i18n=keys[state.kind];button.textContent=i18nCore.t(keys[state.kind]);button.disabled=!!state.disabled||productShareScope!=='full';
+}
+
 function ownerShareNoticeKey(status){
   return{
     missing_projection:'share.ownerMissing',profile_only:'share.ownerProfileOnly',
@@ -3025,18 +3067,25 @@ async function inspectOwnPublicShareAfterHydration(token=activePublicShareHydrat
   if(!token||!publicShareSessionMatches(token.username)||managedPublicSharePublication.snapshot().surfaces.profile!=='loaded')return{ok:false,status:'not_ready'};
   const readiness=managedPublicSharePublication.authorize(token,'explicit_share');
   if(!readiness.ok)return readiness;
-  const generation=token.generation;
+  const generation=token.generation,confirmationEpoch=publicLinkConfirmationEpoch;
   let status;
   try{
     const providerSession=providerPublicProjectionSession(token.username);
     const result=providerSession?await ensureProviderPublicShareClient().read(token.username):await managedPublicShareRepository.read(token.username);
     if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
     if(!result.ok)status={status:'transport_error',republishRequired:true};
-    else status=publicSharePublicationDomain.ownerProjectionReview(providerSession?result.snapshot:result.value,{username:token.username});
+    else{
+      const snapshot=providerSession?result.snapshot:result.value;
+      status=publicSharePublicationDomain.ownerProjectionReview(snapshot,{username:token.username});
+      if(confirmationEpoch===publicLinkConfirmationEpoch){
+        if(!status.republishRequired)rememberPublicLinkConfirmation(snapshot,token);
+        else{publicLinkConfirmation=null;publicLinkConfirmationEpoch++;}
+      }
+    }
   }catch(error){status={status:'transport_error',republishRequired:true};}
   if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
   ownerPublicShareReview={generation,status:status.status,republishRequired:!!status.republishRequired,busy:false};
-  renderOwnerShareRepublishNotice();
+  renderOwnerShareRepublishNotice();refreshPublicLinkAction();
   return{ok:true,...ownerPublicShareReview};
 }
 async function republishOwnPublicShare(){
@@ -3874,7 +3923,9 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
     const session=providerPublicProjectionSession(cur);
     if(!session)throw providerFailure('provider-public/projection-disabled');
     const snapshot=providerAccountSyncPublicSnapshot(acceptedRows,session);
-    return await writeProviderPublicShareSnapshot(session,snapshot);
+    const result=await writeProviderPublicShareSnapshot(session,snapshot);
+    if(currentSession())rememberPublicLinkConfirmation(snapshot,token);
+    return result;
   }
   const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
   if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
@@ -3906,6 +3957,7 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
   if(!currentSession())throw new Error('share-publication/session-changed');
   await writeVerifiedLegacyPublicSnapshot(username,built.snapshot);
   if(!currentSession())throw new Error('share-publication/session-changed');
+  rememberPublicLinkConfirmation(built.snapshot,token);
   return{ok:true,status:'published'};
 }
 function retireMigratedLegacyListQueue(){
@@ -5885,6 +5937,7 @@ function ensureFavoriteShareSessionCache(){
 function resetFavoriteBrowseSession(){
   clearTimeout(favoriteLookupExpiry);favoriteLookupScope='';favoriteLookupVariant='';favoriteLookupLimit=60;
   favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
+  clearTimeout(favoritePublicationSortTimer);favoritePublicationSortTimer=0;favoritePublicationSortPending=false;
   favoriteShareSessionCache?.reset();favoriteShareSessionCache=null;
   favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1,expanded:false};
   favoriteBrowseCatalogCache={locale:'',items:[]};
@@ -6311,6 +6364,7 @@ function closeFavoriteCardActions(except=null,restoreFocus=false){
   document.querySelectorAll('.favorite-card-shell.menu-open').forEach(card=>{if(card!==except)card.classList.remove('menu-open');});
   if(restoreFocus&&favoriteCardMenuTrigger?.isConnected)favoriteCardMenuTrigger.focus();
   if(!except)favoriteCardMenuTrigger=null;
+  if(favoritePublicationSortPending)scheduleFavoritePublicationOrder();
 }
 function openFavoriteSwipeActions(button){const card=button?.closest('.favorite-card-shell');if(!card)return;closeFavoriteCardActions(card);card.classList.add('swipe-open');}
 function toggleFavoriteCardMenu(event,button){
@@ -6386,6 +6440,7 @@ document.getElementById('favorite-trainers-list')?.addEventListener('pointerdown
 document.getElementById('favorite-trainers-list')?.addEventListener('pointermove',favoriteCardPointerMove);
 document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',favoriteCardPointerUp);
 document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
+for(const event of ['pointerleave','pointerup','focusout'])document.getElementById('favorite-trainers-list')?.addEventListener(event,()=>{if(favoritePublicationSortPending)scheduleFavoritePublicationOrder();});
 function toggleFavoriteTagFilter(id){
   if(!id)return;
   trainerOrganizerState.tagIds=[id];renderTrainerQuickLists({favoriteGroupFocusId:id});
@@ -6416,10 +6471,33 @@ async function renderPreservedFavoriteEvidence(host){
     }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
   }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
 }
-// Display only an already-loaded public publication timestamp. Never fetch or infer activity.
+function favoritePublicationTimestamp(favorite){
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt);
+  return record?.targetUid===(favorite.targetUid||'')&&['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime())?stamp:0;
+}
+function orderFavoritesByPublication(favorites){
+  return favorites.map((item,index)=>({item,index,stamp:favoritePublicationTimestamp(item)})).sort((a,b)=>b.stamp-a.stamp||a.index-b.index).map(row=>row.item);
+}
+function scheduleFavoritePublicationOrder(){
+  favoritePublicationSortPending=true;clearTimeout(favoritePublicationSortTimer);
+  const cache=favoriteShareSessionCache,user=auth?.currentUser,username=cur;
+  favoritePublicationSortTimer=setTimeout(()=>{
+    favoritePublicationSortTimer=0;
+    if(cache!==favoriteShareSessionCache||user!==auth?.currentUser||username!==cur||trainerDiscoveryMode!=='favorites'||activeTabName()!=='find')return;
+    const grid=document.querySelector('#favorite-trainers-list .trainer-quick-grid');if(!grid)return;
+    const cards=[...grid.querySelectorAll(':scope > .favorite-card-shell')],state=cache?.snapshot();
+    if(state?.activeReads||state?.queuedReads)return;
+    if(grid.contains(document.activeElement)||grid.querySelector('.menu-open,.swipe-open')||favoriteSwipeGesture||matchMedia('(hover: hover)').matches&&cards.some(card=>card.matches(':hover')))return;
+    const favorites=ensureTrainerHistoryStore()?.read().favorites||[],byName=new Map(favorites.map(item=>[canonicalTrainerName(item.displayName),item])),ranks=new Map(favorites.map((item,index)=>[canonicalTrainerName(item.displayName),index]));
+    const sorted=cards.map((card,index)=>({card,index,rank:ranks.get(card.dataset.trainer)??index,stamp:favoritePublicationTimestamp(byName.get(card.dataset.trainer)||{})})).sort((a,b)=>b.stamp-a.stamp||a.rank-b.rank||a.index-b.index).map(row=>row.card);
+    favoritePublicationSortPending=false;
+    if(sorted.some((card,index)=>card!==cards[index]))grid.append(...sorted);
+  },120);
+}
+// Display and order use the same already-loaded public publication timestamp.
 function favoritePublicationHtml(favorite){
-  const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt),locale=i18nCore.getLocale();
-  const valid=record?.targetUid===(favorite.targetUid||'')&&['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=favoritePublicationTimestamp(favorite),locale=i18nCore.getLocale();
+  const valid=stamp>0;
   const failed=record?.status==='transport_error';
   const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
   const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):failed?i18nCore.t('groups.unavailable'):'—';
@@ -6443,9 +6521,10 @@ function observeFavoritePublications(){
     try{await cache.readFavorite(favorite,{force:retry});}catch{return;}
     if(!current()||!card.isConnected)return;
     const field=card.querySelector('.favorite-publication');if(!field)return;
-    const markup=favoritePublicationHtml(favorite);if(field.outerHTML===markup)return;
+    const markup=favoritePublicationHtml(favorite);if(field.outerHTML===markup){scheduleFavoritePublicationOrder();return;}
     const focused=field===document.activeElement;field.outerHTML=markup;
     if(focused)card.querySelector('.favorite-publication:not([hidden])')?.focus({preventScroll:true});
+    scheduleFavoritePublicationOrder();
   };
   const cards=[...document.querySelectorAll('#favorite-trainers-list .favorite-card-shell')];
   if(typeof IntersectionObserver==='function'){
@@ -6477,7 +6556,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   const groupChips=activeTags.length?`<span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!selectedTagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selectedTagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}<span class="favorite-filter-count">${state.favorites.length}</span></span></button>${activeTags.map(tag=>{const selected=selectedTagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}<span class="favorite-filter-count">${state.favorites.filter(item=>item.tagIds.includes(tag.id)).length}</span></span></button>`;}).join('')}</div>`:'';
   const toolbar=state.favorites.length?`<div class="favorite-group-access${activeTags.length?'':' wants-only'}" role="group" aria-label="${escAttr(i18nCore.t('organizer.favoriteScope'))}">${groupChips}<button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants">${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
   const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><span class="trainer-section-title"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></span>${label==='organizer.savedTrainers'?`<button type="button" class="btn btn-secondary favorite-manage-groups" data-favorite-action="manage-groups">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(i18nCore.t('organizer.manageTags'))}</button>`:''}</div>`;
-  const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
+  const items=orderFavoritesByPublication(filtered).map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;
   if(favoriteGroupFocusId){
     const chip=[...favoritesControlsEl.querySelectorAll('[data-favorite-tag-id]')].find(button=>button.dataset.favoriteTagId===favoriteGroupFocusId);
@@ -6491,7 +6570,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
   observeFavoritePublications();
   if(favoritesOnly)return;
-  const previewItems=state.favorites.slice(0,4);
+  const previewItems=orderFavoritesByPublication(state.favorites).slice(0,4);
   previewEl.hidden=!previewItems.length;
   previewEl.innerHTML=previewItems.length?`${favoritesHeading()}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
@@ -6964,26 +7043,27 @@ function productShareDescription(entry){
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
   productShareSnapshot=accountSyncClone(productScopeEntries());
-  document.getElementById('share-link-status').textContent='';
-  document.getElementById('share-public-url').value='';document.getElementById('share-public-url').hidden=true;publicLinkAttempt++;
+  clearPublicLinkFeedback();publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
   preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
   setProductShareMode(productShareMode);
 }
 function setProductShareMode(mode){
-  if(!['link','image','text','search'].includes(mode))mode='link';
+  if(!['link','image','text','search','markdown','csv'].includes(mode))mode='link';
   productShareMode=mode;
   document.getElementById('product-share-format').value=mode;
   const partial=productShareScope!=='full';
   document.getElementById('share-link-action').disabled=partial;
   document.querySelectorAll('[data-full-list-export]').forEach(button=>button.disabled=partial);
-  document.getElementById('share-link-scope-help').textContent=i18nCore.t(partial?'share.partialLink':'share.liveHelp');
+  const linkHelp=document.getElementById('share-link-scope-help');linkHelp.textContent=i18nCore.t('share.partialLink');linkHelp.hidden=!partial;
+  document.getElementById('share-full-format-scope-help').hidden=!partial||!['markdown','csv'].includes(mode);
   document.getElementById('product-share-preview-wrap').hidden=mode==='search';
   if(mode==='search')refreshProductShareSearch();
-  for(const name of ['link','image','text','search']){
+  for(const name of ['link','image','text','search','markdown','csv']){
     document.getElementById(`product-share-${name}`).hidden=name!==mode;
     document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
   }
+  refreshPublicLinkAction();
 }
 function exportFullProductFormat(format){
   if(productShareScope!=='full')return;
@@ -10218,6 +10298,7 @@ function syncLabelForStatus(s){
   return'—';
 }
 function refreshSyncUi(){
+  if(document.getElementById('product-share-modal')?.classList.contains('open'))refreshPublicLinkAction();
   refreshFavoriteSavedPrompt();
   const s=_syncStatusCurrent;
   if(!s)return;
@@ -12250,39 +12331,51 @@ function exportMyListCSV(){
   toast(i18nCore.t('export.csvDownloaded'));
 }
 let publicLinkAttempt=0;
+function clearPublicLinkFeedback(){
+  publicLinkFeedback=null;
+  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
+  const input=document.getElementById('share-public-url');if(input){input.value='';input.hidden=true;}
+}
 function linkPublicationStatus(key,options={}){
+  const state=publicLinkPublicationState(true);
+  if(!['share.linkReady','share.linkCopied','share.linkCopyFailed'].includes(key))clearPublicLinkFeedback();
+  publicLinkFeedback={token:activePublicShareHydrationToken,uid:auth?.currentUser?.uid,username:cur,contentKey:state.contentKey,scope:productShareScope,listType:myListType};
   const node=document.getElementById('share-link-status');
   if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
+  refreshPublicLinkAction();
 }
 async function copyShareLink(){
   if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
-  const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
-  const declarationState=()=>JSON.stringify(publicSharePublicationDomain.publicDeclarations(productDeclarations(username).entries));
-  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
+  const button=document.getElementById('share-link-action'),displayed=button?.dataset.publicationState,state=publicLinkPublicationState();
+  if(state.disabled||displayed==='current'&&state.kind!=='current'){refreshPublicLinkAction();linkPublicationStatus('share.publicationPending');return;}
+  const username=cur,uid=String(auth?.currentUser?.uid||''),token=activePublicShareHydrationToken,attempt=++publicLinkAttempt;
+  const wasOpen=document.getElementById('product-share-modal')?.classList.contains('open');
+  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'')&&token===activePublicShareHydrationToken&&(!wasOpen||document.getElementById('product-share-modal')?.classList.contains('open'));
+  const payloadCurrent=()=>publicLinkPublicationState(true).contentKey===state.contentKey;
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
-  linkPublicationStatus('product.publishing');
-  const input=document.getElementById('share-public-url');if(input)input.value=url;
+  const input=document.getElementById('share-public-url');if(input){input.value=url;input.hidden=true;}
+  const busy={token,uid,username,attempt,copyOnly:state.kind==='current'};publicLinkBusy=busy;refreshPublicLinkAction();
   try{
-    const initialDeclarations=declarationState();
-    const result=await publishPublicShareNow(username,'explicit_share');
-    if(!current())return;
-    if(declarationState()!==initialDeclarations){
-      linkPublicationStatus('share.publicationPending');return;
+    if(state.kind!=='current'){
+      linkPublicationStatus('product.publishing');
+      const result=await publishPublicShareNow(username,'explicit_share');
+      if(!current())return;
+      if(!publicSharePublicationCurrent(result)){
+        if(result?.status==='pending')linkPublicationStatus('share.publicationPending');
+        else{publicLinkPublicationError={token,contentKey:state.contentKey};linkPublicationStatus('share.publicationUnconfirmed',{state:'product.publishFailed'});}return;
+      }
     }
-    if(!publicSharePublicationCurrent(result)){
-      linkPublicationStatus(result?.status==='pending'?'share.publicationPending':'product.publishFailed');return;
-    }
+    // Only a matching verified readback/publication can authorize copy-only.
+    const proof=currentPublicLinkConfirmation();
+    if(!current()||proof?.contentKey!==state.contentKey){if(current())linkPublicationStatus('share.publicationPending');return;}
+    busy.copyOnly=true;
+    if(!payloadCurrent()){linkPublicationStatus('share.publicationPending');return;}
     if(input)input.hidden=false;
-    linkPublicationStatus('product.published');
-    try{
-      await copyText(url);
-      if(current())linkPublicationStatus('product.publishedCopied');
-    }catch{
-      if(current()){linkPublicationStatus('product.publishedCopyFailed');input?.focus();input?.select();}
-    }
-  }catch(error){
-    if(current())linkPublicationStatus('product.publishFailed');
-  }
+    linkPublicationStatus('share.linkReady',{state:'product.published'});
+    try{await copyText(url);if(current())linkPublicationStatus(payloadCurrent()?'share.linkCopied':'share.publicationPending',{state:payloadCurrent()?'product.publishedCopied':'share.publicationPending'});}
+    catch{if(current()){linkPublicationStatus('share.linkCopyFailed',{state:'product.publishedCopyFailed'});input?.focus();input?.select();}}
+  }catch(error){if(current()){publicLinkPublicationError={token,contentKey:state.contentKey};linkPublicationStatus('share.publicationUnconfirmed',{state:'product.publishFailed'});}}
+  finally{if(publicLinkBusy===busy)publicLinkBusy=null;if(current())refreshPublicLinkAction();}
 }
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────

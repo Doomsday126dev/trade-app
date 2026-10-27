@@ -183,15 +183,15 @@
 "request.unconfirmed":"Envío aún no confirmado. Mantén este formulario abierto y vuelve a comprobar la misma solicitud.",
 "import.unsupported":"Entrada no admitida. Usa números de Pokédex y calificadores en inglés unidos con &. Sin exclusiones, rangos, PC ni consultas completas.",
 "import.ambiguous":"Coinciden varias variantes; empiezan sin seleccionar. Elige formas o disfraces concretos. Seleccionar todo incluye cada variante mostrada.",
-"share.liveList":"Compartir lista en vivo",
+"share.liveList":"Enlace público",
 "share.liveCaption":"Una página pública sin cuenta",
 
 "share.searchCaption":"Busca en tu propio inventario",
-"share.imageSnapshot":"Compartir imagen",
-"share.textSnapshot":"Copiar texto",
+"share.imageSnapshot":"Imagen",
+"share.textSnapshot":"Texto sin formato",
 "share.snapshotCaption":"Una captura de esta selección",
 "share.partialLink":"Los enlaces incluyen toda la lista. Elige Lista completa para un enlace, o usa imagen, texto o búsqueda para esta selección.",
-"share.liveHelp":"Enlace público · no requiere cuenta.",
+"share.liveHelp":"Enlace público",
 "share.publicFields":"El perfil publicado y las notas son visibles. Los cambios guardados actualizan este enlace público.",
 "share.gameLanguage":"Idioma de Pokémon GO",
 "share.searchLimits":"Solo candidatos por especie: comprueba formas y requisitos. Excluye 4★, intercambiados, oscuros, purificados, fondos y PC superior a 2500; sin deseos shiny también excluye shiny.",
@@ -298,6 +298,25 @@
     ,"wantEditor.releasedGender":"Sexo disponible: {gender}"
     ,"workflow.priorityFilter":"Filtrar la lista por prioridad"
     ,"workflow.priorityEmpty":"No hay Pokémon con prioridad {priority}."
-    ,"workflow.selectedOtherPriorities":"{count} seleccionados en otras prioridades; se incluyen al compartir la selección."
-  });
+    ,"workflow.selectedOtherPriorities":"{count} seleccionados en otras prioridades; se incluyen al compartir la selección.",
+"share.markdownFormat":"Markdown",
+"share.csvFormat":"CSV",
+"share.copyPlainText":"Copiar texto sin formato",
+"share.copyMarkdown":"Copiar Markdown",
+"share.downloadCsv":"Descargar CSV",
+"share.fullFormatScope":"Elige Lista completa para exportar Markdown o CSV.",
+"share.markdownDetails":"Lista completa, incluidos los datos de contacto del perfil y las notas.",
+"share.csvDetails":"Lista completa de Pokémon buscados, con una fila por entrada.",
+"share.copyLink":"Copiar enlace",
+"share.updateCopyLink":"Actualizar y copiar enlace",
+"share.retryCopyLink":"Reintentar y copiar enlace",
+"share.syncPending":"Esperando sincronización…",
+"share.copyingLink":"Copiando…",
+"share.publicationUnconfirmed":"No se pudo confirmar la publicación. Tus cambios se conservan. Reinténtalo.",
+"share.linkReady":"Enlace listo.",
+"share.linkCopied":"Enlace copiado.",
+"share.linkCopyFailed":"No se pudo copiar. Usa el enlace seleccionado o inténtalo de nuevo.",
+"share.checkListDetails":"Revisa los detalles de la lista",
+"share.linkUnavailable":"No se puede compartir"
+});
 })(window);
