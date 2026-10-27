@@ -62,6 +62,8 @@ async function installLoginTransport(page){
   });
 }
 async function assertReducedRuntime(page,expected){
+  // The verified .153 baseline loads 85 same-origin scripts (86 with German).
+  // Catalogue repairs add no runtime script requests.
   const scripts=await page.evaluate(()=>performance.getEntriesByType('resource').filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).map(entry=>entry.name));
   expect(scripts.filter(url=>candidates.test(url))).toEqual([]);
   expect(scripts.length).toBe(expected);
@@ -83,12 +85,12 @@ test('fresh Username/PIN login and restored authenticated session use the reduce
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>__bootSignIns)).toBe(1);
   expect(await page.evaluate(()=>({user:cur,uid:auth.currentUser.uid,ready:firebaseDataProtectionReady}))).toEqual({user:identity.username,uid:identity.uid,ready:true});
-  await assertReducedRuntime(page,84);
+  await assertReducedRuntime(page,85);
   await page.reload();
   await expect(page.locator('#app')).toBeVisible();
   expect(await page.evaluate(()=>cur)).toBe(identity.username);
   expect(await page.evaluate(()=>window.__bootSignIns||0)).toBe(0);
-  await assertReducedRuntime(page,84);
+  await assertReducedRuntime(page,85);
   expect(errors).toEqual([]);
 });
 
@@ -99,7 +101,7 @@ test('non-English feature loading retains translations without disabled modules'
   await page.evaluate(()=>__pogoEnsureFullApp('boot-german-qualification'));
   await page.waitForFunction(()=>window.__pogoStartup.firebaseStartupSettledAt!==null);
   expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe('de');
-  await assertReducedRuntime(page,85);
+  await assertReducedRuntime(page,86);
 });
 
 test('installed offline shell retains the independent public-route code without private application loading',async({browser,baseURL})=>{

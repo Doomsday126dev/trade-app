@@ -1,8 +1,9 @@
 const {test,expect}=require('@playwright/test');
+test.use({serviceWorkers:'block'});
 const fs=require('node:fs');const {normalFixture,settled}=require('./helpers/usability-fixture.cjs');const controls=require('./helpers/current-want-controls.cjs');const source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8');const install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');
 test('released Shiny Origin Giratina retains exact art through save/reload and actual canvas export',async({page},info)=>{
- await normalFixture(page);
  const url='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10007.png';
+ await normalFixture(page);
  await page.route(url,r=>r.fulfill({path:require.resolve('./fixtures/art/giratina-origin-shiny.png'),contentType:'image/png'}));
  await page.locator('#wants-add-name').fill('Giratina (Origin');await page.getByRole('option',{name:'Giratina (Origin)',exact:true}).click();await page.keyboard.press('Escape');await page.locator('.add-advanced-toggle').click();await controls.priority(page,'H');await page.locator('#combined-shiny').check();await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.some(e=>e.name==='Giratina (Origin)'))).toBe(true);await settled(page);
  const evidence=await page.evaluate(async()=>{const entry=productDeclarations().entries.find(e=>e.name==='Giratina (Origin)');const urls=exportSpriteFallbackUrls(entry);const blob=await renderProductShareImage([entry],'Exact form audit');return {entry,urls,publicUrls:Array.from(publicSpriteUrls('Giratina (Origin)','',487,true)),png:await new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(blob)})};});

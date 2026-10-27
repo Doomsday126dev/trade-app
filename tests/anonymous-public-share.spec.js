@@ -123,10 +123,10 @@ test.describe('anonymous public share bootstrap',()=>{
     expect(await page.evaluate(()=>typeof POGO_TRADE_DB)).toBe('undefined');
     const expected={
       'Charmander (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png',
-      'Toxtricity (Amped) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-amped.png',
-      'Toxtricity (Low Key) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-low-key.png',
-      'Urshifu (Single Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-single-strike.png',
-      'Urshifu (Rapid Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-rapid-strike.png',
+      'Toxtricity (Amped) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/849.png',
+      'Toxtricity (Low Key) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10184.png',
+      'Urshifu (Single Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/892.png',
+      'Urshifu (Rapid Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10191.png',
       'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png',
       'Urshifu (Gigantamax)':null
     };

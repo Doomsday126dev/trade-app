@@ -1,6 +1,6 @@
 # Catalogue reconciliation and remaining release treatment
 
-The candidate restores 342 base/default identities, 13 regional entries, ten released Dynamax identities and Caterpie wearing a Poké Ball hat. Three further regional art mappings are preserved for review. It fixes the Origin Giratina Shiny numeric-form resolver and duplicate base/Max names in the global picker. This is a repair batch and discovery safeguard, not a claim that the full backlog has been resolved.
+The candidate restores 342 base/default identities, 14 regional entries, ten released Dynamax identities and Caterpie wearing a Poké Ball hat. Two further regional art mappings are preserved for review. It fixes the Origin Giratina Shiny numeric-form resolver and duplicate base/Max names in the global picker. This is a repair batch and discovery safeguard, not a claim that the full backlog has been resolved.
 
 ## Independent coverage
 
@@ -35,4 +35,4 @@ The generated queue contains alias ambiguities, source-only identities, exact-ar
 
 The source/art checks and focused regression tests are deliberately separate from release eligibility. Exact artwork is verified by provenance, hashes, decoding and renderer paths; main-series existence alone never authorizes a GO release claim.
 
-The Alolan Raticate selectable addition is held separately: its default normal/Shiny form art is verified, but the direct female-art source returned HTTP 403. That check stopped without a retry or proxy. Its exact female art or explicit same-form gender equivalence needs independent verification; the gap is visible in the owner queue.
+The Alolan Raticate default entry is included with verified normal/Shiny form art and the optional gender selector disabled. Its direct female-art source returned HTTP 403; that check stopped without a retry or proxy. Exact female art remains an urgent owner queue issue. Saved gender values are preserved, and female requests cannot fall through to default or Kantonian art.

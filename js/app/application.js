@@ -699,11 +699,17 @@ function refreshCombinedGenderOptions(savedValue){
   refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
   const allowed=combinedAllowedGenders(name);
+  // Default Alolan form art is verified; optional female art remains an open
+  // source review. Keep Any gender usable without offering an unverified variant.
+  const pendingGenderArt=spriteSlugsDomain.PUBLIC_EXACT_FORM_IDS[spriteSlugsDomain.normalizeSpriteKey(name)]===10092;
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
   select.innerHTML=`<option value="">${escHtml(i18nCore.t(allowed.length?'wantEditor.anyGender':'wantEditor.genderless'))}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
   select.value=preserve||allowed.includes(value)?value:'';
+  const savedPendingGender=pendingGenderArt&&value&&combinedEditor?.entries?.some(entry=>entry.name===name&&entry.gender===value);
+  if(pendingGenderArt&&!savedPendingGender){select.innerHTML=`<option value="">${escHtml(i18nCore.t('wantEditor.anyGender'))}</option>`;select.value='';}
+  select.disabled=pendingGenderArt;
   const hint=document.getElementById('combined-gender-hint');
   hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
   renderCombinedPokemonSummary();
