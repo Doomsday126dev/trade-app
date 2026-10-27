@@ -42,7 +42,7 @@ function loadPublicDex(){
 }
 if(require.main===module){
   try{
-    const evidence=JSON.parse(fs.readFileSync(path.join(root,'data/recent-release-coverage.json'),'utf8'));
+    const recent=JSON.parse(fs.readFileSync(path.join(root,'data/recent-release-coverage.json'),'utf8')),costume=JSON.parse(fs.readFileSync(path.join(root,'data/caterpie-release-coverage.json'),'utf8'));const evidence={...recent,records:[...recent.records,...costume.records]};
     const missing=missingReleasedEntries(loadCatalog(),evidence);
     checkPublicEligibility(loadPublicDex(),evidence);
     if(missing.length)throw new Error(`Missing released catalog entries: ${missing.map(entry=>entry.id).join(', ')}`);

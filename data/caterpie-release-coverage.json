@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-27",
+  "records": [
+    {
+      "id": "costume:10:GOFEST_2026",
+      "collection": "costumes",
+      "no": 10,
+      "name": "Caterpie (Poke Ball Hat)",
+      "releasedOn": "2026-05-29",
+      "releasedDateQualification": "Park debut date; citywide early-access availability is not inferred.",
+      "sources": [
+        "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+        "https://pokemongohub.net/post/news/poke-ball-hat-caterpie-to-debut-at-in-person-pokemon-go-fests/"
+      ],
+      "requiredArtwork": {
+        "shiny": true
+      }
+    }
+  ]
+}

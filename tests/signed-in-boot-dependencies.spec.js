@@ -62,6 +62,8 @@ async function installLoginTransport(page){
   });
 }
 async function assertReducedRuntime(page,expected){
+  // The verified .153 baseline loads 85 same-origin scripts (86 with German).
+  // The independent traffic script is counted separately; no catalogue script is added.
   const scripts=await page.evaluate(()=>performance.getEntriesByType('resource').filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).map(entry=>entry.name));
   expect(scripts.filter(url=>candidates.test(url))).toEqual([]);
   const traffic=scripts.filter(url=>/\/js\/services\/traffic\.js(?:\?|$)/.test(url));

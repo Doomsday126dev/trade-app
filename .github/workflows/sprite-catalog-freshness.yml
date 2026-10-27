@@ -21,6 +21,15 @@ on:
       - 'js/domain/spriteSlugs.js'
       - 'scripts/generate-public-sprite-dex.cjs'
       - 'data/recent-release-coverage.json'
+      - 'data/base-species-coverage.json'
+      - 'data/regional-species-coverage.json'
+      - 'data/caterpie-release-coverage.json'
+      - 'data/catalogue-*'
+      - 'data/catalogue-sources/**'
+      - 'data/public-form-sprite-identities.json'
+      - 'scripts/reconcile-catalogue.cjs'
+      - 'scripts/catalogue-source-observation.cjs'
+      - 'tests/catalogue-reconciliation.test.cjs'
       - 'data/recent-release-review-holds.json'
       - 'data/release-discovery-snapshot.json'
       - 'scripts/check-released-catalog.cjs'
@@ -50,15 +59,18 @@ jobs:
       - name: Reconcile independent released inventory and validate discovery failure handling
         run: |
           node scripts/check-released-catalog.cjs
-          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs
-      - name: Discover official announcements and season Max catalog gaps
+          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs tests/catalogue-reconciliation.test.cjs
+      - name: Reconcile cached independent inventories on pull requests
+        if: always() && github.event_name == 'pull_request'
+        run: node scripts/check-release-discovery.cjs --offline --report-only
+      - name: Reconcile live announcements, GO inventories and mined sprites
         if: always() && github.event_name != 'pull_request'
         run: node scripts/check-release-discovery.cjs
       - name: Offline review integrity (pull requests)
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --offline --report costume-freshness.json --summary costume-freshness.md
       - name: Live source and review freshness (daily or manual)
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --report costume-freshness.json --summary costume-freshness.md
       - name: Generate review candidate and verify deployed coverage
         if: always()
@@ -72,6 +84,7 @@ jobs:
             costume-freshness.md
             costume-maintenance.json
             costume-maintenance.md
+            catalogue-reconciliation.json
             release-discovery.json
             release-discovery.md
       - name: Publish review summary even when attention is required

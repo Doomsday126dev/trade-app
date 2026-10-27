@@ -76,7 +76,7 @@ function validateCatalog(catalog,root){
       if(entry.sourceUrl!==base+entry.sourceFiles.default)fail('Unreviewed Pokemod URL');
     }
     if(entry.sourceProvider==='pokemod-reviewed-released'){
-      const stems={'Teddiursa Witch Hat':'pm216.cHALLOWEEN_2025','Ursaring Witch Hat':'pm217.cHALLOWEEN_2025','Ursaluna Witch Hat':'pm901.cHALLOWEEN_2025','Galarian Corsola Pink Sunglasses':'pm222.fSPRING_2026','Noibat Headband':'pm714.cHALLOWEEN_2025','Noivern Headband':'pm715.cHALLOWEEN_2025'};
+      const stems={'Caterpie (Poke Ball Hat)':'pm10.fGOFEST_2026','Teddiursa Witch Hat':'pm216.cHALLOWEEN_2025','Ursaring Witch Hat':'pm217.cHALLOWEEN_2025','Ursaluna Witch Hat':'pm901.cHALLOWEEN_2025','Galarian Corsola Pink Sunglasses':'pm222.fSPRING_2026','Noibat Headband':'pm714.cHALLOWEEN_2025','Noivern Headband':'pm715.cHALLOWEEN_2025'};
       const stem=stems[entry.names[0]],female=entry.names[0]==='Ursaring Witch Hat';
       if(!stem||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca'||entry.identityStatus!=='released')fail('Unreviewed released Pokemod identity/commit');
       const sourceBase='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
