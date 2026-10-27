@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 jobs:
-  traffic-runtime:
+  runtime-core:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -57,8 +57,6 @@ jobs:
         run: |
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
-      - name: Exact Share states Favorites order and Apri install icon qualification
-        run: npx playwright test -c playwright.share-refinement.config.cjs
 
   catalogue-browser:
     strategy:
@@ -102,3 +100,38 @@ jobs:
         env:
           BROWSER_RESULT: ${{ needs.catalogue-browser.result }}
         run: test "$BROWSER_RESULT" = success
+
+  share-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: 4cf60cfa385cfa69bbdaf48eda0acfd478c7d847
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Official browser dependency archive
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Exact Share states Favorites order and Apri install icon qualification
+        run: npx playwright test -c playwright.share-refinement.config.cjs
+
+  traffic-runtime:
+    if: always()
+    needs: [runtime-core, share-runtime]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Require exact runtime core and complete Share Favorites icon journeys
+        env:
+          CORE_RESULT: ${{ needs.runtime-core.result }}
+          SHARE_RESULT: ${{ needs.share-runtime.result }}
+        run: test "$CORE_RESULT" = success && test "$SHARE_RESULT" = success
