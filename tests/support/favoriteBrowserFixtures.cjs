@@ -43,11 +43,13 @@ async function routeEmulators(page,fixture,{legacy=true,candidate=false,picker=f
       return route.fulfill({contentType:'text/javascript',body:source});
     });
     await page.route('**/js/domain/favoriteCapabilities.js*',route=>route.fulfill({contentType:'text/javascript',body:`window.PogoDomain.favoriteCapabilities=Object.freeze({resolverEnabled:true,pickerEnabled:${picker}});`}));
-    await page.route('https://us-central1-trade-list-a4297.cloudfunctions.net/resolveLegacyFavoriteIdentities',async route=>{
-      const headers=route.request().headers();headers.origin=origin;
-      const response=await fetch('http://127.0.0.1:4198',{method:route.request().method(),headers,body:route.request().postData()});
-      return route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()});
+    await page.route('**/js/services/favoriteResolverClient.js*',route=>{
+      const source=fs.readFileSync(path.join(root,'js/services/favoriteResolverClient.js'),'utf8')
+        .replace('https://us-central1-trade-list-a4297.cloudfunctions.net/resolveLegacyFavoriteIdentities','http://127.0.0.1:4198');
+      return route.fulfill({contentType:'text/javascript',body:source});
     });
+    // This fixture must never send a resolver request to production.
+    await page.route('https://**.cloudfunctions.net/**',route=>route.abort());
   }
   await page.route('**/js/app/application.js*',route=>{
     let source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
@@ -67,6 +69,9 @@ async function routeEmulators(page,fixture,{legacy=true,candidate=false,picker=f
   });
   await page.route(url=>url.origin===origin&&(url.pathname==='/'||url.pathname==='/index.html'),route=>{
     let html=fs.readFileSync(path.join(root,'index.html'),'utf8').replaceAll('trade-list-a4297',project);
+    // This fulfilled document is an isolated demo fixture, never shipped HTML.
+    // Keep production CSP intact and permit only its exact local emulator hosts.
+    html=html.replace("connect-src 'self'", "connect-src 'self' http://127.0.0.1:9500 ws://127.0.0.1:9500 http://127.0.0.1:9599 http://127.0.0.1:4198");
     html=html.replace('state.auth=state.authMod.getAuth(state.app);',`state.auth=state.authMod.getAuth(state.app);state.authMod.connectAuthEmulator(state.auth,'${authHost}',{disableWarnings:true});`);
     return route.fulfill({contentType:'text/html',body:html});
   });

@@ -69,9 +69,10 @@
     if(!descriptor||descriptor===english)return null;
     const lang=localeKey(locale),known=structuredEntries[`${record.no}|${primary}`];
     const species=speciesName({no:record.no},lang)||english,candidate=known?.labels?.[lang];
-    const translated=candidate&&!normalizeSpeciesLookup(candidate).includes(normalizeSpeciesLookup(species))?candidate:'';
+    const translated=lang!=='en'&&candidate?candidate:'';
     const base=region?regionalLabel(species,region,lang):species,detail=translated||descriptor;
-    return Object.freeze({text:lang==='ja'?`${base}（${detail}）`:`${base} (${detail})`,status:lang==='en'||translated?'full':'partial',category:'app-specific-costume'});
+    const fullTranslation=translated&&normalizeSpeciesLookup(translated).includes(normalizeSpeciesLookup(species));
+    return Object.freeze({text:fullTranslation?translated:composedVariantLabel(base,detail,lang),status:lang==='en'||translated?'full':'partial',category:'app-specific-costume'});
   }
   function resolveDisplayName(entry,{locale='en'}={}){
     const original=originalLabel(entry),lang=localeKey(locale);

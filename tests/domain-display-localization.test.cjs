@@ -318,3 +318,11 @@ test('reviewed costume presentation consistently wraps descriptors without chang
  assert.ok(reviewed>300);for(const alias of ['Hoothoot (New Year)','Hoothoot New Years']){assert.equal(names.displayName({no:163,name:alias}),'Hoothoot (New Year Hat)');assert.equal(names.displayName({no:163,name:alias},{locale:'ja'}),'ホーホー（New Year Hat）');assert.equal(names.resolveDisplayName({no:163,name:alias},{locale:'ja'}).status,'partial');}
  for(const entry of [{no:201,name:'Unown (A)'},{no:327,name:'Spinda (Form 1)'},{no:774,name:'Minior (Green Core)'},{no:815,name:'Cinderace (Gigantamax)'}])assert.equal(names.costumeDisplayName(entry),null);
 });
+
+test('reviewed costume formatting preserves existing full Japanese labels and translated descriptors',()=>{
+ const w=load(['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/domain/costumeSpriteCatalog.js','js/i18n/pokemonNames/core.js']),names=w.PogoI18n.pokemonNames;
+ for(const [descriptor,ja]of [['Libre','マスクド・ピカチュウ'],['Pop Star','アイドル・ピカチュウ'],['Rock Star','ハードロック・ピカチュウ'],['Ph_D','ドクター・ピカチュウ']]){
+  const input={no:25,name:`Pikachu (${descriptor})`},before=JSON.stringify(input);const result=names.resolveDisplayName(input,{locale:'ja'});assert.equal(result.text,ja);assert.equal(result.status,'full');assert.equal(names.displayName(input,{locale:'en'}),`Pikachu (${descriptor})`);assert.equal(names.displayName(input,{locale:'de'}),'Pikachu (Cosplayform)');assert.equal(JSON.stringify(input),before);
+ }
+ assert.equal(names.resolveDisplayName({no:163,name:'Hoothoot New Years'},{locale:'ja'}).status,'partial');
+});
