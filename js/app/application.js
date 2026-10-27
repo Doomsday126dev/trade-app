@@ -6955,7 +6955,7 @@ function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
   productShareSnapshot=accountSyncClone(productScopeEntries());
   document.getElementById('share-link-status').textContent='';
-  document.getElementById('share-public-url').value='';publicLinkAttempt++;
+  document.getElementById('share-public-url').value='';document.getElementById('share-public-url').hidden=true;publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
   preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
   setProductShareMode(productShareMode);
@@ -7585,8 +7585,8 @@ function renderIntentEntries(query='',model=productDeclarations()){
   });
   const review=document.getElementById('intent-review');
   if(review){
-    review.hidden=!model.duplicates.length&&!reviews.length;
-    review.innerHTML=`${model.duplicates.length?`<p>${escHtml(i18nCore.t('product.identical',{count:model.duplicates.length}))}</p>`:''}${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
+    review.hidden=!reviews.length;
+    review.innerHTML=`${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
   }
 }
 function contextualIntentSearchHtml(entries,title,options={}){
@@ -12262,6 +12262,7 @@ async function copyShareLink(){
     if(!publicSharePublicationCurrent(result)){
       linkPublicationStatus(result?.status==='pending'?'share.publicationPending':'product.publishFailed');return;
     }
+    if(input)input.hidden=false;
     linkPublicationStatus('product.published');
     try{
       await copyText(url);
@@ -13037,7 +13038,7 @@ function ptrEnd(){
     setTimeout(()=>{
       ind?.classList.remove('visible','pulling','refreshing');
       if(ind)ind.textContent='↓';
-      toast('🔄 Refreshed');
+      announceFeedback(i18nCore.t('feedback.viewUpdated'));
     },800);
   }else{
     ind?.classList.remove('visible','pulling','refreshing');
@@ -13380,7 +13381,7 @@ function eventBonusesHtml(event,{full=false}={}){
   const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
   const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
   const featuredHtml=full||headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
-  if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${full?attribution:''}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
   if(features.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
