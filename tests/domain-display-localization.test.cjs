@@ -88,14 +88,14 @@ test('structured form supplements localize official terminology without changing
   assert.equal(pokemon.structuredFormSource.kind,'curated-official-form-supplement');
 });
 
-test('all 1367 canonical entries have measurable full partial and fallback coverage',()=>{
+test('all 1433 canonical entries have measurable full partial and fallback coverage',()=>{
   const baseline={full:620,partial:0,fallback:346};
-  const expected={ja:{full:1167,partial:200,fallback:0},es:{full:1126,partial:241,fallback:0},de:{full:1163,partial:204,fallback:0}};
+  const expected={ja:{full:1184,partial:249,fallback:0},es:{full:1143,partial:290,fallback:0},de:{full:1180,partial:253,fallback:0}};
   for(const locale of ['ja','es','de']){
     const report=JSON.parse(JSON.stringify(pokemon.variantCoverage(appEntries,locale)));
-    assert.equal(report.total,1367);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
+    assert.equal(report.total,1433);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
     assert.deepEqual(baseline,{full:620,partial:0,fallback:346});
-    assert.equal(report.categories['app-specific-costume'].partial,198);
+    assert.equal(report.categories['app-specific-costume'].partial,247);
     assert.equal(report.categories['vivillon-pattern'].total,20);
     assert.equal(report.categories['gigantamax'].total,31);
   }
@@ -154,15 +154,15 @@ test('coverage reports are explicit and do not claim a complete catalog',()=>{
 });
 
 test('generated catalogs completely cover every stable species ID in data.js',()=>{
-  assert.equal(appEntries.length,1367);
-  assert.equal(appSpeciesIds.length,917);
+  assert.equal(appEntries.length,1433);
+  assert.equal(appSpeciesIds.length,940);
   assert.equal(appEntries.filter(entry=>!Number.isInteger(Number(entry.no))||Number(entry.no)<=0).length,0);
   for(const locale of ['en','ja','es','de']){
     const catalog=window.PogoPokemonNameCatalogs[locale],keys=Object.keys(catalog);
     assert.equal(keys.length,1025,`${locale} source catalog`);
     assert.equal(new Set(keys).size,keys.length,`${locale} duplicate mapping`);
     assert.equal(appSpeciesIds.filter(id=>!String(catalog[id]||'').trim()).length,0,`${locale} missing app species`);
-    assert.deepEqual(JSON.parse(JSON.stringify(pokemon.coverage(appEntries,locale))),{locale,translatedSpecies:917,totalSpecies:917,fallbackSpecies:0,complete:true});
+    assert.deepEqual(JSON.parse(JSON.stringify(pokemon.coverage(appEntries,locale))),{locale,translatedSpecies:940,totalSpecies:940,fallbackSpecies:0,complete:true});
   }
   assert.deepEqual(JSON.parse(JSON.stringify(window.PogoPokemonNameCatalogSource)),{
     repository:'PokeAPI/pokeapi',path:'data/v2/csv/pokemon_species_names.csv',gitBlobSha:'44954a1248493d8cc336f121ce5cce394cee9ac0',retrievedAt:'2026-08-06',sourceSpecies:1025,languageIds:{ja:1,de:6,es:7,en:9}
@@ -307,4 +307,14 @@ test('trainer organizer v3 remains locale-independent and strips former note fie
   assert.match(html,/tag\.label/);
   assert.doesNotMatch(store,/MAX_NOTE_LENGTH|setFavoriteNote|item\.note/);
   assert.doesNotMatch(html,/createTrainerPreferencesRepository|managedTrainerPreferencesRepository/);
+});
+
+test('reviewed costume presentation consistently wraps descriptors without changing saved identities or forms',()=>{
+ const w=load(['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/domain/costumeSpriteCatalog.js','js/i18n/pokemonNames/core.js']);const names=w.PogoI18n.pokemonNames;
+ let reviewed=0;for(const row of w.PogoDomain.costumeSpriteCatalog.records){
+  const entry={no:row.no,name:row.names[0]},result=names.costumeDisplayName(entry);if(!result)continue;reviewed++;
+  assert.match(result.text,/^.+ \(.+\)$/u,row.names[0]);for(const alias of row.names)assert.equal(names.displayName({no:row.no,name:alias}),result.text,alias);assert.equal(entry.name,row.names[0]);
+ }
+ assert.ok(reviewed>300);for(const alias of ['Hoothoot (New Year)','Hoothoot New Years']){assert.equal(names.displayName({no:163,name:alias}),'Hoothoot (New Year Hat)');assert.equal(names.displayName({no:163,name:alias},{locale:'ja'}),'ホーホー（New Year Hat）');assert.equal(names.resolveDisplayName({no:163,name:alias},{locale:'ja'}).status,'partial');}
+ for(const entry of [{no:201,name:'Unown (A)'},{no:327,name:'Spinda (Form 1)'},{no:774,name:'Minior (Green Core)'},{no:815,name:'Cinderace (Gigantamax)'}])assert.equal(names.costumeDisplayName(entry),null);
 });

@@ -370,6 +370,990 @@
       "artEvidence": "data/catalogue-art-checks.json",
       "reviewedAt": "2026-10-27T10:16:04.042331+00:00",
       "qualification": "Previously held and independently verified exact form. Shiny release remains unverified and wants remain selectable. Default normal/Shiny form images only; saved optional gender choices preserved."
+    },
+    {
+      "category": "reviewed",
+      "no": 1024,
+      "name": "Terapagos (Stellar Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 1024,
+      "name": "Terapagos (Terastal Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 423,
+      "name": "Gastrodon (East Sea)",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "https://pokemongo.com/news/go-battle-league-tales-of-transformation"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 423,
+      "name": "Gastrodon (West Sea)",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "https://pokemongo.com/news/go-battle-league-tales-of-transformation"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 494,
+      "name": "Victini",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://pokemongo.com/news/tour-pass-2025"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 646,
+      "name": "Kyurem (Black Kyurem)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 646,
+      "name": "Kyurem (White Kyurem)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 649,
+      "name": "Genesect (Shock Drive)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://pokemongo.com/news/gofest2026-global-update"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 649,
+      "name": "Genesect (Burn Drive)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://pokemongo.com/news/gofest2026-global-update"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 649,
+      "name": "Genesect (Chill Drive)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://pokemongo.com/news/gofest2026-global-update"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 649,
+      "name": "Genesect (Douse Drive)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://pokemongo.com/news/gofest2026-global-update"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 670,
+      "name": "Floette (Blue Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 670,
+      "name": "Floette (Eternal Flower)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 670,
+      "name": "Floette (Orange Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 670,
+      "name": "Floette (White Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 670,
+      "name": "Floette (Yellow Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 671,
+      "name": "Florges (Blue Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 671,
+      "name": "Florges (Orange Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 671,
+      "name": "Florges (White Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 671,
+      "name": "Florges (Yellow Flower)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/communityday-september-2025-flabebe"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 681,
+      "name": "Aegislash (Blade Forme)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 681,
+      "name": "Aegislash (Shield Forme)",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://pokemongo.com/news/ultra-unlock-steel-and-scales"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 745,
+      "name": "Lycanroc (Dusk Form)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/lustrous-odyssey-2024"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 745,
+      "name": "Lycanroc (Midnight Form)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/lustrous-odyssey-2024"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 745,
+      "name": "Lycanroc (Midday Form)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/lustrous-odyssey-2024"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Blue Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Indigo Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Orange Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Red Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Violet Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 774,
+      "name": "Minior (Yellow Core)",
+      "normal": "announced",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "category": "reviewed",
+      "no": 801,
+      "name": "Magearna (Original Color)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 834,
+      "name": "Drednaw",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 844,
+      "name": "Sandaconda",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://pokemongo.com/news/sustainability-week-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 853,
+      "name": "Grapploct",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 869,
+      "name": "Alcremie",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 879,
+      "name": "Copperajah",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 901,
+      "name": "Ursaluna (Bloodmoon)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 902,
+      "name": "Basculegion (Female)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "f"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 902,
+      "name": "Basculegion (Male)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "m"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/hisuipokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 925,
+      "name": "Maushold (Family of Four)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 925,
+      "name": "Maushold (Family of Three)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 941,
+      "name": "Kilowattrel",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+        "https://pokemongo.com/news/high-zaptitude-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 943,
+      "name": "Mabosstiff",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+        "https://pokemongo.com/news/mega-squads-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 947,
+      "name": "Brambleghast",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 952,
+      "name": "Scovillain",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 954,
+      "name": "Rabsca",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 964,
+      "name": "Palafin (Hero Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 964,
+      "name": "Palafin",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 970,
+      "name": "Glimmora",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 981,
+      "name": "Farigiraf",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 982,
+      "name": "Dudunsparce (Two-Segment Form)",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+        "https://pokemongo.com/news/completely-normal-2025"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "category": "reviewed",
+      "no": 169,
+      "name": "Crobat (Top hat)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemongo.com/news/halloween-part-1-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 42,
+      "name": "Golbat (Top hat)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemongo.com/news/halloween-part-1-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 555,
+      "name": "Darmanitan (Galarian Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 586,
+      "name": "Sawsbuck (Autumn Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 586,
+      "name": "Sawsbuck (Summer Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 586,
+      "name": "Sawsbuck (Winter Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 854,
+      "name": "Sinistea (Antique Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 855,
+      "name": "Polteageist (Halloween Bow - Antique Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemongo.com/news/halloween-part-1-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 855,
+      "name": "Polteageist (Halloween Bow - Phony Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemongo.com/news/halloween-part-1-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 855,
+      "name": "Polteageist (Antique Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 982,
+      "name": "Dudunsparce (Three-Segment Form)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "category": "reviewed",
+      "no": 808,
+      "name": "Meltan (Dynamax)",
+      "normal": "announced",
+      "shiny": "announced",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    },
+    {
+      "category": "reviewed",
+      "no": 809,
+      "name": "Melmetal (Dynamax)",
+      "normal": "announced",
+      "shiny": "announced",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    },
+    {
+      "category": "reviewed",
+      "no": 895,
+      "name": "Regidrago (Dynamax)",
+      "normal": "announced",
+      "shiny": "announced",
+      "genders": [],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+      "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
     }
   ]
 }

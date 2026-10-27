@@ -1063,10 +1063,12 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
-  if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName)?.assets)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(entry?.shiny!==true&&isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(entry?.shiny===true)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,true)[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no,gender||entry?.gender||'',entry?.shiny===true);
   if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
@@ -3726,7 +3728,12 @@ function buildAccountSyncCatalogIndex(){
       const entry=pokemonCatalogDomain.decorateCatalogEntry(raw),catalogId=String(entry?.catalogId||'');
       if(!entry?.name||!catalogId)continue;
       laneIds.set(catalogId,entry);if(!byId.has(catalogId))byId.set(catalogId,entry);
-      const names=[entry.name,entry.displayName,...(entry.legacyAliases||[]),...(entry.searchAliases||[])];
+      for(const legacyId of pokemonCatalogDomain.legacyCatalogIds(catalogId)){
+        const canonicalName=pokemonCatalogDomain.resolveLegacyKey(entry.name)?.canonicalKey||entry.name;
+        const compatible={...entry,name:decodeURIComponent(legacyId.split(':legacy:')[1]),displayName:canonicalName,catalogId:legacyId,canonicalCatalogId:catalogId};
+        laneIds.set(legacyId,compatible);if(!byId.has(legacyId))byId.set(legacyId,compatible);
+      }
+      const names=[entry.name,entry.displayName,pokemonDisplayName(entry),...(entry.legacyAliases||[]),...(entry.searchAliases||[])];
       for(const name of names){const key=pokemonCatalogDomain.normalizeCatalogKey(name);remember(laneAliases,key,entry);remember(globalAliases,key,entry);}
     }
     byLane.set(lane,laneIds);aliasesByLane.set(lane,laneAliases);
@@ -3751,6 +3758,11 @@ function accountSyncCatalogIdentity(type,name,raw={}){
   const requested=String(raw?.catalogId||'').trim(),entry=requested?accountSyncCatalogEntryForId(requested,{lane:type}):accountSyncCatalogEntryForName(type,name);
   if(!entry||requested&&entry.catalogId!==requested)return null;
   return Object.freeze({catalogId:entry.catalogId});
+}
+function accountSyncLegacyCatalogIdentity(type,name,raw={}){
+  if(raw?.catalogId)return accountSyncCatalogIdentity(type,name,raw);
+  const legacyId=pokemonCatalogDomain.legacyCatalogIdForName(name);
+  return accountSyncCatalogIdentity(type,name,legacyId?{catalogId:legacyId}:raw);
 }
 function accountSyncOrdersSnapshot(){
   return Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,readMyListOrder(type,cur)||{priorities:{H:[],M:[],L:[],U:[]}}]));
@@ -3815,7 +3827,7 @@ async function accountSyncReadLegacySources({account}={}){
     legacyRetainedSnapshot:Object.freeze({capturedAt:Date.now(),rawTrainerHistory,legacyRemoteLists:accountSyncClone(remoteLists),legacyLocalLists:localLists,legacyRemoteBoard:accountSyncClone(remoteProfile?.specialTradeBoard||{lf:[],ft:[]}),legacyLocalBoard:localBoard,legacyQueue,orders:accountSyncClone(orders),favorites:accountSyncClone(history.favorites),tags:accountSyncClone(history.tags)}),
     dependencies:Object.freeze({
       parseListValue:value=>parsePri(value),
-      catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw),
+      catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw),
       genderForVariant:value=>entryGender(value),
       resolveFavoriteUid:(displayName,raw)=>accountSyncExactFavoriteUid(displayName,raw,account)
     })
@@ -4140,7 +4152,7 @@ async function applyAccountSyncTradeMutations(mutations,controller=managedAccoun
 async function writeAccountSyncList(type,list,{orderModel,authority}={}){
   const runtime=authority?.runtime||managedAccountSyncRuntime,controller=authority?.controller||runtime?.controller;
   if(authority&&!accountSyncAuthorityCurrent(authority))return accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
-  const rows=accountSyncProduct.listRows({lists:{[type]:list||{}},orders:{[type]:orderModel||currentMyListOrderModel(type,cur)},parsePriority:value=>parsePri(value),catalogIdForListEntry:({lane,name,encoded})=>accountSyncCatalogIdentity(lane,name,encoded)?.catalogId||'',genderForVariant:entryGender});
+  const rows=accountSyncProduct.listRows({lists:{[type]:list||{}},orders:{[type]:orderModel||currentMyListOrderModel(type,cur)},parsePriority:value=>parsePri(value),catalogIdForListEntry:({lane,name,encoded})=>accountSyncLegacyCatalogIdentity(lane,name,encoded)?.catalogId||'',genderForVariant:entryGender});
   if(rows.unresolved.length){for(const item of rows.unresolved)await recordAccountSyncUnresolved(item,'product-edit',runtime);return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});}
   const mutations=accountSyncProduct.planTradeMutations({currentEntities:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'my-list',lanes:[type]}});
   return applyAccountSyncTradeMutations(mutations,controller);
@@ -4148,9 +4160,9 @@ async function writeAccountSyncList(type,list,{orderModel,authority}={}){
 async function writeAccountSyncSpecialBoard(board,{authority,baseBoard}={}){
   const runtime=authority?.runtime||managedAccountSyncRuntime,controller=authority?.controller||runtime?.controller;
   if(authority&&!accountSyncAuthorityCurrent(authority))return accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
-  const rows=accountSyncProduct.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''});
+  const rows=accountSyncProduct.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>accountSyncLegacyCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''});
   if(rows.unresolved.length){for(const item of rows.unresolved)await recordAccountSyncUnresolved(item,'special-board-edit',runtime);return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});}
-  const before=baseBoard?accountSyncProduct.specialBoardRows({board:baseBoard,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''}):null;
+  const before=baseBoard?accountSyncProduct.specialBoardRows({board:baseBoard,catalogIdForBoardEntry:({entry})=>accountSyncLegacyCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''}):null;
   if(before?.unresolved.length)return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});
   const mutations=accountSyncProduct.planTradeMutations({currentEntities:before?before.rows:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'special-board',lanes:['looking-for','for-trade']}});
   return applyAccountSyncTradeMutations(mutations,controller);
@@ -7146,6 +7158,7 @@ function pokemonDisplayName(entry){
 function pokemonSearchLabels(entry){
   const labels=pokemonNamesI18n.searchLabels(entry,{locale:i18nCore.getLocale()});
   // Costume is a search facet, never a different saved identity.
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(entry.name)?.assets&&DB.costumes.some(row=>row.name===entry.name))return [...labels,'costume','costumed'];
   if(costumeSpriteCatalogDomain.resolution({names:[entry.name,entry.displayName].filter(Boolean)}).knownVariant)return [...labels,'costume','costumed'];
   return labels;
 }
@@ -7641,6 +7654,7 @@ async function addManagedIntentEntries(side,entries){
     const catalog=accountSyncCatalogIdentity('wishlist',entry.name,entry);if(!catalog)return false;
     const identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
     if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))continue;
+    if(!isTradeableForWishlist({name:catalog.name||entry.name,no:catalog.speciesId||catalog.no||window.PogoDomain.publicPokemonDex.dex(entry.name)}))return false;
     mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues(entry)});
   }
   if(!mutations.length)return true;
@@ -8012,6 +8026,7 @@ function exportSpriteFallbackUrls(e){
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
   if(reviewed.knownVariant)return Array.from(reviewed.urls);
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||e.name)?.assets)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   if(e.shiny===true)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   // The reviewed Max chain already carries exact normal-form/Shiny/gender
   // semantics. Do not prepend the older unqualified normal-art preference.

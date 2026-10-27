@@ -52,7 +52,7 @@ test('known costumes without reviewed art fail honestly instead of becoming base
 test('every selectable costume is reviewed before runtime fallback can reach base species',()=>{
   const productWindow={};
   const context=vm.createContext({window:productWindow,Object,Map});
-  for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js']){
+  for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js','js/domain/publicPokemonDex.js']){
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   }
   const application=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
@@ -80,10 +80,11 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     const decorated=pokemonCatalog.decorateCatalogEntry(entry);
     const names=[decorated.name,...(decorated.spriteLookupKeys||[]),entry.name,entry.displayName].filter(Boolean);
     const result=reviewedCatalog.resolution({names});
+    if(!result.knownVariant){const exact=productWindow.PogoDomain.publicPokemonDex.variantStatus(entry.name);assert.ok(exact?.assets?.default,`${entry.name} lacks independent exact art`);statusCounts.exact++;continue;}
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:432,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:390,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{

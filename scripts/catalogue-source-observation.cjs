@@ -10,7 +10,7 @@ function parseGOInventory(html,url,kind){
   if(!name)throw Error('Sprite without source identity label: '+m[1]);
   const cell=body.match(/<td class="fooinfo">([\s\S]*?)<\/td>/)?.[1];
   if(!cell)throw Error('Source name cell missing');
-  const row={no,name:text(cell.split(/<br\b|<i\b/i)[0]),sourceSprite:new URL(m[1],url).href,source:url};
+  const row={no,name:text(cell.split(/<i\b/i)[0]),sourceSprite:new URL(m[1],url).href,source:url};
   if(kind==='shiny')row.statusText=/Available when encountered/i.test(body)?'Available when encountered':text(body.match(/<td class="fooinfo">([^<]+)<\/td>/)?.[1]||'uncertain');
   else{
    const unavailable=/Not Currently Available/i.test(body);

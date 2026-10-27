@@ -144,16 +144,17 @@
   }
 
 
-  function spriteHtml(name,gender,shiny=false){
+  function spriteHtml(name,gender,shiny=false,displayedName=name){
     const sprites=global.PogoDomain.spriteSlugs;
     const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name),shiny);
     const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender,shiny});
-    if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name}):t('sprite.artUnavailable',{name});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
+    if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name:displayedName}):t('sprite.artUnavailable',{name:displayedName});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
     const[src,...fallbacks]=urls;
     const max=/\(Gigantamax\)/i.test(name)?'Gigantamax':/\(Dynamax\)/i.test(name)?'Dynamax':'';const mark=max?`<span class="sprite-max-symbol"><img src="assets/${max==='Gigantamax'?'gigantamax':'dynamax'}-symbol.png" alt="${max}" title="${max}"></span>`:'';
     return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async">${mark}</div>`;
   }
   function entryCard(name,value,sectionFlags=[]){
+    const displayedName=global.PogoI18n?.pokemonNames?.costumeDisplayName({name,no:global.PogoDomain.spriteSlugs.publicSpriteDex(name)},{locale:core().getLocale()})?.text||name;
     const model=entryModel(value),gender=value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod);
     const releaseStatus=global.PogoDomain.publicPokemonDex?.variantStatus?.(name),releaseState=model.shiny?releaseStatus?.shiny:releaseStatus?.normal;
     const cleanMod=model.mod.replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
@@ -168,7 +169,7 @@
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
     const note=global.PogoDomain.publicSharePublication.publicNoteForDisplay(value?.note);
-    return`<article class="share-pcard card-row">${spriteHtml(name,gender,model.shiny)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
+    return`<article class="share-pcard card-row">${spriteHtml(name,gender,model.shiny,displayedName)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(displayedName)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
