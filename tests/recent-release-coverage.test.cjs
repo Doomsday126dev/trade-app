@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const evidence=require('../data/recent-release-coverage.json');
+const recent=require('../data/recent-release-coverage.json'),costume=require('../data/caterpie-release-coverage.json');const evidence={...recent,records:[...recent.records,...costume.records]};
 const {missingReleasedEntries,loadCatalog}=require('../scripts/check-released-catalog.cjs');
 
 test('independently sourced released identities exist in the selectable source catalog',()=>{
@@ -34,7 +34,7 @@ test('all repaired Max sprites preserve normal/Shiny and visible gender variants
  const context=vm.createContext({window,URL});for(const file of ['publicPokemonDex.js','spriteSlugs.js','costumeSpriteCatalog.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/domain',file),'utf8'),context);
  const api=window.PogoDomain.spriteSlugs;
  for(const entry of evidence.records.filter(r=>r.collection==='dynamax'))for(const shiny of [false,true])for(const gender of ['','m','f']){
-  const female=gender==='f'&&[111,112,464,215,461].includes(entry.no);
+  const female=gender==='f'&&[111,112,464,215,461,129,130,350,415].includes(entry.no);
   const expected=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${female?'female/':''}${entry.no}.png`;
   assert.deepEqual(Array.from(api.publicSpriteUrls(entry.name+' (Dynamax)',gender,entry.no,shiny)),[expected]);
  }

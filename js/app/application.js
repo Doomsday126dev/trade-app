@@ -699,11 +699,17 @@ function refreshCombinedGenderOptions(savedValue){
   refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
   const allowed=combinedAllowedGenders(name);
+  // Default Alolan form art is verified; optional female art remains an open
+  // source review. Keep Any gender usable without offering an unverified variant.
+  const pendingGenderArt=spriteSlugsDomain.PUBLIC_EXACT_FORM_IDS[spriteSlugsDomain.normalizeSpriteKey(name)]===10092;
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
   select.innerHTML=`<option value="">${escHtml(i18nCore.t(allowed.length?'wantEditor.anyGender':'wantEditor.genderless'))}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
   select.value=preserve||allowed.includes(value)?value:'';
+  const savedPendingGender=pendingGenderArt&&value&&combinedEditor?.entries?.some(entry=>entry.name===name&&entry.gender===value);
+  if(pendingGenderArt&&!savedPendingGender){select.innerHTML=`<option value="">${escHtml(i18nCore.t('wantEditor.anyGender'))}</option>`;select.value='';}
+  select.disabled=pendingGenderArt;
   const hint=document.getElementById('combined-gender-hint');
   hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
   renderCombinedPokemonSummary();
@@ -916,11 +922,11 @@ const GENDER_DIFF_DEX_FEMALE=new Set([
   // Gen 6
   668,678,
   // Gen 8+
-  876
+  876,916
 ]);
 // Pokémon with VERY noticeable gender differences (different colors, body shape, etc.)
 // — always swap sprite even on small thumbnails
-const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876]);
+const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876,916]);
 // Pokémon where one gender is the only form that evolves into the next stage
 // (useful context for trade lists — e.g., only female Combee → Vespiquen)
 const GENDER_EVOLUTION_LOCKED={415:'f',678:'both',876:'both',758:'f'}; // 758=Salazzle is female-only species
@@ -1081,6 +1087,10 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
   const identity=spriteSemanticIdentity(lookupName,gender,no);
+  // Shared numeric mappings also cover newly reconciled regional evolutions.
+  // Existing reviewed mappings retain their established preferred artwork.
+  const sharedFormId=spriteSlugsDomain.PUBLIC_EXACT_FORM_IDS[normalizeSpriteKey(lookupName)];
+  if(sharedFormId&&!compatibilityKeys.some(key=>COSTUME_FORM_SPRITE_IDS[key]||REGIONAL_FORM_IDS[key]))return publicSpriteUrls(lookupName,gender,no)[0]||null;
   // 1. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
   const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
   if(formKey&&!(identity.explicitForm&&identity.genderDistinct))return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
@@ -1154,7 +1164,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   if(gender==='f'&&!identity.explicitForm)push(femaleSpriteUrl(no));
   // Pokémon Database HOME for form/regional/gender variants.
   push(pokemondbSpriteUrl(safeName,dn||safeName,gender));
-  if(identity.exactRequired)return urls;
+  if(identity.exactRequired){for(const url of publicSpriteUrls(safeName,gender,no))push(url);return urls;}
   if(gender==='f'){
     push(pokemondbSpriteUrl(safeName,dn||safeName,''));   // PokemonDB without -female suffix
     if(primary&&primary.includes('/female/')&&no){
@@ -12316,7 +12326,10 @@ function _specialAllItems(){
   // Reuse the wishlist autocomplete pool (now includes legendaries via listSource)
   const seen=new Set();const out=[];
   ['wishlist','dynamax','gmax','costumes'].forEach(t=>{
-    listSource(t).forEach(e=>{
+    // Global picker identities must keep the Max suffix. Raw category rows use
+    // base labels, which otherwise duplicate the ordinary species name.
+    const entries=t==='dynamax'?pokemonCatalogDomain.canonicalizeEntries(maxTradeEntries(t)):listSource(t);
+    entries.forEach(e=>{
       const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
       if(!e?.name||seen.has(key))return;
       if(!selectableSpriteEntry(e))return;

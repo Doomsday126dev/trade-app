@@ -24,8 +24,8 @@ test('only the eighteen reviewed Scatterbug identities share species 664 art',()
 test('finite Dynamax equivalence preserves every underlying visible form',()=>{
   assert.equal(window.POGO_TRADE_DB,undefined,'anonymous public shell must not need data.js');
   const max=sourceWindow.POGO_TRADE_DB.dynamax;
-  assert.equal(max.length,138);
-  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,138);
+  assert.equal(max.length,148);
+  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,148);
   for(const entry of max){
     const name=`${entry.name} (Dynamax)`;
     assert.equal(sprites.reviewedDynamaxBase(name,entry.no),entry.name,name);
@@ -33,11 +33,11 @@ test('finite Dynamax equivalence preserves every underlying visible form',()=>{
     assert.equal(sprites.verifiedEquivalentSpriteUrl(name,entry.no+1),'',name);
   }
   for(const [name,form] of [
-    ['Toxtricity (Amped) (Dynamax)','toxtricity-amped'],
-    ['Toxtricity (Low Key) (Dynamax)','toxtricity-low-key'],
-    ['Urshifu (Single Strike) (Dynamax)','urshifu-single-strike'],
-    ['Urshifu (Rapid Strike) (Dynamax)','urshifu-rapid-strike']
-  ])assert.equal(sprites.verifiedEquivalentSpriteUrl(name,name.startsWith('Toxtricity')?849:892),`https://img.pokemondb.net/sprites/home/normal/${form}.png`);
+    ['Toxtricity (Amped) (Dynamax)',849],
+    ['Toxtricity (Low Key) (Dynamax)',10184],
+    ['Urshifu (Single Strike) (Dynamax)',892],
+    ['Urshifu (Rapid Strike) (Dynamax)',10191]
+  ])assert.equal(sprites.verifiedEquivalentSpriteUrl(name,name.startsWith('Toxtricity')?849:892),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${form}.png`);
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Charmander (Gigantamax)',4),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Invented (Dynamax)',4),'');
 });

@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "importedAt": "2026-10-27T04:33:06.038363+00:00",
+  "qualification": "Imported cached observations; original timestamps preserved, not refreshed by import. Asset existence never proves GO release or trade eligibility.",
+  "sources": [
+    {
+      "id": "normal-inventory",
+      "file": "normal-inventory.json",
+      "sha256": "90741be4ed9f69fcc578c6ea073294534ece8a0001a935b63b6991928786614e",
+      "observedAt": "2026-10-27T01:17:33.896575+00:00",
+      "status": "ok",
+      "role": "GO identity and availability claims; secondary evidence, form/gender labels require reconciliation",
+      "parserVersion": 2
+    },
+    {
+      "id": "shiny-inventory",
+      "file": "shiny-inventory.json",
+      "sha256": "6b44bfccccbbea49167f6ca9f43ff767931844b4ce2b27790b2ea08758b4ee83",
+      "observedAt": "2026-10-27T00:09:06.845363+00:00",
+      "status": "ok",
+      "role": "GO identity and availability claims; secondary evidence, form/gender labels require reconciliation",
+      "parserVersion": 2
+    },
+    {
+      "id": "pokemod",
+      "file": "pokemod-pokemon-tree.json",
+      "sha256": "377fed383f3c1a54c287e847d404eecc20eb80572b418c0911c3df52b7541f5f",
+      "observedAt": "2026-10-26T01:19:10.886992+00:00",
+      "headCheckedAt": "2026-10-27T04:33:06.038363+00:00",
+      "commit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceUpdatedAt": "2026-06-08T02:22:57Z",
+      "status": "ok",
+      "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/git/trees/f81e493a69d075ddbc01ac578d85746f75dbf553?recursive=1",
+      "role": "Mined asset inventory, including pre-release files; no release implication",
+      "originalCachedPayloadSha256": "33107097254e6b4359587398d775b36b68759b18b4b863388bd11c9c53ecaec3",
+      "projection": "Complete path/type/blob SHA/size inventory; redundant mode and per-blob API URLs omitted. No source rows removed."
+    },
+    {
+      "id": "max-inventory",
+      "file": "max-inventory.json",
+      "sha256": "b95f0fff7c2800c47fddb9f6347f72e623cfe42ea23f9c61c9a30d8d673de540",
+      "observedAt": "2026-10-27T00:28:45.526378+00:00",
+      "status": "ok",
+      "role": "Dynamax-capable identity inventory; includes announced future species, not release authority"
+    }
+  ],
+  "fetchEvidence": [
+    {
+      "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "status": 200,
+      "sha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+      "bytes": 823665,
+      "type": "text/html; charset=ISO-8859-1"
+    },
+    {
+      "url": "https://pogoapi.net/api/v1/released_pokemon.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "url": "https://pogoapi.net/api/v1/shiny_pokemon.json",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10007.png",
+      "status": 200,
+      "sha256": "4aee66e9c669fa2c469fe218e7c666a2c6635ce50bf493d05515575d21282a55",
+      "bytes": 167863,
+      "type": "image/png"
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+      "status": 200,
+      "sha256": "1191ef64ce040e073cdd912d3b167ba4994731035b898a58e32148c0b7f9f346",
+      "bytes": 337707
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen2pokemon.shtml",
+      "status": 200,
+      "sha256": "8fb647244816d992acb3698f0f9e089a620e0def568a1efebfc1bceac7f60c51",
+      "bytes": 210668
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+      "status": 200,
+      "sha256": "20dc08665ea5505283ca197f8a905780c085292562222cbfc24d2fa11147da3b",
+      "bytes": 263954
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+      "status": 200,
+      "sha256": "f2961fc7ca5bbf63455436641e9366f6eff071320aa0e2dc00afbb7053f1fb5b",
+      "bytes": 220935
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+      "status": 200,
+      "sha256": "04681ed54e0ff2545914fe05d700b52bb7c56d903956bdaa9cf9146f6351ff26",
+      "bytes": 288684
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+      "status": 200,
+      "sha256": "80629bf391cb98dca6f7e9cc3872a076c479a5aed6fe2543e91aeafbd87da3f2",
+      "bytes": 232469
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+      "status": 200,
+      "sha256": "3dcb20c7480baa4571511146b5110973424fa6adf265e6e063aee5713e519c01",
+      "bytes": 188387
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+      "status": 200,
+      "sha256": "4a47fac3f9c464d14b6c19420261d81985a72431c4560a16ca2ff0a85ccea970",
+      "bytes": 171916
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+      "status": 200,
+      "sha256": "f13341667644bee1a6dac26cdaee749f9a825b0f6b54672f8fe6dbbe67a712fa",
+      "bytes": 219183
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+      "status": 200,
+      "sha256": "05fa466400164b540167c76d0d3d25b38ba1ede708da558aab1f970b3e9263f6",
+      "bytes": 58431
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/forms.shtml",
+      "status": 200,
+      "sha256": "e3edb4090e9eced85431ab281890cb25faa7d0c1d3d9a7fb26553413f297c047",
+      "bytes": 46110
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+      "status": 200,
+      "sha256": "f5857ba29f00ef9871d0261226f09cd8a9c6e34efe487f33d15d1e1a501c80c4",
+      "bytes": 145416
+    }
+  ]
+}

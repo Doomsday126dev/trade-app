@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-10-26",
-  "scope": "Reported July 2026 Deino family plus bounded September–October 26, 2026 Max/costume release audit. Future announcements are not selectable additions.",
+  "asOf": "2026-10-27",
+  "scope": "Reviewed release expectations, including reported Max omissions and evolutions; not a global completeness claim.",
   "records": [
     {
       "id": "dynamax:633",
@@ -178,6 +178,126 @@
         ],
         "shiny": true
       }
+    },
+    {
+      "id": "dynamax:415",
+      "collection": "dynamax",
+      "no": 415,
+      "name": "Combee",
+      "releasedOn": "2026-05-25",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-05-25/"
+      ]
+    },
+    {
+      "id": "dynamax:416",
+      "collection": "dynamax",
+      "no": 416,
+      "name": "Vespiquen",
+      "releasedOn": "2026-05-25",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-05-25/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim of a Max Battle encounter debut."
+    },
+    {
+      "id": "dynamax:466",
+      "collection": "dynamax",
+      "no": 466,
+      "name": "Electivire",
+      "releasedOn": "2026-06-08",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-06-08/",
+        "https://pokemongo.com/seasons/forever-forward"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim of a Max Battle encounter debut."
+    },
+    {
+      "id": "dynamax:163",
+      "collection": "dynamax",
+      "no": 163,
+      "name": "Hoothoot",
+      "releasedOn": "2026-06-22",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-06-22/"
+      ]
+    },
+    {
+      "id": "dynamax:164",
+      "collection": "dynamax",
+      "no": 164,
+      "name": "Noctowl",
+      "releasedOn": "2026-06-22",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-06-22/"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim of a Max Battle encounter debut."
+    },
+    {
+      "id": "dynamax:349",
+      "collection": "dynamax",
+      "no": 349,
+      "name": "Feebas",
+      "releasedOn": "2026-07-27",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-07-27/",
+        "https://pokemongo.com/seasons/forever-forward"
+      ]
+    },
+    {
+      "id": "dynamax:350",
+      "collection": "dynamax",
+      "no": 350,
+      "name": "Milotic",
+      "releasedOn": "2026-07-27",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-07-27/",
+        "https://pokemongo.com/seasons/forever-forward"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim of a Max Battle encounter debut."
+    },
+    {
+      "id": "dynamax:129",
+      "collection": "dynamax",
+      "no": 129,
+      "name": "Magikarp",
+      "releasedOn": "2026-08-17",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-08-17/",
+        "https://pokemongo.com/seasons/forever-forward"
+      ]
+    },
+    {
+      "id": "dynamax:130",
+      "collection": "dynamax",
+      "no": 130,
+      "name": "Gyarados",
+      "releasedOn": "2026-08-17",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-08-17/",
+        "https://pokemongo.com/seasons/forever-forward"
+      ],
+      "availabilityBasis": "Evolution of the released Dynamax encounter; not a claim of a Max Battle encounter debut."
+    },
+    {
+      "id": "dynamax:237",
+      "collection": "dynamax",
+      "no": 237,
+      "name": "Hitmontop",
+      "releasedOn": "2026-08-24",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-08-24/"
+      ]
     }
   ]
 }

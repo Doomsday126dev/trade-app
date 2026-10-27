@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
   "reviewedAt": "2026-10-26",
-  "scope": "Six confirmed released identities,14 original pinned PNGs. No catalogue scrape, invented forms or base-art substitution. Fan-use source decision follows existing user-directed Pokemod imports; not a blanket rights license.",
+  "scope": "Seven reviewed released identities with pinned exact GO artwork; includes Caterpie Poké Ball Hat. Source files and hashes remain per record.",
   "records": [
     {
       "no": 216,
@@ -273,6 +273,58 @@
       "reviewedAt": "2026-10-26",
       "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
       "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 10,
+      "names": [
+        "Caterpie (Poke Ball Hat)",
+        "Caterpie Poké Ball Hat",
+        "Caterpie Pokeball Hat"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm10.fGOFEST_2026.icon.png",
+      "sourceFiles": {
+        "default": "pm10.fGOFEST_2026.icon.png",
+        "shiny": "pm10.fGOFEST_2026.s.icon.png",
+        "female": "pm10.fGOFEST_2026.icon.png",
+        "femaleShiny": "pm10.fGOFEST_2026.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm10.fGOFEST_2026.icon.png",
+      "sourceLabel": "Caterpie wearing a Poké Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
+        "shiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
+        "female": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
+        "femaleShiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png"
+      },
+      "sha256": {
+        "default": "89982e149b29cfa689ea04b8cc8d3b4520def2e8a1176852a09117b994dcc95b",
+        "shiny": "a5a3f7cff1991d0a06faaad8d6906f465b12b48e3956f5a5016cf58dab3734ad",
+        "female": "89982e149b29cfa689ea04b8cc8d3b4520def2e8a1176852a09117b994dcc95b",
+        "femaleShiny": "a5a3f7cff1991d0a06faaad8d6906f465b12b48e3956f5a5016cf58dab3734ad"
+      },
+      "gitBlobShas": {
+        "default": "c53aa97b0db0a5900928603fe3e6d4a38c21608c",
+        "shiny": "65b776579fd9ad385ad024deccf5e77b101e6a8d",
+        "female": "c53aa97b0db0a5900928603fe3e6d4a38c21608c",
+        "femaleShiny": "65b776579fd9ad385ad024deccf5e77b101e6a8d"
+      },
+      "identityEvidence": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+      "shinyEvidence": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+      "reviewedAt": "2026-10-27",
+      "reviewIdentityId": "pokemon:10:standard:legacy:Caterpie%20(Poke%20Ball%20Hat)",
+      "sourceQualification": "Original official Tokyo page now redirects to Mega Finale; official April8 announcement is preserved as embedded tweet at https://comicbook.com/gaming/news/pokemon-go-just-responded-to-a-long-running-meme-in-the-most-hilarious-way-possible/. Direct tweet HTTP403; not retried. LeekDuck archived in-person event provides released identity evidence; art existence is not release proof.",
+      "identityEvidenceDetails": {
+        "url": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+        "sourceFile": "pm10.fGOFEST_2026.icon.png",
+        "specificShinyIndicator": true,
+        "sourceSha256": "62143d47ff799b5090c997b3729bc4eeb53f1a1a095ba1d7d9b4cc1d41101577",
+        "qualification": "Archived event lists use this exact mined costume filename, with an item-specific Shiny indicator. This corroborates both identity and Shiny release separately from sprite existence."
+      }
     }
   ]
 }
