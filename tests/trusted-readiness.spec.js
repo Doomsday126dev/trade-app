@@ -194,7 +194,10 @@ test('publication state is persistent and copying never precedes confirmed publi
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
   await page.evaluate(()=>{copyText=async()=>{throw new Error('denied');};void copyShareLink();});
   await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toContainText('copying failed');
+  await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopyFailed');
+  await expect(page.locator('#share-link-status')).toContainText('Copy failed');
+  await expect(page.locator('#share-public-url')).toBeVisible();
+  await expect(page.locator('#share-public-url')).toBeFocused();
   await page.evaluate(()=>{void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
 });
