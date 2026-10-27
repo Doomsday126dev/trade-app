@@ -41,7 +41,7 @@ jobs:
       pages: write
       id-token: write
     # Pin the reusable control workflow to Commit A's full immutable SHA.
-    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@e285721e6c0a035dd114e41dbd5c733da6a28cd3
+    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@c19ed614a0f665736af23df40264ded5fad58bf7
     with:
       runtime_source_sha: ${{ inputs.runtime_source_sha }}
       runtime_release_id: ${{ inputs.runtime_release_id }}
@@ -51,4 +51,4 @@ jobs:
       confirmation: ${{ inputs.confirmation }}
       control_selector_tag: ${{ github.ref_name }}
       dispatcher_sha: ${{ github.sha }}
-      control_workflow_sha: "e285721e6c0a035dd114e41dbd5c733da6a28cd3"
+      control_workflow_sha: "c19ed614a0f665736af23df40264ded5fad58bf7"
