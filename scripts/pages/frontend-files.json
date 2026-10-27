@@ -1123,7 +1123,9 @@
     "assets/sprites/go/dittobase-41-zubat-top-hat-shiny.png",
     "assets/sprites/go/dittobase-41-zubat-top-hat-female-shiny.png",
     "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
-    "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+    "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png",
+    "assets/brand/apri.webp",
+    "assets/brand/ivory-paper.webp"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

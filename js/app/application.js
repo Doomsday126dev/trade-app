@@ -263,6 +263,7 @@ let managedPublicShareRepository=null;
 let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
+let favoritePublicationObserver=null;
 // Enrollment can pause without removing authority from initialized accounts.
 const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
 const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
@@ -5867,6 +5868,7 @@ function ensureFavoriteShareSessionCache(){
 }
 function resetFavoriteBrowseSession(){
   clearTimeout(favoriteLookupExpiry);favoriteLookupScope='';favoriteLookupVariant='';favoriteLookupLimit=60;
+  favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
   favoriteShareSessionCache?.reset();favoriteShareSessionCache=null;
   favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1,expanded:false};
   favoriteBrowseCatalogCache={locale:'',items:[]};
@@ -5956,6 +5958,7 @@ function setTrainerDiscoveryMode(mode){
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
   renderTrainerDiscoveryHeading();
+  observeFavoritePublications();
   if(trainerDiscoveryMode==='pokemon'){favoriteLookupControls();if(!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}}
 }
 function focusTrainerDiscoveryMode(mode){
@@ -6400,11 +6403,34 @@ async function renderPreservedFavoriteEvidence(host){
 // Display only an already-loaded public publication timestamp. Never fetch or infer activity.
 function favoritePublicationHtml(favorite){
   const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt),locale=i18nCore.getLocale();
-  const valid=['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
+  const valid=record?.targetUid===(favorite.targetUid||'')&&['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime());
   const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
   const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):'—';
   const time=valid?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(stamp):'';
-  return`<span class="favorite-publication" tabindex="0" title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:'<span>—</span>'}</span>`;
+  return`<span class="favorite-publication"${valid?' tabindex="0"':' hidden'} title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:'<span>—</span>'}</span>`;
+}
+function observeFavoritePublications(){
+  favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
+  if(trainerDiscoveryMode!=='favorites'||activeTabName()!=='find')return;
+  const cache=ensureFavoriteShareSessionCache(),store=ensureTrainerHistoryStore(),user=auth?.currentUser,username=cur;
+  if(!cache||!store||!user)return;
+  const favorites=store.read().favorites;cache.syncFavorites(favorites);
+  const current=()=>auth?.currentUser===user&&cur===username&&cache===favoriteShareSessionCache&&trainerDiscoveryMode==='favorites'&&activeTabName()==='find';
+  const load=async card=>{
+    const favorite=favorites.find(item=>canonicalTrainerName(item.displayName)===card.dataset.trainer);
+    if(!favorite)return;
+    try{await cache.readFavorite(favorite);}catch{return;}
+    if(!current()||!card.isConnected)return;
+    const field=card.querySelector('.favorite-publication');if(!field)return;
+    const markup=favoritePublicationHtml(favorite);if(field.outerHTML===markup)return;
+    const focused=field===document.activeElement;field.outerHTML=markup;
+    if(focused)card.querySelector('.favorite-publication:not([hidden])')?.focus({preventScroll:true});
+  };
+  const cards=[...document.querySelectorAll('#favorite-trainers-list .favorite-card-shell')];
+  if(typeof IntersectionObserver==='function'){
+    const observer=new IntersectionObserver(entries=>{if(!current()){observer.disconnect();return;}for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);void load(entry.target);}},{rootMargin:'160px 0px'});
+    favoritePublicationObserver=observer;cards.forEach(card=>observer.observe(card));
+  }else cards.filter(card=>{const r=card.getBoundingClientRect();return r.bottom>=0&&r.top<=innerHeight;}).forEach(card=>void load(card));
 }
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
@@ -6429,7 +6455,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   const groupWantsLabel=i18nCore.t(selectedTagIds.length?'organizer.viewGroupWants':'organizer.viewAllWants');
   const groupChips=activeTags.length?`<span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!selectedTagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selectedTagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}<span class="favorite-filter-count">${state.favorites.length}</span></span></button>${activeTags.map(tag=>{const selected=selectedTagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}<span class="favorite-filter-count">${state.favorites.filter(item=>item.tagIds.includes(tag.id)).length}</span></span></button>`;}).join('')}</div>`:'';
   const toolbar=state.favorites.length?`<div class="favorite-group-access${activeTags.length?'':' wants-only'}" role="group" aria-label="${escAttr(i18nCore.t('organizer.favoriteScope'))}">${groupChips}<button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants">${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
-  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span>${label==='organizer.savedTrainers'?`<button type="button" class="btn btn-secondary favorite-manage-groups" data-favorite-action="manage-groups">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(i18nCore.t('organizer.manageTags'))}</button>`:''}</div>`;
+  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><span class="trainer-section-title"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></span>${label==='organizer.savedTrainers'?`<button type="button" class="btn btn-secondary favorite-manage-groups" data-favorite-action="manage-groups">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(i18nCore.t('organizer.manageTags'))}</button>`:''}</div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;
   if(favoriteGroupFocusId){
@@ -6442,6 +6468,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
+  observeFavoritePublications();
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
   previewEl.hidden=!previewItems.length;
