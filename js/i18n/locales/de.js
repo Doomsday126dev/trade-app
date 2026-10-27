@@ -183,15 +183,15 @@
 "request.unconfirmed":"Zustellung noch nicht bestätigt. Formular offen lassen und dieselbe Anfrage erneut prüfen.",
 "import.unsupported":"Nicht unterstützte Eingabe. Einzelne Pokédex-Nummern mit englischen Merkmalen und & verwenden. Keine Ausschlüsse, Bereiche, WP oder vollständigen Abfragen.",
 "import.ambiguous":"Mehrere Varianten passen und sind zunächst nicht ausgewählt. Gewünschte Formen oder Kostüme wählen. Alle auswählen umfasst jede angezeigte Variante.",
-"share.liveList":"Live-Liste teilen",
+"share.liveList":"Öffentlicher Link",
 "share.liveCaption":"Öffentliche Seite ohne Konto",
 
 "share.searchCaption":"Eigene Pokémon im Spiel suchen",
-"share.imageSnapshot":"Bild teilen",
-"share.textSnapshot":"Text kopieren",
+"share.imageSnapshot":"Bild",
+"share.textSnapshot":"Klartext",
 "share.snapshotCaption":"Momentaufnahme der Auswahl",
 "share.partialLink":"Öffentliche Links enthalten die ganze Liste. Dafür Ganze Liste wählen; Auswahl als Bild, Text oder Spielsuche verwenden.",
-"share.liveHelp":"Öffentlicher Link · kein Konto nötig.",
+"share.liveHelp":"Öffentlicher Link",
 "share.publicFields":"Veröffentlichte Profildaten und Wunschnotizen sind sichtbar. Gespeicherte Änderungen aktualisieren diesen öffentlichen Link.",
 "share.gameLanguage":"Pokémon-GO-Sprache",
 "share.searchLimits":"Nur Art-Kandidaten: Formen und Anforderungen prüfen. Ausgeschlossen: 4★, getauscht, Crypto, erlöst, Hintergründe und über 2500 WP; ohne schillernde Wünsche auch schillernde Pokémon.",
@@ -298,6 +298,25 @@
     ,"wantEditor.releasedGender":"Verfügbares Geschlecht: {gender}"
     ,"workflow.priorityFilter":"Liste nach Priorität filtern"
     ,"workflow.priorityEmpty":"Keine Pokémon mit Priorität {priority}."
-    ,"workflow.selectedOtherPriorities":"{count} in anderen Prioritäten ausgewählt; beim Teilen der Auswahl enthalten."
-  });
+    ,"workflow.selectedOtherPriorities":"{count} in anderen Prioritäten ausgewählt; beim Teilen der Auswahl enthalten.",
+"share.markdownFormat":"Markdown",
+"share.csvFormat":"CSV",
+"share.copyPlainText":"Klartext kopieren",
+"share.copyMarkdown":"Markdown kopieren",
+"share.downloadCsv":"CSV herunterladen",
+"share.fullFormatScope":"Wähle die ganze Liste, um Markdown oder CSV zu exportieren.",
+"share.markdownDetails":"Ganze Liste einschließlich Profilkontaktdaten und Notizen zu Wünschen.",
+"share.csvDetails":"Ganze Wunschliste mit einer Zeile pro Eintrag.",
+"share.copyLink":"Link kopieren",
+"share.updateCopyLink":"Aktualisieren und Link kopieren",
+"share.retryCopyLink":"Erneut versuchen und Link kopieren",
+"share.syncPending":"Warte auf Synchronisierung…",
+"share.copyingLink":"Wird kopiert…",
+"share.publicationUnconfirmed":"Die Veröffentlichung konnte nicht bestätigt werden. Deine Änderungen bleiben erhalten. Erneut versuchen.",
+"share.linkReady":"Link bereit.",
+"share.linkCopied":"Link kopiert.",
+"share.linkCopyFailed":"Kopieren fehlgeschlagen. Nutze den markierten Link unten oder versuche es erneut.",
+"share.checkListDetails":"Listendetails prüfen",
+"share.linkUnavailable":"Teilen nicht verfügbar"
+});
 })(window);

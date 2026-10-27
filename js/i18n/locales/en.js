@@ -552,15 +552,15 @@
 "request.unconfirmed":"Delivery not confirmed yet. Keep this form open and try again to check the same request.",
 "import.unsupported":"Unsupported input. Use individual Pokédex numbers, optionally joined with supported English qualifiers using &. No exclusions, ranges, CP or full game queries.",
 "import.ambiguous":"Multiple variants match. They start unselected: choose the exact forms or costumes you want. Select all includes every shown variant.",
-"share.liveList":"Share live list",
+"share.liveList":"Public link",
 "share.liveCaption":"A public page anyone can open",
 
 "share.searchCaption":"Search your own game inventory",
-"share.imageSnapshot":"Share image",
-"share.textSnapshot":"Copy text",
+"share.imageSnapshot":"Image",
+"share.textSnapshot":"Plain text",
 "share.snapshotCaption":"A snapshot of this selection",
 "share.partialLink":"Public links include the full list. Choose Full list for a link, or use an image, text or game search for this selection.",
-"share.liveHelp":"Public link · no account needed.",
+"share.liveHelp":"Public link",
 "share.publicFields":"Published profile details and want notes are visible. Saved changes update this public link.",
 "share.gameLanguage":"Pokémon GO language",
 "share.searchLimits":"Species candidates only: check exact forms and requirements. Filters exclude 4★, traded, Shadow, Purified, backgrounds and CP above 2500; sections without shiny wants also exclude shiny.",
@@ -654,6 +654,25 @@
     ,"workflow.priorityFilter":"Filter list by priority"
     ,"workflow.priorityEmpty":"No Pokémon with {priority} priority."
     ,"workflow.selectedOtherPriorities":"{count} selected in other priorities; included when sharing selection."
-    ,"wantEditor.options":"Options","wantEditor.listPriority":"List priority","wantEditor.change":"Change","wantEditor.noPriority":"None","wantEditor.preferences":"Preferences","wantEditor.optional":"Optional","wantEditor.morePreferences":"More preferences","wantEditor.genderPreference":"Gender preference","wantEditor.anyGender":"Any gender","wantEditor.genderless":"Not applicable","wantEditor.edit":"Edit Pokémon","wantEditor.addAction":"Add to list","wantEditor.saveChanges":"Save changes","wantEditor.releasedGender":"Released form: {gender}"
-  });
+    ,"wantEditor.options":"Options","wantEditor.listPriority":"List priority","wantEditor.change":"Change","wantEditor.noPriority":"None","wantEditor.preferences":"Preferences","wantEditor.optional":"Optional","wantEditor.morePreferences":"More preferences","wantEditor.genderPreference":"Gender preference","wantEditor.anyGender":"Any gender","wantEditor.genderless":"Not applicable","wantEditor.edit":"Edit Pokémon","wantEditor.addAction":"Add to list","wantEditor.saveChanges":"Save changes","wantEditor.releasedGender":"Released form: {gender}",
+"share.markdownFormat":"Markdown",
+"share.csvFormat":"CSV",
+"share.copyPlainText":"Copy plain text",
+"share.copyMarkdown":"Copy Markdown",
+"share.downloadCsv":"Download CSV",
+"share.fullFormatScope":"Choose Full list to export Markdown or CSV.",
+"share.markdownDetails":"Full list, including profile contact details and want notes.",
+"share.csvDetails":"Full wants list, with one row per entry.",
+"share.copyLink":"Copy link",
+"share.updateCopyLink":"Update and copy link",
+"share.retryCopyLink":"Retry and copy link",
+"share.syncPending":"Waiting for sync…",
+"share.copyingLink":"Copying…",
+"share.publicationUnconfirmed":"Publication could not be confirmed. Your edits are retained. Retry.",
+"share.linkReady":"Link ready.",
+"share.linkCopied":"Link copied.",
+"share.linkCopyFailed":"Copy failed. Use the selected link below or try again.",
+"share.checkListDetails":"Check list details",
+"share.linkUnavailable":"Share unavailable"
+});
 })(window);

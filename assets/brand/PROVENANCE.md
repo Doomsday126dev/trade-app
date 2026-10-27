@@ -27,3 +27,7 @@ Lossless WebP encodes were produced with cwebp -lossless -z 9. No manual recolor
 ## Delivered preview assets
 
 Startup qualification rejected the first lossless encodes. Delivered `ivory-paper.webp` is the same 256px source encoded at WebP quality 95 (3,438 bytes); `apri.webp` is the same source resized to 128px and encoded at quality 85 with full alpha quality (3,438 bytes). Total 6,876 bytes. Both were reviewed at actual display sizes after encoding. No Pokémon artwork was altered. The mascot remains an imagegen extraction, not exact original pixels.
+
+## App icon correction
+
+The approved 256 px Apri raster is retained as `apri-source-256.png` for reproducibility and excluded from the delivered frontend inventory. `scripts/generate-apri-icons.cjs` resizes and composites those original pixels onto the existing charcoal (#111316) background. It does not redraw or generate a mascot. Standard icons occupy 80% of the image bounds; the separate maskable icon keeps every source alpha pixel within a 38%-radius circle, inside the required 40% safe circle. The 512 px icon is an upscale of the approved 256 px source, not newly invented detail. Legacy trade-loop PNG/SVG paths remain available with Apri contents for compatibility. App name, identity, start URL, scope and storage behavior remain unchanged.

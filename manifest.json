@@ -5,21 +5,27 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#6c63ff",
+  "background_color": "#111316",
+  "theme_color": "#111316",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "assets/tradeloop-icon-192.png",
+      "src": "assets/brand/apri-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "assets/tradeloop-icon-512.png",
+      "src": "assets/brand/apri-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/brand/apri-icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -28,28 +34,52 @@
       "short_name": "Add",
       "description": "Open My List and focus the add form",
       "url": "./?action=add",
-      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
+      "icons": [
+        {
+          "src": "assets/brand/apri-icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "My Search Strings",
       "short_name": "Strings",
       "description": "View and copy your search strings",
       "url": "./?action=strings",
-      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
+      "icons": [
+        {
+          "src": "assets/brand/apri-icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Find Trainer",
       "short_name": "Find",
       "description": "Open a trainer's published trade list",
       "url": "./?action=browse",
-      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
+      "icons": [
+        {
+          "src": "assets/brand/apri-icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Pokémon GO Events",
       "short_name": "Events",
       "description": "View upcoming Pokémon GO events",
       "url": "./?action=schedule",
-      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
+      "icons": [
+        {
+          "src": "assets/brand/apri-icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

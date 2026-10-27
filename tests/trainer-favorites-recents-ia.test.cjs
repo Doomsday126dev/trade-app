@@ -100,7 +100,7 @@ test('compact favorite rows preserve tags, Open Trainer, overflow, and optional 
 
 test('Trainers mode exposes a bounded clickable Favorites preview with a full-mode affordance',()=>{
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
-  assert.match(render,/state\.favorites\.slice\(0,4\)/);
+  assert.match(render,/orderFavoritesByPublication\(state\.favorites\)\.slice\(0,4\)/);
   assert.match(render,/trainer-favorites-preview-row card-row[^>]+data-trainer-action="open"/);
   assert.match(render,/trainer\.viewAllFavorites/);
   assert.match(render,/data-favorite-action="show-favorites"/);
