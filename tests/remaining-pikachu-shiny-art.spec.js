@@ -7,9 +7,10 @@ test('every reviewed Shiny costume/gender renders its exact local bytes',async({
  for(let i=0;i<expected.length;i++){await expect(imgs.nth(i)).toHaveAttribute('src',expected[i].url);expect(await imgs.nth(i).evaluate(async im=>{im.loading='eager';await im.decode();return im.naturalWidth})).toBeGreaterThan(32);}
  await expect(page.locator('#pinned-sprites .known-unavailable')).toHaveCount(0);await page.evaluate(()=>stopAccountSyncRuntime());
 });
-test('all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender',async({page})=>{
+for(let offset=0;offset<rows.length;offset+=16){
+test('all reviewed names add, acknowledge, reload and render publicly with the saved Shiny/gender — group '+(offset/16+1),async({page})=>{
  await normalFixture(page);
- const canonicalRows=await page.evaluate(rows=>{const found=new Map();for(const r of rows){const identity=accountSyncCatalogEntryForName('wishlist',r.name),item=_specialAllItems().find(e=>e.catalogId===identity?.catalogId);if(!item)throw Error('Not selectable: '+r.name);const previous=found.get(item.catalogId);if(previous&&previous.assets.shiny!==r.assets.shiny)throw Error('Conflicting alias mapping: '+r.name);found.set(item.catalogId,{...r,name:item.name});}return [...found.values()];},rows);
+ const canonicalRows=await page.evaluate(({rows,offset})=>{const found=new Map();for(const r of rows){const identity=accountSyncCatalogEntryForName('wishlist',r.name),item=_specialAllItems().find(e=>e.catalogId===identity?.catalogId);if(!item)throw Error('Not selectable: '+r.name);const previous=found.get(item.catalogId);if(previous&&previous.assets.shiny!==r.assets.shiny)throw Error('Conflicting alias mapping: '+r.name);found.set(item.catalogId,{...r,name:item.name});}return [...found.values()].slice(offset,offset+16);},{rows,offset});expect(canonicalRows.length).toBeGreaterThan(0);
  for(const r of canonicalRows){await page.locator('#wants-add-name').fill(r.name);await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();await require('./helpers/current-want-controls.cjs').priority(page,'H');await page.locator('#combined-shiny').check();if(!await page.locator('#combined-editor-modal details').evaluate(e=>e.open))await page.locator('#combined-editor-modal details summary').click();await page.locator('#combined-gender').selectOption(r.sourceGenders.at(-1));await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);}
  const saved=await page.evaluate(()=>structuredClone(__normal.remote));await page.evaluate(()=>stopAccountSyncRuntime());await install(page,saved);await settled(page);
  for(const r of canonicalRows){const entry=await page.evaluate(name=>productDeclarations().entries.find(e=>e.name===name),r.name);expect(entry).toMatchObject({shiny:true,gender:r.sourceGenders.at(-1)});}
@@ -17,6 +18,7 @@ test('all reviewed names add, acknowledge, reload and render publicly with the s
  for(const r of canonicalRows){const img=page.locator('.share-pcard img[title='+JSON.stringify(r.name)+']');await expect(img).toHaveAttribute('src',r.assets[r.sourceGenders.at(-1)==='f'?'femaleShiny':'shiny']);}
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.evaluate(()=>stopAccountSyncRuntime());
 });
+}
 test('unreleased Shiny and unspecified Detective year stay blocked while ordinary choices recover',async({page})=>{
  await normalFixture(page);
  for(const name of ['Pikachu (Clone)','Pikachu (Ph_D)','Pikachu (Detective)']){await page.locator('#wants-add-name').fill(name);await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();await expect(page.locator('#combined-shiny')).toBeDisabled();await expect(page.locator('#combined-shiny-hint')).toBeVisible();await page.keyboard.press('Escape');}

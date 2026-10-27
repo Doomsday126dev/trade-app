@@ -2764,3 +2764,6 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 #combined-editor-modal .combined-checks input{accent-color:var(--option-check-accent,#8a6500)}
 
 #combined-list .wants-section-search{min-width:0;max-width:min(220px,60vw);justify-self:end}
+
+/* Reserve the fixed touch-control cluster; allow only brand text to truncate. */
+@media(max-width:767px){.topbar-r{flex:0 0 auto}.topbar .logo{flex:1 1 0}}
