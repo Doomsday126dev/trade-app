@@ -10,4 +10,4 @@ Native .159 observation: six Favorites dates loaded and one unavailable. Read-on
 
 The client correction is a separately reproduced defect, NOT a proven cause of this live incident. The retained client code/retry allowance/response type were not obtained because the native inspector view would expose credentials. No raw replay or broader account inspection was performed.
 
-59 focused tests passed: HTTP classification, existing publication retry accounting, session identity batching and summary cache lifecycle. The fix does not resolve an already-exhausted retry allowance; that state has not been established for the observed row.
+61 focused tests passed: HTTP classification, existing publication retry accounting, session identity batching and summary cache lifecycle, actual observer re-entry recovery after non-JSON503 then200, and repeated non-JSON503 retry exhaustion. The fix does not resolve an already-exhausted retry allowance; that state has not been established for the observed row.
