@@ -33,3 +33,23 @@ test('a late public summary cannot update another account session',async({page})
  await fixture(page);await page.evaluate(()=>{const store=ensureTrainerHistoryStore();store.clear();store.toggleFavorite('ReviewTrainerWithLongName');window.__trustedWrites=[];managedPublicShareRepository={read:name=>new Promise(resolve=>{window.__releasePublication=()=>resolve({ok:true,value:{version:1,username:name,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:Date.parse('2026-10-26T14:35:00Z')}});})};favoriteShareSessionCache=null;switchTab('find');setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});
  await page.waitForFunction(()=>typeof window.__releasePublication==='function');await page.evaluate(()=>{auth={currentUser:{uid:'different-fixture-owner'}};cur='OtherFixture';resetFavoriteBrowseSession();__releasePublication();});await page.waitForTimeout(100);await expect(page.locator('.favorite-publication time')).toHaveCount(0);expect(await page.evaluate(()=>__trustedWrites.length)).toBe(0);
 });
+test('seven UID-bound Favorites survive six-second identity latency with serialized batched requests',async({page})=>{
+ await fixture(page);await page.setViewportSize({width:1440,height:1000});
+ await page.evaluate(()=>{
+  const store=ensureTrainerHistoryStore();store.clear();for(let i=0;i<7;i++)store.toggleFavorite('LatencyTrainer'+i,{targetUid:'latency-uid-'+i});
+  window.__identityCalls=[];window.__identityActive=0;window.__identityMax=0;window.__publicationReads=[];window.__trustedWrites=[];
+  const original=window.PogoServices.favoriteResolverClient;
+  window.PogoServices.favoriteResolverClient={...original,createFavoriteResolverClient:()=>({resolve:async names=>{__identityCalls.push([...names]);__identityActive++;__identityMax=Math.max(__identityMax,__identityActive);await new Promise(r=>setTimeout(r,6000));__identityActive--;return names.map(handle=>({handle,status:'resolved',targetUid:'latency-uid-'+handle.at(-1),canonicalHandle:handle}));}})};
+  managedPublicShareRepository={read:async name=>{__publicationReads.push(name);return{ok:true,value:{version:1,username:name,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:Date.parse('2026-10-26T14:35:00Z')}};}};
+  managedFavoriteAdditions={};favoriteShareSessionCache=null;favoriteIdentityResolverSession=null;switchTab('find');setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();
+ });
+ await expect(page.locator('#favorite-trainers-list .favorite-publication time')).toHaveCount(7,{timeout:35000});
+ const evidence=await page.evaluate(()=>({calls:__identityCalls.map(x=>x.length),max:__identityMax,reads:__publicationReads.length,writes:__trustedWrites.length,statuses:[...favoriteShareSessionCache.snapshot().records.values()].map(r=>r.status)}));
+ expect(evidence.calls).toEqual([2,2,2,1]);expect(evidence.max).toBe(1);expect(evidence.reads).toBe(7);expect(evidence.writes).toBe(0);expect(evidence.statuses.every(s=>s==='published')).toBe(true);
+});
+test('transient cached metadata failure is visible and retried at most once on re-entry',async({page})=>{
+ await fixture(page);await page.evaluate(()=>{const store=ensureTrainerHistoryStore();store.clear();store.toggleFavorite('RetryTrainer');window.__retryReads=0;managedPublicShareRepository={read:async name=>{__retryReads++;return __retryReads===1?{ok:false,error:{code:'network/offline'}}:{ok:true,value:{version:1,username:name,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:Date.parse('2026-10-26T14:35:00Z')}};}};managedFavoriteAdditions={};favoriteShareSessionCache=null;switchTab('find');setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});
+ await expect(page.locator('.favorite-publication')).toBeVisible();await expect(page.locator('.favorite-publication')).toContainText('Unavailable');
+ await page.evaluate(()=>{setTrainerDiscoveryMode('trainers');setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});await expect(page.locator('.favorite-publication time')).toHaveCount(1);
+ await page.evaluate(()=>{setTrainerDiscoveryMode('trainers');setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();});expect(await page.evaluate(()=>__retryReads)).toBe(2);
+});
