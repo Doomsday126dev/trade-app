@@ -28,7 +28,7 @@ test('normal add hierarchy keeps lookup, priority, Add, and per-entry details to
 });
 
 test('list-wide actions are discoverable beside Share and Select in one compact tools menu',()=>{
-  assert.match(toolbar,/onclick="openProductShare\('link','full',this\)"/);assert.match(toolbar,/onclick="startWantsSelection\(\)"/);
+  assert.match(toolbar,/onclick="openProductShare\(\)"/);assert.match(toolbar,/onclick="startWantsSelection\(\)"/);
   assert.match(toolbar,/<details id="wants-list-tools"/);assert.match(toolbar,/<summary[^>]*>/);
   for(const key of ['workflow.findInList','myList.importAction','workflow.aboutSearches'])assert.match(toolbar,new RegExp(key.replace('.','\\.')));
   assert.equal((toolbar.match(/id="wants-list-tools"/g)||[]).length,1);

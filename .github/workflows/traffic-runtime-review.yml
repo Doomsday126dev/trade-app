@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 0967ab52ce9ae77ec1330abd36b0de67da13a452
+          ref: 586d0bc61e934e795f3a88f9bff09fe7ac86eb6d
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -28,7 +28,7 @@ jobs:
             printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           fi
       - run: npx playwright install --with-deps chromium webkit
-      - name: Exact runtime tests including intercepted traffic privacy journeys
+      - name: Exact combined runtime tests including intercepted traffic privacy journeys
         run: |
           node --test --test-concurrency=2 tests/*.test.cjs
           npm run check:pages-release
