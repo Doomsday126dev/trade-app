@@ -19,7 +19,9 @@ test('eleven nonnumeric legacy form filenames never precede their verified exact
 });
 
 test('every reviewed normal preferred/list route matches its qualified identity source',async({page})=>{
- await normalFixture(page);const rows=require('../data/catalogue-normal-preferred-review.json').rows.filter(r=>r.state!=='owner-attention-required').map(r=>({name:r.name,no:r.no,catalogId:r.catalogId,url:r.state==='shared-front-art-replaced-by-exact-HOME'?r.partnerURL:r.url}));const actual=await page.evaluate(rows=>rows.map(r=>({name:r.name,preferred:entrySpriteUrl(r),list:new DOMParser().parseFromString(spriteImg(r.no,32,'',r.name,'',r.name),'text/html').querySelector('img')?.getAttribute('src')})),rows);expect(actual).toHaveLength(983);for(let i=0;i<rows.length;i++){expect(actual[i].preferred,rows[i].name).toBe(rows[i].url);expect(actual[i].list,rows[i].name).toBe(rows[i].url);}await page.evaluate(()=>stopAccountSyncRuntime());
+ // The reviewed ordinary-size alias repair now also prefers the independently
+ // qualified HOME partner for Average, alongside the three prior size fixes.
+ await normalFixture(page);const rows=require('../data/catalogue-normal-preferred-review.json').rows.filter(r=>r.state!=='owner-attention-required').map(r=>({name:r.name,no:r.no,catalogId:r.catalogId,url:r.state==='shared-front-art-replaced-by-exact-HOME'||r.no===710&&r.name==='Pumpkaboo - Average'?r.partnerURL:r.url}));const actual=await page.evaluate(rows=>rows.map(r=>({name:r.name,preferred:entrySpriteUrl(r),list:new DOMParser().parseFromString(spriteImg(r.no,32,'',r.name,'',r.name),'text/html').querySelector('img')?.getAttribute('src')})),rows);expect(actual).toHaveLength(983);for(let i=0;i<rows.length;i++){expect(actual[i].preferred,rows[i].name).toBe(rows[i].url);expect(actual[i].list,rows[i].name).toBe(rows[i].url);}await page.evaluate(()=>stopAccountSyncRuntime());
 });
 
 for(const shiny of [false,true])test('generic Spinda keeps its want and saved identity while unqualified spot artwork is withheld '+shiny,async({page})=>{
