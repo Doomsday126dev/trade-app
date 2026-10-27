@@ -3,6 +3,7 @@
 const crypto=require('node:crypto');
 const fs=require('node:fs');
 const path=require('node:path');
+const {proofRegister,validateVariantArtworkReview}=require('./variant-art-review.cjs');
 const {validatePinnedReview}=require('./pinned-pikachu-review.cjs');
 const {validateStarterShinyReview}=require('./starter-shiny-review.cjs');
 const {validateFormShinyReview}=require('./form-shiny-review.cjs');
@@ -25,7 +26,7 @@ function validateCatalog(catalog,root){
   if(catalog?.schemaVersion!==SCHEMA_VERSION)fail(`Unsupported costume sprite catalog schema: ${catalog?.schemaVersion}`);
   if(catalog?.source?.id!==SOURCE_ID)fail(`Unexpected costume sprite source: ${catalog?.source?.id}`);
   if(!Array.isArray(catalog.entries)||!catalog.entries.length)fail('Costume sprite catalog must contain entries');
-  const aliases=new Map();
+  const aliases=new Map(),variantReviews=proofRegister(root);
   for(const entry of catalog.entries){
     if(!Number.isInteger(entry.no)||entry.no<=0)fail('Every costume sprite entry needs a positive integer dex number');
     if(!Array.isArray(entry.names)||!entry.names.length)fail(`Costume sprite entry ${entry.no} has no lookup names`);
@@ -48,6 +49,7 @@ function validateCatalog(catalog,root){
     }
     if(!entry.sourceFile||!entry.sourceLabel)fail(`Exact sprite entry is missing reviewed source evidence: ${entry.names[0]}`);
     if(!entry.assets?.default||!entry.sha256?.default)fail(`Exact sprite entry is missing its default local asset: ${entry.names[0]}`);
+    validateVariantArtworkReview(entry,root,variantReviews);
     validatePinnedReview(entry,root);
     validateStarterShinyReview(entry,root);
     validateFormShinyReview(entry,root);
@@ -69,10 +71,10 @@ function validateCatalog(catalog,root){
     }
     if(entry.sourceProvider==='pokemod-reviewed'){
       const base='https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/';
-      const forms={'Pikachu (Fossil)':'FOSSIL_2026','Pikachu (Marathon)':'VISOR_2026','Pikachu (Mystic)':'GOFEST_2026_CAP_BLUE','Pikachu (Valor)':'GOFEST_2026_CAP_RED','Pikachu (Instinct)':'GOFEST_2026_CAP_YELLOW'};
+      const forms={'Pikachu (Fossil)':'pm25.fFOSSIL_2026','Pikachu (Marathon)':'pm25.fVISOR_2026','Pikachu (Mystic)':'pm25.fGOFEST_2026_CAP_BLUE','Pikachu (Valor)':'pm25.fGOFEST_2026_CAP_RED','Pikachu (Instinct)':'pm25.fGOFEST_2026_CAP_YELLOW','Pikachu (Detective Hat 2019)':'pm25.cFEB_2019'};
       const form=forms[entry.names[0]];
       if(!form||entry.sourceCommit!=='80a2323099f9c00207a8c9ee20d9386831f6b0ca')fail('Unreviewed Pokemod identity/commit');
-      for(const[key,suffix]of Object.entries({default:'',female:'.g2',shiny:'.s',femaleShiny:'.g2.s'}))if(entry.sourceFiles?.[key]!== 'pm25.f'+form+suffix+'.icon.png'||!entry.assets[key]||!entry.sha256[key])fail('Unreviewed Pokemod variant');
+      for(const[key,suffix]of Object.entries({default:'',female:'.g2',shiny:'.s',femaleShiny:'.g2.s'}))if(entry.sourceFiles?.[key]!== form+suffix+'.icon.png'||!entry.assets[key]||!entry.sha256[key])fail('Unreviewed Pokemod variant');
       if(entry.sourceUrl!==base+entry.sourceFiles.default)fail('Unreviewed Pokemod URL');
     }
     if(entry.sourceProvider==='pokemod-reviewed-released'){

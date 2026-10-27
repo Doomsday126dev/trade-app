@@ -16,12 +16,12 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,406);
+  assert.equal(catalog.entries.length,407);
   assert.equal(require('../data/pending-costume-artwork.json').maintenanceCandidate.canonicalRecords,catalog.entries.length);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,399);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,400);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,1015);
+  assert.equal(assets.length,1036);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -84,7 +84,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:390,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:399,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{
@@ -170,15 +170,15 @@ test('explicit reviewed female art has no default-gender fallback',()=>{
 });
 
 test('Pokemod source is pinned and every exact Shiny/gender variant is mandatory',()=>{
- const rows=catalog.entries.filter(r=>r.sourceProvider==='pokemod-reviewed');assert.equal(rows.length,5);
- for(const row of rows){for(const gender of ['m','f'])for(const shiny of [false,true]){const key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(resolver.resolution({name:row.names[0],gender,shiny}).urls),[row.assets[key]]);}
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='pokemod-reviewed');assert.equal(rows.length,6);
+ for(const row of rows){for(const gender of row.availableGenders||['m','f'])for(const shiny of [false,true]){const key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');assert.deepEqual(Array.from(resolver.resolution({name:row.names[0],gender,shiny}).urls),[row.assets[key]]);}
  for(const mutate of [r=>r.sourceCommit='0'.repeat(40),r=>r.sourceFiles.default='pm25.fWRONG.icon.png',r=>delete r.assets.femaleShiny,r=>r.sourceUrl='https://example.com/base.png']){const changed=structuredClone(catalog);mutate(changed.entries.find(e=>e.names[0]===row.names[0]));assert.throws(()=>validateCatalog(changed,root),/Pokemod/);}}
  assert.match(resolver.resolution({name:'Pikachu (Astronaut)',shiny:true}).urls[0],/astronaut-shiny/);
  assert.deepEqual(Array.from(resolver.resolution({name:'Pikachu (Detective)',shiny:true}).urls),[]);
 });
 
 test('reviewed Dittobase identities retain exact pixels and gender boundaries',()=>{
- const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,10);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of ['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');const allowed=!row.availableGenders||row.availableGenders.includes(gender);assert.deepEqual(Array.from(r.urls),allowed&&row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
+ const rows=catalog.entries.filter(r=>r.sourceProvider==='dittobase-reviewed');assert.equal(rows.length,10);const urls=[];for(const row of rows){assert.match(row.reviewIdentityId,/^(announcement:|pokemon:)/);for(const gender of row.availableGenders||['m','f'])for(const shiny of [false,true]){const r=resolver.resolution({name:row.names[0],gender,shiny}),key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');const allowed=!row.availableGenders||row.availableGenders.includes(gender);assert.deepEqual(Array.from(r.urls),allowed&&row.assets[key]?[row.assets[key]]:[]);urls.push(...r.urls);}}
  assert.equal(new Set(urls).size,32);assert.equal(rows.filter(r=>r.femaleArtworkUnavailable).length,0);
  for(const mutate of [r=>r.sourceUrl='https://example.com/wrong.png',r=>r.sourceFiles.default='25-pikachu.png',r=>r.assets.default=rows[1].assets.default,r=>r.femaleArtworkUnavailable=!r.femaleArtworkUnavailable]){const changed=structuredClone(catalog);mutate(changed.entries.find(r=>r.sourceProvider==='dittobase-reviewed'));assert.throws(()=>validateCatalog(changed,root),/Dittobase|digest/);}
 });

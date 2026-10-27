@@ -1354,6 +1354,462 @@
       ],
       "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
       "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    },
+    {
+      "name": "Pikachu (Clone)",
+      "no": 25,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/pokemonday2020"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.184755+00:00"
+    },
+    {
+      "name": "Pikachu (Ph_D)",
+      "no": 25,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.185528+00:00"
+    },
+    {
+      "name": "Raichu Detective",
+      "no": 26,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/detective-pikachu-returns-event"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.186207+00:00"
+    },
+    {
+      "name": "Mewtwo (Armored)",
+      "no": 150,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/pokemonday2020"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.186693+00:00"
+    },
+    {
+      "name": "Flygon (Meloetta Hat)",
+      "no": 330,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/pokemongofest2021-ultraunlock"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.187641+00:00"
+    },
+    {
+      "name": "Fancy",
+      "no": 666,
+      "category": "variant-art",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/vivillon-fancy"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.188317+00:00"
+    },
+    {
+      "name": "Poké Ball",
+      "no": 666,
+      "category": "variant-art",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/vivillon-pokeball"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.188968+00:00"
+    },
+    {
+      "name": "Spinda (Form 1)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.189715+00:00"
+    },
+    {
+      "name": "Spinda (Form 2)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.190125+00:00"
+    },
+    {
+      "name": "Spinda (Form 3)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.190486+00:00"
+    },
+    {
+      "name": "Spinda (Form 4)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.191033+00:00"
+    },
+    {
+      "name": "Spinda (Form 5)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.191382+00:00"
+    },
+    {
+      "name": "Spinda (Form 6)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.191960+00:00"
+    },
+    {
+      "name": "Spinda (Form 7)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.192758+00:00"
+    },
+    {
+      "name": "Spinda (Form 8)",
+      "no": 327,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.193127+00:00"
+    },
+    {
+      "name": "Minior (Green Core)",
+      "no": 774,
+      "category": "variant-art",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/minior-meteor-showers-2026"
+      ],
+      "artEvidence": "data/reviewed-variant-art-assets.json",
+      "reviewedAt": "2026-10-27T12:59:00.193479+00:00"
+    },
+    {
+      "no": 892,
+      "name": "Urshifu (Single Strike Style) (Gigantamax)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00"
+    },
+    {
+      "no": 892,
+      "name": "Urshifu (Rapid Strike Style) (Gigantamax)",
+      "category": "reviewed",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [],
+      "releaseEvidence": [
+        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00"
+    },
+    {
+      "no": 999,
+      "name": "Gimmighoul (Roaming Form)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/gocoin",
+        "https://pokemongolive.com/news/pokemongo-9th-anniversary"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00"
+    },
+    {
+      "no": 25,
+      "name": "Pikachu (Detective Hat 2019)",
+      "category": "costume",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/pikapika2019",
+        "https://pikachugo.vercel.app/"
+      ],
+      "artEvidence": "data/catalogue-sources/staged-art.json",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Small Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.417084+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Average Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.418581+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Large Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.419805+00:00"
+    },
+    {
+      "no": 710,
+      "name": "Pumpkaboo (Spooky Festival, Super Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/pumpkaboo"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.420636+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Small Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.421475+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Average Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.422511+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Large Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.423321+00:00"
+    },
+    {
+      "no": 711,
+      "name": "Gourgeist (Spooky Festival, Super Size)",
+      "category": "reviewed",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+        "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+        "https://www.serebii.net/pokemongo/shiny.shtml",
+        "https://pokemondb.net/sprites/gourgeist"
+      ],
+      "artEvidence": "data/catalogue-reviewed-assets.json",
+      "reviewedAt": "2026-10-27T15:37:33.424314+00:00"
     }
   ]
 }

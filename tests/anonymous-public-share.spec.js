@@ -127,7 +127,7 @@ test.describe('anonymous public share bootstrap',()=>{
       'Toxtricity (Low Key) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10184.png',
       'Urshifu (Single Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/892.png',
       'Urshifu (Rapid Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10191.png',
-      'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png',
+      'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10151.png',
       'Urshifu (Gigantamax)':null
     };
     const seen=[];
@@ -168,7 +168,7 @@ test.describe('anonymous public share bootstrap',()=>{
     const rendered=await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')})));
     expect(new Set(rendered.map(row=>row.name)).size).toBe(27);
     for(const row of rendered){
-      if(row.name.startsWith('Scatterbug'))expect(row.src,row.name).toBe('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png');
+      if(row.name.startsWith('Scatterbug'))expect(row.src,row.name).toBe('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/664.png');
       else{
         const number=row.name==='Spinda (Heart)'?'09':row.name.match(/Form (\d+)/)[1].padStart(2,'0');
         expect(row.src,row.name).toBe(`assets/sprites/go/spinda-${number}.png`);
@@ -612,7 +612,7 @@ test('follow-up anonymous saved Shiny choice keeps exact art and explicit releas
 });
 
 for(const shiny of [false,true])test('finite67 anonymous catalogue uses exact reviewed art without private data '+shiny,async({page})=>{
- const rows=require('../data/catalogue-reviewed-assets.json').records;const declarations=rows.map(r=>({intent:'lf',name:r.names[0],category:r.catalogCategory,p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:66},realSprites:true});
+ const rows=require('../data/catalogue-reviewed-assets.json').records.filter(r=>!r.sourceId.startsWith('variant-followup:'));const declarations=rows.map(r=>({intent:'lf',name:r.names[0],category:r.catalogCategory,p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:66},realSprites:true});
  for(const category of ['wishlist','costumes','dynamax']){const expected=rows.filter(r=>r.catalogCategory===category);await page.goto('./?view=PublicTrainer&list='+category);const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(expected.length);await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(i=>i.loading='eager'));const actual=await cards.evaluateAll(nodes=>nodes.map(n=>({name:n.querySelector('.share-pcard-name').textContent,src:n.querySelector('img.public-share-pokemon-sprite')?.getAttribute('src')||''})));for(const row of expected){const asset=row.assets[shiny?'shiny':'default'];expect(actual.find(r=>r.name===row.names[0]).src).toBe(asset||'');}await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.filter(i=>i.complete&&i.naturalWidth>0).length)).toBe(expected.filter(r=>r.assets[shiny?'shiny':'default']).length);await assertPublicPrivacy(page);}
 });
 

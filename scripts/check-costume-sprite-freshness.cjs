@@ -94,7 +94,9 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     const reviewed=new Set(entry.reviewedCandidateFiles||[]);
     candidates.push({identity:entry.displayIdentity,canonicalCostumeId:entry.canonicalCostumeId,url:page?.url,blocker:entry.candidate.reason,matches,unreviewed:matches.filter(row=>!reviewed.has(row.file))});
   }
-  for(const record of catalog.entries){
+  for(const current of catalog.entries){
+    let record=current;
+    if(current.variantArtworkReview){try{const review=require('./sprites/variant-art-review.cjs'),proof=review.proofRegister(root).find(r=>r.name===current.names[0]);review.validateVariantArtworkReview(current,root);record=review.retainedEntry(current,proof);}catch(error){problems.push({kind:'source-provenance',identity:current.names[0],message:error.message});continue;}}
     if(record.status==='unavailable'&&!pending.entries.some(entry=>findEntry(entry.displayIdentity,entry.species.dex)===record))problems.push({kind:'untracked-unavailable',identity:record.names[0]});
     if(record.status!=='exact')continue;
     if(record.pinnedArtworkReview){

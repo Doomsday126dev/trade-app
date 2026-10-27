@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');test.use({serviceWorkers:'block'});
-const fs=require('node:fs'),{normalFixture,settled}=require('./helpers/usability-fixture.cjs');const records=require('../data/catalogue-reviewed-assets.json').records;
+const fs=require('node:fs'),{normalFixture,settled}=require('./helpers/usability-fixture.cjs');const records=require('../data/catalogue-reviewed-assets.json').records.filter(r=>!r.sourceId.startsWith('variant-followup:'));
 for(const shiny of [false,true])test('finite67 exact catalogue identities persist and render every qualified variant '+shiny,async({page},info)=>{
  test.setTimeout(150000);await normalFixture(page);
  expect(await page.evaluate(()=>_specialAllItems().filter(e=>[494,649,801].includes(e.no)).length)).toBe(0);
@@ -39,7 +39,7 @@ test('all reviewed semantic duplicates display once and preserve every former sa
  });expect(semantic).toEqual([]);
  const approvedArt=[...require('../data/costume-sprite-catalog.json').entries,...records];const actualPool=await page.evaluate(()=>_specialAllItems().map(r=>({name:r.name,no:r.no,catalogId:r.catalogId})));
  for(const art of approvedArt){const aliases=new Set(art.names||[]);expect(new Set(actualPool.filter(r=>r.no===art.no&&aliases.has(r.name)).map(r=>r.catalogId)).size,art.names[0]).toBeLessThanOrEqual(1);}
- expect(result.count).toBe(1680);
+ expect(result.count).toBe(1692);
  for(let i=0;i<groups.length;i++){const g=groups[i],actual=result.groups[i];expect(actual.options).toEqual([g.primary]);for(const row of actual.names){expect(row.resolved).toBe(g.canonicalCatalogId);expect(row.legacy).toBe(g.legacyIdsByName[row.name]);}for(const row of actual.ids){expect(row.resolved).toBe(row.id);expect(row.name).toBe(g.names[g.catalogIds.indexOf(row.id)]);}}
  for(const matches of result.search)expect(matches).toEqual(['Hoothoot (New Year)']);expect(new Set(result.distinct).size).toBe(5);expect(result.semantic.canonicalKey).toBe('Hoothoot (New Year)');
  const saved=await page.evaluate(()=>{

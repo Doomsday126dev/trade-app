@@ -4733,6 +4733,930 @@
       "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event.",
       "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
       "sourceId": "canonical-missing:dynamax:895"
+    },
+    {
+      "no": 892,
+      "names": [
+        "Urshifu (Single Strike Style) (Gigantamax)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-d1385a57dfc5b273b2eb.png",
+        "shiny": "assets/sprites/go/catalogue-3a60cdb3987279d3d352.png"
+      },
+      "sha256": {
+        "default": "d1385a57dfc5b273b2ebf38710135502e140e4c50f78607e46410e4354d7c387",
+        "shiny": "3a60cdb3987279d3d352fe9e35b6a6440f0b8536df70527b97abafac1f56075c"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10226.png",
+          "http": 200,
+          "sha256": "d1385a57dfc5b273b2ebf38710135502e140e4c50f78607e46410e4354d7c387",
+          "bytes": 171102,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 87963,
+            "pixelHash": "5d792c55",
+            "status": "decoded"
+          },
+          "gitBlobSha": "fe2379483f49ade733343f01093f03ea5840f0a4",
+          "sourcePath": "sprites/pokemon/other/home/10226.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10226.png",
+          "observedAt": "2026-10-27T13:43:11.657Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10226.png",
+          "http": 200,
+          "sha256": "3a60cdb3987279d3d352fe9e35b6a6440f0b8536df70527b97abafac1f56075c",
+          "bytes": 170922,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 87967,
+            "pixelHash": "abab1956",
+            "status": "decoded"
+          },
+          "gitBlobSha": "9b37c2c0e682a1bff8d097b995dc0a468a65b7b2",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10226.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10226.png",
+          "observedAt": "2026-10-27T13:43:11.739Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "gmax",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+          "role": "Explicit model/style identity only. No GO normal/Shiny release is inferred."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10226",
+      "independentFormIdentity": {
+        "id": 10226,
+        "identifier": "urshifu-single-strike-gmax",
+        "speciesId": 892,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
+    },
+    {
+      "no": 892,
+      "names": [
+        "Urshifu (Rapid Strike Style) (Gigantamax)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-3e0b1a597437e965f8e6.png",
+        "shiny": "assets/sprites/go/catalogue-9cdd0fdea5a1457ac42e.png"
+      },
+      "sha256": {
+        "default": "3e0b1a597437e965f8e6977a151b6b479250602aa6a2ec8d35a5b2a149b3d475",
+        "shiny": "9cdd0fdea5a1457ac42e5038dfda09f2c498e666d94523dab3ea2630fe19a1ef"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10227.png",
+          "http": 200,
+          "sha256": "3e0b1a597437e965f8e6977a151b6b479250602aa6a2ec8d35a5b2a149b3d475",
+          "bytes": 174771,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 92049,
+            "pixelHash": "8db5ab58",
+            "status": "decoded"
+          },
+          "gitBlobSha": "75de7c6c6ab453edd626db1ecd1a266b51e4bf13",
+          "sourcePath": "sprites/pokemon/other/home/10227.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10227.png",
+          "observedAt": "2026-10-27T13:43:11.796Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10227.png",
+          "http": 200,
+          "sha256": "9cdd0fdea5a1457ac42e5038dfda09f2c498e666d94523dab3ea2630fe19a1ef",
+          "bytes": 173878,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 92056,
+            "pixelHash": "b4236674",
+            "status": "decoded"
+          },
+          "gitBlobSha": "65ff4f1b713d0ae1ca8468ee8d408917750c6c75",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10227.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10227.png",
+          "observedAt": "2026-10-27T13:43:11.770Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "gmax",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+          "role": "Explicit model/style identity only. No GO normal/Shiny release is inferred."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10227",
+      "independentFormIdentity": {
+        "id": 10227,
+        "identifier": "urshifu-rapid-strike-gmax",
+        "speciesId": 892,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
+    },
+    {
+      "no": 999,
+      "names": [
+        "Gimmighoul (Roaming Form)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-54817070d85d1d821e50.png",
+        "shiny": "assets/sprites/go/catalogue-9d62a1bfb711ef60498d.png"
+      },
+      "sha256": {
+        "default": "54817070d85d1d821e50064e967a4802eb4f6605dc0cac03e20a7df2493e3c01",
+        "shiny": "9d62a1bfb711ef60498db84257e2fb805a523ac84af346cdd357d10374b0dd5c"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10263.png",
+          "http": 200,
+          "sha256": "54817070d85d1d821e50064e967a4802eb4f6605dc0cac03e20a7df2493e3c01",
+          "bytes": 172433,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 102212,
+            "pixelHash": "ee5beff2",
+            "status": "decoded"
+          },
+          "gitBlobSha": "2c72d45756d764f108122887a3fd4b06f8cdcffb",
+          "sourcePath": "sprites/pokemon/other/home/10263.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10263.png",
+          "observedAt": "2026-10-27T13:43:11.775Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10263.png",
+          "http": 200,
+          "sha256": "9d62a1bfb711ef60498db84257e2fb805a523ac84af346cdd357d10374b0dd5c",
+          "bytes": 166413,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 102212,
+            "pixelHash": "233956d2",
+            "status": "decoded"
+          },
+          "gitBlobSha": "7ed7658f598a916c583f6ffb017c033dd0f860e5",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10263.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10263.png",
+          "observedAt": "2026-10-27T13:43:11.843Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "wishlist",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/gocoin",
+          "role": "Official Roaming Form normal release; Chest and anniversary coins are separate identities."
+        },
+        {
+          "url": "https://pokemongolive.com/news/pokemongo-9th-anniversary",
+          "role": "Official ordinary Gimmighoul Shiny debut is stated separately from the ninth-anniversary coin costume."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10263",
+      "independentFormIdentity": {
+        "id": 10263,
+        "identifier": "gimmighoul-roaming",
+        "speciesId": 999,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
+    },
+    {
+      "no": 710,
+      "names": [
+        "Pumpkaboo (Spooky Festival, Small Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-ce2a105467a2cf679c09.png",
+        "shiny": "assets/sprites/go/catalogue-203143e845ef92c88917.png"
+      },
+      "sha256": {
+        "default": "ce2a105467a2cf679c09578dbc7e4ccf72ae56285bccdb9f0e9018616631e438",
+        "shiny": "203143e845ef92c88917529fce552c09e0cba4d5ccd18eadf56b290f560d0668"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pumpkaboo-small-spooky-festival.png",
+          "http": 200,
+          "sha256": "ce2a105467a2cf679c09578dbc7e4ccf72ae56285bccdb9f0e9018616631e438",
+          "bytes": 4421,
+          "observedAt": "2026-10-27T15:33:27.769Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 1292,
+            "pixelHash": "9e2dcb69"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/710-spookys.png",
+          "http": 200,
+          "sha256": "203143e845ef92c88917529fce552c09e0cba4d5ccd18eadf56b290f560d0668",
+          "bytes": 6705,
+          "observedAt": "2026-10-27T15:33:27.810Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2226,
+            "pixelHash": "426f2f5d"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:710:small",
+      "reviewedAt": "2026-10-27T15:37:33.417084+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/pumpkaboo",
+          "role": "Spooky Festival - Small Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 710,
+      "names": [
+        "Pumpkaboo (Spooky Festival, Average Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-83246e0dfc5ec80df66d.png",
+        "shiny": "assets/sprites/go/catalogue-f9e0a71bcc59db817746.png"
+      },
+      "sha256": {
+        "default": "83246e0dfc5ec80df66d393b232c31282888bdece40f68b29ade5d14b6438e01",
+        "shiny": "f9e0a71bcc59db817746c1e035f4f8e76b9ca6110109a86ace9552e4fa34654e"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pumpkaboo-average-spooky-festival.png",
+          "http": 200,
+          "sha256": "83246e0dfc5ec80df66d393b232c31282888bdece40f68b29ade5d14b6438e01",
+          "bytes": 5921,
+          "observedAt": "2026-10-27T15:33:27.722Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 1886,
+            "pixelHash": "857f1744"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/710-spooky.png",
+          "http": 200,
+          "sha256": "f9e0a71bcc59db817746c1e035f4f8e76b9ca6110109a86ace9552e4fa34654e",
+          "bytes": 8075,
+          "observedAt": "2026-10-27T15:33:27.775Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 3323,
+            "pixelHash": "b764cd5c"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:710:average",
+      "reviewedAt": "2026-10-27T15:37:33.418581+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/pumpkaboo",
+          "role": "Spooky Festival - Average Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 710,
+      "names": [
+        "Pumpkaboo (Spooky Festival, Large Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-871c9028e362be219620.png",
+        "shiny": "assets/sprites/go/catalogue-0ea656db59fb5f4ac640.png"
+      },
+      "sha256": {
+        "default": "871c9028e362be219620260fbe3dc68211e83410597f6ed9000fe11db7cc94f9",
+        "shiny": "0ea656db59fb5f4ac6408b03b3f16a4315e786cde22373a7d609b95068939a4f"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pumpkaboo-large-spooky-festival.png",
+          "http": 200,
+          "sha256": "871c9028e362be219620260fbe3dc68211e83410597f6ed9000fe11db7cc94f9",
+          "bytes": 7699,
+          "observedAt": "2026-10-27T15:33:27.712Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 2790,
+            "pixelHash": "e81d90f1"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/710-spookyl.png",
+          "http": 200,
+          "sha256": "0ea656db59fb5f4ac6408b03b3f16a4315e786cde22373a7d609b95068939a4f",
+          "bytes": 10868,
+          "observedAt": "2026-10-27T15:33:27.782Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4824,
+            "pixelHash": "e5cdd2ac"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:710:large",
+      "reviewedAt": "2026-10-27T15:37:33.419805+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/pumpkaboo",
+          "role": "Spooky Festival - Large Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 710,
+      "names": [
+        "Pumpkaboo (Spooky Festival, Super Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-920b258086e22801bbae.png",
+        "shiny": "assets/sprites/go/catalogue-a0d494895ecf7208cdef.png"
+      },
+      "sha256": {
+        "default": "920b258086e22801bbae49b5851695376d2dc28912bfd8797bd54fb0d76c2079",
+        "shiny": "a0d494895ecf7208cdeffee66aea53fad9df7b17ec266fb50e2d173ea40cdb93"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pumpkaboo-super-spooky-festival.png",
+          "http": 200,
+          "sha256": "920b258086e22801bbae49b5851695376d2dc28912bfd8797bd54fb0d76c2079",
+          "bytes": 10066,
+          "observedAt": "2026-10-27T15:33:27.805Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 4149,
+            "pixelHash": "ff01963e"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/710-spookyh.png",
+          "http": 200,
+          "sha256": "a0d494895ecf7208cdeffee66aea53fad9df7b17ec266fb50e2d173ea40cdb93",
+          "bytes": 14651,
+          "observedAt": "2026-10-27T15:33:27.966Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 7434,
+            "pixelHash": "619e034c"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:710:super",
+      "reviewedAt": "2026-10-27T15:37:33.420636+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/pumpkaboo",
+          "role": "Spooky Festival - Super Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 711,
+      "names": [
+        "Gourgeist (Spooky Festival, Small Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-b293a615d5de850d815f.png",
+        "shiny": "assets/sprites/go/catalogue-e7306eab8a0221a95d12.png"
+      },
+      "sha256": {
+        "default": "b293a615d5de850d815fc849e441ac0a6fc3525889c59eda07955e60f5304f94",
+        "shiny": "e7306eab8a0221a95d1293e2ca69a4456b02d6bd31fca5d2a2adad85fd2e6321"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/gourgeist-small-spooky-festival.png",
+          "http": 200,
+          "sha256": "b293a615d5de850d815fc849e441ac0a6fc3525889c59eda07955e60f5304f94",
+          "bytes": 7052,
+          "observedAt": "2026-10-27T15:33:27.975Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 2226,
+            "pixelHash": "27337162"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/711-spookys.png",
+          "http": 200,
+          "sha256": "e7306eab8a0221a95d1293e2ca69a4456b02d6bd31fca5d2a2adad85fd2e6321",
+          "bytes": 9147,
+          "observedAt": "2026-10-27T15:33:27.979Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2866,
+            "pixelHash": "b6f91fd0"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:711:small",
+      "reviewedAt": "2026-10-27T15:37:33.421475+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/gourgeist",
+          "role": "Spooky Festival - Small Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 711,
+      "names": [
+        "Gourgeist (Spooky Festival, Average Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-ec1615f2b2cef1c1e525.png",
+        "shiny": "assets/sprites/go/catalogue-0d6e70af8e853b3fcca7.png"
+      },
+      "sha256": {
+        "default": "ec1615f2b2cef1c1e5255c2373de6114758658fffc84dac130184bbcae4f9420",
+        "shiny": "0d6e70af8e853b3fcca77585435364f0f9cf373de705dbd5291efddbe1f520bb"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/gourgeist-average-spooky-festival.png",
+          "http": 200,
+          "sha256": "ec1615f2b2cef1c1e5255c2373de6114758658fffc84dac130184bbcae4f9420",
+          "bytes": 8292,
+          "observedAt": "2026-10-27T15:33:27.826Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 2766,
+            "pixelHash": "b2604c98"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/711-spooky.png",
+          "http": 200,
+          "sha256": "0d6e70af8e853b3fcca77585435364f0f9cf373de705dbd5291efddbe1f520bb",
+          "bytes": 10540,
+          "observedAt": "2026-10-27T15:33:27.950Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 3492,
+            "pixelHash": "d6bac7e7"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:711:average",
+      "reviewedAt": "2026-10-27T15:37:33.422511+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/gourgeist",
+          "role": "Spooky Festival - Average Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 711,
+      "names": [
+        "Gourgeist (Spooky Festival, Large Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-f684700a4b4ab6ce8ebd.png",
+        "shiny": "assets/sprites/go/catalogue-d1fbcc27ad1f895ee623.png"
+      },
+      "sha256": {
+        "default": "f684700a4b4ab6ce8ebd79cd22b0c58fda160e65bf22317ff853f26baa79575b",
+        "shiny": "d1fbcc27ad1f895ee62335f1fd2b219d50a7fc1b3745c703bdb2e98e8466c688"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/gourgeist-large-spooky-festival.png",
+          "http": 200,
+          "sha256": "f684700a4b4ab6ce8ebd79cd22b0c58fda160e65bf22317ff853f26baa79575b",
+          "bytes": 9803,
+          "observedAt": "2026-10-27T15:33:27.941Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 3415,
+            "pixelHash": "e80649ec"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/711-spookyl.png",
+          "http": 200,
+          "sha256": "d1fbcc27ad1f895ee62335f1fd2b219d50a7fc1b3745c703bdb2e98e8466c688",
+          "bytes": 12157,
+          "observedAt": "2026-10-27T15:33:27.948Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4218,
+            "pixelHash": "5ae38da8"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:711:large",
+      "reviewedAt": "2026-10-27T15:37:33.423321+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/gourgeist",
+          "role": "Spooky Festival - Large Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
+    },
+    {
+      "no": 711,
+      "names": [
+        "Gourgeist (Spooky Festival, Super Size)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-cc7eb24a5c0eb2694a13.png",
+        "shiny": "assets/sprites/go/catalogue-fa343c78927a5e86d436.png"
+      },
+      "sha256": {
+        "default": "cc7eb24a5c0eb2694a1387d51b3912c2a396dfe1c9339eb78e457cd493fc53fd",
+        "shiny": "fa343c78927a5e86d436faf4d8e7e02048c9539108075fcb50efc5b65055edd2"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/gourgeist-super-spooky-festival.png",
+          "http": 200,
+          "sha256": "cc7eb24a5c0eb2694a1387d51b3912c2a396dfe1c9339eb78e457cd493fc53fd",
+          "bytes": 10354,
+          "observedAt": "2026-10-27T15:33:28.004Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 128,
+            "height": 128,
+            "visiblePixels": 3732,
+            "pixelHash": "598685f0"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/711-spookyh.png",
+          "http": 200,
+          "sha256": "fa343c78927a5e86d436faf4d8e7e02048c9539108075fcb50efc5b65055edd2",
+          "bytes": 13128,
+          "observedAt": "2026-10-27T15:33:27.994Z",
+          "decoded": {
+            "status": "decoded",
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4756,
+            "pixelHash": "6e5a7960"
+          }
+        }
+      },
+      "genders": [
+        "m",
+        "f"
+      ],
+      "genderModel": "reviewed-same-species-costume-size-art-no-visible-gender-difference",
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "genderRate": 4,
+        "hasGenderDifferences": 0,
+        "qualification": "Art-equivalence metadata only; no sex-specific release is inferred. Exact costume/size picture is shared because the species has no visible gender difference."
+      },
+      "catalogCategory": "costumes",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "sourceId": "variant-followup:spooky-size:711:super",
+      "reviewedAt": "2026-10-27T15:37:33.424314+00:00",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/halloween-2022-event-details-part-2",
+          "resolvedUrl": "https://pokemongo.com/news/halloween-2022-event-details-part-2",
+          "http": 200,
+          "sha256": "bc161c6a285e6425d9d1aba6a7e0f8e3817dc81133e48f750327e3fd678272ad",
+          "observedAt": "2026-10-27T15:33:28.468Z",
+          "role": "Official normal Spooky Festival Pumpkaboo/Gourgeist debut on 27 October 2022; not a direct claim of every Shiny size from this source alone."
+        },
+        {
+          "url": "https://leekduck.com/events/pokemon-go-halloween-event-2022-part-2/",
+          "http": 200,
+          "sha256": "a89805c9ef984b3f00e5a42f22836880069149b9db0f2173778d2b04822974ae",
+          "observedAt": "2026-10-27T15:33:28.117Z",
+          "role": "Contemporaneous GO event inventory explicitly includes normal and Shiny Spooky Festival Pumpkaboo/Gourgeist."
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Current independent Shiny inventory lists this exact spooky size image as available when encountered; original cached body matches latest monitor observation."
+        },
+        {
+          "url": "https://pokemondb.net/sprites/gourgeist",
+          "role": "Spooky Festival - Super Size is an independently named GO costume-and-size source identity."
+        }
+      ],
+      "qualification": "Exact costume plus size independently named by GO sprite source; normal/Shiny originals decoded and paired contact sheet visually reviewed. No generic Spooky key is assigned a size, and ordinary uncostumed sizes remain separate."
     }
   ]
 }
