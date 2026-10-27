@@ -88,14 +88,14 @@ test('structured form supplements localize official terminology without changing
   assert.equal(pokemon.structuredFormSource.kind,'curated-official-form-supplement');
 });
 
-test('all 1433 canonical entries have measurable full partial and fallback coverage',()=>{
+test('all 1506 canonical entries have measurable full partial and fallback coverage',()=>{
   const baseline={full:620,partial:0,fallback:346};
-  const expected={ja:{full:1184,partial:249,fallback:0},es:{full:1143,partial:290,fallback:0},de:{full:1180,partial:253,fallback:0}};
+  const expected={ja:{full:1245,partial:261,fallback:0},es:{full:1204,partial:302,fallback:0},de:{full:1241,partial:265,fallback:0}};
   for(const locale of ['ja','es','de']){
     const report=JSON.parse(JSON.stringify(pokemon.variantCoverage(appEntries,locale)));
-    assert.equal(report.total,1433);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
+    assert.equal(report.total,1506);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
     assert.deepEqual(baseline,{full:620,partial:0,fallback:346});
-    assert.equal(report.categories['app-specific-costume'].partial,247);
+    assert.equal(report.categories['app-specific-costume'].partial,259);
     assert.equal(report.categories['vivillon-pattern'].total,20);
     assert.equal(report.categories['gigantamax'].total,31);
   }
@@ -154,15 +154,15 @@ test('coverage reports are explicit and do not claim a complete catalog',()=>{
 });
 
 test('generated catalogs completely cover every stable species ID in data.js',()=>{
-  assert.equal(appEntries.length,1433);
-  assert.equal(appSpeciesIds.length,940);
+  assert.equal(appEntries.length,1506);
+  assert.equal(appSpeciesIds.length,941);
   assert.equal(appEntries.filter(entry=>!Number.isInteger(Number(entry.no))||Number(entry.no)<=0).length,0);
   for(const locale of ['en','ja','es','de']){
     const catalog=window.PogoPokemonNameCatalogs[locale],keys=Object.keys(catalog);
     assert.equal(keys.length,1025,`${locale} source catalog`);
     assert.equal(new Set(keys).size,keys.length,`${locale} duplicate mapping`);
     assert.equal(appSpeciesIds.filter(id=>!String(catalog[id]||'').trim()).length,0,`${locale} missing app species`);
-    assert.deepEqual(JSON.parse(JSON.stringify(pokemon.coverage(appEntries,locale))),{locale,translatedSpecies:940,totalSpecies:940,fallbackSpecies:0,complete:true});
+    assert.deepEqual(JSON.parse(JSON.stringify(pokemon.coverage(appEntries,locale))),{locale,translatedSpecies:941,totalSpecies:941,fallbackSpecies:0,complete:true});
   }
   assert.deepEqual(JSON.parse(JSON.stringify(window.PogoPokemonNameCatalogSource)),{
     repository:'PokeAPI/pokeapi',path:'data/v2/csv/pokemon_species_names.csv',gitBlobSha:'44954a1248493d8cc336f121ce5cce394cee9ac0',retrievedAt:'2026-08-06',sourceSpecies:1025,languageIds:{ja:1,de:6,es:7,en:9}

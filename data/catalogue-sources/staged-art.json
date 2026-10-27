@@ -1080,6 +1080,94 @@
         "pixelHash": "add6e0a"
       },
       "qualification": "Original cached exact Hisuian form image; original visually inspected. Art availability does not establish Shiny release."
+    },
+    {
+      "no": 25,
+      "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.cFEB_2019.icon.png",
+      "sourcePath": "Addressable Assets/pm25.cFEB_2019.icon.png",
+      "gitBlobSha": "850f799cf0fe802277842b8c8b90ce2a4a8ae694",
+      "size": 20256,
+      "observedAt": "2026-10-27T12:50:51.826058+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "7d1874f69dd2ba63dbca8fffaa06b12e19b891f33c4238c5bb1473fac40e41dd",
+      "bytes": 20256,
+      "width": 256,
+      "height": 256,
+      "decoded": {
+        "status": "decoded",
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 5596,
+        "pixelHash": "39336da"
+      },
+      "asset": "assets/sprites/go/variant-7d1874f69dd2ba63dbca.png"
+    },
+    {
+      "no": 25,
+      "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.cFEB_2019.s.icon.png",
+      "sourcePath": "Addressable Assets/pm25.cFEB_2019.s.icon.png",
+      "gitBlobSha": "53313265b5d520b68a4d033d024b5b99caadbfa5",
+      "size": 20148,
+      "observedAt": "2026-10-27T12:50:51.826085+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "243016fbb4ca87fc4506c13023e926b2078cb4b4a17a206b7166704cef3f12b8",
+      "bytes": 20148,
+      "width": 256,
+      "height": 256,
+      "decoded": {
+        "status": "decoded",
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 5515,
+        "pixelHash": "1bb2cbd9"
+      },
+      "asset": "assets/sprites/go/variant-243016fbb4ca87fc4506.png"
+    },
+    {
+      "no": 25,
+      "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.cFEB_2019.g2.icon.png",
+      "sourcePath": "Addressable Assets/pm25.cFEB_2019.g2.icon.png",
+      "gitBlobSha": "9f63758bbcaacf78755cf0655e716c98d8ef3c87",
+      "size": 21268,
+      "observedAt": "2026-10-27T12:50:51.826107+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "a29b83a8f3adf7c9fc3c1a0103399991f19cf87a55ef7896f837025143c57e19",
+      "bytes": 21268,
+      "width": 256,
+      "height": 256,
+      "decoded": {
+        "status": "decoded",
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 5652,
+        "pixelHash": "736b1712"
+      },
+      "asset": "assets/sprites/go/variant-a29b83a8f3adf7c9fc3c.png"
+    },
+    {
+      "no": 25,
+      "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.cFEB_2019.g2.s.icon.png",
+      "sourcePath": "Addressable Assets/pm25.cFEB_2019.g2.s.icon.png",
+      "gitBlobSha": "b0916a739b78b836bce73ed9835dd15f20bf029a",
+      "size": 20994,
+      "observedAt": "2026-10-27T12:50:51.826123+00:00",
+      "status": "bytes-fetched",
+      "http": 200,
+      "sha256": "6defadcec9c791b034643b760c9bf67e384a5a9e4484692532fd66518f5938b8",
+      "bytes": 20994,
+      "width": 256,
+      "height": 256,
+      "decoded": {
+        "status": "decoded",
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 5547,
+        "pixelHash": "2a41ccd7"
+      },
+      "asset": "assets/sprites/go/variant-6defadcec9c791b03464.png"
     }
   ]
 }

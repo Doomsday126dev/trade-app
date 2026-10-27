@@ -2,7 +2,11 @@ const {test,expect}=require('@playwright/test');test.use({serviceWorkers:'block'
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {normalFixture,settled,installLoginTransport}=require('./helpers/usability-fixture.cjs');const controls=require('./helpers/current-want-controls.cjs');
 const source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8');const install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');
-const standard=require('../data/reviewed-variant-status.json').records.filter(r=>!r.category||r.category==='form');
+// Keep this original 17-form journey stable. The separate selectable-repair
+// suite exercises every restored ordinary species in both Shiny states.
+const restoredOrdinaryNames=new Set(require('../data/catalogue-selectable-repair.json').records.map(r=>r.name));
+const standard=require('../data/reviewed-variant-status.json').records.filter(r=>(!r.category||r.category==='form')&&!restoredOrdinaryNames.has(r.name));
+expect(standard).toHaveLength(17);
 const costumes=require('../data/costume-sprite-catalog.json').entries.filter(r=>['Gimmighoul (10th Anniversary Coin)','Pikachu (Blue Shirt (Citrus))','Pikachu (PokeXciting Taiwan)','Pikachu (PokeXciting Philippines)'].includes(r.names[0]));
 async function artRoutes(page){for(const r of require('../data/catalogue-sources/staged-art.json').records.filter(r=>r.no&&standard.some(s=>(s.artId||s.no)===r.no))){const file=path.resolve(__dirname,'..',r.asset);expect(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')).toBe(r.sha256);await page.route(r.url,route=>route.fulfill({path:file,contentType:'image/png'}));}}
 async function choose(page,name){await page.locator('#wants-add-name').fill(costumes.some(r=>r.names[0]===name)?name.slice(0,-4):name);await page.getByRole('option',{name,exact:true}).click();await page.keyboard.press('Escape');await page.locator('.add-advanced-toggle').click();await controls.priority(page,'H');}

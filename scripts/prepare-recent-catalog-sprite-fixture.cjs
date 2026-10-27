@@ -9,7 +9,8 @@ const directory=process.env.CATALOG_SPRITE_CACHE||path.join(os.tmpdir(),'trade-r
 const expected=new Map(require('../data/catalogue-art-checks.json').records.map(row=>[row.url,row.sha256]));
 fs.mkdirSync(directory,{recursive:true});
 const output=[];
-for(const entry of evidence.records.filter(r=>r.collection==='dynamax'))for(const shiny of [false,true])for(const female of ([111,112,215,461,464,129,130,350,415].includes(entry.no)?[false,true]:[false])){
+const entries=[...new Map([...evidence.records.filter(r=>r.collection==='dynamax'),...(process.argv.includes('--selectable-repair')?require('../data/catalogue-selectable-repair.json').records:[])].map(row=>[row.no,row])).values()];
+for(const entry of entries)for(const shiny of [false,true])for(const female of ([111,112,215,461,464,129,130,350,415].includes(entry.no)?[false,true]:[false])){
  const variant=(shiny?'shiny/':'')+(female?'female/':'')+entry.no+'.png';
  const url='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/'+variant;
  const file=path.join(directory,variant.replaceAll('/','-'));

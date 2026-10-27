@@ -646,7 +646,7 @@ function renderWantsPicker(input){
   // requirements controls reachable. Partial/family queries still show aliases.
   if(wantsPickerItems.some(item=>normalizeAcText(item.name)===query)&&costumeSpriteCatalogDomain.resolve({name:input.value})){closeWantsPicker(input);return;}
   input._pickerRows=query?rankAutocompleteItems(wantsPickerItems,query,{limit:25}):[];input._pickerIndex=-1;
-  list.replaceChildren(...input._pickerRows.map((item,index)=>{const option=document.createElement('div');option.id=list.id+'-'+index;option.className='wants-picker-option';option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.textContent=item.name;option.addEventListener('pointerdown',event=>event.preventDefault());option.addEventListener('click',()=>chooseWantsPicker(input,index));return option;}));
+  list.replaceChildren(...input._pickerRows.map((item,index)=>{const option=document.createElement('div');option.id=list.id+'-'+index;option.className='wants-picker-option';option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.textContent=pokemonDisplayName({...item,displayName:item.canonicalDn||item.name});option.addEventListener('pointerdown',event=>event.preventDefault());option.addEventListener('click',()=>chooseWantsPicker(input,index));return option;}));
   const open=input._pickerRows.length>0;list.hidden=!open;input.setAttribute('aria-expanded',String(open));input.removeAttribute('aria-activedescendant');
 }
 function chooseWantsPicker(input,index){
@@ -951,15 +951,15 @@ const COSTUME_FORM_SPRITE_IDS={
   "Unown (U)":"201-u","Unown (V)":"201-v","Unown (W)":"201-w","Unown (X)":"201-x",
   "Unown (Y)":"201-y","Unown (Z)":"201-z","Unown (!)":"201-exclamation","Unown (?)":"201-question",
   "Castform (Normal)":351,"Castform (Sunny)":10013,"Castform (Rainy)":10014,"Castform (Snowy)":10015,
-  "Burmy (Plant)":412,"Burmy (Sandy)":"412-sandy","Burmy (Trash)":"412-trash",
+  "Burmy (Plant)":412,
   "Wormadam (Plant)":413,"Wormadam (Sandy)":10004,"Wormadam (Trash)":10005,
-  "Cherrim (Overcast)":421,"Cherrim (Sunny)":"421-sunshine",
-  "Shellos (Pink)":422,"Shellos (Blue)":"422-east",
+  "Cherrim (Overcast)":421,
+  "Shellos (Pink)":422,
   "Rotom":479,"Rotom (Heat)":10008,"Rotom (Wash)":10009,"Rotom (Frost)":10010,"Rotom (Fan)":10011,"Rotom (Mow)":10012,
   "Basculin (Red Stripe)":550,"Basculin (Blue Stripe)":10016,"Basculin (White Stripe)":10247,
-  "Deerling (Spring)":585,"Deerling (Summer)":"585-summer","Deerling (Autumn)":"585-autumn","Deerling (Winter)":"585-winter",
+  "Deerling (Spring)":585,
   "Sawsbuck (Spring)":586,"Sawsbuck (Summer)":"586-summer","Sawsbuck (Autumn)":"586-autumn","Sawsbuck (Winter)":"586-winter",
-  "Flabébé (Red Flower)":669,"Flabébé (Yellow Flower)":"669-yellow","Flabébé (Orange Flower)":"669-orange","Flabébé (Blue Flower)":"669-blue","Flabébé (White Flower)":"669-white",
+  "Flabébé (Red Flower)":669,
   "Furfrou (Heart)":"676-heart","Furfrou (Star)":"676-star","Furfrou (Diamond)":"676-diamond",
   "Furfrou (Debutante)":"676-debutante","Furfrou (Matron)":"676-matron","Furfrou (Dandy)":"676-dandy",
   "Furfrou (La Reine)":"676-la-reine","Furfrou (Kabuki)":"676-kabuki","Furfrou (Pharaoh)":"676-pharaoh",
@@ -1065,6 +1065,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||resolvedName,entry?.no))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
   if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName)?.assets)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
   if(entry?.shiny!==true&&isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
@@ -1086,11 +1087,13 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return null;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return publicSpriteUrls(context.canonicalName||name,gender,no)[0]||null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
   if(window.PogoDomain.publicPokemonDex.variantStatus?.(lookupName))return publicSpriteUrls(lookupName,gender,no)[0]||null;
+  if(spriteSlugsDomain.reviewedPreferredForm(lookupName,no))return publicSpriteUrls(lookupName,gender,no)[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
@@ -1151,6 +1154,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return urls;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
@@ -1159,6 +1163,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   if(equivalent){push(equivalent);return urls;}
   // Shiny requests must never enter the normal-color fallback chain.
   if(shiny)return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,true));
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no));
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
