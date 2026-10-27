@@ -21,3 +21,8 @@ functions/.local/
 .local/firebase-rule-backups/
 .local/staging-creation-approvals/
 functions/favorite-resolver/.env*
+
+# Generated read-only catalogue review artifacts
+/catalogue-reconciliation.json
+/release-discovery.json
+/release-discovery.md

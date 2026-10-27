@@ -16,12 +16,12 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,401);
+  assert.equal(catalog.entries.length,402);
   assert.equal(require('../data/pending-costume-artwork.json').maintenanceCandidate.canonicalRecords,catalog.entries.length);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,394);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,395);
   assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,7);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,999);
+  assert.equal(assets.length,1001);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/https?:\/\/(?:[^/]*\.)?(?:img\.pokemondb\.net|pokeminers|serebii\.net|cdn08)/i);
@@ -83,7 +83,7 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:427,unavailable:7});
+  assert.deepEqual(statusCounts,{exact:428,unavailable:7});
 });
 
 test('reviewed event aliases resolve to their exact visual identity',()=>{

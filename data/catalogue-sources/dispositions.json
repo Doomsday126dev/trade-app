@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-27",
+  "records": [
+    {
+      "id": "dynamax:808",
+      "name": "Meltan",
+      "releaseState": "announced",
+      "releaseOnOrAfter": "2026-11-09",
+      "disposition": "upcoming-catalogue-art-review-required",
+      "reason": "Official Into the Wild event is in November. Do not add to released trading from an inventory listing or sprite existence. Melmetal is the evolution of the announced Meltan encounter.",
+      "sources": [
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "nextAction": "Keep artwork visible in the reconciliation backlog; publish only in a separate upcoming/read-only catalogue until release eligibility is verified."
+    },
+    {
+      "id": "dynamax:809",
+      "name": "Melmetal",
+      "releaseState": "announced",
+      "releaseOnOrAfter": "2026-11-09",
+      "disposition": "upcoming-catalogue-art-review-required",
+      "reason": "Official Into the Wild event is in November. Do not add to released trading from an inventory listing or sprite existence. Melmetal is the evolution of the announced Meltan encounter.",
+      "sources": [
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "nextAction": "Keep artwork visible in the reconciliation backlog; publish only in a separate upcoming/read-only catalogue until release eligibility is verified."
+    },
+    {
+      "id": "dynamax:895",
+      "name": "Regidrago",
+      "releaseState": "announced",
+      "releaseOnOrAfter": "2026-11-12",
+      "disposition": "upcoming-catalogue-art-review-required",
+      "reason": "Official Into the Wild event is in November. Do not add to released trading from an inventory listing or sprite existence. Melmetal is the evolution of the announced Meltan encounter.",
+      "sources": [
+        "https://pokemongo.com/news/into-the-wild-2026"
+      ],
+      "nextAction": "Keep artwork visible in the reconciliation backlog; publish only in a separate upcoming/read-only catalogue until release eligibility is verified."
+    },
+    {
+      "id": "dynamax:849",
+      "name": "Toxtricity",
+      "disposition": "generic-source-family-mapped-to-distinct-forms",
+      "targets": [
+        "Toxtricity (Amped)",
+        "Toxtricity (Low Key)"
+      ],
+      "reason": "The source Max table has one generic species row; the app retains both distinct named forms. This does not authorize a generic image or an invented form alias.",
+      "sources": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml"
+      ]
+    },
+    {
+      "id": "dynamax:892",
+      "name": "Urshifu",
+      "disposition": "generic-source-family-mapped-to-distinct-forms",
+      "targets": [
+        "Urshifu (Single Strike)",
+        "Urshifu (Rapid Strike)"
+      ],
+      "reason": "The source Max table has one generic species row; the app retains both distinct named forms. This does not authorize a generic image or an invented form alias.",
+      "sources": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml"
+      ]
+    }
+  ]
+}

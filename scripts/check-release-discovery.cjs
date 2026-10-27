@@ -2,7 +2,9 @@
 'use strict';
 // Read-only discovery. Announcement != release authorization, and no assets or
 // catalog records are imported by this job. Reviewed snapshots are manual inputs.
-const fs=require('node:fs'),path=require('node:path');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const catalogue=require('./reconcile-catalogue.cjs');
+const {observeInventories}=require('./catalogue-source-observation.cjs');
 const {loadCatalog}=require('./check-released-catalog.cjs');
 const root=path.resolve(__dirname,'..');
 function parseNews(html,url){
@@ -40,7 +42,7 @@ function compareDiscovery(snapshot,observed,database,now=new Date(),holds=[]){
  return findings;
 }
 async function observe(snapshot,fetchImpl=fetch){
- const output={news:[],season:null};
+ const output={news:[],season:null,observations:[]};
  for(const source of [...snapshot.news,snapshot.season]){
   const options={signal:AbortSignal.timeout(15000),redirect:'manual',headers:{'user-agent':'PoGo-Trades read-only release discovery'}};
   let response;
@@ -54,7 +56,7 @@ async function observe(snapshot,fetchImpl=fetch){
   }catch(error){throw Error(`${source.url}: ${error.message}${error.cause?.code?' ('+error.cause.code+')':''}; coverage is unknown`);}
   if(!response.ok)throw Error(`${source.url}: HTTP ${response.status}; coverage is unknown`);
   if(!/text\/html/i.test(response.headers.get('content-type')||''))throw Error(`${source.url}: unexpected content type`);
-  const html=await response.text();if(html.length>3000000)throw Error('Source exceeded bounded response size');
+  const html=await response.text();output.observations.push({url:source.url,status:response.status,observedAt:new Date().toISOString(),sha256:crypto.createHash('sha256').update(html).digest('hex')});if(html.length>3000000)throw Error('Source exceeded bounded response size');
   if(source===snapshot.season)output.season={url:source.url,entries:parseSeason(html)};
   else output.news.push({url:source.url,links:parseNews(html,source.url)});
  }
@@ -71,13 +73,26 @@ function readHolds(document){
 }
 async function main(){
  const snapshot=JSON.parse(fs.readFileSync(path.join(root,'data/release-discovery-snapshot.json'),'utf8'));
- let report;
- try{const observation=await observe(snapshot);const findings=compareDiscovery(snapshot,observation,loadCatalog(),new Date(),readHolds(JSON.parse(fs.readFileSync(path.join(root,'data/recent-release-review-holds.json'),'utf8'))));report={status:findings.length?'review-required':'no-new-discovery',findings,observation};}
- catch(error){report={status:'source-check-failed',error:error.message};}
- report.coverage='English and Korean official news index additions, current official season Max cards, seven-day manual-review expiry. Not a complete worldwide release feed. Does not detect every edit to existing articles, older articles falling outside indexes, or other locale-only announcements. Release dates, evolutions and exact art require human verification.';
- fs.writeFileSync(path.join(root,'release-discovery.json'),JSON.stringify(report,null,2)+'\n');
- fs.writeFileSync(path.join(root,'release-discovery.md'),'## Release discovery\n\nStatus: **'+report.status+'**\n\n'+report.coverage+'\n\n```json\n'+JSON.stringify(report,null,2).replace(/`/g,'\\u0060').replace(/</g,'\\u003c')+'\n```\n');
- console.log(JSON.stringify(report,null,2));if(report.status!=='no-new-discovery')process.exitCode=1;
+ const offline=process.argv.includes('--offline'),now=new Date();
+ const holds=readHolds(JSON.parse(fs.readFileSync(path.join(root,'data/recent-release-review-holds.json'),'utf8')));
+ let official={findings:holds.map(row=>({kind:'known-release-review-hold',...row})),observation:null};const officialIssues=[];
+ if(!offline){try{const observation=await observe(snapshot);official={observation,findings:compareDiscovery(snapshot,observation,loadCatalog(),now,holds)};}catch(error){officialIssues.push({source:'official-go-announcements',kind:'live-source-failed',error:error.message});}}
+ const sources=offline?catalogue.loadSources(now):await observeInventories(catalogue.loadSources(now),{now});
+ sources.issues.push(...officialIssues);
+ const report=catalogue.build(now,sources);report.queue.push(...sources.removed||[],...sources.assetChanges||[]);
+ for(const finding of official.findings)report.queue.push({id:'announcement:'+(finding.url||finding.name||finding.kind),source:'official-go',sourceUrl:finding.url||finding.source||snapshot.season.url,discoveredAt:now.toISOString(),releaseState:finding.releaseStatus||'uncertain',artState:finding.artState||'needs-review',priority:'urgent',disposition:'announcement-review-required',...(finding.name?{name:finding.name}:{}),finding});
+ for(const source of sources.discoveries||[])for(const url of source.links){
+  const reviewed=snapshot.supplementalNews?.find(row=>row.url===source.sourceUrl);
+  if(!reviewed?.links?.includes(url))report.queue.push({id:'news:'+url,source:source.sourceUrl,sourceUrl:url,discoveredAt:now.toISOString(),releaseState:'uncertain',artState:'needs-review',priority:'urgent',disposition:'news-or-event-review-required'});
+ }
+ report.queue.sort((a,b)=>a.id.localeCompare(b.id));report.status=report.sourceIssues.length?'source-failure':report.queue.length?'review-required':'reconciled';
+ report.mode=offline?'offline-integrity-only':'live-source';report.observations=[...official.observation?.observations||[],...sources.observations||[]];
+ report.sourceLimits=['PoGoAPI released/Shiny endpoints previously returned 403 and remain excluded; no retry or alternate route.','Official English/Korean news and current season; Leek Duck event index and GO Hub feed; Serebii GO species/forms/Shiny/Max inventories; Pokemod mined icon tree. Not every website, locale, old article edit, or unmined asset.','Uncertain identities, optional gender and missing art remain open; a reviewed future/excluded disposition cannot close missing artwork.'];
+ const summary='## Catalogue and release reconciliation\n\nStatus: **'+report.status+'** ('+report.mode+'). **'+report.queue.length+' open review items; this is not a complete-coverage result.**\n\n'+Object.entries(report.coverage).map(([id,row])=>'- '+id+': '+JSON.stringify(row)).join('\n')+'\n\n'+report.sourceLimits.map(s=>'- '+s).join('\n')+'\n\nSee catalogue-reconciliation.json for the deterministic queue, provenance, release/art states and explicit dispositions. Source failures: '+report.sourceIssues.length+'.\n';
+ fs.writeFileSync(path.join(root,'catalogue-reconciliation.json'),JSON.stringify(report,null,2)+'\n');
+ fs.writeFileSync(path.join(root,'release-discovery.json'),JSON.stringify({status:report.status,findings:official.findings,sourceIssues:report.sourceIssues,observations:report.observations},null,2)+'\n');
+ fs.writeFileSync(path.join(root,'release-discovery.md'),summary);console.log(summary);
+ if(report.status==='source-failure'||report.status!=='reconciled'&&!process.argv.includes('--report-only'))process.exitCode=1;
 }
 if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});
 module.exports={parseNews,parseSeason,compareDiscovery,observe,readHolds};

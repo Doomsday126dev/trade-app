@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "qualification": "Public page observations; hashes retain provenance, not automatic release eligibility. Unknown publication timestamps remain null. Facts and availability require the reviewed event context.",
+  "observations": [
+    {
+      "url": "https://pokemongo.com/news/ultra-unlock-hisui",
+      "status": 200,
+      "observedAt": "2026-10-27T07:46:29.183398+00:00",
+      "sha256": "09715d0d48904a95de87880f7d89e3aedfc27d5f104cd6e178e01a8a23a88ad0",
+      "bytes": 45289,
+      "sourceDeclaredPublishedOn": "2025-06-30",
+      "lastModified": null
+    },
+    {
+      "url": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "status": 200,
+      "observedAt": "2026-10-27T07:46:29.510593+00:00",
+      "sha256": "3df32a6a5b951ec066693bdcedb53b610658acd741c2fe15631f8c4608db1b2a",
+      "bytes": 215981,
+      "sourceDeclaredPublishedOn": null,
+      "lastModified": null
+    },
+    {
+      "url": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+      "status": 200,
+      "observedAt": "2026-10-27T07:46:29.624257+00:00",
+      "sha256": "62143d47ff799b5090c997b3729bc4eeb53f1a1a095ba1d7d9b4cc1d41101577",
+      "bytes": 149569,
+      "sourceDeclaredPublishedOn": null,
+      "lastModified": null
+    },
+    {
+      "url": "https://pokemongohub.net/post/news/poke-ball-hat-caterpie-to-debut-at-in-person-pokemon-go-fests/",
+      "status": 200,
+      "observedAt": "2026-10-27T07:46:29.726968+00:00",
+      "sha256": "2572e2d8eb53af741033ead595b2a8ccf9f29ee2498a6373aa870780849a0489",
+      "bytes": 373211,
+      "sourceDeclaredPublishedOn": "2026-04-08",
+      "lastModified": "Fri, 09 Oct 2026 19:54:23 GMT"
+    },
+    {
+      "url": "https://twitter.com/PokemonGoApp/status/2041924164466942052",
+      "status": 403,
+      "observedOn": "2026-10-27",
+      "disposition": "Direct web retrieval denied; not retried. Embedded official announcement and archived event used as corroborating evidence."
+    },
+    {
+      "url": "https://img.pokemondb.net/sprites/home/normal/raticate-alolan-female.png",
+      "status": 403,
+      "observedAt": "2026-10-27T08:08:27.166837+00:00",
+      "disposition": "Stopped this provider check after denial. Shiny female URL was not attempted, and no proxy or alternate route to this source was used. Default regional art remains verified; female-form equivalence requires review."
+    }
+  ]
+}
