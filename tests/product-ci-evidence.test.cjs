@@ -11,6 +11,8 @@ test('product evidence keeps job permissions, whole selector, failure status and
   assert.deepEqual(Object.keys(workflow.jobs),['public-share']);
   assert.deepEqual(workflow.on.pull_request.types,['opened','synchronize','reopened','ready_for_review']);
   const steps=workflow.jobs['public-share'].steps;
+  assert.equal(workflow.jobs['public-share']['timeout-minutes'],15);
+  assert.equal(steps.find(step=>step.name==='Affected browser journeys').env.PRODUCT_BROWSER_WORKERS,'4');
   assert.ok(!steps.some(step=>step['continue-on-error']));
   const scrub=steps.find(step=>step.id==='evidence');assert.equal(scrub.if,'always()');
   const upload=steps.find(step=>step.uses?.startsWith('actions/upload-artifact@'));

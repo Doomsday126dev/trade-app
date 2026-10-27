@@ -9,7 +9,7 @@ async function run(stage,{cwd=process.cwd(),env=process.env,command=process.exec
   stageArgs(stage);
   const dir=path.join(cwd,'product-ci-artifacts');fs.mkdirSync(dir,{recursive:true});
   const git=(...args)=>execFileSync('git',args,{cwd,encoding:'utf8'}).trim();
-  const metadata={stage,started:new Date().toISOString(),node:process.version,platform:process.platform,
+  const metadata={stage,browserWorkers:stage==='browser'?String(env.PRODUCT_BROWSER_WORKERS||'1'):null,started:new Date().toISOString(),node:process.version,platform:process.platform,
     os:os.release(),checkout:git('rev-parse','HEAD'),base:env.PRODUCT_BASE_SHA||null,
     workflowHeadRef:env.GITHUB_HEAD_REF||null,workflowCheckout:env.GITHUB_SHA||null,
     run:env.GITHUB_RUN_ID||null,attempt:env.GITHUB_RUN_ATTEMPT||null,

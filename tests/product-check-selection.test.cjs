@@ -183,3 +183,10 @@ test('CI gap acknowledgements are not frontend inputs; runtime catalogs retain p
  for(const runtime of ['data/costume-sprite-catalog.json','data.js','js/domain/costumeSpriteCatalog.js','index.html','css/app.css'])assert.equal(select([runtime]).performance,true,runtime);
  const fs=require('node:fs'),path=require('node:path');const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../scripts/pages/frontend-files.json')));assert.ok(!Object.values(manifest).filter(Array.isArray).flat().includes('scripts/sprites/costume-gap-baseline.json'));
 });
+
+test('product browser concurrency is explicit and bounded without dropping cases or adding retries',()=>{
+ const {browserArgs}=require('../scripts/select-product-checks.cjs'),files=['tests/first.spec.js','tests/second.spec.js'];
+ assert.deepEqual(browserArgs(files,{workers:'1'}),['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop','--workers=1']);
+ for(const workers of ['2','3','4'])assert.deepEqual(browserArgs(files,{workers}),['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop','--workers='+workers,'--fully-parallel']);
+ for(const workers of ['0','5','-1','1.5','four','4 --retries=1'])assert.throws(()=>browserArgs(files,{workers}),/integer from 1 to 4/);
+});

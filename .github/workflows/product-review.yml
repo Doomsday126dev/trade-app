@@ -62,6 +62,7 @@ jobs:
         if: steps.selection.outputs.browser == 'true'
         env:
           CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
+          PRODUCT_BROWSER_WORKERS: "4"
         run: node scripts/ci/product-evidence.cjs browser
       - name: Sanitize isolated test evidence
         id: evidence
