@@ -45,6 +45,7 @@ test('per-section Copy Search stays full-section across filtering, collapse and 
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(entry=>entry.p==='M'),{locale:pokemonGoSearchLocale()}).parts[0]));
     await high.locator('[data-contextual-copy]').click();
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(query);
+    if(locale==='en')await page.screenshot({path:`/tmp/trade-apri-qa/priority-filter-copy-${test.info().project.name}.png`,animations:'disabled'});
     await high.locator('.mylist-priority-toggle').click();
     await expect(high.locator('.myrow')).toHaveCount(0);
     await high.locator('[data-contextual-copy]').click();
@@ -129,7 +130,7 @@ test('priority edit moves the canonical normal want and its exact alias without 
   });
   await section(page,'M').locator('.mylist-priority-toggle').click();
   await section(page,'H').locator('[data-name="Pikachu"] .myrow-edit').click();
-  await page.locator('#combined-priority').selectOption('M');
+  await require('./helpers/current-want-controls.cjs').priority(page,'M');
   await page.locator('#combined-save').click();
   await expect(section(page,'M').locator('[data-name="Pikachu"]')).toHaveCount(1);
   await expect(section(page,'H').locator('[data-name="Pikachu"]')).toHaveCount(0);
@@ -215,7 +216,7 @@ test('classified wants cannot become legacy; genuine legacy edits persist and cl
     };
   });
   await section(page,'H').locator('[data-name="Pikachu"] .myrow-edit').click();
-  await page.locator('#combined-priority').selectOption('');await page.locator('#combined-save').click();
+  await require('./helpers/current-want-controls.cjs').priority(page,'');await page.locator('#combined-save').click();
   await expect(page.locator('#combined-error')).toContainText('Choose a priority');
   expect(await page.evaluate(()=>__writes.length)).toBe(0);await page.keyboard.press('Escape');
   await section(page,'LUCKY').locator('[data-name="Bulbasaur"] .myrow-edit').click();
@@ -227,7 +228,7 @@ test('classified wants cannot become legacy; genuine legacy edits persist and cl
   await page.locator('#combined-note').fill('Keep until classified');await page.locator('#combined-save').click();
   expect(await page.evaluate(()=>__writes.at(-1).patch)).toEqual({note:'Keep until classified'});
   await expect(section(page,'NEEDS_PRIORITY')).toHaveCount(1);
-  await section(page,'NEEDS_PRIORITY').locator('.myrow-edit').click();await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();
+  await section(page,'NEEDS_PRIORITY').locator('.myrow-edit').click();await require('./helpers/current-want-controls.cjs').priority(page,'L');await page.locator('#combined-save').click();
   await expect(section(page,'NEEDS_PRIORITY')).toHaveCount(0);await expect(section(page,'L').locator('[data-name="Psyduck"]')).toHaveCount(1);
 });
 

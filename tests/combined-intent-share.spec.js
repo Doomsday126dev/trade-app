@@ -68,16 +68,16 @@ test('signed-in recipient sections preserve special wants and copy only that tra
     const section=page.locator(`#share-list-out [data-want-section="${key}"]`);
     await expect(section.locator('.share-pcard')).toHaveCount(numbers.length);
     await section.locator('[data-contextual-copy]').click();
-    const expected=await page.evaluate(numbers=>PogoDomain.searchStrings.contextualSearchPlan(numbers.map(no=>({no})),{locale:'en'}).parts[0],numbers);
+    const expected=await page.evaluate(({key,numbers})=>PogoDomain.searchStrings.contextualSearchPlan(numbers.map(no=>({no,shiny:key==='H'?no===94:key.includes('SHINY'),lucky:key.includes('LUCKY'),xxl:key==='XXL',xxs:key==='XXS'})),{locale:'en'}).parts[0],{key,numbers});
     expect(await page.evaluate(()=>__copied)).toBe(expected);
   }
   const high=page.locator('#share-list-out [data-want-section="H"]');
-  await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+  await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(0);await expect(high.locator('.sr-only')).toContainText('Shiny');
   await expect(page.locator('#share-list-out [data-want-section="LUCKY"] .share-pcard-flag.lucky')).toHaveCount(0);
   await high.locator('[data-recipient-section-action="toggle"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(0);
   await high.locator('[data-contextual-copy]').click();
-  expect(await page.evaluate(()=>__copied)).toBe('!traded&25,94');
+  expect(await page.evaluate(()=>__copied)).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:25},{no:94,shiny:true}],{locale:'en'}).parts[0]));
   await expect(page.locator('#share-list-out [data-want-section="LUCKY"]')).toContainText('Lucky request');
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
 });
@@ -93,11 +93,11 @@ test('large signed-in recipient sections page cards while preserving the full se
   });
   const high=page.locator('#share-list-out [data-want-section="H"]');
   await expect(high.locator('.share-pcard')).toHaveCount(80);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]));
   await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
   await high.locator('[data-recipient-section-action="more"]').click();
   await expect(high.locator('.share-pcard')).toHaveCount(160);
-  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&150');
+  await expect(high.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]));
 });
 
 test('wants-only add is one canonical batch, failed save retains the draft',async({page})=>{
@@ -109,7 +109,7 @@ test('wants-only add is one canonical batch, failed save retains the draft',asyn
     applyAccountSyncTradeMutations=async mutations=>{window.__mutations=mutations;return{ok:false};};
     openCombinedEditor();
   });
-  await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-name').press('Escape');
   await expect(page.locator('#combined-ft')).toHaveCount(0);
   await expect(page.locator('#combined-backgroundId')).toHaveCount(0);
   await page.locator('#combined-shiny').check();
@@ -131,7 +131,7 @@ test('unchanged rows retain keyboard focus and an open selection search stays sc
     selectCombinedGroup(0,false);
     return{stable,before,after:document.querySelector('#combined-search [data-wants-copy]')?.dataset.wantsCopy,hidden:document.getElementById('combined-search').hidden};
   });
-  expect(result.stable).toBe(true);expect(result.before).toBe('!traded&25');expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
+  expect(result.stable).toBe(true);expect(result.before).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:25,shiny:true}],{locale:'en'}).parts[0]));expect(result.after).toBeUndefined();expect(result.hidden).toBe(true);
 });
 test('a remotely changed declaration blocks a stale editor without submitting mutations',async({page})=>{
   await fixture(page);
@@ -139,7 +139,7 @@ test('a remotely changed declaration blocks a stale editor without submitting mu
     accountSyncCanonicalEntities=[];accountSyncMutationAuthority=async()=>({mode:'canonical',controller:{}});accountSyncAuthorityCurrent=()=>true;
     window.__writes=0;applyAccountSyncTradeMutations=async()=>{__writes++;return{ok:true};};openCombinedEditor();
   });
-  await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-name').press('Escape');
   await page.evaluate(()=>{allData.wishlist[cur].Snom='H';});
   await page.locator('#combined-save').click();
   await expect(page.locator('#combined-editor-modal')).toBeVisible();
@@ -150,7 +150,7 @@ test('responsive navigation and editor fit',async({page})=>{
   await fixture(page);
   for(const width of [320,390,1440]){
     await page.setViewportSize({width,height:900});
-    if(width<701)await expect(page.locator('#nav-events')).toBeHidden();else await expect(page.locator('#nav-events')).toBeVisible();
+    await expect(page.locator('#nav-events')).toBeVisible();await expect(page.locator('#nav-more')).toBeVisible();await expect(page.locator('.tabs .tab:visible')).toHaveCount(4);
     await page.evaluate(()=>openCombinedEditor());
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.keyboard.press('Escape');
@@ -165,7 +165,7 @@ test('every reviewed unavailable costume is absent from both active selectors',a
     const unavailable=entries.filter(e=>spriteCatalogContext(e.no,e.name,e.displayName||e.name,e.catalogId).unresolved);
     return{unavailable:unavailable.map(e=>e.name),leaked:unavailable.filter(e=>active.has(e.name)||legacy.has(e.name)).map(e=>e.name),base:active.has('Pikachu'),exact:active.has('Pikachu (Worlds 2025)')};
   });
-  expect(audit.unavailable).toContain('Pikachu (Worlds 2026)');
+  expect(audit.unavailable).toContain('Pikachu (Gloria)');
   expect(audit.leaked).toEqual([]);expect(audit.base).toBe(true);expect(audit.exact).toBe(true);
 });
 test('image keeps missing art and long exact details without mutating selection',async({page})=>{

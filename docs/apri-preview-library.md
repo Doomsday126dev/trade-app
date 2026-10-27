@@ -47,3 +47,15 @@ Actual synthetic browser renders after .149 integration. Four My List native cap
 | Events | libfile_2ebd6a0cb1f08191864e078870e9c23c | 0 |
 | More | libfile_d0331f94c1a88191a7e62e77518e1e9e | 0 |
 | Populated Trainers lookup | libfile_593a04ce66ac81919473578538987d51 | 0 |
+
+
+## Implemented approved options refinement
+
+These replace proposal version 0 with actual browser captures, version 1. The broader contact sheets above predate this scoped refinement.
+
+| State | Viewport/theme | Library ID | Version |
+|---|---|---|---|
+| Options | 390×844 light | libfile_7f143e450bdc8191bd84ada562b7c14f | 1 |
+| Expanded preferences | 390×844 dark | libfile_709543be36cc8191aee6de70514f5188 | 1 |
+| Options | 1440×1000 light | libfile_6f8dea356e2c81918e728c7019b2a06d | 1 |
+| List priority label | phone light | libfile_ee196dcfbb6c81918c2a3902b92ecea0 | 1 |

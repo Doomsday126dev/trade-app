@@ -16,7 +16,7 @@ test('48 variant-heavy High wants have direct copies and optional tools at deskt
     await expect(page.locator('.wants-list-toolbar > button[onclick="openProductShare()"]')).toBeVisible();
     await expect(section(page,'H').locator('[data-contextual-copy]')).toBeVisible();
     await expect(page.locator('[data-manual-check-count],.contextual-manual-review,#legacy-list-tools')).toHaveCount(0);
-    await expect(page.locator('#combined-list .contextual-details:visible')).toHaveCount(0);
+    await expect(section(page,'H').locator('.contextual-details:visible')).toHaveCount(0);await expect(section(page,'M').locator('.contextual-details summary')).toHaveText('1 not included');
     await toolsMenu(page).click();
     await expect(page.locator('#wants-list-tools .wants-list-menu > button')).toHaveCount(3);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -53,7 +53,7 @@ test('Combine uses compact wrapping accessible toggles and unchanged independent
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     }
   }
-  for(const key of ['H','M','LUCKY']){const button=page.locator(`[data-wants-scope="${key}"]`);await button.click();await expect(button).toHaveAttribute('aria-pressed','true');await expect(button).toBeFocused();}
+  for(const key of ['H','M','LUCKY']){const button=page.locator(`[data-wants-scope="${key}"]`);await button.focus();await button.press('Enter');await expect(button).toHaveAttribute('aria-pressed','true');await expect(button).toBeFocused();}
   const expected=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(e=>['H','M'].includes(e.p)||!e.p&&e.lucky),{locale:pokemonGoSearchLocale()}).parts[0]);
   await expect(page.locator('.wants-custom-result [data-contextual-copy]')).toHaveCount(1);
   await page.locator('.wants-custom-result [data-contextual-copy]').click();expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(expected);
@@ -75,10 +75,10 @@ test('About searches is optional and Import still opens the existing preview flo
 test('real omissions name excluded entries, split queries remain bounded, and failed copy selects the exact part',async({page})=>{
   await installSimplificationFixture(page);
   const host=section(page,'H').locator('.wants-section-search');
-  await page.evaluate(()=>document.querySelector('[data-wants-section="H"] .wants-section-search').innerHTML=contextualIntentSearchHtml([{name:'Pikachu costume',no:25,lucky:true},{name:'Unresolved fixture',no:null}],'High',{compact:true}));
+  await page.evaluate(()=>document.querySelector('[data-wants-section="H"] .wants-section-search').innerHTML=contextualIntentSearchHtml([{name:'Pikachu (Worlds 2025)',no:25,lucky:true},{name:'Unresolved fixture',no:null}],'High',{compact:true}));
   await expect(host.locator('summary')).toHaveText('1 not included');await host.locator('summary').click();
   await expect(host.locator('.contextual-omitted')).toContainText('Unresolved fixture');await expect(host.locator('.contextual-omitted')).not.toContainText('Pikachu');
-  await expect(host.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy','!traded&25');
+  await expect(host.locator('[data-contextual-copy]')).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{name:'Pikachu (Worlds 2025)',no:25,lucky:true}],{locale:'en'}).parts[0]));
   await page.evaluate(()=>document.querySelector('[data-wants-section="H"] .wants-section-search').innerHTML=contextualIntentSearchHtml([{name:'Unresolved fixture',no:null}],'High',{compact:true}));
   await expect(host.locator('[data-contextual-copy]')).toHaveCount(0);await expect(host).toContainText('No species could be included');
   await page.evaluate(()=>document.querySelector('[data-wants-section="H"] .wants-section-search').innerHTML=contextualIntentSearchHtml(Array.from({length:2000},(_,i)=>({no:i+1})),'High',{compact:true}));

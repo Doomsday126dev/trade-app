@@ -27,7 +27,7 @@ test('priority views count actual rows, preserve selected/full share scopes and 
  for(const name of ['Pikachu','Charmander','Squirtle','Bulbasaur'])expect(csv).toContain(name);
  await page.locator('#product-share-modal .mact button').click();
 
- await page.locator('.wants-row[data-name="Charmander"] .wants-name').click();await page.locator('#combined-priority').selectOption('L');await page.locator('#combined-save').click();await settled(page);
+ await page.locator('.wants-row[data-name="Charmander"] .wants-name').click();await require('./helpers/current-want-controls.cjs').priority(page,'L');await page.locator('#combined-save').click();await settled(page);
  await expect(page.locator('.wants-row')).toHaveCount(0);await expect(page.locator('#combined-list')).toContainText('No Pokémon with Medium priority');
  await expect(filter(page,'M').locator('.wants-filter-count')).toHaveText('0');await expect(filter(page,'L').locator('.wants-filter-count')).toHaveText('2');
  await filter(page,'ALL').click();await expect(page.locator('.wants-row')).toHaveCount(4);await expect(page.locator('.wants-row[data-name="Pikachu"] input')).toBeChecked();

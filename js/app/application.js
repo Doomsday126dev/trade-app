@@ -603,7 +603,9 @@ function resetWantsToolsDisclosure(tools){
 }
 function toggleWantsSearchHelp(){
   const help=document.getElementById('wants-about-searches');help.hidden=!help.hidden;
-  document.getElementById('wants-about-searches-toggle').setAttribute('aria-expanded',String(!help.hidden));
+  const toggle=document.getElementById('wants-about-searches-toggle');
+  toggle.setAttribute('aria-expanded',String(!help.hidden));
+  toggle.focus({preventScroll:true});
 }
 function setWantsFindOpen(open){
   closeWantsListTools();
@@ -644,7 +646,7 @@ function renderWantsPicker(input){
 }
 function chooseWantsPicker(input,index){
   const item=input._pickerRows?.[index];if(!item)return;
-  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name')refreshCombinedGenderOptions();input.focus({preventScroll:true});
+  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name'){refreshCombinedGenderOptions();finishCombinedPokemonChoice();}else input.focus({preventScroll:true});
 }
 function prepareWantsCatalog(){
   if(!wantsPickerItems.length){
@@ -681,6 +683,7 @@ function refreshCombinedShinyAvailability(){
   const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
   box.disabled=!!blocked&&!box.checked;
   hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
+  renderCombinedPokemonSummary();
 }
 function combinedAllowedGenders(name){
   const costume=costumeSpriteCatalogDomain.resolve({name});
@@ -696,18 +699,52 @@ function refreshCombinedGenderOptions(savedValue){
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
-  select.innerHTML=`<option value="">${escHtml(allowed.length===1?i18nCore.t('costume.genderOnly',{gender:label(allowed[0])}):'—')}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
+  select.innerHTML=`<option value="">${escHtml(i18nCore.t(allowed.length?'wantEditor.anyGender':'wantEditor.genderless'))}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
   select.value=preserve||allowed.includes(value)?value:'';
   const hint=document.getElementById('combined-gender-hint');
-  hint.hidden=!preserve;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):'';
+  hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
+  renderCombinedPokemonSummary();
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
-function openWantsAddEditor(){
-  openCombinedEditor();
+function setCombinedPriority(value){
+  if(!['','H','M','L'].includes(value))return;
+  document.getElementById('combined-priority').value=value;
+  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
+}
+function renderCombinedPokemonSummary(){
+  const host=document.getElementById('combined-identity'),input=document.getElementById('combined-name'),field=document.getElementById('combined-name-field');
+  if(!host||!input||!field)return;
+  const entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
+  const show=!!entry&&!field.dataset.editing;
+  host.hidden=!show;field.hidden=show;
+  if(!show)return;
+  const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
+  document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
+  document.getElementById('combined-identity-art').innerHTML=entry.no?spriteImg(entry.no,60,'combined-identity-sprite',name,gender,entry.dn||entry.displayName||name,{shiny,catalogId:entry.catalogId}):'';
+  const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
+  form.replaceChildren();form.hidden=!type;
+  if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
+  document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
+}
+function changeCombinedPokemon(){
+  if(combinedEditor?.entries?.length)return;
+  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;
+  document.getElementById('combined-identity').hidden=true;
+  const input=document.getElementById('combined-name');input.focus();input.select();
+}
+function finishCombinedPokemonChoice(){
+  const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
+  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
+  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();
+  if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
+}
+function openWantsAddEditor(opener=document.activeElement){
+  openCombinedEditor(undefined,{returnFocus:opener});
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
   refreshCombinedGenderOptions();
-  document.getElementById('combined-priority').value=document.getElementById('wants-add-priority').value;
+  setCombinedPriority(document.getElementById('wants-add-priority').value);
+  finishCombinedPokemonChoice();
 }
 function setWantsAddPriority(priority){
   const input=document.getElementById('wants-add-priority');input.value=input.value===priority?'':priority;
@@ -718,34 +755,37 @@ async function submitWantsAdd(){
   const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
   button.disabled=true;
   try{
-    openWantsAddEditor();await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
+    openWantsAddEditor(button);await saveCombinedEditor();
+    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';input.focus({preventScroll:true});}
   }finally{button.disabled=false;}
 }
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
-function openCombinedEditor(index){
+function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
-  const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'phase2.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
-  input.value=entry.name||'';input.readOnly=!!entries?.length;
+  const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
+  input.value=entry.name||'';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
+  if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';
+  document.getElementById('combined-preferences').open=false;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   refreshCombinedShinyAvailability();
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
-  document.getElementById('combined-priority').value=[...priorities][0]||'';
+  setCombinedPriority([...priorities][0]||'');
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
-  document.getElementById('combined-save').disabled=false;
+  const save=document.getElementById('combined-save');save.disabled=false;save.dataset.i18n=entries?.length?'wantEditor.saveChanges':'wantEditor.addAction';save.textContent=i18nCore.t(save.dataset.i18n);
+  renderCombinedPokemonSummary();
   document.getElementById('wants-remove').hidden=!entries?.length;
   document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
-  openModal('combined-editor-modal');
+  openModal('combined-editor-modal',{returnFocus:options.returnFocus,initialFocus:document.getElementById('combined-name-field').hidden?'#combined-priorities input:checked':'#combined-name'});
 }
 function combinedSourceEntity(entry){
   const ref=entry.ref;if(ref?.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);

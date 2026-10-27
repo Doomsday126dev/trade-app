@@ -23,7 +23,7 @@ test('normal add hierarchy keeps lookup, priority, Add, and per-entry details to
   assert.match(add,/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
   assert.match(add,/class="add-pri-group"/);
   assert.match(add,/class="bsave"[^>]+myList\.addAction/);
-  assert.match(add,/myList\.flagsAndDetails/);
+  assert.match(add,/wantEditor\.options/);
   assert.doesNotMatch(add,/aria-controls="export-menu"/);
 });
 
@@ -43,7 +43,7 @@ test('canonical catalog lookup is named and does not advertise the removed voice
 });
 
 test('flags and exact variant details live in the shared wants editor and omit backgrounds',()=>{
-  assert.match(add,/onclick="openWantsAddEditor\(\)"/);
+  assert.match(add,/onclick="openWantsAddEditor\(this\)"/);
   for(const id of ['combined-lucky','combined-shiny','combined-xxl','combined-xxs','combined-mod','combined-gender','combined-note'])assert.match(editor,new RegExp(`id="${id}"`));
   assert.match(editor,/maxlength="160"/);assert.doesNotMatch(editor,/background-picker|combined-background/);
   const save=html.slice(html.indexOf('async function saveCombinedEditor('),html.indexOf('let boardHiddenKeys='));

@@ -4,7 +4,7 @@ for(const shiny of [false,true])test('all ten '+(shiny?'Shiny':'normal')+' costu
  await normalFixture(page);
  for(const r of rows){
   const input=page.locator('#wants-add-name');await input.fill(r.name.split(' (')[0]);await expect(page.locator('#wants-add-name-suggestions').getByRole('option',{name:r.name,exact:true})).toBeVisible();await page.locator('#wants-add-name-suggestions').getByRole('option',{name:r.name,exact:true}).click();
-  await page.locator('.wants-add-form button').filter({hasText:'Flags & details'}).click();if(!await page.locator('#combined-editor-modal details').evaluate(e=>e.open))await page.locator('#combined-editor-modal details summary').click();await page.locator('#combined-priority').selectOption('H');await page.locator('#combined-shiny').setChecked(shiny);await page.locator('#combined-gender').selectOption(shiny?'f':'m');await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
+  await page.locator('.wants-add-form button').filter({hasText:'Options'}).click();if(!await page.locator('#combined-editor-modal details').evaluate(e=>e.open))await page.locator('#combined-editor-modal details summary').click();await require('./helpers/current-want-controls.cjs').priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);await page.locator('#combined-gender').selectOption(shiny?'f':'m');await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
  }
  const saved=await page.evaluate(()=>structuredClone(__normal.remote));await page.evaluate(()=>stopAccountSyncRuntime());await install(page,saved);await settled(page);
  for(const r of rows){
