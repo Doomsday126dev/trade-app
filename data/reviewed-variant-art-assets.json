@@ -1,0 +1,1689 @@
+{
+  "schemaVersion": 1,
+  "sourceRole": "Pinned original GO miner assets, independently named form inventories and exact normal comparison; no mined sprite implies GO release.",
+  "records": [
+    {
+      "name": "Pikachu (Clone)",
+      "no": 25,
+      "reviewedAt": "2026-10-27T12:59:00.184755+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 25,
+        "names": [
+          "Pikachu (Clone)"
+        ],
+        "status": "exact",
+        "sourceFile": "pikachu-clone.png",
+        "sourceFemaleFile": "pikachu-clone-f.png",
+        "sourceLabel": "Clone",
+        "sourcePage": "https://pokemondb.net/sprites/pikachu",
+        "assets": {
+          "default": "assets/sprites/go/pikachu-clone.png",
+          "female": "assets/sprites/go/pikachu-clone-f.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-clone.png",
+        "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-clone-f.png",
+        "sha256": {
+          "default": "fcd196efa3bbeac578cfe0629eb6d13ed415f308fb441073946c87c69f1a1b6a",
+          "female": "9bda3464ebbda7fda6fefe33eb6d14400f136207dfe49d34fca0483e08373a68"
+        },
+        "shinyAvailability": "unreleased",
+        "availableGenders": [
+          "m"
+        ]
+      },
+      "artAllowedGenders": [
+        "m"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 25,
+        "hasGenderDifferences": 1,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fCOPY_2019.icon.png",
+        "sourcePath": "Addressable Assets/pm25.fCOPY_2019.icon.png",
+        "gitBlobSha": "fcc51ad740ab20c91bb3156a1d47fcd532a6796b",
+        "size": 19184,
+        "observedAt": "2026-10-27T12:46:11.065614+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "d938330e177051fa133d4715000731f5d60f1e81ffb67a0e9a1e71aee59e1463",
+        "bytes": 19184,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 5271,
+          "pixelHash": "a9e9163c"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fCOPY_2019.s.icon.png",
+          "sourcePath": "Addressable Assets/pm25.fCOPY_2019.s.icon.png",
+          "gitBlobSha": "8d2e91a605c3c32635a1358db53e8484ceb5e34f",
+          "size": 19200,
+          "observedAt": "2026-10-27T12:46:11.071444+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "be4f92e5f2525620055f8af1a4f5d78d0ef5186a3de43559cfdbf162f7630f02",
+          "bytes": 19200,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 5156,
+            "pixelHash": "e756ce6a"
+          },
+          "asset": "assets/sprites/go/variant-be4f92e5f2525620055f.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://pokemongo.com/news/pokemonday2020",
+          "role": "Official normal costume release. No Shiny release assertion; mined Shiny artwork is independently available."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Pikachu (Ph_D)",
+      "no": 25,
+      "reviewedAt": "2026-10-27T12:59:00.185528+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 25,
+        "names": [
+          "Pikachu (Ph_D)",
+          "Pikachu (Ph.D)",
+          "Pikachu Doctor"
+        ],
+        "status": "exact",
+        "sourceFile": "pikachu-phd.png",
+        "sourceLabel": "Pikachu, Ph.D.",
+        "sourcePage": "https://pokemondb.net/sprites/pikachu",
+        "assets": {
+          "default": "assets/sprites/go/pikachu-phd.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-phd.png",
+        "sha256": {
+          "default": "566d2db61000c6b37837d76e3a248204f71c4211aba97829aab2b9b0b464e122"
+        },
+        "shinyAvailability": "unreleased",
+        "availableGenders": [
+          "f"
+        ]
+      },
+      "artAllowedGenders": [
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 25,
+        "hasGenderDifferences": 1,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fDOCTOR.icon.png",
+        "sourcePath": "Addressable Assets/pm25.fDOCTOR.icon.png",
+        "gitBlobSha": "2ce97c9d39bf5e55ec54a63d71d424ff7e4ca76d",
+        "size": 19407,
+        "observedAt": "2026-10-27T12:46:10.922327+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "25d93db6cf954d057d2bde4677fb874f6d26e670c367d74aac78a4487326fad9",
+        "bytes": 19407,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 5526,
+          "pixelHash": "6e78b073"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fDOCTOR.s.icon.png",
+          "sourcePath": "Addressable Assets/pm25.fDOCTOR.s.icon.png",
+          "gitBlobSha": "c73a8182479c614c4836ea355219af66e54d0e23",
+          "size": 18872,
+          "observedAt": "2026-10-27T12:46:11.064965+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "8923975098f1b5e19757e3fce8ba6375e18990628da954f0d2412bf377338990",
+          "bytes": 18872,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 5547,
+            "pixelHash": "d785acb0"
+          },
+          "asset": "assets/sprites/go/variant-8923975098f1b5e19757.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.fDOCTOR.s.icon.png",
+          "sourcePath": "Addressable Assets/pm25.fDOCTOR.s.icon.png",
+          "gitBlobSha": "c73a8182479c614c4836ea355219af66e54d0e23",
+          "size": 18872,
+          "observedAt": "2026-10-27T12:46:11.064965+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "8923975098f1b5e19757e3fce8ba6375e18990628da954f0d2412bf377338990",
+          "bytes": 18872,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 5547,
+            "pixelHash": "d785acb0"
+          },
+          "asset": "assets/sprites/go/variant-8923975098f1b5e19757.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://pikachugo.vercel.app/",
+          "role": "Existing normal/female-only costume release evidence retained. Shiny remains release-unverified although exact female sprite is mined."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Raichu Detective",
+      "no": 26,
+      "reviewedAt": "2026-10-27T12:59:00.186207+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 26,
+        "names": [
+          "Raichu Detective"
+        ],
+        "status": "exact",
+        "sourceFile": "raichu-detective.png",
+        "sourceFemaleFile": "raichu-detective-f.png",
+        "sourceLabel": "Detective Hat",
+        "sourcePage": "https://pokemondb.net/sprites/raichu",
+        "assets": {
+          "default": "assets/sprites/go/raichu-detective.png",
+          "female": "assets/sprites/go/raichu-detective-f.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/raichu-detective.png",
+        "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/raichu-detective-f.png",
+        "sha256": {
+          "default": "66b8d3974c70e800586e2c1bb6b8da1be9f7ae86c9d97769defa916c395f7281",
+          "female": "4591145387c425e950747371945a3f1b021baf340b66237871cafbd5c48a26c0"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 26,
+        "hasGenderDifferences": 1,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm26.cPI.icon.png",
+        "sourcePath": "Addressable Assets/pm26.cPI.icon.png",
+        "gitBlobSha": "c52467280a0420e537505d1e6de54ca0e36f13cc",
+        "size": 35594,
+        "observedAt": "2026-10-27T12:46:11.458478+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "873feec7861ca1dd8bdda73e1771a760c1a2a8d6be4a83a26793d53da7efce20",
+        "bytes": 35594,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9165,
+          "pixelHash": "89ed9a17"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm26.cPI.s.icon.png",
+          "sourcePath": "Addressable Assets/pm26.cPI.s.icon.png",
+          "gitBlobSha": "2b60718622ac0bfd8bf26999c8c2a82c34377788",
+          "size": 36569,
+          "observedAt": "2026-10-27T12:46:11.479725+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "8c766414fb49899bb8bc38439de630e40a64f4b4a15ab4fad85e53ab2aa3dfcd",
+          "bytes": 36569,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9121,
+            "pixelHash": "400e975f"
+          },
+          "asset": "assets/sprites/go/variant-8c766414fb49899bb8bc.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm26.cPI.g2.s.icon.png",
+          "sourcePath": "Addressable Assets/pm26.cPI.g2.s.icon.png",
+          "gitBlobSha": "072fc0beaee8d296a489b574e46a6a73d4185a98",
+          "size": 36281,
+          "observedAt": "2026-10-27T12:46:11.587277+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "feab1f30f4ea8b904a10930b56e1849278c9947f35716938d2ea266f06eb26b1",
+          "bytes": 36281,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 8834,
+            "pixelHash": "cd36a50a"
+          },
+          "asset": "assets/sprites/go/variant-feab1f30f4ea8b904a10.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://pokemongo.com/news/detective-pikachu-returns-event",
+          "role": "Official Shiny Detective Pikachu encounter and evolution to Detective Raichu; exact PI costume assets independently pinned."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Mewtwo (Armored)",
+      "no": 150,
+      "reviewedAt": "2026-10-27T12:59:00.186693+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 150,
+        "names": [
+          "Mewtwo (Armored)"
+        ],
+        "status": "exact",
+        "sourceFile": "mewtwo-armored.png",
+        "sourceLabel": "Armored Mewtwo",
+        "sourcePage": "https://pokemondb.net/sprites/mewtwo",
+        "assets": {
+          "default": "assets/sprites/go/mewtwo-armored.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/mewtwo-armored.png",
+        "sha256": {
+          "default": "82e4c00dd3c919ad9a9ef0cb8f5f5ec5ea005754c0b01629aea44c3f8beb4146"
+        }
+      },
+      "artAllowedGenders": [],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 150,
+        "hasGenderDifferences": 0,
+        "genderRate": -1,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm150.fA.icon.png",
+        "sourcePath": "Addressable Assets/pm150.fA.icon.png",
+        "gitBlobSha": "a9e0f2ee300022ff7ef93f4fe57cd3011380f13f",
+        "size": 51586,
+        "observedAt": "2026-10-27T12:46:10.894344+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "73a6d4ec4362d67cf2c6f0f336c9d3a29979713d6ce89fad1ff69c51d85bac1e",
+        "bytes": 51586,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 19084,
+          "pixelHash": "8b4d9c4c"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm150.fA.s.icon.png",
+          "sourcePath": "Addressable Assets/pm150.fA.s.icon.png",
+          "gitBlobSha": "05e769a250c1878671388196c990c28308a4c7d7",
+          "size": 50712,
+          "observedAt": "2026-10-27T12:46:10.899855+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "a84b7d0e3aa54da02acbc2bc044318c4baeb2224eb633e28df3df9932e673f56",
+          "bytes": 50712,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 18772,
+            "pixelHash": "3808543f"
+          },
+          "asset": "assets/sprites/go/variant-a84b7d0e3aa54da02acb.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://pokemongo.com/news/pokemonday2020",
+          "role": "Official normal costume release. No Shiny release assertion; mined Shiny artwork is independently available."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Flygon (Meloetta Hat)",
+      "no": 330,
+      "reviewedAt": "2026-10-27T12:59:00.187641+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 330,
+        "names": [
+          "Flygon (Meloetta Hat)",
+          "Flygon GO Fest 2021"
+        ],
+        "status": "exact",
+        "sourceFile": "flygon-meloetta-hat.png",
+        "sourceLabel": "Meloetta Hat",
+        "sourcePage": "https://pokemondb.net/sprites/flygon",
+        "assets": {
+          "default": "assets/sprites/go/flygon-meloetta-hat.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/flygon-meloetta-hat.png",
+        "sha256": {
+          "default": "957e3450d2e203d7896c923109fe9aab95ecdbac35112ab02c8523388620f092"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 330,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm330.cGOFEST_2021_NOEVOLVE.icon.png",
+        "sourcePath": "Addressable Assets/pm330.cGOFEST_2021_NOEVOLVE.icon.png",
+        "gitBlobSha": "eb1e3adcafe7aa9c0f8b57104ea2838bfe4683ba",
+        "size": 34508,
+        "observedAt": "2026-10-27T12:46:10.656876+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "182081f8a40cfbc57a9e8041a4e7d5837bbec425f8d2e22307afc5cf525aafd6",
+        "bytes": 34508,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9958,
+          "pixelHash": "1f5923bc"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm330.cGOFEST_2021_NOEVOLVE.s.icon.png",
+          "sourcePath": "Addressable Assets/pm330.cGOFEST_2021_NOEVOLVE.s.icon.png",
+          "gitBlobSha": "6fc25d3836d3b6604938a10a4931ea8baeae196e",
+          "size": 34244,
+          "observedAt": "2026-10-27T12:46:10.756076+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "388b179c90863256e463637f628cf329db3e958d8ed36c805ef6a1f476554ff5",
+          "bytes": 34244,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9878,
+            "pixelHash": "b9a8654d"
+          },
+          "asset": "assets/sprites/go/variant-388b179c90863256e463.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm330.cGOFEST_2021_NOEVOLVE.s.icon.png",
+          "sourcePath": "Addressable Assets/pm330.cGOFEST_2021_NOEVOLVE.s.icon.png",
+          "gitBlobSha": "6fc25d3836d3b6604938a10a4931ea8baeae196e",
+          "size": 34244,
+          "observedAt": "2026-10-27T12:46:10.756076+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "388b179c90863256e463637f628cf329db3e958d8ed36c805ef6a1f476554ff5",
+          "bytes": 34244,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9878,
+            "pixelHash": "b9a8654d"
+          },
+          "asset": "assets/sprites/go/variant-388b179c90863256e463.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://pokemongo.com/news/pokemongofest2021-ultraunlock",
+          "role": "Official hat event context; normal release also in existing independent catalogue. Shiny hat release is not inferred from base Flygon or mined sprite."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Fancy",
+      "no": 666,
+      "reviewedAt": "2026-10-27T12:59:00.188317+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 666,
+        "names": [
+          "Fancy",
+          "Vivillon (Fancy)"
+        ],
+        "status": "exact",
+        "sourceFile": "vivillon-fancy.png",
+        "sourceLabel": "Fancy Pattern",
+        "sourcePage": "https://pokemondb.net/sprites/vivillon",
+        "assets": {
+          "default": "assets/sprites/go/vivillon-fancy.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/vivillon-fancy.png",
+        "sha256": {
+          "default": "26bbce1893c1ea5349e17f3f9f2c34e854a19f3901ba87f4ca527f2d676cd061"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 666,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fFANCY.icon.png",
+        "sourcePath": "Addressable Assets/pm666.fFANCY.icon.png",
+        "gitBlobSha": "3c06d40da4d77aa9ca7c0a17a48aff49805dbd0f",
+        "size": 29846,
+        "observedAt": "2026-10-27T12:46:10.757587+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "e6adbc9764e4947cd7c8ec0154a1eb2d550dd66104323fc2d01d1cb3d694c5a5",
+        "bytes": 29846,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 13106,
+          "pixelHash": "cae63fd3"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fFANCY.s.icon.png",
+          "sourcePath": "Addressable Assets/pm666.fFANCY.s.icon.png",
+          "gitBlobSha": "8e640ea83dee115f9f175d87af8baba5c3c2c14b",
+          "size": 29877,
+          "observedAt": "2026-10-27T12:46:10.780943+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "eed8698405046d6adef697b8ef09698f9cbcb55ea190cdda287a3527d9f1f587",
+          "bytes": 29877,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 13018,
+            "pixelHash": "72bb0a30"
+          },
+          "asset": "assets/sprites/go/variant-eed8698405046d6adef6.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fFANCY.s.icon.png",
+          "sourcePath": "Addressable Assets/pm666.fFANCY.s.icon.png",
+          "gitBlobSha": "8e640ea83dee115f9f175d87af8baba5c3c2c14b",
+          "size": 29877,
+          "observedAt": "2026-10-27T12:46:10.780943+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "eed8698405046d6adef697b8ef09698f9cbcb55ea190cdda287a3527d9f1f587",
+          "bytes": 29877,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 13018,
+            "pixelHash": "72bb0a30"
+          },
+          "asset": "assets/sprites/go/variant-eed8698405046d6adef6.png"
+        }
+      },
+      "normal": "unverified",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://www.dittobase.com/pokemon-go/pokedex/vivillon-fancy",
+          "role": "Exact named pattern and art only. In-game normal/Shiny release remains unverified; early wants are allowed."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Pok\u00e9 Ball",
+      "no": 666,
+      "reviewedAt": "2026-10-27T12:59:00.188968+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 666,
+        "names": [
+          "Pok\u00e9 Ball",
+          "Vivillon (Pok\u00e9 Ball)"
+        ],
+        "status": "exact",
+        "sourceFile": "vivillon-pokeball.png",
+        "sourceLabel": "Pokeball Pattern",
+        "sourcePage": "https://pokemondb.net/sprites/vivillon",
+        "assets": {
+          "default": "assets/sprites/go/vivillon-pokeball.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/vivillon-pokeball.png",
+        "sha256": {
+          "default": "64740552d9044f93ea2a34e4d412c6dc4af624f0be1d087641519dd7d1690b08"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 666,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fPOKEBALL.icon.png",
+        "sourcePath": "Addressable Assets/pm666.fPOKEBALL.icon.png",
+        "gitBlobSha": "48082d73807e54a9e6d6ead3d10ba1395994d53b",
+        "size": 25871,
+        "observedAt": "2026-10-27T12:46:10.790523+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "0d0b4789e29484f43db2fc2ffd1871174370785f2202988e9c4ad9f14a0254f0",
+        "bytes": 25871,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 11582,
+          "pixelHash": "a44d4faf"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fPOKEBALL.s.icon.png",
+          "sourcePath": "Addressable Assets/pm666.fPOKEBALL.s.icon.png",
+          "gitBlobSha": "e8f31a4790e402059a42bc564b7a39061827e8f5",
+          "size": 25856,
+          "observedAt": "2026-10-27T12:46:10.872119+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "b838e14324247289714ad403f7e2dd7d3aca303bcf37f803b3b07e6e5f543c5d",
+          "bytes": 25856,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 11467,
+            "pixelHash": "79a27348"
+          },
+          "asset": "assets/sprites/go/variant-b838e14324247289714a.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm666.fPOKEBALL.s.icon.png",
+          "sourcePath": "Addressable Assets/pm666.fPOKEBALL.s.icon.png",
+          "gitBlobSha": "e8f31a4790e402059a42bc564b7a39061827e8f5",
+          "size": 25856,
+          "observedAt": "2026-10-27T12:46:10.872119+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "b838e14324247289714ad403f7e2dd7d3aca303bcf37f803b3b07e6e5f543c5d",
+          "bytes": 25856,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 11467,
+            "pixelHash": "79a27348"
+          },
+          "asset": "assets/sprites/go/variant-b838e14324247289714a.png"
+        }
+      },
+      "normal": "unverified",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://www.dittobase.com/pokemon-go/pokedex/vivillon-pokeball",
+          "role": "Exact named pattern and art only. In-game normal/Shiny release remains unverified; early wants are allowed."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 1)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.189715+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 1)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-01.png",
+        "sourceLabel": "Pattern #1",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-01.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-01.png",
+        "sha256": {
+          "default": "fb259dba94713b3b267f6c987fbaac42eef50f50c7971e4ab4f6df049bffeb16"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f00.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f00.icon.png",
+        "gitBlobSha": "be9dc1b6c2fe4bb9b7e182c2c1310af0173ed424",
+        "size": 26375,
+        "observedAt": "2026-10-27T12:46:10.097381+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "3318a15e3b6c2ec50cefd1f9ac5567cb517adbcef3a5b51c1dffdb95aa192ebe",
+        "bytes": 26375,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9729,
+          "pixelHash": "63193f49"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f00.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f00.s.icon.png",
+          "gitBlobSha": "cfcb638c4e1bd1b84ddae159ce11846a0cb9d05f",
+          "size": 26886,
+          "observedAt": "2026-10-27T12:46:10.097872+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "95ee69d14ba1883a44fa5885a1417791e08e15eda3b6679ba1fd583292692c3d",
+          "bytes": 26886,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9752,
+            "pixelHash": "e74745ae"
+          },
+          "asset": "assets/sprites/go/variant-95ee69d14ba1883a44fa.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f00.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f00.s.icon.png",
+          "gitBlobSha": "cfcb638c4e1bd1b84ddae159ce11846a0cb9d05f",
+          "size": 26886,
+          "observedAt": "2026-10-27T12:46:10.097872+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "95ee69d14ba1883a44fa5885a1417791e08e15eda3b6679ba1fd583292692c3d",
+          "bytes": 26886,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9752,
+            "pixelHash": "e74745ae"
+          },
+          "asset": "assets/sprites/go/variant-95ee69d14ba1883a44fa.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 2)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.190125+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 2)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-02.png",
+        "sourceLabel": "Pattern #2",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-02.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-02.png",
+        "sha256": {
+          "default": "74e709ab2f67fb1015985e4d516434c0183bd5628a98d95b20d1a0876093861f"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f01.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f01.icon.png",
+        "gitBlobSha": "7d8cfd10713ff20d104e59f91a5c6770b91983c4",
+        "size": 26776,
+        "observedAt": "2026-10-27T12:46:10.097981+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "4f133b514175845b00d8e8904ef16b81060f9c19767adf3b8f73d6c8da3352b5",
+        "bytes": 26776,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9738,
+          "pixelHash": "8902d6e2"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f01.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f01.s.icon.png",
+          "gitBlobSha": "dd478ae8bebdcf43acc6fe2e4b25f9b869355fda",
+          "size": 27385,
+          "observedAt": "2026-10-27T12:46:10.098050+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "a166de280954eec4ecda78ce433e40972aef6efe0d8042a943ef8b9dc83d2d5d",
+          "bytes": 27385,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9750,
+            "pixelHash": "975efe0"
+          },
+          "asset": "assets/sprites/go/variant-a166de280954eec4ecda.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f01.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f01.s.icon.png",
+          "gitBlobSha": "dd478ae8bebdcf43acc6fe2e4b25f9b869355fda",
+          "size": 27385,
+          "observedAt": "2026-10-27T12:46:10.098050+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "a166de280954eec4ecda78ce433e40972aef6efe0d8042a943ef8b9dc83d2d5d",
+          "bytes": 27385,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9750,
+            "pixelHash": "975efe0"
+          },
+          "asset": "assets/sprites/go/variant-a166de280954eec4ecda.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 3)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.190486+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 3)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-03.png",
+        "sourceLabel": "Pattern #3",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-03.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-03.png",
+        "sha256": {
+          "default": "838a62836ca2ce76f5a6d9e41da6c56bac685d986e8701f03b31762fca3a19b6"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f02.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f02.icon.png",
+        "gitBlobSha": "cf0b0e4ea46309239830dfe0b5ee1f8d41eec1f3",
+        "size": 27006,
+        "observedAt": "2026-10-27T12:46:10.279442+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "0bbb39df341738b2833c3c89a3b2da175e11be145d7fce5c0d3cda2b768df228",
+        "bytes": 27006,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9725,
+          "pixelHash": "43bec70"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f02.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f02.s.icon.png",
+          "gitBlobSha": "f70dd4ef54f42a346a6e41e1890988b149974e16",
+          "size": 27535,
+          "observedAt": "2026-10-27T12:46:10.279549+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "4cdf9811c56ea8cbcb693df37c98093ad2e702f46cf8f69b77e3e1e24e26b7e6",
+          "bytes": 27535,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9750,
+            "pixelHash": "27d33bb"
+          },
+          "asset": "assets/sprites/go/variant-4cdf9811c56ea8cbcb69.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f02.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f02.s.icon.png",
+          "gitBlobSha": "f70dd4ef54f42a346a6e41e1890988b149974e16",
+          "size": 27535,
+          "observedAt": "2026-10-27T12:46:10.279549+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "4cdf9811c56ea8cbcb693df37c98093ad2e702f46cf8f69b77e3e1e24e26b7e6",
+          "bytes": 27535,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9750,
+            "pixelHash": "27d33bb"
+          },
+          "asset": "assets/sprites/go/variant-4cdf9811c56ea8cbcb69.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 4)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.191033+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 4)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-04.png",
+        "sourceLabel": "Pattern #4",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-04.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-04.png",
+        "sha256": {
+          "default": "a6840015680580b5ee7ad9f784cbeb343ec5017b52e13443a0284036b5548b28"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f03.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f03.icon.png",
+        "gitBlobSha": "17c48d0e859fcfec782167f7480535b6c33af6f8",
+        "size": 26777,
+        "observedAt": "2026-10-27T12:46:10.279621+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "1ab9b2a41914beaf33a80688da0a3d4a4bd9f30926f45c2a633a20ae054a4ec4",
+        "bytes": 26777,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9756,
+          "pixelHash": "4186acc6"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f03.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f03.s.icon.png",
+          "gitBlobSha": "be923e6e5f0221a8be5afcbe97ebf09081e75d2f",
+          "size": 27464,
+          "observedAt": "2026-10-27T12:46:10.281506+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "5bb69a355f92b56e4f7516921b870b5480b1f81a7d97a2fb348e262210ba90cc",
+          "bytes": 27464,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9800,
+            "pixelHash": "534b3568"
+          },
+          "asset": "assets/sprites/go/variant-5bb69a355f92b56e4f75.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f03.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f03.s.icon.png",
+          "gitBlobSha": "be923e6e5f0221a8be5afcbe97ebf09081e75d2f",
+          "size": 27464,
+          "observedAt": "2026-10-27T12:46:10.281506+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "5bb69a355f92b56e4f7516921b870b5480b1f81a7d97a2fb348e262210ba90cc",
+          "bytes": 27464,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9800,
+            "pixelHash": "534b3568"
+          },
+          "asset": "assets/sprites/go/variant-5bb69a355f92b56e4f75.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 5)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.191382+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 5)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-05.png",
+        "sourceLabel": "Pattern #5",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-05.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-05.png",
+        "sha256": {
+          "default": "14c91eaad2dcfca02206df51c6cf3918af0490f27914fd60a7b7bcb658adb9d1"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f04.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f04.icon.png",
+        "gitBlobSha": "b025cd867adb212d0fb06db29beda39d10838061",
+        "size": 27002,
+        "observedAt": "2026-10-27T12:46:10.406485+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "aae7ca785be7fa4a38c3ad2e68c0af50a9f57688fee87e0b7ce6f268d1f62096",
+        "bytes": 27002,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9753,
+          "pixelHash": "92a70345"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f04.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f04.s.icon.png",
+          "gitBlobSha": "27e6ac692606f9f2f31712af078dc470f737913b",
+          "size": 27749,
+          "observedAt": "2026-10-27T12:46:10.413784+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "1930b4de80b39171fc0d5e81363da240fa795b7a5b96ab5c73d0541d3c2c8029",
+          "bytes": 27749,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9761,
+            "pixelHash": "b120a56b"
+          },
+          "asset": "assets/sprites/go/variant-1930b4de80b39171fc0d.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f04.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f04.s.icon.png",
+          "gitBlobSha": "27e6ac692606f9f2f31712af078dc470f737913b",
+          "size": 27749,
+          "observedAt": "2026-10-27T12:46:10.413784+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "1930b4de80b39171fc0d5e81363da240fa795b7a5b96ab5c73d0541d3c2c8029",
+          "bytes": 27749,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9761,
+            "pixelHash": "b120a56b"
+          },
+          "asset": "assets/sprites/go/variant-1930b4de80b39171fc0d.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 6)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.191960+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 6)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-06.png",
+        "sourceLabel": "Pattern #6",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-06.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-06.png",
+        "sha256": {
+          "default": "6490f7293b96f2a270442d1b6242453ef6cc415a00bdd49f72221f4b29d7ad54"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f05.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f05.icon.png",
+        "gitBlobSha": "2f2f8c21fcb7131f2eef051e7eabb6813c70eec5",
+        "size": 26526,
+        "observedAt": "2026-10-27T12:46:10.413926+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "6f637ad3bdd77cac89f5be74f95f61765489e42b51e60f402bde5fdd8f7d6727",
+        "bytes": 26526,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9723,
+          "pixelHash": "c1595b2c"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f05.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f05.s.icon.png",
+          "gitBlobSha": "ff26316938b81ca4f73c4a28801675d6dab58193",
+          "size": 27326,
+          "observedAt": "2026-10-27T12:46:10.414009+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "f6b267e97cf78e69ab7b5bfc82becc8230a5195e4d8cc242ec6625c8fda31ad7",
+          "bytes": 27326,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9725,
+            "pixelHash": "cccef330"
+          },
+          "asset": "assets/sprites/go/variant-f6b267e97cf78e69ab7b.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f05.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f05.s.icon.png",
+          "gitBlobSha": "ff26316938b81ca4f73c4a28801675d6dab58193",
+          "size": 27326,
+          "observedAt": "2026-10-27T12:46:10.414009+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "f6b267e97cf78e69ab7b5bfc82becc8230a5195e4d8cc242ec6625c8fda31ad7",
+          "bytes": 27326,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9725,
+            "pixelHash": "cccef330"
+          },
+          "asset": "assets/sprites/go/variant-f6b267e97cf78e69ab7b.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 7)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.192758+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 7)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-07.png",
+        "sourceLabel": "Pattern #7",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-07.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-07.png",
+        "sha256": {
+          "default": "f0bbb903e3c9df36874a50a862b3665e7eb4372746bed042b9d88caabf9d89c2"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f06.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f06.icon.png",
+        "gitBlobSha": "5e56e6a2f5f0ad505df24095f6a5d8df73ca3701",
+        "size": 27844,
+        "observedAt": "2026-10-27T12:46:10.538691+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "0cd464a4c012a76e087146d41595e089c909cda9b5017360be31028ee46d969f",
+        "bytes": 27844,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9660,
+          "pixelHash": "77df8f1b"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f06.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f06.s.icon.png",
+          "gitBlobSha": "b108e6231672107f3e9b37491417b0ee5e16d39a",
+          "size": 28407,
+          "observedAt": "2026-10-27T12:46:10.619659+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "b9681180d86ab4d83f09f341e2375dc428be948809699a564846814ad35129a9",
+          "bytes": 28407,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9663,
+            "pixelHash": "aa48500e"
+          },
+          "asset": "assets/sprites/go/variant-b9681180d86ab4d83f09.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f06.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f06.s.icon.png",
+          "gitBlobSha": "b108e6231672107f3e9b37491417b0ee5e16d39a",
+          "size": 28407,
+          "observedAt": "2026-10-27T12:46:10.619659+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "b9681180d86ab4d83f09f341e2375dc428be948809699a564846814ad35129a9",
+          "bytes": 28407,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9663,
+            "pixelHash": "aa48500e"
+          },
+          "asset": "assets/sprites/go/variant-b9681180d86ab4d83f09.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Spinda (Form 8)",
+      "no": 327,
+      "reviewedAt": "2026-10-27T12:59:00.193127+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 327,
+        "names": [
+          "Spinda (Form 8)"
+        ],
+        "status": "exact",
+        "sourceFile": "spinda-08.png",
+        "sourceLabel": "Pattern #8",
+        "sourcePage": "https://pokemondb.net/sprites/spinda",
+        "assets": {
+          "default": "assets/sprites/go/spinda-08.png"
+        },
+        "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/spinda-08.png",
+        "sha256": {
+          "default": "5e1a2506278f91e3ae6da007341746cdea66e84267fcf8467b217b4607245a76"
+        }
+      },
+      "artAllowedGenders": [
+        "m",
+        "f"
+      ],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 327,
+        "hasGenderDifferences": 0,
+        "genderRate": 4,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f07.icon.png",
+        "sourcePath": "Addressable Assets/pm327.f07.icon.png",
+        "gitBlobSha": "c8bdbb6ef73bca76bb26ce009a6f70019cae29bf",
+        "size": 27619,
+        "observedAt": "2026-10-27T12:46:10.634269+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "sha256": "e3b6b98a68928366cc3671dffc449d90f86676832ecb56f7c37cb0f659275722",
+        "bytes": 27619,
+        "width": 256,
+        "height": 256,
+        "decoded": {
+          "status": "decoded",
+          "width": 256,
+          "height": 256,
+          "visiblePixels": 9679,
+          "pixelHash": "cabefabf"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f07.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f07.s.icon.png",
+          "gitBlobSha": "7f1abbaef50d4dfd25adcc4c4b6ed66755b28015",
+          "size": 28424,
+          "observedAt": "2026-10-27T12:46:10.646094+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "a61b33d94febe72ab0cb8524211ebdf2277e873ac5272324d6d805ae5380be46",
+          "bytes": 28424,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9664,
+            "pixelHash": "4786f35c"
+          },
+          "asset": "assets/sprites/go/variant-a61b33d94febe72ab0cb.png"
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm327.f07.s.icon.png",
+          "sourcePath": "Addressable Assets/pm327.f07.s.icon.png",
+          "gitBlobSha": "7f1abbaef50d4dfd25adcc4c4b6ed66755b28015",
+          "size": 28424,
+          "observedAt": "2026-10-27T12:46:10.646094+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "sha256": "a61b33d94febe72ab0cb8524211ebdf2277e873ac5272324d6d805ae5380be46",
+          "bytes": 28424,
+          "width": 256,
+          "height": 256,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 9664,
+            "pixelHash": "4786f35c"
+          },
+          "asset": "assets/sprites/go/variant-a61b33d94febe72ab0cb.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "released",
+      "releaseEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Shiny inventory explicitly says Available when encountered; separate numbered form identities corroborated by existing normal art and named Dittobase pages, not inferred from an empty source label."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate"
+    },
+    {
+      "name": "Minior (Green Core)",
+      "no": 774,
+      "reviewedAt": "2026-10-27T12:59:00.193479+00:00",
+      "qualification": "Exact-identity normal/source/Shiny visual comparison plus decoded original bytes and pinned upstream identity. Artwork availability is separate from GO release; no normal/generic fallback. Original normal assets and saved identity are retained.",
+      "originalRecord": {
+        "no": 774,
+        "names": [
+          "Minior (Green Core)"
+        ],
+        "status": "exact",
+        "sourceFile": "minior.png",
+        "sourceLabel": "Minior (Green Core)",
+        "sourcePage": "https://pokemongo.com/news/minior-meteor-showers-2026",
+        "assets": {
+          "default": "assets/sprites/go/reviewed-minior.png"
+        },
+        "sha256": {
+          "default": "bad2f78602f583bb85945966180999742d46fd629b6ae9a18cc3c203632a9a0d"
+        },
+        "releaseReview": {
+          "normal": "released Green Core only",
+          "shiny": "not verified released; no artwork assigned",
+          "evidence": [
+            "https://pokemongo.com/news/minior-meteor-showers-2026",
+            "https://pokemongohub.net/post/news/minior-showers-minior-debut-during-real-life-meteor-showers/"
+          ]
+        },
+        "sourceProvider": "max-form-reviewed"
+      },
+      "artAllowedGenders": [],
+      "genderEvidence": {
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv",
+        "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45",
+        "speciesId": 774,
+        "hasGenderDifferences": 0,
+        "genderRate": -1,
+        "formConstraint": "Existing reviewed costume-specific gender boundaries retained; Ph.D. stays female-only and Clone Pikachu male-only."
+      },
+      "normalComparison": {
+        "url": "https://assets.dittobase.com/go/pokemon-unpadded/774-minior-green.png",
+        "observedAt": "2026-10-27T12:23:07.338305+00:00",
+        "status": "bytes-fetched",
+        "http": 200,
+        "bytes": 10417,
+        "sha256": "63c60b20f8da4ebdb4a647d2f80317adb545edb6f532cca37449509bfaaf0a27",
+        "width": 87,
+        "height": 83,
+        "decoded": {
+          "width": 87,
+          "height": 83,
+          "visiblePixels": 3788,
+          "pixelHash": "cd8edfe5",
+          "status": "decoded"
+        }
+      },
+      "variants": {
+        "shiny": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/774-minior-green-shiny.png",
+          "observedAt": "2026-10-27T12:23:07.338286+00:00",
+          "status": "bytes-fetched",
+          "http": 200,
+          "bytes": 9200,
+          "sha256": "3e2af66eff5828d7bdcbfa9d30293fb824cb70ec5c993539e17ebdd80026d4d6",
+          "width": 87,
+          "height": 83,
+          "decoded": {
+            "width": 87,
+            "height": 83,
+            "visiblePixels": 3788,
+            "pixelHash": "a3523212",
+            "status": "decoded"
+          },
+          "asset": "assets/sprites/go/variant-3e2af66eff5828d7bdcb.png"
+        }
+      },
+      "normal": "released",
+      "shiny": "unverified",
+      "releaseEvidence": [
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "Retains existing reviewed Green Core normal release; Shiny not verified released. Exact black-core art does not imply obtainable."
+        }
+      ],
+      "disposition": "exact-art-integrated-release-evidence-separate",
+      "updatedReleaseReview": {
+        "shiny": "Exact Shiny artwork is available; GO Shiny release remains unverified. Artwork is not evidence of obtainability."
+      }
+    }
+  ]
+}

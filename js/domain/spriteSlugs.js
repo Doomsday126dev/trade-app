@@ -81,7 +81,8 @@
       .replace(/^flabebe-(red|yellow|orange|blue|white)-flower$/,'flabebe-$1')// Flabébé drops " Flower"
       .replace(/^oricorio-pa-u$/,'oricorio-pau')                              // Pa'u → pau
       .replace(/^shellos-pink$/,'shellos-west')                               // PokemonDB uses sea names
-      .replace(/^shellos-blue$/,'shellos-east');
+      .replace(/^shellos-blue$/,'shellos-east')
+      .replace(/^cherrim-sunny$/,'cherrim-sunshine');
     // Female gender: append if not already there
     if(gender==='f'&&!/female/.test(slug))slug+='-female';
     return slug;
@@ -101,7 +102,7 @@
     'Savanna','Sun','Tundra'
   ]);
   const scatterbugEquivalentNames=new Set(SCATTERBUG_VISUAL_EQUIVALENTS.map(pattern=>normalizeSpriteKey(`Scatterbug (${pattern})`)));
-  const SCATTERBUG_EQUIVALENT_URL='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png';
+  const SCATTERBUG_EQUIVALENT_URL='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/664.png';
   // Dynamax changes the trade identity and adds the renderer's D badge, but
   // does not change the underlying species/form artwork. Only entries in the
   // generated public Max catalog qualify, including in the anonymous shell
@@ -115,11 +116,11 @@
     return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax';
   }
   function verifiedEquivalentSpriteUrl(name='',no=0,gender='',shiny=false){
-    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return shiny?SCATTERBUG_EQUIVALENT_URL.replace('/pokemon/','/pokemon/shiny/'):SCATTERBUG_EQUIVALENT_URL;
+    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return shiny?SCATTERBUG_EQUIVALENT_URL.replace('/home/','/home/shiny/'):SCATTERBUG_EQUIVALENT_URL;
     // Own-Tempo Rockruff is a distinct trade/evolution identity, not a
     // different-looking Rockruff stage.
     if(Number(no)===744&&normalizeSpriteKey(name)==='rockruff dusk')
-      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shiny?'shiny/':''}744.png`;
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}10151.png`;
     const dynamaxBase=reviewedDynamaxBase(name,no);
     if(!dynamaxBase)return'';
     // Keep real Amped/Low Key and Single/Rapid Strike forms distinct.
@@ -454,7 +455,39 @@
     "h zoroark": 10239,
     "zoroark hisuian form": 10239,
     "h goodra": 10242,
-    "goodra hisuian form": 10242
+    "goodra hisuian form": 10242,
+    "venusaur gigantamax": 10195,
+    "blastoise gigantamax": 10197,
+    "butterfree gigantamax": 10198,
+    "pikachu gigantamax": 10199,
+    "meowth gigantamax": 10200,
+    "machamp gigantamax": 10201,
+    "gengar gigantamax": 10202,
+    "kingler gigantamax": 10203,
+    "lapras gigantamax": 10204,
+    "eevee gigantamax": 10205,
+    "snorlax gigantamax": 10206,
+    "garbodor gigantamax": 10207,
+    "melmetal gigantamax": 10208,
+    "rillaboom gigantamax": 10209,
+    "inteleon gigantamax": 10211,
+    "corviknight gigantamax": 10212,
+    "orbeetle gigantamax": 10213,
+    "drednaw gigantamax": 10214,
+    "coalossal gigantamax": 10215,
+    "flapple gigantamax": 10216,
+    "appletun gigantamax": 10217,
+    "sandaconda gigantamax": 10218,
+    "toxtricity gigantamax": 10219,
+    "centiskorch gigantamax": 10220,
+    "hatterene gigantamax": 10221,
+    "grimmsnarl gigantamax": 10222,
+    "alcremie gigantamax": 10223,
+    "duraludon gigantamax": 10225,
+    "rockruff dusk": 10151,
+    "urshifu single strike style gigantamax": 10226,
+    "urshifu rapid strike style gigantamax": 10227,
+    "gimmighoul roaming form": 10263
 });
   let publicDexDatabase=null,publicDexLookup=null;
   function publicSpriteDex(name='',database=global.POGO_TRADE_DB){

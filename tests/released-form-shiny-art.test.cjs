@@ -7,7 +7,7 @@ test('47 reviewed exact Shiny forms resolve without generic species or normal fa
  assert.equal(assets.size,47);
 });
 test('held Spinda patterns and unreleased Vivillon are not promoted or misclassified',()=>{
- assert.equal(proof.holds.length,10);for(const name of ['Fancy','Poké Ball',...Array.from({length:8},(_,i)=>'Spinda (Form '+(i+1)+')')]){assert.equal(api.resolution({name,shiny:true}).status,'unavailable');assert.equal(api.resolve({name}).formShinyArtworkReview,undefined);}
+ assert.equal(proof.holds.length,10);for(const name of ['Fancy','Poké Ball',...Array.from({length:8},(_,i)=>'Spinda (Form '+(i+1)+')')]){assert.equal(api.resolution({name,shiny:true}).status,'exact');const review=require('../data/reviewed-variant-art-assets.json').records.find(r=>r.name===api.resolve({name}).names[0]);assert.ok(review);assert.equal(review.shiny,name.startsWith('Spinda')?'released':'unverified');assert.equal(api.resolve({name}).formShinyArtworkReview,undefined);}
  assert.equal(proof.holds.filter(r=>r.releasedShiny===true).length,8);assert.equal(proof.holds.filter(r=>r.releasedNormal===false&&r.releasedShiny===false).length,2);
 });
 test('wrong form, variant, pinned source or copied review is rejected',()=>{

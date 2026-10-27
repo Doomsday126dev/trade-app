@@ -15,7 +15,7 @@ const sprites=window.PogoDomain.spriteSlugs;
 
 test('only the eighteen reviewed Scatterbug identities share species 664 art',()=>{
   for(const pattern of sprites.SCATTERBUG_VISUAL_EQUIVALENTS)
-    assert.equal(sprites.verifiedEquivalentSpriteUrl(`Scatterbug (${pattern})`,664),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png');
+    assert.equal(sprites.verifiedEquivalentSpriteUrl(`Scatterbug (${pattern})`,664),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/664.png');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Scatterbug (Invented)',664),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Vivillon (Garden)',666),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Scatterbug (Garden)',666),'');
@@ -43,7 +43,7 @@ test('finite Dynamax equivalence preserves every underlying visible form',()=>{
 });
 
 test('Rockruff Dusk shares appearance, but ambiguous Gigantamax Urshifu never substitutes art',()=>{
-  assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',744),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png');
+  assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',744),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10151.png');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',745),'');
   assert.equal(sprites.isAmbiguousVisibleForm('Urshifu (Gigantamax)',892),true);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Urshifu (Gigantamax)','',892)),[]);
@@ -52,8 +52,8 @@ test('Rockruff Dusk shares appearance, but ambiguous Gigantamax Urshifu never su
 
 test('reviewed equivalent forms retain Shiny color without normal fallback',()=>{
  for(const [name,no]of [['Scatterbug (Garden)',664],['Rockruff (Dusk)',744]]){
-  assert.equal(sprites.verifiedEquivalentSpriteUrl(name,no,'',true),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${no}.png`);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls(name,'',no,true)),[`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${no}.png`]);
+  assert.equal(sprites.verifiedEquivalentSpriteUrl(name,no,'',true),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${no===744?10151:no}.png`);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls(name,'',no,true)),[`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${no===744?10151:no}.png`]);
  }
 });
 

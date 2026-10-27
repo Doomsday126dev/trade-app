@@ -44,7 +44,7 @@ test('reviewed missing identity counts cannot retain an already integrated exact
 });
 
 test('finite queue art stays hash-pinned, Shiny duplicates stay blocked, and Zen labels survive line breaks',()=>{
- const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const records=validateReviewedAssets(path.join(__dirname,'..'));assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
+ const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,69);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
  const input=inputs();input.sources.data['normal-inventory']=[];assert.equal(reconcile(input).status,'reconciled');const html='<img src="/pokemongo/pokemon/555-gz.png"><td class="fooinfo"><a href="/pokemongo/pokemon/555.shtml">Darmanitan</a> (Galarian Form<br />Zen Mode)</td>';assert.equal(parseGOInventory(html,'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal')[0].name,'Darmanitan (Galarian Form Zen Mode)');
 });
 
@@ -52,4 +52,8 @@ test('existing non-tradeable Mythical policy also applies to forms without exclu
  const vm=require('node:vm'),path=require('node:path'),window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/domain/pokemonSearchTerms.js'),'utf8'),{window});vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/domain/pokemonEntryRules.js'),'utf8'),{window});const rules=window.PogoDomain.pokemonEntryRules;
  for(const entry of [{no:494,name:'Victini'},{no:649,name:'Genesect (Shock Drive)'},{no:801,name:'Magearna (Original Color)'}])assert.equal(rules.isTradeableForWishlist(entry),false);
  for(const entry of [{no:808,name:'Meltan'},{no:809,name:'Melmetal'},{no:1024,name:'Terapagos (Stellar Form)'}])assert.equal(rules.isTradeableForWishlist(entry),true);
+});
+
+test('exact variant owner blockers survive source matches and cannot disappear into aliases',()=>{
+ const input=inputs();input.variantIssues=[{id:'clone-shiny',no:3,name:'Venusaur (Clone)',releaseState:'shiny-unverified',artState:'missing-exact-shiny',reason:'Exact Clone Shiny art has not been sourced',sources:['https://example.test/clones'],nextAction:'Check the exact clone miner group; never substitute base art.'}];const report=reconcile(input),row=report.queue.find(r=>r.id==='exact-variant:clone-shiny');assert.equal(row.priority,'urgent');assert.equal(row.disposition,'owner-attention-required');assert.equal(report.status,'review-required');input.variantIssues[0].sources=[];assert.throws(()=>reconcile(input),/Incomplete exact variant owner issue/);
 });

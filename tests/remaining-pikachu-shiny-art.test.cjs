@@ -11,7 +11,7 @@ test('single-gender forms never cross to impossible gender or normal art',()=>{
  for(const [name,g]of [['Kurta','m'],['Mimikyu','m'],['Saree','f']])for(const shiny of [false,true]){const n='Pikachu ('+name+')';assert.deepEqual(Array.from(api.resolve({name:n}).availableGenders),[g]);assert.deepEqual(Array.from(api.resolution({name:n,shiny}).urls),Array.from(api.resolution({name:n,gender:g,shiny}).urls));assert.equal(api.resolution({name:n,gender:g==='m'?'f':'m',shiny}).reason,'invalid-gender');}
 });
 test('unknown Detective year and unreleased Shiny variants cannot borrow 2023 artwork',()=>{
- for(const [name,reason]of [['Detective','needs-identification'],['Clone','unreleased'],['Ph_D','unreleased']]){const result=api.resolution({name:'Pikachu ('+name+')',shiny:true});assert.equal(result.reason,reason);assert.deepEqual(Array.from(result.urls),[]);}
+ assert.equal(api.resolution({name:'Pikachu (Detective)',shiny:true}).reason,'needs-identification');for(const short of ['Clone','Ph_D']){const name='Pikachu ('+short+')';assert.equal(api.resolution({name,shiny:true}).status,'exact');const review=require('../data/reviewed-variant-art-assets.json').records.find(r=>r.name===name);assert.equal(review.shiny,'unverified');assert.notEqual(api.resolution({name,shiny:true}).urls[0],api.resolution({name:'Pikachu (Detective 2023)',shiny:true}).urls[0]);}
  for(const g of ['m','f'])for(const shiny of [false,true])assert.equal(api.resolution({name:'Pikachu (Detective 2023)',gender:g,shiny}).status,'exact');
 });
 test('pinned proof rejects changed costume, variant, commit, source bytes and copied proof',()=>{

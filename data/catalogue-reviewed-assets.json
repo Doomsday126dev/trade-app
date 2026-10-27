@@ -4733,6 +4733,226 @@
       "qualification": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event.",
       "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
       "sourceId": "canonical-missing:dynamax:895"
+    },
+    {
+      "no": 892,
+      "names": [
+        "Urshifu (Single Strike Style) (Gigantamax)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-d1385a57dfc5b273b2eb.png",
+        "shiny": "assets/sprites/go/catalogue-3a60cdb3987279d3d352.png"
+      },
+      "sha256": {
+        "default": "d1385a57dfc5b273b2ebf38710135502e140e4c50f78607e46410e4354d7c387",
+        "shiny": "3a60cdb3987279d3d352fe9e35b6a6440f0b8536df70527b97abafac1f56075c"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10226.png",
+          "http": 200,
+          "sha256": "d1385a57dfc5b273b2ebf38710135502e140e4c50f78607e46410e4354d7c387",
+          "bytes": 171102,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 87963,
+            "pixelHash": "5d792c55",
+            "status": "decoded"
+          },
+          "gitBlobSha": "fe2379483f49ade733343f01093f03ea5840f0a4",
+          "sourcePath": "sprites/pokemon/other/home/10226.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10226.png",
+          "observedAt": "2026-10-27T13:43:11.657Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10226.png",
+          "http": 200,
+          "sha256": "3a60cdb3987279d3d352fe9e35b6a6440f0b8536df70527b97abafac1f56075c",
+          "bytes": 170922,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 87967,
+            "pixelHash": "abab1956",
+            "status": "decoded"
+          },
+          "gitBlobSha": "9b37c2c0e682a1bff8d097b995dc0a468a65b7b2",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10226.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10226.png",
+          "observedAt": "2026-10-27T13:43:11.739Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "gmax",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+          "role": "Explicit model/style identity only. No GO normal/Shiny release is inferred."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10226",
+      "independentFormIdentity": {
+        "id": 10226,
+        "identifier": "urshifu-single-strike-gmax",
+        "speciesId": 892,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
+    },
+    {
+      "no": 892,
+      "names": [
+        "Urshifu (Rapid Strike Style) (Gigantamax)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-3e0b1a597437e965f8e6.png",
+        "shiny": "assets/sprites/go/catalogue-9cdd0fdea5a1457ac42e.png"
+      },
+      "sha256": {
+        "default": "3e0b1a597437e965f8e6977a151b6b479250602aa6a2ec8d35a5b2a149b3d475",
+        "shiny": "9cdd0fdea5a1457ac42e5038dfda09f2c498e666d94523dab3ea2630fe19a1ef"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10227.png",
+          "http": 200,
+          "sha256": "3e0b1a597437e965f8e6977a151b6b479250602aa6a2ec8d35a5b2a149b3d475",
+          "bytes": 174771,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 92049,
+            "pixelHash": "8db5ab58",
+            "status": "decoded"
+          },
+          "gitBlobSha": "75de7c6c6ab453edd626db1ecd1a266b51e4bf13",
+          "sourcePath": "sprites/pokemon/other/home/10227.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10227.png",
+          "observedAt": "2026-10-27T13:43:11.796Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10227.png",
+          "http": 200,
+          "sha256": "9cdd0fdea5a1457ac42e5038dfda09f2c498e666d94523dab3ea2630fe19a1ef",
+          "bytes": 173878,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 92056,
+            "pixelHash": "b4236674",
+            "status": "decoded"
+          },
+          "gitBlobSha": "65ff4f1b713d0ae1ca8468ee8d408917750c6c75",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10227.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10227.png",
+          "observedAt": "2026-10-27T13:43:11.770Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "gmax",
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+          "role": "Explicit model/style identity only. No GO normal/Shiny release is inferred."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10227",
+      "independentFormIdentity": {
+        "id": 10227,
+        "identifier": "urshifu-rapid-strike-gmax",
+        "speciesId": 892,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
+    },
+    {
+      "no": 999,
+      "names": [
+        "Gimmighoul (Roaming Form)"
+      ],
+      "status": "exact",
+      "assets": {
+        "default": "assets/sprites/go/catalogue-54817070d85d1d821e50.png",
+        "shiny": "assets/sprites/go/catalogue-9d62a1bfb711ef60498d.png"
+      },
+      "sha256": {
+        "default": "54817070d85d1d821e50064e967a4802eb4f6605dc0cac03e20a7df2493e3c01",
+        "shiny": "9d62a1bfb711ef60498db84257e2fb805a523ac84af346cdd357d10374b0dd5c"
+      },
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10263.png",
+          "http": 200,
+          "sha256": "54817070d85d1d821e50064e967a4802eb4f6605dc0cac03e20a7df2493e3c01",
+          "bytes": 172433,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 102212,
+            "pixelHash": "ee5beff2",
+            "status": "decoded"
+          },
+          "gitBlobSha": "2c72d45756d764f108122887a3fd4b06f8cdcffb",
+          "sourcePath": "sprites/pokemon/other/home/10263.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10263.png",
+          "observedAt": "2026-10-27T13:43:11.775Z"
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10263.png",
+          "http": 200,
+          "sha256": "9d62a1bfb711ef60498db84257e2fb805a523ac84af346cdd357d10374b0dd5c",
+          "bytes": 166413,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 102212,
+            "pixelHash": "233956d2",
+            "status": "decoded"
+          },
+          "gitBlobSha": "7ed7658f598a916c583f6ffb017c033dd0f860e5",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10263.png",
+          "fetchedUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10263.png",
+          "observedAt": "2026-10-27T13:43:11.843Z"
+        }
+      },
+      "genders": [],
+      "genderModel": "default-only-unqualified",
+      "catalogCategory": "wishlist",
+      "normalRelease": "released",
+      "shinyRelease": "released",
+      "evidence": [
+        {
+          "url": "https://pokemongolive.com/news/gocoin",
+          "role": "Official Roaming Form normal release; Chest and anniversary coins are separate identities."
+        },
+        {
+          "url": "https://pokemongolive.com/news/pokemongo-9th-anniversary",
+          "role": "Official ordinary Gimmighoul Shiny debut is stated separately from the ninth-anniversary coin costume."
+        }
+      ],
+      "qualification": "Explicit separately named form, exact paired original source images and actual contact-sheet review. Saved generic IDs are not reinterpreted. Artwork availability permits early wants without an obtainability claim.",
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "sourceId": "variant-followup:10263",
+      "independentFormIdentity": {
+        "id": 10263,
+        "identifier": "gimmighoul-roaming",
+        "speciesId": 999,
+        "source": "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
+        "sourceSha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+      }
     }
   ]
 }

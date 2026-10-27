@@ -16,10 +16,13 @@ test('exact form, size, gender and source references survive aliases without gen
  const gengar=proof.records.filter(r=>r.no===94&&r.sourceId==='0094-00-00-03');assert.equal(gengar.length,2);assert.equal(gengar[0].assets.shiny,gengar[1].assets.shiny);assert.notEqual(gengar[0].name,gengar[1].name);
  const q=proof.records.find(r=>r.no===195);assert.notEqual(q.assets.shiny,q.assets.femaleShiny);assert.equal(q.sha256.shiny,q.sha256.femaleShiny);
 });
-test('five unreleased and previous held identities do not acquire invented Shiny art',()=>{
- assert.equal(proof.unreleasedRecords.length,5);
- for(const r of proof.unreleasedRecords)assert.notEqual(api.resolution({name:r.inventory.mappingKey,shiny:true}).status,'exact');
- for(const name of ['Pikachu (Detective)','Raichu Detective','Spinda (Form 1)','Vivillon (Fancy)'])assert.notEqual(api.resolution({name,shiny:true}).status,'exact',name);
+test('held identities require independent exact Shiny review without inferring release from art',()=>{
+ assert.equal(proof.unreleasedRecords.length,5);const reviews=require('../scripts/sprites/variant-art-review.cjs').proofRegister();
+ for(const name of [...proof.unreleasedRecords.map(r=>r.inventory.mappingKey),'Pikachu (Detective)','Raichu Detective','Spinda (Form 1)','Vivillon (Fancy)']){
+  const current=catalog.entries.find(r=>r.names.includes(name)),review=reviews.find(r=>r.name===current?.names[0]);
+  if(review){assert.equal(api.resolution({name,shiny:true}).status,'exact',name);assert.ok(review.variants.shiny.gitBlobSha||review.name==='Minior (Green Core)');if(proof.unreleasedRecords.some(r=>r.inventory.mappingKey===name))assert.equal(review.shiny,'unverified',name);}
+  else assert.notEqual(api.resolution({name,shiny:true}).status,'exact',name);
+ }
 });
 test('review removal, identity, size, byte, gender and normal-art drift fail closed',()=>{
  for(const mutate of [r=>delete r.consolidatedShinyArtworkReview,r=>r.consolidatedShinyArtworkReview.sourceId='0710-00-04',r=>r.consolidatedShinyArtworkReview.sourceReferences.shiny.size=[1,1],r=>r.assets.shiny=r.assets.default,r=>r.sha256.shiny='0'.repeat(64),r=>r.consolidatedShinyArtworkReview.retainedNormal.default.asset=r.assets.shiny,r=>r.consolidatedShinyArtworkReview.pixelReview='unreviewed']){const c=structuredClone(catalog);mutate(c.entries.find(r=>r.names[0]==='Ivysaur Party Hat'));assert.throws(()=>validateCatalog(c,process.cwd()),/Consolidated Shiny/);}
@@ -29,7 +32,7 @@ test('frozen inventory preserves every normal byte and all 219 held or unrelated
  const scope=require('../data/reviewed-consolidated-artwork-scope.json'),byname=new Map(catalog.entries.map(r=>[r.names[0],r]));
  const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(', ')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+': '+canonical(v[k])).join(', ')+'}':JSON.stringify(v);
  assert.equal(scope.records.length,178);assert.equal(scope.records.filter(r=>r.classification==='released-shiny').length,173);assert.equal(Object.keys(scope.outsideScopeEntryHashes).length,219);
- assert.deepEqual(new Set(byname.keys()),new Set([...Object.keys(scope.outsideScopeEntryHashes),...scope.records.map(r=>r.mappingKey),'Pikachu (Orange Hanbok)','Minior (Green Core)','Cinderace (Gigantamax)','Charizard (Gigantamax)','Pikachu (Hat and Capelet)','Zubat (Top Hat)','Sinistea (Bow)','Sinistea (Bow, Phony)','Sinistea (Bow, Antique)','Caterpie (Poke Ball Hat)','Gimmighoul (10th Anniversary Coin)','Pikachu (Blue Shirt (Citrus))','Pikachu (PokeXciting Taiwan)','Pikachu (PokeXciting Philippines)']));
- for(const [name,hash]of Object.entries(scope.outsideScopeEntryHashes))assert.equal(crypto.createHash('sha256').update(canonical(name==='Slowpoke (Detective)'?{...byname.get(name),names:byname.get(name).names.filter(alias=>alias!=='Slowpoke (Cowboy)')}:byname.get(name)).replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'))).digest('hex'),hash,name);
+ assert.deepEqual(new Set(byname.keys()),new Set([...Object.keys(scope.outsideScopeEntryHashes),...scope.records.map(r=>r.mappingKey),'Pikachu (Orange Hanbok)','Minior (Green Core)','Cinderace (Gigantamax)','Charizard (Gigantamax)','Pikachu (Hat and Capelet)','Zubat (Top Hat)','Sinistea (Bow)','Sinistea (Bow, Phony)','Sinistea (Bow, Antique)','Caterpie (Poke Ball Hat)','Gimmighoul (10th Anniversary Coin)','Pikachu (Blue Shirt (Citrus))','Pikachu (PokeXciting Taiwan)','Pikachu (PokeXciting Philippines)','Pikachu (Detective Hat 2019)']));
+ const variantReviews=require('../scripts/sprites/variant-art-review.cjs');for(const [name,hash]of Object.entries(scope.outsideScopeEntryHashes)){let entry=byname.get(name);if(entry.variantArtworkReview)entry=variantReviews.retainedEntry(entry,variantReviews.proofRegister().find(r=>r.name===name));if(name==='Slowpoke (Detective)')entry={...entry,names:entry.names.filter(alias=>alias!=='Slowpoke (Cowboy)')};assert.equal(crypto.createHash('sha256').update(canonical(entry).replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'))).digest('hex'),hash,name);}
  for(const r of scope.records){const e=byname.get(r.mappingKey);assert.equal(e.no,r.dex);for(const [key,a]of Object.entries(r.normalAssets)){assert.equal(e.assets[key],a.path);assert.equal(e.sha256[key],a.sha256);assert.equal(crypto.createHash('sha256').update(fs.readFileSync(a.path)).digest('hex'),a.sha256);}if(r.classification==='released-shiny'){assert.equal(r.reviewStatus,'verified-consolidated-manifest');assert(e.assets.shiny);}}
 });

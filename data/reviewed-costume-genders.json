@@ -442,6 +442,18 @@
       ],
       "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
       "basis": "Independently labelled male and female exact originals exist for both normal and Shiny; not an inference from absent art."
+    },
+    {
+      "name": "Pikachu (Detective Hat 2019)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pokemongolive.com/news/pikapika2019",
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "basis": "Year-specific game identity inventory and original pinned male/female sprites; 2019 optional female remains unoffered rather than substituting male art."
     }
   ],
   "independentVerification": "Cosmog 0% male/100% female and Worlds 100% male/0% female verified directly in source pages. Collector source HTML independently inspected: explicit M=male-only,F=female-only legend and Cosmog F/Worlds M/Astronaut M records. Other eight preserve both genders per linked parent research; shirts have moderate database evidence."
