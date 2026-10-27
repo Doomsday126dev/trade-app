@@ -5,7 +5,10 @@ for(const shiny of [false,true])test('finite67 exact catalogue identities persis
  expect(await page.evaluate(()=>_specialAllItems().filter(e=>[494,649,801].includes(e.no)).length)).toBe(0);
  expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Genesect (Shock Drive)',p:'H',shiny:true}]))).toBe(false);
  const names=records.filter(r=>!r.tradeEligibility).map(r=>r.names[0]);const available=await page.evaluate(()=>_specialAllItems().map(e=>e.name));expect(names.filter(name=>!available.includes(name))).toEqual([]);
- expect(await page.evaluate(({names,shiny})=>addManagedIntentEntries('lf',names.map(name=>({name,p:'H',shiny}))),{names,shiny})).toBe(true);await settled(page);
+ expect(await page.evaluate(({names,shiny})=>addManagedIntentEntries('lf',names.map(name=>({name,p:'H',shiny}))),{names,shiny})).toBe(true);
+ // Sixty real IndexedDB operations can outlast an expect.poll callback window.
+ // Await their existing completion barrier first; retain the same saved-state assertion and timeouts.
+ await page.evaluate(()=>managedAccountSyncRuntime.controller.drain());await settled(page);
  const result=await page.evaluate(async({names,shiny})=>{
   const entries=productDeclarations().entries.filter(e=>names.includes(e.name));const routes=entries.map(e=>({name:e.name,shiny:e.shiny,inline:entrySpriteUrl(e),public:Array.from(publicSpriteUrls(e.name,e.gender,e.no,e.shiny)),export:exportSpriteFallbackUrls(e),text:productShareImageDetails(e,{flags:[]})}));
   const decoded=await Promise.all(routes.map(async r=>{if(!r.public.length)return{name:r.name,missing:true};const image=new Image;image.src=r.public[0];try{await image.decode();return{name:r.name,ok:image.naturalWidth>0}}catch{return{name:r.name,ok:false}}}));
