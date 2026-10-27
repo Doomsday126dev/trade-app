@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-10-26T00:40:09.188Z",
   "expiresAt": "2026-11-02T00:40:09.188Z",
-  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.; 2026-10-27 finite-67 review accepts only the independently verified Slowpoke (Cowboy) alias for existing Detective Slowpoke. Exact normal/Shiny assets and all other mapping fingerprints, seven ambiguous gaps and original expiry retained.",
+  "reviewReference": "Existing27 reviewed from first audit40249376535 and current catalog; monitoring refinement authorized. Acknowledgement is NOT verified art. Manual review required; never auto-renew.; 2026-10-26 explicit release review accepts only Fossil, Marathon, Mystic, Valor, Instinct exact normal/Shiny/default/female assets; original expiry retained.; 2026-10-26 explicit release review accepts only six Dittobase exact normal/Shiny identity mappings, preserving three unavailable female variants and original expiry.; 2026-10-26 explicitly reviewed female-only Cosmog exact art correction; only its mapping fingerprint is accepted. Other known gaps and original expiry remain unchanged.; 2026-10-26 explicit release review accepts only nine released exact-art corrections and twelve classic gendered Shiny Pikachu mappings (21 identities); seven ambiguous gaps and original expiry retained.; 2026-10-26 explicit remaining-art review accepts only 76 intended mapping changes and explicit Detective 2023 registration. Seven ambiguous gaps and original expiry retained; no automatic acknowledgement.; 2026-10-26 explicit approval accepts only the 85 starter/form/evolution Shiny mapping fingerprints, with exact source manifests and original expiry retained.; 2026-10-26 explicit consolidated release approval accepts only 173 verified Shiny mapping fingerprints; all seven ambiguous gaps and original expiry retained.; 2026-10-27 finite-67 review accepts only the independently verified Slowpoke (Cowboy) alias for existing Detective Slowpoke. Exact normal/Shiny assets and all other mapping fingerprints, seven ambiguous gaps and original expiry retained.; 2026-10-27 reviewed variant art accepts only the 15 existing exact Shiny mapping fingerprints bound to proof register a5fb87a7c13f5d655e4cbffe48d999720accf2afb9b4fff831ad3bdbd00a456a. Retained normal art, aliases, source evidence, seven ambiguous gaps and original expiry preserved; artwork availability is not a GO release claim.",
   "records": [
     {
       "id": "announcement:2026-horizons:4:friede-goggles",
@@ -260,7 +260,7 @@
       "id": "pokemon:150:standard:legacy:Mewtwo%20(Armored)",
       "identity": "Mewtwo (Armored)",
       "gap": false,
-      "fingerprint": "d300c74033761ff67f825cda6d7019a9541678e41985fbbfe5559975ca9fa080"
+      "fingerprint": "8c45eedced1affa53e0f33deca9725a51825ff857897b5db8a697072dc750cef"
     },
     {
       "id": "pokemon:163:standard:legacy:Hoothoot%20(New%20Year)",
@@ -752,7 +752,7 @@
       "id": "pokemon:25:costume:PIKACHU_DOCTOR",
       "identity": "Pikachu (Ph_D)",
       "gap": false,
-      "fingerprint": "7722e341c924c953aa78c0eab76278e9403739a8d177adc10bee2d34cfb1ba5d"
+      "fingerprint": "7b3d93dd03c68d93f31bfe23c3f506c276b02b33d3e37ff4fddb11f807f223dd"
     },
     {
       "id": "pokemon:25:costume:PIKACHU_FLYING_01",
@@ -998,7 +998,7 @@
       "id": "pokemon:25:standard:legacy:Pikachu%20(Clone)",
       "identity": "Pikachu (Clone)",
       "gap": false,
-      "fingerprint": "843f7a55d3c5286799c1300dc221c5ae84f42233b2192a254dead913bbc42ed0"
+      "fingerprint": "d16eca6192bf416f135f29bb814ff63381d601293af162a47ebcf5f3589977c0"
     },
     {
       "id": "pokemon:25:standard:legacy:Pikachu%20(Dawn)",
@@ -1298,7 +1298,7 @@
       "id": "pokemon:26:standard:legacy:Raichu%20Detective",
       "identity": "Raichu Detective",
       "gap": false,
-      "fingerprint": "76e942061d55fe898e8b62dbd5add55811caf51f521b10429432374b99576fd0"
+      "fingerprint": "25184ba3cfd9d21e0c0f609fd6ea24bf2453b1465ddb37d6f1f9bbf9f14f427e"
     },
     {
       "id": "pokemon:26:standard:legacy:Raichu%20Flower%20Crown",
@@ -1436,49 +1436,49 @@
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%201)",
       "identity": "Spinda (Form 1)",
       "gap": false,
-      "fingerprint": "5380a5e6a6a4099d5bed5fd46b0de8eebd5ef9fe8386738003e2d677d1dae191"
+      "fingerprint": "328cbc89c5fa6b11e4bc71dc2556926f677b5a8a34d31acf5c1761448f4b1ecb"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%202)",
       "identity": "Spinda (Form 2)",
       "gap": false,
-      "fingerprint": "52038a936edf516cb531cf14e2712abc509b88f5612ab680a979e8a1beba33bd"
+      "fingerprint": "8fda739eecb466ded8537d534a0b39b5face7b6a74c20f73ae305a83d252be05"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%203)",
       "identity": "Spinda (Form 3)",
       "gap": false,
-      "fingerprint": "30a3c38fd47bb3d62c82613cfa22144123ba403e2e729606aacec713dc800a3d"
+      "fingerprint": "7ebaa0015b2610307328716ce5097a8ae231b41d1f2126005e4250abd5d521a1"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%204)",
       "identity": "Spinda (Form 4)",
       "gap": false,
-      "fingerprint": "f8bae0dbdf6b4d23be08022e06e4810d7ad7d565613fc2ab5b7ffc90f733869b"
+      "fingerprint": "593f2d198f5c1f8fd6700ce16afc06bfcac1ea306b5ac8e5a1b2d61280969021"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%205)",
       "identity": "Spinda (Form 5)",
       "gap": false,
-      "fingerprint": "f90b1a5eb432b0a6cdc86a9f1446b48d11d7af31fdfcb98c5f78147b5706e28c"
+      "fingerprint": "3005f5d2f7556b7ca4d5d02be23ab005a5f72894165a6930e0e19f4d90437841"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%206)",
       "identity": "Spinda (Form 6)",
       "gap": false,
-      "fingerprint": "7ad22d4766fc75a3cf048554f325cc8e8c1f87f95d2438f618784e37a2ba2ca5"
+      "fingerprint": "1a9c909f51890efafe5042fc44f0726dd3eb3d95e244118de24d08d2a6e95749"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%207)",
       "identity": "Spinda (Form 7)",
       "gap": false,
-      "fingerprint": "86c0063a49df3da7cc34e593e1c34450aa5e15775303c95d8979ba27b4f81342"
+      "fingerprint": "b66221c94a8fb08afe94fe75ad442490757f22aa5a56c2c8781f48d8e0005636"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Form%208)",
       "identity": "Spinda (Form 8)",
       "gap": false,
-      "fingerprint": "edcc6c04f52f096fb7026d729778c574fb048c941faad4e26a5b85fa139c69c4"
+      "fingerprint": "b1ff9f5ad84ef46e8b89f31fa421e9d11bc6ad8f354cb5e7cde806a070ff2d5b"
     },
     {
       "id": "pokemon:327:standard:legacy:Spinda%20(Heart)",
@@ -1496,7 +1496,7 @@
       "id": "pokemon:330:standard:legacy:Flygon%20(Meloetta%20Hat)",
       "identity": "Flygon (Meloetta Hat)",
       "gap": false,
-      "fingerprint": "66e8741c18395f114d291a5a8a642377e96eaa4192c92a8b302185a42294cc7a"
+      "fingerprint": "aa678e55c4128f3e976f161e911fd0f3a681572c0b0ca28f4aeea39047669d30"
     },
     {
       "id": "pokemon:34:standard:legacy:Nidoking%20Crown",
@@ -1874,7 +1874,7 @@
       "id": "pokemon:666:standard:legacy:Fancy",
       "identity": "Fancy",
       "gap": false,
-      "fingerprint": "da3955cc4d3d3767479f4aa789ea1c2b4906e6118f36d3b1178442f0e6655f8c"
+      "fingerprint": "63bee0fb035aaa56f5cfe653ff22f8cf0928ac72a2c4992d92e872081cdb478f"
     },
     {
       "id": "pokemon:666:standard:legacy:Garden",
@@ -1932,9 +1932,9 @@
     },
     {
       "id": "pokemon:666:standard:legacy:Pok%C3%A9%20Ball",
-      "identity": "Pok\u00e9 Ball",
+      "identity": "Poké Ball",
       "gap": false,
-      "fingerprint": "3a2eb534a924610fc940dada87b7eb22240baa685cd9e10a2caa9444a43a9ebb"
+      "fingerprint": "617a3a8ffae4feda49fd29ca1c60950852f1ccbfb74aa50c51d8082e34dbe965"
     },
     {
       "id": "pokemon:666:standard:legacy:Polar",
