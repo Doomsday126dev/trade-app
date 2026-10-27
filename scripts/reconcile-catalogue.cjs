@@ -21,14 +21,23 @@ function loadSources(now=new Date(),readFile=fs.readFileSync){
  for(const id of Object.keys(floors))if(!manifest.sources.some(s=>s.id===id))issues.push({source:id,kind:'missing-source'});
  return{manifest,data,issues};
 }
-function loadIdentities(){
- const window={},ctx=vm.createContext({window});for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
+function loadIdentities({database}={}){
+ const window={},ctx=vm.createContext({window});for(const file of ['data.js','js/domain/pokemonKeys.js','js/domain/publicPokemonDex.js','js/domain/pokemonSearchTerms.js','js/domain/pokemonEntryRules.js','js/domain/costumeSpriteCatalog.js','js/domain/spriteSlugs.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
  const rows=window.PogoDomain.publicPokemonDex.entries?.();if(!Array.isArray(rows)||!rows.length)throw Error('Public dex inventory unavailable; coverage is unknown');
- const all=window.PogoDomain.pokemonCatalog.canonicalizeEntries(rows.map(([name,no])=>({name,no})));
- return{all,catalog:window.PogoDomain.pokemonCatalog,database:window.POGO_TRADE_DB};
+ const catalog=window.PogoDomain.pokemonCatalog,publicAll=catalog.canonicalizeEntries(rows.map(([name,no])=>({name,no}))),domain=window.PogoDomain;
+ // Execute the same pure picker-construction functions as the product. Never
+ // infer selectability from a sprite dictionary or maintain a second seed list.
+ const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8'),tree=require('acorn').parse(source,{ecmaVersion:'latest',sourceType:'script'}),wanted=new Set(['allCostumeEntries','maxTradeEntries','listSource','spriteCatalogContext','selectableSpriteEntry','_specialAllItems']),declarations=[];
+ for(const node of tree.body){if(node.type==='FunctionDeclaration'&&wanted.has(node.id?.name)){declarations.push(source.slice(node.start,node.end));wanted.delete(node.id.name);}if(node.type==='VariableDeclaration')for(const decl of node.declarations)if(['SPRITE_BASE','SCATTERBUG_PATTERNS','EXTRA_COSTUME_ENTRIES','EXTRA_FORM_ENTRIES'].includes(decl.id?.name))declarations.push('const '+source.slice(decl.start,decl.end)+';');}
+ if(wanted.size||declarations.filter(s=>s.startsWith('const ')).length!==4)throw Error('Selectable catalogue runtime extraction failed; coverage is unknown');
+ Object.assign(ctx,{DB:database||window.POGO_TRADE_DB,pokemonCatalogDomain:catalog,costumeSpriteCatalogDomain:domain.costumeSpriteCatalog,spriteSlugsDomain:domain.spriteSlugs,LEGENDARY_AVATAR_ENTRIES:catalog.legendaryEntries,MAX_TYPE_LABELS:{dynamax:'Dynamax',gmax:'Gigantamax'},uniqueEntries:domain.pokemonEntryRules.uniqueEntries,isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist,isUnresolvedSpriteKey:domain.spriteSlugs.isUnresolvedSpriteKey,canonicalSpriteOverride:domain.spriteSlugs.canonicalSpriteOverride,pokemonNamesI18n:{compareDisplay:(a,b)=>String(a.name).localeCompare(String(b.name))},i18nCore:{getLocale:()=> 'en'},pokemonDisplayName:entry=>entry.displayName||entry.name,entrySpriteUrl:()=>null,normalizeAcText:String,pokemonSearchLabels:entry=>[entry.name]});
+ vm.runInContext(declarations.join('\n')+'\nwindow.__selectable=_specialAllItems();',ctx);
+ const all=window.__selectable;if(!all.length)throw Error('Selectable catalogue is empty; coverage is unknown');
+ return{all,publicAll,catalog,database:database||window.POGO_TRADE_DB,isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist};
 }
+
 function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],pendingArt=[],eligibility=[],variantIssues=[],now=new Date()}){
- const queue=[],coverage={},keys=new Map(),byName=new Map(),knownArt=new Map();
+ const queue=[],coverage={'selectable-catalogue':{denominator:identities.all.length,qualification:'Actual runtime picker identities, including supplemental forms and exact-art gates. Public sprite dictionary presence alone does not count as selectable coverage.'}},keys=new Map(),byName=new Map(),knownArt=new Map();
  const add=(key,item)=>{const list=keys.get(key)||new Map();list.set(item.catalogId,item);keys.set(key,list);};
  for(const item of identities.all){byName.set(item.name,item);for(const label of [item.name,...item.legacyAliases||[],...item.searchAliases||[]])add(item.no+'|'+identityKey(label),item);}
  for(const item of art.entries)for(const label of item.names){const key=item.no+'|'+identityKey(label),rows=knownArt.get(key)||new Set();rows.add(item);knownArt.set(key,rows);}
@@ -41,7 +50,7 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
  const sourceDate=id=>sources.manifest.sources.find(r=>r.id===id)?.firstObservedAt||sources.manifest.sources.find(r=>r.id===id)?.observedAt||null;
  function push(row){const d=dispositionsById.get(row.id);if(d){row.review={...d};if(d.releaseState)row.releaseState=d.releaseState;}queue.push(row);}
  for(const [source,kind] of [['normal-inventory','normal'],['shiny-inventory','shiny']]){
-  let matched=0,ambiguous=0;const rows=sources.data[source]||[],sourceLabels=new Map();
+  let matched=0,ambiguous=0,policyExcluded=0;const rows=sources.data[source]||[],sourceLabels=new Map();
   for(const row of rows){const key=row.no+'|'+identityKey(row.name),files=sourceLabels.get(key)||new Set();files.add(row.sourceSprite);sourceLabels.set(key,files);}
   for(const row of rows){
    const sourceId=row.no+'|'+row.sourceSprite+'|'+row.name;const id=kind+':'+sourceId;
@@ -51,6 +60,7 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
     const entry=byName.get(defaults.get(row.no));if(entry)matches=[entry];
    }
    const releaseState=row.availabilityClaim==='explicitly-unavailable'?'uncertain':row.availabilityClaim==='form-of-unavailable-species-needs-release-evidence'?'uncertain':kind==='shiny'&&row.statusText==='Available when encountered'?'released-source-claim':kind==='normal'&&row.availabilityClaim==='listed-without-unavailable-marker'?'released-source-claim':'uncertain';
+   if(identities.isTradeableForWishlist&&!identities.isTradeableForWishlist({no:row.no,name:row.name})){policyExcluded++;push({id,source,sourceUrl:row.source,sourceSprite:row.sourceSprite,discoveredAt:row.discoveredAt||sourceDate(source),no:row.no,name:row.name,releaseState,artState:'source-present-existing-trade-policy-exclusion',priority:'review',disposition:'excluded-existing-trade-policy',reason:'The product species-level nontradeable Mythical rule excludes this identity. Retain source/art evidence without proposing a trade picker entry.'});continue;}
    const localRows=matches.length===1?[...knownArt.get(row.no+'|'+identityKey(matches[0].name))||[]]:[];
    const sourceAmbiguous=sourceLabels.get(row.no+'|'+identityKey(row.name)).size>1;
    const artAmbiguous=localRows.length>1;
@@ -64,7 +74,7 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
    if(sourceAmbiguous||artAmbiguous||matches.length>1)ambiguous++;else if(matches.length===1)matched++;
    if(sourceAmbiguous||artAmbiguous||matches.length!==1||!exact&&!checked)push({id,source,sourceUrl:row.source,sourceSprite:row.sourceSprite,discoveredAt:row.discoveredAt||sourceDate(source),no:row.no,name:row.name,releaseState,artState:exact?'reviewed-local':checked?'verified-remote':'available-at-source-needs-exact-review',matches:matches.map(r=>({name:r.name,catalogId:r.catalogId})),priority:releaseState==='released-source-claim'?'urgent':'review',disposition:sourceAmbiguous?'ambiguous-source-label':artAmbiguous?'ambiguous-art-identity':matches.length>1?'ambiguous-identity':matches.length===0?'unmatched-identity':'exact-art-verification-required'});
   }
-  coverage[source]={denominator:rows.length,identityMatched:matched,ambiguous,unmatched:rows.length-matched-ambiguous};
+  coverage[source]={denominator:rows.length,identityMatched:matched,ambiguous,...(policyExcluded?{policyExcluded}:{}),unmatched:rows.length-matched-ambiguous-policyExcluded};
  }
  const max=sources.data['max-inventory']||[];let maxMatched=0;
  for(const row of max){const family=dispositionsById.get('dynamax:'+row.no);if(family?.targets?.length&&family.targets.every(name=>identities.database.dynamax.some(r=>r.no===row.no&&r.name===name))){maxMatched++;continue;}const matches=identities.database.dynamax.filter(r=>r.no===row.no&&identityKey(r.name)===identityKey(row.name));
@@ -116,7 +126,7 @@ function summarizeReview(report,reviews){
  for(const row of report.queue){
   const alias=aliases.get(row.id);if(alias){if(alias.no!==row.no||alias.sourceName!==row.name)throw Error('Reviewed alias no longer matches its source identity');used.add(row.id);}
   const missing=reviews.missingIdentities.find(r=>r.no===row.no&&r.sourceNames.includes(row.name));
-  const category=missing?'confirmed-missing-identity':alias?'known-identity-alias':row.source==='pokemod'||row.source==='pokemod-legacy'?'mined-identity-review':row.disposition==='news-or-event-review-required'?'news-discovery-lead':row.disposition==='owner-attention-required'?'legacy-identity-or-exact-art-blocker':row.releaseState==='announced'?'upcoming-release-review':row.disposition.includes('ambiguous')?'source-or-canonical-ambiguity':row.matches?.length===1?'existing-identity-exact-art-review':/^(Mega |Primal )|Eternamax/.test(row.name||'')?'battle-form-eligibility-review':'identity-or-release-evidence-review';
+  const category=row.disposition==='excluded-existing-trade-policy'?'excluded-existing-trade-policy':missing?'confirmed-missing-identity':alias?'known-identity-alias':row.source==='pokemod'||row.source==='pokemod-legacy'?'mined-identity-review':row.disposition==='news-or-event-review-required'?'news-discovery-lead':row.disposition==='owner-attention-required'?'legacy-identity-or-exact-art-blocker':row.releaseState==='announced'?'upcoming-release-review':row.disposition.includes('ambiguous')?'source-or-canonical-ambiguity':row.matches?.length===1?'existing-identity-exact-art-review':/^(Mega |Primal )|Eternamax/.test(row.name||'')?'battle-form-eligibility-review':'identity-or-release-evidence-review';
   buckets[category]=(buckets[category]||0)+1;
   const canonical=alias?.catalogId||(row.matches?.length===1?row.matches[0].catalogId:'');
   const id=missing?.id||canonical&&'catalog:'+canonical||row.no&&row.name&&'source-identity:'+row.no+':'+identityKey(row.name)||row.id;

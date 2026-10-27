@@ -508,8 +508,15 @@
   }
   // Preferred front PNGs for these size IDs are one shared drawing. Their
   // independently bound HOME models retain the exact size-form artwork.
-  function reviewedPreferredForm(name='',no=0){return Number(no)===710&&['Pumpkaboo - Small','Pumpkaboo - Large','Pumpkaboo - Super'].includes(String(name||'').trim());}
+  function reviewedPreferredFormUrl(name='',no=0,shiny=false){
+    if(Number(no)!==710)return'';
+    const size=String(name||'').trim().match(/^Pumpkaboo (?:- (Small|Average|Large|Super)|(Small|Average|Large|Super) Size)$/);
+    const id=size&&{Small:10027,Average:710,Large:10028,Super:10029}[size[1]||size[2]];
+    return id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${id}.png`:'';
+  }
+  function reviewedPreferredForm(name='',no=0){return !!reviewedPreferredFormUrl(name,no);}
   function publicSpriteUrls(name='',gender='',no=0,shiny=false){
+    const plainSize=reviewedPreferredFormUrl(name,no,shiny);if(plainSize)return Object.freeze([plainSize]);
     const eligibility=root.publicPokemonDex?.variantStatus?.(name);
     if(eligibility&&gender&&!eligibility.genders.includes(gender))return Object.freeze([]);
     if(eligibility?.assets){const exact=eligibility.assets[shiny?'shiny':'default'];return Object.freeze(exact?[exact]:[]);}

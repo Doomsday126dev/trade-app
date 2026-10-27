@@ -1810,6 +1810,908 @@
       ],
       "artEvidence": "data/catalogue-reviewed-assets.json",
       "reviewedAt": "2026-10-27T15:37:33.424314+00:00"
+    },
+    {
+      "no": 2,
+      "name": "Ivysaur",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 3,
+      "name": "Venusaur",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 5,
+      "name": "Charmeleon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 6,
+      "name": "Charizard",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 8,
+      "name": "Wartortle",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 9,
+      "name": "Blastoise",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 11,
+      "name": "Metapod",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 12,
+      "name": "Butterfree",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 26,
+      "name": "Raichu",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 59,
+      "name": "Arcanine",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 64,
+      "name": "Kadabra",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 65,
+      "name": "Alakazam",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 67,
+      "name": "Machoke",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 68,
+      "name": "Machamp",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 93,
+      "name": "Haunter",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 94,
+      "name": "Gengar",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 99,
+      "name": "Kingler",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 112,
+      "name": "Rhydon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 139,
+      "name": "Omastar",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 141,
+      "name": "Kabutops",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 242,
+      "name": "Blissey",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen2pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 281,
+      "name": "Kirlia",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 282,
+      "name": "Gardevoir",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 321,
+      "name": "Wailord",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 329,
+      "name": "Vibrava",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 330,
+      "name": "Flygon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 364,
+      "name": "Sealeo",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 365,
+      "name": "Walrein",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 375,
+      "name": "Metang",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 376,
+      "name": "Metagross",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 461,
+      "name": "Weavile",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 464,
+      "name": "Rhyperior",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 475,
+      "name": "Gallade",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 520,
+      "name": "Tranquill",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 521,
+      "name": "Unfezant",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 525,
+      "name": "Boldore",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 526,
+      "name": "Gigalith",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 528,
+      "name": "Swoobat",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 530,
+      "name": "Excadrill",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 547,
+      "name": "Whimsicott",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 555,
+      "name": "Darmanitan",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 569,
+      "name": "Garbodor",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 634,
+      "name": "Zweilous",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 635,
+      "name": "Hydreigon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 687,
+      "name": "Malamar",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 700,
+      "name": "Sylveon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 762,
+      "name": "Steenee",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 763,
+      "name": "Tsareena",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 811,
+      "name": "Thwackey",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 812,
+      "name": "Rillaboom",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 814,
+      "name": "Raboot",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 815,
+      "name": "Cinderace",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 817,
+      "name": "Drizzile",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 818,
+      "name": "Inteleon",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 820,
+      "name": "Greedent",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 822,
+      "name": "Corvisquire",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 823,
+      "name": "Corviknight",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 832,
+      "name": "Dubwool",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 851,
+      "name": "Centiskorch",
+      "normal": "released",
+      "shiny": "unverified",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 857,
+      "name": "Hattrem",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
+    },
+    {
+      "no": 858,
+      "name": "Hatterene",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "qualification": "Independent current GO normal/Shiny inventory encounter claim; sprite proof is separate. Unverified Shiny release does not prevent early wants."
     }
   ]
 }

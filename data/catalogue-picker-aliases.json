@@ -1295,6 +1295,122 @@
         "shiny": "assets/sprites/go/pogorewind-consolidated-0656-00-00-01-shiny.png",
         "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0656-00-00-01-shiny.png"
       }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Average Size",
+      "names": [
+        "Pumpkaboo Average Size",
+        "Pumpkaboo - Average"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Average"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Average Size",
+        "Pumpkaboo - Average"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Average Size": "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+        "Pumpkaboo - Average": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Average"
+      },
+      "sourceFile": "pumpkaboo-average.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-average.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-02-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Small Size",
+      "names": [
+        "Pumpkaboo Small Size",
+        "Pumpkaboo - Small"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Small"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Small Size",
+        "Pumpkaboo - Small"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Small Size": "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+        "Pumpkaboo - Small": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Small"
+      },
+      "sourceFile": "pumpkaboo-small.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-small.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Large Size",
+      "names": [
+        "Pumpkaboo Large Size",
+        "Pumpkaboo - Large"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Large"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Large Size",
+        "Pumpkaboo - Large"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Large Size": "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+        "Pumpkaboo - Large": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Large"
+      },
+      "sourceFile": "pumpkaboo-large.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-large.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-03-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Super Size",
+      "names": [
+        "Pumpkaboo Super Size",
+        "Pumpkaboo - Super"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Super"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Super Size",
+        "Pumpkaboo - Super"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Super Size": "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+        "Pumpkaboo - Super": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Super"
+      },
+      "sourceFile": "pumpkaboo-super.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-super.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png"
+      }
     }
   ]
 }
