@@ -4,8 +4,8 @@ const favorite={key:'retryfixture',displayName:'RetryFixture',targetUid:''};
 const share=()=>({version:1,username:favorite.displayName,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:100});
 const flush=()=>new Promise(setImmediate);
 function harness(read){
- const window={},c=vm.createContext({window,console,setTimeout,clearTimeout,queueMicrotask});
- for(const f of ['js/domain/productLimits.js','js/domain/publicSharePublication.js','js/data/favoriteShareSessionCache.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+ const window={},c=vm.createContext({window,console,setTimeout,clearTimeout,queueMicrotask,AbortController});
+ for(const f of ['js/services/favoriteResolverClient.js','js/domain/productLimits.js','js/domain/publicSharePublication.js','js/data/favoriteShareSessionCache.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
  const timers=new Map();let timerId=0;
  const cache=window.PogoData.favoriteShareSessionCache.createFavoriteShareSessionCache({repository:{read},validateProjection:window.PogoDomain.publicSharePublication.publicShareProjectionStatus,projectSnapshot:()=>[],setTimer:fn=>{timers.set(++timerId,fn);return timerId;},clearTimer:id=>timers.delete(id)});cache.activate({uid:'owner',username:'Owner'});
  const field={outerHTML:'field'},card={dataset:{trainer:favorite.displayName},isConnected:true,querySelector:()=>field};
@@ -24,3 +24,16 @@ test('joining a pending physical request must not consume the one new-read retry
  await h.enter();assert.equal(reads,2);assert.equal(h.used(),true);
 });
 test('a completed service failure gets only one fresh retry, even after repeated re-entry',async()=>{let reads=0;const h=harness(async()=>{reads++;return{ok:false,error:{code:'favorite/unavailable'}};});await h.enter();await h.enter();for(let i=0;i<5;i++)await h.enter();assert.equal(reads,2);assert.equal(h.cache.peek(favorite).status,'transport_error');assert.equal(h.cache.peek(favorite).updatedAt,null);assert.equal(h.used(),true);});
+
+for(const recover of [true,false])test(`normal Favorites re-entry after HTML503 ${recover?'recovers on HTTP200':'exhausts one fresh retry without looping'}`,async()=>{
+ let requests=0,client;
+ const h=harness(async()=>{try{await client.resolve([favorite.displayName]);return{ok:true,value:share()};}catch(error){return{ok:false,error};}});
+ const user={uid:'owner',getIdToken:async()=> 'synthetic-token'};
+ client=h.c.window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth:{currentUser:user},enabled:true,sessionCurrent:()=>true,
+ appCheckReady:async()=>({ok:true,instance:{}}),loadAppCheckSdk:async()=>({getLimitedUseToken:async()=>({token:'synthetic-app-token'})}),
+ fetch:async()=>{requests++;const success=recover&&requests>1;return{ok:success,status:success?200:503,text:async()=>success?JSON.stringify({version:1,results:[{handle:favorite.displayName,status:'resolved',targetUid:'target',canonicalHandle:favorite.displayName}]}):'<html>Service Unavailable</html>',headers:{get:()=>null}};}});
+ await h.enter();assert.equal(requests,1);assert.equal(h.cache.peek(favorite).error.code,'favorite/unavailable');assert.equal(h.cache.peek(favorite).retryable,true);
+ await h.enter();assert.equal(requests,2);assert.equal(h.used(),true);
+ assert.equal(h.cache.peek(favorite).status,recover?'published':'transport_error');assert.equal(h.cache.peek(favorite).updatedAt,recover?100:null);
+ for(let n=0;n<5;n++)await h.enter();assert.equal(requests,2,'repeated normal navigation must not add requests');
+});
