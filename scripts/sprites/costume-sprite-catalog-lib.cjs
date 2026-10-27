@@ -39,7 +39,7 @@ function validateCatalog(catalog,root){
       aliases.set(key,entry);
     }
     if(entry.availableGenders){
-      if(!Array.isArray(entry.availableGenders)||(!entry.availableGenders.length&&entry.consolidatedShinyArtworkReview?.genderModel!=='genderless')||entry.availableGenders.some(g=>!['m','f'].includes(g))||new Set(entry.availableGenders).size!==entry.availableGenders.length)fail('Invalid reviewed costume genders');
+      if(!Array.isArray(entry.availableGenders)||(!entry.availableGenders.length&&entry.consolidatedShinyArtworkReview?.genderModel!=='genderless'&&entry.genderModel!=='genderless')||entry.availableGenders.some(g=>!['m','f'].includes(g))||new Set(entry.availableGenders).size!==entry.availableGenders.length)fail('Invalid reviewed costume genders');
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/reviewed-costume-genders.json'))).records.find(r=>r.name===entry.names[0]);if(!reviewed||JSON.stringify(reviewed.availableGenders)!==JSON.stringify(entry.availableGenders)||!reviewed.evidence?.length)fail('Costume gender review evidence changed');}
     }
     if(entry.status==='unavailable'){
@@ -91,17 +91,17 @@ function validateCatalog(catalog,root){
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/margxt-friede-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourcePage','sourceUrl','sourceFiles','sourceSha256','assets','sha256','identityEvidence','shinyEvidence','conversion'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Friede review evidence changed');}
     }
     if(entry.sourceProvider==='dittobase-reviewed'){
-      const forms={'Pikachu (Astronaut)':'pikachu-astronaut','Pikachu (Cosmog Spacesuit)':'pikachu-pxp-2026','Pikachu (Worlds 2026)':'pikachu-wcs-2026',"Pikachu (Professor Willow's Assistant)":'pikachu-anniversary-2026','Pikachu (PokeXciting Turquoise)':'pikachu-anniversary-2026-malaysia-01','Pikachu (PokeXciting Blue)':'pikachu-anniversary-2026-singapore-01'};
-      const stem=forms[entry.names[0]];if(!stem||entry.sourceUrl!=='https://assets.dittobase.com/go/pokemon-unpadded/25-'+stem+'.png'||entry.sourcePage!=='https://www.dittobase.com/pokemon-go/pokedex/'+stem)fail('Unreviewed Dittobase identity/source');
+      const forms={'Pikachu (Hat and Capelet)':'pikachu-halloween-2026','Zubat (Top Hat)':'zubat-top-hat','Pikachu (Astronaut)':'pikachu-astronaut','Pikachu (Cosmog Spacesuit)':'pikachu-pxp-2026','Pikachu (Worlds 2026)':'pikachu-wcs-2026',"Pikachu (Professor Willow's Assistant)":'pikachu-anniversary-2026','Pikachu (PokeXciting Turquoise)':'pikachu-anniversary-2026-malaysia-01','Pikachu (PokeXciting Blue)':'pikachu-anniversary-2026-singapore-01'};
+      const stem=forms[entry.names[0]];if(!stem||entry.no!==(entry.names[0]==='Zubat (Top Hat)'?41:25)||entry.sourceUrl!=='https://assets.dittobase.com/go/pokemon-unpadded/'+entry.no+'-'+stem+'.png'||entry.sourcePage!=='https://www.dittobase.com/pokemon-go/pokedex/'+stem)fail('Unreviewed Dittobase identity/source');
       for(const[key,suffix]of Object.entries({default:'',shiny:'-shiny',female:'-female',femaleShiny:'-female-shiny'})){
         if((key==='default'||key==='shiny')&&!entry.assets[key])fail('Missing Dittobase exact variant');
-        if(entry.assets[key]&&entry.sourceFiles?.[key]!=='25-'+stem+suffix+'.png')fail('Unreviewed Dittobase variant');
+        if(entry.assets[key]&&entry.sourceFiles?.[key]!==entry.no+'-'+stem+suffix+'.png')fail('Unreviewed Dittobase variant');
       }
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/dittobase-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','femaleArtworkUnavailable'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Dittobase review evidence changed');}
     }
     if(entry.sourceProvider==='serebii-reviewed'){
-      const file={'Pikachu (Cosmog Spacesuit)':'025-xp26.png','Pikachu (Orange Hanbok)':'025-hanbok.png'}[entry.names[0]];
-      if(!file||entry.sourceUrl!=='https://www.serebii.net/pokemongo/pokemon/'+file||entry.sourceFile!==file||entry.sourceFiles?.shiny!=='shiny/'+file)fail('Unreviewed Serebii identity/source');
+      const file={'Pikachu (Cosmog Spacesuit)':'025-xp26.png','Pikachu (Orange Hanbok)':'025-hanbok.png','Sinistea (Bow)':'854-bow.png','Sinistea (Bow, Phony)':'854-bow.png','Sinistea (Bow, Antique)':'854-bow.png'}[entry.names[0]];
+      if(!file||entry.no!==(file==='854-bow.png'?854:25)||entry.sourceUrl!=='https://www.serebii.net/pokemongo/pokemon/'+file||entry.sourceFile!==file||entry.sourceFiles?.shiny!=='shiny/'+file)fail('Unreviewed Serebii identity/source');
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/serebii-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','availableGenders'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Serebii review evidence changed');}
     }
     const variants=['default','female','shiny','femaleShiny'].map(key=>[key,entry.assets[key],entry.sha256[key]]);

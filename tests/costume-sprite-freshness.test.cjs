@@ -22,10 +22,10 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:396,exact:389,unsupported:7});
+  assert.deepEqual(report.counts,{canonical:401,exact:394,unsupported:7});
   assert.equal(report.candidates.length,7);
-  assert.equal(report.coverage.releaseEvidenceEntries,20);
-  assert.equal(report.upcomingIdentities.length,3);
+  assert.equal(report.coverage.releaseEvidenceEntries,22);
+  assert.equal(report.upcomingIdentities.length,0);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
   assert.equal(buildReport({...inputs(),online:true}).status,'no-new-findings');
 });
@@ -82,7 +82,7 @@ test('newly released evidence identities missing from the catalog are flagged; f
 test('released September costumes have reviewed exact art while later announcements stay queued',()=>{
   const data=inputs();data.now=new Date('2026-09-17T00:00:00Z');
   const report=buildReport(data);
-  assert.equal(report.upcomingIdentities.length,3);assert.equal(report.missingIdentities.length,0);
+  assert.equal(report.upcomingIdentities.length,0);assert.equal(report.missingIdentities.length,0);
   for(const name of ["Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)"]){
     assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'exact',name);
     const pending=data.pending.entries.find(row=>row.displayIdentity===name);
@@ -109,10 +109,10 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   assert.equal(sources.worldsOfficial.result,'released');
   const released=data.releases.entries.filter(row=>row.lifecycleStatus==='released');
   const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
-  assert.equal(released.length,17);assert.equal(announced.length,3);
+  assert.equal(released.length,22);assert.equal(announced.length,0);
   assert.ok(released.every(row=>['unavailable','exact-reviewed'].includes(row.artworkStatus)));
   assert.ok(data.releases.entries.every(row=>{const supplement=data.releases.additionalReviews?.find(review=>review.ids.includes(row.id));const reviewTime=supplement?Date.parse(supplement.reviewedAt):reviewedAt;return Date.parse(row.lastVerifiedAt)<=reviewTime&&row.evidenceRetrieval.url===row.evidenceUrl;}));
-  assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Hat and Capelet)','Sinistea (Bow)','Zubat (Top Hat)']);
+  assert.deepEqual(announced,[]);
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'exact-reviewed');
 });
@@ -201,7 +201,7 @@ test('October review tracks released costumes without substituting base art and 
   const report=buildReport(data);
   assert.equal(report.status,'offline-check-passed');
   assert.deepEqual(report.missingIdentities,[]);
-  assert.equal(report.upcomingIdentities.length,3);
+  assert.equal(report.upcomingIdentities.length,0);
   for(const name of ['Pikachu (Astronaut)','Pikachu (PokeXciting Blue)']){
     const row=data.catalog.entries.find(entry=>entry.names.includes(name));
     assert.equal(row.status,'exact');
@@ -211,7 +211,7 @@ test('October review tracks released costumes without substituting base art and 
   }
   data.now=new Date('2026-10-27T00:00:00Z');
   assert.deepEqual(buildReport(data).missingIdentities,[]);
-  assert.deepEqual(buildReport(data).problems.filter(row=>row.kind==='release-status-review').map(row=>row.identity).sort(),['Pikachu (Hat and Capelet)','Sinistea (Bow)','Zubat (Top Hat)']);
+  assert.deepEqual(buildReport(data).problems.filter(row=>row.kind==='release-status-review').map(row=>row.identity).sort(),[]);
 });
 
 test('overdue announced identity is flagged even when a catalog record exists, without auto release',()=>{

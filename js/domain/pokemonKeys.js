@@ -97,6 +97,10 @@
   // These relationships come from the reviewed identifier-level costume audit.
   // Historical names remain aliases; only the selectable surface is consolidated.
   const VERIFIED_IDENTITIES=Object.freeze([
+    identity('pokemon:25:costume:halloween-2026','','Pikachu (Hat and Capelet)',['Pikachu (Halloween 2026)'],['Halloween 2026 Pikachu','Hat and Capelet Pikachu']),
+    identity('pokemon:41:costume:halloween-2026','','Zubat (Top Hat)',[],['Top Hat Zubat','Halloween 2026 Zubat'],41),
+    identity('pokemon:854:costume:bow-2026:phony','','Sinistea (Bow, Phony)',[],['Phony Bow Sinistea','Halloween Bow Phony Sinistea'],854),
+    identity('pokemon:854:costume:bow-2026:antique','','Sinistea (Bow, Antique)',[],['Antique Bow Sinistea','Halloween Bow Antique Sinistea'],854),
     identity('pokemon:25:costume:orange-hanbok-2026','','Pikachu (Orange Hanbok)',[],['Orange Hanbok Pikachu','Korean Pikachu','Korea Pikachu','Autumn Picnic Pikachu','주황색 한복의 피카츄']),
     identity('pokemon:25:costume:party-hat-original','PIKACHU_PARTY_HAT_ORIGINAL','Pikachu (Purple Party)',['Pikachu Party Hat'],['Pikachu Party Hat']),
     identity('pokemon:25:costume:flower-hat-2020','PIKACHU_FLOWER_HAT_2020','Pikachu (Spring)',['Pikachu Flower Hat'],['Pikachu Flower Hat']),
@@ -172,6 +176,10 @@
   catalogIdentityDefinitions.forEach(def=>verifiedIdentityByCatalogKey.set(normalizeCatalogKey(def.catalogId),def));
 
   const verifiedMissingEntries=Object.freeze([
+    Object.freeze({"no":25,"name":"Pikachu (Hat and Capelet)","displayName":"Pikachu (Hat and Capelet)","users":{}}),
+    Object.freeze({"no":41,"name":"Zubat (Top Hat)","displayName":"Zubat (Top Hat)","users":{}}),
+    Object.freeze({"no":854,"name":"Sinistea (Bow, Phony)","displayName":"Sinistea (Bow, Phony)","users":{}}),
+    Object.freeze({"no":854,"name":"Sinistea (Bow, Antique)","displayName":"Sinistea (Bow, Antique)","users":{}}),
     Object.freeze({no:25,name:'Pikachu (Orange Hanbok)',displayName:'Pikachu (Orange Hanbok)',users:{}}),
     Object.freeze({no:4,name:"Charmander (Friede's Goggles)",displayName:"Charmander (Friede's Goggles)",users:{}}),
     Object.freeze({no:5,name:"Charmeleon (Friede's Goggles)",displayName:"Charmeleon (Friede's Goggles)",users:{}}),

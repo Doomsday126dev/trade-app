@@ -1,4 +1,4 @@
-name: Isolated Apri design runtime qualification
+name: Isolated Apri and Halloween runtime qualification
 on:
   pull_request:
     branches: [main]
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: d9a6a0d0232c065465fb8084ed8d010699b0fbbb
+          ref: 0967ab52ce9ae77ec1330abd36b0de67da13a452
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -30,7 +30,7 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - name: Exact runtime tests including intercepted traffic privacy journeys
         run: |
-          node --test tests/*.test.cjs
+          node --test --test-concurrency=2 tests/*.test.cjs
           npm run check:pages-release
       - name: Unchanged browser performance budgets
         run: |
@@ -42,3 +42,7 @@ jobs:
             sleep 1
           done
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
+      - name: Exact Halloween artwork and approved Options journeys
+        run: |
+          npx playwright test -c playwright.halloween.config.cjs
+          npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js

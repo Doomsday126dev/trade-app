@@ -28,7 +28,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
       }
     },
     {
@@ -52,7 +52,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
       }
     },
     {
@@ -179,7 +179,7 @@
       "catalogName": "Charmander (Friede's Goggles)",
       "dex": 4,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -196,7 +196,7 @@
       "catalogName": "Charmeleon (Friede's Goggles)",
       "dex": 5,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -213,7 +213,7 @@
       "catalogName": "Charizard (Friede's Goggles)",
       "dex": 6,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -230,7 +230,7 @@
       "catalogName": "Pikachu (PokeXciting Turquoise)",
       "dex": 25,
       "releaseDate": "2026-09-12",
-      "dateMeaning": "Released during the official September 12\u201313, 2026 Kuala Lumpur event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 12–13, 2026 Kuala Lumpur event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
@@ -264,7 +264,7 @@
       "catalogName": "Pikachu (Astronaut)",
       "dex": 25,
       "releaseDate": "2026-10-04",
-      "dateMeaning": "Announced debut for the official October 4\u201310, 2026 local-time event",
+      "dateMeaning": "Announced debut for the official October 4–10, 2026 local-time event",
       "evidenceUrl": "https://pokemongo.com/news/world-space-week-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
@@ -298,58 +298,97 @@
       "catalogName": "Pikachu (Hat and Capelet)",
       "dex": 25,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Official announcement rechecked: October 27 at 10 a.m. local. Date is a review deadline; live encounter and exact-art verification remain unresolved.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-27T01:39:15.230172+00:00",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
         "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
         "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
-        "result": "announcement-rechecked-release-unconfirmed"
-      }
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     },
     {
       "id": "announcement:2026-halloween:zubat-top-hat",
       "catalogName": "Zubat (Top Hat)",
       "dex": 41,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Official announcement rechecked: October 27 at 10 a.m. local. Date is a review deadline; live encounter and exact-art verification remain unresolved.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-27T01:39:15.230172+00:00",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
         "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
         "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
-        "result": "announcement-rechecked-release-unconfirmed"
-      }
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     },
     {
       "id": "announcement:2026-halloween:sinistea-bow",
       "catalogName": "Sinistea (Bow)",
       "dex": 854,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Official announcement rechecked: October 27 at 10 a.m. local. Date is a review deadline; live encounter and exact-art verification remain unresolved.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-27T01:39:15.230172+00:00",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
         "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
         "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
-        "result": "announcement-rechecked-release-unconfirmed"
-      }
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     },
     {
       "id": "pokemon:25:costume:orange-hanbok-2026",
       "catalogName": "Pikachu (Orange Hanbok)",
       "dex": 25,
       "releaseDate": "2026-09-18",
-      "dateMeaning": "Official debut September 18, 2026 at 10:00 Korea time; nationwide encounter September 24\u201326 is not first debut.",
+      "dateMeaning": "Official debut September 18, 2026 at 10:00 Korea time; nationwide encounter September 24–26 is not first debut.",
       "evidenceUrl": "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
@@ -361,6 +400,66 @@
         "result": "released"
       },
       "qualification": "Official announcement explicitly confirms Shiny. Female-only eligibility additionally relies on the documented collector mapping and the inspected female-tail source art; not an official gender statement."
+    },
+    {
+      "id": "announcement:2026-halloween:sinistea-bow:phony",
+      "catalogName": "Sinistea (Bow, Phony)",
+      "dex": 854,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
+    },
+    {
+      "id": "announcement:2026-halloween:sinistea-bow:antique",
+      "catalogName": "Sinistea (Bow, Antique)",
+      "dex": 854,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     }
   ],
   "followUpEvidence": [
@@ -427,7 +526,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",
@@ -486,6 +585,23 @@
     }
   },
   "additionalReviews": [
+    {
+      "ids": [
+        "announcement:2026-halloween:pikachu-hat-capelet",
+        "announcement:2026-halloween:zubat-top-hat",
+        "announcement:2026-halloween:sinistea-bow",
+        "announcement:2026-halloween:sinistea-bow:phony",
+        "announcement:2026-halloween:sinistea-bow:antique"
+      ],
+      "reviewedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidence": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c"
+      },
+      "artReview": "data/halloween2026-art-review.json",
+      "qualification": "Per-player local time. At review, scheduled window has begun in Pacific/Auckland and Pacific/Kiritimati; still future in America/New_York. Official timetable plus current availability listings, not first-hand game encounter evidence or UTC-midnight activation."
+    },
     {
       "reviewedAt": "2026-10-26T21:46:57Z",
       "ids": [
