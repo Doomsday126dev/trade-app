@@ -1091,6 +1091,7 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
   if(window.PogoDomain.publicPokemonDex.variantStatus?.(lookupName))return publicSpriteUrls(lookupName,gender,no)[0]||null;
+  if(spriteSlugsDomain.reviewedPreferredForm(lookupName,no))return publicSpriteUrls(lookupName,gender,no)[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
@@ -1159,6 +1160,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   if(equivalent){push(equivalent);return urls;}
   // Shiny requests must never enter the normal-color fallback chain.
   if(shiny)return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,true));
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no));
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);

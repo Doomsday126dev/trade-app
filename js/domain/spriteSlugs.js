@@ -504,6 +504,9 @@
     }
     return publicDexLookup.get(normalizeSpriteKey(name))||0;
   }
+  // Preferred front PNGs for these size IDs are one shared drawing. Their
+  // independently bound HOME models retain the exact size-form artwork.
+  function reviewedPreferredForm(name='',no=0){return Number(no)===710&&['Pumpkaboo - Small','Pumpkaboo - Large','Pumpkaboo - Super'].includes(String(name||'').trim());}
   function publicSpriteUrls(name='',gender='',no=0,shiny=false){
     const eligibility=root.publicPokemonDex?.variantStatus?.(name);
     if(eligibility&&gender&&!eligibility.genders.includes(gender))return Object.freeze([]);
@@ -567,6 +570,7 @@
     spriteSemanticIdentity,
     PUBLIC_EXACT_FORM_IDS,
     publicSpriteDex,
-    publicSpriteUrls
+    publicSpriteUrls,
+    reviewedPreferredForm
   });
 })(window);
