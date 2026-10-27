@@ -12,7 +12,7 @@ const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
-const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.150)/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -408,3 +408,7 @@ test('exact .150 rejects changed private target',t=>{const d=apri150Fixture(t);c
 function apriHalloween150Fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'apri-halloween150-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','fd74ad68cf196117a0bc479998f7ba1ea29d1bd5','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
 test('exact combined Apri Halloween .150 retains the reviewed 24-read contract',t=>{const r=check(apriHalloween150Fixture(t),'fd74ad68cf196117a0bc479998f7ba1ea29d1bd5');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
 test('exact combined Apri Halloween rejects changed private target',t=>{const d=apriHalloween150Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'fd74ad68cf196117a0bc479998f7ba1ea29d1bd5').status,0)});
+
+function apri151Fixture(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'apri151-read-contract-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));execFileSync('git',['archive','351ebcafe42b1cb3558355aa238c189e55bb09b6','index.html','css','js'],{cwd:root,stdio:['ignore',fs.openSync(path.join(dir,'source.tar'),'w'),'pipe']});execFileSync('tar',['-xf',path.join(dir,'source.tar'),'-C',dir]);return dir;}
+test('exact Apri151 logo Trainers runtime retains the reviewed 24-read contract',t=>{const r=check(apri151Fixture(t),'351ebcafe42b1cb3558355aa238c189e55bb09b6');assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).directReads.length,24)});
+test('exact Apri151 rejects a changed private target',t=>{const d=apri151Fixture(t);change(d,'js/app/application.js','get(ref(db,`accountSync/${owner}`))','get(ref(db,`users/${owner}`))');assert.notEqual(check(d,'351ebcafe42b1cb3558355aa238c189e55bb09b6').status,0)});
