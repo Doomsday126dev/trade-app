@@ -5108,7 +5108,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Turquoise)",
-        "PokéXciting Pikachu (Turquoise)"
+        "Pok\u00e9Xciting Pikachu (Turquoise)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -9431,7 +9431,8 @@
       "no": 79,
       "names": [
         "Slowpoke (Detective)",
-        "Slowpoke Hat"
+        "Slowpoke Hat",
+        "Slowpoke (Cowboy)"
       ],
       "status": "exact",
       "sourceFile": "slowpoke-detective.png",
@@ -10268,7 +10269,7 @@
       ],
       "status": "exact",
       "sourceFile": "cubone-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/cubone",
       "assets": {
         "default": "assets/sprites/go/cubone-cempasuchil-crown.png",
@@ -10286,14 +10287,14 @@
         "name": "Cubone (Cempasuchil)",
         "no": 104,
         "sourceId": "0104-00-00-01",
-        "sourceName": "Cempasúchil Cubone",
+        "sourceName": "Cempas\u00fachil Cubone",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
         "shinyAvailability": "released",
         "releaseEvidence": [
           "https://www.serebii.net/pokemongo/shiny.shtml"
         ],
-        "releaseListedName": "Cubone (Cempasúchil Crown)",
+        "releaseListedName": "Cubone (Cempas\u00fachil Crown)",
         "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
         "sourceGenders": [
           "m",
@@ -10340,7 +10341,7 @@
       ],
       "status": "exact",
       "sourceFile": "marowak-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/marowak",
       "assets": {
         "default": "assets/sprites/go/marowak-cempasuchil-crown.png",
@@ -10358,14 +10359,14 @@
         "name": "Marowak Cempasuchil Crown",
         "no": 105,
         "sourceId": "0105-00-00-01",
-        "sourceName": "Cempasúchil Marowak",
+        "sourceName": "Cempas\u00fachil Marowak",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "identitySource": "https://github.com/Gabrielense/pogorewind/blob/5c6bb56c4026e5fe3cd146910c7e9dad9f07d716/datas_debut.csv",
         "shinyAvailability": "released",
         "releaseEvidence": [
           "https://www.serebii.net/pokemongo/shiny.shtml"
         ],
-        "releaseListedName": "Marowak (Cempasúchil Crown)",
+        "releaseListedName": "Marowak (Cempas\u00fachil Crown)",
         "releaseQualification": "Exact named costume independently matched to released-Shiny evidence; repository CSV verifies identity only. No debut date inferred.",
         "sourceGenders": [
           "m",
@@ -18099,7 +18100,7 @@
       ],
       "status": "exact",
       "sourceFile": "duskull-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/duskull",
       "assets": {
         "default": "assets/sprites/go/duskull-cempasuchil-crown.png",
@@ -18117,7 +18118,7 @@
         "name": "Duskull (Cempasuchil)",
         "no": 355,
         "sourceId": "0355-00-00-01",
-        "sourceName": "Cempasúchil Duskull",
+        "sourceName": "Cempas\u00fachil Duskull",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -18184,7 +18185,7 @@
       ],
       "status": "exact",
       "sourceFile": "dusclops-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/dusclops",
       "assets": {
         "default": "assets/sprites/go/dusclops-cempasuchil-crown.png",
@@ -18202,7 +18203,7 @@
         "name": "Dusclops Cempasuchil Crown",
         "no": 356,
         "sourceId": "0356-00-00-01",
-        "sourceName": "Cempasúchil Dusclops",
+        "sourceName": "Cempas\u00fachil Dusclops",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -20889,7 +20890,7 @@
       ],
       "status": "exact",
       "sourceFile": "dusknoir-cempasuchil-crown.png",
-      "sourceLabel": "Cempasúchil Crown",
+      "sourceLabel": "Cempas\u00fachil Crown",
       "sourcePage": "https://pokemondb.net/sprites/dusknoir",
       "assets": {
         "default": "assets/sprites/go/dusknoir-cempasuchil-crown.png",
@@ -20907,7 +20908,7 @@
         "name": "Dusknoir Cempasuchil Crown",
         "no": 477,
         "sourceId": "0477-00-00-01",
-        "sourceName": "Cempasúchil Dusknoir",
+        "sourceName": "Cempas\u00fachil Dusknoir",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -22514,8 +22515,8 @@
     {
       "no": 666,
       "names": [
-        "Poké Ball",
-        "Vivillon (Poké Ball)"
+        "Pok\u00e9 Ball",
+        "Vivillon (Pok\u00e9 Ball)"
       ],
       "status": "exact",
       "sourceFile": "vivillon-pokeball.png",
@@ -25287,7 +25288,7 @@
         "name": "Oricorio (Baile)",
         "no": 741,
         "sourceId": "0741-00-03",
-        "sourceName": "Baile Oricório",
+        "sourceName": "Baile Oric\u00f3rio",
         "sourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
         "sourceGenders": [
           "m",
@@ -26373,7 +26374,7 @@
       "no": 25,
       "names": [
         "Pikachu (PokeXciting Blue)",
-        "PokéXciting Pikachu (Blue)"
+        "Pok\u00e9Xciting Pikachu (Blue)"
       ],
       "status": "exact",
       "identityStatus": "released",
@@ -26819,7 +26820,7 @@
       "no": 10,
       "names": [
         "Caterpie (Poke Ball Hat)",
-        "Caterpie Poké Ball Hat",
+        "Caterpie Pok\u00e9 Ball Hat",
         "Caterpie Pokeball Hat"
       ],
       "status": "exact",
@@ -26835,7 +26836,7 @@
       },
       "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
       "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm10.fGOFEST_2026.icon.png",
-      "sourceLabel": "Caterpie wearing a Poké Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
+      "sourceLabel": "Caterpie wearing a Pok\u00e9 Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
       "assets": {
         "default": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
         "shiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
@@ -26866,6 +26867,207 @@
         "sourceSha256": "62143d47ff799b5090c997b3729bc4eeb53f1a1a095ba1d7d9b4cc1d41101577",
         "qualification": "Archived event lists use this exact mined costume filename, with an item-specific Shiny indicator. This corroborates both identity and Shiny release separately from sprite existence."
       }
+    },
+    {
+      "no": 999,
+      "names": [
+        "Gimmighoul (10th Anniversary Coin)",
+        "Gimmighoul (Roaming Form (10th Anniversary Coin))"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "999-gimmighoul-10th-anniversary-coin.png",
+      "sourceFiles": {
+        "default": "999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sourceLabel": "10th Anniversary Coin",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/gimmighoul-10th-anniversary-coin",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/999-gimmighoul-10th-anniversary-coin.png",
+      "assets": {
+        "default": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin.png",
+        "shiny": "assets/sprites/go/dittobase-999-gimmighoul-10th-anniversary-coin-shiny.png"
+      },
+      "sha256": {
+        "default": "0f7359eace1dcf1d10d695cdaf6190cafbb682a4b591ab6ae38d4d8e2df68322",
+        "shiny": "2185cee8b4aa4d87ae19af9e12e52adf989131c712b48431df039973661f388a"
+      },
+      "availableGenders": [],
+      "genderModel": "genderless",
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "shinyEvidence": "https://pokemongo.com/news/10th-anniversary-party",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original normal/Shiny art inspected. Normal tenth-anniversary image differs from independently labelled ninth-anniversary reference by 1206 decoded pixels on the same 60x75 canvas. Not a relabelled ninth/default icon.",
+      "anniversaryPixelProof": {
+        "images": [
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2119
+          },
+          {
+            "name": "999-gimmighoul-10th-anniversary-coin-shiny",
+            "width": 61,
+            "height": 74,
+            "visiblePixels": 2126
+          },
+          {
+            "name": "999-gimmighoul-9th-anniversary-coin",
+            "width": 60,
+            "height": 75,
+            "visiblePixels": 2126
+          }
+        ],
+        "normalVsShiny": {
+          "differentDimensions": true
+        },
+        "tenthVsNinth": {
+          "differentPixels": 1206
+        }
+      },
+      "reviewIdentityId": "pokemon:999:standard:legacy:Gimmighoul%20(10th%20Anniversary%20Coin)"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Blue Shirt (Citrus))",
+        "Citrus Shirt Pikachu"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-jeju.png",
+      "sourceFiles": {
+        "default": "025-jeju.png",
+        "shiny": "shiny/025-jeju.png"
+      },
+      "sourceLabel": "Blue Shirt (Citrus)",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-jeju.png",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-pikachu-citrus-shirt.png",
+        "shiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-shiny.png",
+        "female": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female.png",
+        "femaleShiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female-shiny.png"
+      },
+      "sha256": {
+        "default": "ce7b0e3687e22c128c6027e5b1daa3e754172787899380c61160d77fa0a13c1a",
+        "shiny": "9fb20358e69fe33d61bb2f66a6c341d7b928a91c85a7004ed531ffec31bd1fd1",
+        "female": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+        "femaleShiny": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127"
+      },
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/",
+      "shinyEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original male and female normal/Shiny Citrus Shirt PNGs inspected. Female artwork has a heart-notched tail. Generic Jeju label remains unresolved and separate.",
+      "femaleArtworkReview": [
+        {
+          "id": "citrus-female-normal",
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.634701+00:00",
+          "http": 200,
+          "sha256": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+          "bytes": 4930
+        },
+        {
+          "id": "citrus-female-shiny",
+          "url": "https://img.pokemondb.net/sprites/go/shiny/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.709951+00:00",
+          "http": 200,
+          "sha256": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127",
+          "bytes": 4814
+        }
+      ]
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Taiwan)",
+        "Pikachu (Pok\u00e9Xciting Taiwan)",
+        "Pikachu (PokeXciting Pink)"
+      ],
+      "status": "exact",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-taiwan-01.png",
+      "sourceLabel": "PokeXciting Taiwan (Pink Hair)",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01.png",
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-taiwan-01.png",
+        "shiny": "25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-taiwan-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-taiwan-01-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-taiwan-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "7726f41c8e2003ba3111bd94d2d2cbe7d589098d37892733ca7286ca076e124f",
+        "shiny": "4d9f7f5fee282d39b27cd9be7d42a41a0b61b234c98dfc1583887f7b953f4629",
+        "female": "390977dcf232633b5edc2fd323aad37d0e2ecd06ad0ff0b9c12c179864aee546",
+        "femaleShiny": "7d6d647262e1667290c4078a76bec61225255497f62aad02f998540d47623a07"
+      },
+      "femaleArtworkUnavailable": false,
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "identityEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "shinyEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "pixelReview": "Four original images visually reviewed against explicit region form page; pink Taiwan and orange Philippines hair remain separate identities. Correct female tails; normal/Shiny pairs distinct. No substitutions.",
+      "reviewIdentityId": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+      "identityStatus": "released",
+      "shinyAvailability": "released"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Philippines)",
+        "Pikachu (Pok\u00e9Xciting Philippines)",
+        "Pikachu (PokeXciting Orange)"
+      ],
+      "status": "exact",
+      "sourceProvider": "dittobase-reviewed",
+      "sourceFile": "25-pikachu-anniversary-2026-philippine-01.png",
+      "sourceLabel": "PokeXciting Philippines (Orange Hair)",
+      "sourcePage": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "sourceUrl": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01.png",
+      "sourceFiles": {
+        "default": "25-pikachu-anniversary-2026-philippine-01.png",
+        "shiny": "25-pikachu-anniversary-2026-philippine-01-shiny.png",
+        "female": "25-pikachu-anniversary-2026-philippine-01-female.png",
+        "femaleShiny": "25-pikachu-anniversary-2026-philippine-01-female-shiny.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01.png",
+        "shiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-shiny.png",
+        "female": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-female.png",
+        "femaleShiny": "assets/sprites/go/dittobase-25-pikachu-anniversary-2026-philippine-01-female-shiny.png"
+      },
+      "sha256": {
+        "default": "6ac49e0ac3049c8d03a4151e76c3ead9cf5f3f4989f8b8689a9a50abc8b6b29d",
+        "shiny": "9dbcc6c636d2ca7d8afeb87f7e31eade0cfda31db42822aad849caa9ba92f680",
+        "female": "d6b3214465dc6a4c8252bc8e12870d08a1855264ea80463cb876762c21e21c11",
+        "femaleShiny": "b84c5b0f3d107fb9c0331dc98156b487fbfd2efbc2f09df9b3e99abf73460743"
+      },
+      "femaleArtworkUnavailable": false,
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "identityEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "shinyEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "pixelReview": "Four original images visually reviewed against explicit region form page; pink Taiwan and orange Philippines hair remain separate identities. Correct female tails; normal/Shiny pairs distinct. No substitutions.",
+      "reviewIdentityId": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29"
     }
   ]
 }

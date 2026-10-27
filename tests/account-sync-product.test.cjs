@@ -24,7 +24,7 @@ test('Board edit planning changes only intended fields and does not target new r
   const current=api.specialBoardRows({board:{lf:[],ft:[{name:'Pikachu',p:'H',shiny:true},{name:'Eevee'}]},catalogIdForBoardEntry:({entry})=>entry.name}).rows.map(row=>active(row));
   const calls=[],source=readFileSync(path.join(root,'js/app/application.js'),'utf8');
   const context={accountSyncProduct:api,accountSyncModel:model,accountSyncCanonicalEntities:current,managedAccountSyncRuntime:{controller:{}},
-    accountSyncCatalogIdentity:(_type,name)=>({catalogId:name}),accountSyncAuthorityCurrent:()=>true,
+    accountSyncLegacyCatalogIdentity:(_type,name)=>({catalogId:name}),accountSyncAuthorityCurrent:()=>true,
     applyAccountSyncTradeMutations:async mutations=>{calls.push(...mutations);return{ok:true};}};
   vm.runInNewContext(source.slice(source.indexOf('async function writeAccountSyncSpecialBoard('),source.indexOf('function resetOwnedHydrationState(')),context);
   assert.equal((await context.writeAccountSyncSpecialBoard(desired,{baseBoard:base})).ok,true);

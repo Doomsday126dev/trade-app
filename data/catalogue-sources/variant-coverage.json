@@ -1,0 +1,280 @@
+{
+  "qualification": "All 1680 selectable default normal/Shiny identities evaluated through preferred, list, public and export code paths. URI candidates do not prove source identity or current availability. Artifact-proof matches reuse existing approvals/cached decoded bytes and the finite queue source-form review; they are not fresh visual re-approval of every existing variant. Optional gender variants are outside this default-variant denominator.",
+  "metrics": {
+    "normal": {
+      "denominator": 1680,
+      "paths": {
+        "preferred": {
+          "hasCandidate": 1679,
+          "firstCandidateHasRecordedIdentityArtProof": 516,
+          "missing": 1,
+          "unqualifiedFirstCandidate": 1163
+        },
+        "list": {
+          "hasCandidate": 1679,
+          "firstCandidateHasRecordedIdentityArtProof": 516,
+          "missing": 1,
+          "unqualifiedFirstCandidate": 1163
+        },
+        "public": {
+          "hasCandidate": 1679,
+          "firstCandidateHasRecordedIdentityArtProof": 972,
+          "missing": 1,
+          "unqualifiedFirstCandidate": 707
+        },
+        "export": {
+          "hasCandidate": 1679,
+          "firstCandidateHasRecordedIdentityArtProof": 972,
+          "missing": 1,
+          "unqualifiedFirstCandidate": 707
+        }
+      }
+    },
+    "shiny": {
+      "denominator": 1680,
+      "paths": {
+        "preferred": {
+          "hasCandidate": 1658,
+          "firstCandidateHasRecordedIdentityArtProof": 951,
+          "missing": 22,
+          "unqualifiedFirstCandidate": 707
+        },
+        "list": {
+          "hasCandidate": 1658,
+          "firstCandidateHasRecordedIdentityArtProof": 951,
+          "missing": 22,
+          "unqualifiedFirstCandidate": 707
+        },
+        "public": {
+          "hasCandidate": 1658,
+          "firstCandidateHasRecordedIdentityArtProof": 951,
+          "missing": 22,
+          "unqualifiedFirstCandidate": 707
+        },
+        "export": {
+          "hasCandidate": 1658,
+          "firstCandidateHasRecordedIdentityArtProof": 951,
+          "missing": 22,
+          "unqualifiedFirstCandidate": 707
+        }
+      }
+    }
+  },
+  "sourceDenominators": {
+    "normal-inventory": {
+      "denominator": 1333,
+      "identityMatched": 1166,
+      "ambiguous": 24,
+      "unmatched": 143
+    },
+    "shiny-inventory": {
+      "denominator": 1363,
+      "identityMatched": 1203,
+      "ambiguous": 41,
+      "unmatched": 119
+    },
+    "max-inventory": {
+      "denominator": 138,
+      "identityMatched": 138,
+      "unmatched": 0
+    },
+    "gigantamax-inventory": {
+      "denominator": 16,
+      "identityMatched": 16,
+      "unmatched": 0,
+      "appEntriesOutsideSource": [
+        {
+          "no": 133,
+          "name": "Eevee (Gigantamax)"
+        },
+        {
+          "no": 569,
+          "name": "Garbodor (Gigantamax)"
+        },
+        {
+          "no": 809,
+          "name": "Melmetal (Gigantamax)"
+        },
+        {
+          "no": 823,
+          "name": "Corviknight (Gigantamax)"
+        },
+        {
+          "no": 826,
+          "name": "Orbeetle (Gigantamax)"
+        },
+        {
+          "no": 834,
+          "name": "Drednaw (Gigantamax)"
+        },
+        {
+          "no": 839,
+          "name": "Coalossal (Gigantamax)"
+        },
+        {
+          "no": 841,
+          "name": "Flapple (Gigantamax)"
+        },
+        {
+          "no": 842,
+          "name": "Appletun (Gigantamax)"
+        },
+        {
+          "no": 844,
+          "name": "Sandaconda (Gigantamax)"
+        },
+        {
+          "no": 851,
+          "name": "Centiskorch (Gigantamax)"
+        },
+        {
+          "no": 858,
+          "name": "Hatterene (Gigantamax)"
+        },
+        {
+          "no": 869,
+          "name": "Alcremie (Gigantamax)"
+        },
+        {
+          "no": 884,
+          "name": "Duraludon (Gigantamax)"
+        },
+        {
+          "no": 892,
+          "name": "Urshifu (Gigantamax)"
+        }
+      ],
+      "qualification": "Species-level identity presence only. Extra app entries and absent source rows require official release evidence; this secondary table may lag."
+    },
+    "pokemod": {
+      "denominator": 1597,
+      "unit": "addressable-icon-or-portrait-file-groups",
+      "iconFiles": 3611,
+      "portraitFiles": 96,
+      "mapped": 925,
+      "unmatched": 672,
+      "legacyGroups": 1112,
+      "legacyFiles": 2213,
+      "legacyMapped": 683,
+      "legacyUnmapped": 429,
+      "unparsedImages": 0
+    }
+  },
+  "normalMissing": [
+    "Urshifu (Gigantamax)"
+  ],
+  "shinyMissing": [
+    {
+      "name": "Terapagos (Stellar Form)",
+      "scope": "finite67",
+      "classification": "source-pixel-duplicate-not-qualified-as-Shiny"
+    },
+    {
+      "name": "Urshifu (Gigantamax)",
+      "scope": "outside-finite67",
+      "classification": "generic-label-ambiguous-between-two-Gigantamax-styles"
+    },
+    {
+      "name": "Venusaur (Clone)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Charizard (Clone)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Blastoise (Clone)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Pikachu (Clone)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Pikachu (Detective)",
+      "scope": "outside-finite67",
+      "classification": "legacy-year-or-evolution-identity-and-Shiny-art-need-separate-qualification; do-not-replace-2019-with-2023"
+    },
+    {
+      "name": "Pikachu (Ph_D)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Raichu Detective",
+      "scope": "outside-finite67",
+      "classification": "legacy-year-or-evolution-identity-and-Shiny-art-need-separate-qualification; do-not-replace-2019-with-2023"
+    },
+    {
+      "name": "Mewtwo (Armored)",
+      "scope": "outside-finite67",
+      "classification": "no-approved-exact-Shiny-art-in-current-register; source/release-absence-not-proven"
+    },
+    {
+      "name": "Spinda (Form 1)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 2)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 3)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 4)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 5)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 6)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 7)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Spinda (Form 8)",
+      "scope": "outside-finite67",
+      "classification": "numbered-Shiny-assets-not-mapped-in-current-approved-catalogue; independent-page-candidates-found"
+    },
+    {
+      "name": "Flygon (Meloetta Hat)",
+      "scope": "outside-finite67",
+      "classification": "existing-hat-aliases-have-no-approved-Shiny-asset; independent-form-page-found"
+    },
+    {
+      "name": "Fancy",
+      "scope": "outside-finite67",
+      "classification": "future-form-normal-art-exists; exact-Shiny-form-source-not-yet-qualified"
+    },
+    {
+      "name": "Poké Ball",
+      "scope": "outside-finite67",
+      "classification": "future-form-normal-art-exists; exact-Shiny-form-source-not-yet-qualified"
+    },
+    {
+      "name": "Minior (Green Core)",
+      "scope": "outside-finite67",
+      "classification": "existing-green-core-has-no-approved-Shiny-asset; exact independent-page-candidates-found"
+    }
+  ],
+  "preferredShinyUsingNormal": [],
+  "observedAt": "2026-10-27T11:59:04.142Z"
+}

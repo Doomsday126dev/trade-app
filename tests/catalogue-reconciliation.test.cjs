@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const {reconcile,loadSources}=require('../scripts/reconcile-catalogue.cjs');
-const {parseGOInventory,observeInventories}=require('../scripts/catalogue-source-observation.cjs');
+const {reconcile,loadSources,summarizeReview}=require('../scripts/reconcile-catalogue.cjs');
+const {parseGOInventory,parseMaxInventory,observeInventories}=require('../scripts/catalogue-source-observation.cjs');
 const now=new Date('2026-10-27T12:00:00Z');
 function inputs(){return{sources:{manifest:{importedAt:now.toISOString(),sources:[{id:'normal-inventory',observedAt:now.toISOString()},{id:'shiny-inventory',observedAt:now.toISOString()},{id:'max-inventory',observedAt:now.toISOString()},{id:'pokemod',observedAt:now.toISOString(),commit:'fixture'}]},issues:[],data:{'normal-inventory':[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/gen9pokemon.shtml',sourceSprite:'https://www.serebii.net/pokemongo/pokemon/999.png',availabilityClaim:'listed-without-unavailable-marker'}],'shiny-inventory':[],'max-inventory':[],pokemod:{tree:[]}}},identities:{all:[],database:{dynamax:[]}},art:{entries:[]},forms:{records:[]},now};}
 test('a whole new identity, ambiguous alias and missing art all remain open independently of app seeds',()=>{
@@ -19,10 +19,37 @@ test('modified inventory hashes and stale observations are explicit source failu
  assert.ok(loadSources(new Date('2026-11-10')).issues.some(r=>r.kind==='stale-or-failed-source'));
 });
 test('403 responses are recorded once per source without retries or success from cached data',async()=>{
- const calls=[];const input=inputs().sources;input.data['shiny-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/shiny.shtml'}];input.data['max-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/maxbattles.shtml'}];
- const result=await observeInventories(input,{now,fetchImpl:async url=>{calls.push(url);return{ok:false,status:403};}});assert.equal(calls.length,6);assert.equal(new Set(calls).size,calls.length);assert.equal(result.issues.length,6);assert.equal(result.data['normal-inventory'].length,1);assert.equal(reconcile({...inputs(),sources:result}).status,'source-failure');
+ const calls=[];const input=inputs().sources;input.data['shiny-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/shiny.shtml'}];input.data['max-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/maxbattles.shtml'}];input.data['gigantamax-inventory']=input.data['max-inventory'];
+ const result=await observeInventories(input,{now,fetchImpl:async url=>{calls.push(url);return{ok:false,status:403};}});assert.equal(calls.length,6);assert.equal(new Set(calls).size,calls.length);assert.equal(result.issues.length,7);assert.equal(result.data['normal-inventory'].length,1);assert.equal(reconcile({...inputs(),sources:result}).status,'source-failure');
 });
 
 test('unparsed miner files and legacy identity ambiguity remain visible owner issues',()=>{
  const input=inputs();input.sources.data.pokemod.tree=[{path:'new-format-999.png',sha:'fixture'}];input.art.entries=[{no:999,names:['New Species'],status:'unavailable'}];input.pendingArt=[{displayIdentity:'New Species',reasonCategory:'mapping-ambiguous',candidate:{reason:'Two exact variants exist'},acceptedSourcePage:'https://example.test/variants',nextReviewAction:'Resolve the exact variant'}];const result=reconcile(input);assert.ok(result.queue.some(r=>r.disposition==='unparsed-art-filename'&&r.file.path==='new-format-999.png'));const row=result.queue.find(r=>r.id==='missing-art:999:New Species');assert.equal(row.artState,'exact-identity-ambiguous');assert.equal(row.reason,'Two exact variants exist');assert.equal(row.priority,'urgent');assert.equal(row.disposition,'owner-attention-required');
+});
+
+test('Gigantamax section is reconciled separately without consuming Dynamax names',()=>{
+ const row=(no,name)=>`<a href="/pokemongo/pokemon/${no}.shtml">${name}</a>`;const g=Array.from({length:10},(_,i)=>row(i+1,'Gmax '+i)).join('');const d=Array.from({length:100},(_,i)=>row(i+1,'Dmax '+i)).join('');const html='<h2>List of Gigantamax Capable Pokémon</h2>'+g+'<h2>List of Dynamax Capable Pokémon</h2>'+d;assert.equal(parseMaxInventory(html,'https://example.test/max','gmax').length,10);assert.equal(parseMaxInventory(html,'https://example.test/max').length,100);const input=inputs();input.sources.data['gigantamax-inventory']=[{no:999,name:'New Species',source:'https://example.test/max'}];const result=reconcile(input);assert.equal(result.coverage['gigantamax-inventory'].unmatched,1);assert.ok(result.queue.some(r=>r.id==='gigantamax:999'));
+});
+test('owner summary deduplicates variants while retaining every unresolved row and rejecting stale alias identity',()=>{
+ const report={queue:[{id:'normal',no:999,name:'New Species',source:'normal-inventory',disposition:'unmatched-identity'},{id:'shiny',no:999,name:'New Species',source:'shiny-inventory',disposition:'unmatched-identity'}],status:'review-required'};const original=JSON.stringify(report);const reviews={schemaVersion:1,aliases:[{rowId:'normal',no:999,sourceName:'New Species',catalogId:'exact',evidence:{sourceSprite:'https://example.test/999.png'}}],missingIdentities:[{id:'missing:999',no:999,name:'New Species',sourceNames:['New Species'],releaseState:'normal-released-confirmed',shinyReleaseState:'unverified'}]};const summary=summarizeReview(report,reviews);assert.equal(summary.rawRows,2);assert.equal(summary.groupCount,1);assert.deepEqual(summary.groups[0].rows,['normal','shiny']);assert.equal(summary.actionableMissing[0].shinyReleaseState,'unverified');assert.equal(JSON.stringify(report),original);reviews.aliases[0].no=1;assert.throws(()=>summarizeReview(report,reviews),/no longer matches/);
+});
+
+test('new Shiny release evidence stays urgent even when existing identity and exact art already match',()=>{
+ const input=inputs();input.sources.data['normal-inventory']=[];input.sources.data['shiny-inventory']=[{no:999,name:'New Species',sourceSprite:'https://example.test/999.png',source:'https://example.test/shiny',statusText:'Available when encountered'}];input.identities.all=[{no:999,name:'New Species',catalogId:'one'}];input.forms.records=[{id:999,speciesId:999,name:'New Species'}];input.verifiedArt=[{no:999,shiny:true,status:'verified-bytes',decoded:true}];input.eligibility=[{no:999,name:'New Species',normal:'released',shiny:'unverified'}];const result=reconcile(input);assert.equal(result.coverage['shiny-inventory'].identityMatched,1);assert.ok(result.queue.some(r=>r.disposition==='variant-release-evidence-review-required'&&r.priority==='urgent'));assert.equal(result.status,'review-required');
+});
+
+test('reviewed missing identity counts cannot retain an already integrated exact canonical label',()=>{
+ const {loadIdentities,identityKey}=require('../scripts/reconcile-catalogue.cjs');const {all}=loadIdentities(),reviews=require('../data/catalogue-sources/identity-reviews.json'),seen=new Set();
+ for(const row of reviews.missingIdentities){assert.ok(!seen.has(row.id),'duplicate missing identity '+row.name);seen.add(row.id);assert.ok(!all.some(entry=>entry.no===row.no&&identityKey(entry.name)===identityKey(row.name)),'already integrated '+row.name);assert.ok(row.source&&row.action&&row.artState);assert.notEqual(row.disposition,'unavailable');}
+});
+
+test('finite queue art stays hash-pinned, Shiny duplicates stay blocked, and Zen labels survive line breaks',()=>{
+ const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const records=validateReviewedAssets(path.join(__dirname,'..'));assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,undefined);assert.equal(stellar.blockedVariants.shiny.state,'owner-attention-required');assert.equal(records.filter(row=>row.assets.shiny).length,65);
+ const input=inputs();input.sources.data['normal-inventory']=[];assert.equal(reconcile(input).status,'reconciled');const html='<img src="/pokemongo/pokemon/555-gz.png"><td class="fooinfo"><a href="/pokemongo/pokemon/555.shtml">Darmanitan</a> (Galarian Form<br />Zen Mode)</td>';assert.equal(parseGOInventory(html,'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal')[0].name,'Darmanitan (Galarian Form Zen Mode)');
+});
+
+test('existing non-tradeable Mythical policy also applies to forms without excluding tradeable exceptions',()=>{
+ const vm=require('node:vm'),path=require('node:path'),window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/domain/pokemonSearchTerms.js'),'utf8'),{window});vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/domain/pokemonEntryRules.js'),'utf8'),{window});const rules=window.PogoDomain.pokemonEntryRules;
+ for(const entry of [{no:494,name:'Victini'},{no:649,name:'Genesect (Shock Drive)'},{no:801,name:'Magearna (Original Color)'}])assert.equal(rules.isTradeableForWishlist(entry),false);
+ for(const entry of [{no:808,name:'Meltan'},{no:809,name:'Melmetal'},{no:1024,name:'Terapagos (Stellar Form)'}])assert.equal(rules.isTradeableForWishlist(entry),true);
 });

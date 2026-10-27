@@ -1,0 +1,3699 @@
+{
+  "schemaVersion": 1,
+  "baseline": "5312b3550470f4ab67c390046ee9693ab8911250",
+  "reviewedAt": "2026-10-27T11:02:24.194810+00:00",
+  "denominator": 67,
+  "integrated": 66,
+  "existingAlias": 1,
+  "remainingIdentityBlockers": 0,
+  "remainingVariantArtBlockers": 1,
+  "qualification": "Finite reviewed queue only, not whole-catalogue completeness. Unknown GO releases remain explicit and do not block artwork or wants. Fourteen missing Serebii Shiny counterparts were resolved with independently named exact PokeAPI forms; Stellar Terapagos Shiny remains explicitly blocked after duplicate-pixel detection; failures retained below.",
+  "sourceFailures": [
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/1024-s.png",
+      "observedAt": "2026-10-27T10:32:11.949455+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/1024-t.png",
+      "observedAt": "2026-10-27T10:32:12.011115+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/670-e.png",
+      "observedAt": "2026-10-27T10:32:12.417089+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/801-o.png",
+      "observedAt": "2026-10-27T10:32:13.009527+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/834.png",
+      "observedAt": "2026-10-27T10:32:13.099232+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/869.png",
+      "observedAt": "2026-10-27T10:32:13.193849+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/879.png",
+      "observedAt": "2026-10-27T10:32:13.242228+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/901-b.png",
+      "observedAt": "2026-10-27T10:32:13.287622+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/902-f.png",
+      "observedAt": "2026-10-27T10:32:13.317132+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/902.png",
+      "observedAt": "2026-10-27T10:32:13.437954+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/952.png",
+      "observedAt": "2026-10-27T10:32:13.575323+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/954.png",
+      "observedAt": "2026-10-27T10:32:13.618249+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/964-h.png",
+      "observedAt": "2026-10-27T10:32:13.679801+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/964.png",
+      "observedAt": "2026-10-27T10:32:13.679904+00:00",
+      "status": "http-error",
+      "http": 404
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/981.png",
+      "observedAt": "2026-10-27T10:32:13.735664+00:00",
+      "status": "http-error",
+      "http": 404
+    }
+  ],
+  "sourceObservations": [
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/sinistea",
+      "observedAt": "2026-10-27T10:36:16.943050+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/sinistea",
+      "status": 200,
+      "sha256": "d7f87181fd0022b0f03189f712335f2fa00fd39ac3ca6c660b561de3a375bea4",
+      "bytes": 962055
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/polteageist",
+      "observedAt": "2026-10-27T10:36:16.943434+00:00",
+      "status": 404
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/slowpoke",
+      "observedAt": "2026-10-27T10:36:16.943601+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/slowpoke",
+      "status": 200,
+      "sha256": "185bd7ae4bd4cda7e0fd014ae810bc4f83a76db606084807f7d703db28256d45",
+      "bytes": 1161787
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/golbat",
+      "observedAt": "2026-10-27T10:36:16.943674+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/golbat",
+      "status": 200,
+      "sha256": "ee88d8599a4423fddc6b8253bf647ef2f55dbc85cd70763d0d2dbf106facea6f",
+      "bytes": 1087524
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/crobat",
+      "observedAt": "2026-10-27T10:36:17.394783+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/crobat",
+      "status": 200,
+      "sha256": "e32f99b425bac2b834bde1c084cb0d77214e3d313a4d949eb170b6bed4cd97bd",
+      "bytes": 1113646
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/terapagos",
+      "observedAt": "2026-10-27T10:36:17.408673+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/terapagos",
+      "status": 200,
+      "sha256": "181bcf18999627409441f619e999f048be603b115ab939206b978f97f8d24539",
+      "bytes": 854693
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/magearna",
+      "observedAt": "2026-10-27T10:36:17.568702+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/magearna",
+      "status": 200,
+      "sha256": "3d655db9e70830b88f4279837ff25be2f7c98ba2b4dc4ce92a1df0107ddbfced",
+      "bytes": 933223
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/basculegion",
+      "observedAt": "2026-10-27T10:36:17.633929+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/basculegion",
+      "status": 200,
+      "sha256": "b215020df4262d44c899b7e307029302aecafb43661ff5a10dbf880bfd9d2471",
+      "bytes": 972976
+    },
+    {
+      "url": "https://pokemongo.com/news/into-the-wild-2026",
+      "observedAt": "2026-10-27T10:36:17.797182+00:00",
+      "finalUrl": "https://pokemongo.com/news/into-the-wild-2026",
+      "status": 200,
+      "sha256": "de85d270f96d013bd8999ca08bd4baf811fadf95b565ab743fef975490a68980",
+      "bytes": 57775
+    },
+    {
+      "url": "https://pokemongo.com/news/halloween-part-1-2026",
+      "observedAt": "2026-10-27T10:36:17.870816+00:00",
+      "finalUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "status": 200,
+      "sha256": "4c76cb51680e892540e282e58b4d300f5d6ec0520d0c76236d5d5770b29d73fa",
+      "bytes": 51904
+    },
+    {
+      "url": "https://pokemongo.com/news/high-zaptitude-2026",
+      "observedAt": "2026-10-27T10:36:18.121041+00:00",
+      "finalUrl": "https://pokemongo.com/news/high-zaptitude-2026",
+      "status": 200,
+      "sha256": "03398ea5ce8ea2ce40ff68f55720cbd5c7688e5b4c91c37270929c1383b2ddbe",
+      "bytes": 46343
+    },
+    {
+      "url": "https://pokemongo.com/news/mega-squads-2026",
+      "observedAt": "2026-10-27T10:36:18.132550+00:00",
+      "finalUrl": "https://pokemongo.com/news/mega-squads-2026",
+      "status": 200,
+      "sha256": "1c220c5f4cf5401d9eefdef61ca2dcf89f0ea5dd3c5f34bacbc6fbac0d043640",
+      "bytes": 55072
+    },
+    {
+      "url": "https://pokemongo.com/news/fall-marathon-buddy-trek-2026",
+      "observedAt": "2026-10-27T10:36:18.202664+00:00",
+      "finalUrl": "https://pokemongo.com/news/fall-marathon-buddy-trek-2026",
+      "status": 200,
+      "sha256": "317c63daf3e9f2b7acb57bace15f536fa079e6217bf636f2920696ff4b9f0d95",
+      "bytes": 53355
+    },
+    {
+      "url": "https://pokemongo.com/news/into-the-depths-2026",
+      "observedAt": "2026-10-27T10:36:18.370356+00:00",
+      "finalUrl": "https://pokemongo.com/news/into-the-depths-2026",
+      "status": 200,
+      "sha256": "d49f303659843f24fd9f8e69beeb30a7f28304664055838827d201ff7957f854",
+      "bytes": 45501
+    },
+    {
+      "url": "https://pokemongo.com/news/completely-normal-2025",
+      "observedAt": "2026-10-27T10:36:18.389979+00:00",
+      "finalUrl": "https://pokemongo.com/news/completely-normal-2025",
+      "status": 200,
+      "sha256": "7dd33d96b77ee4d0d26230c810dac0ad523f4689c2f96b351f0c01495fbd6e76",
+      "bytes": 46135
+    },
+    {
+      "url": "https://pokemongo.com/news/sustainability-week-2026",
+      "observedAt": "2026-10-27T10:36:18.501884+00:00",
+      "finalUrl": "https://pokemongo.com/news/sustainability-week-2026",
+      "status": 200,
+      "sha256": "13adc30e48762497d1efa23a4527a5353666d7e467f38ced57d42377f8c8b2d0",
+      "bytes": 52236
+    },
+    {
+      "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+      "observedAt": "2026-10-27T10:36:18.630380+00:00",
+      "finalUrl": "https://pokemongo.com/news/minior-meteor-showers-2026",
+      "status": 200,
+      "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+      "bytes": 43270
+    },
+    {
+      "url": "https://pokemongo.com/news/go-battle-league-tales-of-transformation",
+      "observedAt": "2026-10-27T10:36:18.641548+00:00",
+      "finalUrl": "https://pokemongo.com/news/go-battle-league-tales-of-transformation",
+      "status": 200,
+      "sha256": "c41521f80b35802a0b90ddf55e061004f14bb40ec198fec83ffdd9cab77b001a",
+      "bytes": 258888
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/sinistea-antique",
+      "observedAt": "2026-10-27T10:37:41.885829+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/sinistea-antique",
+      "status": 200,
+      "sha256": "0397706f9daa593a110037b00f6b86b88b848fec2c3f04c82cffe4de931a2f3c",
+      "bytes": 963695
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-antique",
+      "observedAt": "2026-10-27T10:37:41.886256+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-antique",
+      "status": 200,
+      "sha256": "8adbc83018b1d5915cb36d392e4569f46efbf9ea5c196e5e5573af0e5a2776f8",
+      "bytes": 978193
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-phony",
+      "observedAt": "2026-10-27T10:37:41.886376+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-phony",
+      "status": 200,
+      "sha256": "94d54c9abc0946ae548c412aca57299202934002a0e403fd3a3022e2f913c504",
+      "bytes": 999293
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/golbat-top-hat",
+      "observedAt": "2026-10-27T10:37:41.886430+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/golbat-top-hat",
+      "status": 200,
+      "sha256": "e5f9e8406477b31781b3d004f51882be8c904dfd5502e9c889019cf3152a1bcb",
+      "bytes": 942405
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/crobat-top-hat",
+      "observedAt": "2026-10-27T10:37:42.200367+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/crobat-top-hat",
+      "status": 200,
+      "sha256": "f9e9099fb7732a0ff880fba0c1f8a5d3148e214c06f5d82c7afee9f815ab253b",
+      "bytes": 907932
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar",
+      "observedAt": "2026-10-27T10:37:42.202371+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-stellar",
+      "status": 200,
+      "sha256": "edd25d7fa32d7217d0f9cae7d8dcdfbcccaa922260dc1af18c7bc19ac0af28b5",
+      "bytes": 856166
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-terastal",
+      "observedAt": "2026-10-27T10:37:42.236149+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/terapagos-terastal",
+      "status": 200,
+      "sha256": "6c4eb76c0e6c4a7cc6358b0c522549fb3d49a3e0993d96d18ccc0fbd313cf8de",
+      "bytes": 856350
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/magearna-original-color",
+      "observedAt": "2026-10-27T10:37:42.308638+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/magearna-original-color",
+      "status": 200,
+      "sha256": "ef33bae1257994a6162d955315206db93c11ad607602340fe388248ca60f16b3",
+      "bytes": 936014
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-antique-halloween-2026-01",
+      "observedAt": "2026-10-27T10:43:47.540103+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-antique-halloween-2026-01",
+      "status": 200,
+      "sha256": "f6aa23dd48516d9bd76701574916e1d8e63fbef7bab1b45618ffdfb67b04cbdf",
+      "bytes": 842251
+    },
+    {
+      "url": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-phony-halloween-2026-01",
+      "observedAt": "2026-10-27T10:43:47.540285+00:00",
+      "finalUrl": "https://www.dittobase.com/pokemon-go/pokedex/polteageist-phony-halloween-2026-01",
+      "status": 200,
+      "sha256": "c243c6fd5867a27600615d280eeafbb5422296caec8509570e08e398dbcbd05b",
+      "bytes": 841863
+    },
+    {
+      "url": "https://pokemongo.com/news/tour-pass-2025",
+      "observedAt": "2026-10-27T10:46:22.441607+00:00",
+      "finalUrl": "https://pokemongo.com/news/tour-pass-2025",
+      "status": 200,
+      "sha256": "d14037b036af770f6a9ca3621895851df14ae0c2d46e79756f531c5b877ce2e9",
+      "bytes": 53823
+    },
+    {
+      "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+      "observedAt": "2026-10-27T10:46:22.441967+00:00",
+      "finalUrl": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+      "status": 200,
+      "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+      "bytes": 56690
+    },
+    {
+      "url": "https://pokemongo.com/news/lustrous-odyssey-2024",
+      "observedAt": "2026-10-27T10:46:22.442077+00:00",
+      "finalUrl": "https://pokemongo.com/news/lustrous-odyssey-2024",
+      "status": 200,
+      "sha256": "e3b5ab228d8316a8bfb8bac7f54a7130e024c12c2e58ea4c3f34710df4f13d6c",
+      "bytes": 82045
+    },
+    {
+      "url": "https://pokemongo.com/news/gofest2026-global-update",
+      "observedAt": "2026-10-27T10:46:22.442138+00:00",
+      "finalUrl": "https://pokemongo.com/news/gofest2026-global-update",
+      "status": 200,
+      "sha256": "7d67374ecf4443cc4e12fc2852516b3ed0cb04e01b09c3b2f254225d5315fc8a",
+      "bytes": 46214
+    },
+    {
+      "url": "https://pokemongo.com/news/ultra-unlock-steel-and-scales",
+      "observedAt": "2026-10-27T10:46:22.795124+00:00",
+      "finalUrl": "https://pokemongo.com/news/ultra-unlock-steel-and-scales",
+      "status": 200,
+      "sha256": "57c9fe25908753d3f61b2a6c44a5280d917f1a705af746103d226a8d15180b6c",
+      "bytes": 45828
+    },
+    {
+      "url": "https://pokemongo.com/news/just-my-cup-of-tea-2024",
+      "observedAt": "2026-10-27T10:46:22.848782+00:00",
+      "finalUrl": "https://pokemongo.com/news/just-my-cup-of-tea-2024",
+      "status": 200,
+      "sha256": "d4b922b9d85f463df6f7b4da56f7b0803d61518e74e24a060593b41211536ecc",
+      "bytes": 46532
+    }
+  ],
+  "records": [
+    {
+      "sourceId": "canonical-missing:1024:stellar terapagos",
+      "sourceName": "Terapagos (Stellar Form)",
+      "canonicalName": "Terapagos (Stellar Form)",
+      "no": 1024,
+      "disposition": "integrated-normal-with-urgent-shiny-art-blocker",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10277.png",
+          "observedAt": "2026-10-27T10:33:44.314676+00:00",
+          "http": 200,
+          "sha256": "b75a0f0b5290c0ac531dd7bca52e21d3056de9bdb3451e631e2c0513f4b77901",
+          "bytes": 255555,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 106507,
+            "pixelHash": "349761b2",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants.",
+      "blockedVariants": {
+        "shiny": {
+          "state": "owner-attention-required",
+          "reason": "Serebii exact Shiny URL returns 404. Independently labelled PokeAPI and Dittobase normal/Shiny assets decode to identical pixels; no evidence establishes a separate Shiny appearance. Do not substitute normal art or assume that duplicate upstream pixels qualify the Shiny variant.",
+          "sources": [
+            "https://www.serebii.net/pokemongo/pokemon/shiny/1024-s.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10277.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10277.png",
+            "https://assets.dittobase.com/go/pokemon-unpadded/1024-terapagos-stellar-shiny.png"
+          ],
+          "nextAction": "Verify upstream exact Shiny model or explicit authoritative same-appearance evidence; keep normal artwork and Shiny wants available, but return no unverified Shiny sprite."
+        }
+      }
+    },
+    {
+      "sourceId": "canonical-missing:1024:terapagos terastal",
+      "sourceName": "Terapagos (Terastal Form)",
+      "canonicalName": "Terapagos (Terastal Form)",
+      "no": 1024,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10276.png",
+          "observedAt": "2026-10-27T10:33:44.315225+00:00",
+          "http": 200,
+          "sha256": "ceea0ef0fe080429b251f0718137780004392b18dff642e1ab656085b4ce8fae",
+          "bytes": 169181,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 78464,
+            "pixelHash": "16e26b6a",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10276.png",
+          "observedAt": "2026-10-27T10:33:44.315297+00:00",
+          "http": 200,
+          "sha256": "91197df1e24a35a77822dcd97597062db2f503c89b5eda41bef548d2b55c04ee",
+          "bytes": 166798,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 78464,
+            "pixelHash": "3d1c7ca4",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:423:east gastrodon sea",
+      "sourceName": "Gastrodon (East Sea)",
+      "canonicalName": "Gastrodon (East Sea)",
+      "no": 423,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/423-e.png",
+          "observedAt": "2026-10-27T10:32:10.060595+00:00",
+          "http": 200,
+          "sha256": "1632b6fbabc6a54d4914ec7fa2269c9cb98e5a043df33fa40e0e5ed198383932",
+          "bytes": 15001,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5915,
+            "pixelHash": "e6377f54",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/423-e.png",
+          "observedAt": "2026-10-27T10:32:12.013886+00:00",
+          "http": 200,
+          "sha256": "cfd5032be45fb07a68c8e03426648e5d40b9ecfff4ed90a055f1428a960e0009",
+          "bytes": 16026,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6453,
+            "pixelHash": "ad80ae53",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/go-battle-league-tales-of-transformation",
+          "role": "Official GO Battle League names both West Sea and East Sea Gastrodon",
+          "status": 200,
+          "sha256": "c41521f80b35802a0b90ddf55e061004f14bb40ec198fec83ffdd9cab77b001a",
+          "observedAt": "2026-10-27T10:36:18.641548+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:423:gastrodon",
+      "sourceName": "Gastrodon",
+      "canonicalName": "Gastrodon (West Sea)",
+      "no": 423,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/423.png",
+          "observedAt": "2026-10-27T10:32:10.182817+00:00",
+          "http": 200,
+          "sha256": "866a99eb03197653dab7b0fcae261df5846a838c84dbb23a6ab6c19ac1dd77e1",
+          "bytes": 15582,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6170,
+            "pixelHash": "47b61bf",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/423.png",
+          "observedAt": "2026-10-27T10:32:12.017068+00:00",
+          "http": 200,
+          "sha256": "d35f011a23e0dac5909147122d91211f24ef52d9e8edc3a88a0bacd3b22d0a0d",
+          "bytes": 15849,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6331,
+            "pixelHash": "9ab4001f",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/go-battle-league-tales-of-transformation",
+          "role": "Official GO Battle League names both West Sea and East Sea Gastrodon",
+          "status": 200,
+          "sha256": "c41521f80b35802a0b90ddf55e061004f14bb40ec198fec83ffdd9cab77b001a",
+          "observedAt": "2026-10-27T10:36:18.641548+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:494:victini",
+      "sourceName": "Victini",
+      "canonicalName": "Victini",
+      "no": 494,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/494.png",
+          "observedAt": "2026-10-27T10:32:10.183000+00:00",
+          "http": 200,
+          "sha256": "3e812a9c0fa66e4748b3959dbb783ec2f1f6a19ea8195ee8e428723cac581102",
+          "bytes": 7505,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2921,
+            "pixelHash": "51a3b518",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/494.png",
+          "observedAt": "2026-10-27T10:32:12.071146+00:00",
+          "http": 200,
+          "sha256": "28b49181574e60a36a4dd1296d5ed8e410f7a22ca30c1162193e269489f66e18",
+          "bytes": 7635,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2994,
+            "pixelHash": "73973400",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/tour-pass-2025",
+          "role": "Official Victini encounter; no Shiny confirmation inferred",
+          "status": 200,
+          "sha256": "d14037b036af770f6a9ca3621895851df14ae0c2d46e79756f531c5b877ce2e9",
+          "observedAt": "2026-10-27T10:46:22.441607+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:646:black kyurem kyurem",
+      "sourceName": "Kyurem (Black Kyurem)",
+      "canonicalName": "Kyurem (Black Kyurem)",
+      "no": 646,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/646-b.png",
+          "observedAt": "2026-10-27T10:32:10.358295+00:00",
+          "http": 200,
+          "sha256": "82feb6224ee172bea048478e49997bdf77b49f1cb2cb411fffa459872e6aac23",
+          "bytes": 19406,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6010,
+            "pixelHash": "d29b030a",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/646-b.png",
+          "observedAt": "2026-10-27T10:32:12.229909+00:00",
+          "http": 200,
+          "sha256": "1cc8b9ec66feb821060d70caf13781a3244b742b1af872082278fa9cc2729548",
+          "bytes": 19142,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6055,
+            "pixelHash": "6d9dc0ac",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:646:kyurem kyurem white",
+      "sourceName": "Kyurem (White Kyurem)",
+      "canonicalName": "Kyurem (White Kyurem)",
+      "no": 646,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/646-w.png",
+          "observedAt": "2026-10-27T10:32:10.383425+00:00",
+          "http": 200,
+          "sha256": "e610deb4bf40fea40ccedda5c7c3021f9eb7d7a31d1d1a50b62aa9a3158e592d",
+          "bytes": 19263,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5937,
+            "pixelHash": "939bda37",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/646-w.png",
+          "observedAt": "2026-10-27T10:32:12.255023+00:00",
+          "http": 200,
+          "sha256": "6317275a3315bf0f386cb6682f0b3c39c4ea36cd85ededda95a99a8d72c0b66e",
+          "bytes": 19392,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5960,
+            "pixelHash": "99cf287d",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:649:drive genesect shock",
+      "sourceName": "Genesect (Shock Drive)",
+      "canonicalName": "Genesect (Shock Drive)",
+      "no": 649,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/649-e.png",
+          "observedAt": "2026-10-27T10:32:10.447926+00:00",
+          "http": 200,
+          "sha256": "57672bee5a0da900e1930fa6859ff8f95fe6347e79caf26be6097c6a7c318989",
+          "bytes": 16724,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5939,
+            "pixelHash": "5f2d07f4",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/649-e.png",
+          "observedAt": "2026-10-27T10:32:12.255693+00:00",
+          "http": 200,
+          "sha256": "3522ee2175fd1844cc3b8af534507cffd47ed1c8aa348e3b61b2b2897e64ea2b",
+          "bytes": 16277,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5911,
+            "pixelHash": "4ef98be5",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/gofest2026-global-update",
+          "role": "All four exact Drives explicitly listed with Shiny stars in past July event",
+          "status": 200,
+          "sha256": "7d67374ecf4443cc4e12fc2852516b3ed0cb04e01b09c3b2f254225d5315fc8a",
+          "observedAt": "2026-10-27T10:46:22.442138+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:649:burn drive genesect",
+      "sourceName": "Genesect (Burn Drive)",
+      "canonicalName": "Genesect (Burn Drive)",
+      "no": 649,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/649-f.png",
+          "observedAt": "2026-10-27T10:32:10.450045+00:00",
+          "http": 200,
+          "sha256": "d2c41603e3e5e1bbadf4e32b6a09eb33432ae47a38bd4da2bb0367f649406058",
+          "bytes": 16645,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5935,
+            "pixelHash": "79187672",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/649-f.png",
+          "observedAt": "2026-10-27T10:32:12.255768+00:00",
+          "http": 200,
+          "sha256": "457205fa4a317b869030b9f8049d4f263f8c84458f6af63c5551aea7ca17d672",
+          "bytes": 16240,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5913,
+            "pixelHash": "9f950111",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/gofest2026-global-update",
+          "role": "All four exact Drives explicitly listed with Shiny stars in past July event",
+          "status": 200,
+          "sha256": "7d67374ecf4443cc4e12fc2852516b3ed0cb04e01b09c3b2f254225d5315fc8a",
+          "observedAt": "2026-10-27T10:46:22.442138+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:649:chill drive genesect",
+      "sourceName": "Genesect (Chill Drive)",
+      "canonicalName": "Genesect (Chill Drive)",
+      "no": 649,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/649-i.png",
+          "observedAt": "2026-10-27T10:32:10.453285+00:00",
+          "http": 200,
+          "sha256": "85fb353fe1af22a5007d0be37a81a30de0cba993de125c72b9bdba7bd29a9ea3",
+          "bytes": 16685,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5935,
+            "pixelHash": "1112bd71",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/649-i.png",
+          "observedAt": "2026-10-27T10:32:12.409379+00:00",
+          "http": 200,
+          "sha256": "2aa2147ad86a48d13ee191f08e42bda1b131ee6f26bf81269ab36fc197222234",
+          "bytes": 16085,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5875,
+            "pixelHash": "c234e70d",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/gofest2026-global-update",
+          "role": "All four exact Drives explicitly listed with Shiny stars in past July event",
+          "status": 200,
+          "sha256": "7d67374ecf4443cc4e12fc2852516b3ed0cb04e01b09c3b2f254225d5315fc8a",
+          "observedAt": "2026-10-27T10:46:22.442138+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:649:douse drive genesect",
+      "sourceName": "Genesect (Douse Drive)",
+      "canonicalName": "Genesect (Douse Drive)",
+      "no": 649,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/649-w.png",
+          "observedAt": "2026-10-27T10:32:10.504020+00:00",
+          "http": 200,
+          "sha256": "08f54721a87083e80e6d8c14a95a191aa6cc9ef8bbe2d4ed4cbac527b7fc6315",
+          "bytes": 16698,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5941,
+            "pixelHash": "8bb26d94",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/649-w.png",
+          "observedAt": "2026-10-27T10:32:12.416321+00:00",
+          "http": 200,
+          "sha256": "a15dd74dc91b36f621a8c976a4081ea38dd80e97d479cb9e910c6de3b0fbcb4e",
+          "bytes": 16305,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5918,
+            "pixelHash": "f96584f7",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/gofest2026-global-update",
+          "role": "All four exact Drives explicitly listed with Shiny stars in past July event",
+          "status": 200,
+          "sha256": "7d67374ecf4443cc4e12fc2852516b3ed0cb04e01b09c3b2f254225d5315fc8a",
+          "observedAt": "2026-10-27T10:46:22.442138+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:670:blue floette flower",
+      "sourceName": "Floette (Blue Flower)",
+      "canonicalName": "Floette (Blue Flower)",
+      "no": 670,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/670-b.png",
+          "observedAt": "2026-10-27T10:32:10.542865+00:00",
+          "http": 200,
+          "sha256": "e29769c4f2b06399c7ebe626f369e5688e896011ffa1b83edd163bb871d151d0",
+          "bytes": 10092,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2603,
+            "pixelHash": "4f9510f2",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/670-b.png",
+          "observedAt": "2026-10-27T10:32:12.416422+00:00",
+          "http": 200,
+          "sha256": "dcb85ce103524864b2e285641edd191cdd11d4c04aa9a6a777e39be3c2e9e2aa",
+          "bytes": 10094,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2605,
+            "pixelHash": "4c298c75",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:670:eternal floette flower",
+      "sourceName": "Floette (Eternal Flower)",
+      "canonicalName": "Floette (Eternal Flower)",
+      "no": 670,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10061.png",
+          "observedAt": "2026-10-27T10:33:44.497196+00:00",
+          "http": 200,
+          "sha256": "f810819f9f897d984b4b8ccf15ec4db7515fc9bd30f83c2dfee900100509eb73",
+          "bytes": 81494,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 49940,
+            "pixelHash": "c2c54062",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10061.png",
+          "observedAt": "2026-10-27T10:33:44.497569+00:00",
+          "http": 200,
+          "sha256": "6257a519fd087f7ba4f134c6896c828c494ab332ff2b6a8f49578c640de7203d",
+          "bytes": 92703,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 55758,
+            "pixelHash": "c5b119df",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:670:floette flower orange",
+      "sourceName": "Floette (Orange Flower)",
+      "canonicalName": "Floette (Orange Flower)",
+      "no": 670,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/670-o.png",
+          "observedAt": "2026-10-27T10:32:10.545145+00:00",
+          "http": 200,
+          "sha256": "c6b3c0c7789288f92bda81b5bbb1aa29b465e249809892fbeb068d147f7e1383",
+          "bytes": 9975,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2583,
+            "pixelHash": "c3c14bea",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/670-o.png",
+          "observedAt": "2026-10-27T10:32:12.503547+00:00",
+          "http": 200,
+          "sha256": "1299fc9817e18ba48f84be0c4c5d9319bfd24d6b52abcba2311d9f53942079ca",
+          "bytes": 9953,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2596,
+            "pixelHash": "6fccd0ae",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:670:floette flower white",
+      "sourceName": "Floette (White Flower)",
+      "canonicalName": "Floette (White Flower)",
+      "no": 670,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/670-w.png",
+          "observedAt": "2026-10-27T10:32:10.616285+00:00",
+          "http": 200,
+          "sha256": "fec46215c65ea765ba6a4bc683ce465d3759d4d03460b386acfed3f814a2d985",
+          "bytes": 10095,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2573,
+            "pixelHash": "99cbf3a3",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/670-w.png",
+          "observedAt": "2026-10-27T10:32:12.508860+00:00",
+          "http": 200,
+          "sha256": "cb188e8c8e3d6e566633cfa06e5b55b6e84575869d1c71e6420d01b027c3ba03",
+          "bytes": 10040,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2573,
+            "pixelHash": "2c945eca",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:670:floette flower yellow",
+      "sourceName": "Floette (Yellow Flower)",
+      "canonicalName": "Floette (Yellow Flower)",
+      "no": 670,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/670-y.png",
+          "observedAt": "2026-10-27T10:32:10.633964+00:00",
+          "http": 200,
+          "sha256": "95372eec7f01d5b10642c07ce92021f92a8861cf2ad84907863c2b01b1257cb2",
+          "bytes": 10165,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2652,
+            "pixelHash": "32471189",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/670-y.png",
+          "observedAt": "2026-10-27T10:32:12.515731+00:00",
+          "http": 200,
+          "sha256": "001617f46e417506a6ed2c3e1cb65b1399ab0f396ad775b5ea295376f4d24816",
+          "bytes": 10168,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2677,
+            "pixelHash": "30103b4e",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:671:blue florges flower",
+      "sourceName": "Florges (Blue Flower)",
+      "canonicalName": "Florges (Blue Flower)",
+      "no": 671,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/671-b.png",
+          "observedAt": "2026-10-27T10:32:10.634072+00:00",
+          "http": 200,
+          "sha256": "3aea1474dbf3c1560380baedd78c4652aff8caf2b9f65ce6a062459641c8e666",
+          "bytes": 17664,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5722,
+            "pixelHash": "b28eb0f9",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/671-b.png",
+          "observedAt": "2026-10-27T10:32:12.534615+00:00",
+          "http": 200,
+          "sha256": "c536e958b642a198efa76d16018100807c14384bc210b209f3974b364aa168ca",
+          "bytes": 17781,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5861,
+            "pixelHash": "9a326dd8",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:671:florges flower orange",
+      "sourceName": "Florges (Orange Flower)",
+      "canonicalName": "Florges (Orange Flower)",
+      "no": 671,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/671-o.png",
+          "observedAt": "2026-10-27T10:32:10.634517+00:00",
+          "http": 200,
+          "sha256": "f073d00a9595b091f9487caeb360b133099d5c1fe1e9965ddd86b8b25a801a3c",
+          "bytes": 17370,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5733,
+            "pixelHash": "d6d52d6f",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/671-o.png",
+          "observedAt": "2026-10-27T10:32:12.596139+00:00",
+          "http": 200,
+          "sha256": "10628d3c96dff33fcfe88956652f6f75fd8d23350bfe506377ebc6e7d6ccb71b",
+          "bytes": 17534,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5869,
+            "pixelHash": "d076c048",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:671:florges flower white",
+      "sourceName": "Florges (White Flower)",
+      "canonicalName": "Florges (White Flower)",
+      "no": 671,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/671-w.png",
+          "observedAt": "2026-10-27T10:32:10.713940+00:00",
+          "http": 200,
+          "sha256": "0c6e99576d439e506b61e36d3a32b747266589c78c6ae8a481b23329a20bb305",
+          "bytes": 17133,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5755,
+            "pixelHash": "ade83a02",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/671-w.png",
+          "observedAt": "2026-10-27T10:32:12.599729+00:00",
+          "http": 200,
+          "sha256": "7cdc5673cf39c2e67fc92c088e76c162fbcbeb48359c585d8933a502cbe2c9d1",
+          "bytes": 17299,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5865,
+            "pixelHash": "6328f256",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:671:florges flower yellow",
+      "sourceName": "Florges (Yellow Flower)",
+      "canonicalName": "Florges (Yellow Flower)",
+      "no": 671,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/671-y.png",
+          "observedAt": "2026-10-27T10:32:10.819432+00:00",
+          "http": 200,
+          "sha256": "424b623461f9ba41d6fd61b723fd3ae7fee4aceaa9af1cb86130988ed9cbbd70",
+          "bytes": 17163,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5692,
+            "pixelHash": "d6095960",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/671-y.png",
+          "observedAt": "2026-10-27T10:32:12.601453+00:00",
+          "http": 200,
+          "sha256": "78d6c233ba555c9b480864f1b7748760913ddec29bbbd1128f1a60b7648acf5c",
+          "bytes": 17231,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5822,
+            "pixelHash": "d68b498c",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/communityday-september-2025-flabebe",
+          "role": "Official color encounters, Shiny base and GO Floette-to-Florges evolution path; exact color art independently mapped",
+          "status": 200,
+          "sha256": "fb81b60a909b7c33cf22a24fcc04723d43c77f7305643ff5dcd0c8ac5723fd88",
+          "observedAt": "2026-10-27T10:46:22.441967+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:681:aegislash blade",
+      "sourceName": "Aegislash (Blade Forme)",
+      "canonicalName": "Aegislash (Blade Forme)",
+      "no": 681,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10026.png",
+          "observedAt": "2026-10-27T10:51:49.961239+00:00",
+          "http": 200,
+          "sha256": "a46d1cadab81aa4acfa873b1986bf66f972de7e57e1e52642ef11613fdbce826",
+          "bytes": 118910,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 70282,
+            "pixelHash": "1bc531c3",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10026.png",
+          "observedAt": "2026-10-27T10:51:49.961673+00:00",
+          "http": 200,
+          "sha256": "4e011a2bb69b010825c19bd67960bac9573c8633c7b90aaf449afaa7d6c74ad7",
+          "bytes": 114240,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 70308,
+            "pixelHash": "a224c2ad",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:681:aegislash",
+      "sourceName": "Aegislash",
+      "canonicalName": "Aegislash (Shield Forme)",
+      "no": 681,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/681.png",
+          "observedAt": "2026-10-27T10:51:49.961719+00:00",
+          "http": 200,
+          "sha256": "dbf9f155a492e3894f6a8b41e47f2aef23f2bafb30ceff57a6cf17ad8d1d7b85",
+          "bytes": 124110,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 64779,
+            "pixelHash": "81aabf46",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/681.png",
+          "observedAt": "2026-10-27T10:51:49.961763+00:00",
+          "http": 200,
+          "sha256": "67844864c5d1ba137b31613df0266fb4c343bf1c83a77ad75bc91ff4860d0390",
+          "bytes": 120318,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 64793,
+            "pixelHash": "a6b5a0bd",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/ultra-unlock-steel-and-scales",
+          "role": "Official Aegislash evolution debut; Blade form availability not inferred",
+          "status": 200,
+          "sha256": "57c9fe25908753d3f61b2a6c44a5280d917f1a705af746103d226a8d15180b6c",
+          "observedAt": "2026-10-27T10:46:22.795124+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:745:dusk lycanroc",
+      "sourceName": "Lycanroc (Dusk Form)",
+      "canonicalName": "Lycanroc (Dusk Form)",
+      "no": 745,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/745-d.png",
+          "observedAt": "2026-10-27T10:32:10.915158+00:00",
+          "http": 200,
+          "sha256": "1191d319adeb603b055dfbc3344ed385140c888ea5a9c9ad852a69f4cdf4e222",
+          "bytes": 15175,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5648,
+            "pixelHash": "f2cd0dfc",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/745-d.png",
+          "observedAt": "2026-10-27T10:32:12.720238+00:00",
+          "http": 200,
+          "sha256": "840720612385c62b9def2133abe52cdf3c03df50f472afb853a966fbdbbaa685",
+          "bytes": 14995,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5609,
+            "pixelHash": "66d7b6d3",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/lustrous-odyssey-2024",
+          "role": "Official Midday/Midnight/Dusk GO evolution routes with Shiny Rockruff encounters",
+          "status": 200,
+          "sha256": "e3b5ab228d8316a8bfb8bac7f54a7130e024c12c2e58ea4c3f34710df4f13d6c",
+          "observedAt": "2026-10-27T10:46:22.442077+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:745:lycanroc midnight",
+      "sourceName": "Lycanroc (Midnight Form)",
+      "canonicalName": "Lycanroc (Midnight Form)",
+      "no": 745,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/745-m.png",
+          "observedAt": "2026-10-27T10:32:10.922368+00:00",
+          "http": 200,
+          "sha256": "cb6ffac1ab04aaf001fdfa37cad2dbc6bbacd388e50a24c429ed8a2cd3b36cda",
+          "bytes": 16094,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5654,
+            "pixelHash": "d52fd71b",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/745-m.png",
+          "observedAt": "2026-10-27T10:32:12.720381+00:00",
+          "http": 200,
+          "sha256": "60ef384670b49f4556fbce7953d7112d1b6df126562ec85da72ce64e248fb313",
+          "bytes": 15629,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5750,
+            "pixelHash": "943ffdbe",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/lustrous-odyssey-2024",
+          "role": "Official Midday/Midnight/Dusk GO evolution routes with Shiny Rockruff encounters",
+          "status": 200,
+          "sha256": "e3b5ab228d8316a8bfb8bac7f54a7130e024c12c2e58ea4c3f34710df4f13d6c",
+          "observedAt": "2026-10-27T10:46:22.442077+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:745:lycanroc",
+      "sourceName": "Lycanroc",
+      "canonicalName": "Lycanroc (Midday Form)",
+      "no": 745,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "released",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/745.png",
+          "observedAt": "2026-10-27T10:32:10.938908+00:00",
+          "http": 200,
+          "sha256": "5d5e0f770178ed5f188f8b9de3f0343d26312b119fc48cef4d3bbb7876d742f7",
+          "bytes": 14661,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5509,
+            "pixelHash": "5e444fa6",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/745.png",
+          "observedAt": "2026-10-27T10:32:12.749186+00:00",
+          "http": 200,
+          "sha256": "1c19edbd070e7e69b6b1290577ff9c738bed5607de9c8a24a3a232b235f1ede1",
+          "bytes": 15055,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5484,
+            "pixelHash": "b18dcd7e",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/lustrous-odyssey-2024",
+          "role": "Official Midday/Midnight/Dusk GO evolution routes with Shiny Rockruff encounters",
+          "status": 200,
+          "sha256": "e3b5ab228d8316a8bfb8bac7f54a7130e024c12c2e58ea4c3f34710df4f13d6c",
+          "observedAt": "2026-10-27T10:46:22.442077+00:00"
+        }
+      ],
+      "reason": "Exact GO variants corroborated by cited official encounter/evolution evidence and independent inventory. No tradeability inference is made from art."
+    },
+    {
+      "sourceId": "canonical-missing:774:blue core minior",
+      "sourceName": "Minior (Blue Core)",
+      "canonicalName": "Minior (Blue Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-b.png",
+          "observedAt": "2026-10-27T10:32:10.939305+00:00",
+          "http": 200,
+          "sha256": "c9631784c32d0ac46bfb7f46865ae40581ef4155c3d0b1d0df2dc1f77b5dace6",
+          "bytes": 6851,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4073,
+            "pixelHash": "1e0daf99",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-b.png",
+          "observedAt": "2026-10-27T10:32:12.779411+00:00",
+          "http": 200,
+          "sha256": "40f9261bcab62c2432a7356fae1a756a6415625a99f0c8751ce280abcad1264a",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:774:core indigo minior",
+      "sourceName": "Minior (Indigo Core)",
+      "canonicalName": "Minior (Indigo Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-i.png",
+          "observedAt": "2026-10-27T10:32:11.010613+00:00",
+          "http": 200,
+          "sha256": "1ade7da1acd6d9bae08a666640fb32692bafa4f1443fb4afb335f898bed871de",
+          "bytes": 6330,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4085,
+            "pixelHash": "f889039",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-i.png",
+          "observedAt": "2026-10-27T10:32:12.914896+00:00",
+          "http": 200,
+          "sha256": "ea079cf5de9d4215d9036847edc27550b87e6ca011b0667044b2c301ae96936c",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:774:core minior orange",
+      "sourceName": "Minior (Orange Core)",
+      "canonicalName": "Minior (Orange Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-o.png",
+          "observedAt": "2026-10-27T10:32:11.012897+00:00",
+          "http": 200,
+          "sha256": "f502c5ba610f652889a447f27634f7e2a19e4b0233059822b5ebb41b19509090",
+          "bytes": 6227,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4077,
+            "pixelHash": "e093dffe",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-o.png",
+          "observedAt": "2026-10-27T10:32:12.915028+00:00",
+          "http": 200,
+          "sha256": "178ccdc2a579d526ed39eb84a40a58b68b36b7c7f5466bd7575635b7447b262e",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:774:core minior red",
+      "sourceName": "Minior (Red Core)",
+      "canonicalName": "Minior (Red Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-r.png",
+          "observedAt": "2026-10-27T10:32:11.034172+00:00",
+          "http": 200,
+          "sha256": "de4ada26fbfcd72f6d959496556189543c7315572bf764bf866c5c6f3faad769",
+          "bytes": 6815,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4185,
+            "pixelHash": "62fc278",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-r.png",
+          "observedAt": "2026-10-27T10:32:12.915768+00:00",
+          "http": 200,
+          "sha256": "4e76d716d4866e5445e9b2ece48ed33aa90ab9424fb562313b5c5d02391becf4",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:774:core minior violet",
+      "sourceName": "Minior (Violet Core)",
+      "canonicalName": "Minior (Violet Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-v.png",
+          "observedAt": "2026-10-27T10:32:11.038749+00:00",
+          "http": 200,
+          "sha256": "0a4c83d5a6da7fa7bdd5e60924b6a04e9015bc745002b1bcff672075ad548cdc",
+          "bytes": 6937,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4124,
+            "pixelHash": "6545d104",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-v.png",
+          "observedAt": "2026-10-27T10:32:12.975985+00:00",
+          "http": 200,
+          "sha256": "8437a401b78e589c206c8fc577b48cf0e7f7b60381cc4adeeb48298f30a98e02",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:774:core minior yellow",
+      "sourceName": "Minior (Yellow Core)",
+      "canonicalName": "Minior (Yellow Core)",
+      "no": 774,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/774-y.png",
+          "observedAt": "2026-10-27T10:32:11.106884+00:00",
+          "http": 200,
+          "sha256": "95f2da662479561cdbb984e5d1f4d5af6db1f2b741e8da8c7c612c45af9cc9be",
+          "bytes": 6222,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4071,
+            "pixelHash": "31095615",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/774-y.png",
+          "observedAt": "2026-10-27T10:32:13.009404+00:00",
+          "http": 200,
+          "sha256": "633f40d921a37f39a5a9495c054ef2168607637c11dde5c9d441912c24f55e0d",
+          "bytes": 6610,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4167,
+            "pixelHash": "2de482cb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "role": "All seven colors announced with staggered meteor showers; this source does not establish which exact colors are currently obtainable",
+          "status": 200,
+          "sha256": "82b36917e2f4ea19933fce63c0b2da139b9f74d41445aa1196c15354fbc6667f",
+          "observedAt": "2026-10-27T10:36:18.630380+00:00"
+        }
+      ],
+      "reason": "All colors explicitly announced. Exact currently released color/date and Shiny release remain unverified; artwork and wants are available."
+    },
+    {
+      "sourceId": "canonical-missing:801:color magearna original",
+      "sourceName": "Magearna (Original Color)",
+      "canonicalName": "Magearna (Original Color)",
+      "no": 801,
+      "disposition": "art-qualified-existing-nontradeable-policy-preserved",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10147.png",
+          "observedAt": "2026-10-27T10:33:44.502652+00:00",
+          "http": 200,
+          "sha256": "c658f16e452166a1ce62e5a0d84cfefcaa9441d5513aa9ba47d1dfa1c5d7c0e7",
+          "bytes": 108662,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 52934,
+            "pixelHash": "debd8148",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10147.png",
+          "observedAt": "2026-10-27T10:33:44.502976+00:00",
+          "http": 200,
+          "sha256": "31ea5cfe90dd200be06d25de6ab0d60910ee7167c40d9311852cbc2b8bee64fd",
+          "bytes": 100914,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 52938,
+            "pixelHash": "8aa09ce4",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants.",
+      "tradeEligibility": "Existing base-species Mythical exclusion also applies to Drive/Original Color names; no policy relaxation. Saved records remain readable."
+    },
+    {
+      "sourceId": "canonical-missing:834:drednaw",
+      "sourceName": "Drednaw",
+      "canonicalName": "Drednaw",
+      "no": 834,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/834.png",
+          "observedAt": "2026-10-27T10:33:44.594358+00:00",
+          "http": 200,
+          "sha256": "0507280459881ca91bf9d87ad28488385ce7c41588adc0975482382499f8827c",
+          "bytes": 124284,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 71900,
+            "pixelHash": "b641e15c",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/834.png",
+          "observedAt": "2026-10-27T10:33:44.594436+00:00",
+          "http": 200,
+          "sha256": "c4163acd681eb6750bcccfcf2a7d094f515b5a4a3aa71a2b5d04ae8f59bec4cc",
+          "bytes": 120875,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 71897,
+            "pixelHash": "bbc246b4",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:844:sandaconda",
+      "sourceName": "Sandaconda",
+      "canonicalName": "Sandaconda",
+      "no": 844,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/844.png",
+          "observedAt": "2026-10-27T10:32:11.197553+00:00",
+          "http": 200,
+          "sha256": "e2edc28369668cb83a6aba9bb7948dca868a81540998669e1ec5391e61a0da37",
+          "bytes": 16544,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5986,
+            "pixelHash": "1efd53ad",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/844.png",
+          "observedAt": "2026-10-27T10:32:13.099608+00:00",
+          "http": 200,
+          "sha256": "73bede0a218cf8ee2545eaa63180267e1e09685f2018831975ccd2819b6fb912",
+          "bytes": 16534,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6188,
+            "pixelHash": "e64c1254",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/sustainability-week-2026",
+          "role": "Official Sandaconda debut/evolution; Shiny not inferred",
+          "status": 200,
+          "sha256": "13adc30e48762497d1efa23a4527a5353666d7e467f38ced57d42377f8c8b2d0",
+          "observedAt": "2026-10-27T10:36:18.501884+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:853:grapploct",
+      "sourceName": "Grapploct",
+      "canonicalName": "Grapploct",
+      "no": 853,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/853.png",
+          "observedAt": "2026-10-27T10:32:11.215584+00:00",
+          "http": 200,
+          "sha256": "728fb6684b11db8fd5e6153fa1b21e652e051fb6c49e5ebae7a53b463def5761",
+          "bytes": 17951,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 7660,
+            "pixelHash": "402b633a",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/853.png",
+          "observedAt": "2026-10-27T10:32:13.125912+00:00",
+          "http": 200,
+          "sha256": "8618655bf5dae12db808f9fc469a9615a5cef051aa56dad1da1538b52cb04d74",
+          "bytes": 18374,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 7898,
+            "pixelHash": "57ac65ed",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:869:alcremie",
+      "sourceName": "Alcremie",
+      "canonicalName": "Alcremie",
+      "no": 869,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/869.png",
+          "observedAt": "2026-10-27T10:33:44.594904+00:00",
+          "http": 200,
+          "sha256": "40e37989fb3c106d76a25ba53c6063aee133d53b23592c9717d7f6ccbc9e79bd",
+          "bytes": 126550,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 78060,
+            "pixelHash": "125062f6",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/869.png",
+          "observedAt": "2026-10-27T10:33:44.647654+00:00",
+          "http": 200,
+          "sha256": "adfefab5325da64851534cc2e0e126c6094e493a5ea407fa9fd6919f86f17ef4",
+          "bytes": 130024,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 78066,
+            "pixelHash": "1af54c97",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:879:copperajah",
+      "sourceName": "Copperajah",
+      "canonicalName": "Copperajah",
+      "no": 879,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/879.png",
+          "observedAt": "2026-10-27T10:33:44.698191+00:00",
+          "http": 200,
+          "sha256": "db03febb5036e2bad775c31447fe236f6fce7fb5bd3eb365b26e73895243e0e0",
+          "bytes": 171441,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 146177,
+            "pixelHash": "5b369429",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/879.png",
+          "observedAt": "2026-10-27T10:33:44.698527+00:00",
+          "http": 200,
+          "sha256": "d81af5ecc15113863a1f44d1ae48cefd81079d939387a67c1d2931a646a0f61a",
+          "bytes": 178227,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 146165,
+            "pixelHash": "d3f98c2e",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:901:bloodmoon ursaluna",
+      "sourceName": "Ursaluna (Bloodmoon)",
+      "canonicalName": "Ursaluna (Bloodmoon)",
+      "no": 901,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10272.png",
+          "observedAt": "2026-10-27T10:33:44.703201+00:00",
+          "http": 200,
+          "sha256": "818e1c31bab590f64b8dfd001ee4f22b6dfa7fca7e33eefc7f7b6458d461c147",
+          "bytes": 205775,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 136436,
+            "pixelHash": "4827bda3",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10272.png",
+          "observedAt": "2026-10-27T10:33:44.756372+00:00",
+          "http": 200,
+          "sha256": "94e180f3dc36713c42f58e6f5dfa397c3dd553bad7c34cb2126909bcc5d86f6c",
+          "bytes": 204230,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 136439,
+            "pixelHash": "7023a61b",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:902:basculegion female",
+      "sourceName": "Basculegion (Female)",
+      "canonicalName": "Basculegion (Female)",
+      "no": 902,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10248.png",
+          "observedAt": "2026-10-27T10:33:44.796865+00:00",
+          "http": 200,
+          "sha256": "dd899f5b6c00412fe3785fa0f38ee24eabf2770ef7ab64b31eef8274aa3c2f4a",
+          "bytes": 94846,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 53214,
+            "pixelHash": "a4eca6e6",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10248.png",
+          "observedAt": "2026-10-27T10:33:44.805566+00:00",
+          "http": 200,
+          "sha256": "84f56b789ae33b76ad3504952cb76425df68b7c1b158c7e55bad8197a7c85751",
+          "bytes": 95701,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 53211,
+            "pixelHash": "c1b0c954",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:902:basculegion",
+      "sourceName": "Basculegion",
+      "canonicalName": "Basculegion (Male)",
+      "no": 902,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/902.png",
+          "observedAt": "2026-10-27T10:33:44.843422+00:00",
+          "http": 200,
+          "sha256": "492e91e3f822a9a36792046cf7570766135931e1ef5b3c14147af277c089c577",
+          "bytes": 106510,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 54270,
+            "pixelHash": "ac0ab216",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/902.png",
+          "observedAt": "2026-10-27T10:33:44.880082+00:00",
+          "http": 200,
+          "sha256": "ff6313709a8872dbf7776f3bd3555aa4fb706129d76ad0d064ad72f20f888741",
+          "bytes": 109598,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 54261,
+            "pixelHash": "e66f44bb",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:925:family four maushold of",
+      "sourceName": "Maushold (Family of Four)",
+      "canonicalName": "Maushold (Family of Four)",
+      "no": 925,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/925.png",
+          "observedAt": "2026-10-27T10:51:50.077427+00:00",
+          "http": 200,
+          "sha256": "1b9964074db869710285aa04325f48cbc01193db00acbbd408943cf09ad0fb12",
+          "bytes": 112417,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 104021,
+            "pixelHash": "18b8e788",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/925.png",
+          "observedAt": "2026-10-27T10:51:50.100446+00:00",
+          "http": 200,
+          "sha256": "8ef0b8f148d4ff6e8cc0675447b5a4307d4709dbbb617e3e2ce982d65939de0a",
+          "bytes": 112654,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 104021,
+            "pixelHash": "251073bd",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:925:maushold",
+      "sourceName": "Maushold",
+      "canonicalName": "Maushold (Family of Three)",
+      "no": 925,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10257.png",
+          "observedAt": "2026-10-27T10:51:50.100497+00:00",
+          "http": 200,
+          "sha256": "b46aca3d635e7187ed7d9a4260dba3b0d235dd6f08e87d492f5003a4b5c2e5c5",
+          "bytes": 105164,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 120780,
+            "pixelHash": "2dec9ce4",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10257.png",
+          "observedAt": "2026-10-27T10:51:50.100851+00:00",
+          "http": 200,
+          "sha256": "1eefec13014701b01d51f2a2f545a7827b893f1b04d8dc216a5610cc03e68cec",
+          "bytes": 105234,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 120780,
+            "pixelHash": "b465f3ce",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:941:kilowattrel",
+      "sourceName": "Kilowattrel",
+      "canonicalName": "Kilowattrel",
+      "no": 941,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/941.png",
+          "observedAt": "2026-10-27T10:32:11.580163+00:00",
+          "http": 200,
+          "sha256": "0d46f112472522b5a0c97e439b6d01c52fe306746d681a769a86be525b78b320",
+          "bytes": 7100,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 1809,
+            "pixelHash": "55e6f51a",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/941.png",
+          "observedAt": "2026-10-27T10:32:13.526387+00:00",
+          "http": 200,
+          "sha256": "732de95f9d37e555af1c374df22f64bc5e29aee2a4842afec336d8f972d48e99",
+          "bytes": 6583,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 1707,
+            "pixelHash": "f6502ce7",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/high-zaptitude-2026",
+          "role": "Official Kilowattrel debut and evolution; secondary GO inventory corroborates challenge unlock",
+          "status": 200,
+          "sha256": "03398ea5ce8ea2ce40ff68f55720cbd5c7688e5b4c91c37270929c1383b2ddbe",
+          "observedAt": "2026-10-27T10:36:18.121041+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:943:mabosstiff",
+      "sourceName": "Mabosstiff",
+      "canonicalName": "Mabosstiff",
+      "no": 943,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/943.png",
+          "observedAt": "2026-10-27T10:32:11.616751+00:00",
+          "http": 200,
+          "sha256": "035de0b550f50e3d60239142cd58aa946307d28891f0a061708d6f2c35b52df2",
+          "bytes": 23561,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 9450,
+            "pixelHash": "acdd1801",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/943.png",
+          "observedAt": "2026-10-27T10:32:13.555398+00:00",
+          "http": 200,
+          "sha256": "925afe77da9f4d507a153c7ea50a33e04484edc8d6d03b10083359813a3e319e",
+          "bytes": 23519,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 9575,
+            "pixelHash": "e47e3a76",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/mega-squads-2026",
+          "role": "Official Mabosstiff debut and evolution",
+          "status": 200,
+          "sha256": "1c220c5f4cf5401d9eefdef61ca2dcf89f0ea5dd3c5f34bacbc6fbac0d043640",
+          "observedAt": "2026-10-27T10:36:18.132550+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:947:brambleghast",
+      "sourceName": "Brambleghast",
+      "canonicalName": "Brambleghast",
+      "no": 947,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/947.png",
+          "observedAt": "2026-10-27T10:32:11.649503+00:00",
+          "http": 200,
+          "sha256": "5f675e2238982fb8c8fa30e39945c344004c6fe27ea072474e33be7ad8443696",
+          "bytes": 22604,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6889,
+            "pixelHash": "d12265a2",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/947.png",
+          "observedAt": "2026-10-27T10:32:13.558157+00:00",
+          "http": 200,
+          "sha256": "51f894dc43a19874247cf1594905b28b18ca039781a4034c042854be2eb07ee8",
+          "bytes": 21445,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6732,
+            "pixelHash": "5d097dc8",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:952:scovillain",
+      "sourceName": "Scovillain",
+      "canonicalName": "Scovillain",
+      "no": 952,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/952.png",
+          "observedAt": "2026-10-27T10:33:44.888637+00:00",
+          "http": 200,
+          "sha256": "cef5362656b6275d5f5e166592b42a84f454733261481fe556061944eb0adec6",
+          "bytes": 171639,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 126227,
+            "pixelHash": "178172e0",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/952.png",
+          "observedAt": "2026-10-27T10:33:44.989891+00:00",
+          "http": 200,
+          "sha256": "b96f963f391902d052cfa7685381194cdaa367fd2600bbe4e2c24b999d4a1ac1",
+          "bytes": 179033,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 126226,
+            "pixelHash": "bc566313",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:954:rabsca",
+      "sourceName": "Rabsca",
+      "canonicalName": "Rabsca",
+      "no": 954,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/954.png",
+          "observedAt": "2026-10-27T10:33:45.007120+00:00",
+          "http": 200,
+          "sha256": "539e42ddb380993a87ff63c88ee960f3232b580b7c4563b4fccb5e9fec3b41a0",
+          "bytes": 156437,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 99045,
+            "pixelHash": "da565d53",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/954.png",
+          "observedAt": "2026-10-27T10:33:45.094038+00:00",
+          "http": 200,
+          "sha256": "762501368c2c280d373ac0179771e2ba8720d11d7f3a1506f5b65db3b0ec8ad9",
+          "bytes": 157820,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 99045,
+            "pixelHash": "4d723d8c",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:964:hero palafin",
+      "sourceName": "Palafin (Hero Form)",
+      "canonicalName": "Palafin (Hero Form)",
+      "no": 964,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10256.png",
+          "observedAt": "2026-10-27T10:33:45.095500+00:00",
+          "http": 200,
+          "sha256": "9b667806f36b2944948f2e6b0c022c56552b5a3ff48d50593e90306a35528351",
+          "bytes": 150584,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 80545,
+            "pixelHash": "9213a98e",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10256.png",
+          "observedAt": "2026-10-27T10:33:45.099471+00:00",
+          "http": 200,
+          "sha256": "be3455e55931b4c75878d483d6fa373539e13f0a55d7f92a027f993079cdac0c",
+          "bytes": 146643,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 80546,
+            "pixelHash": "a5a93335",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:964:palafin",
+      "sourceName": "Palafin",
+      "canonicalName": "Palafin",
+      "no": 964,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/964.png",
+          "observedAt": "2026-10-27T10:33:45.106908+00:00",
+          "http": 200,
+          "sha256": "eecea006946d94368875a297de4806fe6182e65dfbe0471f2ac2e076811159e2",
+          "bytes": 113336,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 84795,
+            "pixelHash": "3266cfed",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/964.png",
+          "observedAt": "2026-10-27T10:33:45.197916+00:00",
+          "http": 200,
+          "sha256": "2625f4aad7deb9ed54299eb751234737f99596a1ea252b85b96dd946d52ee53b",
+          "bytes": 113584,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 84795,
+            "pixelHash": "ac5ab660",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:970:glimmora",
+      "sourceName": "Glimmora",
+      "canonicalName": "Glimmora",
+      "no": 970,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/970.png",
+          "observedAt": "2026-10-27T10:32:11.754169+00:00",
+          "http": 200,
+          "sha256": "8db1b1162f36e6d531670e9b5559a39bf7676bbaba769825da00503af8221813",
+          "bytes": 16631,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6998,
+            "pixelHash": "1eadeb6e",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/970.png",
+          "observedAt": "2026-10-27T10:32:13.690927+00:00",
+          "http": 200,
+          "sha256": "9a3c75c4c84439d7c270ac82dbd083e55601658a0a0192e45374733e4d07cbad",
+          "bytes": 16740,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6982,
+            "pixelHash": "583450f2",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:981:farigiraf",
+      "sourceName": "Farigiraf",
+      "canonicalName": "Farigiraf",
+      "no": 981,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/981.png",
+          "observedAt": "2026-10-27T10:33:45.208975+00:00",
+          "http": 200,
+          "sha256": "4e24ed694c7ce6915896ceda252d433fb8fdffdfc6537a5b760a5071c690ccdc",
+          "bytes": 92556,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 42505,
+            "pixelHash": "5c587bd3",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/981.png",
+          "observedAt": "2026-10-27T10:33:45.209849+00:00",
+          "http": 200,
+          "sha256": "589f053b8a31c8ab2243a1d3906f156973752b9c171615e2e9daf1ed74952c70",
+          "bytes": 92557,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 42505,
+            "pixelHash": "d2f2220e",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:982:dudunsparce",
+      "sourceName": "Dudunsparce",
+      "canonicalName": "Dudunsparce (Two-Segment Form)",
+      "no": 982,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "released",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/982.png",
+          "observedAt": "2026-10-27T10:51:50.268208+00:00",
+          "http": 200,
+          "sha256": "60c15b7e6b93352edaa23f74341226c7b286ce3b662125f8f5e968d93b1c299e",
+          "bytes": 147081,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 116036,
+            "pixelHash": "cf3d4f8",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/982.png",
+          "observedAt": "2026-10-27T10:51:50.289921+00:00",
+          "http": 200,
+          "sha256": "3ab036b19edab886a8ecee766e3b6a52ab68b170f745c84196c4e9f893eba1ed",
+          "bytes": 144910,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 116036,
+            "pixelHash": "16f56fa4",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/completely-normal-2025",
+          "role": "Official Dudunsparce evolution; three-segment and Shiny release not inferred",
+          "status": 200,
+          "sha256": "7dd33d96b77ee4d0d26230c810dac0ad523f4689c2f96b351f0c01495fbd6e76",
+          "observedAt": "2026-10-27T10:36:18.389979+00:00"
+        }
+      ],
+      "reason": "Normal release corroborated by the cited exact GO announcement/context. Shiny state is independently recorded; art availability never promotes an unknown release."
+    },
+    {
+      "sourceId": "canonical-missing:169:crobat hat top",
+      "sourceName": "Crobat (Top hat)",
+      "canonicalName": "Crobat (Top hat)",
+      "no": 169,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/169-tophat.png",
+          "observedAt": "2026-10-27T10:32:10.060354+00:00",
+          "http": 200,
+          "sha256": "dd00171a9a9b9197ad1078ef3cca4a65101545c375b79de8e951ba4c2a0e7802",
+          "bytes": 17294,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5419,
+            "pixelHash": "b18ad0be",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/169-tophat.png",
+          "observedAt": "2026-10-27T10:32:12.011285+00:00",
+          "http": 200,
+          "sha256": "82acb85f1fb74d7674e469cc8d40fc677fec7b126e04feac0fb180c80180d0b6",
+          "bytes": 8540,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 2361,
+            "pixelHash": "efdc9144",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-1-2026",
+          "role": "Official base costume debut only; does not confirm the evolved costume release",
+          "status": 200,
+          "sha256": "4c76cb51680e892540e282e58b4d300f5d6ec0520d0c76236d5d5770b29d73fa",
+          "observedAt": "2026-10-27T10:36:17.870816+00:00"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:42:golbat hat top",
+      "sourceName": "Golbat (Top hat)",
+      "canonicalName": "Golbat (Top hat)",
+      "no": 42,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/042-tophat.png",
+          "observedAt": "2026-10-27T10:32:10.059074+00:00",
+          "http": 200,
+          "sha256": "0a7a98cf2149980f6f54349211b970841fa07c3e992b0be8080c1500879dd5bf",
+          "bytes": 5980,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 1884,
+            "pixelHash": "5d5e3435",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/042-tophat.png",
+          "observedAt": "2026-10-27T10:32:11.920608+00:00",
+          "http": 200,
+          "sha256": "bc909aa36f453aff1409853369f6fb5dda34a3d3985d037d1cf889329444529d",
+          "bytes": 6816,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 1979,
+            "pixelHash": "6234e66d",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-1-2026",
+          "role": "Official base costume debut only; does not confirm the evolved costume release",
+          "status": 200,
+          "sha256": "4c76cb51680e892540e282e58b4d300f5d6ec0520d0c76236d5d5770b29d73fa",
+          "observedAt": "2026-10-27T10:36:17.870816+00:00"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:555:darmanitan galarian",
+      "sourceName": "Darmanitan (Galarian Form)",
+      "canonicalName": "Darmanitan (Galarian Form)",
+      "no": 555,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/555-g.png",
+          "observedAt": "2026-10-27T10:32:10.183741+00:00",
+          "http": 200,
+          "sha256": "57c721953bb8fbd34379108eb7a6bc96066c0746c0163e1a0e36b05202d51cad",
+          "bytes": 15753,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 7823,
+            "pixelHash": "8c26b2d2",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/555-g.png",
+          "observedAt": "2026-10-27T10:32:12.130280+00:00",
+          "http": 200,
+          "sha256": "054c2244f5448aeadc66b9213e3dd3de716afb80ace52e1f6de0a8c6b41e29a3",
+          "bytes": 15986,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 7822,
+            "pixelHash": "c94fb260",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:586:autumn sawsbuck",
+      "sourceName": "Sawsbuck (Autumn Form)",
+      "canonicalName": "Sawsbuck (Autumn Form)",
+      "no": 586,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/586-a.png",
+          "observedAt": "2026-10-27T10:32:10.292864+00:00",
+          "http": 200,
+          "sha256": "215d49bf32b51bd9f450f315c081469cbd8dbf4caa95ab06722ada430891e214",
+          "bytes": 15160,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5263,
+            "pixelHash": "e2c3f0d8",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/586-a.png",
+          "observedAt": "2026-10-27T10:32:12.132034+00:00",
+          "http": 200,
+          "sha256": "f5118628729713c0f0cd4c3c95bb838b7c58686e7e1cf82746260f9f638b69ec",
+          "bytes": 15441,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 5279,
+            "pixelHash": "dbd568a9",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:586:sawsbuck summer",
+      "sourceName": "Sawsbuck (Summer Form)",
+      "canonicalName": "Sawsbuck (Summer Form)",
+      "no": 586,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/586-s.png",
+          "observedAt": "2026-10-27T10:32:10.354885+00:00",
+          "http": 200,
+          "sha256": "1800f786ed4a184871ceb584bf5f8bc422fcead490277d2a507684a11340fc3f",
+          "bytes": 13401,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4778,
+            "pixelHash": "c6129603",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/586-s.png",
+          "observedAt": "2026-10-27T10:32:12.132456+00:00",
+          "http": 200,
+          "sha256": "7932e0b57321d16466d536d47bca56014f023deefb1933cb5531e641c78b7295",
+          "bytes": 13795,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4820,
+            "pixelHash": "d10d679f",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:586:sawsbuck winter",
+      "sourceName": "Sawsbuck (Winter Form)",
+      "canonicalName": "Sawsbuck (Winter Form)",
+      "no": 586,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/586-w.png",
+          "observedAt": "2026-10-27T10:32:10.354994+00:00",
+          "http": 200,
+          "sha256": "a7918e7554d4d200acf57fa388562d78801b6424730b8ef43678d437bc92f69c",
+          "bytes": 13796,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4734,
+            "pixelHash": "9ac0aa11",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/586-w.png",
+          "observedAt": "2026-10-27T10:32:12.163740+00:00",
+          "http": 200,
+          "sha256": "7ce4926a070667178ff6163e73fbacf6e0eb97d828a2bba8e78f3d9316e47e93",
+          "bytes": 13967,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4730,
+            "pixelHash": "4d8032f9",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:79:cowboy slowpoke",
+      "sourceName": "Slowpoke (Cowboy)",
+      "canonicalName": "Slowpoke (Detective)",
+      "no": 79,
+      "disposition": "verified-existing-identity-alias",
+      "reason": "Same brown fedora identity independently represented as Detective Slowpoke in PokemonDB and PI Slowpoke in Dittobase. Official Detective Pikachu Returns event names Slowpoke wearing a hat; originals inspected against existing normal/Shiny assets. No existing record or asset replaced.",
+      "evidence": [
+        {
+          "url": "https://pokemongo.com/news/detective-pikachu-returns-event",
+          "role": "Official 2023 hat encounter context"
+        },
+        {
+          "url": "https://pokemondb.net/sprites/slowpoke",
+          "role": "Existing independently reviewed Detective identity and art"
+        },
+        {
+          "url": "https://www.dittobase.com/pokemon-go/pokedex/slowpoke",
+          "role": "Independent PI costume inventory",
+          "status": 200,
+          "sha256": "185bd7ae4bd4cda7e0fd014ae810bc4f83a76db606084807f7d703db28256d45",
+          "observedAt": "2026-10-27T10:36:16.943601+00:00"
+        }
+      ],
+      "art": "existing exact normal/Shiny retained"
+    },
+    {
+      "sourceId": "canonical-missing:854:antique sinistea",
+      "sourceName": "Sinistea (Antique Form)",
+      "canonicalName": "Sinistea (Antique Form)",
+      "no": 854,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/854-sinistea-antique.png",
+          "observedAt": "2026-10-27T10:46:18.499727+00:00",
+          "http": 200,
+          "sha256": "880ce07640028c14c8016f8e262b45dcf65cebc55db255b1e9c17d96411ad081",
+          "bytes": 3949,
+          "decoded": {
+            "width": 67,
+            "height": 43,
+            "visiblePixels": 1732,
+            "pixelHash": "8d1e575",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/854-sinistea-antique-shiny.png",
+          "observedAt": "2026-10-27T10:46:18.770766+00:00",
+          "http": 200,
+          "sha256": "de48c606f3af911e1e25b5f40e5c402b3a4295ea1d4ee1756e204a1bde5e5dcf",
+          "bytes": 4080,
+          "decoded": {
+            "width": 67,
+            "height": 43,
+            "visiblePixels": 1726,
+            "pixelHash": "1219f85b",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:855:antique bow halloween polteageist",
+      "sourceName": "Polteageist (Halloween Bow - Antique Form)",
+      "canonicalName": "Polteageist (Halloween Bow - Antique Form)",
+      "no": 855,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-antique-halloween-2026-01.png",
+          "observedAt": "2026-10-27T10:46:19.244105+00:00",
+          "http": 200,
+          "sha256": "afe8058f5a111c333f2664454fec52a0e3fe908df0f54c9c2b39a563cb2e0c26",
+          "bytes": 4205,
+          "decoded": {
+            "width": 70,
+            "height": 78,
+            "visiblePixels": 2368,
+            "pixelHash": "19429a2f",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-antique-halloween-2026-01-shiny.png",
+          "observedAt": "2026-10-27T10:46:19.420201+00:00",
+          "http": 200,
+          "sha256": "2266978fd0c823acbf51cb0f6335e68a67e9a441f5dd88b9ce1393b0d349e138",
+          "bytes": 4378,
+          "decoded": {
+            "width": 70,
+            "height": 78,
+            "visiblePixels": 2369,
+            "pixelHash": "a5f259c6",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-1-2026",
+          "role": "Official base costume debut only; does not confirm the evolved costume release",
+          "status": 200,
+          "sha256": "4c76cb51680e892540e282e58b4d300f5d6ec0520d0c76236d5d5770b29d73fa",
+          "observedAt": "2026-10-27T10:36:17.870816+00:00"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:855:bow halloween phony polteageist",
+      "sourceName": "Polteageist (Halloween Bow - Phony Form)",
+      "canonicalName": "Polteageist (Halloween Bow - Phony Form)",
+      "no": 855,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-phony-halloween-2026-01.png",
+          "observedAt": "2026-10-27T10:46:19.512804+00:00",
+          "http": 200,
+          "sha256": "3dcc52dfbb75033481c1048c2090338e1cd029e50e2bcdee472db79eb5e68dc2",
+          "bytes": 4264,
+          "decoded": {
+            "width": 70,
+            "height": 78,
+            "visiblePixels": 2367,
+            "pixelHash": "b988f97b",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-phony-halloween-2026-01-shiny.png",
+          "observedAt": "2026-10-27T10:46:19.652548+00:00",
+          "http": 200,
+          "sha256": "02c181100632828324468827dba7fd7b096a78f9dc4ec872a9a9dce3c1921cf3",
+          "bytes": 4362,
+          "decoded": {
+            "width": 70,
+            "height": 78,
+            "visiblePixels": 2371,
+            "pixelHash": "74d32fef",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-1-2026",
+          "role": "Official base costume debut only; does not confirm the evolved costume release",
+          "status": 200,
+          "sha256": "4c76cb51680e892540e282e58b4d300f5d6ec0520d0c76236d5d5770b29d73fa",
+          "observedAt": "2026-10-27T10:36:17.870816+00:00"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:855:antique polteageist",
+      "sourceName": "Polteageist (Antique Form)",
+      "canonicalName": "Polteageist (Antique Form)",
+      "no": 855,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-antique.png",
+          "observedAt": "2026-10-27T10:46:19.017252+00:00",
+          "http": 200,
+          "sha256": "44b5ecd376da95f314ddcefe85e56de4fb86190c314e805da914c21ae5f40834",
+          "bytes": 5654,
+          "decoded": {
+            "width": 74,
+            "height": 73,
+            "visiblePixels": 2354,
+            "pixelHash": "657619cd",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://assets.dittobase.com/go/pokemon-unpadded/855-polteageist-antique-shiny.png",
+          "observedAt": "2026-10-27T10:46:19.134374+00:00",
+          "http": 200,
+          "sha256": "c1ea880d7f4560c455477419cbe891e1a46ae4659d9fe0e7a2fba63a359fbfdd",
+          "bytes": 5740,
+          "decoded": {
+            "width": 74,
+            "height": 73,
+            "visiblePixels": 2353,
+            "pixelHash": "8a3e668b",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:982:dudunsparce segment three",
+      "sourceName": "Dudunsparce (Three-Segment Form)",
+      "canonicalName": "Dudunsparce (Three-Segment Form)",
+      "no": 982,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "art": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10255.png",
+          "observedAt": "2026-10-27T10:51:50.290178+00:00",
+          "http": 200,
+          "sha256": "af7a80f8b7aca23f2a45191f8ac8f56b76fd204324e67653e5114ab07980259c",
+          "bytes": 158261,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 122873,
+            "pixelHash": "3c8e8014",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/10255.png",
+          "observedAt": "2026-10-27T10:51:50.290336+00:00",
+          "http": 200,
+          "sha256": "8059da8c25c4091140fe9f72616a5bb18b3cbfb5b0a877fb9e01526c44e4367f",
+          "bytes": 155689,
+          "decoded": {
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 122873,
+            "pixelHash": "fa619d1a",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        }
+      ],
+      "reason": "Exact identity and normal/Shiny art qualified. No explicit independent GO release confirmation for this exact variant was established by the bounded official/GO source review; this is not confirmed unreleased and does not restrict wants."
+    },
+    {
+      "sourceId": "canonical-missing:dynamax:808",
+      "sourceName": "Meltan (Dynamax)",
+      "canonicalName": "Meltan (Dynamax)",
+      "no": 808,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "announced",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/808.png",
+          "observedAt": "2026-10-27T10:32:11.127260+00:00",
+          "http": 200,
+          "sha256": "28a61a7d004787d26487b8e69cca1a7190f181d68100ee34329c38d91715d319",
+          "bytes": 9285,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 4052,
+            "pixelHash": "da2c4292",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/808.png",
+          "observedAt": "2026-10-27T10:32:13.009579+00:00",
+          "http": 200,
+          "sha256": "973753b9536227bf01edfc697528510d1555c3582122839589e6a8e5ec19f2ab",
+          "bytes": 9241,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 3996,
+            "pixelHash": "61a0c21",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/into-the-wild-2026",
+          "role": "Official November Dynamax and Shiny debut; Melmetal retains Max capability through Meltan evolution, not a direct encounter claim",
+          "status": 200,
+          "sha256": "de85d270f96d013bd8999ca08bd4baf811fadf95b565ab743fef975490a68980",
+          "observedAt": "2026-10-27T10:36:17.797182+00:00"
+        }
+      ],
+      "reason": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    },
+    {
+      "sourceId": "canonical-missing:dynamax:809",
+      "sourceName": "Melmetal (Dynamax)",
+      "canonicalName": "Melmetal (Dynamax)",
+      "no": 809,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "announced",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/809.png",
+          "observedAt": "2026-10-27T10:32:11.133783+00:00",
+          "http": 200,
+          "sha256": "5f40a6bd0c82a82957f4e867f2cc22be4fc7bfdad485d94d04f738b6f8c0daaf",
+          "bytes": 17448,
+          "decoded": {
+            "width": 140,
+            "height": 120,
+            "visiblePixels": 8463,
+            "pixelHash": "45cbabff",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/809.png",
+          "observedAt": "2026-10-27T10:32:13.073275+00:00",
+          "http": 200,
+          "sha256": "d96224419e7721a93c9754cac7197c72ffe536ca0e281ebd9b5322ab64a13d8e",
+          "bytes": 17789,
+          "decoded": {
+            "width": 140,
+            "height": 120,
+            "visiblePixels": 8475,
+            "pixelHash": "ceec5a0e",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/into-the-wild-2026",
+          "role": "Official November Dynamax and Shiny debut; Melmetal retains Max capability through Meltan evolution, not a direct encounter claim",
+          "status": 200,
+          "sha256": "de85d270f96d013bd8999ca08bd4baf811fadf95b565ab743fef975490a68980",
+          "observedAt": "2026-10-27T10:36:17.797182+00:00"
+        }
+      ],
+      "reason": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    },
+    {
+      "sourceId": "canonical-missing:dynamax:895",
+      "sourceName": "Regidrago (Dynamax)",
+      "canonicalName": "Regidrago (Dynamax)",
+      "no": 895,
+      "disposition": "integrated-exact-art-with-independent-release-state",
+      "normal": "announced",
+      "shiny": "announced",
+      "art": {
+        "default": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/895.png",
+          "observedAt": "2026-10-27T10:32:11.436353+00:00",
+          "http": 200,
+          "sha256": "86e32422c5aa3904f89a344543a63354af04eb9882d0a07710c96f8415ca23bc",
+          "bytes": 16114,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6720,
+            "pixelHash": "31e486e4",
+            "status": "decoded"
+          }
+        },
+        "shiny": {
+          "url": "https://www.serebii.net/pokemongo/pokemon/shiny/895.png",
+          "observedAt": "2026-10-27T10:32:13.278400+00:00",
+          "http": 200,
+          "sha256": "deb2a6020c55fd7524fec6b959f9046343c765d9b6ec1392f4c784bd2ddf48b1",
+          "bytes": 17243,
+          "decoded": {
+            "width": 120,
+            "height": 120,
+            "visiblePixels": 6801,
+            "pixelHash": "75e09150",
+            "status": "decoded"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+          "role": "Independent GO identity inventory; source claim is not automatically confirmed release"
+        },
+        {
+          "url": "https://pokemongo.com/news/into-the-wild-2026",
+          "role": "Official November Dynamax and Shiny debut; Melmetal retains Max capability through Meltan evolution, not a direct encounter claim",
+          "status": 200,
+          "sha256": "de85d270f96d013bd8999ca08bd4baf811fadf95b565ab743fef975490a68980",
+          "observedAt": "2026-10-27T10:36:17.797182+00:00"
+        }
+      ],
+      "reason": "Announced November Max identity. Existing exact-base-art plus Dynamax-symbol rendering is used; not marked obtainable before the event."
+    }
+  ],
+  "fullyPairedAdditions": 65,
+  "normalArtAdditions": 66,
+  "selectableAdditions": 60,
+  "existingNontradeableConstraint": 6
+}

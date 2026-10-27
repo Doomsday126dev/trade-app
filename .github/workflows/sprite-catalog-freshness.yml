@@ -26,6 +26,7 @@ on:
       - 'data/catalogue-*'
       - 'data/catalogue-sources/**'
       - 'data/public-form-sprite-identities.json'
+      - 'data/reviewed-variant-status.json'
       - 'scripts/reconcile-catalogue.cjs'
       - 'scripts/catalogue-source-observation.cjs'
       - 'tests/catalogue-reconciliation.test.cjs'
