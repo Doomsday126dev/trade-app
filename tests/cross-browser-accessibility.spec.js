@@ -280,6 +280,7 @@ test.describe('audit cross-browser contracts',()=>{
         expect(control.width,control.id).toBeGreaterThanOrEqual(47.5);
         expect(control.height,control.id).toBeGreaterThanOrEqual(47.5);
       }
+      if(reviewDir&&width===375)await captureReview(page,'mobile-375-header-corrected');
       await page.evaluate(()=>openAccountMenu());
       await expect(page.locator('#account-popover')).toBeVisible();
       const menu=await page.locator('#account-popover').boundingBox();
