@@ -76,7 +76,7 @@
   }
 
   function normalizeCatalogKey(value){
-    return String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US');
+    return String(value||'').normalize('NFKC').trim().toLowerCase();
   }
 
   function identity(catalogId,goCostumeId,primary,aliases,searchAliases=[],speciesId=25){

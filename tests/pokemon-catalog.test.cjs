@@ -221,3 +221,8 @@ test('indexed legacy alias lookups preserve every reviewed stored ID and return 
  }
  assert.equal(catalog.legacyCatalogIdForName('Unreviewed future costume'),'');assert.deepEqual(Array.from(catalog.legacyCatalogIds('unknown')),[]);
 });
+
+test('locale-independent catalogue normalization preserves previous English casing',()=>{
+ const names=Object.values(dataWindow.POGO_TRADE_DB).filter(Array.isArray).flatMap(rows=>rows.flatMap(e=>[e.name,e.displayName])).concat(['İstanbul','IıΣςßẞKＦＯＯ','  ピカチュウ  ',null,0]);
+ for(const value of names)assert.equal(catalog.normalizeCatalogKey(value),String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US'));
+});
