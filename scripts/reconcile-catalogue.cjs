@@ -8,7 +8,7 @@ const digest=b=>crypto.createHash('sha256').update(b).digest('hex');
 function identityKey(s){return String(s).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\bnidoran[-_ ]f\b/g,'nidoran female').replace(/\bnidoran[-_ ]m\b/g,'nidoran male').replace(/♀/g,' female ').replace(/♂/g,' male ').replace(/\b([aghp])-/g,(_,r)=>({a:'alolan ',g:'galarian ',h:'hisuian ',p:'paldean '}[r])).replace(/\b(alola|galar|hisui|paldea)\b/g,(_,r)=>({alola:'alolan',galar:'galarian',hisui:'hisuian',paldea:'paldean'}[r])).replace(/\bforme?\b|\bcloak\b|\bpattern\b|\bstyle\b|\bplumage\b/g,'').replace(/striped/g,'stripe').replace(/[^a-z0-9!?]+/g,' ').trim().split(/\s+/).sort().join(' ');}
 function loadSources(now=new Date(),readFile=fs.readFileSync){
  const manifest=JSON.parse(readFile(path.join(directory,'manifest.json'))),data={},issues=[];
- const floors={'normal-inventory':1000,'shiny-inventory':1000,'max-inventory':100,pokemod:3000};
+ const floors={'normal-inventory':1000,'shiny-inventory':1000,'max-inventory':100,'gigantamax-inventory':10,pokemod:3000};
  for(const source of manifest.sources){
   try{const bytes=readFile(path.join(directory,source.file));if(digest(bytes)!==source.sha256)throw Error('Inventory content hash changed');
    const parsed=JSON.parse(bytes),rows=source.id==='pokemod'?parsed.tree:parsed;
@@ -68,6 +68,9 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
   push({id:'dynamax:'+row.no,source:'max-inventory',sourceUrl:row.source,discoveredAt:row.discoveredAt||sourceDate('max-inventory'),no:row.no,name:row.name,releaseState:'uncertain',artState:'base-art-is-not-release-proof',matches:matches.map(r=>({name:r.name})),priority:'urgent',disposition:matches.length?'ambiguous-identity':'release-and-identity-review-required'});
  }
  coverage['max-inventory']={denominator:max.length,identityMatched:maxMatched,unmatched:max.length-maxMatched};
+ const gmax=sources.data['gigantamax-inventory']||[];const gmaxMapped=gmax.filter(row=>identities.database.gmax?.some(entry=>entry.no===row.no));
+ for(const row of gmax.filter(row=>!gmaxMapped.includes(row)))push({id:'gigantamax:'+row.no,source:'gigantamax-inventory',sourceUrl:row.source,discoveredAt:sourceDate('gigantamax-inventory'),no:row.no,name:row.name+' (Gigantamax)',releaseState:'uncertain',artState:'exact-gigantamax-art-review-required',priority:'urgent',disposition:'release-and-identity-review-required'});
+ coverage['gigantamax-inventory']={denominator:gmax.length,identityMatched:gmaxMapped.length,unmatched:gmax.length-gmaxMapped.length,appEntriesOutsideSource:(identities.database.gmax||[]).filter(row=>!gmax.some(source=>source.no===row.no)).map(row=>({no:row.no,name:row.name})),qualification:'Species-level identity presence only. Extra app entries and absent source rows require official release evidence; this secondary table may lag.'};
  const tree=sources.data.pokemod;const groups=new Map();
  for(const file of tree?.tree||[]){const m=file.path.match(/^Addressable Assets\/pm(\d+)(.*?)\.(?:icon|portrait)\.png$/);if(!m)continue;
   const token=m[2].replace(/\.g\d+|\.s(?=\.|$)/g,''),id='mined:'+m[1]+token;
@@ -98,9 +101,29 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
  queue.sort((a,b)=>a.id.localeCompare(b.id));
  return{schemaVersion:1,checkedAt:now.toISOString(),status:sources.issues.length?'source-failure':queue.length?'review-required':'reconciled',qualification:'Explicit source denominators, not a promise of every possible identity. Identity matching does not prove exact art, release, tradeability or optional gender. Unmatched rows and missing art remain open. Reviewed future/excluded dispositions annotate rather than erase queue items.',coverage,sourceIssues:sources.issues,queue};
 }
+
+// Compact owner view over the same retained raw queue. This never changes the
+// reconciliation status, erases a source row, or authorizes a trade identity.
+function summarizeReview(report,reviews){
+ if(reviews.schemaVersion!==1||!Array.isArray(reviews.aliases)||!Array.isArray(reviews.missingIdentities))throw Error('Invalid identity review register');
+ const aliases=new Map();for(const row of reviews.aliases){if(!row.rowId||aliases.has(row.rowId)||!row.catalogId||!row.evidence?.sourceSprite)throw Error('Incomplete or duplicate alias evidence');aliases.set(row.rowId,row);}
+ const buckets={},groups=new Map(),used=new Set();
+ for(const row of report.queue){
+  const alias=aliases.get(row.id);if(alias){if(alias.no!==row.no||alias.sourceName!==row.name)throw Error('Reviewed alias no longer matches its source identity');used.add(row.id);}
+  const missing=reviews.missingIdentities.find(r=>r.no===row.no&&r.sourceNames.includes(row.name));
+  const category=missing?'confirmed-missing-identity':alias?'known-identity-alias':row.source==='pokemod'||row.source==='pokemod-legacy'?'mined-identity-review':row.disposition==='news-or-event-review-required'?'news-discovery-lead':row.disposition==='owner-attention-required'?'legacy-identity-or-exact-art-blocker':row.releaseState==='announced'?'upcoming-release-review':row.disposition.includes('ambiguous')?'source-or-canonical-ambiguity':row.matches?.length===1?'existing-identity-exact-art-review':/^(Mega |Primal )|Eternamax/.test(row.name||'')?'battle-form-eligibility-review':'identity-or-release-evidence-review';
+  buckets[category]=(buckets[category]||0)+1;
+  const canonical=alias?.catalogId||(row.matches?.length===1?row.matches[0].catalogId:'');
+  const id=missing?.id||canonical&&'catalog:'+canonical||row.no&&row.name&&'source-identity:'+row.no+':'+identityKey(row.name)||row.id;
+  if(!groups.has(id))groups.set(id,{id,names:new Set(),categories:new Set(),rows:[]});const group=groups.get(id);if(row.name)group.names.add(row.name);group.categories.add(category);group.rows.push(row.id);
+ }
+ const staleAliases=[...aliases.keys()].filter(id=>!used.has(id));
+ return{schemaVersion:1,rawRows:report.queue.length,groupCount:groups.size,rawRowsByCategory:buckets,knownAliasRows:used.size,staleAliasReviewRows:staleAliases,actionableMissing:reviews.missingIdentities,stagedCostumes:reviews.stagedCostumes||[],groups:[...groups.values()].map(r=>({...r,names:[...r.names].sort(),categories:[...r.categories].sort()})).sort((a,b)=>a.id.localeCompare(b.id)),qualification:'Grouping retains every original row ID and its variant/source evidence. Known aliases do not prove art, release or trade eligibility. The actionable list is a confirmed minimum; remaining identity/release candidates still require review. No missing asset is closed as unavailable.'};
+}
+
 function build(now=new Date(),sources=loadSources(now)){
  const read=f=>JSON.parse(fs.readFileSync(path.join(root,f)));
  return reconcile({sources,identities:loadIdentities(),art:read('data/costume-sprite-catalog.json'),pendingArt:read('data/pending-costume-artwork.json').entries,forms:read('data/public-form-sprite-identities.json'),verifiedArt:fs.existsSync(path.join(root,'data/catalogue-art-checks.json'))?read('data/catalogue-art-checks.json').records:[],dispositions:fs.existsSync(path.join(directory,'dispositions.json'))?read('data/catalogue-sources/dispositions.json').records:[],now});
 }
 if(require.main===module){const report=build();fs.writeFileSync(path.join(root,'catalogue-reconciliation.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({status:report.status,coverage:report.coverage,open:report.queue.length,sourceIssues:report.sourceIssues},null,2));if(report.status!=='reconciled'&&!process.argv.includes('--report-only'))process.exitCode=1;}
-module.exports={identityKey,loadSources,loadIdentities,reconcile,build};
+module.exports={identityKey,loadSources,loadIdentities,reconcile,build,summarizeReview};

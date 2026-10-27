@@ -42,6 +42,15 @@
       "observedAt": "2026-10-27T00:28:45.526378+00:00",
       "status": "ok",
       "role": "Dynamax-capable identity inventory; includes announced future species, not release authority"
+    },
+    {
+      "id": "gigantamax-inventory",
+      "file": "gigantamax-inventory.json",
+      "sha256": "03b689c42ae4e329dd65ace3a486281b044f0da7972d7d028bec2c632844347e",
+      "observedAt": "2026-10-27T00:28:45.526378+00:00",
+      "status": "ok",
+      "role": "Gigantamax-capable species inventory; secondary table can lag official releases, not release authority",
+      "qualification": "Separate Gigantamax section of the same cached Max inventory page. Secondary inventory may lag official announcements; no release eligibility inferred."
     }
   ],
   "fetchEvidence": [

@@ -23,7 +23,7 @@ function parseGOInventory(html,url,kind){
  const ids=rows.map(r=>r.no+'|'+r.sourceSprite+'|'+r.name);if(new Set(ids).size!==ids.length)throw Error('Duplicate source sprite identity');
  return rows;
 }
-function parseMaxInventory(html,url){const start=html.lastIndexOf('List of Dynamax Capable Pok');if(start<0)throw Error('Dynamax inventory heading missing');const rows=[];for(const m of html.slice(start).matchAll(/<a href="\/pokemongo\/pokemon\/(\d+)\.shtml">([^<]+)<\/a>/g)){const row={no:Number(m[1]),name:text(m[2]),source:url};if(!rows.some(r=>r.no===row.no&&r.name===row.name))rows.push(row);}if(rows.length<100)throw Error('Max inventory empty or contracted');return rows;}
+function parseMaxInventory(html,url,kind='dynamax'){const label=kind==='gmax'?'Gigantamax':'Dynamax';const start=html.lastIndexOf('List of '+label+' Capable Pok');if(start<0)throw Error(label+' inventory heading missing');const end=html.indexOf('<h2>',start+1);const section=html.slice(start,end<0?undefined:end);const rows=[];for(const m of section.matchAll(/<a href="\/pokemongo\/pokemon\/(\d+)\.shtml">([^<]+)<\/a>/g)){const row={no:Number(m[1]),name:text(m[2]),source:url};if(!rows.some(r=>r.no===row.no&&r.name===row.name))rows.push(row);}if(rows.length<(kind==='gmax'?10:100))throw Error(label+' inventory empty or contracted');return rows;}
 function parseNewsFeed(html,url){
  const links=[];
  const pattern=url.includes('leekduck')?/href=["']([^"']*\/events\/[^"'#?]+)["']/g:/<link>(https:\/\/pokemongohub\.net\/post\/[^<]+)<\/link>/g;
@@ -31,8 +31,8 @@ function parseNewsFeed(html,url){
  const result=[...new Set(links)].sort();if(result.length<5||result.length>500)throw Error('News/event index empty or schema changed');return result;
 }
 async function observeInventories(sources,{fetchImpl=fetch,now=new Date()}={}){
- const observed=structuredClone(sources),observations=[],discoveries=[],removed=[],assetChanges=[];
- async function get(url){
+ const observed=structuredClone(sources),observations=[],discoveries=[],removed=[],assetChanges=[],responses=new Map();
+ async function fetchSource(url){
   try{
    const response=await fetchImpl(url,{signal:AbortSignal.timeout(15000),headers:{'user-agent':'PoGo-Trades public catalogue reconciliation'},redirect:'error'});
    if(!response.ok)throw Error(`HTTP ${response.status}`);
@@ -41,11 +41,13 @@ async function observeInventories(sources,{fetchImpl=fetch,now=new Date()}={}){
    return bytes.toString(/serebii/.test(url)?'latin1':'utf8');
   }catch(error){observations.push({url,status:'failed',error:error.message,observedAt:now.toISOString()});throw Error(url+': '+error.message);}
  }
+ // Share the same Max page observation across its two independent sections.
+ const get=url=>{if(!responses.has(url))responses.set(url,fetchSource(url));return responses.get(url);};
  const fail=(id,error)=>observed.issues.push({source:id,kind:'live-source-failed',error:error.message});
- for(const [id,kind] of [['normal-inventory','normal'],['shiny-inventory','shiny'],['max-inventory','max']]){
+ for(const [id,kind] of [['normal-inventory','normal'],['shiny-inventory','shiny'],['max-inventory','max'],['gigantamax-inventory','gmax']]){
   try{
    const old=observed.data[id];if(!old?.length)throw Error('Accepted source baseline missing');const urls=[...new Set(old.map(r=>r.source))];let rows=[];
-   for(const url of urls){const html=await get(url);rows.push(...(kind==='max'?parseMaxInventory(html,url):parseGOInventory(html,url,kind)));}
+   for(const url of urls){const html=await get(url);rows.push(...(kind==='max'||kind==='gmax'?parseMaxInventory(html,url,kind):parseGOInventory(html,url,kind)));}
    if(rows.length<old.length*.95)throw Error('Source inventory contracted more than5%; review before accepting');
    const key=r=>r.no+'|'+r.sourceSprite+'|'+r.name;const before=new Map(old.map(r=>[key(r),r]));const source=observed.manifest.sources.find(r=>r.id===id);source.firstObservedAt??=source.observedAt;const first=source.firstObservedAt;for(const row of rows)row.discoveredAt=before.has(key(row))?(before.get(key(row)).discoveredAt||first):now.toISOString();const after=new Set(rows.map(key));for(const row of old)if(!after.has(key(row)))removed.push({id:'removed:'+id+':'+key(row),source:id,sourceUrl:row.source,discoveredAt:now.toISOString(),releaseState:'uncertain',artState:'previous-source-row-removed',priority:'urgent',disposition:'source-removal-or-alias-change-needs-review',previous:row});observed.data[id]=rows;observed.manifest.sources.find(r=>r.id===id).observedAt=now.toISOString();
    observed.issues=observed.issues.filter(r=>r.source!==id||r.kind!=='stale-or-failed-source');
