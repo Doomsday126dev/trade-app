@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-27T02:22:42.222324+00:00",
+  "scope": "Evidence-only: three hold species, four distinct form identities, six original PNGs; no runtime mapping or release metadata override.",
+  "officialEvidence": {
+    "url": "https://pokemongo.com/news/halloween-part-1-2026",
+    "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+    "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c"
+  },
+  "eventArtEvidence": {
+    "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+    "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+    "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+  },
+  "shinyListing": {
+    "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+    "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+    "claim": "Available when encountered"
+  },
+  "timing": {
+    "startLocal": "2026-10-27T10:00:00",
+    "endLocal": "2026-11-01T10:00:00",
+    "qualification": "Per-player local time. At review, scheduled window has begun in Pacific/Auckland and Pacific/Kiritimati; still future in America/New_York. Official timetable plus current availability listings, not first-hand game encounter evidence or UTC-midnight activation."
+  },
+  "assets": [
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/025-halloween2026.png",
+      "shiny": false,
+      "sha256": "8a78cae51bf6ea74d57608830cafd681e9c6ab3e61c8e755e79256a746fad320",
+      "bytes": 7995,
+      "status": 200,
+      "names": [
+        "Pikachu (Halloween 2026)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-normal-025-halloween2026.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/025-halloween2026.png",
+      "shiny": true,
+      "sha256": "25a5b235a76c185b6142d9b97b097c14c639969ae6b87a5ffcdd2b74f05dacf7",
+      "bytes": 8066,
+      "status": 200,
+      "names": [
+        "Pikachu (Halloween 2026)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-shiny-025-halloween2026.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/041-tophat.png",
+      "shiny": false,
+      "sha256": "30b3363e282c2758edf3d5a778ebe6bff31927151c43a3fa037f3ae327006d22",
+      "bytes": 8252,
+      "status": 200,
+      "names": [
+        "Zubat (Top hat)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-normal-041-tophat.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/041-tophat.png",
+      "shiny": true,
+      "sha256": "a50917a1657a71daeb6207cd868840d6e9642ea9358431ef572b4e79c62c1c65",
+      "bytes": 8259,
+      "status": 200,
+      "names": [
+        "Zubat (Top hat)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-shiny-041-tophat.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "shiny": false,
+      "sha256": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+      "bytes": 3539,
+      "status": 200,
+      "names": [
+        "Sinistea (Halloween Bow - Phony Form)",
+        "Sinistea (Halloween Bow - Antique Form)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    },
+    {
+      "url": "https://www.serebii.net/pokemongo/pokemon/shiny/854-bow.png",
+      "shiny": true,
+      "sha256": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2",
+      "bytes": 3709,
+      "status": 200,
+      "names": [
+        "Sinistea (Halloween Bow - Phony Form)",
+        "Sinistea (Halloween Bow - Antique Form)"
+      ],
+      "path": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png",
+      "size": [
+        120,
+        120
+      ],
+      "alphaChannel": true
+    }
+  ],
+  "records": [
+    {
+      "name": "Pikachu (Hat and Capelet)",
+      "no": 25,
+      "sourceName": "Pikachu (Halloween 2026)",
+      "defaultImageGender": "male: straight tail",
+      "explicitFemaleArt": "unverified",
+      "genderReleaseRestrictions": "not established; no inference from base ratio",
+      "status": "hold-gender-qualification"
+    },
+    {
+      "name": "Zubat (Top Hat)",
+      "no": 41,
+      "sourceName": "Zubat (Top hat)",
+      "defaultImageGender": "not independently established; species is dimorphic",
+      "explicitFemaleArt": "unverified",
+      "genderReleaseRestrictions": "not established; no claim female encounters are unreleased",
+      "status": "hold-gender-qualification"
+    },
+    {
+      "name": "Sinistea (Bow, Phony)",
+      "no": 854,
+      "sourceName": "Sinistea (Halloween Bow - Phony Form)",
+      "gender": "genderless",
+      "status": "ready-for-explicit-form-integration",
+      "sharedFrontArt": "The source explicitly assigns the same published front PNG to both forms. The distinguishing stamp is not visible; preserve separate semantic identities."
+    },
+    {
+      "name": "Sinistea (Bow, Antique)",
+      "no": 854,
+      "sourceName": "Sinistea (Halloween Bow - Antique Form)",
+      "gender": "genderless",
+      "status": "ready-for-explicit-form-integration",
+      "sharedFrontArt": "The source explicitly assigns the same published front PNG to both forms. The distinguishing stamp is not visible; preserve separate semantic identities."
+    }
+  ],
+  "visualQA": {
+    "imagesInspected": 6,
+    "normalShinyDistinct": true,
+    "observations": [
+      "Pikachu hat/capelet and straight tail visible; normal/Shiny colors differ.",
+      "Zubat top hat retained in purple normal and green Shiny.",
+      "Sinistea bow and cup retained; normal/Shiny cup colors differ; shared Phony/Antique front view is explicitly source-mapped."
+    ],
+    "byteQA": "All six SHA256 values retained;120x120 8-bit RGBA originals. No generated/recolored pixels."
+  },
+  "minimalRuntimePatch": "Register reviewed assets/provenance and separate Sinistea forms, then qualify all renderer/save paths. Do not clear gender gaps or use default art for an explicit female preference. Any policy to permit unspecified-gender-only display pending gender qualification needs explicit coverage documentation.",
+  "remainingHolds": [
+    "Pikachu exact female artwork and release gender qualification",
+    "Zubat exact female artwork and release gender qualification",
+    "Runtime integration and affected browser qualification not implemented in this evidence-only candidate"
+  ],
+  "preservation": "No saved rows, expiry, baseline, app logic, runtime eligibility or other holds changed."
+}
