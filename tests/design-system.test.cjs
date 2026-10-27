@@ -100,7 +100,7 @@ test('shared Pokémon autocomplete rows reset native controls onto themed surfac
 });
 
 test('shared fields preserve theme, focus, and validation layers during browser autofill',()=>{
-  const start=css.indexOf('/* Browser autofill paints above normal background/color declarations.');
+  const start=css.lastIndexOf('\n',css.indexOf(':-webkit-autofill,'))+1;
   const end=css.indexOf('.favorite-card-tag',start);
   assert.ok(start>0&&end>start);
   const autofill=css.slice(start,end);
