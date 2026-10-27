@@ -12354,7 +12354,7 @@ async function copyShareLink(){
   const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'')&&token===activePublicShareHydrationToken&&(!wasOpen||document.getElementById('product-share-modal')?.classList.contains('open'));
   const payloadCurrent=()=>publicLinkPublicationState(true).contentKey===state.contentKey;
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
-  const input=document.getElementById('share-public-url');if(input){input.value=url;input.hidden=true;}
+  const input=document.getElementById('share-public-url');if(input){input.value='';input.hidden=true;}
   const busy={token,uid,username,attempt,copyOnly:state.kind==='current'};publicLinkBusy=busy;refreshPublicLinkAction();
   try{
     if(state.kind!=='current'){
@@ -12371,12 +12371,12 @@ async function copyShareLink(){
     if(!current()||proof?.contentKey!==state.contentKey){if(current())linkPublicationStatus('share.publicationPending');return;}
     busy.copyOnly=true;
     if(!payloadCurrent()){linkPublicationStatus('share.publicationPending');return;}
-    if(input)input.hidden=false;
+    if(input){input.value=url;input.hidden=false;}
     linkPublicationStatus('share.linkReady',{state:'product.published'});
     try{await copyText(url);if(current())linkPublicationStatus(payloadCurrent()?'share.linkCopied':'share.publicationPending',{state:payloadCurrent()?'product.publishedCopied':'share.publicationPending'});}
-    catch{if(current()){linkPublicationStatus('share.linkCopyFailed',{state:'product.publishedCopyFailed'});input?.focus();input?.select();}}
+    catch{if(current()){if(!payloadCurrent())linkPublicationStatus('share.publicationPending');else{linkPublicationStatus('share.linkCopyFailed',{state:'product.publishedCopyFailed'});input?.focus();input?.select();}}}
   }catch(error){if(current()){publicLinkPublicationError={token,contentKey:state.contentKey};linkPublicationStatus('share.publicationUnconfirmed',{state:'product.publishFailed'});}}
-  finally{if(publicLinkBusy===busy)publicLinkBusy=null;if(current())refreshPublicLinkAction();}
+  finally{if(publicLinkBusy===busy){publicLinkBusy=null;refreshPublicLinkAction();}}
 }
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
