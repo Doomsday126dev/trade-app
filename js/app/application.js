@@ -295,7 +295,7 @@ const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
 let ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
-let publicLinkConfirmation=null,publicLinkConfirmationEpoch=0,publicLinkBusy=null,publicLinkPublicationError=null;
+let publicLinkConfirmation=null,publicLinkConfirmationEpoch=0,publicLinkBusy=null,publicLinkPublicationError=null,publicLinkFeedback=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.38";
@@ -3043,7 +3043,9 @@ function publicLinkPublicationState(ignoreBusy=false){
 }
 function refreshPublicLinkAction(){
   const button=document.getElementById('share-link-action');if(!button)return;
-  const state=publicLinkPublicationState(),keys={current:'share.copyLink',changed:'share.updateCopyLink',first:'product.publishCopy',pending:'share.syncPending',publishing:'product.publishing',copying:'share.copyingLink',invalid:'share.checkListDetails',unavailable:'share.linkUnavailable',failed:'share.retryCopyLink'};
+  const state=publicLinkPublicationState(),feedbackState=publicLinkBusy?publicLinkPublicationState(true):state,feedback=publicLinkFeedback;
+  if(feedback&&(feedback.token!==activePublicShareHydrationToken||feedback.uid!==auth?.currentUser?.uid||feedback.username!==cur||feedback.contentKey!==feedbackState.contentKey||feedback.scope!==productShareScope||feedback.listType!==myListType))clearPublicLinkFeedback();
+  const keys={current:'share.copyLink',changed:'share.updateCopyLink',first:'product.publishCopy',pending:'share.syncPending',publishing:'product.publishing',copying:'share.copyingLink',invalid:'share.checkListDetails',unavailable:'share.linkUnavailable',failed:'share.retryCopyLink'};
   button.dataset.publicationState=state.kind;button.dataset.i18n=keys[state.kind];button.textContent=i18nCore.t(keys[state.kind]);button.disabled=!!state.disabled||productShareScope!=='full';
 }
 
@@ -7041,8 +7043,7 @@ function productShareDescription(entry){
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
   productShareSnapshot=accountSyncClone(productScopeEntries());
-  document.getElementById('share-link-status').textContent='';
-  document.getElementById('share-public-url').value='';document.getElementById('share-public-url').hidden=true;publicLinkAttempt++;
+  clearPublicLinkFeedback();publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
   preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
   setProductShareMode(productShareMode);
@@ -12330,7 +12331,15 @@ function exportMyListCSV(){
   toast(i18nCore.t('export.csvDownloaded'));
 }
 let publicLinkAttempt=0;
+function clearPublicLinkFeedback(){
+  publicLinkFeedback=null;
+  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
+  const input=document.getElementById('share-public-url');if(input){input.value='';input.hidden=true;}
+}
 function linkPublicationStatus(key,options={}){
+  const state=publicLinkPublicationState(true);
+  if(!['share.linkReady','share.linkCopied','share.linkCopyFailed'].includes(key))clearPublicLinkFeedback();
+  publicLinkFeedback={token:activePublicShareHydrationToken,uid:auth?.currentUser?.uid,username:cur,contentKey:state.contentKey,scope:productShareScope,listType:myListType};
   const node=document.getElementById('share-link-status');
   if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
   refreshPublicLinkAction();

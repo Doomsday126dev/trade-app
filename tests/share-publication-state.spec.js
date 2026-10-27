@@ -40,3 +40,15 @@ test('one format selector preserves scope, full-list-only exports and contact di
 });
 
 test('a payload change during publication never copies the older snapshot as current',async({page})=>{await setup(page);await page.evaluate(()=>{window.__writeGate=new Promise(resolve=>window.__finishWrite=resolve);});await action(page).click();await page.evaluate(()=>{allData.wishlist[cur].Eevee='H';__finishWrite();});await expect.poll(()=>page.evaluate(()=>__linkWrites)).toBe(1);await expect(action(page)).toHaveText('Update and copy link');expect(await page.evaluate(()=>__linkCopied.length)).toBe(0);await action(page).click();expect(await page.evaluate(()=>[__linkWrites,__linkCopied.length])).toEqual([2,1]);});
+
+
+test('copy feedback and selectable URL expire after profile, list, scope or identity changes',async({page},info)=>{
+ await setup(page);const status=page.locator('#share-link-status'),url=page.locator('#share-public-url');
+ await action(page).click();await expect(status).toHaveText('Link copied.');await expect(url).toBeVisible();
+ await page.evaluate(()=>{allData.users[cur].bio='Changed after copy';refreshPublicLinkAction();});await expect(action(page)).toHaveText('Update and copy link');await expect(status).toBeEmpty();await expect(url).toBeHidden();await expect(url).toHaveValue('');
+ await action(page).click();await expect(status).toHaveText('Link copied.');
+ await page.evaluate(()=>{allData.wishlist[cur].Eevee='H';refreshSyncUi();});await expect(action(page)).toHaveText('Update and copy link');await expect(status).toBeEmpty();await expect(url).toBeHidden();expect(await page.evaluate(()=>__linkWrites)).toBe(2);
+ await action(page).click();await expect(status).toHaveText('Link copied.');await page.locator('#product-share-scope').selectOption('top');await expect(status).toBeEmpty();await expect(url).toBeHidden();await page.locator('#product-share-scope').selectOption('full');
+ await action(page).click();expect(await page.evaluate(()=>__linkWrites)).toBe(3);await page.evaluate(()=>{auth.currentUser={uid:'different-fixture-owner'};refreshPublicLinkAction();});await expect(status).toBeEmpty();await expect(url).toBeHidden();await expect(url).toHaveValue('');expect(await page.evaluate(()=>__linkWrites)).toBe(3);
+ await setup(page);await page.setViewportSize({width:390,height:844});await action(page).click();await page.evaluate(()=>{allData.users[cur].bio='Changed after copy';refreshPublicLinkAction();applyTheme('dark');});await expect(page.locator('#product-share-format')).toHaveCSS('background-color','rgb(25, 27, 32)');await page.screenshot({path:`/tmp/trade154-share-qa/${info.project.name}-share-stale-cleared.png`,animations:'disabled'});
+});
