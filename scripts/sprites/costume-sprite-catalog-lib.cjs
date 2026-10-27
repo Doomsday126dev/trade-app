@@ -100,7 +100,8 @@ function validateCatalog(catalog,root){
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/dittobase-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','femaleArtworkUnavailable'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Dittobase review evidence changed');}
     }
     if(entry.sourceProvider==='serebii-reviewed'){
-      if(entry.names[0]!=='Pikachu (Cosmog Spacesuit)'||entry.sourceUrl!=='https://www.serebii.net/pokemongo/pokemon/025-xp26.png'||entry.sourceFiles?.shiny!=='shiny/025-xp26.png')fail('Unreviewed Serebii identity/source');
+      const file={'Pikachu (Cosmog Spacesuit)':'025-xp26.png','Pikachu (Orange Hanbok)':'025-hanbok.png'}[entry.names[0]];
+      if(!file||entry.sourceUrl!=='https://www.serebii.net/pokemongo/pokemon/'+file||entry.sourceFile!==file||entry.sourceFiles?.shiny!=='shiny/'+file)fail('Unreviewed Serebii identity/source');
       if(root){const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/serebii-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===entry.names[0]);if(!reviewed||['sourceFiles','assets','sha256','availableGenders'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(entry[k])))fail('Serebii review evidence changed');}
     }
     const variants=['default','female','shiny','femaleShiny'].map(key=>[key,entry.assets[key],entry.sha256[key]]);

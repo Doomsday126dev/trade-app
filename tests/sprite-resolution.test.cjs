@@ -135,3 +135,12 @@ test('shared slots and centralized optical metadata preserve source quality',()=
   assert.doesNotMatch(opticalRuntime,/images\.weserv\.nl/);
   assert.match(opticalRuntime,/new URL\(url,document\.baseURI\)\.href/);
 });
+
+test('standard Shiny requests preserve color and gender without normal-color fallback',()=>{
+ const eevee=Array.from(sprites.publicSpriteUrls('Eevee','f',133,true));
+ assert.equal(eevee[0],'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/female/133.png');
+ for(const [name,no,gender] of [['Eevee',133,'f'],['Gengar',94,''],['Pikachu',25,'f']]){
+  const urls=Array.from(sprites.publicSpriteUrls(name,gender,no,true));assert.ok(urls.length);assert.ok(urls.every(u=>u.includes('/shiny/')),name);
+ }
+ assert.ok(Array.from(sprites.publicSpriteUrls('Eevee','f',133,false)).every(u=>!u.includes('/shiny/')));
+});

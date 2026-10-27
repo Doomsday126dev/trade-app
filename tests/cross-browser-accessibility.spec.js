@@ -224,8 +224,8 @@ test.describe('audit cross-browser contracts',()=>{
     const transitions=[
       ['#nav-mylist','#nav-find'],
       ['#nav-find','#nav-events'],
-      ['#nav-events','#admin-tab'],
-      ['#admin-tab','#trainer-mode-trainers'],
+      ['#nav-events','#nav-more'],
+      ['#nav-more','#trainer-mode-trainers'],
       ['#trainer-mode-trainers','#find-trainer-input']
     ];
     const keyboardTab=testInfo.project.name==='cross-webkit'?'Alt+Tab':'Tab';
@@ -238,6 +238,10 @@ test.describe('audit cross-browser contracts',()=>{
       expect(focus.visible,selector).toBe(true);
       expect(focus.outline!=='none'&&focus.width>=2.5||focus.boxShadow!=='none',selector).toBe(true);
     }
+    await page.evaluate(()=>{cur=OWNER;auth={currentUser:{uid:'synthetic-focus-owner'}};allData.users[OWNER]={authUid:'synthetic-focus-owner',isOwner:true};switchTab('more');});
+    const admin=page.locator('#more-admin-link');
+    await expect(admin).toBeVisible();await admin.focus();await page.keyboard.press('Enter');
+    await expect(page.locator('#tab-admin')).toHaveClass(/active/);
   });
 
   test('MOBILE-01 compact top bar keeps long account access in bounds',async({page})=>{
@@ -347,7 +351,8 @@ test.describe('audit cross-browser contracts',()=>{
       const hiddenState=await page.locator('#undo-toast').evaluate(node=>({display:getComputedStyle(node).display,buttonTabIndex:node.querySelector('button').tabIndex}));
       expect(hiddenState.display).toBe('none');
       expect(hiddenState.buttonTabIndex).toBe(0);
-      const filter=page.locator('#mylist-filter');
+      await page.evaluate(()=>{switchTab('mylist');setWantsFindOpen(true);});
+      const filter=page.locator('#combined-filter');
       await filter.focus();
       await page.evaluate(()=>showUndo('Pikachu'));
       await expect(filter).toBeFocused();
@@ -466,17 +471,17 @@ test.describe('audit cross-browser contracts',()=>{
     await waitForApp(page);
     await establishAccount(page);
     await page.evaluate(()=>{allData.wishlist.CrossBrowserTrainer={};myListType='wishlist';buildAcItems();switchTab('mylist');});
-    const add=page.locator('#ac-input');
+    const add=page.locator('#wants-add-name');
     await add.fill('pika');
     await expect(add).toHaveAttribute('aria-expanded','true');
     await add.press('ArrowDown');
     const activeId=await add.getAttribute('aria-activedescendant');
-    expect(activeId).toMatch(/^add-pokemon-option-\d+$/);
+    expect(activeId).toMatch(/^wants-add-name-suggestions-\d+$/);
     await expect(page.locator(`#${activeId}`)).toHaveAttribute('aria-selected','true');
     await add.press('Enter');
     await expect(add).toHaveAttribute('aria-expanded','false');
     await expect(add).not.toHaveAttribute('aria-activedescendant',/.+/);
-    await expect(page.locator('#add-pmon-sel')).not.toHaveValue('');
+    await expect(add).not.toHaveValue('');
     await expect(add).toBeFocused();
 
     const legacyRoundTrip=await page.evaluate(()=>{
@@ -556,7 +561,7 @@ test.describe('audit cross-browser contracts',()=>{
       accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});_syncStatusCurrent='online';refreshSyncUi();
       return{diagnostic:document.getElementById('trainer-sync-diagnostic').textContent,diagnosticHidden:document.getElementById('trainer-sync-diagnostic').hidden,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,recoveryLabel:document.getElementById('trainer-sync-recovery-label').textContent};
     });
-    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain('2026-08-31.86');expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
+    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain(await page.evaluate(()=>clientReleaseDomain.RELEASE_ID));expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
     const pill=page.locator('#sync-pill');await pill.focus();await expect(pill).toBeFocused();
     await page.evaluate(()=>{window.__syncActivationCount=0;openSyncDetail=()=>{window.__syncActivationCount++;};});
     await page.keyboard.press('Enter');await page.keyboard.press('Space');expect(await page.evaluate(()=>window.__syncActivationCount)).toBe(2);
@@ -647,7 +652,7 @@ test.describe('audit cross-browser contracts',()=>{
     }finally{await standalone.close();}
   });
 
-  test('fieldless sync conflicts expose only canonical saved-copy acceptance',async({page})=>{
+  test('fieldless sync conflicts expose only canonical saved-copy acceptance',async({page,browserName})=>{
     await page.setViewportSize({width:390,height:844});
     await page.goto(`./?fieldless-sync-conflict=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForApp(page);
@@ -663,7 +668,7 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(dialog.locator('.conflict-actions .bsave')).toHaveCount(0);
     await expect(dialog.locator('p')).toHaveText(await page.evaluate(()=>i18nCore.t('accountSync.savedOnlyConflictHelp')));
     await expect(dialog.locator('.conflict-actions button').first()).toBeFocused();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(browserName==='webkit'?'Alt+Tab':'Tab');
     await page.keyboard.press('Enter');
     await expect(dialog).toHaveCount(0);
     await expect(page.locator('#fieldless-conflict-trigger')).toBeFocused();

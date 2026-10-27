@@ -1104,7 +1104,16 @@
     "assets/sprites/go/pogorewind-consolidated-0832-00-00-01-shiny.png",
     "assets/sprites/go/pogorewind-consolidated-0870-00-00-01-shiny.png",
     "assets/sprites/go/pogorewind-consolidated-0907-00-00-01-shiny.png",
-    "assets/sprites/go/pogorewind-consolidated-0999-00-01-01-shiny.png"
+    "assets/sprites/go/pogorewind-consolidated-0999-00-01-01-shiny.png",
+    "assets/sprites/go/serebii-pikachu-orange-hanbok-female.png",
+    "assets/sprites/go/serebii-pikachu-orange-hanbok-female-shiny.png",
+    "assets/dynamax-symbol.png",
+    "assets/gigantamax-symbol.png",
+    "assets/sprites/go/reviewed-charizard-shiny.png",
+    "assets/sprites/go/reviewed-minior.png",
+    "assets/sprites/go/reviewed-cinderace.png",
+    "assets/sprites/go/reviewed-cinderace-shiny.png",
+    "assets/sprites/go/reviewed-charizard.png"
   ],
   "hostedOnlyScriptFiles": [
     "js/data/firebaseReadRegistry.js",

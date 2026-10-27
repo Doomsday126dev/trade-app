@@ -26,8 +26,7 @@ for(const width of [390,820,1440])test(`Apri themes preserve 36-row list and tab
   await expect(page.locator('#toast')).toBeHidden({timeout:10000});await noOverflow(page);
   await expect(page.locator('.wants-row').first()).toHaveCSS('opacity','1');
   await expect(page.locator('#wants-add-name')).toHaveCSS('border-top-color',theme==='light'?'rgb(133, 131, 125)':'rgb(129, 133, 142)');
-  await expect(page.locator('.myrow-trait.shiny').first()).toHaveText('Shiny');await expect(page.locator('.myrow-trait.shiny').first()).toHaveCSS('font-size','11px');
-  expect(await page.locator('.myrow-trait.shiny').first().evaluate(e=>getComputedStyle(e,'::before').content)).toBe('none');
+  await expect(page.locator('.myrow-trait.shiny')).toHaveCount(0);await expect(page.locator('.wants-name .sr-only').first()).toContainText('Shiny');
 
   await page.screenshot({path:`${out}/${info.project.name}-mylist-${width}-${theme}.png`,fullPage:true,animations:'disabled'});await page.screenshot({path:`${out}/${info.project.name}-mylist-${width}-${theme}-viewport.png`,animations:'disabled'});
   await expect(page.locator('[data-wants-priority-filter="ALL"] .wants-filter-count')).toHaveText('36');

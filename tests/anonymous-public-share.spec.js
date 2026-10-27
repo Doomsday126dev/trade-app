@@ -138,9 +138,9 @@ test.describe('anonymous public share bootstrap',()=>{
     ]){
       await page.locator(`[data-list-type="${category}"]`).click();
       await expect(cards).toHaveCount(count);
-      await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+      await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
       const imageCount=category==='gmax'?0:count;
-      await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.filter(image=>image.complete&&image.naturalWidth>1).length),{timeout:30000}).toBe(imageCount);
+      await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.filter(image=>image.complete&&image.naturalWidth>1).length),{timeout:30000}).toBe(imageCount);
       for(const row of await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')||null})))){
         expect(row.src,row.name).toBe(expected[row.name]);seen.push(row.name);
       }
@@ -163,8 +163,8 @@ test.describe('anonymous public share bootstrap',()=>{
     await page.goto('./?view=PublicTrainer&list=wishlist');
     const cards=page.locator('#share-list-out .share-pcard');
     await expect(cards).toHaveCount(27);
-    await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
-    await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.length===27&&images.every(image=>image.complete&&image.naturalWidth>1)),{timeout:30000}).toBe(true);
+    await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+    await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.length===27&&images.every(image=>image.complete&&image.naturalWidth>1)),{timeout:30000}).toBe(true);
     const rendered=await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')})));
     expect(new Set(rendered.map(row=>row.name)).size).toBe(27);
     for(const row of rendered){
@@ -230,7 +230,7 @@ test.describe('anonymous public share bootstrap',()=>{
       await expect(section.locator('textarea')).toBeHidden();
     }
     const high=page.locator('[data-want-section="H"]'),lucky=page.locator('[data-want-section="LUCKY"]');
-    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(0);await expect(high.locator('.sr-only')).toContainText('Shiny');
     await expect(lucky.locator('.share-pcard-flag.lucky')).toHaveCount(0);
     await expect(page.locator('[data-want-section="LUCKY+SHINY"] .share-pcard-flag')).toHaveCount(0);
     await expect(high).toContainText('Female shiny wanted');
@@ -464,7 +464,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('.background-badge-kind')).toHaveCount(0);
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
     await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
-    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/female\/25\.png/);
+    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/shiny\/female\/25\.png/);
     await expect(page.locator('.public-share-pokemon-mark')).toHaveCount(0);
     await assertPublicPrivacy(page);
     await page.locator('#app-legal-footer button').click();
@@ -536,6 +536,7 @@ test.describe('anonymous public share bootstrap',()=>{
     const snom=page.locator('.share-pcard').filter({hasText:'Snom'});
     const worlds2025=page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2025)'});
     const worlds2026=page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2026)'});
+    const unresolvedCostume=page.locator('.share-pcard').filter({hasText:'Pikachu (Gloria)'});
     await expect(snom.locator('img')).toHaveAttribute('data-optical-ready','true');
     const geometry=await snom.evaluate(card=>({
       cardHeight:card.getBoundingClientRect().height,
@@ -551,13 +552,11 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(worlds2025.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
     await expect(worlds2025.locator('img')).toHaveAttribute('data-optical-ready','true');
     expect(await worlds2025.locator('img').evaluate(image=>Number(image.style.transform.match(/[\d.]+/)?.[0]||1))).toBeGreaterThan(1.5);
-    await expect(worlds2026.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/dittobase-25-pikachu-wcs-2026\.png/);
-    await expect(worlds2026.locator('img')).toHaveAttribute('data-optical-ready','true');
-    const held=page.locator('.share-pcard').filter({hasText:'Pikachu (Gloria)'});
-    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
-    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Gloria)');
-    await expect(held.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Gloria)');
-    await expect(held.locator('img')).toHaveCount(0);
+    await expect(unresolvedCostume.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
+    await expect(unresolvedCostume.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Gloria)');
+    await expect(unresolvedCostume.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Gloria)');
+    await expect(unresolvedCostume.locator('img')).toHaveCount(0);
+    await expect(worlds2026.locator('img')).toHaveAttribute('src','assets/sprites/go/dittobase-25-pikachu-wcs-2026.png');
     expect(await page.locator('.public-share-pokemon-sprite').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
   });
 

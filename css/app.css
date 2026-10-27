@@ -2585,7 +2585,7 @@ html[data-theme="light"]{--priority-medium-text:#885000}
 .ltab.active,.chip-filter[aria-pressed="true"],.event-filter[aria-pressed="true"]{background:var(--accent-soft);color:var(--text);border-color:var(--accent)}
 .fbtn.fALL.on,.event-calendar-day.selected{background:var(--action-bg);color:var(--action-text)}
 .btn-primary:hover,.bpri:hover,.bsave:hover{filter:brightness(.97)}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex="0"]:focus-visible{outline:2px solid var(--ac2);outline-offset:3px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex="0"]:focus-visible{outline:3px solid var(--ac2);outline-offset:3px}
 #tab-more{max-width:var(--container-wide);padding-top:30px}
 #tab-more h2{font-size:30px;line-height:1.25;letter-spacing:-.5px}
 .more-intro{color:var(--muted);margin:8px 0 24px}
@@ -2749,10 +2749,14 @@ html[data-theme="light"] .myrow-trait.lucky{color:#805900}
  .event-agenda-card .event-bonuses{margin:2px 0 0}
 }
 #tab-find :is(.field-control,.app-search-input):focus{border-color:var(--ac2)}
-#tab-find :is(.field-control,.app-search-input):focus-visible{outline-color:var(--ac2)}
+#tab-find :is(.field-control,.app-search-input):focus-visible{outline:3px solid var(--ac2);outline-offset:3px}
 @media(max-width:600px){.event-card-time .event-time-basis:not(:first-child)::before{content:none}}
 
 /* Shared lists retain the same explicit variant label as My List. */
 .share-pcard-flag.shiny{font-size:11px;color:#e76aaf;background:var(--surface-subtle)}
 html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 @media(prefers-color-scheme:light){html:not([data-theme]) .share-pcard-flag.shiny{color:#a52f73}}
+/* HOME Sizzlipede: visible alpha bounds y=363..503 of 512; center the visible body in its slot. */
+.myrow-sprite-wrap.sprite-sizzlipede-home > img.myrow-sprite{translate:0 calc(var(--sprite-slot-list) * -0.4325);}
+
+.sprite-max-symbol{position:absolute;right:0;top:0;width:15px;height:15px;z-index:1;pointer-events:none}.sprite-max-symbol img{display:block;width:100%;height:100%;object-fit:contain}

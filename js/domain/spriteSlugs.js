@@ -114,18 +114,19 @@
     // artwork differs. Neither style may be guessed from the species number.
     return Number(no)===892&&normalizeSpriteKey(name)==='urshifu gigantamax';
   }
-  function verifiedEquivalentSpriteUrl(name='',no=0){
-    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return SCATTERBUG_EQUIVALENT_URL;
+  function verifiedEquivalentSpriteUrl(name='',no=0,gender='',shiny=false){
+    if(Number(no)===664&&scatterbugEquivalentNames.has(normalizeSpriteKey(name)))return shiny?SCATTERBUG_EQUIVALENT_URL.replace('/pokemon/','/pokemon/shiny/'):SCATTERBUG_EQUIVALENT_URL;
     // Own-Tempo Rockruff is a distinct trade/evolution identity, not a
     // different-looking Rockruff stage.
     if(Number(no)===744&&normalizeSpriteKey(name)==='rockruff dusk')
-      return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png';
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${shiny?'shiny/':''}744.png`;
     const dynamaxBase=reviewedDynamaxBase(name,no);
     if(!dynamaxBase)return'';
     // Keep real Amped/Low Key and Single/Rapid Strike forms distinct.
     if(spriteSemanticIdentity(dynamaxBase,'',no).explicitForm)
-      return publicSpriteUrls(dynamaxBase,'',no)[0]||'';
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${Number(no)}.png`;
+      return publicSpriteUrls(dynamaxBase,gender,no,shiny)[0]||'';
+    const genderPath=gender==='f'&&genderDistinctSpeciesLookup.has(Number(no))?'female/':'';
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${genderPath}${Number(no)}.png`;
   }
   function publicSpriteDisplayName(name=''){
     const raw=String(name||'').normalize('NFKC').trim();
@@ -182,19 +183,19 @@
     if(isAmbiguousVisibleForm(name,no))return Object.freeze([]);
     const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender,shiny});
     if(reviewed?.knownVariant)return reviewed.urls;
-    const equivalent=verifiedEquivalentSpriteUrl(name,no);
+    const equivalent=verifiedEquivalentSpriteUrl(name,no,gender,shiny);
     if(equivalent)return Object.freeze([equivalent]);
     const dex=Number.parseInt(no,10);
     const exactId=PUBLIC_EXACT_FORM_IDS[normalizeSpriteKey(display)];
     const pushPokeapi=(candidateGender='',id=dex)=>{
       if(!Number.isInteger(id)||id<=0)return;
       const genderPath=candidateGender==='f'?'female/':'';
-      const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${genderPath}${id}.png`;
+      const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${genderPath}${id}.png`;
       if(spriteSourceForUrl(url)?.id==='pokeapi'&&!urls.includes(url))urls.push(url);
     };
     const push=(candidate,candidateGender='')=>{
       const slug=pokemondbSlug(candidate,candidate,candidateGender);
-      const url=slug?`https://img.pokemondb.net/sprites/home/normal/${slug}.png`:'';
+      const url=slug?`https://img.pokemondb.net/sprites/home/${shiny?'shiny':'normal'}/${slug}.png`:'';
       if(url&&spriteSourceForUrl(url)?.id==='pokemondb-home'&&!urls.includes(url))urls.push(url);
     };
     if(exactId)pushPokeapi('',exactId);

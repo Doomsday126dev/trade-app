@@ -36,3 +36,14 @@ Synthetic data only. Actual browser renders of the .148-based redesign draft, no
 | trainer-shared-list | 1440×1000 | dark | libfile_04b294607c38819190ae4555085cff21 | 0 |
 | trainer-shared-list | 390×844 | light | libfile_86c2a5360f84819194c254f17667b487 | 0 |
 | trainer-shared-list | 390×844 | dark | libfile_9ae7621a53a88191aed66ab3a05c42de | 0 |
+
+## Reconciled .149 review captures
+
+Actual synthetic browser renders after .149 integration. Four My List native captures above are now version 2 (390×844 and 1440×1000, light/dark). New contact sheets contain desktop and phone, both themes:
+
+| Screen | Library ID | Version |
+|---|---|---|
+| My List | libfile_e8848e8005c881919e6aef4fc947cb88 | 0 |
+| Events | libfile_2ebd6a0cb1f08191864e078870e9c23c | 0 |
+| More | libfile_d0331f94c1a88191a7e62e77518e1e9e | 0 |
+| Populated Trainers lookup | libfile_593a04ce66ac81919473578538987d51 | 0 |
