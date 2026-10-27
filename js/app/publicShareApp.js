@@ -161,8 +161,8 @@
       gender==='m'?`<span class="share-pcard-flag gender-m" title="${attr(t('share.flagMale'))}">♂</span>`:'',
       model.lucky&&!sectionFlags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${attr(t('share.flagLucky'))}">⚡</span>`:'',
       model.shiny?`<span class="sr-only">${esc(t('share.flagShiny'))}</span>`:'',
-      model.shiny&&global.PogoDomain.publicPokemonDex?.variantEligibility?.(name)?.shiny==='unverified'?`<span class="share-pcard-mod">${esc(t('catalogue.releaseUnverified'))}</span>`:'',
-      model.shiny&&global.PogoDomain.publicPokemonDex?.variantEligibility?.(name)?.shiny==='announced'?`<span class="share-pcard-mod">${esc(t('catalogue.releaseAnnounced'))}</span>`:'',
+      model.shiny&&global.PogoDomain.publicPokemonDex?.variantStatus?.(name)?.shiny==='unverified'?`<span class="share-pcard-mod">${esc(t('catalogue.releaseUnverified'))}</span>`:'',
+      model.shiny&&global.PogoDomain.publicPokemonDex?.variantStatus?.(name)?.shiny==='announced'?`<span class="share-pcard-mod">${esc(t('catalogue.releaseAnnounced'))}</span>`:'',
       model.xxl&&!sectionFlags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');

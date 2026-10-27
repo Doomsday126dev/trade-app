@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-27T08:50:39.504002+00:00",
-  "qualification": "Research staging only; not referenced by the frontend manifest or active catalogue. Preserve exact identities and variant-release distinctions.",
+  "reviewedAt": "2026-10-27T09:55:05.473913+00:00",
+  "qualification": "Original PNG provenance. Some separately qualified records are promoted to active catalogue metadata; research records alone never assert release or selection eligibility.",
   "records": [
     {
       "url": "https://www.serebii.net/pokemongo/pokemon/042-tophat.png",
@@ -844,6 +844,166 @@
         "status": "decoded"
       },
       "qualification": "Original source PNG; visually reviewed in original-image contact sheet. Art availability only, not proof of release, obtainability or trade eligibility."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01-female-shiny.png",
+      "observedAt": "2026-10-27T09:41:54.897152+00:00",
+      "file": "25-pikachu-anniversary-2026-taiwan-01-female-shiny.png",
+      "http": 200,
+      "sha256": "7d6d647262e1667290c4078a76bec61225255497f62aad02f998540d47623a07",
+      "bytes": 11387,
+      "path": "25-pikachu-anniversary-2026-taiwan-01-female-shiny.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-taiwan-01-female-shiny.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-taiwan-01-female-shiny.png",
+        "width": 104,
+        "height": 105,
+        "visiblePixels": 6144,
+        "pixelHash": "68834fa0",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01-female.png",
+      "observedAt": "2026-10-27T09:41:54.897732+00:00",
+      "file": "25-pikachu-anniversary-2026-taiwan-01-female.png",
+      "http": 200,
+      "sha256": "390977dcf232633b5edc2fd323aad37d0e2ecd06ad0ff0b9c12c179864aee546",
+      "bytes": 11778,
+      "path": "25-pikachu-anniversary-2026-taiwan-01-female.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-taiwan-01-female.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-taiwan-01-female.png",
+        "width": 105,
+        "height": 105,
+        "visiblePixels": 6164,
+        "pixelHash": "a671d63a",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+      "observedAt": "2026-10-27T09:41:54.897787+00:00",
+      "file": "25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+      "http": 200,
+      "sha256": "4d9f7f5fee282d39b27cd9be7d42a41a0b61b234c98dfc1583887f7b953f4629",
+      "bytes": 11155,
+      "path": "25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-taiwan-01-shiny.png",
+        "width": 102,
+        "height": 105,
+        "visiblePixels": 6086,
+        "pixelHash": "6d2f986e",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-taiwan-01.png",
+      "observedAt": "2026-10-27T09:41:55.150312+00:00",
+      "file": "25-pikachu-anniversary-2026-taiwan-01.png",
+      "http": 200,
+      "sha256": "7726f41c8e2003ba3111bd94d2d2cbe7d589098d37892733ca7286ca076e124f",
+      "bytes": 11258,
+      "path": "25-pikachu-anniversary-2026-taiwan-01.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-taiwan-01.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-taiwan-01.png",
+        "width": 101,
+        "height": 105,
+        "visiblePixels": 6060,
+        "pixelHash": "d959833a",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01-female-shiny.png",
+      "observedAt": "2026-10-27T09:41:55.150495+00:00",
+      "file": "25-pikachu-anniversary-2026-philippine-01-female-shiny.png",
+      "http": 200,
+      "sha256": "b84c5b0f3d107fb9c0331dc98156b487fbfd2efbc2f09df9b3e99abf73460743",
+      "bytes": 11352,
+      "path": "25-pikachu-anniversary-2026-philippine-01-female-shiny.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-philippine-01-female-shiny.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-philippine-01-female-shiny.png",
+        "width": 105,
+        "height": 106,
+        "visiblePixels": 6166,
+        "pixelHash": "7a6867e",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01-female.png",
+      "observedAt": "2026-10-27T09:41:55.155896+00:00",
+      "file": "25-pikachu-anniversary-2026-philippine-01-female.png",
+      "http": 200,
+      "sha256": "d6b3214465dc6a4c8252bc8e12870d08a1855264ea80463cb876762c21e21c11",
+      "bytes": 11599,
+      "path": "25-pikachu-anniversary-2026-philippine-01-female.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-philippine-01-female.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-philippine-01-female.png",
+        "width": 106,
+        "height": 106,
+        "visiblePixels": 6180,
+        "pixelHash": "c7708950",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01-shiny.png",
+      "observedAt": "2026-10-27T09:41:55.268724+00:00",
+      "file": "25-pikachu-anniversary-2026-philippine-01-shiny.png",
+      "http": 200,
+      "sha256": "9dbcc6c636d2ca7d8afeb87f7e31eade0cfda31db42822aad849caa9ba92f680",
+      "bytes": 11133,
+      "path": "25-pikachu-anniversary-2026-philippine-01-shiny.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-philippine-01-shiny.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-philippine-01-shiny.png",
+        "width": 103,
+        "height": 106,
+        "visiblePixels": 6102,
+        "pixelHash": "12e89640",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
+    },
+    {
+      "url": "https://assets.dittobase.com/go/pokemon-unpadded/25-pikachu-anniversary-2026-philippine-01.png",
+      "observedAt": "2026-10-27T09:41:55.269186+00:00",
+      "file": "25-pikachu-anniversary-2026-philippine-01.png",
+      "http": 200,
+      "sha256": "6ac49e0ac3049c8d03a4151e76c3ead9cf5f3f4989f8b8689a9a50abc8b6b29d",
+      "bytes": 10971,
+      "path": "25-pikachu-anniversary-2026-philippine-01.png",
+      "asset": "proposals/catalogue-art-review/25-pikachu-anniversary-2026-philippine-01.png",
+      "decoded": {
+        "file": "25-pikachu-anniversary-2026-philippine-01.png",
+        "width": 102,
+        "height": 106,
+        "visiblePixels": 6077,
+        "pixelHash": "37a58ae5",
+        "status": "decoded"
+      },
+      "identitySource": "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01",
+      "qualification": "Original sprite, visually reviewed normal/Shiny/male/female identities and tails. Separate regional canonical identity pending; no release inferred from image."
     }
   ]
 }

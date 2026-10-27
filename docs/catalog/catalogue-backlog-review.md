@@ -2,18 +2,44 @@
 
 The .154 candidate `b44e842d2a1f514f6cd1bc4a4e8983738b0ce637` remains unchanged. This follow-up branch changes discovery/review artifacts only. It does not enable any new trade entry, change a saved identity or deploy staged artwork.
 
-## Actionable minimum
+## Qualified local follow-up
 
-Fifteen standard identities are absent from the standard picker and have official normal-release evidence: Sinistcha, Dottler, Orbeetle, Drakloak, Dragapult, Naclstack, Garganacl, Eldegoss, Boltund, Carkol, Coalossal, Barraskewda, Spidops, Espathra and Houndstone. Their individual official URLs and cached response hashes are in `data/catalogue-sources/identity-reviews.json`.
+Based on live .154 runtime `cdf0171c08508940a34f53df2eb6653e878b2574`, the follow-up adds fifteen standard identities with official normal-release evidence and two exact costumes. All 1,346 existing seed rows are byte-for-byte preserved as objects; no existing user choices or labels change. The candidate is not published by this task.
 
-The previous batch required both normal and Shiny inventory evidence before adding base identities. That excluded legitimate normal releases. The next repair should use a small reviewed per-identity variant eligibility register, extending the existing Shiny editor checks and save validation. Add normal entries after exact-art qualification; keep Shiny art available in the review/upcoming catalogue, with its release state explicit. Preserve existing saved Shiny conflicts rather than silently clearing them. An unverified Shiny release must not be described as definitively unreleased.
+Normal and Shiny wants remain selectable for all fifteen standard identities. Their exact normal/Shiny HOME originals are independently decoded and hash-pinned. The small `reviewed-variant-status.json` register records evidence, not permission to request an entry. “Release unverified” appears in the existing personal, shared and exported views for their Shiny variants. It does not claim confirmed unreleased or unavailable. No artwork preview interface or new request restriction ships.
 
-Two distinct costume gaps are also actionable:
+| Identity | Normal GO evidence | Shiny GO evidence | Exact artwork |
+| --- | --- | --- | --- |
+| Sinistcha | [Released](https://pokemongo.com/news/halloween-part-1-2025) | Unverified | Normal + Shiny verified |
+| Dottler | [Released](https://pokemongo.com/news/bug-out-2026) | Unverified | Normal + Shiny verified |
+| Orbeetle | [Released](https://pokemongo.com/news/bug-out-2026) | Unverified | Normal + Shiny verified |
+| Drakloak | [Released](https://pokemongo.com/news/go-out-galar-region) | Unverified | Normal + Shiny verified |
+| Dragapult | [Released](https://pokemongo.com/news/go-out-galar-region) | Unverified | Normal + Shiny verified |
+| Naclstack | [Released](https://pokemongo.com/news/journey-to-paldea-2025) | Unverified | Normal + Shiny verified |
+| Garganacl | [Released](https://pokemongo.com/news/journey-to-paldea-2025) | Unverified | Normal + Shiny verified |
+| Eldegoss | [Released](https://pokemongo.com/news/spring-into-spring-2025) | Unverified | Normal + Shiny verified |
+| Boltund | [Released](https://pokemongo.com/news/yampers-paw-prints-2025) | Unverified | Normal + Shiny verified |
+| Carkol | [Released](https://pokemongo.com/news/winter-holiday-part2-2025) | Unverified | Normal + Shiny verified |
+| Coalossal | [Released](https://pokemongo.com/news/winter-holiday-part2-2025) | Unverified | Normal + Shiny verified |
+| Barraskewda | [Released](https://pokemongo.com/news/water-festival-2026) | Unverified | Normal + Shiny verified |
+| Spidops | [Released](https://pokemongo.com/news/enchanted-hollow-2025) | Unverified | Normal + Shiny verified |
+| Espathra | [Released](https://pokemongo.com/news/spring-marathon-2026) | Unverified | Normal + Shiny verified |
+| Houndstone | [Released](https://pokemongo.com/news/halloween-part-1-2023) | Unverified | Normal + Shiny verified |
 
-- **Gimmighoul (10th Anniversary Coin):** the official [July 2026 announcement](https://pokemongo.com/news/10th-anniversary-party) confirms both costume and Shiny availability. Exact art remains urgent and unresolved. The current Serebii normal/Shiny inventories reuse `999-r.png` for ordinary Roaming Form and both anniversary coin labels. The [Leek Duck event](https://leekduck.com/events/10th-anniversary-party/) uses the ordinary `pm999.icon.png`, while PokémonDB lists only the 9th coin. Neither current miner tree establishes the 10th-coin identity. Never substitute the ordinary or 9th-coin sprite.
-- **Pikachu (Blue Shirt (Citrus)):** a distinct missing costume, with normal/Shiny originals staged. [GO Hub's archived Jeju event report](https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/) and Serebii provide historical evidence. The original official event link returns 404; that failure remains recorded. Add an explicit new Citrus Shirt identity after final qualification. Do not reinterpret saved `Pikachu (Jeju)` values, which could mean a different balloon costume.
+The [2026 Halloween announcement](https://pokemongo.com/news/halloween-part-2-2026) announces Shiny Greavard for November 1. This is related evolutionary-family evidence, not an explicit Houndstone Shiny announcement; Houndstone's own Shiny state remains unverified pending confirmation. The monitor flags new source Shiny-release claims for these identities for review even when artwork already matches.
 
-These seventeen identities are a confirmed minimum, not a completed whole-catalogue claim. The first fifteen have direct official normal-release evidence; the Citrus Shirt release currently has secondary archived evidence. Hisuian Zoroark's normal release is already tracked by the earlier hold and still needs the same variant treatment; it is not counted again here.
+**Gimmighoul (10th Anniversary Coin)** is resolved with independently labelled [Dittobase original normal/Shiny art](https://www.dittobase.com/pokemon-go/pokedex/gimmighoul-10th-anniversary-coin) and the [official July release](https://pokemongo.com/news/10th-anniversary-party). The original normal image differs from the independently labelled ninth coin by 1,206 decoded pixels on the same canvas. It does not reuse the ordinary or ninth coin icon. Gimmighoul is genderless.
+
+**Pikachu (Blue Shirt (Citrus))** has four exact male/female normal/Shiny originals, [historical GO Hub release evidence](https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/) and independent Serebii/PokémonDB art evidence. The original official event URL's 404 remains recorded. It is a new explicit costume and does not reinterpret saved generic Jeju labels.
+
+## Remaining urgent additions
+
+Further independent Dittobase form inventory review found two distinct regional costumes with four original decoded assets each (normal, Shiny, female, female Shiny). They are retained as urgent actionable entries with source hashes and discovery times in `identity-reviews.json`; all eight unmodified PNGs are staged. They are not aliases of the existing Malaysia or Singapore costumes.
+
+- **Taiwan pink-hair Pikachu:** dedicated event October 10–11, 2026, already past. [Official regional announcement](https://pokemongo.com/news/event-apac-30th-anniversary-2026), [exact form page](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01).
+- **Philippines orange-hair Pikachu:** dedicated event January 23–24, 2027, announced. [Exact form page](https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01). Earlier cross-region stamp obtainability is unverified; a future dedicated event date alone does not establish that the variant cannot already be obtained. Available art must remain available for wants with passive evidence labels when integrated.
+
+Final canonical display labels and integration of these two additions remain the next review unit. Bangkok is announced for February 2027 but no exact Thai mapping is established here. Do not merge these distinct regional labels based only on “PokéXciting.” Hisuian Zoroark Shiny evidence and upcoming Hisuian Goodra retain the earlier explicit review states.
 
 ## The 2,799 source rows
 
@@ -21,7 +47,7 @@ Every original row remains in the raw artifact, with its original variant/source
 
 | Review category | Raw rows |
 | --- | ---: |
-| Confirmed missing identities above | 18 rows for 17 identities |
+| Original confirmed missing identities (now qualified locally) | 18 rows for 17 identities |
 | Known identity aliases | 134 rows for 113 source names |
 | Existing identity, exact-art qualification pending | 1,119 |
 | Source or canonical identity ambiguity | 88 |
@@ -38,7 +64,7 @@ The compact owner view is added to the existing `catalogue-reconciliation.json` 
 
 ## Exact artwork staged
 
-`proposals/catalogue-art-review/` contains 38 unmodified original PNGs: normal/Shiny pairs for the fifteen standard identities, Citrus Shirt Pikachu, Golbat with a top hat, Crobat with a top hat, and Polteageist with a bow. `data/catalogue-sources/staged-art.json` records source URLs, timestamps, SHA-256, positive upstream Git blob matches where available, dimensions, alpha-pixel counts and decoded pixel checks. All 38 decode, all 19 normal/Shiny pairs differ, and none is empty. The original-image contact sheet was visually reviewed.
+The original research batch in `proposals/catalogue-art-review/` contained 38 unmodified PNGs: normal/Shiny pairs for the fifteen standard identities, Citrus Shirt Pikachu, Golbat with a top hat, Crobat with a top hat, and Polteageist with a bow. `data/catalogue-sources/staged-art.json` records source URLs, timestamps, SHA-256, positive upstream Git blob matches where available, dimensions, alpha-pixel counts and decoded pixel checks. All 38 decode, all 19 normal/Shiny pairs differ, and none is empty. The original-image contact sheet was visually reviewed.
 
 The three costume evolutions remain release/identity reviews. Today's official Halloween announcement names the base Zubat/Sinistea costumes, but does not establish those evolutions. Antique and Phony bow Polteageist share one source image; do not assign it to a specific form from the picture alone. These files are outside the frontend manifest and are not shipped or made tradeable by this branch.
 
@@ -51,3 +77,9 @@ The three unmatched Dynamax species remain the already documented November annou
 An additional read-only evidence check found the public PokeMiners HEAD at `c2a686eb08ace6e890d8fe3d2134c76988db87b5` (October 8, 2026), newer than Pokemod's June 8 HEAD. Its complete Pokémon subtree contains 5,733 PNGs; all paths also exist in the 5,920-PNG Pokemod inventory, with different content hashes. Therefore path overlap is not proof of identical artwork. The observation is retained for source review; no second scheduler or monitoring framework is introduced.
 
 The denied female Alolan Raticate URL was not retried or accessed through another route. Its optional female-art issue remains open. The previously denied PoGoAPI endpoints also remain excluded.
+
+## Current denominator and limits
+
+After the seventeen candidate additions, the cached-source reconciliation reports normal inventory 1,333 rows: 1,111 identity matches, 26 ambiguous and 196 unmatched; Shiny inventory 1,363 rows: 1,146 matches, 63 ambiguous and 154 unmatched. Dynamax is 135/138; Gigantamax is 16/16 for its incomplete secondary table. Pokemod covers 1,597 addressable file groups (920 mapped, 677 unresolved), plus 1,112 legacy groups (682 mapped, 430 unresolved). Matching is identity presence only, not blanket art/release approval.
+
+The current offline monitor queue has 2682 rows and no cached-source integrity/staleness failure at qualification time. It deliberately omits 85 live news leads; compare it only with the original offline run, not the 2,799-row live baseline. It remains review-required. The newer PokeMiners tree and Dittobase regional inventory checks are supplemental, not claimed as a continuously monitored complete independent source. Existing monitoring retains failure states and the unmatched queue. No new scheduler, account, credential or paid service is introduced.

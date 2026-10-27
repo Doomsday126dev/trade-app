@@ -681,31 +681,16 @@ function prepareWantsCatalog(){
     });
   }
 }
-function combinedShinyAvailability(name){
-  return window.PogoDomain.publicPokemonDex.variantEligibility?.(name)?.shiny||costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability;
-}
-function catalogueVariantReleaseLabel(entry){const state=entry.shiny&&window.PogoDomain.publicPokemonDex.variantEligibility?.(entry.name)?.shiny;return state==='unverified'?i18nCore.t('catalogue.releaseUnverified'):state==='announced'?i18nCore.t('catalogue.releaseAnnounced'):'';}
-function shinyAvailabilityMessage(status){return status==='unverified'||status==='announced'?'catalogue.shinyReleaseUnverified':status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased';}
+function catalogueVariantReleaseLabel(entry){const review=window.PogoDomain.publicPokemonDex.variantStatus?.(entry.name),state=entry.shiny?review?.shiny:review?.normal;return state==='unverified'?i18nCore.t('catalogue.releaseUnverified'):state==='announced'?i18nCore.t('catalogue.releaseAnnounced'):'';}
 function refreshCombinedShinyAvailability(){
   const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
-  const status=combinedShinyAvailability(name),blocked=status&&status!=='released';
+  const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
   box.disabled=!!blocked&&!box.checked;
-  hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(shinyAvailabilityMessage(status)):'';
-  let preview=document.getElementById('combined-shiny-artwork'),button=document.getElementById('combined-shiny-art-preview');
-  if(!button){button=document.createElement('button');button.id='combined-shiny-art-preview';button.type='button';button.className='btn btn-ghost';button.setAttribute('aria-controls','combined-shiny-artwork');button.addEventListener('click',toggleCombinedShinyArtwork);hint.after(button);preview=document.createElement('figure');preview.id='combined-shiny-artwork';preview.style.margin='8px 0';preview.hidden=true;button.after(preview);}
-  const available=blocked&&!!window.PogoDomain.publicPokemonDex.variantEligibility?.(name);
-  if(preview.dataset.name!==name||!available){preview.hidden=true;preview.replaceChildren();preview.dataset.name=name;}
-  button.hidden=!available;button.textContent=i18nCore.t(preview.hidden?'catalogue.viewShinyArtwork':'catalogue.hideArtwork');button.setAttribute('aria-expanded',String(!preview.hidden));
+  hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
   renderCombinedPokemonSummary();
 }
-function toggleCombinedShinyArtwork(){
-  const name=document.getElementById('combined-name').value,eligibility=window.PogoDomain.publicPokemonDex.variantEligibility?.(name),preview=document.getElementById('combined-shiny-artwork'),button=document.getElementById('combined-shiny-art-preview');
-  if(!eligibility||!preview||button.hidden)return;
-  if(preview.hidden){const no=window.PogoDomain.publicPokemonDex.dex(name);preview.innerHTML=spriteImg(no,80,'',name,'',name,{shiny:true})+`<figcaption class="share-privacy-note">${escHtml(i18nCore.t(eligibility.shiny==='announced'?'catalogue.artAvailableAnnounced':'catalogue.artAvailableUnverified'))}</figcaption>`;preview.hidden=false;}else preview.hidden=true;
-  button.textContent=i18nCore.t(preview.hidden?'catalogue.viewShinyArtwork':'catalogue.hideArtwork');button.setAttribute('aria-expanded',String(!preview.hidden));
-}
 function combinedAllowedGenders(name){
-  const eligibility=window.PogoDomain.publicPokemonDex.variantEligibility?.(name);if(eligibility)return eligibility.genders;
+  const eligibility=window.PogoDomain.publicPokemonDex.variantStatus?.(name);if(eligibility)return eligibility.genders;
   const costume=costumeSpriteCatalogDomain.resolve({name});
   if(costume?.availableGenders)return costume.availableGenders;
   // Reviewed recent Max additions: the lake guardians are genderless.
@@ -833,8 +818,7 @@ async function saveCombinedEditor(remove=false){
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
   const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=combinedAllowedGenders(name);
   const unchangedSavedShiny=draft.entries.length&&draft.entries.every(entry=>entry.shiny===true);
-  const shinyStatus=combinedShinyAvailability(name);
-  if(!remove&&changes.shiny&&shinyStatus&&shinyStatus!=='released'&&!unchangedSavedShiny)return fail(shinyAvailabilityMessage(shinyStatus));
+  if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
@@ -1082,7 +1066,7 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
-  if(window.PogoDomain.publicPokemonDex.variantEligibility?.(context.canonicalName||resolvedName))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no,gender||entry?.gender||'',entry?.shiny===true);
   if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
@@ -1102,7 +1086,7 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
-  if(window.PogoDomain.publicPokemonDex.variantEligibility?.(lookupName))return publicSpriteUrls(lookupName,gender,no)[0]||null;
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(lookupName))return publicSpriteUrls(lookupName,gender,no)[0]||null;
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
@@ -1166,7 +1150,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
-  if(window.PogoDomain.publicPokemonDex.variantEligibility?.(context.canonicalName||name))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||name))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
   const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no,gender,shiny);
   if(equivalent){push(equivalent);return urls;}
   // Shiny requests must never enter the normal-color fallback chain.
@@ -7657,8 +7641,6 @@ async function addManagedIntentEntries(side,entries){
     const catalog=accountSyncCatalogIdentity('wishlist',entry.name,entry);if(!catalog)return false;
     const identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
     if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))continue;
-    const shinyStatus=combinedShinyAvailability(catalog.name||entry.name);
-    if(entry.shiny&&shinyStatus&&shinyStatus!=='released'){toast(i18nCore.t(shinyAvailabilityMessage(shinyStatus)));return false;}
     mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues(entry)});
   }
   if(!mutations.length)return true;
@@ -8752,7 +8734,6 @@ async function _setFlags(name,update){
   const list={...(allData[myListType]?.[cur]||{})};
   const{p,mod,lucky,xxl,xxs,shiny,backgroundId}=parsePri(list[name]||'');
   const next=update({p,mod,lucky,xxl,xxs,shiny,backgroundId});
-  const shinyStatus=combinedShinyAvailability(name);if(next.shiny&&!shiny&&shinyStatus&&shinyStatus!=='released'){toast(i18nCore.t(shinyAvailabilityMessage(shinyStatus)));return;}
   // If toggling off leaves entry empty, confirm delete
   if(!next.p&&!next.lucky&&!next.xxl&&!next.xxs&&!next.shiny&&!next.backgroundId){
     if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
