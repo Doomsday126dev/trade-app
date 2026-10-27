@@ -274,6 +274,8 @@
 "events.groupVenueUnknown":"Hora del lugar sin confirmar"
     ,"share.format":"Formato"
     ,"share.gameSearch":"Cadena de búsqueda de Pokémon GO"
+    ,"catalogue.releaseUnverified":"Lanzamiento sin confirmar"
+    ,"catalogue.releaseAnnounced":"Anunciado"
     ,"costume.shinyNotReleased":"La versión variocolor de este disfraz no se ha lanzado."
     ,"costume.shinyYearRequired":"Elige el año del disfraz de detective antes de pedir la versión variocolor."
     ,"costume.genderOnly":"Solo {gender}"

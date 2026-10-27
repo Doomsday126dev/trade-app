@@ -223,7 +223,15 @@
     needles:Object.freeze(Array.from(LEGACY_PUBLICATION_SOURCE_CALL_CONTRACT.needles,item=>Object.freeze({...item,
       count:item.text==='get(target)'?3:item.count})))
   });
+  // Catalogue .156 preserves legacy IDs through the reviewed adapter only.
+  // Historical releases retain their original strict handler signatures.
+  const CATALOGUE_ID_SOURCE_CALL_CONTRACT=Object.freeze({
+    ...RECOVERY_SOURCE_CALL_CONTRACT,
+    readHandlerHashes:Object.freeze({...RECOVERY_SOURCE_CALL_CONTRACT.readHandlerHashes,
+      accountSyncReadLegacySources:'8ebcda51428eb247434f7f5d762c0fae8534ec29032cfbc9ac63a1aed927fce2'})
+  });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
+    '1679f84b0c5b854a4e7e06802262bcff0cd27dca':CATALOGUE_ID_SOURCE_CALL_CONTRACT,
     '94b29e428fc4771917b3cca99d42f9ac58ba4642':RECOVERY_SOURCE_CALL_CONTRACT,
     '03cd734f40bd5e2c68f18cc0ce61cbfebe721ed3':RECOVERY_SOURCE_CALL_CONTRACT,
     'cdf0171c08508940a34f53df2eb6653e878b2574':RECOVERY_SOURCE_CALL_CONTRACT,

@@ -51,8 +51,11 @@
     'Magearna','Marshadow','Zeraora',
     'Zarude','Pecharunt'
   ]);
+  // Apply the existing Mythical restriction to every form of those same species.
+  // A Drive or cosmetic suffix must not turn an excluded species into a trade.
+  const UNTRADEABLE_MYTHICAL_SPECIES_IDS=new Set([151,251,385,386,494,489,490,491,492,493,647,648,649,719,720,721,801,802,807,893,1025]);
   function isTradeableForWishlist(entry){
-    return !UNTRADEABLE_MYTHICAL_NAMES.has(entry?.name);
+    return !UNTRADEABLE_MYTHICAL_SPECIES_IDS.has(Number(entry?.speciesId||entry?.no))&&!UNTRADEABLE_MYTHICAL_NAMES.has(entry?.name);
   }
   function maxTypeForEntry(entry,type=''){
     if(type==='gmax')return'gmax';

@@ -160,7 +160,9 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
   const releaseIds=new Set();
   const missingIdentities=[],upcomingIdentities=[];
   for(const release of releases.entries){
-    if(!release.id||releaseIds.has(release.id)||!Number.isInteger(release.dex)||!release.catalogName||!/^https:\/\/(?:pokemongo\.com|www\.pokemon\.com)\//.test(release.evidenceUrl)||!Number.isFinite(Date.parse(release.releaseDate)))throw new Error(`Invalid release evidence: ${release.id}`);
+    const official=/^https:\/\/(?:pokemongo\.com|www\.pokemon\.com)\//.test(release.evidenceUrl);
+    const historical=release.evidenceType==='reviewed-historical-secondary'&&release.evidenceUrl==='https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/'&&release.catalogName==='Pikachu (Blue Shirt (Citrus))'&&release.originalOfficialEvidence?.status===404&&/^[0-9a-f]{64}$/.test(release.evidenceRetrieval?.sha256||'')&&release.corroboratingEvidence?.some(row=>row.url==='https://www.serebii.net/pokemongo/shiny.shtml'&&/^[0-9a-f]{64}$/.test(row.snapshotSha256||''));
+    if(!release.id||releaseIds.has(release.id)||!Number.isInteger(release.dex)||!release.catalogName||!(official||historical)||!Number.isFinite(Date.parse(release.releaseDate)))throw new Error(`Invalid release evidence: ${release.id}`);
     releaseIds.add(release.id);
     // A date-only announcement is a review deadline, not proof of release in
     // any player's timezone. Never turn the clock into release authorization.

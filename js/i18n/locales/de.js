@@ -274,6 +274,8 @@
 "events.groupVenueUnknown":"Veranstaltungszeit unbestätigt"
     ,"share.format":"Format"
     ,"share.gameSearch":"Pokémon GO-Suchstring"
+    ,"catalogue.releaseUnverified":"Veröffentlichung unbestätigt"
+    ,"catalogue.releaseAnnounced":"Angekündigt"
     ,"costume.shinyNotReleased":"Die schillernde Variante dieses Kostüms wurde noch nicht veröffentlicht."
     ,"costume.shinyYearRequired":"Wähle das Jahr des Detektiv-Kostüms, bevor du Schillernd anforderst."
     ,"costume.genderOnly":"Nur {gender}"

@@ -643,6 +643,8 @@
 "events.groupVenueUnknown":"Venue time unconfirmed"
     ,"share.format":"Format"
     ,"share.gameSearch":"Pokémon GO search string"
+    ,"catalogue.releaseUnverified":"Release unverified"
+    ,"catalogue.releaseAnnounced":"Announced"
     ,"costume.shinyNotReleased":"Shiny has not been released for this costume."
     ,"costume.shinyYearRequired":"Choose the Detective costume year before requesting Shiny."
     ,"costume.genderOnly":"{gender} only"
