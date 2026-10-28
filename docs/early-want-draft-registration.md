@@ -1,6 +1,6 @@
 # Draft-only exact-source qualification
 
-Runtime 9919180ac25a35a433460db511748466fcd1f75e is the finite five-pair plus retained-monitor follow-up. Its 2,212 passing Node checks (12 existing skips), six focused browser journeys and reviewed ten-path packaging proposal are recorded in docs/early-want-five-qualification.md. Final exact-head hosted gates are required; this registration does not authorize publication.
+Runtime 4436b960e9ede2e6d3595f55c16e69648e0b1415 is the finite five-pair plus retained-monitor follow-up. Its 2,212 passing Node checks (12 existing skips), six focused browser journeys and reviewed ten-path packaging proposal are recorded in docs/early-want-five-qualification.md. Final exact-head hosted gates are required; this registration does not authorize publication.
 
 Register that exact source under the unchanged CATALOGUE_ID_SOURCE_CALL_CONTRACT. Preserve every existing handler digest, owner/session guard, permission and 24-direct/10-repository read budget. Historical registered sources are retained. The runtime source recognizer already covers .162 locally; no unknown-source escape or budget increase is added.
 
