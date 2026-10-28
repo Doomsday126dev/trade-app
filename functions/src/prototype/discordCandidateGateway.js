@@ -5,6 +5,8 @@ const FIELDS={
   begin:['operation','requestId','browserBinding','lifecycleId'],
   complete:['issuer','code','state','requestId','browserBinding','lifecycleId'],
   confirm:['confirmationToken','requestId','browserBinding','lifecycleId'],
+  register:['registrationToken','requestId','browserBinding','lifecycleId','requestedHandle','reviewAccepted'],
+  cancelRegistration:['registrationToken','requestId','browserBinding','lifecycleId'],
   unlink:['requestId','expectedProviderRevision','browserBinding','lifecycleId']
 };
 // Host seam for the existing public gateway -> private authority pattern.
@@ -22,6 +24,8 @@ function createDiscordCandidateGateway({enabled=false,oauth,authority,verifyAppC
       if(action==='begin')return await oauth.begin(base);
       if(action==='complete')return await oauth.complete({...base,observedRedirectUri:oauth.redirectUri});
       if(action==='confirm')return await oauth.confirmLink(base);
+      if(action==='register')return await oauth.confirmRegistration(base);
+      if(action==='cancelRegistration')return await oauth.cancelRegistration(base);
       if(!context.idToken)fail('unauthenticated','discord/auth_required');
       // No caller may supply an alternate-method assertion or raw Firestore path.
       return await authority.unlink({idToken:context.idToken,lifecycleId:input.lifecycleId,requestId:input.requestId,expectedProviderRevision:input.expectedProviderRevision});

@@ -18,3 +18,13 @@ test('unlink forwards only auth and optimistic method version to verified server
   assert.deepEqual(h.calls[0],['unlink',['expectedProviderRevision','idToken','lifecycleId','requestId']]);
   assert.equal((await h.invoke('unlink',request,{...context,idToken:null})).error.reason,'discord/auth_required');
 });
+
+test('registration routes require exact allowlisted fields and retain verified request context',async()=>{
+  const calls=[],oauth={begin(){},complete(){},confirmLink(){},confirmRegistration:async value=>{calls.push(value);return{ok:true,status:'account-created'};},cancelRegistration:async value=>{calls.push(value);return{ok:true,status:'canceled'};}};
+  const invoke=createDiscordCandidateGateway({enabled:true,oauth,authority:{verify:async()=>({uid:'existing-owner'}),unlink(){}},verifyAppCheck:async()=>true,allowedOrigin:ORIGIN});
+  const request={registrationToken:'r'.repeat(43),requestId:'registration-request',browserBinding:'b'.repeat(43),lifecycleId:'registration-lifecycle',requestedHandle:'TrainerNew',reviewAccepted:true};
+  assert.equal((await invoke('register',{...request,uid:'injected-owner'},context)).error.reason,'discord/request_invalid');assert.equal(calls.length,0);
+  assert.equal((await invoke('register',request,{...context,idToken:null})).status,'account-created');assert.equal(await calls[0].currentAuthority(),null);
+  const {requestedHandle,reviewAccepted,...cancel}=request;
+  assert.equal((await invoke('cancelRegistration',cancel,context)).status,'canceled');assert.equal((await calls[1].currentAuthority()).uid,'existing-owner');
+});

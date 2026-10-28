@@ -112,10 +112,13 @@ function createDiscordOAuthPrototype({
   store,
   discord,
   customTokenMinter,
+  registrationStore,
+  registrationEnabled = false,
   now = Date.now,
   randomBytes = crypto.randomBytes,
   audit = () => {}
 } = {}) {
+  if(typeof registrationEnabled!=='boolean')throw new TypeError('Explicit registration boolean required');
   const settings = validateConfig(config);
   if (!store || !discord) throw new TypeError('Discord prototype adapters required');
   for (const method of ['consumeRateLimit', 'createFlow', 'consumeFlow', 'finishFlow', 'linkSubjectAtomic', 'resolveSubject', 'createLinkReview', 'readLinkReview', 'finishLinkReview', 'readProviderLifecycle']) {
@@ -125,6 +128,7 @@ function createDiscordOAuthPrototype({
     requiredFunction(discord[method], `discord.${method}`);
   }
   requiredFunction(customTokenMinter, 'customTokenMinter');
+  if(registrationEnabled)for(const name of ['createReview','confirm','cancel'])requiredFunction(registrationStore?.[name],`registrationStore.${name}`);
 
   const stateHash = (value) => hmac(settings.statePepper, 'discord-oauth-state', value);
   const bindingHash = (value) => hmac(settings.statePepper, 'discord-browser-binding', value);
@@ -301,9 +305,16 @@ function createDiscordOAuthPrototype({
 
       const resolved = await store.resolveSubject({ providerSubjectKey });
       if (!resolved) {
+        authority(await currentAuthority(), { required: false });
+        let registrationToken;
+        if(registrationEnabled){
+          registrationToken=token();
+          await registrationStore.createReview({reviewHash:stateHash(registrationToken),browserBindingHash:bindingHash(binding),requestId:id,providerSubjectKey,expiresAt:now()+settings.flowTtlMs});
+          authority(await currentAuthority(), { required: false });
+        }
         await store.finishFlow({ stateHash: flow.stateHash, status: 'complete', reason: 'onboarding_required', timestamp: now() });
         emit('discord_oauth_onboarding_required', id);
-        return Object.freeze({ ok: true, operation: 'sign-in', status: 'onboarding-required' });
+        return Object.freeze({ ok: true, operation: 'sign-in', status: 'onboarding-required', ...(registrationToken?{registrationToken,expiresInMs:settings.flowTtlMs}:{}) });
       }
       authority(await currentAuthority(), { required: false });
       const customToken = await customTokenMinter(resolved.uid);
@@ -342,7 +353,25 @@ function createDiscordOAuthPrototype({
     return Object.freeze({ ok: true, operation: 'link', status: linked.status, replay: linked.replay === true });
   }
 
-  return Object.freeze({ begin, complete, confirmLink, redirectUri: settings.redirectUri });
+  async function registration(action,{registrationToken,requestId:rawId,browserBinding,clientKey,currentAuthority,requestedHandle,reviewAccepted}={}){
+    if(!registrationEnabled)fail('unavailable','discord/registration_disabled');
+    const id=requestId(rawId),binding=validBinding(browserBinding,'discord/browser_binding_invalid');
+    if(!BINDING.test(String(registrationToken||'')))fail('invalid_argument','discord/registration_invalid');
+    await rateLimit('complete',clientKey,now());authority(await currentAuthority(),{required:false});
+    const input={reviewHash:stateHash(registrationToken),requestId:id,browserBindingHash:bindingHash(binding)};
+    if(action==='cancel')return Object.freeze({ok:true,operation:'registration',...await registrationStore.cancel(input)});
+    const created=await registrationStore.confirm({...input,requestedHandle,reviewAccepted});
+    authority(await currentAuthority(),{required:false});
+    const before=await store.resolveSubject({providerSubjectKey:created.providerSubjectKey});
+    if(before?.uid!==created.uid)fail('stale_state','discord/mapping_changed');
+    const customToken=await customTokenMinter(created.uid);authority(await currentAuthority(),{required:false});
+    if(typeof customToken!=='string'||customToken.length<8||customToken.length>8192)fail('internal','discord/custom_token_invalid');
+    const after=await store.resolveSubject({providerSubjectKey:created.providerSubjectKey});
+    if(after?.uid!==created.uid||after.mappingRevision!==before.mappingRevision)fail('stale_state','discord/mapping_changed');
+    authority(await currentAuthority(),{required:false});
+    return Object.freeze({ok:true,operation:'registration',status:'account-created',uid:created.uid,customToken,canonicalTrainerName:created.canonicalTrainerName,replay:created.replay});
+  }
+  return Object.freeze({ begin, complete, confirmLink, confirmRegistration:input=>registration('confirm',input),cancelRegistration:input=>registration('cancel',input), redirectUri: settings.redirectUri });
 }
 
 module.exports = {

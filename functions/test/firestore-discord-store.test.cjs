@@ -122,3 +122,77 @@ test('Discord provider-only foundation is resolvable by the existing Discord sig
   const store=createFirestoreDiscordOAuthStore({firestore:db,now:()=>1000});
   assert.equal((await store.resolveSubject({providerSubjectKey:key})).uid,uid);
 });
+
+async function registrationHarness({enabled=true,mint}={}){
+  const db=await database(),n=++sequence,at=NOW;let clock=at,current=null,subject=`903511102246789${n}`;
+  const binding=Buffer.from(hash(`registration-browser-${n}`),'hex').toString('base64url'),id=`discord-registration-${n}`;
+  const freeze={schemaVersion:1,state:'active',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-registration-0001',provisioningContractDigest:'d'.repeat(64),activatedAt:100,releasedAt:null};
+  await db.doc('authorityConfig/legacyProvisioningFreeze').set(freeze);
+  await db.doc('authorityConfig/providerAccountCreation').set({schemaVersion:2,state:'certified',provisioningModel:freeze.provisioningModel,freezeId:freeze.freezeId,provisioningContractDigest:freeze.provisioningContractDigest,normalizationVersion:1,legacyNamespaceCoverageCertified:true,activeLegacyHandleCount:0,certifiedHandleCount:0,coverageDigest:'c'.repeat(64),inventoryCapturedAt:200,certifiedAt:300,expiresAt:at+600000});
+  const store=createFirestoreDiscordOAuthStore({firestore:db,now:()=>clock});
+  const {createFirestoreDiscordRegistrationStore}=require('../src/prototype/firestoreDiscordRegistrationStore');
+  const registrationStore=createFirestoreDiscordRegistrationStore({firestore:db,now:()=>clock});
+  const config={clientId:'157730590492196864',clientSecret:'synthetic-client-secret',statePepper:'synthetic-state-pepper',subjectPepper:'synthetic-subject-pepper',redirectUri:'http://127.0.0.1:8886/callback'};
+  const oauth=createDiscordOAuthPrototype({registrationEnabled:enabled,registrationStore,store,now:()=>clock,config,customTokenMinter:mint||(async uid=>`synthetic-token-${uid}`),discord:{exchangeCode:async()=>({accessToken:'synthetic-access-token',scope:'identify',tokenType:'Bearer'}),getCurrentUser:async()=>({subject,label:'Synthetic Registration'}),revokeToken:async()=>{}}});
+  const base={requestId:id,browserBinding:binding,clientKey:binding,currentAuthority:async()=>current};
+  async function review(requestId=id){const args={...base,requestId},started=await oauth.begin({...args,operation:'sign-in'});return oauth.complete({...args,issuer:'https://discord.com',code:'synthetic-code',state:new URL(started.authorizeUrl).searchParams.get('state'),observedRedirectUri:config.redirectUri});}
+  const token=await review();
+  const input={...base,registrationToken:token.registrationToken,requestedHandle:`DiscordNew${n}`,reviewAccepted:true};
+  return{db,n,oauth,store,registrationStore,token,input,review,confirm:extra=>oauth.confirmRegistration({...input,...extra}),cancel:()=>oauth.cancelRegistration(input),setCurrent:value=>{current=value;},advance:ms=>{clock+=ms;}};
+}
+
+test('registration is default-off and unknown identity creates only a review when enabled',async()=>{
+  const off=await registrationHarness({enabled:false});assert.deepEqual(off.token,{ok:true,operation:'sign-in',status:'onboarding-required'});
+  await assert.rejects(off.confirm(),error=>error.reason==='discord/registration_disabled');
+  const h=await registrationHarness();assert.equal(h.token.status,'onboarding-required');assert.ok(h.token.registrationToken);assert.equal(Object.hasOwn(h.token,'uid'),false);
+});
+test('registration atomically claims identity and replay survives a lost mint response',async()=>{
+  let calls=0;const h=await registrationHarness({mint:async uid=>{if(++calls===1)throw Error('synthetic mint unavailable');return`synthetic-token-${uid}`;}});
+  await assert.rejects(h.confirm(),/synthetic mint unavailable/);
+  const result=await h.confirm();assert.equal(result.replay,true);assert.equal(result.status,'account-created');
+  const account=(await h.db.doc(`accounts/${result.uid}`).get()).data();assert.equal(account.identityKind,'provider_only');assert.equal(account.legacyAccessConfigured,false);assert.equal(account.legacyUsername,null);
+  const after=await h.review(`discord-login-after-${h.n}`);assert.equal(after.status,'existing-account');assert.equal(after.uid,result.uid);
+  const changed=await h.cancel();assert.equal(changed.status,'already-created');assert.equal((await h.db.doc(`accounts/${result.uid}`).get()).exists,true);
+  await assert.rejects(h.confirm({requestedHandle:'DifferentHandle'}),error=>error.reason==='discord/registration_changed');
+});
+test('cancel before registration invalidates the review and never claims an account',async()=>{
+  const h=await registrationHarness();assert.equal((await h.cancel()).status,'canceled');assert.equal((await h.cancel()).status,'canceled');
+  await assert.rejects(h.confirm(),error=>error.reason==='discord/registration_canceled');
+});
+test('registration rejects absent consent, wrong browser, expired review and authenticated account switching',async()=>{
+  const h=await registrationHarness();await assert.rejects(h.confirm({reviewAccepted:false}),error=>error.reason==='discord/registration_review_required');
+  await assert.rejects(h.confirm({browserBinding:'z'.repeat(43)}),error=>error.reason==='discord/registration_mismatch');
+  h.setCurrent({uid:'existing-owner'});await assert.rejects(h.confirm(),error=>error.reason==='discord/sign_in_requires_signed_out');
+  h.setCurrent(null);h.advance(300000);await assert.rejects(h.confirm(),error=>error.reason==='discord/registration_expired');
+});
+test('trainer name collision does not consume review or overwrite the existing owner',async()=>{
+  const h=await registrationHarness(),{normalizeHandle}=require('../e1-authority-service/handleNormalization');
+  const key=normalizeHandle(h.input.requestedHandle).handleKey,target=h.db.doc(`trainerHandles/${key}`),original={uid:'existing-name-owner',state:'legacy_hold',revision:1};await target.set(original);
+  await assert.rejects(h.confirm(),error=>error.code==='e1/handle-conflict');assert.deepEqual((await target.get()).data(),original);
+  assert.equal((await h.confirm({requestedHandle:`Alternative${h.n}`})).status,'account-created');
+});
+test('two registrations for one subject produce one UID without cross-account rebind',async()=>{
+  const h=await registrationHarness(),secondId=`discord-second-${h.n}`,second=await h.review(secondId);
+  const results=await Promise.allSettled([h.confirm(),h.confirm({requestId:secondId,registrationToken:second.registrationToken,requestedHandle:`SecondName${h.n}`})]);
+  assert.equal(results.filter(x=>x.status==='fulfilled').length,1);
+  assert.equal(results.find(x=>x.status==='rejected').reason.code,'e1/provider-subject-conflict');
+});
+test('cancel racing confirm either prevents all claims or reports the retained completed account',async()=>{
+  const h=await registrationHarness(),results=await Promise.allSettled([h.confirm(),h.cancel()]);
+  if(results[0].status==='fulfilled'){assert.equal(results[1].value.status,'already-created');assert.equal((await h.db.doc(`accounts/${results[0].value.uid}`).get()).exists,true);}
+  else{assert.equal(results[0].reason.reason,'discord/registration_canceled');assert.equal(results[1].value.status,'canceled');}
+});
+test('registration requires current namespace certification before claiming any identity',async()=>{
+  const h=await registrationHarness();await h.db.doc('authorityConfig/legacyProvisioningFreeze').set({state:'released'});
+  await assert.rejects(h.confirm(),error=>error.code==='e1/legacy-namespace-not-certified');
+});
+test('new Discord registration creates the exact Firebase UID only after canonical claims',{skip:process.env.DISCORD_FIRESTORE_EMULATOR!=='1'},async()=>{
+  const adminApp=require('firebase-admin/app'),adminAuth=require('firebase-admin/auth'),app=adminApp.initializeApp({projectId:'demo-pogo-discord'},`discord-registration-${Date.now()}`);
+  try{
+    const h=await registrationHarness({mint:uid=>adminAuth.getAuth(app).createCustomToken(uid)}),created=await h.confirm();
+    await assert.rejects(adminAuth.getAuth(app).getUser(created.uid),error=>error.code==='auth/user-not-found');
+    const response=await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=synthetic-key`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:created.customToken,returnSecureToken:true})});
+    assert.equal(response.status,200);const result=await response.json();assert.equal((await adminAuth.getAuth(app).getUser(created.uid)).uid,created.uid);
+    const verified=await adminAuth.getAuth(app).verifyIdToken(result.idToken);assert.equal(verified.uid,created.uid);
+  }finally{await adminApp.deleteApp(app);}
+});
