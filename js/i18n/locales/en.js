@@ -694,6 +694,7 @@
 "share.linkCopied":"Link copied.",
 "share.linkCopyFailed":"Copy failed. Use the selected link below or try again.",
 "share.checkListDetails":"Check list details",
-"share.linkUnavailable":"Share unavailable"
+"share.linkUnavailable":"Share unavailable",
+"updates.title":"Updates","updates.latestTitle":"Variants and Favorites","updates.clarify":"Choose an exact pattern or form for an unspecified request, or keep it as it is. Your original entry stays until you choose to remove it.","updates.favorites":"Favorites are ordered by publication date, with more reliable date loading.","updates.listsTitle":"Lists, sharing and artwork","updates.options":"A cleaner Options panel keeps preferences optional. List priority filters make longer lists easier to browse.","updates.share":"Share has one format selector. Copy a current link, or update it after your list changes.","updates.artwork":"More exact normal, Shiny and Max artwork, with duplicate picker options reduced. Unverified releases remain labeled.",
 });
 })(window);
