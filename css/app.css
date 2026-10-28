@@ -2468,6 +2468,8 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 .combined-identity-copy{min-width:0}.combined-identity-copy strong{font-size:18px;line-height:1.35;overflow-wrap:anywhere}
 #combined-identity-form{display:flex;align-items:center;gap:6px;margin-top:5px;color:var(--muted);font-size:12px}
 #combined-identity-form img{width:18px;height:18px;object-fit:contain}
+#combined-identity-art{background:var(--border2);border-radius:var(--radius-md)}
+#combined-identity-release:not([hidden]){display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}
 #combined-change{margin-left:auto;flex-shrink:0;min-height:44px;color:var(--ac2);font-weight:650;padding:8px}
 .combined-priority-field{border:0;margin:0;padding:0;min-width:0}.combined-priority-field legend{font-size:13px;font-weight:600;padding:0}
 .combined-priorities{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--bg2);padding:4px;border:1px solid var(--control-border);border-radius:8px;margin-top:7px}

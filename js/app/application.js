@@ -739,6 +739,8 @@ function renderCombinedPokemonSummary(){
   const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
   form.replaceChildren();form.hidden=!type;
   if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
+  const release=document.getElementById('combined-identity-release'),releaseLabel=catalogueVariantReleaseLabel({name,shiny});
+  release.hidden=!releaseLabel;release.textContent=releaseLabel;
   document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
 }
 function changeCombinedPokemon(){
