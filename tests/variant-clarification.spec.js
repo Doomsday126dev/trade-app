@@ -4,7 +4,7 @@ async function seed(page){await normalFixture(page);await page.route('https://ra
  const controller=managedAccountSyncRuntime.controller,mutations=[];window.__clarifySources={};
  for(const name of ['Spinda','Urshifu (Gigantamax)','Pikachu (Detective)']){
   const catalog=accountSyncCatalogIdentity('wishlist',name),identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
-  const values=accountSyncProduct.tradeValues({priority:'H',variant:'saved legacy detail',gender:name.startsWith('Urshifu')?'':'f',lucky:true,xxl:true,shiny:true,backgroundId:'test-background',sortOrder:7,quantity:4,note:'Keep all saved preferences',mirror:true});
+  const values=accountSyncProduct.tradeValues({priority:'H',variant:'saved legacy detail',gender:name==='Spinda'?'f':'',lucky:true,xxl:true,shiny:true,backgroundId:'test-background',sortOrder:7,quantity:4,note:'Keep all saved preferences',mirror:true});
   mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,patch:values});
   __clarifySources[name]=entityId;
  }
