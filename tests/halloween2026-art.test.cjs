@@ -1,0 +1,18 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),read=f=>JSON.parse(fs.readFileSync(path.join(root,f))),proof=read('data/halloween2026-art-review.json'),catalog=read('data/costume-sprite-catalog.json');
+const window={};for(const f of ['js/domain/pokemonKeys.js','js/domain/costumeSpriteCatalog.js','js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js'])vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),{window,URL,Object,Map});
+test('three independently released Halloween species retain five exact mappings and all ten original PNGs',()=>{
+ assert.equal(proof.records.length,5);const assets=new Set();for(const row of proof.records){const current=catalog.entries.find(r=>r.names[0]===row.names[0]);assert.deepEqual(current,row);for(const [key,asset]of Object.entries(row.assets)){assets.add(asset);const bytes=fs.readFileSync(path.join(root,asset));assert.equal(require('node:crypto').createHash('sha256').update(bytes).digest('hex'),row.sha256[key]);assert.equal(bytes.subarray(1,4).toString(),'PNG');}for(const gender of row.no===854?['']:['','m','f'])for(const shiny of [false,true]){const key=shiny?(gender==='f'?'femaleShiny':'shiny'):(gender==='f'?'female':'default');const actual=window.PogoDomain.costumeSpriteCatalog.resolution({name:row.names[0],gender,shiny});assert.equal(actual.status,'exact');assert.deepEqual(Array.from(actual.urls),[row.assets[key]]);assert.deepEqual(Array.from(window.PogoDomain.spriteSlugs.publicSpriteUrls(row.names[0],gender,row.no,shiny)),[row.assets[key]]);}}
+ assert.equal(assets.size,10);
+});
+test('Phony, Antique and unspecified Bow preserve distinct saved identities despite shared front artwork',()=>{
+ const keys=window.PogoDomain.pokemonCatalog;const phony=keys.resolveLegacyKey('Sinistea (Bow, Phony)'),antique=keys.resolveLegacyKey('Sinistea (Bow, Antique)');assert.ok(phony);assert.ok(antique);assert.notEqual(phony.catalogId,antique.catalogId);const generic=keys.decorateCatalogEntry({no:854,name:'Sinistea (Bow)'});assert.notEqual(generic.catalogId,phony.catalogId);assert.notEqual(generic.catalogId,antique.catalogId);
+ for(const name of ['Sinistea (Bow)','Sinistea (Bow, Phony)','Sinistea (Bow, Antique)'])for(const gender of ['m','f'])assert.deepEqual(Array.from(window.PogoDomain.costumeSpriteCatalog.resolution({name,gender}).urls),[]);
+});
+test('release evidence is regional and separately corroborated, never inferred solely from gender-labelled assets',()=>{
+ const rows=read('data/costume-release-evidence.json').entries.filter(r=>r.id.startsWith('announcement:2026-halloween:'));assert.equal(rows.length,5);for(const r of rows){assert.equal(r.lifecycleStatus,'released');assert.equal(r.artworkStatus,'exact-reviewed');assert.match(r.dateMeaning,/10 a.m. local/);assert.equal(r.corroboratingEvidence.length,2);assert.match(r.evidenceUrl,/pokemongo.com/);}assert.match(proof.sourceDiscrepancy,/unreleased badge/);
+});
+test('public dex compact encoding preserves every generated name, number and Dynamax index under existing budget',()=>{
+ const generator=fs.readFileSync(path.join(root,'scripts/generate-public-sprite-dex.cjs'),'utf8');const funcs=generator.slice(generator.indexOf('function normalize('),generator.indexOf('\nfunction main('));const rows=vm.runInNewContext('(()=>{'+funcs+';return sourceRows()})()',{fs,path,vm,root,require:require('node:module').createRequire(path.join(root,'scripts/generate-public-sprite-dex.cjs'))});for(const row of rows.rows)assert.equal(window.PogoDomain.publicPokemonDex.dex(row.name),row.no,row.name);assert.ok(fs.statSync(path.join(root,'js/domain/publicPokemonDex.js')).size<35000);
+});

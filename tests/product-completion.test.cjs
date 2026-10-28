@@ -9,12 +9,12 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 function harness(){
   const window={btoa:value=>Buffer.from(value,'binary').toString('base64')};
   const context=vm.createContext({window,console});
-  for(const file of ['accountSyncModel','accountSyncProduct','tradeListComparison','publicSharePublication','providerPublicProjection']){
+  for(const file of ['pokemonSearchTerms','pokemonEntryRules','publicPokemonDex','accountSyncModel','accountSyncProduct','tradeListComparison','publicSharePublication','providerPublicProjection']){
     vm.runInContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),context);
   }
   const domain=window.PogoDomain;
   Object.assign(context,{cur:'Owner',selectedTrainerRuntime:{},allData:{},OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],
-    tradeListComparisonDomain:domain.tradeListComparison,accountSyncProduct:domain.accountSyncProduct,accountSyncModel:domain.accountSyncModel,
+    isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist,tradeListComparisonDomain:domain.tradeListComparison,accountSyncProduct:domain.accountSyncProduct,accountSyncModel:domain.accountSyncModel,
     accountSyncCatalogEntryForName:(_type,name)=>({name,no:{Pikachu:25,Eevee:133,Mew:151,Charmander:4}[name]}),
     pokemonCatalogDomain:{catalogKey:value=>value.toLowerCase()},normalizeTradeQualifier:value=>String(value||'').toLowerCase(),
     maxTypeForEntry:()=> 'wishlist',pokemonDisplayName:entry=>entry.name,entryGender:()=>'',parsePri:value=>typeof value==='string'?{p:value,mod:''}:value});
@@ -202,11 +202,18 @@ test('every supplemental signed-in legendary has the same anonymous dex identity
 });
 
 test('a declaration edit during publication prevents copying an out-of-date URL as current',async()=>{
-  let declarations=[{name:'Pikachu',intent:'lf',category:'wishlist'}],copies=0;
-  const {context:c}=require('./helpers/share-link-vm.cjs').shareLinkHarness({entries:()=>declarations,
-    publish:async()=>{declarations=[...declarations,{name:'Eevee',intent:'lf',category:'wishlist'}];return{ok:true,status:'published'};},copy:async()=>{copies++;}});
+  let declarations=[{name:'Pikachu',intent:'lf',category:'wishlist'}],copies=0;const statuses=[];
+  const {domain}=harness();
+  const c=vm.createContext({cur:'Owner',auth:{currentUser:{uid:'owner'}},myListType:'wishlist',
+    location:{origin:'https://example.test',pathname:'/'},publicLinkAttempt:0,
+    publicSharePublicationDomain:{publicDeclarations:rows=>rows},productDeclarations:()=>({entries:declarations}),
+    document:{getElementById:()=>null},linkPublicationStatus:key=>statuses.push(key),
+    publishPublicShareNow:async()=>{const issued=c.publicShareSnapshotForUser('Owner').snapshot;declarations=[...declarations,{name:'Eevee',intent:'ft',category:'wishlist'}];c.rememberPublicLinkConfirmation(issued);return{status:'published'};},
+    publicSharePublicationCurrent:()=>true,copyText:async()=>{copies++;}});
+  require('./helpers/share-link-vm.cjs')(app,c,domain.publicSharePublication);
+  vm.runInContext(app.slice(app.indexOf('async function copyShareLink('),app.indexOf('// ── SPECIAL TRADE BOARD')),c);
   await c.copyShareLink();
-  assert.equal(copies,0);assert.equal(c.statuses.at(-1),'shareUi.changed');
+  assert.equal(copies,0);assert.equal(statuses.at(-1),'share.publicationPending');
 });
 
 test('application Compare uses exact wanted overlap without manufacturing offers and retains V1 fallback',()=>{

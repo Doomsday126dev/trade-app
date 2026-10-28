@@ -8,7 +8,7 @@ const root=path.join(__dirname,'..');
 function imageHarness(locale='en'){
   const drawn=[],artRequests=[],window={};
   const context=vm.createContext({window,Date,Promise,Intl});
-  for(const file of ['js/i18n/locales/en.js',`js/i18n/locales/${locale}.js`,'js/domain/priorityValues.js']){
+  for(const file of ['js/i18n/locales/en.js',`js/i18n/locales/${locale}.js`,'js/domain/priorityValues.js','js/domain/publicPokemonDex.js']){
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   }
   const ctx={font:'',fillStyle:'',strokeStyle:'',lineWidth:1,textAlign:'left',scale(){},fillRect(){},strokeRect(){},measureText(text){return{width:String(text).length*6};},fillText(text,x,y){drawn.push({text:String(text),x,y});}};
@@ -26,6 +26,8 @@ function imageHarness(locale='en'){
     wantSectionLabel:(section,options)=>window.PogoDomain.priorityValues.wantSectionLabel(section,t,options)
   });
   const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
+  vm.runInContext(source.slice(source.indexOf('function maxPresentationType('),source.indexOf('const MAX_CLOUD_URL=')),context);
+  vm.runInContext(source.slice(source.indexOf('function catalogueVariantReleaseLabel('),source.indexOf('function refreshCombinedShinyAvailability(')),context);
   const start=source.indexOf('function productShareCategoryLabel('),end=source.indexOf('\nfunction refreshAll()',start);
   assert.ok(start>=0&&end>start);
   vm.runInContext(source.slice(start,end),context);
@@ -70,7 +72,7 @@ test('active export uses ordered priority and exact special sections without los
   assert.ok(text.some(item=>item.text==='Art unavailable'),'missing exact art is explicit');
   assert.ok(text.map(item=>item.text).join(' ').includes('Antique'));
   assert.ok(text.map(item=>item.text).join(' ').includes('Alolan'));
-  assert.equal(text.filter(item=>item.text==='✦').length,2,'shiny remains visible in priority and special wants');
+  assert.equal(text.filter(item=>item.text==='✦').length,0,'Shiny artwork carries the visual state without a duplicate marker');
   assert.ok(text.some(item=>item.text.includes('♀')));
   assert.ok(text.some(item=>item.text.includes('♂')));
   assert.ok(artRequests.some(item=>item.catalogId==='raichu-alolan'&&item.gender==='m'));

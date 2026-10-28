@@ -35,7 +35,11 @@
           const response=await fetch(ENDPOINT,{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',signal:abort.signal,
             headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`,'X-Firebase-AppCheck':appToken.token},body:JSON.stringify({handles})});current();
           const text=await response.text();current();if(text.length>32768)throw failure('favorite/response-invalid');
-          let value;try{value=JSON.parse(text);}catch{throw failure('favorite/response-invalid');}
+          let value;try{value=JSON.parse(text);}catch{
+            // Infrastructure failures may return HTML instead of the service JSON contract.
+            // Keep malformed successful responses and non-transient failures fail-closed.
+            throw failure(!response.ok&&response.status>=500&&response.status<=599?'favorite/unavailable':'favorite/response-invalid');
+          }
           if(!response.ok){
             const allowed=['favorite/auth-required','favorite/app-check-required','favorite/caller-unavailable','favorite/rate-limited','favorite/busy','favorite/not-enabled','favorite/unavailable','favorite/quota-unavailable'];
             const code=exact(value,['code'])&&allowed.includes(value.code)?value.code:'favorite/unavailable';
@@ -48,5 +52,29 @@
       finally{clearTimeout(timer);abort.abort();}
     }});
   }
-  root.favoriteResolverClient=Object.freeze({ENDPOINT,MAX_HANDLES,valid,validateResponse,createFavoriteResolverClient});
+  // Batch only simultaneous requests; never retain resolved identities or bypass fences.
+  function createSessionIdentityQueue({resolve,sessionCurrent}={}){
+    if(typeof resolve!=='function'||typeof sessionCurrent!=='function')throw new TypeError('Identity queue dependencies required');
+    const pending=new Map();let running=false,scheduled=false;
+    const current=()=>{if(!sessionCurrent())throw failure('favorite/session-changed');};
+    function schedule(){if(running||scheduled)return;scheduled=true;Promise.resolve().then(drain);}
+    async function drain(){
+      scheduled=false;if(running||!pending.size)return;
+      const batch=[...pending.values()].filter(item=>!item.started).slice(0,MAX_HANDLES);if(!batch.length)return;
+      running=true;batch.forEach(item=>item.started=true);
+      try{current();const rows=await resolve(batch.map(item=>item.handle));current();
+        if(!Array.isArray(rows)||rows.length!==batch.length)throw failure('favorite/response-invalid');
+        rows.forEach((row,index)=>{if(row?.handle!==batch[index].handle)throw failure('favorite/response-invalid');});
+        batch.forEach((item,index)=>item.fulfill(rows[index]));
+      }catch(error){batch.forEach(item=>item.reject(error));}
+      finally{batch.forEach(item=>pending.delete(item.handle));running=false;schedule();}
+    }
+    return Object.freeze({resolve(handle){
+      try{current();if(!valid(handle,64))throw failure('favorite/request-invalid');}catch(error){return Promise.reject(error);}
+      if(pending.has(handle))return pending.get(handle).promise;
+      if(pending.size>=100)return Promise.reject(failure('favorite/busy'));
+      const item={handle,started:false};item.promise=new Promise((fulfill,reject)=>Object.assign(item,{fulfill,reject}));pending.set(handle,item);schedule();return item.promise;
+    }});
+  }
+  root.favoriteResolverClient=Object.freeze({ENDPOINT,MAX_HANDLES,valid,validateResponse,createFavoriteResolverClient,createSessionIdentityQueue});
 })(window);

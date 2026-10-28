@@ -15,7 +15,7 @@ test('design tokens define the bounded spacing, container, radius, type, control
   for(const [name,value] of Object.entries({
     'space-1':'4px','space-2':'8px','space-3':'12px','space-4':'16px','space-5':'24px','space-6':'32px',
     'container-narrow':'480px','container-standard':'760px','container-wide':'1120px',
-    'radius-sm':'4px','radius-md':'6px','radius-lg':'8px','radius-pill':'999px',
+    'radius-sm':'6px','radius-md':'9px','radius-lg':'12px','radius-pill':'999px',
     'control-min':'48px'
   }))assert.match(css,new RegExp(`--${name}:${value.replace(/[()]/g,'\\$&')}`));
   for(const role of ['page','section','card','body','meta','utility'])assert.match(css,new RegExp(`--type-${role}:`));
@@ -95,12 +95,12 @@ test('shared Pokémon autocomplete rows reset native controls onto themed surfac
   assert.match(css,/\.ac-item-no\{[^}]*color:var\(--muted\)/);
   assert.match(css,/\.ac-item-variant\{[^}]*color:var\(--muted\)/);
   assert.doesNotMatch(css,/\.ac-(?:dropdown|item)[^}]*background:\s*(?:#fff|white)/i);
-  assert.match(html,/<datalist id="combined-catalog"/);
+  assert.match(html,/list.setAttribute\('role','listbox'\)/);assert.match(css,/\.wants-picker\{[^}]*background:var\(--bg2\)/);
   assert.match(html,/id="favorite-browse-suggestions" role="listbox"/);
 });
 
 test('shared fields preserve theme, focus, and validation layers during browser autofill',()=>{
-  const start=css.indexOf('/* Browser autofill paints above normal background/color declarations.');
+  const start=css.lastIndexOf('\n',css.indexOf(':-webkit-autofill,'))+1;
   const end=css.indexOf('.favorite-card-tag',start);
   assert.ok(start>0&&end>start);
   const autofill=css.slice(start,end);
@@ -136,13 +136,13 @@ test('unified wanted list replaces category navigation with a single primary lis
   assert.match(html,/function wantSectionLabel\(/);
 });
 
-test('application chrome and unified wanted rows use icons with explicit edit and remove actions',()=>{
+test('application chrome and wanted rows use an explicit edit action with removal in its dialog',()=>{
   assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
   const rows=html.slice(html.indexOf('template.innerHTML=`<article class="myrow wants-row'),html.indexOf('function refreshCombinedSearch'));
   assert.match(rows,/class="myrow-edit"/);assert.match(rows,/uiIconMarkup\('sliders'/);
-  assert.match(rows,/class="myrow-remove"/);assert.match(rows,/removeWantsGroup/);
-  assert.match(rows,/aria-label="\$\{escAttr\(i18nCore\.t\('myList\.removeEntry'/);
+  assert.doesNotMatch(rows,/class="myrow-remove"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
+  assert.match(html,/setAttribute\('aria-label',i18nCore.t\('myList.removeEntry'/);
   assert.match(rows,/openCombinedEditor/);assert.match(rows,/myrow-active-traits/);
   assert.match(css,/\.myrow-edit,\.myrow-remove\{[^}]*min-width:48px[^}]*min-height:44px/);
 });

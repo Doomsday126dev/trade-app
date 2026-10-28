@@ -22,10 +22,10 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:391,exact:375,unsupported:16});
-  assert.equal(report.candidates.length,16);
-  assert.equal(report.coverage.releaseEvidenceEntries,19);
-  assert.equal(report.upcomingIdentities.length,3);
+  assert.deepEqual(report.counts,{canonical:402,exact:395,unsupported:7});
+  assert.equal(report.candidates.length,7);
+  assert.equal(report.coverage.releaseEvidenceEntries,26);
+  assert.equal(report.upcomingIdentities.length,0);
   assert.match(report.coverage.releaseDiscovery,/manually reviewed/);
   assert.equal(buildReport({...inputs(),online:true}).status,'no-new-findings');
 });
@@ -79,15 +79,15 @@ test('newly released evidence identities missing from the catalog are flagged; f
   data.releases.entries.at(-1).releaseDate='2026-10-01';
   assert.equal(buildReport(data).missingIdentities.length,0);
 });
-test('released September costumes are unavailable records while later announcements stay queued',()=>{
+test('released September costumes have reviewed exact art while later announcements stay queued',()=>{
   const data=inputs();data.now=new Date('2026-09-17T00:00:00Z');
   const report=buildReport(data);
-  assert.equal(report.upcomingIdentities.length,3);assert.equal(report.missingIdentities.length,0);
+  assert.equal(report.upcomingIdentities.length,0);assert.equal(report.missingIdentities.length,0);
   for(const name of ["Charmander (Friede's Goggles)","Charmeleon (Friede's Goggles)","Charizard (Friede's Goggles)"]){
-    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'unavailable',name);
+    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.status,'exact',name);
     const pending=data.pending.entries.find(row=>row.displayIdentity===name);
-    assert.equal(pending?.identityStatus,'released',name);
-    assert.equal(pending?.artworkStatus,'unavailable',name);
+    assert.equal(pending,undefined,name);
+    assert.equal(data.catalog.entries.find(row=>row.names.includes(name))?.identityStatus,'released',name);
   }
 });
 test('current review evidence records exact retrieval times, URLs, hashes and unresolved source gaps',()=>{
@@ -109,21 +109,21 @@ test('current review evidence records exact retrieval times, URLs, hashes and un
   assert.equal(sources.worldsOfficial.result,'released');
   const released=data.releases.entries.filter(row=>row.lifecycleStatus==='released');
   const announced=data.releases.entries.filter(row=>row.lifecycleStatus==='announced');
-  assert.equal(released.length,16);assert.equal(announced.length,3);
+  assert.equal(released.length,25);assert.equal(announced.length,1);
   assert.ok(released.every(row=>['unavailable','exact-reviewed'].includes(row.artworkStatus)));
-  assert.ok(data.releases.entries.every(row=>Date.parse(row.lastVerifiedAt)<=reviewedAt&&row.evidenceRetrieval.url===row.evidenceUrl));
-  assert.deepEqual(announced.map(row=>row.catalogName).sort(),['Pikachu (Hat and Capelet)','Sinistea (Bow)','Zubat (Top Hat)']);
+  assert.ok(data.releases.entries.every(row=>{const supplement=data.releases.additionalReviews?.find(review=>review.ids.includes(row.id));const reviewTime=supplement?Date.parse(supplement.reviewedAt):reviewedAt;return Date.parse(row.lastVerifiedAt)<=reviewTime&&row.evidenceRetrieval.url===row.evidenceUrl;}));
+  assert.equal(announced[0].catalogName,'Pikachu (PokeXciting Philippines)');
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Batik Shirt)').artworkStatus,'exact-reviewed');
   assert.equal(released.find(row=>row.catalogName==='Pikachu (Astronaut)').artworkStatus,'exact-reviewed');
 });
 test('broken, tampered and wrong-source local asset mappings are reported',()=>{
-  const missing=inputs();missing.catalog.entries[0].assets.default='assets/sprites/go/missing.png';
+  const missing=inputs();missing.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').assets.default='assets/sprites/go/missing.png';
   assert.ok(buildReport(missing).problems.some(row=>row.kind==='local-integrity'&&/Missing/.test(row.message)));
-  const digest=inputs();digest.catalog.entries[0].sha256.default='0'.repeat(64);
+  const digest=inputs();digest.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sha256.default='0'.repeat(64);
   assert.ok(buildReport(digest).problems.some(row=>row.kind==='local-integrity'&&/digest mismatch/.test(row.message)));
-  const source=inputs();source.catalog.entries[0].sourceUrl='https://unapproved.invalid/a.png';
+  const source=inputs();source.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sourceUrl='https://unapproved.invalid/a.png';
   assert.ok(buildReport(source).problems.some(row=>row.kind==='source-provenance'));
-  const mapping=inputs();mapping.catalog.entries[0].sourceFile=mapping.catalog.entries[1].sourceFile;
+  const mapping=inputs();mapping.catalog.entries.find(r=>r.names[0]==='Venusaur (Clone)').sourceFile=mapping.catalog.entries[1].sourceFile;
   assert.ok(buildReport(mapping).problems.some(row=>row.kind==='source-provenance'));
 });
 test('untracked unavailable records and stale pending entries do not silently drift',()=>{
@@ -201,7 +201,7 @@ test('October review tracks released costumes without substituting base art and 
   const report=buildReport(data);
   assert.equal(report.status,'offline-check-passed');
   assert.deepEqual(report.missingIdentities,[]);
-  assert.equal(report.upcomingIdentities.length,3);
+  assert.equal(report.upcomingIdentities.length,0);
   for(const name of ['Pikachu (Astronaut)','Pikachu (PokeXciting Blue)']){
     const row=data.catalog.entries.find(entry=>entry.names.includes(name));
     assert.equal(row.status,'exact');
@@ -210,9 +210,10 @@ test('October review tracks released costumes without substituting base art and 
     assert.equal(data.pending.entries.some(entry=>entry.displayIdentity===name),false);
   }
   data.now=new Date('2026-10-27T00:00:00Z');
-  assert.deepEqual(buildReport(data).missingIdentities.map(row=>row.catalogName).sort(),['Pikachu (Hat and Capelet)','Sinistea (Bow)','Zubat (Top Hat)']);
+  assert.deepEqual(buildReport(data).missingIdentities,[]);
+  assert.deepEqual(buildReport(data).problems.filter(row=>row.kind==='release-status-review').map(row=>row.identity).sort(),[]);
 });
 
 test('overdue announced identity is flagged even when a catalog record exists, without auto release',()=>{
- const data=inputs(),row=data.releases.entries.find(x=>x.catalogName==='Pikachu (Astronaut)');row.lifecycleStatus='announced';row.releaseDate='2026-10-01';data.now=new Date('2026-10-25T00:00:00Z');const before=JSON.stringify(data.releases);assert.ok(buildReport(data).problems.some(x=>x.kind==='release-status-review'&&x.identity===row.catalogName));assert.equal(JSON.stringify(data.releases),before);data.now=new Date('2026-10-01T12:00:00Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),false);
+ const data=inputs(),row=data.releases.entries.find(x=>x.catalogName==='Pikachu (Astronaut)');row.lifecycleStatus='announced';row.releaseDate='2026-10-01';data.now=new Date('2026-10-25T00:00:00Z');const before=JSON.stringify(data.releases);assert.ok(buildReport(data).problems.some(x=>x.kind==='release-status-review'&&x.identity===row.catalogName));assert.equal(JSON.stringify(data.releases),before);data.now=new Date('2026-09-30T23:59:59.999Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),false);data.now=new Date('2026-10-01T00:00:00.000Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),true);assert.equal(JSON.stringify(data.releases),before);
 });

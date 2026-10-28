@@ -123,11 +123,11 @@ test.describe('anonymous public share bootstrap',()=>{
     expect(await page.evaluate(()=>typeof POGO_TRADE_DB)).toBe('undefined');
     const expected={
       'Charmander (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png',
-      'Toxtricity (Amped) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-amped.png',
-      'Toxtricity (Low Key) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/toxtricity-low-key.png',
-      'Urshifu (Single Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-single-strike.png',
-      'Urshifu (Rapid Strike) (Dynamax)':'https://img.pokemondb.net/sprites/home/normal/urshifu-rapid-strike.png',
-      'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png',
+      'Toxtricity (Amped) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/849.png',
+      'Toxtricity (Low Key) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10184.png',
+      'Urshifu (Single Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/892.png',
+      'Urshifu (Rapid Strike) (Dynamax)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10191.png',
+      'Rockruff (Dusk)':'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10151.png',
       'Urshifu (Gigantamax)':null
     };
     const seen=[];
@@ -138,9 +138,9 @@ test.describe('anonymous public share bootstrap',()=>{
     ]){
       await page.locator(`[data-list-type="${category}"]`).click();
       await expect(cards).toHaveCount(count);
-      await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+      await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
       const imageCount=category==='gmax'?0:count;
-      await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.filter(image=>image.complete&&image.naturalWidth>1).length),{timeout:30000}).toBe(imageCount);
+      await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.filter(image=>image.complete&&image.naturalWidth>1).length),{timeout:30000}).toBe(imageCount);
       for(const row of await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')||null})))){
         expect(row.src,row.name).toBe(expected[row.name]);seen.push(row.name);
       }
@@ -163,12 +163,12 @@ test.describe('anonymous public share bootstrap',()=>{
     await page.goto('./?view=PublicTrainer&list=wishlist');
     const cards=page.locator('#share-list-out .share-pcard');
     await expect(cards).toHaveCount(27);
-    await cards.locator('img').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
-    await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.length===27&&images.every(image=>image.complete&&image.naturalWidth>1)),{timeout:30000}).toBe(true);
+    await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(image=>{image.loading='eager';}));
+    await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.length===27&&images.every(image=>image.complete&&image.naturalWidth>1)),{timeout:30000}).toBe(true);
     const rendered=await cards.evaluateAll(nodes=>nodes.map(node=>({name:node.querySelector('.share-pcard-name').textContent,src:node.querySelector('img')?.getAttribute('src')})));
     expect(new Set(rendered.map(row=>row.name)).size).toBe(27);
     for(const row of rendered){
-      if(row.name.startsWith('Scatterbug'))expect(row.src,row.name).toBe('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png');
+      if(row.name.startsWith('Scatterbug'))expect(row.src,row.name).toBe('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/664.png');
       else{
         const number=row.name==='Spinda (Heart)'?'09':row.name.match(/Form (\d+)/)[1].padStart(2,'0');
         expect(row.src,row.name).toBe(`assets/sprites/go/spinda-${number}.png`);
@@ -230,7 +230,7 @@ test.describe('anonymous public share bootstrap',()=>{
       await expect(section.locator('textarea')).toBeHidden();
     }
     const high=page.locator('[data-want-section="H"]'),lucky=page.locator('[data-want-section="LUCKY"]');
-    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(0);await expect(high.locator('.sr-only')).toContainText('Shiny');
     await expect(lucky.locator('.share-pcard-flag.lucky')).toHaveCount(0);
     await expect(page.locator('[data-want-section="LUCKY+SHINY"] .share-pcard-flag')).toHaveCount(0);
     await expect(high).toContainText('Female shiny wanted');
@@ -464,7 +464,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('.background-badge-kind')).toHaveCount(0);
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
     await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
-    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/female\/25\.png/);
+    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/shiny\/female\/25\.png/);
     await expect(page.locator('.public-share-pokemon-mark')).toHaveCount(0);
     await assertPublicPrivacy(page);
     await page.locator('#app-legal-footer button').click();
@@ -601,4 +601,21 @@ test('late initial rejection cannot erase a successful bfcache-resumed public vi
  await installPublicFirebase(page,{live:true,deferredFirst:true});await page.goto('./?view=PublicTrainer');await page.waitForFunction(()=>typeof __rejectFirstPublic==='function');
  await page.evaluate(()=>{dispatchEvent(new Event('pagehide'));dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});await expect(page.locator('#share-list-out')).toContainText('Pikachu');
  await page.evaluate(()=>__rejectFirstPublic(new Error('isolated earlier request failure')));await page.waitForTimeout(50);await expect(page.locator('#share-list-out')).toContainText('Pikachu');
+});
+
+for(const shiny of [false,true])test('follow-up anonymous exact anniversary and Citrus artwork '+shiny,async({page})=>{
+ const names=['Gimmighoul 9th Anniversary Coin','Gimmighoul (10th Anniversary Coin)','Pikachu (Blue Shirt (Citrus))','Pikachu (PokeXciting Taiwan)','Pikachu (PokeXciting Philippines)'];const declarations=names.map(name=>({intent:'lf',name,category:'costumes',p:'H',mod:'',gender:name.startsWith('Pikachu')?'f':'',backgroundId:'',note:'',lucky:false,shiny,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:5},realSprites:true});await page.goto('./?view=PublicTrainer&list=costumes');const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(5);await cards.locator('img').evaluateAll(images=>images.forEach(i=>{i.loading='eager'}));await expect.poll(()=>cards.locator('img').evaluateAll(images=>images.filter(i=>i.complete&&i.naturalWidth>0).length)).toBe(5);const rows=await cards.evaluateAll(nodes=>nodes.map(n=>({name:n.querySelector('.share-pcard-name').textContent,src:n.querySelector('img')?.getAttribute('src')})));const tenth=rows.find(r=>r.name===names[1]),ninth=rows.find(r=>r.name==='Gimmighoul (9th Anniversary Coin)'),citrus=rows.find(r=>r.name===names[2]);expect(tenth.src).toContain('dittobase-999-gimmighoul-10th-anniversary-coin'+(shiny?'-shiny':'')+'.png');expect(tenth.src).not.toBe(ninth.src);expect(citrus.src).toContain('reviewed-pikachu-citrus-shirt-female'+(shiny?'-shiny':'')+'.png');expect(rows.find(r=>r.name===names[3]).src).toContain('taiwan-01-female'+(shiny?'-shiny':'')+'.png');expect(rows.find(r=>r.name===names[4]).src).toContain('philippine-01-female'+(shiny?'-shiny':'')+'.png');await expect(cards.filter({hasText:names[4]})).toContainText('Announced');await assertPublicPrivacy(page);
+});
+
+test('follow-up anonymous saved Shiny choice keeps exact art and explicit release uncertainty',async({page})=>{
+ const declarations=[{intent:'lf',name:'Sinistcha',category:'wishlist',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:true,xxl:false,xxs:false}];await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:1},realSprites:true});await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/1013.png',route=>route.fulfill({path:path.join(__dirname,'..','proposals/catalogue-art-review/shiny-1013.png'),contentType:'image/png'}));await page.goto('./?view=PublicTrainer&list=wishlist');const card=page.locator('#share-list-out .share-pcard');await expect(card).toHaveCount(1);await expect(card).toContainText('Release unverified');const image=card.locator('img.public-share-pokemon-sprite');await image.evaluate(i=>{i.loading='eager'});await expect.poll(()=>image.evaluate(i=>i.complete&&i.naturalWidth>0)).toBe(true);await expect(image).toHaveAttribute('src',/home\/shiny\/1013\.png$/);await assertPublicPrivacy(page);
+});
+
+for(const shiny of [false,true])test('finite67 anonymous catalogue uses exact reviewed art without private data '+shiny,async({page})=>{
+ const rows=require('../data/catalogue-reviewed-assets.json').records.filter(r=>!r.sourceId.startsWith('variant-followup:'));const declarations=rows.map(r=>({intent:'lf',name:r.names[0],category:r.catalogCategory,p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:66},realSprites:true});
+ for(const category of ['wishlist','costumes','dynamax']){const expected=rows.filter(r=>r.catalogCategory===category);await page.goto('./?view=PublicTrainer&list='+category);const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(expected.length);await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.forEach(i=>i.loading='eager'));const actual=await cards.evaluateAll(nodes=>nodes.map(n=>({name:n.querySelector('.share-pcard-name').textContent,src:n.querySelector('img.public-share-pokemon-sprite')?.getAttribute('src')||''})));for(const row of expected){const asset=row.assets[shiny?'shiny':'default'];expect(actual.find(r=>r.name===row.names[0]).src).toBe(asset||'');}await expect.poll(()=>cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.filter(i=>i.complete&&i.naturalWidth>0).length)).toBe(expected.filter(r=>r.assets[shiny?'shiny':'default']).length);await assertPublicPrivacy(page);}
+});
+
+test('anonymous costume aliases show one label while retaining separate normal and Shiny requests',async({page})=>{
+ const declarations=['Hoothoot (New Year)','Hoothoot New Years'].map((name,i)=>({intent:'lf',name,category:'costumes',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:i===1,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:2},realSprites:true});await page.goto('./?view=PublicTrainer&list=costumes');const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(2);await expect(cards.locator('.share-pcard-name')).toHaveText(['Hoothoot (New Year Hat)','Hoothoot (New Year Hat)']);const routes=await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.map(i=>i.getAttribute('src')));expect(new Set(routes).size).toBe(2);expect(routes[1]).toContain('shiny');await page.locator('#share-language-trigger').click();await page.locator('#settings-language').selectOption('ja');await page.keyboard.press('Escape');await expect(cards.locator('.share-pcard-name')).toHaveText(['ホーホー（New Year Hat）','ホーホー（New Year Hat）']);await assertPublicPrivacy(page);
 });

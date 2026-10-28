@@ -1,0 +1,9 @@
+# Stellar Terapagos same-appearance exception
+
+This repair qualifies the separately labelled Shiny HOME10277 original for exactly Terapagos (Stellar Form), rather than treating ordinary normal art as a fallback. Its normal and Shiny originals are byte-identical, independently corroborated by separately labelled Dittobase originals. The retained Bulbapedia excerpt explicitly identifies Stellar Form as lacking a distinct Shiny palette. Its direct HTML archival request was denied and was not retried; the evidence describes the successful earlier web excerpt accurately, not as a full HTML snapshot.
+
+The exception is bound to the exact name, species, HOME form ID, source ID, normal/Shiny URL pair, PNG hash and fixed evidence-file digest. Both GO release states remain unverified; the main-series palette fact does not establish GO obtainability. Early wants, Shiny flags, user priorities/notes/traits and saved identity remain. Wrong identity/model/source/hash/gender or inferred release cannot use the exception. Generic duplicate rejection also compares file hashes, so a fabricated differing pixelHash field cannot qualify duplicate bytes.
+
+No new image, recolouring or generated Pokemon art is introduced. All other reviewed normal/Shiny routes are unchanged. The public dex format stays identical; three generated local variable names are shortened solely to retain the unchanged 35,000-byte budget. Final output is 34,988 bytes. The three Clone starter Shiny source gaps remain explicit; normal Clone or ordinary Shiny artwork is not substituted.
+
+The full routing audit now permits only this exact named shared path. Targeted tests include arbitrary duplicate rejection, evidence tampering, wrong source/model/release, editor/list/public/canvas routing, preserved flags and fields after reload, and anonymous privacy. The generic legacy identity correction flow remains a separate review proposal and is not implemented by this repair.

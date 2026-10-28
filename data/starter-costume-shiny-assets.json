@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "scope": "Ten released Kanto starter costume Shiny models, original bytes, existing normal art unchanged. No new remote runtime source or fallback.",
+  "reviewedAt": "2026-10-26",
+  "records": [
+    {
+      "name": "Bulbasaur (Shedinja)",
+      "no": 1,
+      "stem": "001-halloween2019",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/001-halloween2019.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/halloween2019",
+      "asset": "assets/sprites/go/serebii-starter-001-halloween2019-shiny.png",
+      "sha256": "e4dc6726084a411036219bc4f6dc3a06f9092658939ac870545bb4d817edf211",
+      "sourceBytes": 11591,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/001.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/001-halloween2019.png",
+        "sha256": "d85610e6de1131669efbb3202f0a367515b72b5137aeaaab39784d0966490159",
+        "bytes": 11640
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/bulbasaur-shedinja.png",
+        "sha256": "4282e0aa9446ffc116e6ac52d6e102c057fbe0e465c2c5fe98333312baf1f2f4"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Bulbasaur (Red Party)",
+      "no": 1,
+      "stem": "001-partyhat",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/001-partyhat.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/pokemonday2020?hl=en",
+      "asset": "assets/sprites/go/serebii-starter-001-partyhat-shiny.png",
+      "sha256": "e5e44c173534b77ff8b6a7d207a05c6d149937d39b73294426f3fc6a393fba39",
+      "sourceBytes": 11461,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/001.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/001-partyhat.png",
+        "sha256": "51283c510217606196dd689393aa2332d3081261bda1aeb8e7a5d170911e68ed",
+        "bytes": 11218
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/bulbasaur-red-party-hat.png",
+        "sha256": "8e9b4c91610f31b6efa09306543c1a2f5b16a1b67d72e8899e26c77a1cfe2f51"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Bulbasaur (Visor)",
+      "no": 1,
+      "stem": "001-pikachuvisor",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/001-pikachuvisor.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://www.serebii.net/pokemongo/ticketevents/pokemongofest2020.shtml",
+      "asset": "assets/sprites/go/serebii-starter-001-pikachuvisor-shiny.png",
+      "sha256": "f874d09e4bea484919ebf3ec4f4e97d563ea7450d497bc4ec87cf4345dd6fe79",
+      "sourceBytes": 11493,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/001.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/001-pikachuvisor.png",
+        "sha256": "0d0b1196605239fad831be070606d2f32de417cf40955ce3177ff993af7ea0fc",
+        "bytes": 11383
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/bulbasaur-pikachu-cap.png",
+        "sha256": "f46717e3bcb1c19d7ad1ded65bf666929e89c6f586dc459e1b320706aa280a44"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Charmander (Cubone)",
+      "no": 4,
+      "stem": "004-halloween2019",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/004-halloween2019.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/halloween2019",
+      "asset": "assets/sprites/go/serebii-starter-004-halloween2019-shiny.png",
+      "sha256": "10b180aa99d95e49acc06ae5545bce27365bab414098666cd0624412a9f9bb10",
+      "sourceBytes": 10583,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/004.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/004-halloween2019.png",
+        "sha256": "06a9fc30f4001ccca11d4dd9d58db2b5017655636b22264c095b2ea4ce695e87",
+        "bytes": 10442
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/charmander-cubone.png",
+        "sha256": "780da3d58d979e562966aac68e5791af83da0811f45b7ccb79470db4abb0cf02"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Charmander (Red Party)",
+      "no": 4,
+      "stem": "004-partyhat",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/004-partyhat.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/pokemonday2020?hl=en",
+      "asset": "assets/sprites/go/serebii-starter-004-partyhat-shiny.png",
+      "sha256": "22caa05d714409ae8948ae530d7a38486bc043f816dd53d12ed5392e20f7d9bb",
+      "sourceBytes": 9502,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/004.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/004-partyhat.png",
+        "sha256": "8a69c734b5b01b4922a1ba02bd083f2394b23a90dfd3a68ceb4dce355400b849",
+        "bytes": 9333
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/charmander-red-party-hat.png",
+        "sha256": "748996494acbccee7fa997f1e92dd483e2935b586fc98af5c09bbf165d00c252"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Charmander (Visor)",
+      "no": 4,
+      "stem": "004-pikachuvisor",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/004-pikachuvisor.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://www.serebii.net/pokemongo/ticketevents/pokemongofest2020.shtml",
+      "asset": "assets/sprites/go/serebii-starter-004-pikachuvisor-shiny.png",
+      "sha256": "e0e013bfbfbdb9b4e8418671f61b079610b3e93734b6baa66d7ad195cafd2490",
+      "sourceBytes": 9848,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/004.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/004-pikachuvisor.png",
+        "sha256": "0ae2d93c3de02ac7aa745ed31751599907a0ac9fa90356ee76fe44910f64e80a",
+        "bytes": 9868
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/charmander-pikachu-cap.png",
+        "sha256": "482907992c38661942443adc74534dfc80833f6a096e4cc91607aee3d1cfcdb9"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Squirtle (Yamask)",
+      "no": 7,
+      "stem": "007-halloween2019",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/007-halloween2019.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/halloween2019",
+      "asset": "assets/sprites/go/serebii-starter-007-halloween2019-shiny.png",
+      "sha256": "03eb0e66c3cdb248f3deaff633885c19b61659fee5f25c83f6f51c4cd54d616f",
+      "sourceBytes": 11744,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/007.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/007-halloween2019.png",
+        "sha256": "c3338244663dc856682e5853a7838951558672ea01b778461ad2319e24f096b1",
+        "bytes": 11452
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/squirtle-yamask.png",
+        "sha256": "52f6ccf1f260b68fa94d7d075437304b15629e25310f85b739f3c2cbd2f510d1"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Squirtle (Red Party)",
+      "no": 7,
+      "stem": "007-partyhat",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/007-partyhat.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/pokemonday2020?hl=en",
+      "asset": "assets/sprites/go/serebii-starter-007-partyhat-shiny.png",
+      "sha256": "1e806d19045c479678adae49c4a7d6cdf12cbf091e2fbbba7d105cd6850d6489",
+      "sourceBytes": 10101,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/007.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/007-partyhat.png",
+        "sha256": "8de7a378cfe20e57075d2d5fcf175df55b8035ef738990ce0b85266a9398023f",
+        "bytes": 9695
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/squirtle-red-party-hat.png",
+        "sha256": "154f3eeae851dd79fa81240188c5f83afdf1b4ea02ade824fc0e16a3e6f55045"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Squirtle (Visor)",
+      "no": 7,
+      "stem": "007-pikachuvisor",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/007-pikachuvisor.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://www.serebii.net/pokemongo/ticketevents/pokemongofest2020.shtml",
+      "asset": "assets/sprites/go/serebii-starter-007-pikachuvisor-shiny.png",
+      "sha256": "a0d64223f6b1845f99a5b593e7f2d89bef28bed1d51a2d94e16d13e28383cce9",
+      "sourceBytes": 10733,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/007.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/007-pikachuvisor.png",
+        "sha256": "c5b9d505df2f2b15d16cfccf6389258b5eedb646d2cb7abb26646f665c9404f8",
+        "bytes": 10431
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/squirtle-pikachu-cap.png",
+        "sha256": "116877bb393f04baad763e225c0613379ef34951ae39c5c4696b9e25c1f23b18"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    },
+    {
+      "name": "Squirtle (Sunglasses)",
+      "no": 7,
+      "stem": "007-sunglasses",
+      "shinyAvailability": "released",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/shiny/007-sunglasses.png",
+      "sourcePage": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "releaseEvidence": "https://pokemongo.com/news/community-day-classic-squirtle-makeup-2023",
+      "asset": "assets/sprites/go/serebii-starter-007-sunglasses-shiny.png",
+      "sha256": "70cc92e3548f1c52d16afa3aecba5ee235c091c0c0f76d183442025c52c4e5d1",
+      "sourceBytes": 10361,
+      "genderModel": "shared-no-visual-dimorphism",
+      "genderEvidence": "https://www.serebii.net/pokemongo/pokemon/007.shtml",
+      "normalReference": {
+        "url": "https://www.serebii.net/pokemongo/pokemon/007-sunglasses.png",
+        "sha256": "caafca5f364e630c5d044225add07afb85f48d12c564ae34d579b2222225cbba",
+        "bytes": 10138
+      },
+      "retainedNormal": {
+        "asset": "assets/sprites/go/squirtle-sunglasses.png",
+        "sha256": "20d3affbb65d5aa57bd391ec90cd62d38d7b06422ce618e6dc68390d1cfa564e"
+      },
+      "pixelReview": "Locally inspected 20-image alpha-composited contact sheet; exact outfit and normal/Shiny colors verified. No image edits."
+    }
+  ]
+}

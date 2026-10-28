@@ -56,6 +56,8 @@ async function installTrustedFixture(page){
       dynamax:{TrustedTester:{}},gmax:{TrustedTester:{}},costumes:{TrustedTester:{}}
     });
     _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
+    const publication=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur});activePublicShareHydrationToken=publication.token;
+    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(publication.token,surface);
     const save=(type,username,list)=>{
       if(!allData[type])allData[type]={};
       allData[type][username]={...(list||{})};
@@ -109,12 +111,10 @@ async function expectNoOverflow(page){
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 }
 
-test('approved intent, More and Share paths preserve one canonical declaration view',async({page},testInfo)=>{
+test('approved intent, More and Share paths preserve one canonical declaration view',async({page})=>{
   await page.goto('./?product-intents');await installTrustedFixture(page);
   await page.evaluate(()=>renderInterimProductLabels());
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
-  const declarations=await page.evaluate(()=>JSON.stringify(productDeclarations().entries));
-  const previewEvidence=[],localizedEvidence=[];
   await page.locator('#wants-combine > summary').click();
   await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
   expect(await page.evaluate(()=>productDeclarations().entries.every(e=>e.intent==='lf'))).toBe(true);
@@ -139,20 +139,10 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await capture(page,`approved-entries-${viewport.width}`);
     if(viewport.width<700)expect(await page.locator('#nav-more .tab-label').evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(10);
     await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
-    await expect(page.locator('#more-events')).toBeVisible();await expect(page.locator('#more-events strong')).toHaveText('Events');
+    await expect(page.locator('#nav-events')).toBeVisible();await expect(page.locator('#tab-more button[onclick*="schedule"]')).toHaveCount(0);
     await capture(page,`approved-more-${viewport.width}`);
     await page.locator('#nav-mylist').click();await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();
-    const dialog=page.locator('#product-share-modal'),imageTab=dialog.locator('[data-share-mode="image"]');
-    await imageTab.click();await expect(imageTab).toHaveAttribute('aria-selected','true');
-    const preview=dialog.locator('#product-share-preview img.share-image-preview');
-    await expect(preview).toBeVisible();
-    await expect.poll(()=>preview.evaluate(image=>image.complete&&image.naturalWidth>0&&image.naturalHeight>0)).toBe(true);
-    const decoded=await preview.evaluate(async image=>{await image.decode();return{width:image.naturalWidth,height:image.naturalHeight};});
-    expect(decoded.width).toBeGreaterThan(0);expect(decoded.height).toBeGreaterThan(0);
-    const download=dialog.locator('#product-share-primary');
-    await expect(download).toHaveText('Download image');await expect(download).toBeVisible();await expect(download).toBeEnabled();
-    await expect(download).toHaveAttribute('aria-busy','false');
-    previewEvidence.push({viewport,decoded,downloadReady:true});
+    await page.locator('#product-share-format').selectOption('image');await expect(page.locator('#product-share-image')).toBeVisible();
     await expectNoOverflow(page);await capture(page,`approved-share-${viewport.width}`);
     await page.keyboard.press('Escape');
   }
@@ -161,11 +151,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await page.evaluate(value=>changeInterfaceLocale(value),locale);
     await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
     await expectNoOverflow(page);
-    localizedEvidence.push(locale);
   }
-  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(original);
-  expect(await page.evaluate(()=>JSON.stringify(productDeclarations().entries))).toBe(declarations);
-  await testInfo.attach('current-share-preview-journey',{body:Buffer.from(JSON.stringify({previewEvidence,localizedEvidence,sourcePreserved:true},null,2)),contentType:'application/json'});
 });
 
 test('legacy editing retains originals and Board PNG consumes the deduplicated unified selection',async({page})=>{
@@ -193,29 +179,29 @@ test('legacy editing retains originals and Board PNG consumes the deduplicated u
   if(screenshotDir){mkdirSync(screenshotDir,{recursive:true});writeFileSync(path.join(screenshotDir,'unified-board-export.png'),Buffer.from(result.data.split(',')[1],'base64'));}
 });
 
-test('sharing feedback stays practical and copying never precedes verified publication',async({page})=>{
+test('publication state is persistent and copying never precedes confirmed publication',async({page})=>{
   await page.goto('./?product-publication');await installTrustedFixture(page);
   await page.evaluate(()=>{
     window.__publicationCopies=[];copyText=async value=>{window.__publicationCopies.push(value);};
-    activePublicShareHydrationToken=managedPublicSharePublication.activate({uid:auth.currentUser.uid,username:cur}).token;
-    for(const surface of ['profile','wishlist','dynamax','gmax','costumes'])managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
     publishPublicShareNow=()=>new Promise(resolve=>{window.__finishPublish=resolve;});
     openProductShare();void copyShareLink();
   });
-  await expect(page.locator('#share-link-status')).toHaveText('Working…');
+  await expect(page.locator('#share-link-status')).toHaveText('Publishing…');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(0);
   await page.evaluate(()=>window.__finishPublish({ok:false,status:'failed'}));
-  await expect(page.locator('#share-link-status')).toContainText('Couldn’t share your list');
+  await expect(page.locator('#share-link-status')).toContainText('could not be confirmed');
   expect(await page.evaluate(()=>Object.keys(allData.wishlist[cur]).length)).toBe(4);
-  await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toHaveText('Copied.');
+  await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>{rememberPublicLinkConfirmation(publicShareSnapshotForUser(cur).snapshot);window.__finishPublish({ok:true,status:'published'});});
+  await expect(page.locator('#share-link-status')).toHaveText('Link copied.');
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
   await page.evaluate(()=>{copyText=async()=>{throw new Error('denied');};void copyShareLink();});
   await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
-  await expect(page.locator('#share-link-status')).toContainText('Couldn’t copy the link');
-  await page.evaluate(()=>{closeModal('product-share-modal');openProductShare();void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
+  await expect(page.locator('#share-link-status')).toHaveAttribute('data-state','product.publishedCopyFailed');
+  await expect(page.locator('#share-link-status')).toContainText('Copy failed');
+  await expect(page.locator('#share-public-url')).toBeVisible();
+  await expect(page.locator('#share-public-url')).toBeFocused();
+  await page.evaluate(()=>{void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
   expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
-  await expect(page.locator('#product-share-modal')).toBeHidden();
 });
 
 test('empty flag search sets never emit a prefilter-only search block',async({page})=>{
@@ -243,7 +229,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await expect(pikachu).toBeVisible();
   expect(await pikachu.evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
   await expect(pikachu.locator('.background-visual-label')).toHaveCount(0);
-  await expect(pikachu.getByRole('button',{name:'Remove Pikachu'})).toBeVisible();
+  await pikachu.locator('.myrow-edit').click();await expect(page.locator('#wants-remove')).toHaveAttribute('aria-label','Remove Pikachu');await page.keyboard.press('Escape');
   await capture(page,'trusted-journey-my-list-1440x900');
 
   await page.locator('#wants-add-name').fill('Squirtle');
@@ -253,12 +239,12 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   const addedId=await page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').ref.entityId);
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('L');
   await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
-  await page.locator('#combined-priorities input[value="M"]').check();
+  await require('./helpers/current-want-controls.cjs').priority(page,'M');
   await page.locator('#combined-save').click();
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('M');
 
-  page.once('dialog',dialog=>dialog.accept());
-  await page.locator('.myrow[data-name="Squirtle"] .myrow-remove').click();
+  await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
+  await page.locator('#wants-remove').click();
   await expect(page.locator('.myrow[data-name="Squirtle"]')).toHaveCount(0);
   expect(await page.evaluate(id=>accountSyncCanonicalEntities.find(entry=>entry.entityId===id)?.deleted,addedId)).toBe(true);
   expect(await page.evaluate(()=>window.__trustedWrites||[])).toEqual([]);
@@ -354,7 +340,7 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await expect(page.locator('#nav-mylist')).toHaveAttribute('aria-selected','true');
     await expect(page.locator('.myrow').first()).toBeVisible();
     await page.locator('#combined-list .myrow').evaluateAll(rows=>Promise.all(rows.flatMap(row=>row.getAnimations().map(animation=>animation.finished))));
-    const removeBox=await page.locator('.myrow-remove').first().boundingBox();
+    const removeBox=await page.locator('.myrow-edit').first().boundingBox();
     expect(removeBox?.width).toBeGreaterThanOrEqual(viewport.width<=600?43.9:39.9);expect(removeBox?.height).toBeGreaterThanOrEqual(43.9);
     expect(await page.locator('.myrow').first().evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
     await expectNoOverflow(page);

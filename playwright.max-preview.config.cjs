@@ -1,0 +1,2 @@
+const {defineConfig}=require('@playwright/test');
+module.exports=defineConfig({testDir:'./tests',testMatch:['max-icon-preview.spec.js'],timeout:90000,workers:1,reporter:'list',outputDir:'/tmp/trade-recent-catalog-evidence/results',use:{baseURL:'http://127.0.0.1:4351',serviceWorkers:'block'},webServer:{command:'python3 -m http.server 4351 --bind 127.0.0.1',url:'http://127.0.0.1:4351',reuseExistingServer:false},projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}]});

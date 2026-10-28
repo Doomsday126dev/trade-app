@@ -1,0 +1,1504 @@
+{
+  "qualification": "Explicit reviewed costume identity aliases; no deduplication by image hash. Original names and immutable saved catalog IDs remain resolvable.",
+  "groups": [
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 1,
+      "primary": "Bulbasaur (Red Party)",
+      "names": [
+        "Bulbasaur (Red Party)",
+        "Bulbasaur Party Hat"
+      ],
+      "catalogIds": [
+        "pokemon:1:standard:legacy:Bulbasaur%20(Red%20Party)",
+        "pokemon:1:standard:legacy:Bulbasaur%20Party%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/bulbasaur",
+      "recordNames": [
+        "Bulbasaur (Red Party)",
+        "Bulbasaur Party Hat"
+      ],
+      "canonicalCatalogId": "pokemon:1:standard:legacy:Bulbasaur%20(Red%20Party)",
+      "legacyIdsByName": {
+        "Bulbasaur (Red Party)": "pokemon:1:standard:legacy:Bulbasaur%20(Red%20Party)",
+        "Bulbasaur Party Hat": "pokemon:1:standard:legacy:Bulbasaur%20Party%20Hat"
+      },
+      "sourceFile": "bulbasaur-red-party-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/bulbasaur-red-party-hat.png",
+        "shiny": "assets/sprites/go/serebii-starter-001-partyhat-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-001-partyhat-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 1,
+      "primary": "Bulbasaur (Visor)",
+      "names": [
+        "Bulbasaur (Visor)",
+        "Bulbasaur Pikachu Visor"
+      ],
+      "catalogIds": [
+        "pokemon:1:standard:legacy:Bulbasaur%20(Visor)",
+        "pokemon:1:standard:legacy:Bulbasaur%20Pikachu%20Visor"
+      ],
+      "source": "https://pokemondb.net/sprites/bulbasaur",
+      "recordNames": [
+        "Bulbasaur (Visor)",
+        "Bulbasaur Pikachu Visor"
+      ],
+      "canonicalCatalogId": "pokemon:1:standard:legacy:Bulbasaur%20(Visor)",
+      "legacyIdsByName": {
+        "Bulbasaur (Visor)": "pokemon:1:standard:legacy:Bulbasaur%20(Visor)",
+        "Bulbasaur Pikachu Visor": "pokemon:1:standard:legacy:Bulbasaur%20Pikachu%20Visor"
+      },
+      "sourceFile": "bulbasaur-pikachu-cap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/bulbasaur-pikachu-cap.png",
+        "shiny": "assets/sprites/go/serebii-starter-001-pikachuvisor-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-001-pikachuvisor-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 4,
+      "primary": "Charmander (Red Party)",
+      "names": [
+        "Charmander (Red Party)",
+        "Charmander Party Hat"
+      ],
+      "catalogIds": [
+        "pokemon:4:standard:legacy:Charmander%20(Red%20Party)",
+        "pokemon:4:standard:legacy:Charmander%20Party%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/charmander",
+      "recordNames": [
+        "Charmander (Red Party)",
+        "Charmander Party Hat"
+      ],
+      "canonicalCatalogId": "pokemon:4:standard:legacy:Charmander%20(Red%20Party)",
+      "legacyIdsByName": {
+        "Charmander (Red Party)": "pokemon:4:standard:legacy:Charmander%20(Red%20Party)",
+        "Charmander Party Hat": "pokemon:4:standard:legacy:Charmander%20Party%20Hat"
+      },
+      "sourceFile": "charmander-red-party-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/charmander-red-party-hat.png",
+        "shiny": "assets/sprites/go/serebii-starter-004-partyhat-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-004-partyhat-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 4,
+      "primary": "Charmander (Visor)",
+      "names": [
+        "Charmander (Visor)",
+        "Charmander Pikachu Visor"
+      ],
+      "catalogIds": [
+        "pokemon:4:standard:legacy:Charmander%20(Visor)",
+        "pokemon:4:standard:legacy:Charmander%20Pikachu%20Visor"
+      ],
+      "source": "https://pokemondb.net/sprites/charmander",
+      "recordNames": [
+        "Charmander (Visor)",
+        "Charmander Pikachu Visor"
+      ],
+      "canonicalCatalogId": "pokemon:4:standard:legacy:Charmander%20(Visor)",
+      "legacyIdsByName": {
+        "Charmander (Visor)": "pokemon:4:standard:legacy:Charmander%20(Visor)",
+        "Charmander Pikachu Visor": "pokemon:4:standard:legacy:Charmander%20Pikachu%20Visor"
+      },
+      "sourceFile": "charmander-pikachu-cap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/charmander-pikachu-cap.png",
+        "shiny": "assets/sprites/go/serebii-starter-004-pikachuvisor-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-004-pikachuvisor-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 7,
+      "primary": "Squirtle (Red Party)",
+      "names": [
+        "Squirtle (Red Party)",
+        "Squirtle Party Hat"
+      ],
+      "catalogIds": [
+        "pokemon:7:standard:legacy:Squirtle%20(Red%20Party)",
+        "pokemon:7:standard:legacy:Squirtle%20Party%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/squirtle",
+      "recordNames": [
+        "Squirtle (Red Party)",
+        "Squirtle Party Hat"
+      ],
+      "canonicalCatalogId": "pokemon:7:standard:legacy:Squirtle%20(Red%20Party)",
+      "legacyIdsByName": {
+        "Squirtle (Red Party)": "pokemon:7:standard:legacy:Squirtle%20(Red%20Party)",
+        "Squirtle Party Hat": "pokemon:7:standard:legacy:Squirtle%20Party%20Hat"
+      },
+      "sourceFile": "squirtle-red-party-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/squirtle-red-party-hat.png",
+        "shiny": "assets/sprites/go/serebii-starter-007-partyhat-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-007-partyhat-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 7,
+      "primary": "Squirtle (Visor)",
+      "names": [
+        "Squirtle (Visor)",
+        "Squirtle Pikachu Visor"
+      ],
+      "catalogIds": [
+        "pokemon:7:standard:legacy:Squirtle%20(Visor)",
+        "pokemon:7:standard:legacy:Squirtle%20Pikachu%20Visor"
+      ],
+      "source": "https://pokemondb.net/sprites/squirtle",
+      "recordNames": [
+        "Squirtle (Visor)",
+        "Squirtle Pikachu Visor"
+      ],
+      "canonicalCatalogId": "pokemon:7:standard:legacy:Squirtle%20(Visor)",
+      "legacyIdsByName": {
+        "Squirtle (Visor)": "pokemon:7:standard:legacy:Squirtle%20(Visor)",
+        "Squirtle Pikachu Visor": "pokemon:7:standard:legacy:Squirtle%20Pikachu%20Visor"
+      },
+      "sourceFile": "squirtle-pikachu-cap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/squirtle-pikachu-cap.png",
+        "shiny": "assets/sprites/go/serebii-starter-007-pikachuvisor-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-007-pikachuvisor-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 7,
+      "primary": "Squirtle (Yamask)",
+      "names": [
+        "Squirtle (Yamask)",
+        "Squirtle Halloween"
+      ],
+      "catalogIds": [
+        "pokemon:7:standard:legacy:Squirtle%20(Yamask)",
+        "pokemon:7:standard:legacy:Squirtle%20Halloween"
+      ],
+      "source": "https://pokemondb.net/sprites/squirtle",
+      "recordNames": [
+        "Squirtle (Yamask)",
+        "Squirtle Halloween"
+      ],
+      "canonicalCatalogId": "pokemon:7:standard:legacy:Squirtle%20(Yamask)",
+      "legacyIdsByName": {
+        "Squirtle (Yamask)": "pokemon:7:standard:legacy:Squirtle%20(Yamask)",
+        "Squirtle Halloween": "pokemon:7:standard:legacy:Squirtle%20Halloween"
+      },
+      "sourceFile": "squirtle-yamask.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/squirtle-yamask.png",
+        "shiny": "assets/sprites/go/serebii-starter-007-halloween2019-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-starter-007-halloween2019-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 12,
+      "primary": "Butterfree (Bow)",
+      "names": [
+        "Butterfree (Bow)",
+        "Butterfree Fashionable"
+      ],
+      "catalogIds": [
+        "pokemon:12:standard:legacy:Butterfree%20(Bow)",
+        "pokemon:12:standard:legacy:Butterfree%20Fashionable"
+      ],
+      "source": "https://pokemondb.net/sprites/butterfree",
+      "recordNames": [
+        "Butterfree (Bow)",
+        "Butterfree Fashionable"
+      ],
+      "canonicalCatalogId": "pokemon:12:standard:legacy:Butterfree%20(Bow)",
+      "legacyIdsByName": {
+        "Butterfree (Bow)": "pokemon:12:standard:legacy:Butterfree%20(Bow)",
+        "Butterfree Fashionable": "pokemon:12:standard:legacy:Butterfree%20Fashionable"
+      },
+      "sourceFile": "butterfree-fashion.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/butterfree-fashion.png",
+        "female": "assets/sprites/go/butterfree-fashion-f.png",
+        "shiny": "assets/sprites/go/pogorewind-costume20-0012-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0012-00-00-01-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 25,
+      "primary": "Pikachu (Saree)",
+      "names": [
+        "Pikachu (Saree)",
+        "Pikachu (Sari)"
+      ],
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Saree)",
+        "pokemon:25:standard:legacy:Pikachu%20(Sari)"
+      ],
+      "source": "https://pikachugo.vercel.app/",
+      "recordNames": [
+        "Pikachu (Saree)",
+        "Pikachu (Sari)"
+      ],
+      "canonicalCatalogId": "pokemon:25:standard:legacy:Pikachu%20(Saree)",
+      "legacyIdsByName": {
+        "Pikachu (Saree)": "pokemon:25:standard:legacy:Pikachu%20(Saree)",
+        "Pikachu (Sari)": "pokemon:25:standard:legacy:Pikachu%20(Sari)"
+      },
+      "sourceFile": "0025-00-00-067.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pogorewind-pikachu-067.png",
+        "female": "assets/sprites/go/pogorewind-pikachu-067.png",
+        "shiny": "assets/sprites/go/pogorewind-pikachu-067-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-pikachu-067-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 37,
+      "primary": "Vulpix (Halloween)",
+      "names": [
+        "Vulpix (Halloween)",
+        "Vulpix Spooky Festival"
+      ],
+      "catalogIds": [
+        "pokemon:37:standard:legacy:Vulpix%20(Halloween)",
+        "pokemon:37:standard:legacy:Vulpix%20Spooky%20Festival"
+      ],
+      "source": "https://pokemondb.net/sprites/vulpix",
+      "recordNames": [
+        "Vulpix (Halloween)",
+        "Vulpix Spooky Festival"
+      ],
+      "canonicalCatalogId": "pokemon:37:standard:legacy:Vulpix%20(Halloween)",
+      "legacyIdsByName": {
+        "Vulpix (Halloween)": "pokemon:37:standard:legacy:Vulpix%20(Halloween)",
+        "Vulpix Spooky Festival": "pokemon:37:standard:legacy:Vulpix%20Spooky%20Festival"
+      },
+      "sourceFile": "vulpix-spooky-festival.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/vulpix-spooky-festival.png",
+        "shiny": "assets/sprites/go/pogorewind-costume20-0037-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0037-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 54,
+      "primary": "Psyduck (Holiday 2023)",
+      "names": [
+        "Psyduck (Holiday 2023)",
+        "Psyduck Holiday Attire"
+      ],
+      "catalogIds": [
+        "pokemon:54:standard:legacy:Psyduck%20(Holiday%202023)",
+        "pokemon:54:standard:legacy:Psyduck%20Holiday%20Attire"
+      ],
+      "source": "https://pokemondb.net/sprites/psyduck",
+      "recordNames": [
+        "Psyduck (Holiday 2023)",
+        "Psyduck Holiday Attire"
+      ],
+      "canonicalCatalogId": "pokemon:54:standard:legacy:Psyduck%20(Holiday%202023)",
+      "legacyIdsByName": {
+        "Psyduck (Holiday 2023)": "pokemon:54:standard:legacy:Psyduck%20(Holiday%202023)",
+        "Psyduck Holiday Attire": "pokemon:54:standard:legacy:Psyduck%20Holiday%20Attire"
+      },
+      "sourceFile": "psyduck-holiday-2023.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/psyduck-holiday-2023.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0054-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0054-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 77,
+      "primary": "G_ Ponyta (Meloetta Hat)",
+      "names": [
+        "G_ Ponyta (Meloetta Hat)",
+        "Ponyta Galarian GO Fest 2021"
+      ],
+      "catalogIds": [
+        "pokemon:77:standard:legacy:G_%20Ponyta%20(Meloetta%20Hat)",
+        "pokemon:77:standard:legacy:Ponyta%20Galarian%20GO%20Fest%202021"
+      ],
+      "source": "https://pokemondb.net/sprites/ponyta",
+      "recordNames": [
+        "G_ Ponyta (Meloetta Hat)",
+        "G. Ponyta (Meloetta Hat)",
+        "Ponyta Galarian GO Fest 2021"
+      ],
+      "canonicalCatalogId": "pokemon:77:standard:legacy:G_%20Ponyta%20(Meloetta%20Hat)",
+      "legacyIdsByName": {
+        "G_ Ponyta (Meloetta Hat)": "pokemon:77:standard:legacy:G_%20Ponyta%20(Meloetta%20Hat)",
+        "Ponyta Galarian GO Fest 2021": "pokemon:77:standard:legacy:Ponyta%20Galarian%20GO%20Fest%202021"
+      },
+      "sourceFile": "ponyta-galarian-meloetta-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/ponyta-galarian-meloetta-hat.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0077-01-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0077-01-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 79,
+      "primary": "Slowpoke (Detective)",
+      "names": [
+        "Slowpoke (Detective)",
+        "Slowpoke Hat"
+      ],
+      "catalogIds": [
+        "pokemon:79:standard:legacy:Slowpoke%20(Detective)",
+        "pokemon:79:standard:legacy:Slowpoke%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/slowpoke",
+      "recordNames": [
+        "Slowpoke (Detective)",
+        "Slowpoke Hat",
+        "Slowpoke (Cowboy)"
+      ],
+      "canonicalCatalogId": "pokemon:79:standard:legacy:Slowpoke%20(Detective)",
+      "legacyIdsByName": {
+        "Slowpoke (Detective)": "pokemon:79:standard:legacy:Slowpoke%20(Detective)",
+        "Slowpoke Hat": "pokemon:79:standard:legacy:Slowpoke%20Hat"
+      },
+      "sourceFile": "slowpoke-detective.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/slowpoke-detective.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0079-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0079-00-00-02-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 79,
+      "primary": "Slowpoke (New Year)",
+      "names": [
+        "Slowpoke (New Year)",
+        "Slowpoke 2020"
+      ],
+      "catalogIds": [
+        "pokemon:79:standard:legacy:Slowpoke%20(New%20Year)",
+        "pokemon:79:standard:legacy:Slowpoke%202020"
+      ],
+      "source": "https://pokemondb.net/sprites/slowpoke",
+      "recordNames": [
+        "Slowpoke (New Year)",
+        "Slowpoke 2020"
+      ],
+      "canonicalCatalogId": "pokemon:79:standard:legacy:Slowpoke%20(New%20Year)",
+      "legacyIdsByName": {
+        "Slowpoke (New Year)": "pokemon:79:standard:legacy:Slowpoke%20(New%20Year)",
+        "Slowpoke 2020": "pokemon:79:standard:legacy:Slowpoke%202020"
+      },
+      "sourceFile": "slowpoke-2020.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/slowpoke-2020.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0079-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0079-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 94,
+      "primary": "Gengar (Halloween 2023)",
+      "names": [
+        "Gengar (Halloween 2023)",
+        "Gengar Fall 2023"
+      ],
+      "catalogIds": [
+        "pokemon:94:standard:legacy:Gengar%20(Halloween%202023)",
+        "pokemon:94:standard:legacy:Gengar%20Fall%202023"
+      ],
+      "source": "https://pokemondb.net/sprites/gengar",
+      "recordNames": [
+        "Gengar (Halloween 2023)",
+        "Gengar Fall 2023"
+      ],
+      "canonicalCatalogId": "pokemon:94:standard:legacy:Gengar%20(Halloween%202023)",
+      "legacyIdsByName": {
+        "Gengar (Halloween 2023)": "pokemon:94:standard:legacy:Gengar%20(Halloween%202023)",
+        "Gengar Fall 2023": "pokemon:94:standard:legacy:Gengar%20Fall%202023"
+      },
+      "sourceFile": "gengar-tricks-treats.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/gengar-tricks-treats.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-04-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 94,
+      "primary": "Gengar (Spooky Hat)",
+      "names": [
+        "Gengar (Halloween 2022)",
+        "Gengar (Spooky Hat)",
+        "Gengar Halloween",
+        "Gengar Spooky Festival",
+        "Gengar (Halloween 2024)"
+      ],
+      "catalogIds": [
+        "pokemon:94:standard:legacy:Gengar%20(Halloween%202022)",
+        "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
+        "pokemon:94:standard:legacy:Gengar%20Halloween",
+        "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival",
+        "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)"
+      ],
+      "source": "https://pokemondb.net/sprites/gengar",
+      "recordNames": [
+        "Gengar (Spooky Hat)",
+        "Gengar (Halloween 2022)",
+        "Gengar Halloween",
+        "Gengar Spooky Festival",
+        "Gengar (Halloween 2024)"
+      ],
+      "canonicalCatalogId": "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
+      "legacyIdsByName": {
+        "Gengar (Halloween 2022)": "pokemon:94:standard:legacy:Gengar%20(Halloween%202022)",
+        "Gengar (Spooky Hat)": "pokemon:94:standard:legacy:Gengar%20(Spooky%20Hat)",
+        "Gengar Halloween": "pokemon:94:standard:legacy:Gengar%20Halloween",
+        "Gengar Spooky Festival": "pokemon:94:standard:legacy:Gengar%20Spooky%20Festival",
+        "Gengar (Halloween 2024)": "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)"
+      },
+      "sourceFile": "gengar-spooky-festival.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/gengar-spooky-festival.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0094-00-00-03-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 104,
+      "primary": "Cubone (Cempasuchil)",
+      "names": [
+        "Cubone (Cempasuchil)",
+        "Cubone Cempasuchil Crown"
+      ],
+      "catalogIds": [
+        "pokemon:104:standard:legacy:Cubone%20(Cempasuchil)",
+        "pokemon:104:standard:legacy:Cubone%20Cempasuchil%20Crown"
+      ],
+      "source": "https://pokemondb.net/sprites/cubone",
+      "recordNames": [
+        "Cubone (Cempasuchil)",
+        "Cubone Cempasuchil Crown"
+      ],
+      "canonicalCatalogId": "pokemon:104:standard:legacy:Cubone%20(Cempasuchil)",
+      "legacyIdsByName": {
+        "Cubone (Cempasuchil)": "pokemon:104:standard:legacy:Cubone%20(Cempasuchil)",
+        "Cubone Cempasuchil Crown": "pokemon:104:standard:legacy:Cubone%20Cempasuchil%20Crown"
+      },
+      "sourceFile": "cubone-cempasuchil-crown.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/cubone-cempasuchil-crown.png",
+        "shiny": "assets/sprites/go/pogorewind-costume20-0104-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-costume20-0104-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 133,
+      "primary": "Eevee (Cherry Blossom)",
+      "names": [
+        "Eevee (Cherry Blossom)",
+        "Eevee Cherry Blossoms"
+      ],
+      "catalogIds": [
+        "pokemon:133:standard:legacy:Eevee%20(Cherry%20Blossom)",
+        "pokemon:133:standard:legacy:Eevee%20Cherry%20Blossoms"
+      ],
+      "source": "https://pokemondb.net/sprites/eevee",
+      "recordNames": [
+        "Eevee (Cherry Blossom)",
+        "Eevee Cherry Blossoms"
+      ],
+      "canonicalCatalogId": "pokemon:133:standard:legacy:Eevee%20(Cherry%20Blossom)",
+      "legacyIdsByName": {
+        "Eevee (Cherry Blossom)": "pokemon:133:standard:legacy:Eevee%20(Cherry%20Blossom)",
+        "Eevee Cherry Blossoms": "pokemon:133:standard:legacy:Eevee%20Cherry%20Blossoms"
+      },
+      "sourceFile": "eevee-cherry-blossoms.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/eevee-cherry-blossoms.png",
+        "female": "assets/sprites/go/eevee-cherry-blossoms-f.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-04-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 133,
+      "primary": "Eevee (Holiday)",
+      "names": [
+        "Eevee (Holiday)",
+        "Eevee Holiday 2023"
+      ],
+      "catalogIds": [
+        "pokemon:133:standard:legacy:Eevee%20(Holiday)",
+        "pokemon:133:standard:legacy:Eevee%20Holiday%202023"
+      ],
+      "source": "https://pokemondb.net/sprites/eevee",
+      "recordNames": [
+        "Eevee (Holiday)",
+        "Eevee Holiday 2023"
+      ],
+      "canonicalCatalogId": "pokemon:133:standard:legacy:Eevee%20(Holiday)",
+      "legacyIdsByName": {
+        "Eevee (Holiday)": "pokemon:133:standard:legacy:Eevee%20(Holiday)",
+        "Eevee Holiday 2023": "pokemon:133:standard:legacy:Eevee%20Holiday%202023"
+      },
+      "sourceFile": "eevee-holiday-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/eevee-holiday-hat.png",
+        "female": "assets/sprites/go/eevee-holiday-hat-f.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-03-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 133,
+      "primary": "Eevee (Moon)",
+      "names": [
+        "Eevee (Moon)",
+        "Eevee Moon Crown"
+      ],
+      "catalogIds": [
+        "pokemon:133:standard:legacy:Eevee%20(Moon)",
+        "pokemon:133:standard:legacy:Eevee%20Moon%20Crown"
+      ],
+      "source": "https://pokemondb.net/sprites/eevee",
+      "recordNames": [
+        "Eevee (Moon)",
+        "Eevee Moon Crown"
+      ],
+      "canonicalCatalogId": "pokemon:133:standard:legacy:Eevee%20(Moon)",
+      "legacyIdsByName": {
+        "Eevee (Moon)": "pokemon:133:standard:legacy:Eevee%20(Moon)",
+        "Eevee Moon Crown": "pokemon:133:standard:legacy:Eevee%20Moon%20Crown"
+      },
+      "sourceFile": "eevee-moon-crown.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/eevee-moon-crown.png",
+        "female": "assets/sprites/go/eevee-moon-crown-f.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-07-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-07-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 133,
+      "primary": "Eevee (Red Party)",
+      "names": [
+        "Eevee (Red Party)",
+        "Eevee Party Hat"
+      ],
+      "catalogIds": [
+        "pokemon:133:standard:legacy:Eevee%20(Red%20Party)",
+        "pokemon:133:standard:legacy:Eevee%20Party%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/eevee",
+      "recordNames": [
+        "Eevee (Red Party)",
+        "Eevee Party Hat"
+      ],
+      "canonicalCatalogId": "pokemon:133:standard:legacy:Eevee%20(Red%20Party)",
+      "legacyIdsByName": {
+        "Eevee (Red Party)": "pokemon:133:standard:legacy:Eevee%20(Red%20Party)",
+        "Eevee Party Hat": "pokemon:133:standard:legacy:Eevee%20Party%20Hat"
+      },
+      "sourceFile": "eevee-red-party-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/eevee-red-party-hat.png",
+        "female": "assets/sprites/go/eevee-red-party-hat-f.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-02-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 133,
+      "primary": "Eevee (Sun)",
+      "names": [
+        "Eevee (Sun)",
+        "Eevee Sun Crown"
+      ],
+      "catalogIds": [
+        "pokemon:133:standard:legacy:Eevee%20(Sun)",
+        "pokemon:133:standard:legacy:Eevee%20Sun%20Crown"
+      ],
+      "source": "https://pokemondb.net/sprites/eevee",
+      "recordNames": [
+        "Eevee (Sun)",
+        "Eevee Sun Crown"
+      ],
+      "canonicalCatalogId": "pokemon:133:standard:legacy:Eevee%20(Sun)",
+      "legacyIdsByName": {
+        "Eevee (Sun)": "pokemon:133:standard:legacy:Eevee%20(Sun)",
+        "Eevee Sun Crown": "pokemon:133:standard:legacy:Eevee%20Sun%20Crown"
+      },
+      "sourceFile": "eevee-sun-crown.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/eevee-sun-crown.png",
+        "female": "assets/sprites/go/eevee-sun-crown-f.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-06-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0133-00-00-06-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 143,
+      "primary": "Snorlax (Nightcap)",
+      "names": [
+        "Snorlax (Nightcap)",
+        "Snorlax Night Cap"
+      ],
+      "catalogIds": [
+        "pokemon:143:standard:legacy:Snorlax%20(Nightcap)",
+        "pokemon:143:standard:legacy:Snorlax%20Night%20Cap"
+      ],
+      "source": "https://pokemondb.net/sprites/snorlax",
+      "recordNames": [
+        "Snorlax (Nightcap)",
+        "Snorlax Night Cap"
+      ],
+      "canonicalCatalogId": "pokemon:143:standard:legacy:Snorlax%20(Nightcap)",
+      "legacyIdsByName": {
+        "Snorlax (Nightcap)": "pokemon:143:standard:legacy:Snorlax%20(Nightcap)",
+        "Snorlax Night Cap": "pokemon:143:standard:legacy:Snorlax%20Night%20Cap"
+      },
+      "sourceFile": "snorlax-nightcap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/snorlax-nightcap.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0143-00-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0143-00-00-02-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 149,
+      "primary": "Dragonite (Bow)",
+      "names": [
+        "Dragonite (Bow)",
+        "Dragonite Fashionable"
+      ],
+      "catalogIds": [
+        "pokemon:149:standard:legacy:Dragonite%20(Bow)",
+        "pokemon:149:standard:legacy:Dragonite%20Fashionable"
+      ],
+      "source": "https://pokemondb.net/sprites/dragonite",
+      "recordNames": [
+        "Dragonite (Bow)",
+        "Dragonite Fashionable"
+      ],
+      "canonicalCatalogId": "pokemon:149:standard:legacy:Dragonite%20(Bow)",
+      "legacyIdsByName": {
+        "Dragonite (Bow)": "pokemon:149:standard:legacy:Dragonite%20(Bow)",
+        "Dragonite Fashionable": "pokemon:149:standard:legacy:Dragonite%20Fashionable"
+      },
+      "sourceFile": "dragonite-fashion.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/dragonite-fashion.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0149-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0149-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 163,
+      "primary": "Hoothoot (New Year)",
+      "names": [
+        "Hoothoot (New Year)",
+        "Hoothoot New Years"
+      ],
+      "catalogIds": [
+        "pokemon:163:standard:legacy:Hoothoot%20(New%20Year)",
+        "pokemon:163:standard:legacy:Hoothoot%20New%20Years"
+      ],
+      "source": "https://pokemondb.net/sprites/hoothoot",
+      "recordNames": [
+        "Hoothoot (New Year)",
+        "Hoothoot New Years"
+      ],
+      "canonicalCatalogId": "pokemon:163:standard:legacy:Hoothoot%20(New%20Year)",
+      "legacyIdsByName": {
+        "Hoothoot (New Year)": "pokemon:163:standard:legacy:Hoothoot%20(New%20Year)",
+        "Hoothoot New Years": "pokemon:163:standard:legacy:Hoothoot%20New%20Years"
+      },
+      "sourceFile": "hoothoot-new-year-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/hoothoot-new-year-hat.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0163-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0163-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 172,
+      "primary": "Pichu (Ash)",
+      "names": [
+        "Pichu (Ash)",
+        "Pichu Original Cap"
+      ],
+      "catalogIds": [
+        "pokemon:172:standard:legacy:Pichu%20(Ash)",
+        "pokemon:172:standard:legacy:Pichu%20Original%20Cap"
+      ],
+      "source": "https://pokemondb.net/sprites/pichu",
+      "recordNames": [
+        "Pichu (Ash)",
+        "Pichu Original Cap"
+      ],
+      "canonicalCatalogId": "pokemon:172:standard:legacy:Pichu%20(Ash)",
+      "legacyIdsByName": {
+        "Pichu (Ash)": "pokemon:172:standard:legacy:Pichu%20(Ash)",
+        "Pichu Original Cap": "pokemon:172:standard:legacy:Pichu%20Original%20Cap"
+      },
+      "sourceFile": "pichu-cap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pichu-cap.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 172,
+      "primary": "Pichu (Cherry Blossom)",
+      "names": [
+        "Pichu (Cherry Blossom)",
+        "Pichu Cherry Blossoms"
+      ],
+      "catalogIds": [
+        "pokemon:172:standard:legacy:Pichu%20(Cherry%20Blossom)",
+        "pokemon:172:standard:legacy:Pichu%20Cherry%20Blossoms"
+      ],
+      "source": "https://pokemondb.net/sprites/pichu",
+      "recordNames": [
+        "Pichu (Cherry Blossom)",
+        "Pichu Cherry Blossoms"
+      ],
+      "canonicalCatalogId": "pokemon:172:standard:legacy:Pichu%20(Cherry%20Blossom)",
+      "legacyIdsByName": {
+        "Pichu (Cherry Blossom)": "pokemon:172:standard:legacy:Pichu%20(Cherry%20Blossom)",
+        "Pichu Cherry Blossoms": "pokemon:172:standard:legacy:Pichu%20Cherry%20Blossoms"
+      },
+      "sourceFile": "pichu-cherry-blossoms.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pichu-cherry-blossoms.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-09-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-09-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 172,
+      "primary": "Pichu (Winter)",
+      "names": [
+        "Pichu (Winter)",
+        "Pichu Beanie"
+      ],
+      "catalogIds": [
+        "pokemon:172:standard:legacy:Pichu%20(Winter)",
+        "pokemon:172:standard:legacy:Pichu%20Beanie"
+      ],
+      "source": "https://pokemondb.net/sprites/pichu",
+      "recordNames": [
+        "Pichu (Winter)",
+        "Pichu Beanie"
+      ],
+      "canonicalCatalogId": "pokemon:172:standard:legacy:Pichu%20(Winter)",
+      "legacyIdsByName": {
+        "Pichu (Winter)": "pokemon:172:standard:legacy:Pichu%20(Winter)",
+        "Pichu Beanie": "pokemon:172:standard:legacy:Pichu%20Beanie"
+      },
+      "sourceFile": "pichu-beanie.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pichu-beanie.png",
+        "shiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-06-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-evolution-0172-00-00-06-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 194,
+      "primary": "Wooper (Cap)",
+      "names": [
+        "Wooper (Cap)",
+        "Wooper Fashionable"
+      ],
+      "catalogIds": [
+        "pokemon:194:standard:legacy:Wooper%20(Cap)",
+        "pokemon:194:standard:legacy:Wooper%20Fashionable"
+      ],
+      "source": "https://pokemondb.net/sprites/wooper",
+      "recordNames": [
+        "Wooper (Cap)",
+        "Wooper Fashionable"
+      ],
+      "canonicalCatalogId": "pokemon:194:standard:legacy:Wooper%20(Cap)",
+      "legacyIdsByName": {
+        "Wooper (Cap)": "pokemon:194:standard:legacy:Wooper%20(Cap)",
+        "Wooper Fashionable": "pokemon:194:standard:legacy:Wooper%20Fashionable"
+      },
+      "sourceFile": "wooper-beanie.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/wooper-beanie.png",
+        "female": "assets/sprites/go/wooper-beanie-f.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0194-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0194-00-00-01-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 196,
+      "primary": "Espeon (Scarf)",
+      "names": [
+        "Espeon (Scarf)",
+        "Espeon Day Scarf"
+      ],
+      "catalogIds": [
+        "pokemon:196:standard:legacy:Espeon%20(Scarf)",
+        "pokemon:196:standard:legacy:Espeon%20Day%20Scarf"
+      ],
+      "source": "https://pokemondb.net/sprites/espeon",
+      "recordNames": [
+        "Espeon (Scarf)",
+        "Espeon Day Scarf"
+      ],
+      "canonicalCatalogId": "pokemon:196:standard:legacy:Espeon%20(Scarf)",
+      "legacyIdsByName": {
+        "Espeon (Scarf)": "pokemon:196:standard:legacy:Espeon%20(Scarf)",
+        "Espeon Day Scarf": "pokemon:196:standard:legacy:Espeon%20Day%20Scarf"
+      },
+      "sourceFile": "espeon-day-scarf.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/espeon-day-scarf.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0196-00-00-05-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0196-00-00-05-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 197,
+      "primary": "Umbreon (Scarf)",
+      "names": [
+        "Umbreon (Scarf)",
+        "Umbreon Night Scarf"
+      ],
+      "catalogIds": [
+        "pokemon:197:standard:legacy:Umbreon%20(Scarf)",
+        "pokemon:197:standard:legacy:Umbreon%20Night%20Scarf"
+      ],
+      "source": "https://pokemondb.net/sprites/umbreon",
+      "recordNames": [
+        "Umbreon (Scarf)",
+        "Umbreon Night Scarf"
+      ],
+      "canonicalCatalogId": "pokemon:197:standard:legacy:Umbreon%20(Scarf)",
+      "legacyIdsByName": {
+        "Umbreon (Scarf)": "pokemon:197:standard:legacy:Umbreon%20(Scarf)",
+        "Umbreon Night Scarf": "pokemon:197:standard:legacy:Umbreon%20Night%20Scarf"
+      },
+      "sourceFile": "umbreon-night-scarf.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/umbreon-night-scarf.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0197-00-00-05-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0197-00-00-05-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 215,
+      "primary": "Sneasel (Hipster)",
+      "names": [
+        "Sneasel (Hipster)",
+        "Sneasel Fashion"
+      ],
+      "catalogIds": [
+        "pokemon:215:standard:legacy:Sneasel%20(Hipster)",
+        "pokemon:215:standard:legacy:Sneasel%20Fashion"
+      ],
+      "source": "https://pokemondb.net/sprites/sneasel",
+      "recordNames": [
+        "Sneasel (Hipster)",
+        "Sneasel Fashion"
+      ],
+      "canonicalCatalogId": "pokemon:215:standard:legacy:Sneasel%20(Hipster)",
+      "legacyIdsByName": {
+        "Sneasel (Hipster)": "pokemon:215:standard:legacy:Sneasel%20(Hipster)",
+        "Sneasel Fashion": "pokemon:215:standard:legacy:Sneasel%20Fashion"
+      },
+      "sourceFile": "sneasel-fashion.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/sneasel-fashion.png",
+        "female": "assets/sprites/go/sneasel-fashion-f.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0215-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0215-00-00-01-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 225,
+      "primary": "Delibird (Bow)",
+      "names": [
+        "Delibird (Bow)",
+        "Delibird Holidays"
+      ],
+      "catalogIds": [
+        "pokemon:225:standard:legacy:Delibird%20(Bow)",
+        "pokemon:225:standard:legacy:Delibird%20Holidays"
+      ],
+      "source": "https://pokemondb.net/sprites/delibird",
+      "recordNames": [
+        "Delibird (Bow)",
+        "Delibird Holidays"
+      ],
+      "canonicalCatalogId": "pokemon:225:standard:legacy:Delibird%20(Bow)",
+      "legacyIdsByName": {
+        "Delibird (Bow)": "pokemon:225:standard:legacy:Delibird%20(Bow)",
+        "Delibird Holidays": "pokemon:225:standard:legacy:Delibird%20Holidays"
+      },
+      "sourceFile": "delibird-holiday.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/delibird-holiday.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0225-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0225-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 263,
+      "primary": "G_ Zigzagoon (Meloetta Hat)",
+      "names": [
+        "G_ Zigzagoon (Meloetta Hat)",
+        "Zigzagoon Galarian GO Fest 2021"
+      ],
+      "catalogIds": [
+        "pokemon:263:standard:legacy:G_%20Zigzagoon%20(Meloetta%20Hat)",
+        "pokemon:263:standard:legacy:Zigzagoon%20Galarian%20GO%20Fest%202021"
+      ],
+      "source": "https://pokemondb.net/sprites/zigzagoon",
+      "recordNames": [
+        "G_ Zigzagoon (Meloetta Hat)",
+        "G. Zigzagoon (Meloetta Hat)",
+        "Zigzagoon Galarian GO Fest 2021"
+      ],
+      "canonicalCatalogId": "pokemon:263:standard:legacy:G_%20Zigzagoon%20(Meloetta%20Hat)",
+      "legacyIdsByName": {
+        "G_ Zigzagoon (Meloetta Hat)": "pokemon:263:standard:legacy:G_%20Zigzagoon%20(Meloetta%20Hat)",
+        "Zigzagoon Galarian GO Fest 2021": "pokemon:263:standard:legacy:Zigzagoon%20Galarian%20GO%20Fest%202021"
+      },
+      "sourceFile": "zigzagoon-galarian-meloetta-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/zigzagoon-galarian-meloetta-hat.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0263-01-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0263-01-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 282,
+      "primary": "Gardevoir (Meloetta Hat)",
+      "names": [
+        "Gardevoir (Meloetta Hat)",
+        "Gardevoir GO Fest 2021"
+      ],
+      "catalogIds": [
+        "pokemon:282:standard:legacy:Gardevoir%20(Meloetta%20Hat)",
+        "pokemon:282:standard:legacy:Gardevoir%20GO%20Fest%202021"
+      ],
+      "source": "https://pokemondb.net/sprites/gardevoir",
+      "recordNames": [
+        "Gardevoir (Meloetta Hat)",
+        "Gardevoir GO Fest 2021"
+      ],
+      "canonicalCatalogId": "pokemon:282:standard:legacy:Gardevoir%20(Meloetta%20Hat)",
+      "legacyIdsByName": {
+        "Gardevoir (Meloetta Hat)": "pokemon:282:standard:legacy:Gardevoir%20(Meloetta%20Hat)",
+        "Gardevoir GO Fest 2021": "pokemon:282:standard:legacy:Gardevoir%20GO%20Fest%202021"
+      },
+      "sourceFile": "gardevoir-meloetta-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/gardevoir-meloetta-hat.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0282-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0282-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 330,
+      "primary": "Flygon (Meloetta Hat)",
+      "names": [
+        "Flygon (Meloetta Hat)",
+        "Flygon GO Fest 2021"
+      ],
+      "catalogIds": [
+        "pokemon:330:standard:legacy:Flygon%20(Meloetta%20Hat)",
+        "pokemon:330:standard:legacy:Flygon%20GO%20Fest%202021"
+      ],
+      "source": "https://pokemondb.net/sprites/flygon",
+      "recordNames": [
+        "Flygon (Meloetta Hat)",
+        "Flygon GO Fest 2021"
+      ],
+      "canonicalCatalogId": "pokemon:330:standard:legacy:Flygon%20(Meloetta%20Hat)",
+      "legacyIdsByName": {
+        "Flygon (Meloetta Hat)": "pokemon:330:standard:legacy:Flygon%20(Meloetta%20Hat)",
+        "Flygon GO Fest 2021": "pokemon:330:standard:legacy:Flygon%20GO%20Fest%202021"
+      },
+      "sourceFile": "flygon-meloetta-hat.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/flygon-meloetta-hat.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 355,
+      "primary": "Duskull (Cempasuchil)",
+      "names": [
+        "Duskull (Cempasuchil)",
+        "Duskull Cempasuchil Crown"
+      ],
+      "catalogIds": [
+        "pokemon:355:standard:legacy:Duskull%20(Cempasuchil)",
+        "pokemon:355:standard:legacy:Duskull%20Cempasuchil%20Crown"
+      ],
+      "source": "https://pokemondb.net/sprites/duskull",
+      "recordNames": [
+        "Duskull (Cempasuchil)",
+        "Duskull Cempasuchil Crown"
+      ],
+      "canonicalCatalogId": "pokemon:355:standard:legacy:Duskull%20(Cempasuchil)",
+      "legacyIdsByName": {
+        "Duskull (Cempasuchil)": "pokemon:355:standard:legacy:Duskull%20(Cempasuchil)",
+        "Duskull Cempasuchil Crown": "pokemon:355:standard:legacy:Duskull%20Cempasuchil%20Crown"
+      },
+      "sourceFile": "duskull-cempasuchil-crown.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/duskull-cempasuchil-crown.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0355-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0355-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 359,
+      "primary": "Absol (Fashion)",
+      "names": [
+        "Absol (Fashion)",
+        "Absol Fashionable Costume"
+      ],
+      "catalogIds": [
+        "pokemon:359:standard:legacy:Absol%20(Fashion)",
+        "pokemon:359:standard:legacy:Absol%20Fashionable%20Costume"
+      ],
+      "source": "https://pokemondb.net/sprites/absol",
+      "recordNames": [
+        "Absol (Fashion)",
+        "Absol Fashionable Costume"
+      ],
+      "canonicalCatalogId": "pokemon:359:standard:legacy:Absol%20(Fashion)",
+      "legacyIdsByName": {
+        "Absol (Fashion)": "pokemon:359:standard:legacy:Absol%20(Fashion)",
+        "Absol Fashionable Costume": "pokemon:359:standard:legacy:Absol%20Fashionable%20Costume"
+      },
+      "sourceFile": "absol-fashion.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/absol-fashion.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0359-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0359-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 393,
+      "primary": "Piplup (Halloween)",
+      "names": [
+        "Piplup (Halloween)",
+        "Piplup Halloween Mischief"
+      ],
+      "catalogIds": [
+        "pokemon:393:standard:legacy:Piplup%20(Halloween)",
+        "pokemon:393:standard:legacy:Piplup%20Halloween%20Mischief"
+      ],
+      "source": "https://pokemondb.net/sprites/piplup",
+      "recordNames": [
+        "Piplup (Halloween)",
+        "Piplup Halloween Mischief"
+      ],
+      "canonicalCatalogId": "pokemon:393:standard:legacy:Piplup%20(Halloween)",
+      "legacyIdsByName": {
+        "Piplup (Halloween)": "pokemon:393:standard:legacy:Piplup%20(Halloween)",
+        "Piplup Halloween Mischief": "pokemon:393:standard:legacy:Piplup%20Halloween%20Mischief"
+      },
+      "sourceFile": "piplup-halloween-mischief.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/piplup-halloween-mischief.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0393-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0393-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 426,
+      "primary": "Drifblim (Halloween)",
+      "names": [
+        "Drifblim (Halloween)",
+        "Drifblim Halloween Mischief"
+      ],
+      "catalogIds": [
+        "pokemon:426:standard:legacy:Drifblim%20(Halloween)",
+        "pokemon:426:standard:legacy:Drifblim%20Halloween%20Mischief"
+      ],
+      "source": "https://pokemondb.net/sprites/drifblim",
+      "recordNames": [
+        "Drifblim (Halloween)",
+        "Drifblim Halloween Mischief"
+      ],
+      "canonicalCatalogId": "pokemon:426:standard:legacy:Drifblim%20(Halloween)",
+      "legacyIdsByName": {
+        "Drifblim (Halloween)": "pokemon:426:standard:legacy:Drifblim%20(Halloween)",
+        "Drifblim Halloween Mischief": "pokemon:426:standard:legacy:Drifblim%20Halloween%20Mischief"
+      },
+      "sourceFile": "drifblim-halloween-mischief.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/drifblim-halloween-mischief.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0426-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0426-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 453,
+      "primary": "Croagunk (Cap)",
+      "names": [
+        "Croagunk (Cap)",
+        "Croagunk Backwards Cap"
+      ],
+      "catalogIds": [
+        "pokemon:453:standard:legacy:Croagunk%20(Cap)",
+        "pokemon:453:standard:legacy:Croagunk%20Backwards%20Cap"
+      ],
+      "source": "https://pokemondb.net/sprites/croagunk",
+      "recordNames": [
+        "Croagunk (Cap)",
+        "Croagunk Backwards Cap"
+      ],
+      "canonicalCatalogId": "pokemon:453:standard:legacy:Croagunk%20(Cap)",
+      "legacyIdsByName": {
+        "Croagunk (Cap)": "pokemon:453:standard:legacy:Croagunk%20(Cap)",
+        "Croagunk Backwards Cap": "pokemon:453:standard:legacy:Croagunk%20Backwards%20Cap"
+      },
+      "sourceFile": "croagunk-cap.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/croagunk-cap.png",
+        "female": "assets/sprites/go/croagunk-cap-f.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0453-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0453-00-00-01-female-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 522,
+      "primary": "Blitzle (Collar)",
+      "names": [
+        "Blitzle (Collar)",
+        "Blitzle Fashionable"
+      ],
+      "catalogIds": [
+        "pokemon:522:standard:legacy:Blitzle%20(Collar)",
+        "pokemon:522:standard:legacy:Blitzle%20Fashionable"
+      ],
+      "source": "https://pokemondb.net/sprites/blitzle",
+      "recordNames": [
+        "Blitzle (Collar)",
+        "Blitzle Fashionable"
+      ],
+      "canonicalCatalogId": "pokemon:522:standard:legacy:Blitzle%20(Collar)",
+      "legacyIdsByName": {
+        "Blitzle (Collar)": "pokemon:522:standard:legacy:Blitzle%20(Collar)",
+        "Blitzle Fashionable": "pokemon:522:standard:legacy:Blitzle%20Fashionable"
+      },
+      "sourceFile": "blitzle-fashion.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/blitzle-fashion.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0522-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0522-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 613,
+      "primary": "Cubchoo (Bow)",
+      "names": [
+        "Cubchoo (Bow)",
+        "Cubchoo Holidays"
+      ],
+      "catalogIds": [
+        "pokemon:613:standard:legacy:Cubchoo%20(Bow)",
+        "pokemon:613:standard:legacy:Cubchoo%20Holidays"
+      ],
+      "source": "https://pokemondb.net/sprites/cubchoo",
+      "recordNames": [
+        "Cubchoo (Bow)",
+        "Cubchoo Holidays"
+      ],
+      "canonicalCatalogId": "pokemon:613:standard:legacy:Cubchoo%20(Bow)",
+      "legacyIdsByName": {
+        "Cubchoo (Bow)": "pokemon:613:standard:legacy:Cubchoo%20(Bow)",
+        "Cubchoo Holidays": "pokemon:613:standard:legacy:Cubchoo%20Holidays"
+      },
+      "sourceFile": "cubchoo-holiday.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/cubchoo-holiday.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0613-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0613-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-art-identity-aliases",
+      "no": 656,
+      "primary": "Froakie (Halloween)",
+      "names": [
+        "Froakie (Halloween)",
+        "Froakie Witch Hat"
+      ],
+      "catalogIds": [
+        "pokemon:656:standard:legacy:Froakie%20(Halloween)",
+        "pokemon:656:standard:legacy:Froakie%20Witch%20Hat"
+      ],
+      "source": "https://pokemondb.net/sprites/froakie",
+      "recordNames": [
+        "Froakie (Halloween)",
+        "Froakie Witch Hat"
+      ],
+      "canonicalCatalogId": "pokemon:656:standard:legacy:Froakie%20(Halloween)",
+      "legacyIdsByName": {
+        "Froakie (Halloween)": "pokemon:656:standard:legacy:Froakie%20(Halloween)",
+        "Froakie Witch Hat": "pokemon:656:standard:legacy:Froakie%20Witch%20Hat"
+      },
+      "sourceFile": "froakie-halloween.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/froakie-halloween.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0656-00-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0656-00-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Average Size",
+      "names": [
+        "Pumpkaboo Average Size",
+        "Pumpkaboo - Average"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Average"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Average Size",
+        "Pumpkaboo - Average"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Average Size": "pokemon:710:standard:legacy:Pumpkaboo%20Average%20Size",
+        "Pumpkaboo - Average": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Average"
+      },
+      "sourceFile": "pumpkaboo-average.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-average.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-02-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-02-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Small Size",
+      "names": [
+        "Pumpkaboo Small Size",
+        "Pumpkaboo - Small"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Small"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Small Size",
+        "Pumpkaboo - Small"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Small Size": "pokemon:710:standard:legacy:Pumpkaboo%20Small%20Size",
+        "Pumpkaboo - Small": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Small"
+      },
+      "sourceFile": "pumpkaboo-small.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-small.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-01-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-01-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Large Size",
+      "names": [
+        "Pumpkaboo Large Size",
+        "Pumpkaboo - Large"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Large"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Large Size",
+        "Pumpkaboo - Large"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Large Size": "pokemon:710:standard:legacy:Pumpkaboo%20Large%20Size",
+        "Pumpkaboo - Large": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Large"
+      },
+      "sourceFile": "pumpkaboo-large.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-large.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-03-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-03-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-ordinary-form-size-aliases",
+      "no": 710,
+      "primary": "Pumpkaboo Super Size",
+      "names": [
+        "Pumpkaboo Super Size",
+        "Pumpkaboo - Super"
+      ],
+      "catalogIds": [
+        "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+        "pokemon:710:standard:legacy:Pumpkaboo%20-%20Super"
+      ],
+      "source": "https://pokemondb.net/sprites/pumpkaboo",
+      "recordNames": [
+        "Pumpkaboo Super Size",
+        "Pumpkaboo - Super"
+      ],
+      "canonicalCatalogId": "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+      "legacyIdsByName": {
+        "Pumpkaboo Super Size": "pokemon:710:standard:legacy:Pumpkaboo%20Super%20Size",
+        "Pumpkaboo - Super": "pokemon:710:standard:legacy:Pumpkaboo%20-%20Super"
+      },
+      "sourceFile": "pumpkaboo-super.png",
+      "exactAssetProof": {
+        "default": "assets/sprites/go/pumpkaboo-super.png",
+        "shiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png",
+        "femaleShiny": "assets/sprites/go/pogorewind-consolidated-0710-00-04-shiny.png"
+      }
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Holiday 2020)",
+      "names": [
+        "Pikachu (Holiday 2020)",
+        "Pikachu Winter Carnival Outfit",
+        "Pikachu (Holiday 2022)",
+        "Pikachu (Holiday 2024)"
+      ],
+      "recordNames": [
+        "Pikachu (Holiday 2020)",
+        "Pikachu Winter Carnival Outfit",
+        "Pikachu (Holiday 2022)",
+        "Pikachu (Holiday 2024)"
+      ],
+      "canonicalCatalogId": "pokemon:25:costume:PIKACHU_WINTER_2020",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202020)",
+        "pokemon:25:standard:legacy:Pikachu%20Winter%20Carnival%20Outfit",
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
+        "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Holiday 2020)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202020)",
+        "Pikachu Winter Carnival Outfit": "pokemon:25:standard:legacy:Pikachu%20Winter%20Carnival%20Outfit",
+        "Pikachu (Holiday 2022)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
+        "Pikachu (Holiday 2024)": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Halloween 2021)",
+      "names": [
+        "Pikachu (Halloween 2021)",
+        "Pikachu Halloween Mischief",
+        "Pikachu (Halloween 2022)"
+      ],
+      "recordNames": [
+        "Pikachu (Halloween 2021)",
+        "Pikachu Halloween Mischief",
+        "Pikachu (Halloween 2022)"
+      ],
+      "canonicalCatalogId": "pokemon:25:costume:halloween-2021",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202021)",
+        "pokemon:25:standard:legacy:Pikachu%20Halloween%20Mischief",
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Halloween 2021)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202021)",
+        "Pikachu Halloween Mischief": "pokemon:25:standard:legacy:Pikachu%20Halloween%20Mischief",
+        "Pikachu (Halloween 2022)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
+    },
+    {
+      "method": "explicit-reviewed-outfit-return-year-aliases",
+      "no": 25,
+      "primary": "Pikachu (Witch)",
+      "names": [
+        "Pikachu (Witch)",
+        "Pikachu (Halloween 2024)"
+      ],
+      "recordNames": [
+        "Pikachu (Witch)",
+        "Pikachu (Halloween 2024)"
+      ],
+      "canonicalCatalogId": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+      "catalogIds": [
+        "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+        "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)"
+      ],
+      "legacyIdsByName": {
+        "Pikachu (Witch)": "pokemon:25:standard:legacy:Pikachu%20(Witch)",
+        "Pikachu (Halloween 2024)": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)"
+      },
+      "source": "https://github.com/PokeMiners/game_masters",
+      "qualification": "Pinned exact outfit source and GO metadata reviewed; no distinct year-only costume identity established."
+    }
+  ]
+}

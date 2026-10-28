@@ -67,6 +67,22 @@ function requireTrustedOrder(actual,expected,label){
     fail(`${label} differs from trusted-control frontend manifest at index ${index}: runtime=${runtime}, trusted=${trusted}; reviewed inventory changes require a new immutable control revision and dispatcher selector`);
   }
 }
+function referencedLocalAssets(root,allowlist){
+  const references=[];
+  const add=(value,source)=>{
+    if(!value||/^(?:data:|https?:|#|blob:|\/\/)/i.test(value))return;
+    const url=new URL(value,`https://example.test/trade-app/${source}`);
+    if(!url.pathname.startsWith('/trade-app/'))fail(`Referenced asset escapes app scope: ${value} in ${source}`);
+    references.push({path:decodeURIComponent(url.pathname.slice('/trade-app/'.length)),source});
+  };
+  const html=readText(root,'index.html');
+  for(const match of html.matchAll(/<img\b[^>]*\bsrc=["']([^"']+)["']/gi))add(match[1],'index.html');
+  for(const source of allowlist.styleFiles)for(const match of readText(root,source).matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi))add(match[1],source);
+  return references;
+}
+function validateReferencedAssets(root,allowlist){
+  for(const reference of referencedLocalAssets(root,allowlist))if(!allowlist.files.includes(reference.path))fail(`Referenced frontend asset omitted from trusted inventory: ${reference.path} in ${reference.source}`);
+}
 function manifestAssets(webManifest){
   const values=[];
   for(const icon of webManifest.icons||[])if(icon.src)values.push(icon.src);
@@ -120,6 +136,7 @@ function validateReleaseCoherence(root,{expectedReleaseId}={}){
   requireTrustedOrder(precache,[...allowlist.styleFiles,...requiredScripts],'Service-worker release graph');
   const lazyPrecache=workerArray(worker,'LAZY_RELEASE_ASSETS');
   requireTrustedOrder(lazyPrecache,allowlist.lazyScriptFiles,'Service-worker lazy release graph');
+  validateReferencedAssets(root,allowlist);
   const declaredAssets=manifestAssets(webManifest);
   for(const asset of declaredAssets)if(!allowlist.assetFiles.includes(asset))fail(`Web manifest asset is not allowlisted: ${asset}`);
   for(const required of ['index.html','manifest.json','sw.js','js/domain/clientRelease.js'])if(!allowlist.files.includes(required))fail(`Required runtime file omitted: ${required}`);
@@ -192,4 +209,4 @@ function main(){
 }
 if(require.main===module){try{main();}catch(error){console.error(error.message);process.exitCode=1;}}
 
-module.exports={SHA_RE,RELEASE_RE,CONTROL_SELECTOR_PREFIX,FORBIDDEN_PREFIXES,CONTROL_ROOT,normalizeSha,normalizeReleaseId,runtimeReleaseTag,controlSelectorTag,loadFrontendManifest,validateReleaseCoherence,validateDispatchContext,validateGitHistory,expectedConfirmation};
+module.exports={SHA_RE,RELEASE_RE,CONTROL_SELECTOR_PREFIX,FORBIDDEN_PREFIXES,CONTROL_ROOT,normalizeSha,normalizeReleaseId,runtimeReleaseTag,controlSelectorTag,loadFrontendManifest,referencedLocalAssets,validateReferencedAssets,validateReleaseCoherence,validateDispatchContext,validateGitHistory,expectedConfirmation};

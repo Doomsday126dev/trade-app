@@ -14,10 +14,10 @@
   },
   "maintenanceCandidate": {
     "baseCommit": "bf4a7e437545833e515bd7518fede39f209279e1",
-    "canonicalRecords": 391,
-    "exactArtworkRecords": 375,
-    "pendingArtworkRecords": 16,
-    "excludedRows": 16
+    "canonicalRecords": 402,
+    "exactArtworkRecords": 395,
+    "pendingArtworkRecords": 7,
+    "excludedRows": 7
   },
   "reasonCategories": [
     "accepted-source-missing",
@@ -42,120 +42,6 @@
     }
   },
   "entries": [
-    {
-      "canonicalCostumeId": "announcement:2026-horizons:4:friede-goggles",
-      "displayIdentity": "Charmander (Friede's Goggles)",
-      "species": {
-        "dex": 4,
-        "name": "Charmander"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "2a742da9be39df4920d421d54a05cfbb366150e090c033235d69d3bedeebad57"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The primary event evidence confirms this released identity. The October 19 accepted-source review found no exact Charmander (Friede's Goggles) sprite."
-      },
-      "nextReviewAction": "Review exact Charmander wearing Friede's goggles artwork when it appears in the accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "friede"
-        ],
-        [
-          "goggles"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/charmander",
-      "reviewedCandidateFiles": [],
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "announcement:2026-horizons:5:friede-goggles",
-      "displayIdentity": "Charmeleon (Friede's Goggles)",
-      "species": {
-        "dex": 5,
-        "name": "Charmeleon"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "2a742da9be39df4920d421d54a05cfbb366150e090c033235d69d3bedeebad57"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The primary event evidence confirms this released identity. The October 19 accepted-source review found no exact Charmeleon (Friede's Goggles) sprite."
-      },
-      "nextReviewAction": "Review exact Charmeleon wearing Friede's goggles artwork; Charmander art is not an acceptable substitute.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "friede"
-        ],
-        [
-          "goggles"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/charmeleon",
-      "reviewedCandidateFiles": [],
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "announcement:2026-horizons:6:friede-goggles",
-      "displayIdentity": "Charizard (Friede's Goggles)",
-      "species": {
-        "dex": 6,
-        "name": "Charizard"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "identityStatus": "released",
-      "artworkStatus": "unavailable",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "identityEvidence": {
-        "url": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
-        "retrievedAt": "2026-09-22T21:15:29Z",
-        "sha256": "2a742da9be39df4920d421d54a05cfbb366150e090c033235d69d3bedeebad57"
-      },
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The primary event evidence confirms this released identity. The October 19 accepted-source review found no exact Charizard (Friede's Goggles) sprite."
-      },
-      "nextReviewAction": "Review exact Charizard wearing Friede's goggles artwork; earlier evolution art is not an acceptable substitute.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "friede"
-        ],
-        [
-          "goggles"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/charizard",
-      "reviewedCandidateFiles": [],
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Gloria)",
       "displayIdentity": "Pikachu (Gloria)",
@@ -355,107 +241,6 @@
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     },
     {
-      "canonicalCostumeId": "pokemon:216:standard:legacy:Teddiursa%20Witch%20Hat",
-      "displayIdentity": "Teddiursa Witch Hat",
-      "species": {
-        "dex": 216,
-        "name": "Teddiursa"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The accepted Teddiursa GO gallery contains only teddiursa.png, with no witch-hat version. The official Halloween 2025 announcement confirms the costume but does not grant image reuse."
-      },
-      "nextReviewAction": "Wait for an accepted Teddiursa witch-hat sprite or separately documented source permission.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "witch"
-        ],
-        [
-          "halloween",
-          "2025"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/teddiursa",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:217:standard:legacy:Ursaring%20Witch%20Hat",
-      "displayIdentity": "Ursaring Witch Hat",
-      "species": {
-        "dex": 217,
-        "name": "Ursaring"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The accepted Ursaring GO gallery contains only ordinary male/female sprites, with no witch-hat version. An evolved costume must have its own exact art."
-      },
-      "nextReviewAction": "Review an Ursaring witch-hat asset; neither base Ursaring nor Teddiursa art is acceptable.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "witch"
-        ],
-        [
-          "halloween",
-          "2025"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/ursaring",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
-      "displayIdentity": "Galarian Corsola Pink Sunglasses",
-      "species": {
-        "dex": 222,
-        "name": "Galarian Corsola"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The official Sustainability Week announcement confirms Galarian Corsola with pink sunglasses. The accepted gallery contains ordinary Corsola and Galarian Corsola only, neither wearing sunglasses."
-      },
-      "nextReviewAction": "Review the Galarian pink-sunglasses version; reject ordinary Galarian or Johto Corsola.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "pink"
-        ],
-        [
-          "sunglasses"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/corsola",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
       "canonicalCostumeId": "pokemon:287:standard:legacy:Slakoth%20(Night%20Cap)",
       "displayIdentity": "Slakoth (Night Cap)",
       "species": {
@@ -524,108 +309,6 @@
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
       "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:714:standard:legacy:Noibat%20Headband",
-      "displayIdentity": "Noibat Headband",
-      "species": {
-        "dex": 714,
-        "name": "Noibat"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The accepted Noibat GO gallery contains only noibat.png, without a headband. The official Halloween 2025 announcement is identity evidence, not an artwork license."
-      },
-      "nextReviewAction": "Review exact Noibat headband artwork from an accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "headband"
-        ],
-        [
-          "halloween",
-          "2025"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/noibat",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:715:standard:legacy:Noivern%20Headband",
-      "displayIdentity": "Noivern Headband",
-      "species": {
-        "dex": 715,
-        "name": "Noivern"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The accepted Noivern GO gallery contains only noivern.png, without a headband. Noibat's headband image cannot stand in for its evolution."
-      },
-      "nextReviewAction": "Review exact Noivern headband artwork from an accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "headband"
-        ],
-        [
-          "halloween",
-          "2025"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/noivern",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
-    },
-    {
-      "canonicalCostumeId": "pokemon:901:standard:legacy:Ursaluna%20Witch%20Hat",
-      "displayIdentity": "Ursaluna Witch Hat",
-      "species": {
-        "dex": 901,
-        "name": "Ursaluna"
-      },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "accepted-source-missing",
-      "acceptedSourcesChecked": [
-        "pokemon-db-go-sprites"
-      ],
-      "candidate": {
-        "exactImageFound": false,
-        "decision": "not-found",
-        "reason": "The accepted Ursaluna GO gallery contains only ursaluna.png, without a witch hat. Neither base Ursaluna nor an earlier evolution's costume is exact."
-      },
-      "nextReviewAction": "Review exact Ursaluna witch-hat artwork from an accepted source.",
-      "lastReviewedDate": "2026-10-19",
-      "searchTerms": [
-        [
-          "witch"
-        ],
-        [
-          "halloween",
-          "2025"
-        ]
-      ],
-      "acceptedSourcePage": "https://pokemondb.net/sprites/ursaluna",
-      "reviewedCandidateFiles": [],
-      "artworkStatus": "unavailable",
-      "identityStatus": "released",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
     }
   ],
   "reviewScope": "All 127 accepted-source GO galleries compared live on 2026-09-22 with no changes; all 21 inherited unavailable identities re-reviewed. Four September announcements are recorded as released with artwork unavailable, and two October identities remain announced.",
@@ -687,7 +370,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",

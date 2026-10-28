@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-10-19",
-  "coverage": "Public News index and costume-bearing announcements reviewed October 19, 2026. Astronaut and Batik confirmed released; Blue PokéXciting confirmed already available; three Halloween October 27 debuts queued. Events requires sign-in. This is a bounded manual review, not a complete history or exhaustive feed.",
+  "lastReviewedDate": "2026-10-27",
+  "coverage": "Bounded manual review of the current public News index and costume-bearing Halloween Part I/II, Singapore PokeXciting and Festival of Lights announcements on October 27, 2026. Events remains sign-in-only and was not accessed. Halloween debut date has arrived, but field release confirmation and exact-art qualification remain unresolved; this review does not mark them released or complete. Not an exhaustive release history.",
   "reviewSources": [
     "https://pokemongo.com/news",
     "https://pokemongo.com/events"
@@ -28,7 +28,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       }
     },
     {
@@ -52,7 +52,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       }
     },
     {
@@ -179,7 +179,7 @@
       "catalogName": "Charmander (Friede's Goggles)",
       "dex": 4,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -196,7 +196,7 @@
       "catalogName": "Charmeleon (Friede's Goggles)",
       "dex": 5,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -213,7 +213,7 @@
       "catalogName": "Charizard (Friede's Goggles)",
       "dex": 6,
       "releaseDate": "2026-09-16",
-      "dateMeaning": "Released during the official September 16–22, 2026 local-time event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 16\u201322, 2026 local-time event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "unavailable",
@@ -230,7 +230,7 @@
       "catalogName": "Pikachu (PokeXciting Turquoise)",
       "dex": 25,
       "releaseDate": "2026-09-12",
-      "dateMeaning": "Released during the official September 12–13, 2026 Kuala Lumpur event; primary announcement reverified September 22",
+      "dateMeaning": "Released during the official September 12\u201313, 2026 Kuala Lumpur event; primary announcement reverified September 22",
       "evidenceUrl": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
@@ -264,7 +264,7 @@
       "catalogName": "Pikachu (Astronaut)",
       "dex": 25,
       "releaseDate": "2026-10-04",
-      "dateMeaning": "Announced debut for the official October 4–10, 2026 local-time event",
+      "dateMeaning": "Announced debut for the official October 4\u201310, 2026 local-time event",
       "evidenceUrl": "https://pokemongo.com/news/world-space-week-2026",
       "lifecycleStatus": "released",
       "artworkStatus": "exact-reviewed",
@@ -298,51 +298,256 @@
       "catalogName": "Pikachu (Hat and Capelet)",
       "dex": 25,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
-        "retrievedAt": "2026-10-19T16:43:27.113Z",
-        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
-        "result": "announced"
-      }
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     },
     {
       "id": "announcement:2026-halloween:zubat-top-hat",
       "catalogName": "Zubat (Top Hat)",
       "dex": 41,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
-        "retrievedAt": "2026-10-19T16:43:27.113Z",
-        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
-        "result": "announced"
-      }
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
     },
     {
       "id": "announcement:2026-halloween:sinistea-bow",
       "catalogName": "Sinistea (Bow)",
       "dex": 854,
       "releaseDate": "2026-10-27",
-      "dateMeaning": "Announced debut for Halloween Part I, 10 a.m. local time; not yet released at review.",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
       "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
-      "lifecycleStatus": "announced",
-      "artworkStatus": "unavailable",
-      "lastVerifiedAt": "2026-10-19T16:43:27.113Z",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
       "evidenceRetrieval": {
         "url": "https://pokemongo.com/news/halloween-part-1-2026",
-        "retrievedAt": "2026-10-19T16:43:27.113Z",
-        "sha256": "bebdd323f9a7f174f713eccf8f7f92871b6eadd99754fd7b3d95614f90b128ba",
-        "result": "announced"
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
+    },
+    {
+      "id": "pokemon:25:costume:orange-hanbok-2026",
+      "catalogName": "Pikachu (Orange Hanbok)",
+      "dex": 25,
+      "releaseDate": "2026-09-18",
+      "dateMeaning": "Official debut September 18, 2026 at 10:00 Korea time; nationwide encounter September 24\u201326 is not first debut.",
+      "evidenceUrl": "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-26T21:46:57Z",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026",
+        "retrievedAt": "2026-10-26T21:46:57Z",
+        "sha256": "00cda5247a7b1d2e107350969dcf332bef7350a14953452a1813a5c0d69c2670",
+        "result": "released"
+      },
+      "qualification": "Official announcement explicitly confirms Shiny. Female-only eligibility additionally relies on the documented collector mapping and the inspected female-tail source art; not an official gender statement."
+    },
+    {
+      "id": "announcement:2026-halloween:sinistea-bow:phony",
+      "catalogName": "Sinistea (Bow, Phony)",
+      "dex": 854,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
+    },
+    {
+      "id": "announcement:2026-halloween:sinistea-bow:antique",
+      "catalogName": "Sinistea (Bow, Antique)",
+      "dex": 854,
+      "releaseDate": "2026-10-27",
+      "dateMeaning": "October 27 10 a.m. local: regionally active per official schedule plus current Serebii event/Shiny listings; not worldwide UTC-midnight activation or first-hand encounter capture.",
+      "evidenceUrl": "https://pokemongo.com/news/halloween-part-1-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+        "result": "official local start and all three Shiny debuts independently corroborated by current event and Shiny listings"
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+          "retrievedAt": "2026-10-27T02:02:30.186126+00:00",
+          "sha256": "202cef82ed05eb196f93c97d475f28766907e97141ecb1448c1e499bb3cbcd53"
+        },
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "a244fd8e6c4b8115ba580404073e0a90e0216274baa4dd0e613e8ffb92129fb2",
+          "claim": "Available when encountered"
+        }
+      ],
+      "artReview": "data/halloween2026-art-review.json"
+    },
+    {
+      "id": "pokemon:999:standard:legacy:Gimmighoul%20(10th%20Anniversary%20Coin)",
+      "catalogName": "Gimmighoul (10th Anniversary Coin)",
+      "dex": 999,
+      "releaseDate": "2026-07-04",
+      "evidenceUrl": "https://pokemongo.com/news/10th-anniversary-party",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T09:16:05.293197+00:00",
+      "artReview": "data/dittobase-reviewed-costume-assets.json",
+      "qualification": "Official costume/Shiny debut plus independently labelled exact normal/Shiny images, compared against separate ninth-anniversary art.",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/10th-anniversary-party",
+        "retrievedAt": "2026-10-27T08:34:04.917983+00:00",
+        "sha256": "b7096892ca30cd92d1de424ecc7b89228c33558acaad6c6ccf678e848ac4102f",
+        "result": "official-released-normal-and-shiny-costume"
       }
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Blue%20Shirt%20(Citrus))",
+      "catalogName": "Pikachu (Blue Shirt (Citrus))",
+      "dex": 25,
+      "releaseDate": "2023-07-28",
+      "evidenceUrl": "https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T09:16:05.293197+00:00",
+      "artReview": "data/serebii-reviewed-costume-assets.json",
+      "qualification": "Historical release uses archived GO Hub and Serebii evidence. Original official event page is 404. Separate explicit identity; saved generic Jeju values are not relabelled.",
+      "evidenceType": "reviewed-historical-secondary",
+      "evidenceRetrieval": {
+        "url": "https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/",
+        "retrievedAt": "2026-10-27T09:15:44.400904+00:00",
+        "http": 200,
+        "sha256": "68ca7be1912583f4885edf78565a32a59c22886d76f9deaf9db2bd9e584cc53e",
+        "bytes": 401493,
+        "result": "archived-historical-release-correlated-with-exact-current-Shiny-inventory"
+      },
+      "originalOfficialEvidence": {
+        "url": "https://pokemongolive.com/events/airadventures-jejuisland",
+        "status": 404,
+        "result": "retired-original-event-link",
+        "qualification": "Not used as proof of release; archived report and independent GO/Shiny inventory supply the evidence."
+      },
+      "corroboratingEvidence": [
+        {
+          "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+          "snapshotSha256": "6b44bfccccbbea49167f6ca9f43ff767931844b4ce2b27790b2ea08758b4ee83",
+          "claim": "Exact Citrus Shirt label, Available when encountered"
+        }
+      ]
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+      "catalogName": "Pikachu (PokeXciting Taiwan)",
+      "dex": 25,
+      "releaseDate": "2026-10-10",
+      "evidenceUrl": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "lifecycleStatus": "released",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T10:06:58.122544+00:00",
+      "artReview": "data/dittobase-reviewed-costume-assets.json",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+        "retrievedAt": "2026-10-27T09:41:55.893980+00:00",
+        "sha256": "f3dd7765c376f2fbda0721a4228f386a3a207dcd61ca107eefa428173b12c8bc",
+        "result": "official-regional-costume-and-shiny-announcement"
+      },
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29",
+      "catalogName": "Pikachu (PokeXciting Philippines)",
+      "dex": 25,
+      "releaseDate": "2027-01-23",
+      "evidenceUrl": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "lifecycleStatus": "announced",
+      "artworkStatus": "exact-reviewed",
+      "lastVerifiedAt": "2026-10-27T10:06:58.122544+00:00",
+      "artReview": "data/dittobase-reviewed-costume-assets.json",
+      "evidenceRetrieval": {
+        "url": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+        "retrievedAt": "2026-10-27T09:41:55.893980+00:00",
+        "sha256": "f3dd7765c376f2fbda0721a4228f386a3a207dcd61ca107eefa428173b12c8bc",
+        "result": "official-regional-costume-and-shiny-announcement"
+      },
+      "qualification": "Official region-exclusive variant announcement and exact region-labelled originals. Taiwan also independently listed in GO Shiny inventory; event is past. Philippines dedicated event is future; earlier cross-region obtainability is unverified. Wants remain allowed regardless of release evidence."
     }
   ],
   "followUpEvidence": [
@@ -409,7 +614,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",
@@ -466,5 +671,99 @@
         "result": "returning-existing-identity"
       }
     }
-  }
+  },
+  "additionalReviews": [
+    {
+      "ids": [
+        "announcement:2026-halloween:pikachu-hat-capelet",
+        "announcement:2026-halloween:zubat-top-hat",
+        "announcement:2026-halloween:sinistea-bow",
+        "announcement:2026-halloween:sinistea-bow:phony",
+        "announcement:2026-halloween:sinistea-bow:antique"
+      ],
+      "reviewedAt": "2026-10-27T02:36:33.145209+00:00",
+      "evidence": {
+        "url": "https://pokemongo.com/news/halloween-part-1-2026",
+        "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+        "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c"
+      },
+      "artReview": "data/halloween2026-art-review.json",
+      "qualification": "Per-player local time. At review, scheduled window has begun in Pacific/Auckland and Pacific/Kiritimati; still future in America/New_York. Official timetable plus current availability listings, not first-hand game encounter evidence or UTC-midnight activation."
+    },
+    {
+      "reviewedAt": "2026-10-26T21:46:57Z",
+      "ids": [
+        "pokemon:25:costume:orange-hanbok-2026"
+      ],
+      "scope": "Orange Hanbok announcement only; does not refresh older announcement/source reviews."
+    },
+    {
+      "reviewedAt": "2026-10-27T01:39:15.988457+00:00",
+      "scope": "Current public News headlines and the relevant costume announcements listed in evidence; no automatic release acknowledgement.",
+      "sources": [
+        {
+          "url": "https://pokemongo.com/news",
+          "retrievedAt": "2026-10-27T01:39:14.982805+00:00",
+          "sha256": "3be5dbbef33c37df1391b7495c3b36c9781bbad60981c5bd6d3acf3eeb8539a4",
+          "status": 200
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-1-2026",
+          "retrievedAt": "2026-10-27T01:39:15.230172+00:00",
+          "sha256": "b018434e6bf6d3d329fb3edf9ee8105503de33d409607aeb5db61b884be3089c",
+          "status": 200
+        },
+        {
+          "url": "https://pokemongo.com/news/halloween-part-2-2026",
+          "retrievedAt": "2026-10-27T01:39:15.488257+00:00",
+          "sha256": "787b0376bb0c0e36917d0523c9ffb1ae3f693c97a9a0787392e1f48cb62630dd",
+          "status": 200
+        },
+        {
+          "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+          "retrievedAt": "2026-10-27T01:39:15.718273+00:00",
+          "sha256": "07834f66c44291ce6af0195230323758497546b60b13c7f4e8a9673fc60952fd",
+          "status": 200
+        },
+        {
+          "url": "https://pokemongo.com/news/festival-of-lights-2026",
+          "retrievedAt": "2026-10-27T01:39:15.988457+00:00",
+          "sha256": "cff1a7aa28853be2ccf5c2e7744c2fcbb293b4dc9019afa9e3b957efc0a7e81e",
+          "status": 200
+        }
+      ],
+      "limitations": [
+        "Events index requires sign-in; not accessed.",
+        "Halloween three costume records remain announced/unconfirmed and missing exact artwork.",
+        "No gap baseline, expiry, release eligibility, assets or saved data changed."
+      ],
+      "findings": [
+        "Halloween Part I advertises Pikachu hat/capelet, Zubat top hat and Sinistea bow from October 27 10 a.m. local with Shiny eligibility; release/art verification remains open.",
+        "Halloween Part II advertises Shiny Greavard from November 1, not currently released by this evidence.",
+        "Singapore Blue PokeXciting stamp encounter is described as already live; existing Blue identity remains distinct from November 7-8 event content.",
+        "Festival of Lights returns existing saree/kurta identities; no new costume inferred."
+      ],
+      "ids": [
+        "announcement:2026-halloween:pikachu-hat-capelet",
+        "announcement:2026-halloween:zubat-top-hat",
+        "announcement:2026-halloween:sinistea-bow"
+      ]
+    },
+    {
+      "ids": [
+        "pokemon:999:standard:legacy:Gimmighoul%20(10th%20Anniversary%20Coin)",
+        "pokemon:25:standard:legacy:Pikachu%20(Blue%20Shirt%20(Citrus))"
+      ],
+      "reviewedAt": "2026-10-27T09:16:05.293197+00:00",
+      "scope": "Two independently reviewed historical costume additions; retired official Jeju source remains explicit."
+    },
+    {
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "ids": [
+        "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Taiwan%29",
+        "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29"
+      ],
+      "scope": "Taiwan and Philippines exact regional identities; announced Philippines wants remain selectable."
+    }
+  ]
 }

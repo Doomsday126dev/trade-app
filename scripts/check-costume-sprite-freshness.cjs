@@ -94,9 +94,44 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     const reviewed=new Set(entry.reviewedCandidateFiles||[]);
     candidates.push({identity:entry.displayIdentity,canonicalCostumeId:entry.canonicalCostumeId,url:page?.url,blocker:entry.candidate.reason,matches,unreviewed:matches.filter(row=>!reviewed.has(row.file))});
   }
-  for(const record of catalog.entries){
+  for(const current of catalog.entries){
+    let record=current;
+    if(current.variantArtworkReview){try{const review=require('./sprites/variant-art-review.cjs'),proof=review.proofRegister(root).find(r=>r.name===current.names[0]);review.validateVariantArtworkReview(current,root);record=review.retainedEntry(current,proof);}catch(error){problems.push({kind:'source-provenance',identity:current.names[0],message:error.message});continue;}}
     if(record.status==='unavailable'&&!pending.entries.some(entry=>findEntry(entry.displayIdentity,entry.species.dex)===record))problems.push({kind:'untracked-unavailable',identity:record.names[0]});
     if(record.status!=='exact')continue;
+    if(record.pinnedArtworkReview){
+      try{require('./sprites/pinned-pikachu-review.cjs').validatePinnedReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+      if(record.sourceProvider==='pogorewind-reviewed')continue;
+    }
+    if(record.shinyArtworkReview){
+      const proof=JSON.parse(fs.readFileSync(path.join(root,'data/classic-pikachu-shiny-assets.json'))).records.find(r=>r.name===record.names[0]);
+      if(!proof||JSON.stringify(proof)!==JSON.stringify(record.shinyArtworkReview)||['shiny','femaleShiny'].some(k=>record.assets[k]!==proof.assets[k]||record.sha256[k]!==proof.sha256[k]))problems.push({kind:'source-provenance',identity:record.names[0]});
+    }
+    if(record.starterShinyArtworkReview){
+      try{require('./sprites/starter-shiny-review.cjs').validateStarterShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
+    if(record.formShinyArtworkReview){
+      try{require('./sprites/form-shiny-review.cjs').validateFormShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
+    if(record.consolidatedShinyArtworkReview){
+      try{require('./sprites/consolidated-shiny-review.cjs').validateConsolidatedShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
+    if(record.costume20ShinyArtworkReview){
+      try{require('./sprites/costume20-shiny-review.cjs').validateCostume20ShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
+    if(record.evolutionShinyArtworkReview){
+      try{require('./sprites/evolution-shiny-review.cjs').validateEvolutionShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
+    }
+    if(record.sourceProvider==='pokemod-reviewed-released'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-released-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
+      if(!reviewed||['sourceCommit','sourcePage','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','identityEvidence','shinyEvidence'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
+    if(record.sourceProvider==='margxt-reviewed-friede'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/margxt-friede-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
+      if(!reviewed||['sourcePage','sourceUrl','sourceFiles','sourceSha256','assets','sha256','identityEvidence','shinyEvidence','conversion'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
     if(record.sourceProvider==='serebii-reviewed'){
       const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/serebii-reviewed-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
       if(!reviewed||['sourcePage','sourceUrl','sourceFiles','assets','sha256','availableGenders'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
@@ -112,23 +147,32 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
       if(!reviewed||['sourceCommit','sourcePage','sourceUrl','sourceFiles','assets','sha256'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});
       continue;
     }
+    if(record.sourceProvider==='max-form-reviewed'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/max-presentation-asset-review.json'))).records.find(r=>r.names[0]===record.names[0]);
+      if(!reviewed||JSON.stringify(reviewed)!==JSON.stringify(record))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
     const page=snapshot.pages.find(row=>row.url===record.sourcePage&&row.dex===record.no);
     if(!page||!page.files.some(row=>row.file===record.sourceFile)||record.sourceUrl!==IMAGE_PREFIX+record.sourceFile||path.posix.basename(record.assets?.default||'')!==record.sourceFile)problems.push({kind:'source-provenance',identity:record.names[0]});
-    for(const asset of Object.values(record.assets||{})){
+    for(const [key,asset] of Object.entries(record.assets||{})){
+      if((record.shinyArtworkReview||record.pinnedArtworkReview||record.starterShinyArtworkReview||record.formShinyArtworkReview||record.evolutionShinyArtworkReview||record.costume20ShinyArtworkReview||record.consolidatedShinyArtworkReview)&&['shiny','femaleShiny'].includes(key))continue;
       if(!page?.files.some(row=>row.file===path.posix.basename(asset)))problems.push({kind:'asset-source-mapping',identity:record.names[0],asset});
     }
   }
   const releaseIds=new Set();
   const missingIdentities=[],upcomingIdentities=[];
   for(const release of releases.entries){
-    if(!release.id||releaseIds.has(release.id)||!Number.isInteger(release.dex)||!release.catalogName||!/^https:\/\/(?:pokemongo\.com|www\.pokemon\.com)\//.test(release.evidenceUrl)||!Number.isFinite(Date.parse(release.releaseDate)))throw new Error(`Invalid release evidence: ${release.id}`);
+    const official=/^https:\/\/(?:pokemongo\.com|www\.pokemon\.com)\//.test(release.evidenceUrl);
+    const historical=release.evidenceType==='reviewed-historical-secondary'&&release.evidenceUrl==='https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/'&&release.catalogName==='Pikachu (Blue Shirt (Citrus))'&&release.originalOfficialEvidence?.status===404&&/^[0-9a-f]{64}$/.test(release.evidenceRetrieval?.sha256||'')&&release.corroboratingEvidence?.some(row=>row.url==='https://www.serebii.net/pokemongo/shiny.shtml'&&/^[0-9a-f]{64}$/.test(row.snapshotSha256||''));
+    if(!release.id||releaseIds.has(release.id)||!Number.isInteger(release.dex)||!release.catalogName||!(official||historical)||!Number.isFinite(Date.parse(release.releaseDate)))throw new Error(`Invalid release evidence: ${release.id}`);
     releaseIds.add(release.id);
-    // A passed announcement needs human confirmation even when an old catalog
-    // row already exists. Allow two days for worldwide player-local debut dates;
-    // never auto-promote an announcement or download artwork from this check.
-    if(release.lifecycleStatus==='announced'&&now.getTime()>=Date.parse(release.releaseDate)+2*86400000)
-      problems.push({kind:'release-status-review',identity:release.catalogName,releaseDate:release.releaseDate});
-    if(!findEntry(release.catalogName,release.dex)){
+    // A date-only announcement is a review deadline, not proof of release in
+    // any player's timezone. Never turn the clock into release authorization.
+    if(release.lifecycleStatus==='announced'){
+      if(now.getTime()>=Date.parse(release.releaseDate))
+        problems.push({kind:'release-status-review',identity:release.catalogName,releaseDate:release.releaseDate,evidenceUrl:release.evidenceUrl,releaseStatus:'announced-unconfirmed'});
+      else if(!findEntry(release.catalogName,release.dex))upcomingIdentities.push(release);
+    }else if(!findEntry(release.catalogName,release.dex)){
       if(Date.parse(release.releaseDate)<=now.getTime())missingIdentities.push(release);
       else upcomingIdentities.push(release);
     }

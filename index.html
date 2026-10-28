@@ -6,17 +6,17 @@
 <!-- Firebase uses assigned RTDB shard hosts; analytics is restricted to its exact collector. -->
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://recaptchaenterprise.googleapis.com https://apis.google.com https://accounts.google.com https://trade-list-a4297.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://us-central1-trade-list-a4297.cloudfunctions.net https://www.google.com https://www.recaptcha.net https://recaptcha.google.com https://raw.githubusercontent.com https://doomsday126dev-trade.goatcounter.com">
 <meta name="pogo-traffic-endpoint" content="https://doomsday126dev-trade.goatcounter.com/count">
-<script src="js/services/traffic.js?v=2026-10-26.142" defer></script>
+<script src="js/services/traffic.js?v=2026-10-28.161" defer></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111316">
 <title>PoGo Trade List</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/tradeloop-icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
+<link rel="icon" href="assets/brand/apri-icon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/brand/apri-icon-180.png" sizes="180x180">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-10-26.142';
+window.__POGO_RELEASE_ID='2026-10-28.161';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:true,
@@ -88,7 +88,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-10-26.142">
+<link rel="stylesheet" href="css/app.css?v=2026-10-28.161">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -128,7 +128,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <article id="privacy-pg" class="privacy-page ui-container ui-container-standard" lang="en" aria-labelledby="privacy-title" hidden>
   <header class="privacy-page-header">
-    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
+    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-10-28.161" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
     <a class="btn btn-secondary" href="./">Back to app</a>
   </header>
   <div class="privacy-page-intro">
@@ -152,7 +152,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </section>
   <section aria-labelledby="privacy-services">
     <h2 id="privacy-services">Service providers</h2>
-    <p>Google Firebase provides authentication and data synchronization, and GitHub Pages delivers the website. GoatCounter provides basic traffic counting. It receives only a generic Trade or public-share page category and fixed app title, with no page URL, query, fragment, referrer, trainer/share identifier, collection contents or typed input. Browser-direct requests also expose your network IP address and browser User-Agent to GoatCounter for its approximate session counts; these are not exact counts of people. The integration uses no analytics cookies, persistent identifier or third-party tracking script.</p>
+    <p>Google Firebase provides authentication and data synchronization, and GitHub Pages delivers the website. GoatCounter provides basic traffic counting. It receives only a generic Trade or public-share page category, fixed app title and screen width in CSS pixels (not height or pixel ratio), with no page URL, query, fragment, referrer, trainer/share identifier, collection contents or typed input. Browser-direct requests also expose your network IP address and browser User-Agent to GoatCounter for its approximate session counts; these are not exact counts of people. The integration uses no analytics cookies, persistent identifier or third-party tracking script.</p>
   </section>
   <section aria-labelledby="privacy-choices">
     <h2 id="privacy-choices">Your choices</h2>
@@ -167,7 +167,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-10-28.161" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div style="margin-top:4px"></div>
     <h2 style="font-size:20px;font-weight:700;margin-bottom:5px" data-i18n="setup.title">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6" data-i18n="setup.subtitle">One-time setup. Takes about five minutes.</p>
@@ -187,7 +187,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div id="login-pg" data-bootstrap-pending="true" aria-busy="true">
   <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings" disabled data-bootstrap-disabled="true"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-10-28.161" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <section id="preauth-pg" class="login-bootstrap-status" aria-labelledby="preauth-title" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
       <h1 class="preauth-title" id="preauth-title" data-i18n="app.preparing">Preparing your trade list</h1>
       <p class="preauth-detail sr-only" id="preauth-detail" data-i18n="app.preparingDetail">Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.</p>
@@ -231,7 +231,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="llogo">🙋 <span data-i18n="request.title">Request access</span></div>
       <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
       <div class="field"><label for="req-username" data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
-      <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
+      <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(Optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
       <button type="button" id="request-send" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
       <div class="err" id="req-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
     </div>
@@ -246,10 +246,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- APP -->
 <div id="app" style="display:none">
   <div class="topbar">
-    <div class="logo"><img class="brand-mark" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="logo"><img class="brand-mark" src="assets/brand/apri.webp?v=2026-10-28.161" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="topbar-r">
       <div class="topbar-sync-wrap">
-        <div class="sync-row" id="sync-pill" data-i18n-title="status.details" title="Open save status details" onclick="openSyncDetail()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSyncDetail()}" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
+        <div class="sync-row" id="sync-pill" data-i18n-title="status.details" title="Open save status details" onclick="openSyncDetail()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSyncDetail()}" role="button" tabindex="0"><div class="sync-dot" id="sdot" aria-hidden="true"></div><span class="sync-lbl" id="slbl">—</span></div>
         <div class="sync-queue-dot" id="sqd" data-i18n-title="status.pendingChanges" title="Unsaved changes pending"></div>
       </div>
       <div id="member-community-switcher" class="member-community-switcher" aria-live="polite"></div>
@@ -291,37 +291,22 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   <div class="tabs" role="tablist" aria-label="Main sections" data-i18n-aria-label="app.mainSections">
     <button class="tab active" id="nav-mylist" data-tab="mylist" data-short="List" onclick="switchTab('mylist')" role="tab" aria-selected="true"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-list"></use></svg></span><span class="tab-label">My List</span><span class="tab-short-label" aria-hidden="true">List</span></button>
     <button class="tab" id="nav-find" data-tab="find" data-short="Find" onclick="switchTab('find')" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-search"></use></svg></span><span class="tab-label">Find Trainer</span><span class="tab-short-label" aria-hidden="true">Find</span></button>
-    <button class="tab desktop-events-tab" id="nav-events" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-calendar"></use></svg></span><span class="tab-label" data-i18n="nav.events">Events</span></button>
+    <button class="tab" id="nav-events" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-calendar"></use></svg></span><span class="tab-label" data-i18n="nav.events">Events</span></button>
     <button class="tab" id="nav-more" data-tab="more" onclick="switchTab('more')" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-sliders"></use></svg></span><span class="tab-label" data-i18n="product.more">More</span><span class="tab-short-label" data-i18n="product.more" aria-hidden="true">More</span></button>
     <button class="tab" data-tab="admin" data-short="Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false"><span class="tab-icon-slot" aria-hidden="true"><svg class="ui-icon tab-icon"><use href="#ui-icon-shield"></use></svg></span><span class="tab-label">Admin</span><span class="tab-short-label" aria-hidden="true">Admin</span><span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
-  <div class="page ui-container ui-container-wide more-hub" id="tab-more">
+  <div class="page" id="tab-more">
     <h2 data-i18n="product.more">More</h2>
-    <p class="more-intro" data-i18n="discovery.intro">Trading tools and your app.</p>
-    <div class="more-groups">
-      <section class="more-group" aria-labelledby="more-trading-title">
-        <h3 id="more-trading-title" data-i18n="discovery.trading">Trading</h3>
-        <div class="more-rows">
-          <button type="button" id="more-events" class="more-destination" tabindex="0" onclick="openMoreDestination('events',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-calendar"></use></svg><span><strong data-i18n="nav.events">Events</strong><small data-i18n="discovery.eventsHelp">Upcoming dates and event details.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-          <button type="button" id="more-transfer" class="more-destination" tabindex="0" onclick="openTaskTool('transfer',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span><strong data-i18n="discovery.transfer">Transfer review</strong><small data-i18n="discovery.transferHelp">Review shared wants from trainers you select.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-          <button type="button" id="more-share" class="more-destination" tabindex="0" onclick="openTaskTool('share',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span><strong data-i18n="product.share">Share</strong><small data-i18n="discovery.shareHelp">A public link, image or text of your wants.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-          <button type="button" id="more-import" class="more-destination" tabindex="0" onclick="openTaskTool('import',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-download"></use></svg><span><strong data-i18n="myList.importAction">Import string</strong><small data-i18n="discovery.importHelp">Preview a Pokémon GO search string before adding wants.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-        </div>
-      </section>
-      <section class="more-group" aria-labelledby="more-app-title">
-        <h3 id="more-app-title" data-i18n="discovery.yourApp">Your app</h3>
-        <div class="more-rows">
-          <button type="button" id="more-profile" class="more-destination" tabindex="0" onclick="openMoreDestination('profile',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span><strong data-i18n="settings.sectionProfile">Profile</strong><small data-i18n="discovery.profileHelp">Your trainer identity and shared details.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-          <button type="button" id="more-settings" class="more-destination" tabindex="0" onclick="openMoreDestination('settings',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-settings"></use></svg><span><strong data-i18n="settings.title">Settings</strong><small data-i18n="discovery.settingsHelp">Language, appearance, account and sync.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-          <button type="button" id="more-help" class="more-destination" tabindex="0" onclick="openTaskTool('help',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span><strong data-i18n="discovery.help">Help &amp; shortcuts</strong><small data-i18n="discovery.helpDescription">Get around the app with your keyboard.</small></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-        </div>
-      </section>
-      <section class="more-group more-admin" id="more-admin-group" hidden aria-labelledby="more-admin-title">
-        <h3 id="more-admin-title" data-i18n="nav.admin">Admin</h3>
-        <div class="more-rows"><button type="button" class="more-destination" tabindex="0" id="more-admin-link" hidden onclick="openMoreDestination('admin',this)"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span><strong data-i18n="nav.admin">Admin</strong></span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button></div>
-      </section>
+    <p class="more-intro" data-i18n="apri.moreIntro">Your account, preferences, and a little help.</p>
+    <button type="button" class="more-profile" onclick="openSettingsPanel('account',{section:'profile',returnFocus:this})"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionProfile">Profile</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+    <div class="more-grid">
+      <section class="more-group" aria-labelledby="more-preferences"><h3 id="more-preferences" data-i18n="apri.preferences">Account &amp; preferences</h3>
+<button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'security',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-key"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionSecurity">Account & Security</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'appearance',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-sun"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionAppearance">Appearance</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'language',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionLanguage">Language</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'tools',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionTools">Tools</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSettingsPanel('account',{section:'data',returnFocus:this})"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg><span class="more-entry-copy"><strong data-i18n="settings.sectionData">App & Data</strong><small data-i18n="apri.dataHelp">Sync status, storage, and app information.</small></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button></section>
+      <section class="more-group" aria-labelledby="more-help"><h3 id="more-help" data-i18n="apri.help">Help &amp; information</h3>
+<button type="button" class="more-entry" onclick="openWhatsNew()"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-sparkles"></use></svg><span class="more-entry-copy"><strong data-i18n="app.whatsNew">What’s new</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openSyncDetail()"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-activity"></use></svg><span class="more-entry-copy"><strong data-i18n="apri.syncTitle">Sync status</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><button type="button" class="more-entry" onclick="openLegalAcknowledgements(this)"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span class="more-entry-copy"><strong data-i18n="legal.title">Legal & acknowledgements</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button><a class="more-entry" href="?legal=privacy"><svg class="ui-icon more-entry-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span class="more-entry-copy"><strong data-i18n="apri.privacy">Privacy</strong></span><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></a></section>
     </div>
+    <div class="more-footer"><button type="button" class="btn btn-secondary signout" onclick="logout()" data-i18n="account.signOut">Sign out</button><button type="button" class="btn btn-secondary" id="more-admin-link" hidden onclick="switchTab('admin')"><svg class="ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="nav.admin">Admin</span></button></div>
   </div>
   <!-- BROWSE -->
   <div class="page" id="tab-browse">
@@ -405,7 +390,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     </section>
     <section class="trainer-discovery-panel" id="trainer-panel-favorites" role="tabpanel" aria-labelledby="trainer-mode-favorites" data-discovery-panel="favorites" hidden>
     <section id="favorite-trainers" class="trainer-quick-section">
-      <div class="discovery-transfer-context"><button type="button" class="btn btn-secondary" id="trainer-transfer-review" onclick="openTaskTool('transfer',this)"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-users"></use></svg><span data-i18n="discovery.transfer">Transfer review</span></button><p data-i18n="discovery.transferHelp">Review shared wants from trainers you select.</p></div>
       <div id="favorite-trainers-controls"></div>
     <div class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"><span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span><input class="app-search-input field-control" id="favorite-trainer-search" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" data-i18n-aria-label="organizer.searchFavorites" aria-label="Search favorites"><button type="button" class="trainer-search-clear" id="favorite-trainer-search-clear" onclick="clearFavoriteSearch()" data-i18n-aria-label="trainer.clearSearch" aria-label="Clear search" hidden>×</button></div>
       <div id="favorite-trainers-list"></div>
@@ -456,7 +440,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <form class="add-form wants-add-form" onsubmit="event.preventDefault();submitWantsAdd()">
       <div class="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
       <div class="frow">
-        <div class="ac-wrap search-lookup"><input type="text" class="ac-input field-control" id="wants-add-name" list="combined-catalog" required autocomplete="off" onfocus="prepareWantsCatalog()" data-i18n-placeholder="myList.searchPlaceholder" data-i18n-aria-label="myList.searchPlaceholder" placeholder="Search Pokémon…" aria-label="Search Pokémon"></div>
+        <div class="ac-wrap search-lookup"><input type="text" class="ac-input field-control" id="wants-add-name" required autocomplete="off" onfocus="prepareWantsCatalog()" data-i18n-placeholder="myList.searchPlaceholder" data-i18n-aria-label="myList.searchPlaceholder" placeholder="Search Pokémon…" aria-label="Search Pokémon"></div>
         <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
           <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
           <input type="hidden" id="wants-add-priority" value="">
@@ -465,32 +449,39 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <button type="button" class="pb" data-wants-add-priority="L" title="Low" data-i18n-title="priority.low" aria-pressed="false" onclick="setWantsAddPriority('L')">L</button>
         </div>
         <div class="add-actions"><button type="submit" class="bsave" data-i18n="myList.addAction">Add</button></div>
-        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor(this)"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span><span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor(this)"><span data-i18n="wantEditor.options">Options</span><span class="caret">▾</span></button>
       </div>
     </form>
     <div class="wants-list-toolbar">
-      <button type="button" class="btn btn-secondary" onclick="openProductShare('link','full',this)"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
+      <button type="button" class="btn btn-secondary" onclick="openProductShare()"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span data-i18n="product.share">Share</span></button>
       <button type="button" id="wants-select-toggle" class="btn btn-secondary" onclick="startWantsSelection()" data-i18n="workflow.select">Select</button>
       <details id="wants-list-tools" class="wants-list-tools" ontoggle="resetWantsToolsDisclosure(this)" onkeydown="if(event.key==='Escape'){event.stopPropagation();closeWantsListTools(true)}">
         <summary class="btn btn-secondary"><span data-i18n="workflow.listTools">List tools</span><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-down"></use></svg></summary>
         <div class="wants-list-menu">
           <button type="button" class="btn btn-ghost" onclick="setWantsFindOpen(true)" data-i18n="workflow.findInList">Find in list</button>
-          <button type="button" id="wants-import" class="btn btn-ghost" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button>
+          <button type="button" class="btn btn-ghost" onclick="closeWantsListTools(true);openImport()" data-i18n="myList.importAction">Import string</button>
           <button type="button" class="btn btn-ghost" id="wants-about-searches-toggle" aria-expanded="false" aria-controls="wants-about-searches" onclick="toggleWantsSearchHelp()" data-i18n="workflow.aboutSearches">About searches</button>
           <p id="wants-about-searches" hidden data-i18n="workflow.searchHelp">Searches find candidate Pokémon by species. Check exact forms and requirements in Pokémon GO.</p>
         </div>
       </details>
+    </div>
+    <div class="wants-priority-label" data-i18n="wantEditor.listPriority">List priority</div>
+    <div class="wants-priority-filter" role="group" data-i18n-aria-label="workflow.priorityFilter" aria-label="Filter list by priority">
+      <button type="button" data-wants-priority-filter="ALL" aria-pressed="true" aria-controls="combined-list" onclick="setWantsPriorityFilter(this.dataset.wantsPriorityFilter)"><span data-i18n="common.all">All</span><span class="wants-filter-count">0</span></button>
+      <button type="button" data-wants-priority-filter="H" aria-pressed="false" aria-controls="combined-list" onclick="setWantsPriorityFilter(this.dataset.wantsPriorityFilter)"><span data-i18n="priority.high">High</span><span class="wants-filter-count">0</span></button>
+      <button type="button" data-wants-priority-filter="M" aria-pressed="false" aria-controls="combined-list" onclick="setWantsPriorityFilter(this.dataset.wantsPriorityFilter)"><span data-i18n="priority.medium">Medium</span><span class="wants-filter-count">0</span></button>
+      <button type="button" data-wants-priority-filter="L" aria-pressed="false" aria-controls="combined-list" onclick="setWantsPriorityFilter(this.dataset.wantsPriorityFilter)"><span data-i18n="priority.low">Low</span><span class="wants-filter-count">0</span></button>
     </div>
     <div id="wants-find" class="wants-find" hidden>
       <input type="search" class="field-control" id="combined-filter" data-i18n-placeholder="workflow.findInList" data-i18n-aria-label="workflow.findInList" aria-label="Find in list" oninput="scheduleMyListFilter(this.value)" onkeydown="if(event.key==='Escape'){event.stopPropagation();setWantsFindOpen(false)}">
       <button type="button" class="btn btn-secondary" onclick="setWantsFindOpen(false)" data-i18n="common.close" data-i18n-aria-label="workflow.closeFind" aria-label="Close find in list">Close</button>
     </div>
     <div id="wants-selection-tools" class="wants-selection-context" hidden>
-      <span id="combined-selected-count" aria-live="polite"></span><div id="combined-search" hidden></div>
-      <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection(this)" data-i18n="workflow.shareSelected" hidden>Share selected</button>
+      <span id="combined-selected-count" aria-live="polite"></span><span id="wants-selection-filter-note" class="wants-selection-filter-note" role="status" hidden></span><div id="combined-search" hidden></div>
+      <button type="button" id="wants-selection-share" class="btn btn-secondary" onclick="shareWantsSelection()" data-i18n="workflow.shareSelected" hidden>Share selected</button>
       <button type="button" class="btn btn-secondary" onclick="clearWantsSelection()" data-i18n="workflow.clear">Clear</button>
     </div>
-    <aside id="wants-empty-import" class="discovery-empty-import" hidden><div class="discovery-guide-copy"><strong data-i18n="discovery.emptyTitle">Start with a Pokémon you want</strong><p data-i18n="discovery.emptyImport">Search above to add one, or import a Pokémon GO search string.</p></div><button type="button" class="btn btn-secondary" onclick="openTaskTool('import',this)" data-i18n="myList.importAction">Import string</button></aside>
+    <aside id="variant-clarification-notice" class="variant-clarification-notice" hidden></aside>
     <div id="combined-list" class="mylist-priority-sections"></div>
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div id="intent-review" class="intent-review" hidden></div>
@@ -549,7 +540,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <span class="stb-section-actions">
             <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(true)" data-i18n="common.selectAll">Select all</button>
             <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(false)" data-i18n="common.clear">Clear</button>
-            <button class="stb-link-btn" id="stb-save-default" onclick="saveSafeTransferAsDefault()" data-i18n="safeTransfer.saveDefault" data-i18n-title="safeTransfer.saveDefaultHelp" title="Save the current selection as the default next time you open this">Save as default</button>
+            <button class="stb-link-btn" onclick="saveSafeTransferAsDefault()" data-i18n="safeTransfer.saveDefault" data-i18n-title="safeTransfer.saveDefaultHelp" title="Save the current selection as the default next time you open this">Save as default</button>
           </span>
         </div>
         <div class="stb-trainer-grid" id="stb-trainer-grid"></div>
@@ -681,57 +672,70 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ov" id="event-detail-modal" role="dialog" aria-modal="true" aria-labelledby="event-detail-title"><div class="modal event-detail-modal"><h2 id="event-detail-title"></h2><div id="event-detail-body"></div><div class="mact"><button type="button" class="bghost" onclick="closeModal('event-detail-modal')" data-i18n="common.close">Close</button></div></div></div>
 <div class="ov" id="product-share-modal" role="dialog" aria-modal="true" aria-labelledby="product-share-title">
   <div class="modal product-share-modal">
-    <header class="share-head">
-      <h3 id="product-share-title" data-i18n="shareUi.title">Share your wants</h3>
-      <button type="button" class="share-close" onclick="closeModal('product-share-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button>
-    </header>
-    <div class="share-format-tabs" role="tablist" data-i18n-aria-label="shareUi.shareFormat" aria-label="Share format" onkeydown="productShareFormatKeydown(event)">
-      <button type="button" role="tab" id="product-share-tab-link" data-share-mode="link" aria-selected="true" aria-controls="product-share-body" onclick="setProductShareMode('link')" data-i18n="product.link">Link</button>
-      <button type="button" role="tab" id="product-share-tab-image" data-share-mode="image" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('image')" data-i18n="product.image">Image</button>
-      <button type="button" role="tab" id="product-share-tab-text" data-share-mode="text" aria-selected="false" aria-controls="product-share-body" tabindex="-1" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
-    </div>
-    <div class="share-body" id="product-share-body" role="tabpanel" tabindex="0" aria-labelledby="product-share-tab-link">
-      <p class="share-disclosure" id="product-share-disclosure" data-i18n="shareUi.disclosure">Sharing a link makes your full wants list and public profile available to anyone with the link.</p>
-      <div class="share-options" id="product-share-options"></div>
-      <div class="share-preview-heading"><h4 data-i18n="shareUi.preview">Preview</h4><span id="product-share-count"></span></div>
-      <div id="product-share-preview" class="product-share-preview"></div>
-    </div>
-    <footer class="share-footer">
+    <h3 id="product-share-title" data-i18n="product.share">Share</h3>
+    <label for="product-share-format" data-i18n="share.format">Format</label>
+    <select id="product-share-format" class="field-control" onchange="setProductShareMode(this.value)">
+      <option value="link" data-i18n="share.liveList">Public link</option>
+      <option value="search" data-i18n="share.gameSearch">Pokémon GO search string</option>
+      <option value="image" data-i18n="share.imageSnapshot">Image</option>
+      <option value="text" data-i18n="share.textSnapshot">Plain text</option>
+      <option value="markdown" data-i18n="share.markdownFormat">Markdown</option>
+      <option value="csv" data-i18n="share.csvFormat">CSV</option>
+    </select>
+    <label for="product-share-scope" data-i18n="phase2.scope">Scope</label>
+    <select class="field-control" id="product-share-scope" onchange="refreshProductShare()">
+      <option value="full" data-i18n="phase2.full">Full list</option>
+      <option value="top" data-i18n="phase2.top">High</option>
+      <option value="selected" data-i18n="phase2.selected">Selected entries</option>
+    </select>
+    <details id="product-share-preview-wrap" class="share-preview-disclosure"><summary data-i18n="share.previewSelection">Preview selected wants</summary><div id="product-share-preview" class="product-share-preview" aria-live="polite"></div></details>
+    <section id="product-share-link">
+      <p id="share-link-scope-help"></p><p class="share-privacy-note" data-i18n="share.publicFields">Published profile details and want notes are visible. Saved changes update this public link.</p>
+      <button type="button" id="share-link-action" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
       <p id="share-link-status" role="status" aria-live="polite"></p>
-      <label id="share-manual-link" hidden><span data-i18n="shareUi.manualLink">Link to copy</span><input id="share-public-url" class="field-control" readonly></label>
-      <div class="share-footer-actions">
-        <button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button>
-        <button type="button" id="product-share-primary" class="bpri" onclick="activateProductShare()" data-i18n="shareUi.copyLink">Copy link</button>
-      </div>
-    </footer>
+      <input id="share-public-url" class="field-control" hidden readonly data-i18n-aria-label="product.link" aria-label="Link">
+    </section>
+    <section id="product-share-search" hidden>
+      <label for="share-game-language" data-i18n="share.gameLanguage">Pokémon GO language</label>
+      <select id="share-game-language" class="field-control" onchange="setShareGameLanguage(this.value)"><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="de">Deutsch</option></select>
+      <p class="share-privacy-note" data-i18n="share.searchLimits">Finds possible species matches, not exact individuals or every form. Current filters exclude 4★, traded, Shadow, Purified, background and Pokémon above 2500 CP; non-shiny-only sections also exclude shiny.</p>
+      <div id="share-search-output"></div>
+    </section>
+    <section id="product-share-image" hidden class="share-format-actions">
+      <button type="button" class="btn btn-primary" onclick="exportProductShareImage()" data-i18n="specialBoard.export">Export as image</button>
+    </section>
+    <section id="product-share-text" hidden class="share-format-actions">
+      <button type="button" class="btn btn-secondary" onclick="copyProductShareText()" data-i18n="share.copyPlainText">Copy plain text</button>
+    </section>
+    <p id="share-full-format-scope-help" class="share-privacy-note" data-i18n="share.fullFormatScope" hidden>Choose Full list to export Markdown or CSV.</p>
+    <section id="product-share-markdown" hidden class="share-format-actions">
+      <p class="share-privacy-note" data-i18n="share.markdownDetails">Full list, including profile contact details and want notes.</p>
+      <button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('markdown')" data-i18n="share.copyMarkdown">Copy Markdown</button>
+    </section>
+    <section id="product-share-csv" hidden class="share-format-actions">
+      <p class="share-privacy-note" data-i18n="share.csvDetails">Full wants list, with one row per entry.</p>
+      <button type="button" class="btn btn-secondary" data-full-list-export onclick="exportFullProductFormat('csv')" data-i18n="share.downloadCsv">Download CSV</button>
+    </section>
+    <div class="mact"><button type="button" class="bghost" onclick="closeModal('product-share-modal')" data-i18n="common.close">Close</button></div>
   </div>
 </div>
 
 <div class="ov" id="combined-editor-modal" role="dialog" aria-modal="true" aria-labelledby="combined-editor-title">
   <form class="modal combined-editor" onsubmit="event.preventDefault();saveCombinedEditor()">
-    <header class="want-editor-head"><h3 id="combined-editor-title" data-i18n="wantEditor.add">Add want</h3><button type="button" id="combined-close" onclick="closeModal('combined-editor-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button></header>
-    <div class="want-editor-body">
-    <div id="combined-identity" class="want-editor-identity" hidden></div>
-    <label id="combined-name-field"><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" oninput="refreshCombinedGenderOptions()" list="combined-catalog" required autocomplete="off"></label>
-    <datalist id="combined-catalog"></datalist>
-    <div class="want-editor-identity-fields">
+    <h3 id="combined-editor-title" data-i18n="phase2.edit">Trade intent</h3>
+    <div id="combined-identity" class="combined-identity" hidden><span id="combined-identity-art" class="combined-identity-art" aria-hidden="true"></span><div class="combined-identity-copy"><strong id="combined-identity-name"></strong><span id="combined-identity-form"></span></div><button type="button" id="combined-change" class="btn btn-ghost" onclick="changeCombinedPokemon()" data-i18n="wantEditor.change">Change</button></div>
+    <section id="variant-clarification-panel" class="variant-clarification-panel" hidden></section>
+    <label id="combined-name-field"><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" oninput="refreshCombinedGenderOptions()" required autocomplete="off"></label>
+    <fieldset class="combined-priority-field"><legend data-i18n="myList.priority">Priority</legend><select class="field-control" id="combined-priority" hidden aria-hidden="true" tabindex="-1"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select><span id="combined-priorities" class="combined-priorities" role="radiogroup" data-i18n-aria-label="myList.priority" aria-label="Priority"><label><input type="radio" name="combined-priority-choice" value="" onchange="setCombinedPriority(this.value)"><span data-i18n="wantEditor.noPriority">None</span></label><label><input type="radio" name="combined-priority-choice" value="H" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.high">High</span></label><label><input type="radio" name="combined-priority-choice" value="M" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.medium">Medium</span></label><label><input type="radio" name="combined-priority-choice" value="L" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.low">Low</span></label></span></fieldset>
+    <fieldset class="wants-special-fields"><legend><span data-i18n="wantEditor.preferences">Preferences</span><span class="combined-optional" data-i18n="wantEditor.optional">Optional</span></legend><div class="combined-checks"><label><input type="checkbox" id="combined-shiny" onchange="refreshCombinedShinyAvailability()" aria-describedby="combined-shiny-hint"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div><p id="combined-shiny-hint" class="share-privacy-note" role="status" hidden></p></fieldset>
+    <details id="combined-preferences"><summary data-i18n="wantEditor.morePreferences">More preferences</summary>
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160"></label>
-      <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender" onchange="refreshCombinedGenderOptions()" aria-describedby="combined-gender-hint"><option value="" data-i18n="wantEditor.anyGender">Any</option><option value="f">♀</option><option value="m">♂</option></select></label><p id="combined-gender-hint" class="share-privacy-note" role="status" hidden></p>
-    </div>
-    <select id="combined-priority" hidden aria-hidden="true" tabindex="-1"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select>
-    <fieldset id="combined-priorities"><legend data-i18n="myList.priority">Priority</legend><div class="want-priority-choices">
-      <label class="want-choice"><input type="radio" name="want-priority" value="H" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.high">High</span></label>
-      <label class="want-choice"><input type="radio" name="want-priority" value="M" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.medium">Medium</span></label>
-      <label class="want-choice"><input type="radio" name="want-priority" value="L" onchange="setCombinedEditorPriority(this.value)"><span data-i18n="priority.low">Low</span></label>
-      <label class="want-choice"><input type="radio" name="want-priority" value="" onchange="setCombinedEditorPriority(this.value)"><span id="combined-no-priority" data-i18n="wantEditor.noPriority">No priority</span></label>
-    </div></fieldset>
-    <fieldset><legend data-i18n="wantEditor.requirements">Requirements</legend><div class="want-requirements">
-      <label class="want-choice"><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label><label class="want-choice"><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label class="want-choice"><input type="checkbox" id="combined-xxl"><span>XXL</span></label><label class="want-choice"><input type="checkbox" id="combined-xxs"><span>XXS</span></label>
-    </div></fieldset>
-    <details id="combined-note-details"><summary data-i18n="wantEditor.note">Public note</summary><label class="want-note-field"><span class="sr-only" data-i18n="wantEditor.note">Public note</span><textarea class="field-control" id="combined-note" maxlength="160" rows="3"></textarea></label></details>
+      <label><span data-i18n="wantEditor.genderPreference">Gender preference</span><small class="combined-optional" data-i18n="wantEditor.optional">Optional</small><select class="field-control" id="combined-gender" onchange="refreshCombinedGenderOptions()" aria-describedby="combined-gender-hint"><option value="" data-i18n="wantEditor.anyGender">Any gender</option><option value="f">♀</option><option value="m">♂</option></select></label><p id="combined-gender-hint" class="share-privacy-note" role="status" hidden></p>
+
+      <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
+    </details>
     <p id="combined-error" role="alert"></p>
-    </div>
-    <footer class="want-editor-footer"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" id="combined-cancel" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.cancel">Cancel</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="wantEditor.add">Add want</button></footer>
+    <div class="mact"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" id="combined-close" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.cancel">Cancel</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="common.save">Save</button></div>
   </form>
 </div>
 <!-- READ-ONLY SHARE VIEW (#9) -->
@@ -770,7 +774,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   <div class="modal settings-modal ui-container ui-container-wide">
     <div class="settings-modal-header">
       <div><h2 id="settings-title" data-i18n="settings.title">Settings</h2><p id="settings-description" data-i18n="settings.description">Manage your profile, app health, appearance, and session.</p></div>
-      <button type="button" class="settings-modal-close btn btn-secondary" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span data-i18n="account.closeSettings">Close settings</span></button>
+      <button type="button" class="settings-modal-close btn btn-secondary" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-chevron-left"></use></svg><span data-i18n="account.closeSettings">Close settings</span></button>
     </div>
     <div class="settings-modal-body">
       <div class="settings-layout" id="settings-layout">
@@ -779,8 +783,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <button type="button" class="settings-nav-button" data-settings-target="language" onclick="selectSettingsSection('language')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="settings.sectionLanguage">Language</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
           <button type="button" class="settings-nav-button" data-settings-target="appearance" onclick="selectSettingsSection('appearance')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-sun"></use></svg><span data-i18n="settings.sectionAppearance">Appearance</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
           <button type="button" class="settings-nav-button" data-settings-target="security" onclick="selectSettingsSection('security')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-shield"></use></svg><span data-i18n="settings.sectionSecurity">Account &amp; Security</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
-
-          <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg><span data-i18n="settings.sectionData">Sync &amp; storage</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="tools" onclick="selectSettingsSection('tools')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-wrench"></use></svg><span data-i18n="settings.sectionTools">Tools</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
+          <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><svg class="settings-nav-icon ui-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg><span data-i18n="settings.sectionData">App &amp; Data</span><svg class="settings-nav-chevron ui-icon" aria-hidden="true"><use href="#ui-icon-chevron-right"></use></svg></button>
         </div></nav>
         <div class="settings-detail" id="settings-detail">
           <button type="button" class="bghost btn btn-secondary settings-mobile-back" onclick="showSettingsSectionList()" data-i18n="settings.backToSections">Back to Settings</button>
@@ -804,8 +808,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <section class="settings-section language-settings-panel" data-settings-section="language" aria-labelledby="settings-language-heading">
             <div class="settings-section-heading"><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
             <div class="language-settings-controls">
-              <label class="language-primary-row" for="settings-language"><span data-i18n="settings.languageLabel">App language</span><select class="field-control" id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
-              <label class="language-primary-row language-search-row" for="settings-search-language"><span data-i18n="settings.searchLanguageLabel">Pokémon GO search language</span><select class="field-control" id="settings-search-language" onchange="changePokemonGoSearchLocale(this.value)" aria-describedby="settings-search-language-help"><option value="follow-app" data-i18n="settings.sameAsApp">Same as app</option><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select><small id="settings-search-language-help"></small></label>
+              <label class="language-primary-row" for="settings-language"><span data-i18n="settings.languageLabel">Interface language</span><select class="field-control" id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
+              <p class="language-follow-copy" id="settings-search-language-automatic" data-i18n="settings.searchLanguageAutomatic">Pokémon GO search commands automatically use this language.</p>
+              <label class="language-override-toggle" for="settings-search-language-override"><input type="checkbox" id="settings-search-language-override" onchange="togglePokemonGoSearchLocaleOverride(this.checked)" aria-controls="settings-search-language-override-row" aria-describedby="settings-search-language-override-help"><span data-i18n="settings.searchLanguageOverride">Use a different Pokémon GO search language</span></label>
+              <small class="language-override-help" id="settings-search-language-override-help" data-i18n="settings.searchLanguageOverrideHelp">Turn this on only when Pokémon GO uses a different language from this app.</small>
+              <div class="language-override-row" id="settings-search-language-override-row" hidden><label class="language-field" for="settings-search-language"><span data-i18n="settings.searchLanguageLabel">Pokémon GO search language</span><select class="field-control" id="settings-search-language" onchange="changePokemonGoSearchLocale(this.value)" disabled aria-describedby="settings-search-language-override-help"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label></div>
             </div>
           </section>
           <section class="settings-section settings-account-only" data-settings-section="appearance" aria-labelledby="settings-appearance-heading">
@@ -816,11 +823,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           <section class="settings-section account-security-panel settings-account-only" data-settings-section="security" id="settings-account-security" aria-labelledby="settings-account-security-heading" data-provider-actions="disabled">
         <div class="account-security-intro"><h2 id="settings-account-security-heading" data-i18n="security.title">Account &amp; Security</h2><p data-i18n="security.description">Manage how you sign in to this trainer account.</p></div>
         <div class="settings-profile-card card-row"><div class="av" aria-hidden="true">#</div><div class="settings-profile-copy"><span data-i18n="settings.currentIdentity">Current account</span><strong class="settings-identity-value" id="settings-security-name">—</strong></div></div>
-
-        <div class="settings-section-heading"><h3 data-i18n="security.methodsLabel">Sign-in methods</h3></div>
+        <div class="settings-security-pin" id="settings-security-pin-panel"><div class="settings-section-heading"><h3 data-i18n="settings.pinTitle">Update PIN</h3><p data-i18n="settings.pinSummary">Your six-digit PIN remains the active sign-in method.</p></div><div class="settings-form"><div class="field"><label for="np1" data-i18n="profile.newPin">New PIN</label><input class="field-control" type="password" id="np1" autocomplete="new-password" data-i18n-placeholder="profile.newPinPlaceholder" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div><div class="field"><label for="np2" data-i18n="profile.confirmPin">Confirm PIN</label><input class="field-control" type="password" id="np2" autocomplete="new-password" data-i18n-placeholder="profile.confirmPinPlaceholder" placeholder="Confirm" maxlength="6" inputmode="numeric"></div><div class="settings-form-status" id="pin-err" role="status" aria-live="polite"></div><div class="settings-form-actions"><button id="settings-pin-save" class="bpri btn btn-primary" onclick="savePinSettings()" data-i18n="settings.pinSave">Update PIN</button></div></div></div>
+        <div class="settings-section-heading"><h3 data-i18n="security.connectedAccounts">Connected accounts</h3><p data-i18n="security.connectedAccountsHelp">Authentication methods connected to this trainer account.</p></div>
         <div class="account-security-methods" role="list" data-i18n-aria-label="security.methodsLabel" aria-label="Sign-in methods">
-          <div class="account-security-method" role="listitem" data-provider="username-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.usernamePin">Username and PIN</strong><span data-provider-detail data-i18n="security.usernamePinHelp">Sign in with your trainer name and PIN.</span></div><div class="account-security-method-actions"><span class="account-security-status is-active" data-provider-status><span data-provider-status-icon aria-hidden="true">✓</span><span data-provider-status-label data-i18n="security.connected">Connected</span></span><button type="button" class="account-security-action btn" id="settings-pin-toggle" tabindex="0" onclick="toggleSettingsPinForm()" aria-expanded="false" aria-controls="settings-pin-form" hidden data-i18n="settings.changePin">Change PIN</button></div></div>
-          <div class="settings-security-pin" id="settings-security-pin-panel" hidden><form class="settings-form" id="settings-pin-form" hidden onsubmit="event.preventDefault();savePinSettings()"><div class="field"><label for="np1" data-i18n="profile.newPin">New PIN</label><input class="field-control" type="password" id="np1" autocomplete="new-password" data-i18n-placeholder="profile.newPinPlaceholder" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric" aria-describedby="pin-err"></div><div class="field"><label for="np2" data-i18n="profile.confirmPin">Confirm PIN</label><input class="field-control" type="password" id="np2" autocomplete="new-password" data-i18n-placeholder="profile.confirmPinPlaceholder" placeholder="Confirm" maxlength="6" inputmode="numeric" aria-describedby="pin-err"></div><div class="settings-form-status" id="pin-err" role="status" aria-live="polite"></div><div class="settings-form-actions"><button type="button" tabindex="0" class="btn btn-secondary" onclick="toggleSettingsPinForm(false,true)" data-i18n="common.cancel">Cancel</button><button id="settings-pin-save" type="submit" tabindex="0" class="bpri btn btn-primary" data-i18n="settings.pinSave">Update PIN</button></div></form></div>
+          <div class="account-security-method" role="listitem" data-provider="username-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.usernamePin">Username and PIN</strong><span data-provider-detail data-i18n="security.usernamePinHelp">Your existing sign-in remains connected to this Firebase account.</span></div><span class="account-security-status is-active" data-provider-status><span data-provider-status-icon aria-hidden="true">✓</span><span data-provider-status-label data-i18n="security.connected">Connected</span></span></div>
           <div class="account-security-method account-security-provider-development" role="listitem" data-provider="google" hidden><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><div class="account-security-method-actions"><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span><button type="button" class="account-security-action btn" data-provider-action onclick="handleGoogleAccountAction()" hidden></button></div></div>
           <div class="account-security-method account-security-provider-development" role="listitem" data-provider="discord" hidden><span class="account-security-provider-icon" aria-hidden="true">D</span><div class="account-security-copy"><strong data-i18n="security.discord">Discord</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span></div>
         </div>
@@ -828,14 +834,14 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <button class="settings-tool" id="settings-logout" onclick="logout()"><span aria-hidden="true">↪</span><span data-i18n="settings.logoutAction">Sign out</span></button>
           </section>
           <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
-            <button class="settings-tool" id="settings-import" onclick="openSettingsTool('import',this)"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
-            <button class="settings-tool" id="settings-export" onclick="openSettingsTool('export',this)"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
-            <button class="settings-tool" id="settings-transfer" onclick="openSettingsTool('safe-transfer',this)"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Scoped transfer-review search</span></button>
-            <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts',this)"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
-
-
+            <button class="settings-tool" onclick="openSettingsTool('import')"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('export')"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Scoped transfer-review search</span></button>
+            <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
+            <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health')"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
+            <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
           </div></section>
-          <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">Sync &amp; storage</h2><p data-i18n="settings.storageSummary">Your data on this device and your account.</p></div><div class="settings-storage-card"><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><p class="trainer-sync-diagnostic" id="trainer-sync-diagnostic" hidden></p><div class="trainer-sync-preserved-review" id="trainer-sync-preserved-review" hidden><strong data-i18n="accountSync.preservedReviewTitle">Choose the account copy for this device</strong><p id="trainer-sync-preserved-review-count"></p><button class="settings-tool trainer-sync-review-action" id="trainer-sync-preserved-review-action" type="button" onclick="useSavedAccountCopyForPreservedReview()" aria-describedby="trainer-sync-preserved-review-count"><span aria-hidden="true">✓</span><span data-i18n="accountSync.useSavedAccountCopy">Use saved account copy</span></button></div><button class="settings-tool trainer-sync-recovery" id="trainer-sync-recovery" type="button" onclick="requestAccountSyncRecovery()" hidden><span aria-hidden="true">↻</span><span id="trainer-sync-recovery-label"></span></button><button class="settings-tool" id="settings-health" onclick="openSettingsTool('health',this)"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button></div><div class="settings-storage-card"><h3 data-i18n="settings.onDevice">On this device</h3><p data-i18n="settings.storageCare">Review sync problems before signing out or clearing browser storage.</p><button class="settings-tool settings-admin-only" id="settings-backup" onclick="openSettingsTool('backup',this)" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button></div></section>
+          <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">App &amp; Data</h2></div><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><p class="trainer-sync-diagnostic" id="trainer-sync-diagnostic" hidden></p><div class="trainer-sync-preserved-review" id="trainer-sync-preserved-review" hidden><strong data-i18n="accountSync.preservedReviewTitle">Choose the account copy for this device</strong><p id="trainer-sync-preserved-review-count"></p><button class="settings-tool trainer-sync-review-action" id="trainer-sync-preserved-review-action" type="button" onclick="useSavedAccountCopyForPreservedReview()" aria-describedby="trainer-sync-preserved-review-count"><span aria-hidden="true">✓</span><span data-i18n="accountSync.useSavedAccountCopy">Use saved account copy</span></button></div><button class="settings-tool trainer-sync-recovery" id="trainer-sync-recovery" type="button" onclick="requestAccountSyncRecovery()" hidden><span aria-hidden="true">↻</span><span id="trainer-sync-recovery-label"></span></button><button class="settings-tool" id="settings-install" onclick="triggerInstall()"><span aria-hidden="true">⬇</span><span data-i18n="app.install">Install</span></button><p class="settings-release" id="settings-release-id"></p></section>
         </div>
       </div>
     </div>
@@ -844,9 +850,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <!-- KEYBOARD SHORTCUTS CHEAT SHEET (#17) -->
 <div class="ov" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
-  <div class="modal help-app-modal">
-    <h2 id="shortcuts-title" data-i18n="discovery.help">Help &amp; shortcuts</h2>
-    <h3 data-i18n="shortcuts.title">Keyboard shortcuts</h3>
+  <div class="modal" style="max-width:520px">
+    <h3 id="shortcuts-title">⌨️ <span data-i18n="shortcuts.title">Keyboard shortcuts</span></h3>
     <div class="shortcut-grid">
       <div class="shortcut-section-hdr" data-i18n="shortcuts.navigation">Navigation</div>
       <div class="shortcut-row"><kbd>b</kbd><span data-i18n="shortcuts.findTrainer">Open Find Trainer</span></div>
@@ -863,9 +868,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="shortcuts.saveWant">Save in the editor; Esc closes without saving</span></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-top:8px" data-i18n="shortcuts.typingDisabled">Shortcuts are disabled while you type in a field.</div>
-    <details class="help-app-section" id="help-install"><summary tabindex="0" data-i18n="app.installLabel">Install app</summary><p id="help-install-status" role="status"></p><button type="button" class="btn btn-secondary" id="settings-install" tabindex="0" onclick="triggerInstall()" hidden data-i18n="app.installLabel">Install app</button><p class="help-app-note" data-i18n="settings.installLimits">Account data still needs a connection to sync.</p></details>
-    <details class="help-app-section" id="help-about"><summary tabindex="0" data-i18n="settings.about">About PoGo Trades</summary><p class="settings-release" id="settings-release-id"></p><p data-i18n="legal.unofficial">PoGo Trades is an unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored by the rights holders.</p><button type="button" tabindex="0" class="btn btn-secondary" onclick="openLegalAcknowledgements(this)" data-i18n="legal.title">Legal &amp; acknowledgements</button><a class="btn btn-secondary" tabindex="0" href="?legal=privacy" target="_blank" rel="noopener" data-i18n="settings.privacy">Privacy</a></details>
-    <div class="mact"><button class="bpri" tabindex="0" onclick="closeModal('shortcuts-modal')" data-i18n="common.gotIt">Got it</button></div>
+    <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')" data-i18n="common.gotIt">Got it</button></div>
   </div>
 </div>
 
@@ -904,95 +907,95 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-10-26.142"></script>
-<script src="js/domain/productLimits.js?v=2026-10-26.142"></script>
-<script src="js/domain/favoriteCapabilities.js?v=2026-10-26.142"></script>
-<script src="js/domain/favoritePickerModel.js?v=2026-10-26.142"></script>
-<script src="js/domain/priorities.js?v=2026-10-26.142"></script>
-<script src="js/ui/badges.js?v=2026-10-26.142"></script>
-<script src="js/domain/username.js?v=2026-10-26.142"></script>
-<script src="js/domain/requestAccess.js?v=2026-10-26.142"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-10-26.142"></script>
-<script src="js/domain/priorityValues.js?v=2026-10-26.142"></script>
-<script src="js/domain/scheduleDates.js?v=2026-10-26.142"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-10-26.142"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-10-26.142"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-10-26.142"></script>
-<script src="js/domain/safeTransferRestoration.js?v=2026-10-26.142"></script>
-<script src="js/domain/searchStrings.js?v=2026-10-26.142"></script>
-<script src="js/ui/stringHtml.js?v=2026-10-26.142"></script>
-<script src="js/ui/safeTransferCandidate.js?v=2026-10-26.142"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-10-26.142"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-10-26.142"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-10-26.142"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-10-26.142"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-10-26.142"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-10-26.142"></script>
-<script src="js/domain/fuzzyText.js?v=2026-10-26.142"></script>
-<script src="js/domain/autocompleteText.js?v=2026-10-26.142"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-10-26.142"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-10-26.142"></script>
-<script src="js/domain/relativeTime.js?v=2026-10-26.142"></script>
-<script src="js/domain/clientRelease.js?v=2026-10-26.142"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-10-26.142"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-10-26.142"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-10-26.142"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-10-26.142"></script>
-<script src="js/domain/eventPresentation.js?v=2026-10-26.142"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-10-26.142"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-10-26.142" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-10-26.142"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-10-26.142"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-10-26.142"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-10-26.142"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-10-26.142"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-10-26.142"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-10-26.142" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-10-26.142"></script>
-<script src="js/utils/textSafety.js?v=2026-10-26.142"></script>
-<script src="js/ui/stringPanels.js?v=2026-10-26.142"></script>
-<script src="js/ui/emptyState.js?v=2026-10-26.142"></script>
-<script src="js/i18n/locales/en.js?v=2026-10-26.142"></script>
-<script src="js/i18n/locales/ja.js?v=2026-10-26.142"></script>
-<script src="js/i18n/locales/es.js?v=2026-10-26.142"></script>
-<script src="js/i18n/locales/de.js?v=2026-10-26.142"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-10-26.142"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-10-26.142"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-10-26.142"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-10-26.142"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-10-26.142"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-10-26.142"></script>
-<script src="js/i18n/core.js?v=2026-10-26.142"></script>
-<script src="js/services/firebaseClient.js?v=2026-10-26.142"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-10-26.142"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-10-26.142" data-pogo-provider-public-capability></script>
-<script src="js/services/favoriteResolverClient.js?v=2026-10-26.142"></script>
-<script src="js/services/favoriteWriteTransport.js?v=2026-10-26.142"></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-10-26.142"></script>
-<script src="js/data/subscriptionManager.js?v=2026-10-26.142"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-10-26.142"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-10-26.142"></script>
-<script src="js/data/currentUserRepository.js?v=2026-10-26.142"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-10-26.142"></script>
-<script src="js/data/publicShareRepository.js?v=2026-10-26.142"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-10-26.142"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-10-26.142"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-10-26.142"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-10-26.142"></script>
-<script src="js/data/favoriteAdditionRepository.js?v=2026-10-26.142"></script>
-<script src="js/data/accountSyncController.js?v=2026-10-26.142"></script>
-<script src="js/data/favoriteAdditions.js?v=2026-10-26.142"></script>
-<script src="js/data/favoriteRecoveryPreview.js?v=2026-10-26.142"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-10-26.142"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-10-26.142"></script>
-<script src="js/app/favoritePicker.js?v=2026-10-26.142"></script>
-<script src="js/app/application.js?v=2026-10-26.142"></script>
+<script src="data.js?v=2026-10-28.161"></script>
+<script src="js/domain/productLimits.js?v=2026-10-28.161"></script>
+<script src="js/domain/favoriteCapabilities.js?v=2026-10-28.161"></script>
+<script src="js/domain/favoritePickerModel.js?v=2026-10-28.161"></script>
+<script src="js/domain/priorities.js?v=2026-10-28.161"></script>
+<script src="js/ui/badges.js?v=2026-10-28.161"></script>
+<script src="js/domain/username.js?v=2026-10-28.161"></script>
+<script src="js/domain/requestAccess.js?v=2026-10-28.161"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-10-28.161"></script>
+<script src="js/domain/priorityValues.js?v=2026-10-28.161"></script>
+<script src="js/domain/scheduleDates.js?v=2026-10-28.161"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-10-28.161"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-10-28.161"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-10-28.161"></script>
+<script src="js/domain/safeTransferRestoration.js?v=2026-10-28.161"></script>
+<script src="js/domain/searchStrings.js?v=2026-10-28.161"></script>
+<script src="js/ui/stringHtml.js?v=2026-10-28.161"></script>
+<script src="js/ui/safeTransferCandidate.js?v=2026-10-28.161"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-10-28.161"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-10-28.161"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-10-28.161"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-10-28.161"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-10-28.161"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-10-28.161"></script>
+<script src="js/domain/fuzzyText.js?v=2026-10-28.161"></script>
+<script src="js/domain/autocompleteText.js?v=2026-10-28.161"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-10-28.161"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-10-28.161"></script>
+<script src="js/domain/relativeTime.js?v=2026-10-28.161"></script>
+<script src="js/domain/clientRelease.js?v=2026-10-28.161"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-10-28.161"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-10-28.161"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-10-28.161"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-10-28.161"></script>
+<script src="js/domain/eventPresentation.js?v=2026-10-28.161"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-10-28.161"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-10-28.161" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-10-28.161"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-10-28.161"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-10-28.161"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-10-28.161"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-10-28.161"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-10-28.161"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-10-28.161" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-10-28.161"></script>
+<script src="js/utils/textSafety.js?v=2026-10-28.161"></script>
+<script src="js/ui/stringPanels.js?v=2026-10-28.161"></script>
+<script src="js/ui/emptyState.js?v=2026-10-28.161"></script>
+<script src="js/i18n/locales/en.js?v=2026-10-28.161"></script>
+<script src="js/i18n/locales/ja.js?v=2026-10-28.161"></script>
+<script src="js/i18n/locales/es.js?v=2026-10-28.161"></script>
+<script src="js/i18n/locales/de.js?v=2026-10-28.161"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-10-28.161"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-10-28.161"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-10-28.161"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-10-28.161"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-10-28.161"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-10-28.161"></script>
+<script src="js/i18n/core.js?v=2026-10-28.161"></script>
+<script src="js/services/firebaseClient.js?v=2026-10-28.161"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-10-28.161"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-10-28.161" data-pogo-provider-public-capability></script>
+<script src="js/services/favoriteResolverClient.js?v=2026-10-28.161"></script>
+<script src="js/services/favoriteWriteTransport.js?v=2026-10-28.161"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-10-28.161"></script>
+<script src="js/data/subscriptionManager.js?v=2026-10-28.161"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-10-28.161"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-10-28.161"></script>
+<script src="js/data/currentUserRepository.js?v=2026-10-28.161"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-10-28.161"></script>
+<script src="js/data/publicShareRepository.js?v=2026-10-28.161"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-10-28.161"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-10-28.161"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-10-28.161"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-10-28.161"></script>
+<script src="js/data/favoriteAdditionRepository.js?v=2026-10-28.161"></script>
+<script src="js/data/accountSyncController.js?v=2026-10-28.161"></script>
+<script src="js/data/favoriteAdditions.js?v=2026-10-28.161"></script>
+<script src="js/data/favoriteRecoveryPreview.js?v=2026-10-28.161"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-10-28.161"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-10-28.161"></script>
+<script src="js/app/favoritePicker.js?v=2026-10-28.161"></script>
+<script src="js/app/application.js?v=2026-10-28.161"></script>
 
 </template>
 <script>

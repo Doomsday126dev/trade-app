@@ -22,7 +22,7 @@ for(const width of [1920,1440,768,390,320])test(`actual More rows fit and remain
           return{id:el.id,box:box(el),content:box(content),text:[...range.getClientRects()].map(r=>({left:r.left,right:r.right})),icons:[...el.querySelectorAll('svg')].map(box)};
         })};
     });
-    measurements.push({locale,...measured});expect(measured.overflow).toBe(false);expect(measured.rows).toHaveLength(7);
+    measurements.push({locale,...measured});expect(measured.overflow).toBe(false);expect(measured.rows.map(row=>row.id)).toEqual(['more-transfer','more-share','more-import','more-profile','more-settings','more-help']);
     expect(measured.columns.split(' ').length).toBe(width>=768?2:1);
     for(const row of measured.rows){
       expect(row.box.height).toBeGreaterThanOrEqual(48);expect(row.icons).toHaveLength(2);
@@ -47,7 +47,7 @@ test('More short viewport, themes, pointer and enlarged localized text remain us
   await capture(page,'more-320-de-text-200');
   await page.evaluate(()=>{document.documentElement.style.fontSize='';applyTheme('dark');});await page.setViewportSize({width:1440,height:900});await page.evaluate(()=>scrollTo(0,0));
   await page.locator('#more-transfer').hover();await capture(page,'more-pointer');
-  await page.locator('#more-events').focus();await page.keyboard.press('Tab');await capture(page,'more-keyboard');
+  await page.locator('#more-transfer').focus();await page.keyboard.press('Tab');await capture(page,'more-keyboard');
 });
 test('actual contextual My List, trainer selection and Help captures',async({page})=>{
   await install(page);await page.setViewportSize({width:1440,height:900});

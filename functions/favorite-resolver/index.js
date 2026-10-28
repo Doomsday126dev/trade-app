@@ -10,6 +10,8 @@ const { createIdentityReader, createIdentityResolver } = require('./identity');
 const { createGcsQuotaStore, createQuota } = require('./quota');
 const { createGcsReplayStore, createAppCheckVerifier } = require('./app-check');
 const { createHandler } = require('./handler');
+const { createFailureDiagnostics } = require('./diagnostics');
+const diagnostics = createFailureDiagnostics();
 const PROJECT = 'trade-list-a4297';
 const APP_ID = '1:1053781218847:web:378b312470943152d9a72a';
 const RUNTIME = `favorite-resolver-runtime@${PROJECT}.iam.gserviceaccount.com`;
@@ -26,10 +28,11 @@ function configuredHandler() {
     const app = initializeApp({ projectId: PROJECT, databaseURL: `https://${PROJECT}-default-rtdb.firebaseio.com` }, 'favorite-resolver');
     const auth = getAuth(app), appCheck = getAppCheck(app);
     const bucket = new Storage({ projectId: PROJECT, retryOptions: { autoRetry: false } }).bucket(`${PROJECT}-favorite-resolver-quota`);
-    const quota = createQuota(createGcsQuotaStore(bucket));
-    handler = createHandler({ enabled, origins: ORIGINS, quota, resolve: createIdentityResolver(createIdentityReader(getDatabase(app))),
+    const quota = createQuota(createGcsQuotaStore(bucket, diagnostics));
+    const verifyAppCheck = createAppCheckVerifier({ appCheck, appId: APP_ID, replayStore: createGcsReplayStore(bucket, diagnostics) });
+    handler = createHandler({ enabled, origins: ORIGINS, quota, resolve: createIdentityResolver(createIdentityReader(getDatabase(app), diagnostics)),
       verifyAuth: async token => {
-        const caller = await auth.verifyIdToken(token, true);
+        const caller = await diagnostics.observe('auth-verification', () => auth.verifyIdToken(token, true));
         if (caller.firebase?.tenant) throw new Error('unsupported tenant');
         if (process.env.FAVORITE_RESOLVER_COHORT !== 'all') {
           const canaries = (process.env.FAVORITE_RESOLVER_CANARY_UIDS || '').split(',').filter(Boolean);
@@ -37,11 +40,15 @@ function configuredHandler() {
         }
         return caller;
       },
-      verifyAppCheck: createAppCheckVerifier({ appCheck, appId: APP_ID, replayStore: createGcsReplayStore(bucket) })
+      verifyAppCheck: token => diagnostics.observe('app-check-verification', () => verifyAppCheck(token)),
+      diagnostics
     });
   }
   return handler;
 }
 exports.resolveLegacyFavoriteIdentities = onRequest({ region: 'us-central1', serviceAccount: RUNTIME,
   invoker: 'public', cors: false, maxInstances: 2, concurrency: 8, timeoutSeconds: 30, memory: '256MiB'
-}, (req, res) => configuredHandler()(req, res));
+}, (req, res) => {
+  try { return configuredHandler()(req, res); }
+  catch (error) { diagnostics.report('initialization', error); throw error; }
+});

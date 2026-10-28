@@ -65,13 +65,13 @@ test('A11Y-06 provides a skip target and native search-string disclosure control
   assert.doesNotMatch(html,/class="user-str-hdr" onclick=/);
 });
 
-test('wanted-list lookup uses a named native datalist and accessible editor',()=>{
+test('wanted-list lookup uses a named canonical combobox and accessible editor',()=>{
   const index=readFileSync(path.join(root,'index.html'),'utf8');
   const lookup=index.match(/<input[^>]+id="wants-add-name"[^>]*>/)?.[0];assert.ok(lookup);
-  assert.match(lookup,/list="combined-catalog"/);assert.match(lookup,/data-i18n-aria-label="myList\.searchPlaceholder"/);assert.match(lookup,/required/);
-  assert.match(index,/<datalist id="combined-catalog"/);
+  assert.doesNotMatch(lookup,/list=/);assert.match(lookup,/data-i18n-aria-label="myList\.searchPlaceholder"/);assert.match(lookup,/required/);
+  assert.match(html,/input.setAttribute\('role','combobox'\)/);assert.match(html,/list.setAttribute\('role','listbox'\)/);assert.match(html,/aria-activedescendant/);
   assert.match(index,/id="combined-editor-modal"[^>]+role="dialog"[^>]+aria-modal="true"[^>]+aria-labelledby="combined-editor-title"/);
-  assert.match(index,/id="combined-name"[^>]+list="combined-catalog"/);
+  assert.match(index,/id="combined-name"[^>]+required/);
 });
 
 test('compact feedback is bounded, safe-area aware, nonblocking, and reduced-motion aware',()=>{

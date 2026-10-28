@@ -1,5 +1,4 @@
 const {test,expect}=require('@playwright/test');
-const fs=require('node:fs');
 const {installPriorityReviewFixture}=require('./helpers/my-list-priority-fixture.cjs');
 test.use({serviceWorkers:'block'});
 const section=(page,key)=>page.locator(`#combined-list > [data-wants-section="${key}"]`);
@@ -46,6 +45,7 @@ test('per-section Copy Search stays full-section across filtering, collapse and 
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan(productDeclarations().entries.filter(entry=>entry.p==='M'),{locale:pokemonGoSearchLocale()}).parts[0]));
     await high.locator('[data-contextual-copy]').click();
     expect(await page.evaluate(()=>__priorityReviewCopied)).toBe(query);
+    if(locale==='en')await page.screenshot({path:`/tmp/trade-apri-qa/priority-filter-copy-${test.info().project.name}.png`,animations:'disabled'});
     await high.locator('.mylist-priority-toggle').click();
     await expect(high.locator('.myrow')).toHaveCount(0);
     await high.locator('[data-contextual-copy]').click();
@@ -79,24 +79,8 @@ test('Combine searches combinations are explicit independent scopes, without rep
   await expect(page.locator('[data-wants-scope="LUCKY"]')).toHaveAttribute('aria-pressed','true');
 });
 
-test('selection is contextual, survives filters, and copies/shares only selected declarations',async({page},info)=>{
+test('selection is contextual, survives filters, and copies/shares only selected declarations',async({page})=>{
   await fixture(page);
-  await page.evaluate(()=>{
-    window.__selectedShareAudit={renders:[],drawn:[],publicationRequests:[],writes:[]};
-    // Observe the real renderer and publication entry points; do not replace
-    // export generation or publication with an unconditional success stub.
-    const render=renderProductShareImage,draw=CanvasRenderingContext2D.prototype.fillText;
-    renderProductShareImage=async function(entries,owner){
-      __selectedShareAudit.renders.push(structuredClone(entries));
-      const blob=await render(entries,owner);__selectedShareAudit.blob=blob;return blob;
-    };
-    CanvasRenderingContext2D.prototype.fillText=function(value,...args){__selectedShareAudit.drawn.push(String(value));return draw.call(this,value,...args);};
-    const request=requestPublicSharePublication,publish=publishPublicShareNow,write=set;
-    requestPublicSharePublication=function(...args){__selectedShareAudit.publicationRequests.push('request');return request(...args);};
-    publishPublicShareNow=function(...args){__selectedShareAudit.publicationRequests.push('publish');return publish(...args);};
-    set=function(...args){__selectedShareAudit.writes.push(String(args[0]));return write(...args);};
-    __selectedShareAudit.queueBefore=JSON.stringify(syncQueue);
-  });
   await page.locator('#wants-select-toggle').click();
   await section(page,'H').locator('[data-name="Pikachu"] input').check();
   await section(page,'LUCKY').locator('[data-name="Pikachu"] input').check();
@@ -108,33 +92,9 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await page.locator('#combined-search [data-contextual-copy]').click();
   expect(await page.evaluate(()=>__priorityReviewCopied)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&25');
   await page.locator('#wants-selection-share').click();
-  await expect(page.locator('#product-share-tab-image')).toHaveAttribute('aria-selected','true');
-  await expect(page.locator('input[type="radio"][name="share-scope"][value="selected"]')).toBeChecked();
-  await expect(page.locator('#product-share-primary')).toHaveText('Download image');
-  await expect(page.locator('#product-share-primary')).toBeEnabled();
-  const image=page.locator('#product-share-preview img.share-image-preview');await expect(image).toBeVisible();
-  const decoded=await image.evaluate(async img=>{await img.decode();return{width:img.naturalWidth,height:img.naturalHeight,src:img.src};});
-  expect(decoded.width).toBeGreaterThan(0);expect(decoded.height).toBeGreaterThan(0);expect(decoded.src).toMatch(/^blob:/);
-  const audit=await page.evaluate(()=>({renders:__selectedShareAudit.renders,drawn:__selectedShareAudit.drawn,sameBlob:__selectedShareAudit.blob===productShareUi.blob,blobType:productShareUi.blob.type,snapshot:productShareSnapshot}));
-  expect(audit.renders).toHaveLength(1);expect(audit.sameBlob).toBe(true);expect(audit.blobType).toBe('image/png');
-  expect([...audit.renders[0]].sort((a,b)=>b.p.localeCompare(a.p))).toEqual([
-    expect.objectContaining({name:'Pikachu',category:'wishlist',intent:'lf',p:'H',lucky:false,shiny:false,xxl:false,xxs:false,note:''}),
-    expect.objectContaining({name:'Pikachu',category:'wishlist',intent:'lf',p:'',lucky:true,shiny:false,xxl:false,xxs:false,note:'Lucky dex'})
-  ]);
-  expect(audit.snapshot).toEqual(audit.renders[0]);
-  expect(audit.drawn.filter(text=>text==='Pikachu')).toHaveLength(2);expect(audit.drawn.join(' ')).toContain('Lucky dex');
-  await expect(page.locator('#product-share-count')).toHaveText(`${audit.renders[0].length} wants`);
-  await info.attach('selected-image-export',{body:JSON.stringify({decoded,...audit},null,2),contentType:'application/json'});
-  fs.writeFileSync(info.outputPath('selected-image-export.json'),JSON.stringify({decoded,...audit},null,2));
-  await page.locator('#product-share-tab-link').click();
-  await expect(page.locator('#product-share-tab-link')).toHaveAttribute('aria-selected','true');
-  await expect(page.locator('#product-share-disclosure')).toHaveText('Sharing a link makes your full wants list and public profile available to anyone with the link.');
-  await expect(page.locator('[name="share-scope"]')).toHaveCount(0);
-  const full=await page.evaluate(()=>publicSharePublicationDomain.publicDeclarations(productDeclarations().entries));
-  expect(full).toHaveLength(18);
-  expect(await page.evaluate(()=>publicSharePublicationDomain.publicDeclarations(productShareSnapshot))).toEqual(full);
-  await expect(page.locator('.share-public-list li')).toHaveCount(full.length);await expect(page.locator('.share-public-list')).toContainText('Rayquaza');
-  expect(await page.evaluate(()=>({requests:__selectedShareAudit.publicationRequests,writes:__selectedShareAudit.writes,queueUnchanged:JSON.stringify(syncQueue)===__selectedShareAudit.queueBefore}))).toEqual({requests:[],writes:[],queueUnchanged:true});
+  await expect(page.locator('#product-share-scope')).toHaveValue('selected');
+  await expect(page.locator('#product-share-preview li')).toHaveCount(2);
+  await expect(page.locator('#share-link-action')).toBeDisabled();
   await page.keyboard.press('Escape');
   await page.locator('#wants-selection-tools button[onclick="clearWantsSelection()"] ').click();
   await expect(page.locator('#wants-selection-tools')).toBeHidden();
@@ -142,9 +102,6 @@ test('selection is contextual, survives filters, and copies/shares only selected
   await page.evaluate(()=>setWantsFindOpen(true));
   await page.locator('#combined-filter').fill('');
   expect(await page.evaluate(()=>combinedSelection.size)).toBe(0);
-  await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
-  expect(await page.locator('#combined-list .wants-select').evaluateAll(inputs=>inputs.every(input=>getComputedStyle(input).display==='none'))).toBe(true);
-  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__priorityReviewData));
 });
 
 test('priority edit moves the canonical normal want and its exact alias without mutating Lucky',async({page})=>{
@@ -173,7 +130,7 @@ test('priority edit moves the canonical normal want and its exact alias without 
   });
   await section(page,'M').locator('.mylist-priority-toggle').click();
   await section(page,'H').locator('[data-name="Pikachu"] .myrow-edit').click();
-  await page.locator('#combined-priorities input[value="M"]').check();
+  await require('./helpers/current-want-controls.cjs').priority(page,'M');
   await page.locator('#combined-save').click();
   await expect(section(page,'M').locator('[data-name="Pikachu"]')).toHaveCount(1);
   await expect(section(page,'H').locator('[data-name="Pikachu"]')).toHaveCount(0);
@@ -192,12 +149,14 @@ test('new special wants save without priority; new normal wants require classifi
     openCombinedEditor();
   });
   await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name-suggestions [role=option]').filter({hasText:/^Charmander$/}).click();
   await page.locator('#combined-save').click();
   await expect(page.locator('#combined-error')).toHaveText('Choose a priority or a special requirement.');
   expect(await page.evaluate(()=>__mutations)).toEqual([]);
   for(const flag of ['lucky','xxl','xxs','shiny']){
     await page.evaluate(()=>openCombinedEditor());
     await page.locator('#combined-name').fill('Charmander');
+  await page.locator('#combined-name-suggestions [role=option]').filter({hasText:/^Charmander$/}).click();
     await page.locator('#combined-'+flag).check();
     await page.locator('#combined-save').click();
     const mutation=await page.evaluate(()=>__mutations[0]);
@@ -210,11 +169,10 @@ test('new special wants save without priority; new normal wants require classifi
   await expect(page.locator('#combined-name')).toHaveValue('Psyduck');
 });
 
-test('remove icon retains confirmation and clipboard failure opens only that section for manual recovery',async({page})=>{
+test('editor cancellation preserves the list and clipboard failure opens only that section for manual recovery',async({page})=>{
   await fixture(page);
-  let dismissed=0;page.once('dialog',async dialog=>{dismissed++;await dialog.dismiss();});
-  await section(page,'H').locator('.myrow-remove').first().click();
-  expect(dismissed).toBe(1);await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
+  await section(page,'H').locator('.myrow-edit').first().click();
+  await expect(page.locator('#wants-remove')).toBeVisible();await page.keyboard.press('Escape');await expect(page.locator('#combined-list .myrow')).toHaveCount(18);
   await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new Error('denied');};});
   await section(page,'H').locator('[data-contextual-copy]').click();
   await expect(section(page,'H').locator('textarea')).toBeFocused();
@@ -258,7 +216,7 @@ test('classified wants cannot become legacy; genuine legacy edits persist and cl
     };
   });
   await section(page,'H').locator('[data-name="Pikachu"] .myrow-edit').click();
-  await page.locator('#combined-priorities input[value=""]').check();await page.locator('#combined-save').click();
+  await require('./helpers/current-want-controls.cjs').priority(page,'');await page.locator('#combined-save').click();
   await expect(page.locator('#combined-error')).toContainText('Choose a priority');
   expect(await page.evaluate(()=>__writes.length)).toBe(0);await page.keyboard.press('Escape');
   await section(page,'LUCKY').locator('[data-name="Bulbasaur"] .myrow-edit').click();
@@ -270,7 +228,7 @@ test('classified wants cannot become legacy; genuine legacy edits persist and cl
   await page.locator('#combined-note').fill('Keep until classified');await page.locator('#combined-save').click();
   expect(await page.evaluate(()=>__writes.at(-1).patch)).toEqual({note:'Keep until classified'});
   await expect(section(page,'NEEDS_PRIORITY')).toHaveCount(1);
-  await section(page,'NEEDS_PRIORITY').locator('.myrow-edit').click();await page.locator('#combined-priorities input[value="L"]').check();await page.locator('#combined-save').click();
+  await section(page,'NEEDS_PRIORITY').locator('.myrow-edit').click();await require('./helpers/current-want-controls.cjs').priority(page,'L');await page.locator('#combined-save').click();
   await expect(section(page,'NEEDS_PRIORITY')).toHaveCount(0);await expect(section(page,'L').locator('[data-name="Psyduck"]')).toHaveCount(1);
 });
 

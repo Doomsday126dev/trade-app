@@ -37,6 +37,219 @@
       ],
       "reviewedAt": "2026-10-26",
       "pixelReview": "Both 120px original normal/Shiny images independently inspected: female heart-notched tail. Supersedes straight-tail DittoBase art; do not relabel that artwork female."
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Orange Hanbok)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-hanbok.png",
+      "sourceLabel": "Orange Hanbok",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-hanbok.png",
+      "assets": {
+        "default": "assets/sprites/go/serebii-pikachu-orange-hanbok-female.png",
+        "female": "assets/sprites/go/serebii-pikachu-orange-hanbok-female.png",
+        "shiny": "assets/sprites/go/serebii-pikachu-orange-hanbok-female-shiny.png",
+        "femaleShiny": "assets/sprites/go/serebii-pikachu-orange-hanbok-female-shiny.png"
+      },
+      "sha256": {
+        "default": "02450ee88197a7d4581ca5959c8e0ff4f0ff020dc305e3e25878077cf3f20a61",
+        "female": "02450ee88197a7d4581ca5959c8e0ff4f0ff020dc305e3e25878077cf3f20a61",
+        "shiny": "c59735282b03b75968384971596d620320777809db5592c71979040800548960",
+        "femaleShiny": "c59735282b03b75968384971596d620320777809db5592c71979040800548960"
+      },
+      "sourceFiles": {
+        "default": "025-hanbok.png",
+        "shiny": "shiny/025-hanbok.png"
+      },
+      "reviewIdentityId": "pokemon:25:costume:orange-hanbok-2026",
+      "availableGenders": [
+        "f"
+      ],
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-26",
+      "pixelReview": "Original 120px normal and Shiny PNGs inspected: orange hanbok, red headwear and female heart-notched tail. No male artwork substituted.",
+      "genderEvidenceQualification": "Female-only availability is collector-documented (pikachugo), not explicitly stated by the official event announcement; the published PNGs independently show female tails.",
+      "identityEvidence": [
+        "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/ko/news/pikachu-autumn-picnic-korea-2026"
+      ]
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow (form unspecified)",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:unspecified",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow, Phony)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Phony Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:phony",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 854,
+      "names": [
+        "Sinistea (Bow, Antique)"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "854-bow.png",
+      "sourceLabel": "Bow, Antique Form",
+      "sourcePage": "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/854-bow.png",
+      "sourceFiles": {
+        "default": "854-bow.png",
+        "shiny": "shiny/854-bow.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/serebii-halloween2026-normal-854-bow.png",
+        "shiny": "assets/sprites/go/serebii-halloween2026-shiny-854-bow.png"
+      },
+      "sha256": {
+        "default": "ca783a29f3ce3ef6b4ac0c1d9f36cbf518e15a2f087ca0e2c67466af24639224",
+        "shiny": "e73701a7f2ec4f205767424e5210ad10ab1bd4a27a8c579e1786076c2ec29fe2"
+      },
+      "reviewIdentityId": "pokemon:854:costume:bow-2026:antique",
+      "shinyAvailability": "released",
+      "reviewedAt": "2026-10-27",
+      "pixelReview": "Original bow/cup normal and Shiny front PNGs inspected. Source explicitly assigns these identical front views to both Phony and Antique; hidden underside stamp is not visible. Generic Bow stays form-unspecified, never a Phony alias.",
+      "identityEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "shinyEvidence": [
+        "https://pokemongo.com/news/halloween-part-1-2026",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "genderModel": "genderless",
+      "availableGenders": []
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (Blue Shirt (Citrus))",
+        "Citrus Shirt Pikachu"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "serebii-reviewed",
+      "sourceFile": "025-jeju.png",
+      "sourceFiles": {
+        "default": "025-jeju.png",
+        "shiny": "shiny/025-jeju.png"
+      },
+      "sourceLabel": "Blue Shirt (Citrus)",
+      "sourcePage": "https://www.serebii.net/pokemongo/pokemon/025.shtml",
+      "sourceUrl": "https://www.serebii.net/pokemongo/pokemon/025-jeju.png",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-pikachu-citrus-shirt.png",
+        "shiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-shiny.png",
+        "female": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female.png",
+        "femaleShiny": "assets/sprites/go/reviewed-pikachu-citrus-shirt-female-shiny.png"
+      },
+      "sha256": {
+        "default": "ce7b0e3687e22c128c6027e5b1daa3e754172787899380c61160d77fa0a13c1a",
+        "shiny": "9fb20358e69fe33d61bb2f66a6c341d7b928a91c85a7004ed531ffec31bd1fd1",
+        "female": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+        "femaleShiny": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127"
+      },
+      "shinyAvailability": "released",
+      "identityEvidence": "https://pokemongohub.net/post/event/pokemon-air-adventures-jeju-island-south-korea/",
+      "shinyEvidence": "https://www.serebii.net/pokemongo/shiny.shtml",
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "pixelReview": "Original male and female normal/Shiny Citrus Shirt PNGs inspected. Female artwork has a heart-notched tail. Generic Jeju label remains unresolved and separate.",
+      "femaleArtworkReview": [
+        {
+          "id": "citrus-female-normal",
+          "url": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.634701+00:00",
+          "http": 200,
+          "sha256": "845b9a68063229779560f9ec17d513a34dc1430417868d4250e1cf2bf19e3058",
+          "bytes": 4930
+        },
+        {
+          "id": "citrus-female-shiny",
+          "url": "https://img.pokemondb.net/sprites/go/shiny/1x/pikachu-blue-tshirt-f.png",
+          "observedAt": "2026-10-27T09:00:19.709951+00:00",
+          "http": 200,
+          "sha256": "4eb883e19444c99b8903398d22a7265b17baf5003dcb53b5f88d656dc8841127",
+          "bytes": 4814
+        }
+      ]
     }
   ]
 }

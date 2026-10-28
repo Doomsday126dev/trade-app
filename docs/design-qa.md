@@ -1,0 +1,97 @@
+# Apri implementation QA
+
+## Status
+
+Functional and responsive QA passed for this draft, including the subsequently approved priority selector. Production publication is not requested by this task. Independent review at 23dc9067 confirmed closure of the demonstrated P2 defects. Populated lookup and opened shared-list evidence has now also been captured and inspected locally. User review remains pending; the imagegen-extracted mascot is not a pixel-exact copy of the supplied master. This is a review candidate, not a claim of exact logo extraction or production readiness.
+
+## Reference and implementation comparison
+
+Selected references listed in `design-brief.md` were viewed alongside actual 1440px implementation captures, in light and dark, using eight local comparison sheets. Actual 390px and 820px captures and long-page views were also inspected. Native preview identities are in `apri-preview-library.md`.
+
+- Layout: My List retains its original two-column desktop/single-column phone rows and controls. More uses the reference's grouped sections and one Profile. Events uses a selected-week/day agenda plus existing calendar context. Trainers adapts publication time to the existing Favorites rows rather than inventing the reference's global directory.
+- Spacing: comfortable row/control targets remain. More heading, description and first action have explicit spacing. Phone bottom navigation remains four direct destinations. Full-page screenshot artifacts from fixed navigation are avoided in user-facing viewport captures.
+- Typography: existing system font and hierarchy retained, dark text on warm ivory and light text on charcoal. Readable date with quieter local time; no new font dependency.
+- Color and surfaces: warm ivory static paper with clean card surfaces, charcoal dark and gold controls. Semantic priorities and variant flags remain. Small light-theme Shiny/Lucky labels and gold-button foregrounds were darkened for readability.
+- Imagery: existing Pokémon files and resolver data are unchanged. Apri retains the no-smile silhouette, folded ear and eye highlights at 34 CSS px, checked at 1× and 2×. Extraction is visually recognizable but not exact master pixels. Paper encoding retains subtle fibers without a conspicuous tile grid in wide/long views; no mathematical seamlessness claim.
+
+## Defects found and addressed
+
+- P1: initial lossless brand assets exceeded the existing startup byte budget. Delivered files now total 6,876 bytes; unchanged performance tests pass.
+- P1: More settings dialogs initially returned keyboard focus to the account menu. Each new entry now explicitly supplies its opener for return focus.
+- P2: light-theme white text on gold controls and pale Shiny/Lucky labels. Corrected foreground colors; settled-theme More text/navigation contrast passes 4.5:1 in both engines.
+- P2: full-page phone screenshots placed fixed navigation across content. Deliver viewport captures, retain full pages as internal evidence.
+- Test maintenance: stale tests expected unavailable Worlds 2026 art (already released in baseline), the old More Settings button, and a hidden date filter. Updated to current exact art plus held Gloria fallback, actual grouped destinations, and approved visible-day behavior. The save test now selects the canonical combobox result before toggling flags, preserving real pointer interaction.
+
+No open functional P0/P1 issues found in the qualified flows. Brand fidelity acceptance and a comprehensive all-control contrast audit remain review limitations; focused text contrast is not a full accessibility certification. New copy currently uses English fallback where translations do not yet exist.
+
+## Verification
+
+- `node --test tests/*.test.cjs`: 1,964 passed, 12 skipped, zero failures.
+- `playwright.apri-regression.config.cjs`: 106 passed, 6 skipped (existing unsupported/emulator-dependent cases), zero failures. Chromium and WebKit: public shares, exact/held sprites, day/calendar/details/source states, four-tab navigation, 48-row editing, canonical save/reopen, account fencing/replacement and standalone privacy.
+- `playwright.apri.config.cjs`: all 22 cases pass across Chromium/WebKit. 36 exact-art rows, 390/820/1440, both themes, long names, empty/loading/error/offline, keyboard More actions and focus, reduced motion, system theme, repeated navigation, 2× phone capture.
+- `playwright.apri-performance.config.cjs`: all eight pass. Existing budgets unchanged: desktop and throttled 390/320 startup, 1,000-entry structural bounds and 120-row filtering/editing at 4× CPU.
+- Syntax and whitespace checks passed. No changes to auth, database rules, service contracts, catalog data, sprite files, telemetry, privacy notice or deployment workflows.
+
+All fixtures use synthetic identities/data and isolate production mutations. These checks do not constitute a new real-provider login test. Release numbers remain .148 in this preview; a later authorized release must receive fresh immutable qualification and versioning.
+
+## Intentional differences and deferred scope
+
+Events keeps factual time-basis, source and category controls omitted by the mockup, so cards have additional truthful metadata. Trainers retains authorized lookup/Favorites rather than a new all-trainer table. More retains Tools, App & Data and existing help functions. Existing sign-in is unchanged. Discovery/location indexes, onboarding and calendar export are not implemented. The approved All/High/Medium/Low priority selector is now included.
+
+
+## Independent review corrections and final qualification
+
+The initial captures exposed genuine P2 issues; the draft was revised before handoff:
+- Events: removed redundant intro; combined phone week navigation/view controls; moved healthy checked-time/refresh below the agenda while retaining stale/error disclosure above it. Timed events and day boundaries precede ongoing seasons, with every overlap retained. Metadata is compact without truncating bonuses or uncertainty. At matching 390×844, the first card is about 323–329px rather than ~510px; at 1440×1000 it is ~405px rather than ~552px, with four complete fixture cards. These measurements describe the fixture, not a fixed-card count guarantee.
+- More: removed repetitive descriptions, retaining App & Data clarification and all destinations with at least 44px targets.
+- Shiny: removed the old phone CSS that suppressed text in favor of sparkles. Explicit pink Shiny and Lucky text remains visible at 11px; exact sprites unchanged.
+- Inputs: introduced centralized opaque control-border colors, including legacy input-selector specificity. Browser checks measure at least 3:1 against the input and adjacent Add surface in both themes; actual canonical 36-row captures also assert the final border colors.
+- Save state: check/refresh/error/local shapes accompany color. Existing accessible status labels and recovery actions remain.
+- Category strip: visible edge chevron, keyboard access to the final category, and unchanged filtering assertions.
+- Trainers: four separate actual lookup captures now accompany the four Favorites captures. The timestamp remains a public-snapshot publication time, never a claimed last edit/sign-in.
+- Priority filter: real distinct-row counts, zero-count choices, All including unprioritized flags, keyboard activation, account reset, canonical priority edits moving rows out, and retained hidden selections with explicit scope notice. Full/top/selected sharing scopes and Find counts remain unchanged. Filter interaction makes no writes.
+
+Final source checks: 1,964 unit passed / 12 existing skipped; 106 regression browser passed / 6 existing skipped; 22 presentation/filter browser passed; 8 unchanged performance checks passed. Logs: `/tmp/apri-final-unit.log`, `/tmp/apri-final-regression.log`, `/tmp/apri-final-captures.log`, `/tmp/apri-final-performance.log`. Captures in `apri-preview-library.md` preserve prior versions for before/after review. Local scoped visual QA: final result: passed. User preview review remains pending; no deployment requested or performed.
+
+## Populated browsing evidence and explicit scope checks
+
+Eight additional viewport captures show populated trainer suggestions and the opened synthetic published list at 390×844 and 1440×1000, light/dark. The journey types a known-name prefix, checks both suggestions, opens ReviewTrainerA by ArrowDown/Enter, then opens its costume category. All six sprites decode from the unchanged verified local catalog. The fixture records exactly one simulated public snapshot read and zero owner writes; all external requests are blocked. Existing Favorites captures include one publication date/time and one missing-time dash, with accessible publication semantics. These are separate states, not a new directory.
+
+Local pixel inspection confirmed readable names, explicit Shiny-only text, no horizontal overflow or clipped primary actions in these states. The existing shared-profile comparison summary remains stacked on phone; its density is unchanged. The label fix also replaces the shared-row sparkle-only Shiny flag with localized text. No account, query, permission or data-model changes accompany it.
+
+The priority test now exercises actual Copy text and a downloaded full CSV while Medium is selected: the full outputs contain all four fixture entries, selected text contains only the hidden selected Pikachu, and partial scope disables full-file exports. It also verifies zero filter writes, count updates after a canonical priority edit, the resulting empty Medium state, persistent selection when returning to All, account reset, and keyboard Enter activation. The existing search/filter, image rendering and publication regression coverage remains in place.
+
+P3 agenda repetition: the secondary featured line is suppressed only when one exact identity equals the localized headline or the exact identity plus localized event-type label. Origin Forme under a base-species headline and multiple named Pokémon remain explicit; bonuses and full details are preserved. The separate Up next rail retains its existing content.
+
+Final follow-up logs: `/tmp/apri-evidence-final-unit.log`, `/tmp/apri-evidence-final-presentation.log`, `/tmp/apri-evidence-final-regression.log`, `/tmp/apri-evidence-final-performance.log`. The initial targeted test failures were corrected fixture assumptions (missing-label accessible prefix, HTML bonus emphasis, clipboard stub); a unit VM was supplied its new title-localization dependency. No behavioral assertions or budgets were removed.
+
+## Reconciliation with released .149 and expanded audit
+
+The design now incorporates verified runtime `80db1bb90f3132f7125d7c32932b841ab77abf2b` as a merge parent. This supersedes the earlier .148-only qualification notes above. All .149 catalogue, exact-art resolver, anonymous-renderer, optional-gender and Max-symbol changes are retained. The later user direction supersedes the earlier visible pink Shiny label: no decorative visible Shiny label/sparkle is rendered in lists or image exports; exact Shiny artwork, controls, filters, text exports and accessible descriptions remain.
+
+Reconciliation checks: 1,983 unit tests pass, 12 existing skips; 22 Apri presentation/filter browser tests pass; 106 regression browser tests pass, six emulator-dependent skips; eight unchanged performance-budget checks pass. Chromium and WebKit fixtures cover 390/820/1440 layouts and both themes. The expanded audit adds Settings/Profile, Groups, public wanted-list demand, Admin Members at 320/390/768/1440, dialog/account focus, keyboard autocomplete, undo feedback, navigation history, private-context isolation, share image/text generation, optional gender and recent Max/art selection/save/reload/share paths.
+
+The audit found a design-caused focus-ring regression: a shared theme rule and a more-specific trainer-search rule reduced existing 3px keyboard outlines to 2px. Both now retain 3px outlines with 3px offset. Stale tests were updated to the current More/Admin entry, canonical add/search controls, current runtime release ID, configured localhost origin and WebKit full-keyboard navigation. Behavioral assertions remain; tests do not expose Admin to unauthorized users or weaken runtime guards.
+
+Actual synthetic screenshots inspected: desktop/phone My List, Events, More and populated Trainers in both themes; tablet dark My List; phone dark and desktop light Profile with visible focus and Save controls. Existing My List row structure, exact sprite files, comfortable controls and selected priority-filter behavior remain. No new P0/P1/P2 visual issue was demonstrated after these corrections.
+
+Limits: production account mutations, real provider sign-ins and real privileged Admin actions are not exercised. Synthetic Admin rendering/keyboard navigation is covered. Emulator-dependent cases remain explicitly skipped when the emulator is absent. This is design qualification, not universal catalogue completeness. The reported Shiny Giratina (Origin) image-export unavailable issue is preserved for the separately requested comprehensive released-catalogue review, not silently substituted or declared resolved here. No redesign deployment, tags or production environment approval is included.
+
+Final corrected-source reruns: `playwright.apri-final-audit.config.cjs` **96 passed, zero failures** (2.9 minutes); `playwright.apri.config.cjs` **22 passed, zero failures** (1.5 minutes). Logs: `/tmp/apri149-audit-final.log` and `/tmp/apri149-presentation-final.log`. Together with the retained regression run, 224 browser cases passed and six emulator-dependent cases were skipped. Performance: eight passed. Unit: 1,983 passed and 12 existing skips. Required hosted immutable registration/CI, review and production deployment remain later release steps, not implied by this local qualification.
+
+## Approved options implementation
+
+The reviewed options sample is now implemented, rather than injected as a visual prototype. It retains canonical entries, existing mutation/eligibility checks, quick Add, all requirement fields and stored optional-gender semantics. Native priority radios mirror the existing select values; no data-model change is introduced. Selected Pokémon summary uses the existing exact sprite resolver, including actual Gmax forms and Shiny state, with Change exposed only for new entries. Add to list and Save changes distinguish creation/editing. List priority identifies the existing filters. Optional is capitalized in group labels and the shared English standalone label; ordinary prose is unchanged.
+
+Focused browser coverage passed all ten cases in Chromium/WebKit: 390/820/1440, both themes, exact decoded Gmax Shiny image, reachable expanded-preference actions, no-write cancellation, explicit opener restoration, quick Add and next-entry focus, name changes, explicit female versus unspecified fixed-female costume, save/reopen/edit, IME composition and empty-priority special wants. A Safari pointer-focus difference was fixed by passing the concrete opener to the existing modal focus-restoration mechanism. No authentication logic or privileges changed.
+
+Screenshots were actually inspected in light/dark at phone, tablet and desktop. The final capture fixture waits for transient feedback to settle and replays original base artwork so notifications/placeholders do not obscure the sample. The approved standalone Optional capitalization appears in all captured groups.
+
+
+Final options qualification (2026-10-27): unit aggregate 1,983 passed, 12 existing skips, zero failures (`/tmp/apri-options-unit-final.log`). Presentation/options matrix: 32 passed (`/tmp/apri-options-presentation-ready.log`); retained expanded app audit: 96 passed; Events/share/privacy/canonical regression: 106 passed, six emulator-dependent skips. Additional priority/combined regression: 46 passed, six skips; its two failing cases were subsequently corrected and covered by focused reruns (five of six passed in `/tmp/apri-options-focus-ready.log`, then both Chromium/WebKit help cases passed in `/tmp/apri-options-help-ready.log`). These are combined evidence across scoped revisions, not a claim that every suite ran again on the final immutable commit.
+
+Two genuine interaction defects were fixed: fully typed exact names no longer collapse their input before a confirmed choice, and filtered section-copy scope notes cannot stretch over the section-collapse hit area. Safari About searches now explicitly retains toggle focus so Escape reliably closes List tools; keyboard Combine assertions use actual keyboard activation rather than assuming pointer focus. Existing full-output copy/export scope and legacy conflict warnings remain asserted. The post-fix filtered header was visually inspected.
+
+The first performance attempt caught a stale hidden-select assertion and a shell transfer overage of 1,058 bytes. The test now asserts the visible four native radios; non-runtime stylesheet comments were stripped to reduce delivery bytes. No timing, size, DOM or transfer budget was increased. Final performance result is recorded below. Production account/provider/privileged mutations remain untested as documented above. Catalogue audit and production publication remain separate.
+
+Final unchanged performance gate: **8 passed, zero failures**, 11.1 seconds (`/tmp/apri-options-performance-final.log`). Final diff whitespace check passed. No unresolved demonstrated blocker remains for local design review; hosted qualification and publication are pending separately.

@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+  "reviewedAt": "2026-10-26",
+  "scope": "Seven reviewed released identities with pinned exact GO artwork; includes Caterpie Poké Ball Hat. Source files and hashes remain per record.",
+  "records": [
+    {
+      "no": 216,
+      "names": [
+        "Teddiursa Witch Hat"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:216:standard:legacy:Teddiursa%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm216.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm216.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm216.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm216.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm216.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm216.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Teddiursa Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm216-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm216-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm216-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm216-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "3cb40bc9be34ba8bf896b5dc2c6cdc6bdd68b0389b10614f1624e2bc255d2e41",
+        "shiny": "e1571dce029315a41a8117f65a5834fbde0b1d0ee9b3c64aa46156a8e413537e",
+        "female": "3cb40bc9be34ba8bf896b5dc2c6cdc6bdd68b0389b10614f1624e2bc255d2e41",
+        "femaleShiny": "e1571dce029315a41a8117f65a5834fbde0b1d0ee9b3c64aa46156a8e413537e"
+      },
+      "gitBlobShas": {
+        "default": "1fb58be21efc25d19042c1c1af776aa3714310e4",
+        "shiny": "cf374b7ec6a3553c29ecaf5ccdb334bbc36ae5d4",
+        "female": "1fb58be21efc25d19042c1c1af776aa3714310e4",
+        "femaleShiny": "cf374b7ec6a3553c29ecaf5ccdb334bbc36ae5d4"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 217,
+      "names": [
+        "Ursaring Witch Hat"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:217:standard:legacy:Ursaring%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm217.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm217.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm217.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm217.cHALLOWEEN_2025.g2.icon.png",
+        "femaleShiny": "pm217.cHALLOWEEN_2025.g2.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm217.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Ursaring Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm217-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm217-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm217-challoween-2025-g2-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm217-challoween-2025-g2-s-icon.png"
+      },
+      "sha256": {
+        "default": "d150d9f5f119088782823681d30e8fc048d313cd860a94d85a19cbb56eaaafc3",
+        "shiny": "65802cfdb45544b5bbbf76eb367244a888e61f583ee7014ebb51d830cc748002",
+        "female": "97d075ce03ab5e308500dfb6a69cef969dd30e4980e4c4fce9482064613319d1",
+        "femaleShiny": "7e71ef839fbaf65acd08ded056876262a1ffe700d94b5197d364948b002e8f55"
+      },
+      "gitBlobShas": {
+        "default": "23b9025c320babb4a4b354a863a3283f5d7df5ad",
+        "shiny": "5656bc4c35040e1c4f26e2508e5cd843e6c14e25",
+        "female": "1135ae9e2a52ac9ea82295a4f7072bbfa9b40a29",
+        "femaleShiny": "a95598934fccd76c90878bcee10b9fa87eab6733"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Distinct default and g2 female models",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 901,
+      "names": [
+        "Ursaluna Witch Hat"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:901:standard:legacy:Ursaluna%20Witch%20Hat",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm901.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm901.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm901.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm901.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm901.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm901.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Ursaluna Witch Hat",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm901-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm901-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm901-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm901-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "6e4bed80dc9018f0f553d559faff3bacecb40dabb51a2a95e1fa48dc69141352",
+        "shiny": "2819573bf679ce377fe0f03be06adfa2fd50b578a5f34bce996c0bff9679d8bf",
+        "female": "6e4bed80dc9018f0f553d559faff3bacecb40dabb51a2a95e1fa48dc69141352",
+        "femaleShiny": "2819573bf679ce377fe0f03be06adfa2fd50b578a5f34bce996c0bff9679d8bf"
+      },
+      "gitBlobShas": {
+        "default": "ff9a0ab4a198d58f6adb65c75839b0153d362516",
+        "shiny": "950065518650ef1db58be679d311e0e96a8dfde6",
+        "female": "ff9a0ab4a198d58f6adb65c75839b0153d362516",
+        "femaleShiny": "950065518650ef1db58be679d311e0e96a8dfde6"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 222,
+      "names": [
+        "Galarian Corsola Pink Sunglasses"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm222.fSPRING_2026.icon.png",
+      "sourceFiles": {
+        "default": "pm222.fSPRING_2026.icon.png",
+        "shiny": "pm222.fSPRING_2026.s.icon.png",
+        "female": "pm222.fSPRING_2026.icon.png",
+        "femaleShiny": "pm222.fSPRING_2026.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm222.fSPRING_2026.icon.png",
+      "sourceLabel": "Galarian Corsola Pink Sunglasses",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm222-fspring-2026-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm222-fspring-2026-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm222-fspring-2026-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm222-fspring-2026-s-icon.png"
+      },
+      "sha256": {
+        "default": "03d0c4c2320cadb8fcf9a07f8e1440ad6cfb6b8816b89907ce8d9344451559a3",
+        "shiny": "e4d4ad3ac8300c764ed9bbf6fac9a881d6a492335719e9f5b6093033afc6922c",
+        "female": "03d0c4c2320cadb8fcf9a07f8e1440ad6cfb6b8816b89907ce8d9344451559a3",
+        "femaleShiny": "e4d4ad3ac8300c764ed9bbf6fac9a881d6a492335719e9f5b6093033afc6922c"
+      },
+      "gitBlobShas": {
+        "default": "8f8d6729695fe12207de152a9ceee358df609757",
+        "shiny": "39470083a81749816860b028badf1a65013293a0",
+        "female": "8f8d6729695fe12207de152a9ceee358df609757",
+        "femaleShiny": "39470083a81749816860b028badf1a65013293a0"
+      },
+      "identityEvidence": "https://pokemongo.com/news/sustainability-week-2026",
+      "shinyEvidence": "https://pokemongo.com/news/sustainability-week-2026",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 714,
+      "names": [
+        "Noibat Headband"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:714:standard:legacy:Noibat%20Headband",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm714.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm714.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm714.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm714.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm714.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm714.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Noibat Headband",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm714-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm714-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm714-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm714-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "9dac85c5e62d1f9f452d8c80f62d5ba5592e9f45a7c4985c010a17bb4e7dff25",
+        "shiny": "bfea5bbd8bd7d468d176386c3c8d4b77e14082613e3bfc7c6c6691d315c8aac4",
+        "female": "9dac85c5e62d1f9f452d8c80f62d5ba5592e9f45a7c4985c010a17bb4e7dff25",
+        "femaleShiny": "bfea5bbd8bd7d468d176386c3c8d4b77e14082613e3bfc7c6c6691d315c8aac4"
+      },
+      "gitBlobShas": {
+        "default": "ec42778e5891c0025101d9c6383edf55cbc72d6c",
+        "shiny": "ffc417cc1fff5d4496b65c838bfac9b942482b9e",
+        "female": "ec42778e5891c0025101d9c6383edf55cbc72d6c",
+        "femaleShiny": "ffc417cc1fff5d4496b65c838bfac9b942482b9e"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 715,
+      "names": [
+        "Noivern Headband"
+      ],
+      "status": "exact",
+      "unavailableReason": "",
+      "identityStatus": "released",
+      "reviewIdentityId": "pokemon:715:standard:legacy:Noivern%20Headband",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm715.cHALLOWEEN_2025.icon.png",
+      "sourceFiles": {
+        "default": "pm715.cHALLOWEEN_2025.icon.png",
+        "shiny": "pm715.cHALLOWEEN_2025.s.icon.png",
+        "female": "pm715.cHALLOWEEN_2025.icon.png",
+        "femaleShiny": "pm715.cHALLOWEEN_2025.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm715.cHALLOWEEN_2025.icon.png",
+      "sourceLabel": "Noivern Headband",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-pm715-challoween-2025-icon.png",
+        "shiny": "assets/sprites/go/pokemod-pm715-challoween-2025-s-icon.png",
+        "female": "assets/sprites/go/pokemod-pm715-challoween-2025-icon.png",
+        "femaleShiny": "assets/sprites/go/pokemod-pm715-challoween-2025-s-icon.png"
+      },
+      "sha256": {
+        "default": "b816029326cda9e8278d6598733318a6c9b284acc7dd70ae07c72f138d6b5d94",
+        "shiny": "77fc897c05d8281634273b70cbed7098ca7bf4e938f37e1e6bdc31d32e2db46f",
+        "female": "b816029326cda9e8278d6598733318a6c9b284acc7dd70ae07c72f138d6b5d94",
+        "femaleShiny": "77fc897c05d8281634273b70cbed7098ca7bf4e938f37e1e6bdc31d32e2db46f"
+      },
+      "gitBlobShas": {
+        "default": "543ef0279d1c71335f1bf0171ce25f8f03a8e76e",
+        "shiny": "6b86ce983b1c62859e52dbe70c854059da736d48",
+        "female": "543ef0279d1c71335f1bf0171ce25f8f03a8e76e",
+        "femaleShiny": "6b86ce983b1c62859e52dbe70c854059da736d48"
+      },
+      "identityEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "shinyEvidence": "https://pokemongo.com/news/halloween-part-2-2025",
+      "reviewedAt": "2026-10-26",
+      "genderVisual": "Shared exact-costume visual; no separate g2 model in pinned game assets",
+      "pixelReview": "Original PNGs inspected in labelled contact sheet: exact costume retained for normal/Shiny. Ursaring female model has its distinct neck fur. Galarian Corsola has grey Galarian body and pink sunglasses; base/Johto Corsola is not used."
+    },
+    {
+      "no": 10,
+      "names": [
+        "Caterpie (Poke Ball Hat)",
+        "Caterpie Poké Ball Hat",
+        "Caterpie Pokeball Hat"
+      ],
+      "status": "exact",
+      "identityStatus": "released",
+      "sourceProvider": "pokemod-reviewed-released",
+      "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+      "sourceFile": "pm10.fGOFEST_2026.icon.png",
+      "sourceFiles": {
+        "default": "pm10.fGOFEST_2026.icon.png",
+        "shiny": "pm10.fGOFEST_2026.s.icon.png",
+        "female": "pm10.fGOFEST_2026.icon.png",
+        "femaleShiny": "pm10.fGOFEST_2026.s.icon.png"
+      },
+      "sourcePage": "https://github.com/The-Pokemod-Group/pogo_assets/tree/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets",
+      "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm10.fGOFEST_2026.icon.png",
+      "sourceLabel": "Caterpie wearing a Poké Ball hat; normal and Shiny inspected against mined GOFEST_2026 identity.",
+      "assets": {
+        "default": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
+        "shiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png",
+        "female": "assets/sprites/go/pokemod-caterpie-poke-ball-hat.png",
+        "femaleShiny": "assets/sprites/go/pokemod-caterpie-poke-ball-hat-shiny.png"
+      },
+      "sha256": {
+        "default": "89982e149b29cfa689ea04b8cc8d3b4520def2e8a1176852a09117b994dcc95b",
+        "shiny": "a5a3f7cff1991d0a06faaad8d6906f465b12b48e3956f5a5016cf58dab3734ad",
+        "female": "89982e149b29cfa689ea04b8cc8d3b4520def2e8a1176852a09117b994dcc95b",
+        "femaleShiny": "a5a3f7cff1991d0a06faaad8d6906f465b12b48e3956f5a5016cf58dab3734ad"
+      },
+      "gitBlobShas": {
+        "default": "c53aa97b0db0a5900928603fe3e6d4a38c21608c",
+        "shiny": "65b776579fd9ad385ad024deccf5e77b101e6a8d",
+        "female": "c53aa97b0db0a5900928603fe3e6d4a38c21608c",
+        "femaleShiny": "65b776579fd9ad385ad024deccf5e77b101e6a8d"
+      },
+      "identityEvidence": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+      "shinyEvidence": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+      "reviewedAt": "2026-10-27",
+      "reviewIdentityId": "pokemon:10:standard:legacy:Caterpie%20(Poke%20Ball%20Hat)",
+      "sourceQualification": "Original official Tokyo page now redirects to Mega Finale; official April8 announcement is preserved as embedded tweet at https://comicbook.com/gaming/news/pokemon-go-just-responded-to-a-long-running-meme-in-the-most-hilarious-way-possible/. Direct tweet HTTP403; not retried. LeekDuck archived in-person event provides released identity evidence; art existence is not release proof.",
+      "identityEvidenceDetails": {
+        "url": "https://leekduck.com/events/pokemon-go-fest-2026-tokyo/",
+        "sourceFile": "pm10.fGOFEST_2026.icon.png",
+        "specificShinyIndicator": true,
+        "sourceSha256": "62143d47ff799b5090c997b3729bc4eeb53f1a1a095ba1d7d9b4cc1d41101577",
+        "qualification": "Archived event lists use this exact mined costume filename, with an item-specific Shiny indicator. This corroborates both identity and Shiny release separately from sprite existence."
+      }
+    }
+  ]
+}

@@ -183,3 +183,5 @@ test('CI gap acknowledgements are not frontend inputs; runtime catalogs retain p
  for(const runtime of ['data/costume-sprite-catalog.json','data.js','js/domain/costumeSpriteCatalog.js','index.html','css/app.css'])assert.equal(select([runtime]).performance,true,runtime);
  const fs=require('node:fs'),path=require('node:path');const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../scripts/pages/frontend-files.json')));assert.ok(!Object.values(manifest).filter(Array.isArray).flat().includes('scripts/sprites/costume-gap-baseline.json'));
 });
+
+test('ordinary product browser execution retains one worker and all selected cases',()=>{const{browserArgs}=require('../scripts/select-product-checks.cjs');const files=['tests/first.spec.js','tests/second.spec.js'];assert.deepEqual(browserArgs(files),['node_modules/@playwright/test/cli.js','test',...files,'--project=desktop','--workers=1']);});

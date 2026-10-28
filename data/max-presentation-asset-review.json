@@ -1,0 +1,127 @@
+{
+  "reviewedOn": "2026-10-26",
+  "iconsSourceCommit": "ba151108cbef91fc6b85f184a74e383093a67bf1",
+  "formSourceCommit": "5c6bb56c4026e5fe3cd146910c7e9dad9f07d716",
+  "cinderaceSources": [
+    "https://cdn.leekduck.com/assets/img/pokemon_icons/pm815.fGIGANTAMAX.s.icon.png",
+    "https://cdn.leekduck.com/assets/img/pokemon_icons/poke_capture_0815_000_mf_g_00000000_f_n.png"
+  ],
+  "releaseEvidence": [
+    "https://leekduck.com/events/gigantamax-cinderace-max-battle-day-2026/",
+    "https://pokemongo.com/news/minior-meteor-showers-2026",
+    "https://pokemongohub.net/post/news/minior-showers-minior-debut-during-real-life-meteor-showers/"
+  ],
+  "assets": [
+    {
+      "file": "charizard.png",
+      "sha256": "267c6bdb29451c71d5b21019d6054e0b8d205805b1d9726c9e1343e74c12fcd0",
+      "bytes": 35565
+    },
+    {
+      "file": "charizard-shiny.png",
+      "sha256": "04c9c8908f9695dba3b6a23da8576b96b1dfbd12695ac115a771da4272f88973",
+      "bytes": 35686
+    },
+    {
+      "file": "gigantamax.png",
+      "sha256": "b857eadc2d70f0add5f18cd6d4cb1d59f41f44b11242551be7e4be20d8a67a02",
+      "bytes": 16994
+    },
+    {
+      "file": "cinderace.png",
+      "sha256": "b5fd026ae1ac33f908454ca78c7476f3a2eb2da71690cadda44720d1e36ebbd8",
+      "bytes": 128555
+    },
+    {
+      "file": "dynamax.png",
+      "sha256": "8fd977cd6ff1e0726cad7e3e0efaf4b4db175c1bd7d365d6cd11469e9eeebad9",
+      "bytes": 29240
+    },
+    {
+      "file": "minior.png",
+      "sha256": "bad2f78602f583bb85945966180999742d46fd629b6ae9a18cc3c203632a9a0d",
+      "bytes": 14328
+    },
+    {
+      "file": "cinderace-shiny.png",
+      "sha256": "52e655aa6c2749e87cf0594554b1b6ab59a90e7da4a08b29f2225c22c6a038cd",
+      "bytes": 28988
+    }
+  ],
+  "visualReview": "Originals inspected. Minior green exposed core; Cinderace Gmax fireball and dark Shiny body; Charizard Gmax and Shiny. Icons outlined Dynamax and solid Gigantamax. No generated artwork.",
+  "records": [
+    {
+      "no": 774,
+      "names": [
+        "Minior (Green Core)"
+      ],
+      "status": "exact",
+      "sourceFile": "minior.png",
+      "sourceLabel": "Minior (Green Core)",
+      "sourcePage": "https://pokemongo.com/news/minior-meteor-showers-2026",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-minior.png"
+      },
+      "sha256": {
+        "default": "bad2f78602f583bb85945966180999742d46fd629b6ae9a18cc3c203632a9a0d"
+      },
+      "releaseReview": {
+        "normal": "released Green Core only",
+        "shiny": "not verified released; no artwork assigned",
+        "evidence": [
+          "https://pokemongo.com/news/minior-meteor-showers-2026",
+          "https://pokemongohub.net/post/news/minior-showers-minior-debut-during-real-life-meteor-showers/"
+        ]
+      },
+      "sourceProvider": "max-form-reviewed"
+    },
+    {
+      "no": 815,
+      "names": [
+        "Cinderace (Gigantamax)"
+      ],
+      "status": "exact",
+      "sourceFile": "cinderace.png",
+      "sourceLabel": "Cinderace (Gigantamax)",
+      "sourcePage": "https://leekduck.com/events/gigantamax-cinderace-max-battle-day-2026/",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-cinderace.png",
+        "shiny": "assets/sprites/go/reviewed-cinderace-shiny.png",
+        "female": "assets/sprites/go/reviewed-cinderace.png",
+        "femaleShiny": "assets/sprites/go/reviewed-cinderace-shiny.png"
+      },
+      "sha256": {
+        "default": "b5fd026ae1ac33f908454ca78c7476f3a2eb2da71690cadda44720d1e36ebbd8",
+        "shiny": "52e655aa6c2749e87cf0594554b1b6ab59a90e7da4a08b29f2225c22c6a038cd",
+        "female": "b5fd026ae1ac33f908454ca78c7476f3a2eb2da71690cadda44720d1e36ebbd8",
+        "femaleShiny": "52e655aa6c2749e87cf0594554b1b6ab59a90e7da4a08b29f2225c22c6a038cd"
+      },
+      "shinyAvailability": "released",
+      "sourceProvider": "max-form-reviewed"
+    },
+    {
+      "no": 6,
+      "names": [
+        "Charizard (Gigantamax)"
+      ],
+      "status": "exact",
+      "sourceFile": "charizard.png",
+      "sourceLabel": "Charizard (Gigantamax)",
+      "sourcePage": "https://pokemongo.com/news/gigantamax-charizard-venusaur-blastoise",
+      "assets": {
+        "default": "assets/sprites/go/reviewed-charizard.png",
+        "shiny": "assets/sprites/go/reviewed-charizard-shiny.png",
+        "female": "assets/sprites/go/reviewed-charizard.png",
+        "femaleShiny": "assets/sprites/go/reviewed-charizard-shiny.png"
+      },
+      "sha256": {
+        "default": "267c6bdb29451c71d5b21019d6054e0b8d205805b1d9726c9e1343e74c12fcd0",
+        "shiny": "04c9c8908f9695dba3b6a23da8576b96b1dfbd12695ac115a771da4272f88973",
+        "female": "267c6bdb29451c71d5b21019d6054e0b8d205805b1d9726c9e1343e74c12fcd0",
+        "femaleShiny": "04c9c8908f9695dba3b6a23da8576b96b1dfbd12695ac115a771da4272f88973"
+      },
+      "shinyAvailability": "released",
+      "sourceProvider": "max-form-reviewed"
+    }
+  ]
+}

@@ -33,7 +33,7 @@ test('split and unresolved guidance localize without known-variant checklists',(
 });
 test('public shell canonical identity dependencies accept every catalog species and variant without checklists',()=>{
   const w=load();
-  const rows=JSON.parse(fs.readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8').match(/const rows=(.*);/)[1]);
+  const rows=Array.from(w.PogoDomain.publicPokemonDex.entries());assert.ok(rows.length>1500);
   const t=(key,params={})=>w.PogoLocales.en[key].replace(/\{(\w+)\}/g,(_,k)=>params[k]);
   for(const [name,no]of rows){
     const html=w.PogoUi.stringHtml.contextualSearchHtml(w.PogoDomain.searchStrings.contextualSearchPlan([{name,no}]),{t,title:name,compact:true});

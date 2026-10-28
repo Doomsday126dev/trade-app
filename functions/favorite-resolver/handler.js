@@ -6,7 +6,7 @@ const STATUSES = Object.freeze({
   'favorite/auth-required': 401, 'favorite/app-check-required': 401, 'favorite/caller-unavailable': 403,
   'favorite/origin-denied': 403, 'favorite/rate-limited': 429, 'favorite/busy': 429
 });
-function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, resolve, now = Date.now }) {
+function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, resolve, now = Date.now, diagnostics }) {
   if (typeof enabled !== 'function' || !Array.isArray(origins) || !origins.length || [verifyAuth, verifyAppCheck, resolve].some(fn => typeof fn !== 'function') || !quota?.acquire || !quota?.release) throw new TypeError('Favorite resolver dependencies are required');
   return async function handler(req, res) {
     const origin = req.headers?.origin;
@@ -35,7 +35,7 @@ function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, re
         if (!key(caller?.uid) || !current()) fail('favorite/auth-required');
         try { if (await verifyAppCheck(appToken) !== true) fail('favorite/app-check-required'); } catch { fail('favorite/app-check-required'); }
         if (!current()) fail('favorite/unavailable');
-        lease = await quota.acquire(caller.uid, handles.length);
+        lease = await quota.acquire(caller.uid, handles.length, { deadlineAt: started + LIMITS.deadlineMs, current });
         if (!current()) fail('favorite/unavailable');
         return { version: 1, results: await resolve(caller.uid, handles, current) };
       })();
@@ -44,6 +44,7 @@ function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, re
       return res.status(200).json(value);
     } catch (error) {
       const code = Object.hasOwn(STATUSES, error?.code) ? error.code : 'favorite/unavailable';
+      if (STATUSES[code] === 503) diagnostics?.report('request', error);
       if (STATUSES[code] === 429) res.set('Retry-After', String(Math.max(1, Math.min(900, Number(error.retryAfter) || 2))));
       // No SDK messages, raw errors, identities, handles, tokens or bodies in logs.
       return res.status(STATUSES[code]).json({ code });
@@ -51,7 +52,7 @@ function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, re
       open = false; clearTimeout(timer);
       // An unfinished timeout keeps its lease through the platform's 30s hard
       // timeout (lease is 60s); no new work can use this request after deadline.
-      if (lease && settled) try { await quota.release(lease); } catch { /* The bounded lease expires; quota is never refunded. */ }
+      if (lease && settled) try { await quota.release(lease, { deadlineAt: started + LIMITS.deadlineMs }); } catch (error) { diagnostics?.report('quota-release', error); /* The bounded lease expires; quota is never refunded. */ }
     }
   };
 }

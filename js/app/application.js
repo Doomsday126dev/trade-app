@@ -275,6 +275,10 @@ let managedPublicShareRepository=null;
 let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
+let favoritePublicationObserver=null;
+let favoritePublicationSortTimer=0,favoritePublicationSortPending=false;
+let favoriteIdentityResolverSession=null;
+const favoritePublicationRetries=new WeakMap();
 // Enrollment can pause without removing authority from initialized accounts.
 const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
 const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
@@ -303,6 +307,7 @@ const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
 let ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
+let publicLinkConfirmation=null,publicLinkConfirmationEpoch=0,publicLinkBusy=null,publicLinkPublicationError=null,publicLinkFeedback=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.38";
@@ -446,7 +451,7 @@ let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
 let myListIntent='lf';
 let combinedSelection=new Set(),combinedOwner='',combinedEditor=null,combinedLimit=120;
-let wantsSelectionMode=false;
+let wantsSelectionMode=false,wantsPriorityFilter='ALL';
 const wantsSectionLimits=new Map(),wantsCollapsedSections=new Set(),wantsCustomScopes=new Set();
 function wantSectionLabel(section,options){return window.PogoDomain.priorityValues.wantSectionLabel(section,i18nCore.t,options);}
 function combinedKey(entry){return tradeListComparisonDomain.wantedIntentKey(entry,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})+'|'+JSON.stringify([entry.p||'',entry.note||'']);}
@@ -457,16 +462,24 @@ function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
 }
 const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
-  if(combinedEditor&&combinedEditor.owner!==cur)closeModal('combined-editor-modal');
-  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
+  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;variantClarificationDraft=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
   const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
   const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
+  renderVariantClarificationNotice(model,groups);
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
-  const sections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const allSections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
+  const counts={ALL:groups.length,H:0,M:0,L:0};
+  for(const entry of byEntry.keys())if(Object.hasOwn(counts,entry.p))counts[entry.p]++;
+  document.querySelectorAll('[data-wants-priority-filter]').forEach(button=>{
+    const key=button.dataset.wantsPriorityFilter;
+    button.setAttribute('aria-pressed',String(wantsPriorityFilter===key));
+    button.querySelector('.wants-filter-count').textContent=i18nCore.formatNumber(counts[key]);
+  });
+  const sections=allSections.filter(section=>wantsPriorityFilter==='ALL'||section.priority===wantsPriorityFilter);
   const current=new Map([...host.querySelectorAll(':scope > section')].map(section=>[section.dataset.wantsSection,section]));
   const active=[],nodes=[];let total=0,hasMore=false;
   const baseLimit=Math.floor(combinedLimit/Math.max(1,sections.length));
@@ -501,13 +514,13 @@ function renderCombinedList(model=productDeclarations()){
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
-    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',catalogueVariantReleaseLabel(e),catalogueVariantReleaseLabel(e)],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
-      <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${uiIconMarkup('trash','ui-icon ui-icon-sm')}</button></div></article>`;
+      <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+</div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
     });
@@ -533,13 +546,20 @@ function renderCombinedList(model=productDeclarations()){
   }
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
-  if(!active.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
+  if(!active.length)host.innerHTML=`<p class="empty" role="status">${escHtml(i18nCore.t(wantsPriorityFilter==='ALL'?'contextSearch.empty':'workflow.priorityEmpty',{priority:wantSectionLabel({priority:wantsPriorityFilter,flags:[]})}))}</p>`;
   const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
   for(const [key,cached]of combinedRowCache){if(combinedRowCache.size<=cacheBudget)break;if(!visibleNodes.has(cached.row))combinedRowCache.delete(key);}
   window.__pogoMyListRenderState={complete:true,rendered:nodes.length,total,query,hasMore,usableAt:performance.now()};
   refreshCombinedSearch(model);
+}
+function setWantsPriorityFilter(value){
+  if(!['ALL','H','M','L'].includes(value))return;
+  wantsPriorityFilter=value;
+  // Choosing a priority reveals its rows; selections and copy/export scopes stay intact.
+  if(value!=='ALL')wantsCollapsedSections.delete(value);
+  renderMyList();
 }
 function toggleWantsSection(key){
   if(wantsCollapsedSections.has(key))wantsCollapsedSections.delete(key);else wantsCollapsedSections.add(key);
@@ -567,6 +587,9 @@ function refreshCombinedSearch(model=productDeclarations()){
   toolbar.hidden=!wantsSelectionMode&&!selected.length;
   document.getElementById('wants-select-toggle').hidden=wantsSelectionMode||selected.length>0;
   document.getElementById('combined-selected-count').textContent=selected.length?i18nCore.t('workflow.selected',{count:selected.length}):i18nCore.t('workflow.select');
+  const outside=selected.filter(entry=>wantsPriorityFilter!=='ALL'&&entry.p!==wantsPriorityFilter).length;
+  const scopeNote=document.getElementById('wants-selection-filter-note');
+  scopeNote.hidden=!outside;scopeNote.textContent=outside?i18nCore.t('workflow.selectedOtherPriorities',{count:outside}):'';
   document.getElementById('wants-selection-share').hidden=!selected.length;
   document.getElementById('tab-mylist').classList.toggle('wants-selecting',wantsSelectionMode||selected.length>0);
   const selectedHost=document.getElementById('combined-search');selectedHost.hidden=!selected.length;
@@ -598,7 +621,9 @@ function resetWantsToolsDisclosure(tools){
 }
 function toggleWantsSearchHelp(){
   const help=document.getElementById('wants-about-searches');help.hidden=!help.hidden;
-  document.getElementById('wants-about-searches-toggle').setAttribute('aria-expanded',String(!help.hidden));
+  const toggle=document.getElementById('wants-about-searches-toggle');
+  toggle.setAttribute('aria-expanded',String(!help.hidden));
+  toggle.focus({preventScroll:true});
 }
 function setWantsFindOpen(open){
   closeWantsListTools();
@@ -613,7 +638,7 @@ document.addEventListener('click',event=>{
 function toggleWantsCustomScope(key){if(wantsCustomScopes.has(key))wantsCustomScopes.delete(key);else wantsCustomScopes.add(key);refreshCombinedSearch();}
 function startWantsSelection(){wantsSelectionMode=true;refreshCombinedSearch();}
 function clearWantsSelection(){combinedSelection.clear();wantsSelectionMode=false;renderMyList();}
-function shareWantsSelection(trigger){openProductShare('image','selected',trigger);}
+function shareWantsSelection(){openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();}
 function selectCombinedGroup(index,selected){
   const model=productDeclarations(),groups=combinedGroups(model);
   const group=typeof index==='string'?groups.find(g=>combinedKey(g[0])===index):groups[index];
@@ -622,36 +647,130 @@ function selectCombinedGroup(index,selected){
   document.querySelectorAll('#combined-list .wants-row').forEach(row=>{const input=row.querySelector('input');if(input.dataset.group===(typeof index==='string'?index:combinedKey(group?.[0]||{})))input.checked=selected;row.classList.toggle('wants-selected',input.checked);});
   refreshCombinedSearch(model);
 }
+let wantsPickerItems=[];
+function closeWantsPicker(input){
+  const list=document.getElementById(input.getAttribute('aria-controls'));if(list)list.hidden=true;
+  input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');input._pickerIndex=-1;
+}
+function renderWantsPicker(input){
+  const list=document.getElementById(input.getAttribute('aria-controls'));if(!list||input.readOnly)return;
+  const query=normalizeAcText(input.value);
+  // A fully entered reviewed costume is already an exact choice; keep its
+  // requirements controls reachable. Partial/family queries still show aliases.
+  if(wantsPickerItems.some(item=>normalizeAcText(item.name)===query)&&costumeSpriteCatalogDomain.resolve({name:input.value})){closeWantsPicker(input);return;}
+  input._pickerRows=query?rankAutocompleteItems(wantsPickerItems,query,{limit:25}):[];input._pickerIndex=-1;
+  list.replaceChildren(...input._pickerRows.map((item,index)=>{const option=document.createElement('div');option.id=list.id+'-'+index;option.className='wants-picker-option';option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.textContent=pokemonDisplayName({...item,displayName:item.canonicalDn||item.name});option.addEventListener('pointerdown',event=>event.preventDefault());option.addEventListener('click',()=>chooseWantsPicker(input,index));return option;}));
+  const open=input._pickerRows.length>0;list.hidden=!open;input.setAttribute('aria-expanded',String(open));input.removeAttribute('aria-activedescendant');
+}
+function chooseWantsPicker(input,index){
+  const item=input._pickerRows?.[index];if(!item)return;
+  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name'){refreshCombinedGenderOptions();finishCombinedPokemonChoice();}else input.focus({preventScroll:true});
+}
 function prepareWantsCatalog(){
-  const options=document.getElementById('combined-catalog');
-  if(options.childElementCount)return;
-  // This name-only picker cannot distinguish two category IDs with the same
-  // value. Deduplicate its presentation, without merging catalog or list data.
-  const items=new Map();
-  for(const entry of _specialAllItems()){
-    const item=items.get(entry.name)||{...entry,labels:new Set()};
-    for(const label of [entry.dn,...(entry.searchAliases||[]),...(costumeSpriteCatalogDomain.resolve({name:entry.name})?.no===25?['costume Pikachu']:[])])if(label&&normalizeAcText(label)!==normalizeAcText(entry.name))item.labels.add(label);
-    items.set(entry.name,item);
+  if(!wantsPickerItems.length){
+    const items=new Map();
+    for(const entry of _specialAllItems()){
+      const prior=items.get(entry.name)||{...entry,search:''};
+      // Aliases help matching, but never become a second visible name.
+      prior.search+=' '+normalizeAcText([entry.name,entry.dn,...(entry.searchAliases||[]),costumeSpriteCatalogDomain.resolve({name:entry.name})?.no===25?'costume Pikachu':''].join(' '));items.set(entry.name,prior);
+    }
+    wantsPickerItems=[...items.values()];
   }
-  options.innerHTML=[...items.values()].map(e=>`<option value="${escAttr(e.name)}" label="${escAttr([...e.labels].join(' · '))}">${escHtml(e.name)}</option>`).join('');
+  for(const id of ['wants-add-name','combined-name']){
+    const input=document.getElementById(id);if(!input)continue;if(input.dataset.pickerReady){document.getElementById(input.getAttribute('aria-controls'))?.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));continue;}input.dataset.pickerReady='true';input.removeAttribute('list');
+    const list=document.createElement('div');list.id=id+'-suggestions';list.className='wants-picker';list.setAttribute('role','listbox');list.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));list.hidden=true;
+    input.parentElement.classList.add('wants-picker-wrap');input.insertAdjacentElement('afterend',list);
+    input.setAttribute('role','combobox');if(id==='combined-name')input.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
+    input.addEventListener('input',event=>{if(!event.isComposing)renderWantsPicker(input);});input.addEventListener('compositionend',()=>renderWantsPicker(input));
+    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>closeWantsPicker(input),0));
+    input.addEventListener('keydown',event=>{
+      if(event.isComposing)return;
+      if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();closeWantsPicker(input);return;}
+      if(['ArrowDown','ArrowUp'].includes(event.key)){
+        if(list.hidden)renderWantsPicker(input);if(list.hidden)return;event.preventDefault();
+        const count=input._pickerRows.length,current=input._pickerIndex??-1;input._pickerIndex=current<0?(event.key==='ArrowDown'?0:count-1):(current+(event.key==='ArrowDown'?1:-1)+count)%count;
+        [...list.children].forEach((option,index)=>option.setAttribute('aria-selected',String(index===input._pickerIndex)));
+        const selected=list.children[input._pickerIndex];input.setAttribute('aria-activedescendant',selected.id);selected.scrollIntoView({block:'nearest'});return;
+      }
+      if(event.key==='Enter'&&!list.hidden&&input._pickerIndex>=0){event.preventDefault();chooseWantsPicker(input,input._pickerIndex);}
+    });
+  }
+}
+function catalogueVariantReleaseLabel(entry){const review=window.PogoDomain.publicPokemonDex.variantStatus?.(entry.name),state=entry.shiny?review?.shiny:review?.normal;return state==='unverified'?i18nCore.t('catalogue.releaseUnverified'):state==='announced'?i18nCore.t('catalogue.releaseAnnounced'):'';}
+function refreshCombinedShinyAvailability(){
+  const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
+  const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
+  box.disabled=!!blocked&&!box.checked;
+  hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
+  renderCombinedPokemonSummary();
+}
+function combinedAllowedGenders(name){
+  const eligibility=window.PogoDomain.publicPokemonDex.variantStatus?.(name);if(eligibility)return eligibility.genders;
+  const costume=costumeSpriteCatalogDomain.resolve({name});
+  if(costume?.availableGenders)return costume.availableGenders;
+  // Reviewed recent Max additions: the lake guardians are genderless.
+  // This also covers their existing standard entries; saved conflicts survive.
+  return [480,481,482].includes(window.PogoDomain.publicPokemonDex.dex(name))?[]:['f','m'];
 }
 function refreshCombinedGenderOptions(savedValue){
+  refreshCombinedShinyAvailability();
   const name=document.getElementById('combined-name').value,select=document.getElementById('combined-gender');
-  const allowed=costumeSpriteCatalogDomain.resolve({name})?.availableGenders||['f','m'];
+  const allowed=combinedAllowedGenders(name);
+  // Default Alolan form art is verified; optional female art remains an open
+  // source review. Keep Any gender usable without offering an unverified variant.
+  const pendingGenderArt=spriteSlugsDomain.PUBLIC_EXACT_FORM_IDS[spriteSlugsDomain.normalizeSpriteKey(name)]===10092;
   const value=savedValue===undefined?select.value:savedValue,conflict=value&&!allowed.includes(value);
   const preserve=conflict&&combinedEditor?.entries?.length>0;
   const label=g=>g==='f'?'♀':'♂';
-  select.innerHTML=`<option value="">${escHtml(allowed.length===1?i18nCore.t('costume.genderOnly',{gender:label(allowed[0])}):'—')}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
+  select.innerHTML=`<option value="">${escHtml(i18nCore.t(allowed.length?'wantEditor.anyGender':'wantEditor.genderless'))}</option>`+allowed.map(g=>`<option value="${g}">${label(g)}</option>`).join('')+(preserve?`<option value="${value}">${label(value)} — ${escHtml(i18nCore.t('costume.savedConflict'))}</option>`:'');
   select.value=preserve||allowed.includes(value)?value:'';
+  const savedPendingGender=pendingGenderArt&&value&&combinedEditor?.entries?.some(entry=>entry.name===name&&entry.gender===value);
+  if(pendingGenderArt&&!savedPendingGender){select.innerHTML=`<option value="">${escHtml(i18nCore.t('wantEditor.anyGender'))}</option>`;select.value='';}
+  select.disabled=pendingGenderArt;
   const hint=document.getElementById('combined-gender-hint');
-  hint.hidden=!preserve;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):'';
+  hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
+  renderCombinedPokemonSummary();
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
-function openWantsAddEditor(invoker){
-  openCombinedEditor(undefined,invoker);
+function setCombinedPriority(value){
+  if(!['','H','M','L'].includes(value))return;
+  document.getElementById('combined-priority').value=value;
+  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
+}
+function renderCombinedPokemonSummary(){
+  const host=document.getElementById('combined-identity'),input=document.getElementById('combined-name'),field=document.getElementById('combined-name-field');
+  if(!host||!input||!field)return;
+  const entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
+  const show=!!entry&&!field.dataset.editing;
+  host.hidden=!show;field.hidden=show;
+  if(!show)return;
+  const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
+  document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
+  document.getElementById('combined-identity-art').innerHTML=entry.no?spriteImg(entry.no,60,'combined-identity-sprite',name,gender,entry.dn||entry.displayName||name,{shiny,catalogId:entry.catalogId}):'';
+  const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
+  form.replaceChildren();form.hidden=!type;
+  if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
+  document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
+}
+function changeCombinedPokemon(){
+  if(combinedEditor?.entries?.length)return;
+  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;
+  document.getElementById('combined-identity').hidden=true;
+  const input=document.getElementById('combined-name');input.focus();input.select();
+}
+function finishCombinedPokemonChoice(){
+  const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
+  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
+  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();
+  if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
+}
+function openWantsAddEditor(opener=document.activeElement){
+  openCombinedEditor(undefined,{returnFocus:opener});
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
-  setCombinedEditorPriority(document.getElementById('wants-add-priority').value);
+  refreshCombinedGenderOptions();
+  setCombinedPriority(document.getElementById('wants-add-priority').value);
+  finishCombinedPokemonChoice();
 }
 function setWantsAddPriority(priority){
   const input=document.getElementById('wants-add-priority');input.value=input.value===priority?'':priority;
@@ -662,60 +781,156 @@ async function submitWantsAdd(){
   const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
   button.disabled=true;
   try{
-    openWantsAddEditor(input);await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
+    openWantsAddEditor(button);await saveCombinedEditor();
+    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';input.focus({preventScroll:true});}
   }finally{button.disabled=false;}
 }
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
-  renderCombinedList();openProductShare('image','selected');
+  renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
-function setCombinedEditorPriority(value){
-  document.getElementById('combined-priority').value=value;
-  document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
-}
-function combinedEditorSessionCurrent(draft){
-  return draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&
-    draft.sessionGeneration===_sessionTransientGeneration&&draft.runtimeGeneration===accountSyncRuntimeGeneration&&draft.runtime===managedAccountSyncRuntime;
-}
-function openCombinedEditor(index,invoker){
+function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  const modal=document.getElementById('combined-editor-modal'),focused=document.activeElement;
-  const opener=invoker?.isConnected?invoker:modal.contains(focused)?_modalPrevFocus:focused;
-  const previousInert=combinedEditor?.appInert??document.getElementById('app').inert;
-  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries),runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,sessionGeneration:_sessionTransientGeneration,appInert:previousInert};
+  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  variantClarificationDraft=null;setClarificationControlsLocked(false);
+  document.querySelector('#combined-editor-modal form').classList.remove('clarification-copy-created');
+  document.getElementById('combined-save').hidden=false;
+  const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
-  input.value=entry.name||'';input.readOnly=!!entries?.length;
+  const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
+  input.value=entry.name||'';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
+  if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';
+  document.getElementById('combined-preferences').open=false;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
+  refreshCombinedShinyAvailability();
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
-  setCombinedEditorPriority([...priorities][0]||'');
+  setCombinedPriority([...priorities][0]||'');
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
-  const editing=!!entries?.length,titleKey=editing?'wantEditor.edit':'wantEditor.add',saveKey=editing?'wantEditor.save':'wantEditor.add';
-  for(const [id,key]of [['combined-editor-title',titleKey],['combined-save',saveKey]]){
-    const node=document.getElementById(id);node.dataset.i18n=key;node.textContent=i18nCore.t(key);
-  }
-  document.getElementById('combined-name-field').hidden=editing;
-  const identity=document.getElementById('combined-identity');identity.hidden=!editing;
-  identity.innerHTML=editing?`<strong>${escHtml([entry.dn||entry.name,productShareCategoryLabel(entry)].filter(Boolean).join(' · '))}</strong>`:'';
-  document.getElementById('combined-note-details').open=Boolean(entry.note);
-  combinedEditor.initialFields=Object.fromEntries(['mod','note','gender'].map(field=>[field,document.getElementById('combined-'+field).value]));
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
-  document.getElementById('combined-save').disabled=false;
-  document.getElementById('wants-remove').disabled=false;
+  const save=document.getElementById('combined-save');save.disabled=false;save.dataset.i18n=entries?.length?'wantEditor.saveChanges':'wantEditor.addAction';save.textContent=i18nCore.t(save.dataset.i18n);
+  renderCombinedPokemonSummary();
   document.getElementById('wants-remove').hidden=!entries?.length;
-  document.getElementById('app').inert=true;
-  // A replacement editor draft owns its explicit invoker even while this same
-  // modal is already open. Do not change other modals' return-focus behavior.
-  if(_modalActiveId==='combined-editor-modal')_modalPrevFocus=opener;
-  openModal('combined-editor-modal',{initialFocus:editing?'#combined-close':'#combined-name',returnFocus:opener});
-  document.querySelector('#combined-editor-modal .want-editor-body').scrollTop=0;
+  document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
+  renderVariantClarificationPanel();
+  openModal('combined-editor-modal',{returnFocus:options.returnFocus,initialFocus:document.getElementById('combined-name-field').hidden?'#combined-priorities input:checked':'#combined-name'});
+}
+let variantClarificationDraft=null;
+const variantClarificationDismissed=new Map();
+function variantClarificationKey(){return `variant-clarification-v1:${auth?.currentUser?.uid||''}:${cur||''}`;}
+function variantClarificationSources(entries){
+  const sources=new Map();
+  for(const entry of entries||[])for(const raw of [entry,...entry.aliases||[]]){const entity=combinedSourceEntity(raw);if(entity)sources.set(entity.entityId,entity);else return [];}
+  return [...sources.values()];
+}
+function variantClarificationFamily(entry){
+  if(!entry||!accountSyncProduct.clarificationFamily(entry.name,entry.shiny)||!auth?.currentUser?.uid||!accountSyncProjectionReady())return '';
+  const sources=variantClarificationSources([entry]);
+  if(!sources.length||sources.some(source=>source.ownerUid!==auth.currentUser.uid))return '';
+  const families=sources.map(source=>accountSyncProduct.clarificationFamily(accountSyncCatalogEntryForId(source.identity.catalogId)?.name,source.values.shiny));
+  return families[0]&&families.every(family=>family===families[0])?families[0]:'';
+}
+function variantClarificationIgnored(){
+  try{return new Set([...(variantClarificationDismissed.get(variantClarificationKey())||[]),...JSON.parse(localStorage.getItem(variantClarificationKey())||'[]')]);}catch{return new Set(variantClarificationDismissed.get(variantClarificationKey())||[]);}
+}
+function ignoreVariantClarifications(ids){
+  const ignored=variantClarificationIgnored();ids.forEach(id=>ignored.add(id));
+  variantClarificationDismissed.set(variantClarificationKey(),ignored);
+  try{localStorage.setItem(variantClarificationKey(),JSON.stringify([...ignored].slice(-300)));}catch{}
+  renderVariantClarificationNotice();
+}
+function variantClarificationRows(model=productDeclarations(),groups=combinedGroups(model)){
+  return groups.filter(entries=>variantClarificationFamily(entries[0]));
+}
+function renderVariantClarificationNotice(model=productDeclarations(),groups){
+  const host=document.getElementById('variant-clarification-notice');if(!host)return;
+  const ignored=variantClarificationIgnored(),rows=variantClarificationRows(model,groups).filter(entries=>variantClarificationSources(entries).some(e=>!ignored.has(e.entityId)));
+  host.hidden=!rows.length;if(!rows.length){host.replaceChildren();return;}
+  host.innerHTML=`<span>${escHtml(i18nCore.t('clarify.notice'))}</span><button type="button" class="btn btn-ghost" onclick="openFirstVariantClarification()">${escHtml(i18nCore.t('clarify.action'))}</button><button type="button" class="btn btn-ghost clarification-dismiss" onclick="dismissVariantClarificationNotice()" aria-label="${escAttr(i18nCore.t('clarify.dismiss'))}" title="${escAttr(i18nCore.t('clarify.dismiss'))}"><span aria-hidden="true">×</span></button>`;
+}
+function dismissVariantClarificationNotice(){ignoreVariantClarifications(variantClarificationRows().flatMap(variantClarificationSources).map(e=>e.entityId));document.querySelector('#combined-list .myrow-name')?.focus({preventScroll:true});}
+function openFirstVariantClarification(){
+  const ignored=variantClarificationIgnored(),entries=variantClarificationRows().find(rows=>variantClarificationSources(rows).some(e=>!ignored.has(e.entityId)));if(!entries)return;
+  openCombinedEditor(combinedKey(entries[0]),{returnFocus:document.querySelector('[data-wants-priority-filter="ALL"]')});const details=document.querySelector('#variant-clarification-panel details');if(details){details.open=true;details.querySelector('select')?.focus();}
+}
+function renderVariantClarificationPanel(){
+  const host=document.getElementById('variant-clarification-panel'),entry=combinedEditor?.entries?.[0],family=variantClarificationFamily(entry);
+  host.hidden=!family;host.replaceChildren();if(!family)return;
+  const sources=variantClarificationSources(combinedEditor.entries),choices=accountSyncProduct.CLARIFICATION_CHOICES[family].filter(name=>accountSyncCatalogIdentity('wishlist',name));
+  host.innerHTML=`<details><summary>${escHtml(i18nCore.t('clarify.action'))}</summary><p>${escHtml(i18nCore.t('clarify.help'))}</p><label for="variant-clarification-choice">${escHtml(i18nCore.t(({pattern:'clarify.pattern',style:'clarify.style',year:'clarify.year'})[family]))}</label><select class="field-control" id="variant-clarification-choice" onchange="updateVariantClarificationPreview()"><option value="">${escHtml(i18nCore.t('clarify.unspecified'))}</option>${choices.map(name=>`<option value="${escAttr(name)}">${escHtml(pokemonDisplayName(accountSyncCatalogEntryForName('wishlist',name)||{name}))}</option>`).join('')}</select><div id="variant-clarification-preview" class="variant-clarification-preview"></div><p id="variant-clarification-status" role="status"></p><div class="variant-clarification-actions"><button type="button" id="variant-clarification-add" class="btn btn-secondary" onclick="addClarifiedVariant()" disabled>${escHtml(i18nCore.t('clarify.add'))}</button><button type="button" id="variant-clarification-keep" class="btn btn-ghost" onclick="keepVariantUnspecified()">${escHtml(i18nCore.t('clarify.unspecified'))}</button><button type="button" id="variant-clarification-check" class="btn btn-secondary" onclick="checkClarifiedVariant()" hidden>${escHtml(i18nCore.t('clarify.check'))}</button><button type="button" id="variant-clarification-remove" class="btn btn-secondary" onclick="removeClarifiedOriginal()" hidden>${escHtml(i18nCore.t('clarify.remove'))}</button></div></details>`;
+  if(sources.length!==1){document.getElementById('variant-clarification-choice').disabled=true;document.getElementById('variant-clarification-status').textContent=i18nCore.t('clarify.grouped');}
+}
+function updateVariantClarificationPreview(){
+  const name=document.getElementById('variant-clarification-choice').value,entry=combinedEditor?.entries?.[0],catalog=accountSyncCatalogEntryForName('wishlist',name),host=document.getElementById('variant-clarification-preview');
+  document.getElementById('variant-clarification-add').disabled=!catalog||!!variantClarificationDraft;
+  host.innerHTML=catalog?`${spriteImg(catalog.no,64,'',name,entry?.gender||'',pokemonDisplayName(catalog),{shiny:entry?.shiny===true,catalogId:catalog.catalogId})}<span>${escHtml(pokemonDisplayName(catalog))}${entry?.shiny?`<small>${escHtml(i18nCore.t('share.flagShiny'))}</small>`:''}<small>${escHtml(catalogueVariantReleaseLabel({...catalog,shiny:entry?.shiny===true})||'')}</small></span>`:'';
+}
+function keepVariantUnspecified(){
+  if(!combinedEditor)return;ignoreVariantClarifications(variantClarificationSources(combinedEditor.entries).map(e=>e.entityId));
+  const details=document.querySelector('#variant-clarification-panel details');details.open=false;details.querySelector('summary')?.focus();
+}
+function clarificationSessionCurrent(draft){return draft&&draft.editor===combinedEditor&&document.getElementById('combined-editor-modal')?.classList.contains('open')&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.user===auth?.currentUser&&draft.generation===_sessionTransientGeneration&&draft.controller===managedAccountSyncRuntime?.controller;}
+function clarificationMessage(key){const host=document.getElementById('variant-clarification-status');if(host){const messageKey=`clarify.${key}`;host.textContent=i18nCore.t(messageKey);}}
+function clarificationHasUnsavedEdits(draft){
+  const entry=draft.entries[0];return ['mod','note','gender'].some(f=>document.getElementById('combined-'+f).value!==(entry[f]||''))||['shiny','lucky','xxl','xxs'].some(f=>document.getElementById('combined-'+f).checked!==(entry[f]===true))||document.getElementById('combined-priority').value!==(entry.p||'');
+}
+function setClarificationControlsLocked(locked){
+  document.querySelectorAll('#combined-editor-modal input,#combined-editor-modal textarea,#combined-editor-modal select,#combined-save,#wants-remove').forEach(control=>{
+    if(locked){if(!Object.hasOwn(control.dataset,'clarifyDisabledBefore'))control.dataset.clarifyDisabledBefore=String(control.disabled);control.disabled=true;}
+    else if(Object.hasOwn(control.dataset,'clarifyDisabledBefore')){control.disabled=control.dataset.clarifyDisabledBefore==='true';delete control.dataset.clarifyDisabledBefore;}
+  });
+}
+async function addClarifiedVariant(){
+  const editor=combinedEditor,button=document.getElementById('variant-clarification-add');if(!editor||button.disabled||variantClarificationDraft)return;
+  if(clarificationHasUnsavedEdits(editor)){clarificationMessage('saveFirst');return;}
+  const sources=variantClarificationSources(editor.entries),name=document.getElementById('variant-clarification-choice').value,catalog=accountSyncCatalogIdentity('wishlist',name);
+  if(sources.length!==1||!catalog){clarificationMessage('grouped');return;}
+  const source=accountSyncClone(sources[0]),draft={editor,owner:cur,uid:auth?.currentUser?.uid,user:auth?.currentUser,generation:_sessionTransientGeneration,source,controller:managedAccountSyncRuntime?.controller};button.disabled=true;setClarificationControlsLocked(true);
+  const close=document.getElementById('combined-close');close.dataset.i18n='common.close';close.textContent=i18nCore.t('common.close');
+  try{
+    const authority=await accountSyncMutationAuthority();if(!clarificationSessionCurrent(draft))return;if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)){clarificationMessage('failed');return;}
+    if(accountSyncModel.canonicalJson(draft.controller.getEntity('tradeEntry',source.entityId))!==accountSyncModel.canonicalJson(source)){clarificationMessage('changed');return;}
+    const identity={...source.identity,catalogId:catalog.catalogId},targetId=accountSyncModel.tradeEntryId(identity);
+    const plan=accountSyncProduct.clarificationPlan({source,sourceName:editor.entries[0].name,targetName:name,targetCatalogId:catalog.catalogId,existing:draft.controller.getEntity('tradeEntry',targetId)});
+    if(!plan.ok){clarificationMessage(plan.code==='collision'?'collision':'changed');return;}
+    const result=await applyAccountSyncTradeMutations([plan.mutation],authority.controller);
+    if(!clarificationSessionCurrent(draft))return;
+    if(!result?.ok){clarificationMessage('failed');return;}
+    variantClarificationDraft={...draft,plan,operationId:result.operations[0].operationId};
+    document.querySelector('#combined-editor-modal form').classList.add('clarification-copy-created');
+    document.getElementById('combined-save').hidden=true;document.getElementById('wants-remove').hidden=true;button.hidden=true;
+    document.getElementById('variant-clarification-choice').disabled=true;document.getElementById('variant-clarification-keep').hidden=true;
+    document.getElementById('variant-clarification-check').hidden=false;document.getElementById('variant-clarification-check').focus();clarificationMessage('pending');
+    await authority.controller.drain();if(clarificationSessionCurrent(draft))await checkClarifiedVariant();
+  }catch{if(clarificationSessionCurrent(draft))clarificationMessage('failed');}
+  finally{if(editor===combinedEditor){button.disabled=!!variantClarificationDraft;if(!variantClarificationDraft){setClarificationControlsLocked(false);close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');}}}
+}
+async function checkClarifiedVariant(){
+  const draft=variantClarificationDraft;if(!clarificationSessionCurrent(draft))return false;
+  const state=await draft.controller.snapshot();if(!clarificationSessionCurrent(draft))return false;
+  const source=draft.controller.getEntity('tradeEntry',draft.source.entityId),target=draft.controller.getEntity('tradeEntry',draft.plan.mutation.entityId);
+  const confirmed=!clarificationHasUnsavedEdits(draft.editor)&&accountSyncProduct.clarificationConfirmed({plan:draft.plan,source,target,state,operationId:draft.operationId});
+  draft.confirmed=confirmed;document.getElementById('variant-clarification-remove').hidden=!confirmed;
+  const check=document.getElementById('variant-clarification-check'),focused=check===document.activeElement;check.hidden=confirmed;if(confirmed&&focused)document.getElementById('variant-clarification-remove').focus();
+  const changed=!source||accountSyncModel.canonicalJson(source)!==draft.plan.sourceBefore||target&&(target.deleted||target.generation!==1||target.revision!==1||target.lifecycleMutation!==draft.operationId||accountSyncModel.canonicalJson(target.values)!==accountSyncModel.canonicalJson(draft.plan.mutation.values));
+  clarificationMessage(confirmed?'confirmed':changed?'changed':state.blockedCount||state.conflictCount||state.state==='sync-error'?'failed':'pending');return confirmed;
+}
+async function removeClarifiedOriginal(){
+  const draft=variantClarificationDraft;if(!await checkClarifiedVariant()||!clarificationSessionCurrent(draft))return;
+  const authority=await accountSyncMutationAuthority();if(!clarificationSessionCurrent(draft)||authority.controller!==draft.controller||!accountSyncAuthorityCurrent(authority)||!await checkClarifiedVariant())return;
+  const button=document.getElementById('variant-clarification-remove');button.disabled=true;
+  try{
+    const result=await applyAccountSyncTradeMutations([{kind:'delete',entityType:'tradeEntry',entityId:draft.source.entityId,expectedGeneration:draft.source.generation}],draft.controller);
+    if(!clarificationSessionCurrent(draft))return;
+    if(!result?.ok){clarificationMessage('failed');return;}
+    closeModal('combined-editor-modal');renderMyList();
+  }catch{if(clarificationSessionCurrent(draft))clarificationMessage('failed');}finally{if(clarificationSessionCurrent(draft))button.disabled=false;}
 }
 function combinedSourceEntity(entry){
-  const ref=entry.ref;if(ref?.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
+  const ref=entry.ref;if(!ref)return null;if(ref.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
   const catalog=accountSyncCatalogIdentity(ref?.type||'wishlist',entry.name,entry);if(!catalog)return null;
   const identity={surface:ref.surface,lane:ref.surface==='special-board'?(entry.intent==='lf'?'looking-for':'for-trade'):ref.type,catalogId:catalog.catalogId};
   const id=accountSyncModel.tradeEntryId(identity);
@@ -723,8 +938,8 @@ function combinedSourceEntity(entry){
 }
 async function saveCombinedEditor(remove=false){
   const draft=combinedEditor,error=document.getElementById('combined-error'),button=document.getElementById('combined-save');
-  if(!draft||draft.busy||button.disabled)return;
-  const fail=key=>{if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;error.textContent=i18nCore.t(key);button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;};
+  if(!draft||button.disabled)return;
+  const fail=key=>{error.textContent=i18nCore.t(key);button.disabled=false;};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -732,7 +947,9 @@ async function saveCombinedEditor(remove=false){
   if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
   const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
-  const allowedGenders=costumeSpriteCatalogDomain.resolve({name})?.availableGenders;
+  const costume=costumeSpriteCatalogDomain.resolve({name}),allowedGenders=combinedAllowedGenders(name);
+  const unchangedSavedShiny=draft.entries.length&&draft.entries.every(entry=>entry.shiny===true);
+  if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
@@ -740,11 +957,10 @@ async function saveCombinedEditor(remove=false){
   const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
-  button.disabled=true;draft.busy=true;document.getElementById('wants-remove').disabled=true;
+  button.disabled=true;
   try{
-    if(!combinedEditorSessionCurrent(draft))return fail('phase2.changed');
     const authority=await accountSyncMutationAuthority();
-    if(!combinedEditorSessionCurrent(draft)||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
+    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
     for(const side of ['lf']){
@@ -758,7 +974,7 @@ async function saveCombinedEditor(remove=false){
           for(const [field,value] of Object.entries(changes)){
             const empty=['shiny','lucky','xxl','xxs'].includes(field)?false:'';
             // A priority-only edit must not overwrite differing saved notes or flags.
-            if(value!==(draft.initialFields?.[field]??draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
+            if(value!==(draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
           }
           if(side==='lf'&&priority!=='mixed'&&priority!==entry.p)patch.priority=priority;
           // Keep the existing list encoder's gender representation coherent.
@@ -777,15 +993,11 @@ async function saveCombinedEditor(remove=false){
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
-    // A durable queued mutation is already accepted, even if transport readiness
-    // changes immediately afterward. Only a superseded draft/session may not finish.
-    if(!combinedEditorSessionCurrent(draft))return;
+    if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
-    renderMyList();
-    if(!_modalPrevFocus?.isConnected)_modalPrevFocus=document.getElementById('wants-add-name');
-    closeModal('combined-editor-modal');
+    closeModal('combined-editor-modal');renderMyList();
   }catch(error){fail(accountSyncEditFailureKey(error?.code));}
-  finally{if(draft===combinedEditor){button.disabled=false;draft.busy=false;document.getElementById('wants-remove').disabled=false;}}
+  finally{button.disabled=false;}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
@@ -819,6 +1031,10 @@ const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
+function maxPresentationType(entry){return /\(Gigantamax\)/i.test(entry.name||'')?'gmax':/\(Dynamax\)/i.test(entry.name||'')?'dynamax':'';}
+function maxPresentationName(name){return String(name||'').replace(/\s*\((?:Dynamax|Gigantamax)\)/gi,'').trim();}
+function maxPresentationIcon(type){return type==='gmax'?'assets/gigantamax-symbol.png':type==='dynamax'?'assets/dynamax-symbol.png':'';}
+function maxPresentationMarkup(entry){const type=maxPresentationType(entry);return type?`<span class="sprite-max-symbol"><img src="${maxPresentationIcon(type)}" alt="${type==='gmax'?'Gigantamax':'Dynamax'}" title="${type==='gmax'?'Gigantamax':'Dynamax'}"></span>`:'';}
 const MAX_CLOUD_URL='assets/max-cloud.svg';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
@@ -839,11 +1055,11 @@ const GENDER_DIFF_DEX_FEMALE=new Set([
   // Gen 6
   668,678,
   // Gen 8+
-  876
+  876,916
 ]);
 // Pokémon with VERY noticeable gender differences (different colors, body shape, etc.)
 // — always swap sprite even on small thumbnails
-const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876]);
+const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876,916]);
 // Pokémon where one gender is the only form that evolves into the next stage
 // (useful context for trade lists — e.g., only female Combee → Vespiquen)
 const GENDER_EVOLUTION_LOCKED={415:'f',678:'both',876:'both',758:'f'}; // 758=Salazzle is female-only species
@@ -864,15 +1080,15 @@ const COSTUME_FORM_SPRITE_IDS={
   "Unown (U)":"201-u","Unown (V)":"201-v","Unown (W)":"201-w","Unown (X)":"201-x",
   "Unown (Y)":"201-y","Unown (Z)":"201-z","Unown (!)":"201-exclamation","Unown (?)":"201-question",
   "Castform (Normal)":351,"Castform (Sunny)":10013,"Castform (Rainy)":10014,"Castform (Snowy)":10015,
-  "Burmy (Plant)":412,"Burmy (Sandy)":"412-sandy","Burmy (Trash)":"412-trash",
+  "Burmy (Plant)":412,
   "Wormadam (Plant)":413,"Wormadam (Sandy)":10004,"Wormadam (Trash)":10005,
-  "Cherrim (Overcast)":421,"Cherrim (Sunny)":"421-sunshine",
-  "Shellos (Pink)":422,"Shellos (Blue)":"422-east",
+  "Cherrim (Overcast)":421,
+  "Shellos (Pink)":422,
   "Rotom":479,"Rotom (Heat)":10008,"Rotom (Wash)":10009,"Rotom (Frost)":10010,"Rotom (Fan)":10011,"Rotom (Mow)":10012,
   "Basculin (Red Stripe)":550,"Basculin (Blue Stripe)":10016,"Basculin (White Stripe)":10247,
-  "Deerling (Spring)":585,"Deerling (Summer)":"585-summer","Deerling (Autumn)":"585-autumn","Deerling (Winter)":"585-winter",
+  "Deerling (Spring)":585,
   "Sawsbuck (Spring)":586,"Sawsbuck (Summer)":"586-summer","Sawsbuck (Autumn)":"586-autumn","Sawsbuck (Winter)":"586-winter",
-  "Flabébé (Red Flower)":669,"Flabébé (Yellow Flower)":"669-yellow","Flabébé (Orange Flower)":"669-orange","Flabébé (Blue Flower)":"669-blue","Flabébé (White Flower)":"669-white",
+  "Flabébé (Red Flower)":669,
   "Furfrou (Heart)":"676-heart","Furfrou (Star)":"676-star","Furfrou (Diamond)":"676-diamond",
   "Furfrou (Debutante)":"676-debutante","Furfrou (Matron)":"676-matron","Furfrou (Dandy)":"676-dandy",
   "Furfrou (La Reine)":"676-la-reine","Furfrou (Kabuki)":"676-kabuki","Furfrou (Pharaoh)":"676-pharaoh",
@@ -921,6 +1137,7 @@ const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":
 // Additional form identities. Exact form art is resolved independently; when
 // it is unavailable, consumers must keep the identity and show missing art.
 const EXTRA_FORM_ENTRIES=[
+  {no:774,name:"Minior (Green Core)",displayName:"Minior (Green Core)",users:{}},
   // Spinda — 8 standard spot patterns in Pokémon GO + heart form
   {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"",users:{}},
   {no:327,name:"Spinda (Form 2)",displayName:"Spinda (Form 2)",spriteUrl:"",users:{}},
@@ -977,10 +1194,14 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
-  if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||resolvedName,entry?.no))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName)?.assets)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(entry?.shiny!==true&&isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:gender||entry?.gender||'',shiny:entry?.shiny===true});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no);
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||resolvedName))return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,entry?.shiny===true)[0]||null;
+  if(entry?.shiny===true)return publicSpriteUrls(context.canonicalName||resolvedName,gender||entry?.gender||'',entry?.no,true)[0]||null;
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||resolvedName,entry?.no,gender||entry?.gender||'',entry?.shiny===true);
   if(equivalent)return equivalent;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
   const identity=spriteSemanticIdentity(context.canonicalName||resolvedName,gender,entry?.no);
@@ -995,14 +1216,21 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return null;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return publicSpriteUrls(context.canonicalName||name,gender,no)[0]||null;
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
   if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no);
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(lookupName))return publicSpriteUrls(lookupName,gender,no)[0]||null;
+  if(spriteSlugsDomain.reviewedPreferredForm(lookupName,no))return publicSpriteUrls(lookupName,gender,no)[0]||null;
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(lookupName,no,gender);
   if(equivalent)return equivalent;
   const compatibilityKeys=context.lookupKeys;
   const identity=spriteSemanticIdentity(lookupName,gender,no);
+  // Shared numeric mappings also cover newly reconciled regional evolutions.
+  // Existing reviewed mappings retain their established preferred artwork.
+  const sharedFormId=spriteSlugsDomain.PUBLIC_EXACT_FORM_IDS[normalizeSpriteKey(lookupName)];
+  if(sharedFormId&&!compatibilityKeys.some(key=>COSTUME_FORM_SPRITE_IDS[key]||REGIONAL_FORM_IDS[key]))return publicSpriteUrls(lookupName,gender,no)[0]||null;
   // 1. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
   const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
   if(formKey&&!(identity.explicitForm&&identity.genderDistinct))return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
@@ -1055,11 +1283,16 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||name,no))return urls;
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
   push(context.override?.url);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender,shiny});
   if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
-  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no);
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||name))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,shiny));
+  const equivalent=spriteSlugsDomain.verifiedEquivalentSpriteUrl(context.canonicalName||name,no,gender,shiny);
   if(equivalent){push(equivalent);return urls;}
+  // Shiny requests must never enter the normal-color fallback chain.
+  if(shiny)return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no,true));
+  if(spriteSlugsDomain.reviewedPreferredForm(context.canonicalName||name,no))return Array.from(publicSpriteUrls(context.canonicalName||name,gender,no));
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
@@ -1074,7 +1307,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
   if(gender==='f'&&!identity.explicitForm)push(femaleSpriteUrl(no));
   // Pokémon Database HOME for form/regional/gender variants.
   push(pokemondbSpriteUrl(safeName,dn||safeName,gender));
-  if(identity.exactRequired)return urls;
+  if(identity.exactRequired){for(const url of publicSpriteUrls(safeName,gender,no))push(url);return urls;}
   if(gender==='f'){
     push(pokemondbSpriteUrl(safeName,dn||safeName,''));   // PokemonDB without -female suffix
     if(primary&&primary.includes('/female/')&&no){
@@ -1093,7 +1326,7 @@ function reviewedEquivalentSpriteOverride(no,name,dn,url){
 }
 function vettedSpriteUrlOverride(no,name,gender,dn,url,chain){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
-  if(reviewedEquivalentSpriteOverride(no,name,dn,url))return url;
+  if(reviewedEquivalentSpriteOverride(no,name,dn,url)&&chain.includes(url))return url;
   const identity=spriteSlugsDomain.spriteSemanticIdentity?.(name||dn,gender,no);
   const exactRequired=identity?.exactRequired??(
     normalizeSpriteKey(spriteSlugsDomain.publicSpriteDisplayName(name||dn))!==normalizeSpriteKey(spriteSlugsDomain.publicSpriteBaseName(name||dn))||gender==='f'
@@ -2122,10 +2355,12 @@ function syncPokemonGoSearchLanguageControl(){
   const override=preference!=='follow-app';
   if(override)_pokemonGoSearchOverrideDraft=preference;
   else if(!pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(_pokemonGoSearchOverrideDraft))_pokemonGoSearchOverrideDraft=pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());
+  const checkbox=document.getElementById('settings-search-language-override');
+  const row=document.getElementById('settings-search-language-override-row');
   const select=document.getElementById('settings-search-language');
-  if(select){select.disabled=false;select.value=preference;}
-  const help=document.getElementById('settings-search-language-help');
-  if(help)help.textContent=i18nCore.t(override?'settings.searchFixed':'settings.searchFollows',{language:i18nCore.t(`locale.${pokemonGoSearchLocale()}`)});
+  if(checkbox){checkbox.checked=override;checkbox.setAttribute('aria-expanded',String(override));}
+  if(row)row.hidden=!override;
+  if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
@@ -2171,11 +2406,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
-  if(typeof taskToolOrigin!=='undefined'&&taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
-  for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.setAttribute('hidden','');
-  closeModal('product-share-modal');
-  closeModal('combined-editor-modal');
-  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
+  combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
@@ -2296,6 +2527,7 @@ function activateOwnedSession(uid,username){
     error.code=hydration.error.code;
     throw error;
   }
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=hydration.token;
   ownerPublicShareReview={generation:hydration.token.generation,status:'waiting_for_hydration',republishRequired:false,busy:false};
   return result;
@@ -2312,6 +2544,7 @@ function suspendOwnedSession(reason='auth_loss'){
   invalidateAccountSyncRecovery(reason);
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate(reason);
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=null;
   ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.suspend(reason);
@@ -2322,6 +2555,7 @@ function clearOwnedSession(){
   invalidateAccountSyncRecovery('logout');
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate('logout');
+  publicLinkConfirmation=null;publicLinkBusy=null;publicLinkPublicationError=null;publicLinkConfirmationEpoch++;
   activePublicShareHydrationToken=null;
   ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.clearForLogout();
@@ -2888,6 +3122,7 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
+    rememberPublicLinkConfirmation(built.snapshot);
     return{ok:true,status:'published'};
   }
   return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
@@ -2919,6 +3154,42 @@ async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
   if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username)||!normalized.ok||!expected.ok||accountSyncModel.canonicalJson(normalized.snapshot)!==accountSyncModel.canonicalJson(expected.snapshot))throw new Error('share-publication/not-current');
 }
 
+function currentPublicLinkConfirmation(){
+  const proof=publicLinkConfirmation,token=activePublicShareHydrationToken;
+  return proof&&proof.token===token&&proof.uid===auth?.currentUser?.uid&&proof.username===cur&&publicShareSessionMatches(cur)?proof:null;
+}
+function rememberPublicLinkConfirmation(snapshot,token=activePublicShareHydrationToken){
+  if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(snapshot?.username))return false;
+  const contentKey=publicSnapshotContentKey(snapshot,snapshot.username);if(contentKey===null)return false;
+  publicLinkConfirmation={token,uid:token.uid,username:token.username,contentKey};publicLinkConfirmationEpoch++;publicLinkPublicationError=null;
+  refreshPublicLinkAction();return true;
+}
+function publicLinkPublicationState(ignoreBusy=false){
+  const token=activePublicShareHydrationToken,proof=currentPublicLinkConfirmation();
+  if(!ignoreBusy&&publicLinkBusy?.token===token&&publicLinkBusy.uid===auth?.currentUser?.uid&&publicLinkBusy.username===cur)return{kind:publicLinkBusy.copyOnly?'copying':'publishing',disabled:true};
+  const built=publicShareSnapshotForUser(cur,allData,'explicit_share',accountSyncProjectionReady());
+  const state=accountSyncUiState||{},pending=Number(state.pendingCount)||Number(state.blockedCount)||Number(state.conflictCount)||managedAccountSyncRuntime?.publicProjectionPending;
+  const paths=[`users/${cur}`,`publicShares/${cur}`,`trainerShares/${auth?.currentUser?.uid||''}`,...PUBLIC_SHARE_TYPES.map(type=>`${type}/${cur}`)];
+  const queued=Object.values(syncQueue||{}).some(item=>paths.some(path=>item?.path===path||String(item?.path||'').startsWith(path+'/')));
+  if(!built.ok){
+    const code=built.error?.code||'';
+    return{kind:/source-invalid|declarations-invalid/.test(code)?'invalid':/hydration-failed/.test(code)?'unavailable':'pending',disabled:true};
+  }
+  if(pending||queued)return{kind:'pending',disabled:true};
+  const contentKey=publicSnapshotContentKey(built.snapshot,cur);
+  if(contentKey===null)return{kind:'pending',disabled:true};
+  if(proof?.contentKey===contentKey)return{kind:'current',contentKey};
+  if(publicLinkPublicationError?.token===token&&publicLinkPublicationError.contentKey===contentKey)return{kind:'failed',contentKey};
+  return{kind:proof?'changed':'first',contentKey};
+}
+function refreshPublicLinkAction(){
+  const button=document.getElementById('share-link-action');if(!button)return;
+  const state=publicLinkPublicationState(),feedbackState=publicLinkBusy?publicLinkPublicationState(true):state,feedback=publicLinkFeedback;
+  if(feedback&&(feedback.token!==activePublicShareHydrationToken||feedback.uid!==auth?.currentUser?.uid||feedback.username!==cur||feedback.contentKey!==feedbackState.contentKey||feedback.scope!==productShareScope||feedback.listType!==myListType))clearPublicLinkFeedback();
+  const keys={current:'share.copyLink',changed:'share.updateCopyLink',first:'product.publishCopy',pending:'share.syncPending',publishing:'product.publishing',copying:'share.copyingLink',invalid:'share.checkListDetails',unavailable:'share.linkUnavailable',failed:'share.retryCopyLink'};
+  button.dataset.publicationState=state.kind;button.dataset.i18n=keys[state.kind];button.textContent=i18nCore.t(keys[state.kind]);button.disabled=!!state.disabled||productShareScope!=='full';
+}
+
 function ownerShareNoticeKey(status){
   return{
     missing_projection:'share.ownerMissing',profile_only:'share.ownerProfileOnly',
@@ -2937,18 +3208,25 @@ async function inspectOwnPublicShareAfterHydration(token=activePublicShareHydrat
   if(!token||!publicShareSessionMatches(token.username)||managedPublicSharePublication.snapshot().surfaces.profile!=='loaded')return{ok:false,status:'not_ready'};
   const readiness=managedPublicSharePublication.authorize(token,'explicit_share');
   if(!readiness.ok)return readiness;
-  const generation=token.generation;
+  const generation=token.generation,confirmationEpoch=publicLinkConfirmationEpoch;
   let status;
   try{
     const providerSession=providerPublicProjectionSession(token.username);
     const result=providerSession?await ensureProviderPublicShareClient().read(token.username):await managedPublicShareRepository.read(token.username);
     if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
     if(!result.ok)status={status:'transport_error',republishRequired:true};
-    else status=publicSharePublicationDomain.ownerProjectionReview(providerSession?result.snapshot:result.value,{username:token.username});
+    else{
+      const snapshot=providerSession?result.snapshot:result.value;
+      status=publicSharePublicationDomain.ownerProjectionReview(snapshot,{username:token.username});
+      if(confirmationEpoch===publicLinkConfirmationEpoch){
+        if(!status.republishRequired)rememberPublicLinkConfirmation(snapshot,token);
+        else{publicLinkConfirmation=null;publicLinkConfirmationEpoch++;}
+      }
+    }
   }catch(error){status={status:'transport_error',republishRequired:true};}
   if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
   ownerPublicShareReview={generation,status:status.status,republishRequired:!!status.republishRequired,busy:false};
-  renderOwnerShareRepublishNotice();
+  renderOwnerShareRepublishNotice();refreshPublicLinkAction();
   return{ok:true,...ownerPublicShareReview};
 }
 async function republishOwnPublicShare(){
@@ -3633,7 +3911,12 @@ function buildAccountSyncCatalogIndex(){
       const entry=pokemonCatalogDomain.decorateCatalogEntry(raw),catalogId=String(entry?.catalogId||'');
       if(!entry?.name||!catalogId)continue;
       laneIds.set(catalogId,entry);if(!byId.has(catalogId))byId.set(catalogId,entry);
-      const names=[entry.name,entry.displayName,...(entry.legacyAliases||[]),...(entry.searchAliases||[])];
+      for(const legacyId of pokemonCatalogDomain.legacyCatalogIds(catalogId)){
+        const canonicalName=pokemonCatalogDomain.resolveLegacyKey(entry.name)?.canonicalKey||entry.name;
+        const compatible={...entry,name:decodeURIComponent(legacyId.split(':legacy:')[1]),displayName:canonicalName,catalogId:legacyId,canonicalCatalogId:catalogId};
+        laneIds.set(legacyId,compatible);if(!byId.has(legacyId))byId.set(legacyId,compatible);
+      }
+      const names=[entry.name,entry.displayName,pokemonDisplayName(entry),...(entry.legacyAliases||[]),...(entry.searchAliases||[])];
       for(const name of names){const key=pokemonCatalogDomain.normalizeCatalogKey(name);remember(laneAliases,key,entry);remember(globalAliases,key,entry);}
     }
     byLane.set(lane,laneIds);aliasesByLane.set(lane,laneAliases);
@@ -3659,6 +3942,11 @@ function accountSyncCatalogIdentity(type,name,raw={}){
   if(!entry||requested&&entry.catalogId!==requested)return null;
   return Object.freeze({catalogId:entry.catalogId});
 }
+function accountSyncLegacyCatalogIdentity(type,name,raw={}){
+  if(raw?.catalogId)return accountSyncCatalogIdentity(type,name,raw);
+  const legacyId=pokemonCatalogDomain.legacyCatalogIdForName(name);
+  return accountSyncCatalogIdentity(type,name,legacyId?{catalogId:legacyId}:raw);
+}
 function accountSyncOrdersSnapshot(){
   return Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,readMyListOrder(type,cur)||{priorities:{H:[],M:[],L:[],U:[]}}]));
 }
@@ -3675,9 +3963,13 @@ function resolveLegacyFavoriteIdentity(displayName,expectedTargetUid=''){
 }
 async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid='',{allowIncidentResolver=true}={}){
   if(allowIncidentResolver&&window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
-    const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
-    const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation});
-    const row=(await client.resolve([displayName]))[0];
+    if(!favoriteIdentityResolverSession?.current()){
+      const user=auth?.currentUser,generation=_sessionTransientGeneration,username=cur;
+      const current=()=>auth?.currentUser===user&&cur===username&&_sessionTransientGeneration===generation;
+      const client=window.PogoServices.favoriteResolverClient.createFavoriteResolverClient({auth,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,enabled:true,sessionCurrent:current});
+      favoriteIdentityResolverSession={current,queue:window.PogoServices.favoriteResolverClient.createSessionIdentityQueue({resolve:handles=>client.resolve(handles),sessionCurrent:current})};
+    }
+    const row=await favoriteIdentityResolverSession.queue.resolve(displayName);
     return row.status==='resolved'&&(!expectedTargetUid||row.targetUid===expectedTargetUid)?Object.freeze({targetUid:row.targetUid,canonicalTrainerName:row.canonicalHandle}):null;
   }
   return PROVIDER_CAPABILITIES.providerPublicReadSupport
@@ -3718,7 +4010,7 @@ async function accountSyncReadLegacySources({account}={}){
     legacyRetainedSnapshot:Object.freeze({capturedAt:Date.now(),rawTrainerHistory,legacyRemoteLists:accountSyncClone(remoteLists),legacyLocalLists:localLists,legacyRemoteBoard:accountSyncClone(remoteProfile?.specialTradeBoard||{lf:[],ft:[]}),legacyLocalBoard:localBoard,legacyQueue,orders:accountSyncClone(orders),favorites:accountSyncClone(history.favorites),tags:accountSyncClone(history.tags)}),
     dependencies:Object.freeze({
       parseListValue:value=>parsePri(value),
-      catalogIdentity:(type,name,raw)=>accountSyncCatalogIdentity(type,name,raw),
+      catalogIdentity:(type,name,raw)=>accountSyncLegacyCatalogIdentity(type,name,raw),
       genderForVariant:value=>entryGender(value),
       resolveFavoriteUid:(displayName,raw)=>accountSyncExactFavoriteUid(displayName,raw,account)
     })
@@ -3782,7 +4074,9 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
     const session=providerPublicProjectionSession(cur);
     if(!session)throw providerFailure('provider-public/projection-disabled');
     const snapshot=providerAccountSyncPublicSnapshot(acceptedRows,session);
-    return await writeProviderPublicShareSnapshot(session,snapshot);
+    const result=await writeProviderPublicShareSnapshot(session,snapshot);
+    if(currentSession())rememberPublicLinkConfirmation(snapshot,token);
+    return result;
   }
   const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
   if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
@@ -3814,6 +4108,7 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
   if(!currentSession())throw new Error('share-publication/session-changed');
   await writeVerifiedLegacyPublicSnapshot(username,built.snapshot);
   if(!currentSession())throw new Error('share-publication/session-changed');
+  rememberPublicLinkConfirmation(built.snapshot,token);
   return{ok:true,status:'published'};
 }
 function retireMigratedLegacyListQueue(){
@@ -4037,13 +4332,14 @@ async function applyAccountSyncTradeMutations(mutations,controller=managedAccoun
   if(!controller)return accountSyncModel.failure('account-sync/session-inactive','Cross-device sync session is not active');
   return controller.mutateBatch(mutations.map(mutation=>({
     entityType:mutation.entityType,entityId:mutation.entityId,identity:mutation.identity,kind:mutation.kind,
+    ...(mutation.expectedGeneration!==undefined?{intentExpectedGeneration:mutation.expectedGeneration}:{}),
     patch:mutation.kind==='add'?mutation.values:(mutation.kind==='patch'?mutation.patch:{})
   })));
 }
 async function writeAccountSyncList(type,list,{orderModel,authority}={}){
   const runtime=authority?.runtime||managedAccountSyncRuntime,controller=authority?.controller||runtime?.controller;
   if(authority&&!accountSyncAuthorityCurrent(authority))return accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
-  const rows=accountSyncProduct.listRows({lists:{[type]:list||{}},orders:{[type]:orderModel||currentMyListOrderModel(type,cur)},parsePriority:value=>parsePri(value),catalogIdForListEntry:({lane,name,encoded})=>accountSyncCatalogIdentity(lane,name,encoded)?.catalogId||'',genderForVariant:entryGender});
+  const rows=accountSyncProduct.listRows({lists:{[type]:list||{}},orders:{[type]:orderModel||currentMyListOrderModel(type,cur)},parsePriority:value=>parsePri(value),catalogIdForListEntry:({lane,name,encoded})=>accountSyncLegacyCatalogIdentity(lane,name,encoded)?.catalogId||'',genderForVariant:entryGender});
   if(rows.unresolved.length){for(const item of rows.unresolved)await recordAccountSyncUnresolved(item,'product-edit',runtime);return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});}
   const mutations=accountSyncProduct.planTradeMutations({currentEntities:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'my-list',lanes:[type]}});
   return applyAccountSyncTradeMutations(mutations,controller);
@@ -4051,9 +4347,9 @@ async function writeAccountSyncList(type,list,{orderModel,authority}={}){
 async function writeAccountSyncSpecialBoard(board,{authority,baseBoard}={}){
   const runtime=authority?.runtime||managedAccountSyncRuntime,controller=authority?.controller||runtime?.controller;
   if(authority&&!accountSyncAuthorityCurrent(authority))return accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
-  const rows=accountSyncProduct.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''});
+  const rows=accountSyncProduct.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>accountSyncLegacyCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''});
   if(rows.unresolved.length){for(const item of rows.unresolved)await recordAccountSyncUnresolved(item,'special-board-edit',runtime);return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});}
-  const before=baseBoard?accountSyncProduct.specialBoardRows({board:baseBoard,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''}):null;
+  const before=baseBoard?accountSyncProduct.specialBoardRows({board:baseBoard,catalogIdForBoardEntry:({entry})=>accountSyncLegacyCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''}):null;
   if(before?.unresolved.length)return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});
   const mutations=accountSyncProduct.planTradeMutations({currentEntities:before?before.rows:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'special-board',lanes:['looking-for','for-trade']}});
   return applyAccountSyncTradeMutations(mutations,controller);
@@ -5533,7 +5829,6 @@ async function changeInterfaceLocale(locale){
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
     if(document.getElementById('special-board-modal')?.classList.contains('open'))renderSpecialBoard();
-    if(productShareIsOpen())refreshProductShare();
     renderSafeTransferOutput();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5550,6 +5845,7 @@ let providerTrainerDirectoryRequests=new Map();
 let providerTrainerDirectoryBinding='';
 let eventTypeFilter='all';
 let eventCalendarDate='';
+let eventAllSchedule=false;
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let trainerOrganizerGeneration=0;
 let trainerOrganizerState={query:'',tagIds:[],username:''};
@@ -5789,7 +6085,7 @@ function ensureFavoriteShareSessionCache(){
       repository:favoriteRepository,
       validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,
       projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot,
-      concurrency:4,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES
+      concurrency:2,readDeadlineMs:35000,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES
     });
   }
   favoriteShareSessionCache.activate({uid,username:cur});
@@ -5797,6 +6093,8 @@ function ensureFavoriteShareSessionCache(){
 }
 function resetFavoriteBrowseSession(){
   clearTimeout(favoriteLookupExpiry);favoriteLookupScope='';favoriteLookupVariant='';favoriteLookupLimit=60;
+  favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
+  clearTimeout(favoritePublicationSortTimer);favoritePublicationSortTimer=0;favoritePublicationSortPending=false;
   favoriteShareSessionCache?.reset();favoriteShareSessionCache=null;
   favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1,expanded:false};
   favoriteBrowseCatalogCache={locale:'',items:[]};
@@ -5886,6 +6184,7 @@ function setTrainerDiscoveryMode(mode){
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
   renderTrainerDiscoveryHeading();
+  observeFavoritePublications();
   if(trainerDiscoveryMode==='pokemon'){favoriteLookupControls();if(!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}}
 }
 function focusTrainerDiscoveryMode(mode){
@@ -6035,17 +6334,16 @@ async function trainerSearchKeydown(event){
   }
   if(event.key==='Enter'){
     event.preventDefault();clearTimeout(trainerSuggestionTimer);
-    const input=event.currentTarget;
     let best;
     try{
-      let lookup=input.value;
+      let lookup=event.currentTarget.value;
       try{const parsed=new URL(String(lookup||''),location.href);lookup=parsed.searchParams.get('view')||lookup;}catch{}
       await ensureProviderTrainerDirectory(lookup);
-      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),input.value,trainerSuggestionOptions());
+      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),event.currentTarget.value,trainerSuggestionOptions());
     }
     catch(error){showTrainerSearchError();return;}
-    if(best){input.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
-    else openTrainerPublicShare(input.value);
+    if(best){event.currentTarget.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
+    else openTrainerPublicShare(event.currentTarget.value);
     return;
   }
   if(event.key==='Escape'){event.preventDefault();closeTrainerSuggestions();}
@@ -6223,6 +6521,7 @@ function closeFavoriteCardActions(except=null,restoreFocus=false){
   document.querySelectorAll('.favorite-card-shell.menu-open').forEach(card=>{if(card!==except)card.classList.remove('menu-open');});
   if(restoreFocus&&favoriteCardMenuTrigger?.isConnected)favoriteCardMenuTrigger.focus();
   if(!except)favoriteCardMenuTrigger=null;
+  if(favoritePublicationSortPending)scheduleFavoritePublicationOrder();
 }
 function openFavoriteSwipeActions(button){const card=button?.closest('.favorite-card-shell');if(!card)return;closeFavoriteCardActions(card);card.classList.add('swipe-open');}
 function toggleFavoriteCardMenu(event,button){
@@ -6298,6 +6597,7 @@ document.getElementById('favorite-trainers-list')?.addEventListener('pointerdown
 document.getElementById('favorite-trainers-list')?.addEventListener('pointermove',favoriteCardPointerMove);
 document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',favoriteCardPointerUp);
 document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
+for(const event of ['pointerleave','pointerup','focusout'])document.getElementById('favorite-trainers-list')?.addEventListener(event,()=>{if(favoritePublicationSortPending)scheduleFavoritePublicationOrder();});
 function toggleFavoriteTagFilter(id){
   if(!id)return;
   trainerOrganizerState.tagIds=[id];renderTrainerQuickLists({favoriteGroupFocusId:id});
@@ -6328,6 +6628,68 @@ async function renderPreservedFavoriteEvidence(host){
     }).join('')}<button type="button" class="btn btn-ghost" data-favorite-action="review-preserved">${escHtml(i18nCore.t('settings.sectionData'))}</button>`;
   }catch{if(current())section.innerHTML=`<summary>${escHtml(i18nCore.t('accountSync.preservedFavoritesUnavailable'))}</summary>`;}
 }
+function favoritePublicationTimestamp(favorite){
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=Number(record?.updatedAt);
+  return record?.targetUid===(favorite.targetUid||'')&&['published','published_empty'].includes(record?.status)&&stamp>0&&Number.isFinite(stamp)&&Number.isFinite(new Date(stamp).getTime())?stamp:0;
+}
+function orderFavoritesByPublication(favorites){
+  return favorites.map((item,index)=>({item,index,stamp:favoritePublicationTimestamp(item)})).sort((a,b)=>b.stamp-a.stamp||a.index-b.index).map(row=>row.item);
+}
+function scheduleFavoritePublicationOrder(){
+  favoritePublicationSortPending=true;clearTimeout(favoritePublicationSortTimer);
+  const cache=favoriteShareSessionCache,user=auth?.currentUser,username=cur;
+  favoritePublicationSortTimer=setTimeout(()=>{
+    favoritePublicationSortTimer=0;
+    if(cache!==favoriteShareSessionCache||user!==auth?.currentUser||username!==cur||trainerDiscoveryMode!=='favorites'||activeTabName()!=='find')return;
+    const grid=document.querySelector('#favorite-trainers-list .trainer-quick-grid');if(!grid)return;
+    const cards=[...grid.querySelectorAll(':scope > .favorite-card-shell')],state=cache?.snapshot();
+    if(state?.activeReads||state?.queuedReads)return;
+    if(grid.contains(document.activeElement)||grid.querySelector('.menu-open,.swipe-open')||favoriteSwipeGesture||matchMedia('(hover: hover)').matches&&cards.some(card=>card.matches(':hover')))return;
+    const favorites=ensureTrainerHistoryStore()?.read().favorites||[],byName=new Map(favorites.map(item=>[canonicalTrainerName(item.displayName),item])),ranks=new Map(favorites.map((item,index)=>[canonicalTrainerName(item.displayName),index]));
+    const sorted=cards.map((card,index)=>({card,index,rank:ranks.get(card.dataset.trainer)??index,stamp:favoritePublicationTimestamp(byName.get(card.dataset.trainer)||{})})).sort((a,b)=>b.stamp-a.stamp||a.rank-b.rank||a.index-b.index).map(row=>row.card);
+    favoritePublicationSortPending=false;
+    if(sorted.some((card,index)=>card!==cards[index]))grid.append(...sorted);
+  },120);
+}
+// Display and order use the same already-loaded public publication timestamp.
+function favoritePublicationHtml(favorite){
+  const record=favoriteShareSessionCache?.peek(favorite),stamp=favoritePublicationTimestamp(favorite),locale=i18nCore.getLocale();
+  const valid=stamp>0;
+  const failed=record?.status==='transport_error';
+  const explanation=i18nCore.t(valid?'apri.publicationHelp':'apri.publicationMissing');
+  const date=valid?new Intl.DateTimeFormat(locale,{month:'short',day:'numeric',year:'numeric'}).format(stamp):failed?i18nCore.t('groups.unavailable'):'—';
+  const time=valid?new Intl.DateTimeFormat(locale,{hour:'numeric',minute:'2-digit'}).format(stamp):'';
+  return`<span class="favorite-publication"${valid||failed?' tabindex="0"':' hidden'} title="${escAttr(explanation)}" aria-label="${escAttr(`${i18nCore.t('apri.lastUpdated')}: ${date}${time?' · '+time:''}. ${explanation}`)}"><span class="favorite-publication-label">${escHtml(i18nCore.t('apri.lastUpdated'))}</span>${valid?`<time datetime="${new Date(stamp).toISOString()}"><span>${escHtml(date)}</span><span class="favorite-publication-time">${escHtml(time)}</span></time>`:`<span>${escHtml(date)}</span>`}</span>`;
+}
+function observeFavoritePublications(){
+  favoritePublicationObserver?.disconnect();favoritePublicationObserver=null;
+  if(trainerDiscoveryMode!=='favorites'||activeTabName()!=='find')return;
+  const cache=ensureFavoriteShareSessionCache(),store=ensureTrainerHistoryStore(),user=auth?.currentUser,username=cur;
+  if(!cache||!store||!user)return;
+  const favorites=store.read().favorites;cache.syncFavorites(favorites);
+  const current=()=>auth?.currentUser===user&&cur===username&&cache===favoriteShareSessionCache&&trainerDiscoveryMode==='favorites'&&activeTabName()==='find';
+  const load=async card=>{
+    const favorite=favorites.find(item=>canonicalTrainerName(item.displayName)===card.dataset.trainer);
+    if(!favorite)return;
+    const retries=favoritePublicationRetries.get(cache)||new Set();favoritePublicationRetries.set(cache,retries);
+    const previous=cache.peek(favorite),key=canonicalTrainerName(favorite.displayName);
+    const retry=previous?.retryable===true&&!retries.has(key)&&!/(?:rate-limited|busy)/.test(previous.error?.code||'');
+    // Rejoining an outstanding request does not spend the one fresh-read retry.
+    if(retry&&!cache.hasPhysicalRead(favorite))retries.add(key);
+    try{await cache.readFavorite(favorite,{force:retry});}catch{return;}
+    if(!current()||!card.isConnected)return;
+    const field=card.querySelector('.favorite-publication');if(!field)return;
+    const markup=favoritePublicationHtml(favorite);if(field.outerHTML===markup){scheduleFavoritePublicationOrder();return;}
+    const focused=field===document.activeElement;field.outerHTML=markup;
+    if(focused)card.querySelector('.favorite-publication:not([hidden])')?.focus({preventScroll:true});
+    scheduleFavoritePublicationOrder();
+  };
+  const cards=[...document.querySelectorAll('#favorite-trainers-list .favorite-card-shell')];
+  if(typeof IntersectionObserver==='function'){
+    const observer=new IntersectionObserver(entries=>{if(!current()){observer.disconnect();return;}for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);void load(entry.target);}},{rootMargin:'160px 0px'});
+    favoritePublicationObserver=observer;cards.forEach(card=>observer.observe(card));
+  }else cards.filter(card=>{const r=card.getBoundingClientRect();return r.bottom>=0&&r.top<=innerHeight;}).forEach(card=>void load(card));
+}
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
@@ -6351,8 +6713,8 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   const groupWantsLabel=i18nCore.t(selectedTagIds.length?'organizer.viewGroupWants':'organizer.viewAllWants');
   const groupChips=activeTags.length?`<span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-group-access-list"><button class="favorite-filter-chip chip chip-filter" aria-pressed="${!selectedTagIds.length}" data-favorite-action="clear-groups"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selectedTagIds.length?'':'✓'}</span>${escHtml(groupText('favorites'))}<span class="favorite-filter-count">${state.favorites.length}</span></span></button>${activeTags.map(tag=>{const selected=selectedTagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}<span class="favorite-filter-count">${state.favorites.filter(item=>item.tagIds.includes(tag.id)).length}</span></span></button>`;}).join('')}</div>`:'';
   const toolbar=state.favorites.length?`<div class="favorite-group-access${activeTags.length?'':' wants-only'}" role="group" aria-label="${escAttr(i18nCore.t('organizer.favoriteScope'))}">${groupChips}<button type="button" class="btn btn-ghost favorite-group-wants-action" data-favorite-action="view-group-wants">${uiIconMarkup('search','ui-icon ui-icon-sm')} ${escHtml(groupWantsLabel)}</button></div>`:'';
-  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span>${label==='organizer.savedTrainers'?`<button type="button" class="btn btn-secondary favorite-manage-groups" data-favorite-action="manage-groups">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(i18nCore.t('organizer.manageTags'))}</button>`:''}</div>`;
-  const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
+  const favoritesHeading=(label='trainer.favoritesTitle')=>`<div class="trainer-section-heading"><span class="trainer-section-title"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t(label))}</h2><span class="trainer-section-count">${state.favorites.length}</span></span>${label==='organizer.savedTrainers'?`<button type="button" class="btn btn-secondary favorite-manage-groups" data-favorite-action="manage-groups">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(i18nCore.t('organizer.manageTags'))}</button>`:''}</div>`;
+  const items=orderFavoritesByPublication(filtered).map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading('organizer.savedTrainers')}${toolbar}`;
   if(favoriteGroupFocusId){
     const chip=[...favoritesControlsEl.querySelectorAll('[data-favorite-tag-id]')].find(button=>button.dataset.favoriteTagId===favoriteGroupFocusId);
@@ -6360,12 +6722,13 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="favorite-card-primary-copy"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</span><span class="recent-trainer-chevron favorite-card-chevron" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))}${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>${favoritePublicationHtml(item)}<div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   renderPreservedFavoriteEvidence(favoritesListEl);
   if(typeof installFavoritePickerButton==='function')installFavoritePickerButton();
+  observeFavoritePublications();
   if(favoritesOnly)return;
-  const previewItems=state.favorites.slice(0,4);
+  const previewItems=orderFavoritesByPublication(state.favorites).slice(0,4);
   previewEl.hidden=!previewItems.length;
   previewEl.innerHTML=previewItems.length?`${favoritesHeading()}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
@@ -6794,7 +7157,6 @@ function refreshBadgesAndLightChrome(){
   checkWhatsNew();
 }
 function switchTab(t,opts={}){
-  if(taskToolOrigin)closeModal(taskToolOrigin.modal,{restoreTool:false});
   if(t==='have')t='mylist';
   const previous=activeTabName();
   if(t!=='admin')closeExistingPinReset();
@@ -6804,57 +7166,26 @@ function switchTab(t,opts={}){
   if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const navTarget=t==='admin'||t==='schedule'&&matchMedia('(max-width: 700px)').matches?'more':t;
+  const navTarget=t==='admin'?'more':t;
   const tabBtn=document.querySelector(`[data-tab="${navTarget}"]`);
   const page=document.getElementById(`tab-${t}`);
   if(!page)return;
   if(tabBtn){tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');}
   page.classList.add('active');
-  if(t==='more')for(const id of ['more-admin-link','more-admin-group'])document.getElementById(id)?.toggleAttribute('hidden',!protectedOwnerSession());
+  if(t==='more')document.getElementById('more-admin-link')?.toggleAttribute('hidden',!protectedOwnerSession());
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
 }
-let productShareScope='full',productShareSnapshot=[],productShareOwner='';
-let productShareUi={generation:0,mode:'link',text:'plain',image:'board',busy:false,receipt:null,blob:null,blobUrl:'',fingerprint:'',category:'wishlist',intent:'lf'};
-function productShareIsOpen(){return document.getElementById('product-share-modal')?.classList.contains('open');}
-function clearProductShareRecovery(){
-  productShareUi.receipt=null;
-  const input=document.getElementById('share-public-url');if(input)input.value='';
-  document.getElementById('share-manual-link')?.setAttribute('hidden','');
-}
-function invalidateProductShare(){
-  productShareUi.generation++;publicLinkAttempt++;productShareUi.busy=false;
-  clearProductShareRecovery();
-  if(productShareUi.blobUrl)URL.revokeObjectURL(productShareUi.blobUrl);
-  productShareUi.blobUrl='';productShareUi.blob=null;productShareUi.imageError=false;
-  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
-}
-function productSharePublicProfile(){
-  const profile=allData.users?.[cur]||{};
-  return{friendCode:String(profile.friendCode||'').slice(0,32),discord:String(profile.discord||'').slice(0,40),bio:String(profile.bio||'').slice(0,120),avatarPokemon:String(profile.avatarPokemon||'').slice(0,80)};
-}
-function productShareFingerprint(){
-  return JSON.stringify([productSharePublicProfile(),publicSharePublicationDomain.publicDeclarations(productDeclarations().entries)]);
-}
-function productShareContext(){
-  const selected=productShareScope==='selected'&&(productShareUi.mode==='image'&&productShareUi.image==='board'||productShareUi.mode==='text'&&productShareUi.text==='plain');
-  return{owner:cur,uid:String(auth?.currentUser?.uid||''),session:_sessionTransientGeneration,token:activePublicShareHydrationToken,runtime:managedAccountSyncRuntime,runtimeGeneration:accountSyncRuntimeGeneration,generation:productShareUi.generation,fingerprint:productShareFingerprint(),selection:selected?JSON.stringify([...combinedSelection].sort()):null};
-}
-function productShareContextCurrent(context){
-  try{return productShareIsOpen()&&context.generation===productShareUi.generation&&context.owner===cur&&context.uid===String(auth?.currentUser?.uid||'')&&context.session===_sessionTransientGeneration&&context.token===activePublicShareHydrationToken&&context.runtime===managedAccountSyncRuntime&&context.runtimeGeneration===accountSyncRuntimeGeneration&&context.fingerprint===productShareFingerprint()&&(context.selection===null||context.selection===JSON.stringify([...combinedSelection].sort()));}catch{return false;}
-}
+let productShareScope='full',productShareSnapshot=[],productShareOwner='',productShareMode='link';
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
   return scope==='top'?entries.filter(e=>e.intent==='lf'&&e.p==='H'):scope==='selected'?entries.filter(e=>combinedSelection.has(productSelectionKey(e))):entries;
 }
-function openProductShare(mode='link',scope='full',returnFocus){
-  invalidateProductShare();
-  productShareScope=['full','top','selected'].includes(scope)?scope:'full';productShareOwner=cur;
-  Object.assign(productShareUi,{mode:['link','image','text'].includes(mode)?mode:'link',text:'plain',image:'board',category:myListType,intent:myListIntent});
-  openModal('product-share-modal',{initialFocus:'[data-share-mode="'+productShareUi.mode+'"]',returnFocus});
-  if(productShareUi.appInert===undefined){productShareUi.appInert=document.getElementById('app').inert;document.getElementById('app').inert=true;}
-  refreshProductShare();
+function openProductShare(mode='link'){
+  productShareScope='full';productShareOwner=cur;
+  document.getElementById('product-share-scope').value='full';
+  productShareMode=mode;document.getElementById('product-share-preview-wrap').open=mode==='image';openModal('product-share-modal');refreshProductShare();
 }
 function productShareCategoryLabel(entry){
   const category=entry.category||entry.type||entry.ref?.type;
@@ -6865,126 +7196,65 @@ function productShareCategoryLabel(entry){
   return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
 }
 function productShareDescription(entry){
-  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',catalogueVariantReleaseLabel(entry),entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
-  if(!productShareIsOpen())return;
-  const focus=document.activeElement?.id;
-  invalidateProductShare();
-  const state=productShareUi,mode=state.mode;
-  const scoped=mode==='image'&&state.image==='board'||mode==='text'&&state.text==='plain';
-  const category=mode==='image'&&state.image!=='board';
-  let entries=category?productDeclarations().entries.filter(e=>e.intent===state.intent&&e.category===state.category):productScopeEntries(scoped?productShareScope:'full');
-  try{
-    // Keep only the established public projection plus catalog display fields. Never copy private profile/provenance into a preview.
-    productShareSnapshot=publicSharePublicationDomain.publicDeclarations(entries).map((entry,index)=>({...entry,dn:entries[index].dn||entry.name,no:entries[index].no||null,catalogId:entries[index].catalogId||entries[index].ref?.catalogId||'',note:publicSharePublicationDomain.publicNoteForDisplay(entry.note)}));
-    state.fingerprint=productShareFingerprint();state.context=productShareContext();
-  }catch{productShareSnapshot=[];state.fingerprint='';state.context=null;}
-  const choices=(name,legend,values,selected,tiles=false)=>`<fieldset class="share-choice-group"><legend>${escHtml(i18nCore.t(legend))}</legend><div class="share-choices ${tiles?'choice-tiles':'choice-segments'}">${values.map(([value,label])=>`<label class="share-choice"><input type="radio" id="share-${name}-${value}" name="share-${name}" value="${value}" ${selected===value?'checked':''} onchange="setProductShareOption('${name}',this.value)"><span class="choice-mark" aria-hidden="true">${uiIconMarkup('check')}</span><span class="choice-label">${escHtml(label)}</span></label>`).join('')}</div></fieldset>`;
-  const t=key=>i18nCore.t(`shareUi.${key}`);
-  let options='';
-  if(scoped)options+=choices('scope','shareUi.include',[['full',t('all')],['top',t('high')],['selected',i18nCore.t('shareUi.selected',{count:productScopeEntries('selected').length})]],productShareScope);
-  else if(mode!=='link')options+=`<p class="share-fixed-scope">${escHtml(category?i18nCore.t('shareUi.category',{category:listLabel(state.category)}):t('fullScope'))}</p>`;
-  if(mode==='image')options+=choices('image','shareUi.layout',[['board',t('board')],['classic',t('classic')],['cards',t('cards')]],state.image,true);
-  if(mode==='text')options+=choices('text','shareUi.format',[['plain',t('plain')],['markdown','Markdown'],['csv','CSV']],state.text);
-  document.getElementById('product-share-options').innerHTML=options;
-  document.getElementById('product-share-disclosure').hidden=mode!=='link';
-  document.getElementById('product-share-count').textContent=i18nCore.t('shareUi.count',{count:productShareSnapshot.length});
-  document.querySelectorAll('[data-share-mode]').forEach(button=>{button.setAttribute('aria-selected',String(button.dataset.shareMode===mode));button.tabIndex=button.dataset.shareMode===mode?0:-1;});
-  document.getElementById('product-share-body').setAttribute('aria-labelledby','product-share-tab-'+mode);
+  productShareScope=document.getElementById('product-share-scope').value;
+  productShareSnapshot=accountSyncClone(productScopeEntries());
+  clearPublicLinkFeedback();publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
-  if(mode==='link'){
-    const profile=productSharePublicProfile();
-    preview.innerHTML=`<div class="share-public-profile">${userAvatarHtml(cur,48)}<div><strong>${escHtml(cur)}</strong>${[profile.friendCode,profile.discord,profile.bio].filter(Boolean).map(value=>`<p>${escHtml(value)}</p>`).join('')}</div></div><ul class="share-public-list">${productShareSnapshot.map(entry=>`<li><span>${spriteImg(entry.no,34,'share-sprite',entry.name,entry.gender,entry.dn,{catalogId:entry.catalogId,shiny:entry.shiny===true})}</span><div><strong>${escHtml(entry.dn)}</strong><p>${escHtml(productShareDescription({...entry,dn:'',name:''}))}</p></div></li>`).join('')||`<li>${escHtml(t('empty'))}</li>`}</ul>`;
-  }else if(mode==='text'){
-    state.output=state.text==='markdown'?productMarkdownText(productTextRows(productShareSnapshot),productSharePublicProfile(),cur):state.text==='csv'?productCSVText(productTextRows(productShareSnapshot)):[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(entry=>'- '+productShareDescription(entry))].join('\n');
-    preview.innerHTML=`<pre class="share-text-preview">${escHtml(productShareSnapshot.length?state.output:t('empty'))}</pre>`;
-  }else{
-    preview.innerHTML=`<p class="share-preview-message">${escHtml(productShareSnapshot.length?t('building'):t('empty'))}</p>`;
-    if(productShareSnapshot.length&&state.context)buildProductShareImage(state.context);
-  }
-  if(!state.context)linkPublicationStatus('shareUi.invalid');
-  updateProductShareAction();
-  if(focus?.startsWith('share-'))document.getElementById(focus)?.focus({preventScroll:true});
+  preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
+  setProductShareMode(productShareMode);
 }
 function setProductShareMode(mode){
-  if(!['link','image','text'].includes(mode)||productShareUi.mode===mode)return;
-  productShareUi.mode=mode;refreshProductShare();
-}
-function productShareFormatKeydown(event){
-  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-  event.preventDefault();
-  const modes=['link','image','text'],index=modes.indexOf(productShareUi.mode);
-  const mode=event.key==='Home'?'link':event.key==='End'?'text':modes[(index+(event.key==='ArrowRight'?1:2))%3];
-  setProductShareMode(mode);document.getElementById('product-share-tab-'+mode).focus({preventScroll:true});
-}
-function setProductShareOption(name,value){
-  const allowed={scope:['full','top','selected'],text:['plain','markdown','csv'],image:['board','classic','cards']};
-  if(!allowed[name]?.includes(value))return;
-  if(name==='scope')productShareScope=value;else productShareUi[name]=value;
-  refreshProductShare();
-  // WebKit pointer activation need not focus a radio before change fires. The
-  // refreshed native input remains the keyboard continuation point either way.
-  document.getElementById('share-'+name+'-'+value)?.focus({preventScroll:true});
-}
-function updateProductShareAction(){
-  const state=productShareUi,button=document.getElementById('product-share-primary');if(!button)return;
-  const firstShare=ownerPublicShareReview.generation===activePublicShareHydrationToken?.generation&&ownerPublicShareReview.status==='missing_projection';
-  const key=state.busy?'working':state.mode==='link'?(firstShare&&!state.receipt?'shareCopy':'copyLink'):state.mode==='image'?(state.imageError?'retryImage':'downloadImage'):state.text==='csv'?'downloadCsv':'copyText';
-  button.textContent=i18nCore.t(`shareUi.${key}`);
-  button.disabled=state.busy||!state.context||state.mode!=='link'&&!productShareSnapshot.length||state.mode==='image'&&!state.blob&&!state.imageError;
-  button.setAttribute('aria-busy',String(state.busy));
-}
-async function buildProductShareImage(context){
-  productShareUi.imageError=false;
-  try{
-    const state=productShareUi,entries=accountSyncClone(productShareSnapshot);
-    const blob=state.image==='board'?await renderProductShareImage(entries,context.owner):await renderListImage(entries,state.category,context.owner,state.image,state.intent);
-    if(!productShareContextCurrent(context))return;
-    state.blob=blob;state.blobUrl=URL.createObjectURL(blob);
-    const image=document.createElement('img');image.src=state.blobUrl;image.alt=i18nCore.t('shareUi.preview');image.className='share-image-preview';
-    document.getElementById('product-share-preview').replaceChildren(image);
-  }catch{
-    if(!productShareContextCurrent(context))return;
-    productShareUi.imageError=true;linkPublicationStatus('shareUi.imageFailed');
-    document.getElementById('product-share-preview').textContent=i18nCore.t('shareUi.imageFailed');
+  if(!['link','image','text','search','markdown','csv'].includes(mode))mode='link';
+  productShareMode=mode;
+  document.getElementById('product-share-format').value=mode;
+  const partial=productShareScope!=='full';
+  document.getElementById('share-link-action').disabled=partial;
+  document.querySelectorAll('[data-full-list-export]').forEach(button=>button.disabled=partial);
+  const linkHelp=document.getElementById('share-link-scope-help');linkHelp.textContent=i18nCore.t('share.partialLink');linkHelp.hidden=!partial;
+  document.getElementById('share-full-format-scope-help').hidden=!partial||!['markdown','csv'].includes(mode);
+  document.getElementById('product-share-preview-wrap').hidden=mode==='search';
+  if(mode==='search')refreshProductShareSearch();
+  for(const name of ['link','image','text','search','markdown','csv']){
+    document.getElementById(`product-share-${name}`).hidden=name!==mode;
+    document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
   }
-  if(productShareContextCurrent(context))updateProductShareAction();
+  refreshPublicLinkAction();
 }
-async function activateProductShare(){
-  if(productShareUi.mode==='link')return copyShareLink();
-  if(productShareUi.mode==='image')return exportProductShareImage();
-  return copyProductShareText();
+function exportFullProductFormat(format){
+  if(productShareScope!=='full')return;
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  if(format==='markdown')void exportMyListMarkdown();
+  else if(format==='csv')exportMyListCSV();
 }
-async function runProductShareExport(action){
-  if(productShareUi.busy||!productShareSnapshot.length)return;
-  const context=productShareUi.context;
-  if(!context||!productShareContextCurrent(context)){refreshProductShare();linkPublicationStatus('shareUi.changed');return;}
-  productShareUi.busy=true;updateProductShareAction();
-  try{await action(context);}
-  catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.exportFailed');}
-  finally{if(context.generation===productShareUi.generation&&productShareIsOpen()){
-    if(productShareContextCurrent(context)){productShareUi.busy=false;updateProductShareAction();}
-    else if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||''))closeModal('product-share-modal');
-    else{refreshProductShare();linkPublicationStatus('shareUi.changed');}
-  }}
+function refreshProductShareSearch(){
+  const host=document.getElementById('share-search-output');
+  document.getElementById('share-game-language').value=pokemonGoSearchLocale();
+  host.innerHTML=contextualIntentSearchHtml(productShareSnapshot,i18nCore.t('share.gameSearch'));
+}
+function setShareGameLanguage(value){
+  if(!['en','ja','es','de'].includes(value))return;
+  changePokemonGoSearchLocale(value);refreshProductShareSearch();
+}
+function productShareSnapshotCurrent(){
+  return productShareOwner===cur&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
 }
 async function copyProductShareText(){
-  return runProductShareExport(async context=>{
-    const text=productShareUi.output;
-    if(productShareUi.text==='csv'){downloadBlob(new Blob([text],{type:'text/csv;charset=utf-8'}),`pogo-${safeFilePart(context.owner)}-wants.csv`);linkPublicationStatus('shareUi.downloaded');return;}
-    try{await copyText(text,{isCurrent:()=>productShareContextCurrent(context)});if(productShareContextCurrent(context))linkPublicationStatus('shareUi.copied');}
-    catch{if(productShareContextCurrent(context))linkPublicationStatus('shareUi.textCopyFailed');}
-  });
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  const text=[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(e=>'- '+productShareDescription(e))].join('\n');
+  try{await copyText(text);toast(i18nCore.t('share.textCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 async function exportProductShareImage(){
-  if(productShareUi.imageError){refreshProductShare();return;}
-  if(!productShareUi.blob)return;
-  return runProductShareExport(async context=>{
-    const state=productShareUi,filename=state.image==='board'?`pogo-${safeFilePart(context.owner)}-${productShareScope}.png`:listImageFilename(context.owner,state.category,state.image);
-    const result=await deliverImageBlob(state.blob,filename,i18nCore.t('product.share'));
-    if(productShareContextCurrent(context))linkPublicationStatus(result==='cancelled'?'export.cancelled':'shareUi.downloaded');
-  });
+  if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
+  if(!productShareSnapshot.length){toast(i18nCore.t('export.entriesRequired'));return;}
+  const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope;
+  try{
+    const blob=await renderProductShareImage(entries,owner);
+    if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent())return;
+    await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}.png`,i18nCore.t('product.share'));
+  }catch{toast(i18nCore.t('export.failed'));}
 }
 function productShareImageDetails(entry,section){
   const sectionFlags=section.priority?[]:section.flags||[];
@@ -6992,7 +7262,7 @@ function productShareImageDetails(entry,section){
   const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
-  return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,
+  return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,catalogueVariantReleaseLabel(entry),
     flag('lucky',i18nCore.t('myList.lucky')),flag('xxl','XXL'),flag('xxs','XXS'),entry.note].filter(Boolean).join(' · ');
 }
 function drawProductShareMissingArt(ctx,x,y,width,height){
@@ -7031,7 +7301,8 @@ async function renderProductShareImage(entries,owner){
       const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
       const image=await loadCanvasImageWithFallback(exportSpriteFallbackUrls({...entry,gender,spriteUrl:entrySpriteUrl(entry,entry.name,gender)})).catch(()=>null);
       const name=entry.dn||entry.name||i18nCore.t('contextSearch.unknown');
-      return{entry,image,nameLines:wrap(name),detailLines:wrap(productShareImageDetails(entry,section))};
+      const maxIcon=maxPresentationType(entry)?await loadCanvasImage(maxPresentationIcon(maxPresentationType(entry))):null;
+      return{entry,image,maxIcon,nameLines:wrap(maxPresentationName(name)),detailLines:wrap(productShareImageDetails(entry,section))};
     }));
     const heights=Array.from({length:Math.ceil(items.length/rowColumns)},(_,index)=>96+14*Math.max(...items.slice(index*rowColumns,(index+1)*rowColumns).map(item=>item.nameLines.length+item.detailLines.length)));
     return{section,items,heights,columns:rowColumns};
@@ -7060,13 +7331,13 @@ async function renderProductShareImage(entries,owner){
     drawFittedText(ctx,i18nCore.t('myList.priorityPokemonCount',{count:section.entries.length}),left+sectionWidth-12,y+26,110,{max:12,min:10,weight:500,color:'#a9b1b7'});
     ctx.textAlign='left';
     let rowTop=y+44;
-    items.forEach(({entry,image,nameLines,detailLines},index)=>{
+    items.forEach(({entry,image,maxIcon,nameLines,detailLines},index)=>{
       if(index&&index%rowColumns===0)rowTop+=heights[index/rowColumns-1];
       const x=left+(index%rowColumns)*cellWidth;
       const artX=x+(cellWidth-76)/2;
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
-      if(entry.shiny)drawFittedText(ctx,'✦',x+cellWidth-20,rowTop+16,18,{max:17,min:17,color:'#ffffff'});
+      if(maxIcon)drawImageContain(ctx,maxIcon,x+cellWidth-22,rowTop+2,18,18);
       ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillStyle='#eef2f4';
       nameLines.forEach((line,lineIndex)=>ctx.fillText(line,x+cellWidth/2,rowTop+88+lineIndex*14));
       ctx.fillStyle='#b8c2c9';
@@ -7108,6 +7379,7 @@ function pokemonDisplayName(entry){
 function pokemonSearchLabels(entry){
   const labels=pokemonNamesI18n.searchLabels(entry,{locale:i18nCore.getLocale()});
   // Costume is a search facet, never a different saved identity.
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(entry.name)?.assets&&DB.costumes.some(row=>row.name===entry.name))return [...labels,'costume','costumed'];
   if(costumeSpriteCatalogDomain.resolution({names:[entry.name,entry.displayName].filter(Boolean)}).knownVariant)return [...labels,'costume','costumed'];
   return labels;
 }
@@ -7498,7 +7770,7 @@ function _renderBrowseInner(){
 
 // ── MY LIST ───────────────────────────────────────────────────
 function resetMyListCategoryForAccountBoundary(){
-  myListIntent='lf';boardHiddenKeys=new Set();boardCurationOwner='';publicLinkAttempt++;
+  myListIntent='lf';boardHiddenKeys=new Set();boardCurationOwner='';publicLinkAttempt++;variantClarificationDraft=null;
   myListType='wishlist';
   addTray=[];
   myListCollapsedPrioritySections.clear();
@@ -7562,8 +7834,8 @@ function renderIntentEntries(query='',model=productDeclarations()){
   });
   const review=document.getElementById('intent-review');
   if(review){
-    review.hidden=!model.duplicates.length&&!reviews.length;
-    review.innerHTML=`${model.duplicates.length?`<p>${escHtml(i18nCore.t('product.identical',{count:model.duplicates.length}))}</p>`:''}${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
+    review.hidden=!reviews.length;
+    review.innerHTML=`${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
   }
 }
 function contextualIntentSearchHtml(entries,title,options={}){
@@ -7603,6 +7875,7 @@ async function addManagedIntentEntries(side,entries){
     const catalog=accountSyncCatalogIdentity('wishlist',entry.name,entry);if(!catalog)return false;
     const identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
     if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))continue;
+    if(!isTradeableForWishlist({name:catalog.name||entry.name,no:catalog.speciesId||catalog.no||window.PogoDomain.publicPokemonDex.dex(entry.name)}))return false;
     mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues(entry)});
   }
   if(!mutations.length)return true;
@@ -7935,9 +8208,6 @@ function waitForMyListRender(){
   return Promise.resolve(true);
 }
 function renderMyList(filterVal,options={}){
-  if(productShareIsOpen()){
-    try{if(productShareUi.fingerprint!==productShareFingerprint()||productShareUi.receipt&&!managedPublicSharePublication.authorize(activePublicShareHydrationToken,'explicit_share').ok)refreshProductShare();}catch{refreshProductShare();}
-  }
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
@@ -7946,17 +8216,6 @@ function renderMyList(filterVal,options={}){
   // One fresh model drives both the visible wants and their copy action.
   const declarations=productDeclarations();
   renderCombinedList(declarations);
-  // Empty-account guidance uses the unfiltered model and proven owned hydration.
-  // Merely looking at this state must not subscribe, publish, or start a write.
-  const activeOwner=managedSessionCache?.snapshot?.().activeOwner;
-  const owned=!!cur&&!!auth?.currentUser?.uid&&activeOwner?.uid===auth.currentUser.uid&&activeOwner?.username===cur;
-  const hydrated=owned&&(accountSyncProjectionReady()||_firstSyncDone&&['users',...OWNED_MY_LIST_TYPES].every(type=>_pathLoadState[type]==='loaded'));
-  const emptyImport=document.getElementById('wants-empty-import');
-  if(emptyImport){
-    const hide=!hydrated||declarations.entries.length!==0;
-    if(hide&&emptyImport.contains(document.activeElement))document.getElementById('wants-add-name')?.focus();
-    emptyImport.hidden=hide;
-  }
   renderIntentEntries('',declarations);
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',declarations.entries.length>0);
   if(options.reason!=='filter'){
@@ -7988,6 +8247,11 @@ function exportSpriteFallbackUrls(e){
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
   const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender,shiny:e.shiny===true});
   if(reviewed.knownVariant)return Array.from(reviewed.urls);
+  if(window.PogoDomain.publicPokemonDex.variantStatus?.(context.canonicalName||e.name)?.assets)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
+  if(e.shiny===true)return chain.map(canvasSafeSpriteUrl).filter(Boolean);
+  // The reviewed Max chain already carries exact normal-form/Shiny/gender
+  // semantics. Do not prepend the older unqualified normal-art preference.
+  if(spriteSlugsDomain.reviewedDynamaxBase(e.spriteName||e.name,e.no))return chain.map(canvasSafeSpriteUrl).filter(Boolean);
   const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
   const compatibilityKeys=[...context.lookupKeys];
   for(const value of [e.spriteName,e.name,e.dn]){
@@ -8307,85 +8571,17 @@ function _familySort(a,b){
   return String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
 }
 
-// A readable caption is part of the export, not an optional/truncated sprite
-// annotation. Both legacy layouts use the same public description as Share.
-function listImageContentRows(ctx,entries,cols,cellW,spriteH){
-  const wrap=text=>String(text||'').split(/\r\n?|\n|\u2028/u).flatMap(paragraph=>{
-    const lines=[];let line='';
-    for(const word of paragraph.split(/\s+/u).filter(Boolean)){
-      const candidate=line?line+' '+word:word;
-      if(ctx.measureText(candidate).width<=cellW-16){line=candidate;continue;}
-      if(line){lines.push(line);line='';}
-      for(const char of word){
-        if(line&&ctx.measureText(line+char).width>cellW-16){lines.push(line);line='';}
-        line+=char;
-      }
-    }
-    lines.push(line);return lines;
-  });
-  const items=entries.map(entry=>{
-    ctx.font='700 12px sans-serif';
-    const name=wrap(entry.dn||entry.name);
-    ctx.font='12px sans-serif';
-    const details=productShareDescription({...entry,name:'',dn:'',p:'',note:''});
-    const note=publicSharePublicationDomain.publicNoteForDisplay(entry.note);
-    const lines=[...name.map(text=>({text,bold:true})),...(details?wrap(details).map(text=>({text})):[]),...(note?wrap(note).map(text=>({text})):[])];
-    return{entry,lines,height:spriteH+12+lines.length*16};
-  });
-  const rows=[];
-  for(let i=0;i<items.length;i+=cols){const cells=items.slice(i,i+cols);rows.push({cells,height:Math.max(...cells.map(item=>item.height))});}
-  return rows;
-}
-function drawListImageCaption(ctx,item,x,y,{dark=false}={}){
-  ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  item.lines.forEach((line,index)=>{
-    ctx.font=line.bold?'700 12px sans-serif':'12px sans-serif';
-    ctx.fillStyle=dark?(line.bold?'#ffffff':'#d5d5e8'):(line.bold?'#111827':'#334155');
-    ctx.fillText(line.text,x+8,y+14+index*16);
-  });
-}
-function listImageHeading(owner,intent='lf'){
-  return i18nCore.t('export.listHeading',{owner,list:i18nCore.t(intent==='ft'?'product.ft':'wants.title')});
-}
-function listImageHeader(ctx,owner,type,intent,style){
-  const dark=style==='cards',width=dark?536:528,titleSize=dark?22:20;
-  // Keep the exact identity and localized context, wrapping rather than shrinking
-  // or clipping the heading. Only the header grows; export cells stay unchanged.
-  const wrap=(text,font)=>{
-    ctx.font=font;const lines=[];let line='';
-    for(const char of String(text)){
-      if(line&&ctx.measureText(line+char).width>width){
-        const space=line.lastIndexOf(' ');
-        if(space>0){lines.push(line.slice(0,space+1));line=line.slice(space+1);}
-        else{lines.push(line);line='';}
-      }
-      line+=char;
-    }
-    lines.push(line);return lines;
-  };
-  const titleFont=`800 ${titleSize}px Space Grotesk, sans-serif`;
-  const contextFont='600 12px Space Grotesk, sans-serif';
-  const title=wrap(listImageHeading(owner,intent),titleFont);
-  const category=i18nCore.t(({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'})[type]||'list.others');
-  const context=wrap(i18nCore.t('export.listCategory',{category}),contextFont);
-  const titleY=dark?30:28,contextY=titleY+(title.length-1)*28+22;
-  const metaY=contextY+(context.length-1)*18+20;
-  return{title,context,titleFont,contextFont,titleY,contextY,metaY,height:metaY+(dark?32:16)};
-}
-async function renderListImage(entries,type,username,style='classic',intent='lf'){
-  if(style==='cards')return renderListImageCards(entries,type,username,intent);
-  const W=560,frame=0,pad=6,gap=0,cols=3;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,spriteH=72,sprSize=68;
+async function renderListImage(entries,type,username,style='classic'){
+  if(style==='cards')return renderListImageCards(entries,type,username);
+  const W=560,frame=0,pad=6,gap=0,cols=6;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
+  const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
+  let H=frame+headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+sectionPad*2+Math.ceil(g.entries.length/cols)*cellH+sectionGap;});
   const canvas=document.createElement('canvas');
-  const measure=canvas.getContext('2d');
-  const header=listImageHeader(measure,username,type,intent,'classic'),headerH=header.height;
-  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
-  const H=frame+headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+sectionPad*2+g.rows.reduce((sum,row)=>sum+row.height,0)+sectionGap,0);
-  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8407,15 +8603,13 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
   // Accent line below header
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
 
-  ctx.textAlign='center';ctx.font=header.titleFont;ctx.fillStyle='#ffffff';
-  header.title.forEach((line,index)=>ctx.fillText(line,W/2,header.titleY+index*28));
-  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
-  header.context.forEach((line,index)=>ctx.fillText(line,W/2,header.contextY+index*18));
+  const title=`${username}'s ${listLabel(type)} List`;
+  drawCenteredFittedText(ctx,title,W/2,28,W-32,{max:20,min:14,color:'#ffffff'});
   ctx.font='600 11px Space Grotesk, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.6)';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
   ctx.textAlign='center';
-  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,header.metaY);
+  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
   ctx.textAlign='left';
 
   // Load with cascading fallback — try PokeAPI → Serebii for each entry
@@ -8445,21 +8639,22 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
     ctx.font='600 12px Space Grotesk, sans-serif';
     ctx.fillText(`${group.entries.length}`,frame+14+ctx.measureText(group.label).width+8,y+18);
     y+=groupTitleH;
-    const contentH=group.rows.reduce((sum,row)=>sum+row.height,0);
-    const areaH=sectionPad*2+contentH;
+    const rows=Math.ceil(group.entries.length/cols);
+    const areaH=sectionPad*2+rows*cellH;
     // White background with subtle priority tint
     ctx.fillStyle='#ffffff';ctx.fillRect(frame,y,W-frame*2,areaH);
     ctx.fillStyle=priBgColors[group.p]||'rgba(0,0,0,0)';ctx.fillRect(frame,y,W-frame*2,areaH);
     y+=sectionPad;
-    let rowTop=y;
-    group.rows.forEach(row=>{
-     row.cells.forEach((item,col)=>{
-      const e=item.entry,x=frame+pad+col*(cellW+gap),cy=rowTop;
-      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2;
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawListImageCaption(ctx,item,x,cy+spriteH);
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW);
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
+      // Export is a clean H/M/L view — Lucky/shiny indicators stay omitted; size notes are labeled below the sprite.
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
@@ -8488,28 +8683,24 @@ async function renderListImage(entries,type,username,style='classic',intent='lf'
         ctx.textBaseline='alphabetic';
         ctx.textAlign='left';
       }
-     });
-     rowTop+=row.height;
     });
-    y+=contentH+sectionPad+sectionGap;
+    y+=rows*cellH+sectionPad+sectionGap;
   });
   return canvasBlob(canvas);
 }
-// Dark-card style: content-sized grid where each Pokémon sits in its own bordered card
+// Dark-card style: 8-column grid where each Pokémon sits in its own bordered card
 // with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
 // + trim/scale logic as the classic style, so icons stay consistent across both.
-async function renderListImageCards(entries,type,username,intent='lf'){
-  const W=560,frame=12,pad=0,gap=6,cols=3;
-  const cellW=(W-frame*2-(cols-1)*gap)/cols,spriteH=64,sprSize=50;
+async function renderListImageCards(entries,type,username){
+  const W=560,frame=12,pad=0,gap=6,cols=8;
+  const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
   const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const groupTitleH=26,sectionGap=12,bottomPad=16;
+  const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
+  let H=headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*cellH+(Math.ceil(g.entries.length/cols)-1)*gap+sectionGap;});
+
   const canvas=document.createElement('canvas');
-  const measure=canvas.getContext('2d');
-  const header=listImageHeader(measure,username,type,intent,'cards'),headerH=header.height;
-  groups.forEach(g=>{g.rows=listImageContentRows(measure,g.entries,cols,cellW,spriteH);});
-  const H=headerH+bottomPad+groups.reduce((h,g)=>h+groupTitleH+g.rows.reduce((sum,row)=>sum+row.height,0)+(g.rows.length-1)*gap+sectionGap,0);
-  if(H>15000)throw new Error('Image scope is too large');
   const scale=2;
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
@@ -8524,19 +8715,17 @@ async function renderListImageCards(entries,type,username,intent='lf'){
   // Title block (left-aligned, large)
   ctx.textAlign='left';
   ctx.fillStyle='#ffffff';
-  ctx.font=header.titleFont;
-  header.title.forEach((line,index)=>ctx.fillText(line,frame,header.titleY+index*28));
-  ctx.font=header.contextFont;ctx.fillStyle='rgba(255,255,255,.75)';
-  header.context.forEach((line,index)=>ctx.fillText(line,frame,header.contextY+index*18));
+  ctx.font='800 22px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,frame,30);
   ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.font='500 12px Space Grotesk, sans-serif';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,header.metaY);
+  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,48);
   // "PoGo Trades" branding top-right
   ctx.textAlign='right';
   ctx.fillStyle='#a78bfa';
   ctx.font='700 13px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo Trades',W-frame,header.metaY+20);
+  ctx.fillText('PoGo Trades',W-frame,30);
   ctx.textAlign='left';
 
   // Load sprites with cascading fallback (same as classic)
@@ -8567,22 +8756,23 @@ async function renderListImageCards(entries,type,username,intent='lf'){
     ctx.fillText(`${group.entries.length}`,frame+12+labelW+6,y+18);
     y+=groupTitleH;
 
-    let rowTop=y;
-    group.rows.forEach(row=>{
-     row.cells.forEach((item,col)=>{
-      const e=item.entry,x=frame+col*(cellW+gap),cy=rowTop;
+    const rows=Math.ceil(group.entries.length/cols);
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=frame+col*(cellW+gap),cy=y+row*(cellH+gap);
       // Card background
       ctx.fillStyle='#1e1e35';
-      roundedRect(ctx,x,cy,cellW,row.height,8);ctx.fill();
+      roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
       // Sprite (trimmed + scaled — same logic as classic)
-      const sx=x+(cellW-sprSize)/2,sy=cy+(spriteH-sprSize)/2+1;
+      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2+1;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      drawListImageCaption(ctx,item,x,cy+spriteH,{dark:true});
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -8610,18 +8800,12 @@ async function renderListImageCards(entries,type,username,intent='lf'){
         ctx.fillText(isF?'♀':'♂',bx+5.5,by+6);
         ctx.textBaseline='alphabetic';ctx.textAlign='left';
       }
-     });
-     rowTop+=row.height+gap;
     });
-    y=rowTop-gap+sectionGap;
+    y+=rows*cellH+(rows-1)*gap+sectionGap;
   });
   return canvasBlob(canvas);
 }
 
-function listImageFilename(owner,type,style){
-  const styleTag=style==='cards'?'-darkcards':'';
-  return `pogo-${safeFilePart(owner)}-${safeFilePart(listLabel(type))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
-}
 async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
@@ -8629,9 +8813,11 @@ async function exportMyListImage(style='classic'){
   if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   try{
     if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
-    const blob=await renderListImage(entries,myListType,cur,style,myListIntent);
-    const filename=listImageFilename(cur,myListType,style);
-    const delivery=await deliverImageBlob(blob,filename,listImageHeading(cur,myListIntent));
+    const intentLabel=i18nCore.t(myListIntent==='ft'?'product.ft':'product.lf');
+    const blob=await renderListImage(entries,myListType,cur+' · '+intentLabel,style);
+    const styleTag=style==='cards'?'-darkcards':'';
+    const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
+    const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
     if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));
@@ -10202,14 +10388,6 @@ async function saveProfile(event){
     if(_profileSaveOperation===operation){_profileSaveOperation=null;if(session.uiCurrent()){syncProfileDirtyState();if(failed){err.classList.add('is-error');err.textContent=i18nCore.t('profile.saveUnconfirmed');}}}
   }
 }
-function toggleSettingsPinForm(open,restoreFocus=false){
-  const form=document.getElementById('settings-pin-form'),button=document.getElementById('settings-pin-toggle'),panel=document.getElementById('settings-security-pin-panel');
-  if(!form||!button)return;
-  const show=usernamePinAccessUsable()&&(open===undefined?form.hidden:open===true);
-  form.hidden=!show;if(panel)panel.hidden=!show;button.setAttribute('aria-expanded',String(show));
-  if(show)document.getElementById('np1')?.focus();
-  else{for(const id of ['np1','np2']){const input=document.getElementById(id);if(input)input.value='';}const error=document.getElementById('pin-err');if(error)error.textContent='';if(restoreFocus&&!button.hidden)button.focus();}
-}
 async function savePinSettings(){
   if(_pinSaveOperation?.session.uiCurrent())return;
   const p1=document.getElementById('np1')?.value||'',p2=document.getElementById('np2')?.value||'',err=document.getElementById('pin-err');if(err)err.textContent='';
@@ -10281,6 +10459,7 @@ function syncLabelForStatus(s){
   return'—';
 }
 function refreshSyncUi(){
+  if(document.getElementById('product-share-modal')?.classList.contains('open'))refreshPublicLinkAction();
   refreshFavoriteSavedPrompt();
   const s=_syncStatusCurrent;
   if(!s)return;
@@ -10654,12 +10833,10 @@ function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
   const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','prepared','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
   const usernamePinAvailable=usernamePinAccessUsable();
-  const pinToggle=document.getElementById('settings-pin-toggle');if(pinToggle)pinToggle.hidden=!usernamePinAvailable;
-  if(!usernamePinAvailable)toggleSettingsPinForm(false);
+  const pinPanel=document.getElementById('settings-security-pin-panel');if(pinPanel)pinPanel.hidden=!usernamePinAvailable;
   const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable,operationStates}):[
     {key:'username-pin',visible:true,state:usernamePinAvailable?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
   ];
-  const notice=document.querySelector('#settings-account-security .account-security-notice');if(notice)notice.hidden=methods.some(method=>method.key!=='username-pin'&&method.visible);
   for(const method of methods){
     const row=document.querySelector(`#settings-account-security [data-provider="${method.key}"]`);if(!row)continue;
     const presentation=method.key==='google'?googleProviderPresentation(method,controllerState):Object.freeze({state:method.state,labelKey:PROVIDER_LINKING_STATUS_KEYS[method.state],detailKey:method.key==='username-pin'&&!usernamePinAvailable?'security.usernamePinNotConfigured':method.detailKey,action:'',actionKey:'',disabled:true});
@@ -10733,27 +10910,21 @@ function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
   const route=parseSettingsRoute();
   document.getElementById('settings-layout')?.classList.add('mobile-list');
-  // The supported legacy Tools route has a detail panel but no section-list
-  // destination. Normalize the remembered selection along with the fallback
-  // focus so a later reopen or desktop resize cannot revive that panel.
-  if(!document.querySelector(`[data-settings-target="${_settingsSection}"]`))selectSettingsSection('profile',{focus:false,keepList:true,updateHistory:false});
   if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&Number(history.state?.settingsDepth)>1&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
   if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
-  requestAnimationFrame(()=>(document.querySelector(`[data-settings-target="${_settingsSection}"]`)||document.querySelector('[data-settings-target="profile"]'))?.focus({preventScroll:true}));
+  requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
 }
 function settingsDetailIsOpenOnMobile(){return!matchMedia(SETTINGS_DESKTOP_QUERY).matches&&!document.getElementById('settings-layout')?.classList.contains('mobile-list')&&_settingsContext==='account';}
 function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
-  const route=parseSettingsRoute();
-  const requestedSection=accountContext&&SETTINGS_SECTIONS.includes(options.section)?options.section:null;
-  if(requestedSection)_settingsSection=requestedSection;
-  else if(accountContext&&route.section)_settingsSection=route.section;
+  const route=parseSettingsRoute(),requested=accountContext&&SETTINGS_SECTIONS.includes(options.section)?options.section:null;
+  if(requested)_settingsSection=requested;else if(accountContext&&route.section)_settingsSection=route.section;
   const returnFocus=options.returnFocus||(accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null));
   closeAccountMenu(false);renderInterimProductLabels();configureSettingsPanel(accountContext?'account':'public');
-  if(requestedSection||accountContext&&route.valid&&route.section&&!settingsUsesPageMode())selectSettingsSection(requestedSection||route.section,{focus:false,updateHistory:false});
+  if(accountContext&&(requested||route.valid&&route.section)&&!settingsUsesPageMode())selectSettingsSection(requested||route.section,{focus:false,updateHistory:false});
   const modal=document.getElementById('settings-modal');
   if(!modal?.classList.contains('open')){_settingsDraftGeneration++;if(options.captureScroll!==false)captureSettingsScrollSnapshot();}
-  const section=accountContext&&(requestedSection||settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
+  const section=accountContext&&(requested||settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
   const target=settingsRouteUrl(true,section);
   if(options.updateHistory!==false)writeSettingsRoute(section);
   else if(route.matches&&(!route.valid||!accountContext&&route.section||accountContext&&settingsUsesPageMode()&&!route.section))writeSettingsRoute(section,{mode:'replace'});
@@ -10771,7 +10942,6 @@ function closeSettingsRoute(){
   return false;
 }
 function syncSettingsRoute(options={}){
-  if(taskToolOrigin?.settings&&taskToolOrigin.route!==location.href)closeModal(taskToolOrigin.modal,{restoreTool:false});
   const modal=document.getElementById('settings-modal');if(!modal)return;
   const route=parseSettingsRoute();
   if(route.valid&&route.section&&!_authStateKnown&&!cur){
@@ -10797,45 +10967,23 @@ function syncPendingSettingsRouteAfterAuth(){
   if(!_pendingSettingsRouteSection&&!parseSettingsRoute().matches)return;
   setTimeout(()=>syncSettingsRoute({captureScroll:false}),0);
 }
-let taskToolOrigin=null;
-function taskNavigationIdentity(){return cur&&auth?.currentUser?.uid&&currentAuthUid===auth.currentUser.uid?{owner:cur,uid:auth.currentUser.uid,generation:_sessionTransientGeneration}:null;}
-function taskNavigationCurrent(origin){
-  const identity=taskNavigationIdentity();
-  return !!identity&&identity.owner===origin.owner&&identity.uid===origin.uid&&identity.generation===origin.generation&&origin.tab===activeTabName()&&origin.route===location.href;
-}
-function openMoreDestination(destination,invoker){
-  if(!taskNavigationIdentity())return false;
-  if(destination==='profile'||destination==='settings')openSettingsPanel('account',{returnFocus:invoker,...(destination==='profile'?{section:'profile'}:{})});
-  else if(destination==='events'){switchTab('schedule');const heading=document.getElementById('events-title');heading.tabIndex=-1;heading.focus();}
-  else if(destination==='admin'&&protectedOwnerSession()){switchTab('admin');document.querySelector('.tab[data-tab="more"]')?.focus();}
-  else return false;
-  return true;
-}
-function openTaskTool(tool,invoker,options={}){
-  const identity=taskNavigationIdentity();if(!identity)return false;
-  const modal={import:'import-modal',share:'product-share-modal',export:'product-share-modal',transfer:'safe-transfer-modal',help:'shortcuts-modal',health:'login-health-modal'}[tool];
-  if(!modal||tool==='health'&&!options.settings)return false;
-  if(taskToolOrigin||anyOpenModal()&&!options.settings)return false;
-  const origin={...identity,modal,invoker:invoker||document.activeElement,tab:activeTabName(),route:location.href,settings:options.settings===true,section:_settingsSection,settingsReturnFocus:_modalPrevFocus,appInert:document.getElementById('app').inert};
-  if(origin.settings){closeModal('settings-modal',{route:false});origin.appInert=document.getElementById('app').inert;}
-  if(!taskNavigationCurrent(origin))return false;
-  // Dispatch synchronously. There is no timer carrying an old account or route.
-  if(tool==='import')openImport(origin.invoker);
-  else if(tool==='share'||tool==='export')openProductShare(tool==='export'?'image':'link','full',origin.invoker);
-  else if(tool==='transfer')openSafeTransferModal({returnFocus:origin.invoker,explicitSelection:true});
-  else if(tool==='help')openModal(modal,{returnFocus:origin.invoker});
-  else if(tool==='health')void openLoginHealthCheck();
-  if(_modalActiveId!==modal)return false;
-  taskToolOrigin=origin;document.getElementById('app').inert=true;return true;
-}
-function openSettingsTool(tool,invoker){
-  if(!taskNavigationIdentity()||!document.getElementById('settings-modal')?.classList.contains('open'))return false;
-  if(tool==='backup')return protectedOwnerSession()?exportData():false;
-  return openTaskTool({'safe-transfer':'transfer',shortcuts:'help'}[tool]||tool,invoker,{settings:true});
+function openSettingsTool(tool){
+  if(!cur)return;
+  const session=captureSettingsMutationSession();
+  closeModal('settings-modal',{route:false});
+  if(parseSettingsRoute().matches)history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
+  setTimeout(()=>{
+    if(!session.current())return;
+    if(tool==='health')openLoginHealthCheck();
+    else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
+    else if(tool==='import')openImport();
+    else if(tool==='export'){switchTab('mylist');openProductShare();}
+    else if(tool==='safe-transfer')openSafeTransferModal();
+    else if(tool==='backup'&&protectedOwnerSession())exportData();
+  },0);
 }
 function openModal(id,options={}){
   const m=document.getElementById(id);if(!m)return;
-  if(id==='shortcuts-modal'){renderHelpAppInformation();options={initialFocus:'.mact button',...options};}
   if(_modalActiveId&&_modalActiveId!==id){
     const active=document.getElementById(_modalActiveId);
     if(_modalActiveId==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(_modalActiveId,{route:false});
@@ -10861,22 +11009,9 @@ function openModal(id,options={}){
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
-    // Help can open the existing native Legal dialog; its own focus/escape
-    // handling takes precedence until it returns focus to the Help invoker.
-    if(id==='shortcuts-modal'&&document.getElementById('legal-dialog')?.open)return;
     if(ev.defaultPrevented)return;
     if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
-    if(id==='product-share-modal'||id==='combined-editor-modal'){
-      // Keep the dialog's explicit keyboard sequence inside the modal even on
-      // WebKit/macOS configurations that skip controls during native tabbing.
-      // A native radio group contributes its checked (or first) input only;
-      // arrow-key selection remains the browser's native behavior.
-      const controls=[...m.querySelectorAll(id==='combined-editor-modal'?'button,input,select,textarea,summary,[tabindex]':'button,input,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.offsetParent!==null&&(id!=='combined-editor-modal'||(el.getClientRects().length>0&&(!el.closest('details:not([open])')||el.tagName==='SUMMARY'))));
-      const stops=controls.filter(el=>el.type!=='radio'||el===(controls.find(other=>other.type==='radio'&&other.name===el.name&&other.checked)||controls.find(other=>other.type==='radio'&&other.name===el.name)));
-      if(stops.length){const index=stops.indexOf(document.activeElement),next=index<0?(ev.shiftKey?stops.length-1:0):(index+(ev.shiftKey?-1:1)+stops.length)%stops.length;ev.preventDefault();stops[next].focus();}
-      return;
-    }
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,a[href],summary,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
     const first=focusables[0],last=focusables[focusables.length-1];
@@ -10887,19 +11022,8 @@ function openModal(id,options={}){
 }
 function closeModal(id){
   const options=arguments[1]||{};
-  const toolOrigin=taskToolOrigin?.modal===id?taskToolOrigin:null;
-  if(toolOrigin){taskToolOrigin=null;document.getElementById('app').inert=toolOrigin.appInert;}
-  if(id==='combined-editor-modal'){
-    if(combinedEditor?.appInert!==undefined)document.getElementById('app').inert=combinedEditor.appInert;
-    combinedEditor=null;
-  }
-  if(id==='settings-modal')toggleSettingsPinForm(false);
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
-  if(id==='product-share-modal'){
-    invalidateProductShare();
-    if(productShareUi.appInert!==undefined){document.getElementById('app').inert=productShareUi.appInert;delete productShareUi.appInert;}
-  }
   if(id==='settings-modal'&&document.getElementById(id)?.classList.contains('open'))_settingsDraftGeneration++;
   document.getElementById(id)?.classList.remove('open');
   if(_modalActiveId!==id)return;
@@ -10907,15 +11031,13 @@ function closeModal(id){
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalActiveId='';
   if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
-  const toolReturn=toolOrigin&&options.restoreTool!==false&&taskNavigationCurrent(toolOrigin);
-  let returnFocus=toolOrigin?(toolReturn?toolOrigin.invoker:null):_modalPrevFocus;_modalPrevFocus=null;
-  if(toolReturn&&toolOrigin.settings){
-    openSettingsPanel('account',{section:toolOrigin.section,returnFocus:toolOrigin.settingsReturnFocus,updateHistory:false,captureScroll:false});
+  let returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  if(id==='product-share-modal'){
+    const visible=node=>node?.isConnected&&!node.disabled&&(node.tabIndex>=0||node.hasAttribute('tabindex'))&&node.getClientRects().length&&!node.closest('[inert]');
+    // Settings tools may replace their opener while launching Share. Do not
+    // leave focus in a hidden format select after Escape: it eats shortcuts.
+    if(!visible(returnFocus))returnFocus=[...document.querySelectorAll('.wants-list-toolbar button'),...document.querySelectorAll('#nav-more,#nav-mylist')].find(visible);
   }
-  // Import clicks dismiss the background disclosure through its existing
-  // outside-click handler. Restore it before focusing the actual launcher.
-  if(toolReturn&&returnFocus?.closest('#wants-list-tools'))document.getElementById('wants-list-tools').open=true;
-  if(toolReturn&&returnFocus?.closest('#wants-empty-import')&&!returnFocus.getClientRects().length)returnFocus=document.getElementById('wants-add-name');
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
 }
@@ -11094,6 +11216,7 @@ function tradeIntentQualifierTokens(intent){
   if(intent.type&&intent.type!=='wishlist')tokens.push({label:publicShareListLabel(intent.type)});
   if(intent.lucky)tokens.push({label:i18nCore.t('share.flagLucky')});
   if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
+  const releaseLabel=catalogueVariantReleaseLabel(intent);if(releaseLabel)tokens.push({label:releaseLabel});
   if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
   if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
   if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:''}),cls:'background',backgroundId:intent.backgroundId});
@@ -11155,7 +11278,7 @@ function renderTradeMatchModal(){
   if(!_activeTradeMatch)return;
   const{them}=_activeTradeMatch;
   const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" aria-labelledby="trade-match-title" onclick="if(event.target===this)closeTradeMatchModal()">
-    <div class="diff-modal trade-match-modal">
+    <div class="diff-modal trade-match-modal" onclick="event.stopPropagation()">
       <div class="diff-hdr">
         <div class="diff-hdr-title" id="trade-match-title">${escHtml(i18nCore.t('tradeMatch.title',{trainer:them}))}</div>
         <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="${escAttr(i18nCore.t('common.close'))}">×</button>
@@ -11273,15 +11396,14 @@ function _safeTransferSelectedMembers(model=_safeTransferScopeModel()){
   return model.members.filter(item=>selected.has(_safeTransferMemberKey(item)));
 }
 function _safeTransferAllTrainers(){return _safeTransferScopeModel().members.map(item=>item.displayName);}
-function openSafeTransferModal(options={}){
+function openSafeTransferModal(){
   const model=_safeTransferScopeModel(),active=new Set(model.members.map(_safeTransferMemberKey));
   if(!_safeTransferSelected){
-    const saved=options.explicitSelection?null:_loadSafeTransferDefault();
-    _safeTransferSelected=options.explicitSelection?new Set():saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
+    const saved=_loadSafeTransferDefault();
+    _safeTransferSelected=saved&&saved.size?new Set([...saved].map(value=>String(value).toLocaleLowerCase('en-US'))):new Set(active);
   }
   [..._safeTransferSelected].forEach(key=>{if(!active.has(key))_safeTransferSelected.delete(key);});
-  document.getElementById('stb-save-default').hidden=options.explicitSelection===true;
-  openModal('safe-transfer-modal',{returnFocus:options.returnFocus});
+  openModal('safe-transfer-modal');
   const checkbox=document.getElementById('stb-prefilter-chk');if(checkbox){checkbox.checked=true;checkbox.disabled=true;}
   renderSafeTransferTrainers();renderSafeTransferOutput();
 }
@@ -11291,7 +11413,7 @@ function renderSafeTransferTrainers(){
   if(!model.members.length){grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;return;}
   grid.innerHTML=model.members.map(item=>{
     const key=_safeTransferMemberKey(item),on=_safeTransferSelected.has(key);
-    return`<button type="button" class="stb-trainer-chip${on?' on':''}" aria-pressed="${on}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
+    return`<button type="button" class="stb-trainer-chip${on?' on':''}" data-safe-transfer-trainer="${escAttr(key)}" title="${escAttr(i18nCore.t('safeTransfer.toggleTrainer',{trainer:item.displayName}))}">${escHtml(item.displayName)}</button>`;
   }).join('');
 }
 document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
@@ -11702,7 +11824,7 @@ function pokeballLoader(text=''){
 
 // ── WALLPAPER (#32) ───────────────────────────────────────────
 const WALLPAPERS=[
-  {key:'mono',label:'Neutral'},
+  {key:'mono',label:'Default'},
   {key:'aurora',label:'Aurora'},
   {key:'ocean',label:'Ocean'},
   {key:'forest',label:'Forest'},
@@ -11964,25 +12086,14 @@ function reloadForUpdate(){
 
 // ── PWA INSTALL PROMPT (#1) ──────────────────────────────────
 let _deferredInstallPrompt=null;
-function renderHelpAppInformation(){
-  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const safari=ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  const key=standalone?'settings.installStandalone':_deferredInstallPrompt?'settings.installAvailable':safari?'settings.installSafari':'settings.installUnavailable';
-  const status=document.getElementById('help-install-status');if(status)status.textContent=i18nCore.t(key);
-  const button=document.getElementById('settings-install');if(button)button.hidden=standalone||!_deferredInstallPrompt;
-  const release=document.getElementById('settings-release-id');if(release)release.textContent=i18nCore.t('settings.release',{release:clientReleaseDomain.RELEASE_ID});
-}
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   _deferredInstallPrompt=e;
   document.getElementById('install-btn')?.classList.add('show');
-  renderHelpAppInformation();
 });
 window.addEventListener('appinstalled',()=>{
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
-  renderHelpAppInformation();
   toast(i18nCore.t('install.installed'));
 });
 async function triggerInstall(){
@@ -11992,7 +12103,6 @@ async function triggerInstall(){
   if(outcome==='accepted'){toast(i18nCore.t('install.installing'));}
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
-  renderHelpAppInformation();
 }
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
@@ -12356,8 +12466,8 @@ function closeExportMenu(){
   document.getElementById('export-menu-btn')?.setAttribute('aria-expanded','false');
   document.removeEventListener('click',_closeExportOnOutside);
 }
-function productTextRows(entries=productDeclarations().entries){
-  return entries.map(e=>({
+function productTextRows(){
+  return productDeclarations().entries.map(e=>({
     intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
@@ -12365,95 +12475,69 @@ function productTextRows(entries=productDeclarations().entries){
 async function exportMyListMarkdown(){
   const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const profile=allData.users?.[cur]||{};
-  const text=productMarkdownText(entries,profile,cur);
+  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
-function productMarkdownText(entries,profile,username){
-  return ['## '+username,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
-}
-function productCSVText(entries){
-  if(!entries.length)return'';
+function exportMyListCSV(){
+  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const cell=value=>{
     let text=String(value??'');
     if(/^[=+@-]/.test(text))text="'"+text;
     return '"'+text.replace(/"/g,'""')+'"';
   };
   const rows=[Object.keys(entries[0]),...entries.map(e=>Object.values(e))];
-  return rows.map(row=>row.map(cell).join(',')).join('\n');
-}
-function exportMyListCSV(){
-  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
-  const csv=productCSVText(entries);
+  const csv=rows.map(row=>row.map(cell).join(',')).join('\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-wants.csv`;
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   toast(i18nCore.t('export.csvDownloaded'));
 }
 let publicLinkAttempt=0;
+function clearPublicLinkFeedback(){
+  publicLinkFeedback=null;
+  const status=document.getElementById('share-link-status');if(status){status.textContent='';delete status.dataset.state;}
+  const input=document.getElementById('share-public-url');if(input){input.value='';input.hidden=true;}
+}
 function linkPublicationStatus(key,options={}){
+  const state=publicLinkPublicationState(true);
+  if(!['share.linkReady','share.linkCopied','share.linkCopyFailed'].includes(key))clearPublicLinkFeedback();
+  publicLinkFeedback={token:activePublicShareHydrationToken,uid:auth?.currentUser?.uid,username:cur,contentKey:state.contentKey,scope:productShareScope,listType:myListType};
   const node=document.getElementById('share-link-status');
   if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
+  refreshPublicLinkAction();
 }
 async function copyShareLink(){
-  if(!productShareIsOpen()||productShareUi.mode!=='link'||productShareUi.busy)return;
-  let context;
-  try{context=productShareContext();}catch{clearProductShareRecovery();linkPublicationStatus('shareUi.invalid');return;}
-  const attempt=++publicLinkAttempt;
-  const current=()=>attempt===publicLinkAttempt&&productShareContextCurrent(context);
-  const ready=()=>publicShareSessionMatches(context.owner)&&managedPublicSharePublication.authorize(context.token,'explicit_share').ok;
-  const receipt=productShareUi.receipt;
-  if(receipt&&(receipt.context.runtime!==context.runtime||receipt.context.runtimeGeneration!==context.runtimeGeneration)){
-    clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;
-  }
-  // A receipt exists only after verified publication followed by clipboard failure.
-  // It is never persisted, and normal actions still use the authorized sharing flow.
-  const retry=receipt&&productShareContextCurrent(receipt.context);
-  if(!retry)clearProductShareRecovery();
-  productShareUi.busy=true;updateProductShareAction();linkPublicationStatus('shareUi.working');
+  if(document.getElementById('product-share-modal')?.classList.contains('open')&&productShareScope!=='full')return;
+  const button=document.getElementById('share-link-action'),displayed=button?.dataset.publicationState,state=publicLinkPublicationState();
+  if(state.disabled||displayed==='current'&&state.kind!=='current'){refreshPublicLinkAction();linkPublicationStatus('share.publicationPending');return;}
+  const username=cur,uid=String(auth?.currentUser?.uid||''),token=activePublicShareHydrationToken,attempt=++publicLinkAttempt;
+  const wasOpen=document.getElementById('product-share-modal')?.classList.contains('open');
+  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'')&&token===activePublicShareHydrationToken&&(!wasOpen||document.getElementById('product-share-modal')?.classList.contains('open'));
+  const payloadCurrent=()=>publicLinkPublicationState(true).contentKey===state.contentKey;
+  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
+  const input=document.getElementById('share-public-url');if(input){input.value='';input.hidden=true;}
+  const busy={token,uid,username,attempt,copyOnly:state.kind==='current'};publicLinkBusy=busy;refreshPublicLinkAction();
   try{
-    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
-    const runtime=managedAccountSyncRuntime;
-    if(runtime){
-      const state=await runtime.snapshot();
-      if(!current())return;
-      if(runtime.ownerUid!==context.uid||state.pendingCount||state.blockedCount||state.conflictCount){clearProductShareRecovery();linkPublicationStatus('shareUi.notSaved');return;}
-    }
-    if(!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');return;}
-    let url;
-    if(retry){
-      if(!fbOn||!db){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');return;}
-      url=receipt.url;
-    }else{
-      const result=await publishPublicShareNow(context.owner,'explicit_share');
+    if(state.kind!=='current'){
+      linkPublicationStatus('product.publishing');
+      const result=await publishPublicShareNow(username,'explicit_share');
       if(!current())return;
       if(!publicSharePublicationCurrent(result)){
-        clearProductShareRecovery();linkPublicationStatus(result?.status==='pending'?'shareUi.notSaved':'shareUi.shareFailed');return;
-      }
-      if(!ready()){linkPublicationStatus('shareUi.notReady');return;}
-      url=`${location.origin}${location.pathname}?view=${encodeURIComponent(context.owner)}&list=${productShareUi.category}`;
-    }
-    if(!current())return;
-    try{
-      await copyText(url,{isCurrent:()=>current()&&ready()});
-      if(current()&&ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.copied',{state:'product.publishedCopied'});}
-    }catch{
-      if(current()&&ready()){
-        productShareUi.receipt={url,context};
-        const input=document.getElementById('share-public-url');input.value=url;
-        document.getElementById('share-manual-link').hidden=false;
-        linkPublicationStatus('shareUi.linkCopyFailed',{state:'product.publishedCopyFailed'});input.focus();input.select();
+        if(result?.status==='pending')linkPublicationStatus('share.publicationPending');
+        else{publicLinkPublicationError={token,contentKey:state.contentKey};linkPublicationStatus('share.publicationUnconfirmed',{state:'product.publishFailed'});}return;
       }
     }
-    if(current()&&!ready()){clearProductShareRecovery();linkPublicationStatus('shareUi.notReady');}
-  }catch{
-    if(current()){clearProductShareRecovery();linkPublicationStatus('shareUi.shareFailed');}
-  }finally{
-    if(attempt===publicLinkAttempt&&productShareIsOpen()){
-      if(context.owner!==cur||context.uid!==String(auth?.currentUser?.uid||'')||context.session!==_sessionTransientGeneration||context.token!==activePublicShareHydrationToken)closeModal('product-share-modal');
-      else if(!current()){refreshProductShare();linkPublicationStatus('shareUi.changed');}
-      else{productShareUi.busy=false;updateProductShareAction();}
-    }
-  }
+    // Only a matching verified readback/publication can authorize copy-only.
+    const proof=currentPublicLinkConfirmation();
+    if(!current()||proof?.contentKey!==state.contentKey){if(current())linkPublicationStatus('share.publicationPending');return;}
+    busy.copyOnly=true;
+    if(!payloadCurrent()){linkPublicationStatus('share.publicationPending');return;}
+    if(input){input.value=url;input.hidden=false;}
+    linkPublicationStatus('share.linkReady',{state:'product.published'});
+    try{await copyText(url);if(current())linkPublicationStatus(payloadCurrent()?'share.linkCopied':'share.publicationPending',{state:payloadCurrent()?'product.publishedCopied':'share.publicationPending'});}
+    catch{if(current()){if(!payloadCurrent())linkPublicationStatus('share.publicationPending');else{linkPublicationStatus('share.linkCopyFailed',{state:'product.publishedCopyFailed'});input?.focus();input?.select();}}}
+  }catch(error){if(current()){publicLinkPublicationError={token,contentKey:state.contentKey};linkPublicationStatus('share.publicationUnconfirmed',{state:'product.publishFailed'});}}
+  finally{if(publicLinkBusy===busy){publicLinkBusy=null;refreshPublicLinkAction();}}
 }
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
@@ -12497,7 +12581,10 @@ function _specialAllItems(){
   // Reuse the wishlist autocomplete pool (now includes legendaries via listSource)
   const seen=new Set();const out=[];
   ['wishlist','dynamax','gmax','costumes'].forEach(t=>{
-    listSource(t).forEach(e=>{
+    // Global picker identities must keep the Max suffix. Raw category rows use
+    // base labels, which otherwise duplicate the ordinary species name.
+    const entries=t==='dynamax'?pokemonCatalogDomain.canonicalizeEntries(maxTradeEntries(t)):listSource(t);
+    entries.forEach(e=>{
       const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
       if(!e?.name||seen.has(key))return;
       if(!selectableSpriteEntry(e))return;
@@ -12911,7 +12998,7 @@ async function renderSpecialBoardImage(board,username){
     return 1;
   };
   const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
-    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
+
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
@@ -13089,7 +13176,7 @@ function renderShareView(username,type,intent){
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
-          e.shiny&&!section.flags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
+          e.shiny?`<span class="sr-only">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
           ,''
@@ -13099,13 +13186,13 @@ function renderShareView(username,type,intent){
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
         // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
-          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${maxPresentationMarkup(e)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
         return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
 
           ${spriteHtml}
           <div class="share-pcard-info">
-            <span class="share-pcard-name">${escHtml(e.dn)}</span>
+            <span class="share-pcard-name">${escHtml(maxPresentationName(e.dn))}</span>
             ${metaHtml}${e.note?`<p class="share-pcard-mod">${escHtml(e.note)}</p>`:''}
           </div>
         </div>`;
@@ -13219,7 +13306,7 @@ function ptrEnd(){
     setTimeout(()=>{
       ind?.classList.remove('visible','pulling','refreshing');
       if(ind)ind.textContent='↓';
-      toast('🔄 Refreshed');
+      announceFeedback(i18nCore.t('feedback.viewUpdated'));
     },800);
   }else{
     ind?.classList.remove('visible','pulling','refreshing');
@@ -13371,7 +13458,6 @@ function selectSchedDay(isoD){
 }
 
 function setEventTypeFilter(type){
-  eventCalendarDate='';
   eventTypeFilter=eventPresentationDomain.TYPES.includes(type)?type:'all';
   renderEventsOnly();
 }
@@ -13417,7 +13503,8 @@ function eventStateHtml(kind,title,detail='',actionLabel='',action=''){
 }
 function eventStableId(event){return eventLabelsI18n.eventId(event);}
 function setEventCalendarDate(date){
-  eventCalendarDate=eventCalendarDate===date?'':date;
+  eventAllSchedule=false;
+  eventCalendarDate=date||isoDate(new Date());
   renderEventsOnly();
 }
 function moveEventCalendarMonth(delta){
@@ -13435,11 +13522,13 @@ function eventCalendarKeydown(event,dateKey){
   else if(event.key==='End')next.setDate(current.getDate()+(6-current.getDay()));
   else next.setDate(current.getDate()+offsets[event.key]);
   eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);
+  eventAllSchedule=false;
   eventCalendarDate=isoDate(next);
   renderEventsOnly();
   requestAnimationFrame(()=>[...document.querySelectorAll(`.event-calendar-day[data-date="${eventCalendarDate}"]`)].find(node=>node.getClientRects().length)?.focus());
 }
 function jumpToEvent(eventId){
+  eventAllSchedule=true;
   eventCalendarDate='';
   eventTypeFilter='all';
   renderEventsOnly();
@@ -13490,8 +13579,31 @@ function renderEventUpNext(events){
   if(!items.length)return'';
   return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
-function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events,{variant:'desktop'})}${renderEventUpNext(events)}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
-function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function renderEventWeek(){
+  const selected=eventAgendaDate(),date=new Date(`${selected}T12:00:00`),locale=i18nCore.getLocale();
+  const monday=new Date(date);monday.setDate(date.getDate()-(date.getDay()+6)%7);
+  return`<div class="event-planner"><nav class="event-week" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="-1" aria-label="${escAttr(i18nCore.t('apri.previousWeek'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><div class="event-week-days">${Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);const key=isoDate(d);return`<button type="button" class="event-week-day" data-event-action="date" data-date="${key}" aria-pressed="${!eventAllSchedule&&key===selected}" aria-label="${escAttr(new Intl.DateTimeFormat(locale,{dateStyle:'full'}).format(d))}"><span>${escHtml(new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d))}</span><strong>${escHtml(new Intl.DateTimeFormat(locale,{month:'short',day:'numeric'}).format(d))}</strong></button>`;}).join('')}</div><button type="button" class="event-week-arrow" data-event-action="week" data-event-week-delta="1" aria-label="${escAttr(i18nCore.t('apri.nextWeek'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></nav><div class="event-view-mode" role="group" aria-label="${escAttr(i18nCore.t('events.dayPlanner'))}"><button class="btn btn-ghost" type="button" data-event-action="day-view" aria-pressed="${!eventAllSchedule}">${escHtml(i18nCore.t('apri.dayView'))}</button><button class="btn btn-ghost" type="button" data-event-action="all-schedule" aria-pressed="${eventAllSchedule}">${escHtml(i18nCore.t('apri.allSchedule'))}</button></div></div>`;
+}
+function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventUpNext(events)}${renderEventCalendar(events,{variant:'desktop'})}<details class="event-calendar-disclosure" data-event-disclosure="mobile-calendar"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
+function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${renderEventWeek()}${eventsFeedIsStale()?eventsSourceHtml():''}${timeline}${eventsFeedIsStale()?'':eventsSourceHtml()}</div>${renderEventsRail(events)}</div><footer class="events-credits"><a href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a> · <a href="https://leekduck.com" target="_blank" rel="noopener noreferrer">LeekDuck</a> · <a href="https://pokemongo.com/news" target="_blank" rel="noopener noreferrer">${escHtml(i18nCore.t('events.officialNews'))}</a></footer>`;}
+function eventSelectedDaySections(events){
+  const agenda=eventPresentationDomain.dayAgenda(events,eventAgendaDate()),seen=new Set();
+  const selected=Object.values(agenda).flat().filter(event=>{const id=eventStableId(event);if(seen.has(id)||eventTypeFilter!=='all'&&eventPresentationDomain.eventType(event)!==eventTypeFilter)return false;seen.add(id);return true;});
+  // Lead with today's timed events/boundaries; ongoing seasons remain in the agenda.
+  const actionable=new Set([...agenda.timed,...agenda.starting,...agenda.ending].map(eventStableId));
+  const dayTime=event=>isoDate(eventPresentationDomain.eventDate(event.end))===eventAgendaDate()&&isoDate(eventPresentationDomain.eventDate(event.start))!==eventAgendaDate()?event.end:event.start;
+  selected.sort((a,b)=>Number(actionable.has(eventStableId(b)))-Number(actionable.has(eventStableId(a)))||eventPresentationDomain.eventDate(dayTime(a))-eventPresentationDomain.eventDate(dayTime(b)));
+  return selected.length?[{group:'day',events:selected}]:[];
+}
+function eventSelectedDayHours(event,timing){
+  if(timing.zoneUncertain)return eventTimeBasisLabel(event,{compact:true});
+  if(eventPresentationDomain.dateOnly(event.start)||eventPresentationDomain.dateOnly(event.end))return i18nCore.t('events.hoursUnknown');
+  if(!timing.multiDay)return timing.timeLabel||i18nCore.t('events.hoursUnknown');
+  const date=eventAgendaDate(),start=eventPresentationDomain.eventDate(event.start),end=eventPresentationDomain.eventDate(event.end);
+  if(isoDate(end)===date)return i18nCore.t('apri.until',{time:timing.endTimeLabel});
+  if(isoDate(start)===date)return i18nCore.t('apri.from',{time:timing.startTimeLabel});
+  return i18nCore.t('apri.ongoing');
+}
 function syncEventFilterScrollState(row){
   if(!row)return;
   row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
@@ -13530,7 +13642,14 @@ function eventBonusesHtml(event,{full=false}={}){
   const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
   const benefitRows=`<ul class="event-benefit-list">${eventBonusGroups(visible).map(group=>`<li>${group.scope?`<span class="event-benefit-scope">${escHtml(group.scope)}:</span> `:''}<span class="event-benefit-text">${group.items.map(eventBonusText).join('; ')}</span></li>`).join('')}</ul>`;
   const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
-  if(bonuses.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${attribution}</div>`;
+  const featured=facts.bosses.length?facts.bosses:facts.encounters;
+  // Suppress only an exact single-identity headline, never a base-species
+  // substring that could conceal a form, multiple bosses, or additional facts.
+  const headline=eventLabelsI18n.localizeEvent(event,i18nCore.getLocale()).localizedTitle;
+  const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
+  const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
+  const featuredHtml=full||headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+  if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${full?attribution:''}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
   if(features.length)return`<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.encounters'))}</h4><ul>${features.map(x=>`<li>${escHtml(x)}</li>`).join('')}</ul></div>`;
@@ -13538,10 +13657,12 @@ function eventBonusesHtml(event,{full=false}={}){
   // not mean unannounced, no bonuses, or a successful source check.
   return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
 }
+function eventsFeedIsStale(){const checked=Number(_eventData?.fetchedAt);return Boolean(_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL);}
 function eventsSourceHtml(){
-  const checked=Number(_eventData?.fetchedAt),stale=_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL;
+  const checked=Number(_eventData?.fetchedAt),stale=eventsFeedIsStale();
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
-  return`<div class="events-source${stale?' is-stale':''}" role="status"><div><strong>${escHtml(i18nCore.t(stale?'events.staleFeed':'events.feedStatus'))}</strong><p class="events-checked">${escHtml(i18nCore.t('events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
+  const saved=_eventData?.sourceFallback;
+  return`<div class="events-source${stale?' is-stale':''}" role="status"><div>${stale?`<strong>${escHtml(i18nCore.t('events.staleFeed'))}</strong>`:''}<p class="events-checked">${escHtml(i18nCore.t(saved?'events.savedSchedule':'events.checked',{date}))}</p></div><button type="button" class="btn btn-secondary" data-event-action="retry" ${_eventLoadState==='refreshing'?'disabled':''}>${escHtml(i18nCore.t(_eventLoadState==='refreshing'?'events.refreshing':'events.refresh'))}</button></div>`;
 }
 function openEventBrief(eventId,returnFocus=null){
   const event=(_eventData?.events||[]).find(e=>eventStableId(e)===eventId);if(!event)return;
@@ -13570,29 +13691,30 @@ function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
   const disclosureState=new Map([...out.querySelectorAll('[data-event-disclosure]')].map(node=>[node.dataset.eventDisclosure,node.open]));
   const focused=document.activeElement?.closest?.('[data-event-action]'),activeDisclosure=document.activeElement?.tagName==='SUMMARY'?document.activeElement.parentElement?.dataset.eventDisclosure:null;
-  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,calendar:focused.closest('.event-calendar')?.className}:null;
+  const focusKey=focused?{action:focused.dataset.eventAction,id:focused.dataset.eventId,date:focused.dataset.date,type:focused.dataset.type,delta:focused.dataset.eventMonthDelta,weekDelta:focused.dataset.eventWeekDelta,calendar:focused.closest('.event-calendar')?.className}:null;
   const restoreInteraction=()=>{
     out.querySelectorAll('[data-event-disclosure]').forEach(node=>{if(disclosureState.has(node.dataset.eventDisclosure))node.open=disclosureState.get(node.dataset.eventDisclosure);});
     if(activeDisclosure){[...out.querySelectorAll('[data-event-disclosure]')].find(node=>node.dataset.eventDisclosure===activeDisclosure)?.querySelector('summary')?.focus({preventScroll:true});return;}
     if(!focusKey)return;
-    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.closest('.event-calendar')?.className===focusKey.calendar);
+    const next=[...out.querySelectorAll('[data-event-action]')].find(node=>node.getClientRects().length&&node.dataset.eventAction===focusKey.action&&node.dataset.eventId===focusKey.id&&node.dataset.date===focusKey.date&&node.dataset.type===focusKey.type&&node.dataset.eventMonthDelta===focusKey.delta&&node.dataset.eventWeekDelta===focusKey.weekDelta&&node.closest('.event-calendar')?.className===focusKey.calendar);
     next?.focus({preventScroll:true});
   };
   out.setAttribute('aria-busy',String(_eventLoadState==='loading'||!_eventData));
   if(_eventLoadState==='loading'||!_eventData){out.innerHTML=eventStateHtml('loading',i18nCore.t('events.loading'));return;}
   if(_eventLoadState==='offline'||navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('offline',i18nCore.t('events.offlineTitle'),i18nCore.t('events.offline'),i18nCore.t('events.retry'),'retry');return;}
   if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retry');return;}
-  const allEvents=_eventData.events||[],sections=eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter,date:eventCalendarDate});
+  const allEvents=_eventData.events||[],sections=eventAllSchedule?eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter}):eventSelectedDaySections(allEvents);
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
-  const filterHtml=`${eventsSourceHtml()}<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
-  const dateContext=eventCalendarDate?`<p class="event-date-filter">${escHtml(i18nCore.t('events.onDate',{date:new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'full'}).format(new Date(eventCalendarDate+'T12:00:00'))}))}</p>`:'';
-  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
-  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
+  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
+  const dayLabel=new Intl.DateTimeFormat(i18nCore.getLocale(),{weekday:'long',month:'long',day:'numeric'}).format(new Date(eventAgendaDate()+'T12:00:00'));
+  const dateContext=!eventAllSchedule?`<h2 class="event-agenda-title">${escHtml(dayLabel)}</h2>`:'';
+  if(!sections.length){const filtered=eventTypeFilter!=='all'||!eventAllSchedule,clear=!eventAllSchedule?'all-schedule':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${dateContext}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(!eventAllSchedule?'apri.allSchedule':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));restoreInteraction();return;}
+  const timeline=`${filterHtml}${dateContext}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(section.group==='day'?i18nCore.t('apri.dayView'):eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
     const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div><p class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</p>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta">${section.group!=='day'||timing.multiDay?`<span class="event-card-date">${escHtml(timing.dateLabel)}</span>`:''}${timing.timeLabel&&section.group!=='day'?`<span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-relative">${escHtml(relative)}</span>`:''}<span class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</span></div>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));
@@ -13601,9 +13723,16 @@ function renderEventsOnly(){
 function eventsAction(event){
   const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
   const action=control.dataset.eventAction;
+  if(action==='all-schedule'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='day-view'){eventAllSchedule=false;renderEventsOnly();return;}
+  if(action==='week'){
+    const delta=Number(control.dataset.eventWeekDelta);if(delta!==1&&delta!==-1)return;
+    const next=new Date(`${eventAgendaDate()}T12:00:00`);next.setDate(next.getDate()+delta*7);eventCalendarAnchor=new Date(next.getFullYear(),next.getMonth(),1);eventAllSchedule=false;eventCalendarDate=isoDate(next);renderEventsOnly();return;
+  }
   if(action==='details'){openEventBrief(control.dataset.eventId,control);return;}
   if(action==='filter'){setEventTypeFilter(control.dataset.type||'all');return;}
-  if(action==='date'||action==='clear-date'){setEventCalendarDate(control.dataset.date||eventCalendarDate);return;}
+  if(action==='clear-date'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
+  if(action==='date'){setEventCalendarDate(control.dataset.date);return;}
   if(action==='month'){
     const delta=Number.parseInt(control.dataset.eventMonthDelta||'',10);if(delta===-1||delta===1)moveEventCalendarMonth(delta);return;
   }
@@ -14873,7 +15002,7 @@ function showConflictModal(conflicts,onLocal,onRemote,{savedOnly=false}={}){
 let importPri='M';
 let importMatches=[],importOwner='',importUid='',importCategory='wishlist',importSaving=false,importSession=0;
 
-function openImport(invoker){
+function openImport(){
   importSession++;importPri='M';importMatches=[];importOwner=cur;importUid=auth?.currentUser?.uid;importSaving=false;
   document.getElementById('import-category').value=myListType;
   document.getElementById('import-str-input').value='';
@@ -14886,7 +15015,7 @@ function openImport(invoker){
     b.classList.remove('sel','H','M','L');
     if(b.dataset.pri==='M')b.classList.add('sel','M');
   });
-  openModal('import-modal',{returnFocus:invoker});
+  openModal('import-modal');
 }
 
 function setImportPri(p){
@@ -15051,12 +15180,12 @@ function _handleGlobalShortcut(ev){
   switch(ev.key.toLowerCase()){
     case'b':switchTab('find');ev.preventDefault();break;
     case'm':switchTab('mylist');ev.preventDefault();break;
-    case's':switchTab('mylist',{render:false});renderMyList();document.querySelector('#combined-list [data-wants-copy]')?.focus();ev.preventDefault();break;
+    case's':switchTab('mylist');openProductShare('search');ev.preventDefault();break;
     case'h':case'i':switchTab('have');ev.preventDefault();break;
     case'c':switchTab('schedule');ev.preventDefault();break;
     case'n':
       switchTab('mylist');
-      document.getElementById('wants-add-name')?.focus();
+      setTimeout(()=>document.getElementById('wants-add-name')?.focus(),60);
       ev.preventDefault();break;
     case'/':
       ev.preventDefault();
@@ -15119,7 +15248,7 @@ function maybeStartTour(){
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
   setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,
-  openProductShare,setProductShareMode,setProductShareOption,productShareFormatKeydown,activateProductShare,toggleBoardSelection,
+  openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,clearTrainerSearch,focusTrainerSearch,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,

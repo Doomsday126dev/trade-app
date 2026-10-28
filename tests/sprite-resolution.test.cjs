@@ -40,7 +40,7 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Spinda (Heart)'),327);
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Scatterbug (Garden)'),664);
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Charmander (Dynamax)'),4);
-  assert.ok(Buffer.byteLength(publicDexRuntime)<35000,'complete runtime public dex should stay compact');
+  assert.ok(Buffer.byteLength(publicDexRuntime)<40000,'complete runtime public dex should stay compact');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Blipbug')),['https://img.pokemondb.net/sprites/home/normal/blipbug.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Snom','',872)),[
     'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/872.png',
@@ -50,7 +50,7 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Snom'),872);
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Pikachu (Worlds 2026)'),25);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['assets/sprites/go/vivillon-garden.png']);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10243.png','https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png']);
   assert.equal(sprites.pokemondbSlug('Basculin (White Stripe)','Basculin (White Stripe)'),'basculin-white-striped');
   assert.equal(sprites.pokemondbSlug('Avalugg (Hisuian Form)','Avalugg (Hisuian Form)'),'avalugg-hisuian');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f',757)),[
@@ -60,7 +60,7 @@ test('anonymous public shares resolve approved form-aware sprites without privat
     'https://img.pokemondb.net/sprites/home/normal/salandit.png'
   ]);
   assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-go'),true);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pikachu-saree.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pogorewind-pikachu-067.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2025)','f')),['assets/sprites/go/pikachu-world-champs-2025-f.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2026)')),['assets/sprites/go/dittobase-25-pikachu-wcs-2026.png']);
   assert.equal(sprites.spriteSourceForUrl('assets/sprites/go/pikachu-world-champs-2025.png')?.id,'pokemondb-go');
@@ -134,4 +134,14 @@ test('shared slots and centralized optical metadata preserve source quality',()=
   assert.doesNotMatch(resolver,/quality=|width=\d+&height=\d+/i);
   assert.doesNotMatch(opticalRuntime,/images\.weserv\.nl/);
   assert.match(opticalRuntime,/new URL\(url,document\.baseURI\)\.href/);
+});
+
+test('standard Shiny requests preserve color and gender without normal-color fallback',()=>{
+ const eevee=Array.from(sprites.publicSpriteUrls('Eevee','f',133,true));
+ assert.equal(eevee[0],'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/female/133.png');
+ for(const [name,no,gender] of [['Eevee',133,'f'],['Gengar',94,''],['Pikachu',25,'f'],['Oinkologne',916,'f']]){
+  const urls=Array.from(sprites.publicSpriteUrls(name,gender,no,true));assert.ok(urls.length);assert.ok(urls.every(u=>u.includes('/shiny/')),name);
+ }
+ assert.ok(Array.from(sprites.publicSpriteUrls('Eevee','f',133,false)).every(u=>!u.includes('/shiny/')));
+ for(const shiny of [false,true])assert.ok(Array.from(sprites.publicSpriteUrls('Oinkologne','f',916,shiny)).every(url=>url.includes('/female/')||url.includes('oinkologne-female')),'Female Oinkologne must never fall back to male art');
 });

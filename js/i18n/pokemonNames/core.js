@@ -56,9 +56,28 @@
     if(normalizeSpeciesLookup(base)===normalizeSpeciesLookup(englishSpecies))return'';
     return null;
   }
+  function costumeDisplayName(entry,{locale='en'}={}){
+    const record=global.PogoDomain?.costumeSpriteCatalog?.resolve({names:[entry?.name,entry?.displayName]});
+    if(!record||[201,327,666,774].includes(record.no)||record.names.some(name=>/\((?:Dynamax|Gigantamax)\)/i.test(name)))return null;
+    const primary=record.names[0],english=String(catalogs.en?.[String(record.no)]||'');
+    if(!english)return null;
+    const region=primary.match(/^([AGHP])[-_]/)?.[1]||(/^Galarian /.test(primary)?'G':'');
+    const start=primary.indexOf('(');
+    let descriptor=start>=0&&primary.endsWith(')')?primary.slice(start+1,-1):primary.replace(/^Galarian /,'').replace(/^([AGHP])[-_]\s*/,'');
+    if(descriptor.toLowerCase().startsWith(english.toLowerCase()+' '))descriptor=descriptor.slice(english.length).trim();
+    if(record.no===163&&record.sourceLabel==='New Year Hat')descriptor=record.sourceLabel;
+    if(!descriptor||descriptor===english)return null;
+    const lang=localeKey(locale),known=structuredEntries[`${record.no}|${primary}`];
+    const species=speciesName({no:record.no},lang)||english,candidate=known?.labels?.[lang];
+    const translated=lang!=='en'&&candidate?candidate:'';
+    const base=region?regionalLabel(species,region,lang):species,detail=translated||descriptor;
+    const fullTranslation=translated&&normalizeSpeciesLookup(translated).includes(normalizeSpeciesLookup(species));
+    return Object.freeze({text:fullTranslation?translated:composedVariantLabel(base,detail,lang),status:lang==='en'||translated?'full':'partial',category:'app-specific-costume'});
+  }
   function resolveDisplayName(entry,{locale='en'}={}){
     const original=originalLabel(entry),lang=localeKey(locale);
     if(!original)return Object.freeze({text:'',status:'fallback',category:'unparseable'});
+    const costume=costumeDisplayName(entry,{locale:lang});if(costume)return costume;
     if(lang==='en')return Object.freeze({text:original,status:'full',category:'canonical'});
     const localizedSpecies=speciesName(entry,lang);
     if(!localizedSpecies)return Object.freeze({text:original,status:'fallback',category:'unknown-species'});
@@ -101,9 +120,12 @@
       ...(entry?.legacyAliases||[]),...(entry?.searchAliases||[]),String(entry?.no||'')
     ].map(value=>String(value||'').trim()).filter(Boolean))]);
   }
+  // Four immutable locale comparators; no per-comparison Intl allocation.
+  const displayCollators=Object.freeze(Object.fromEntries(supported.map(lang=>[lang,new Intl.Collator(lang,{numeric:true,sensitivity:'base'})])));
   function compareDisplay(a,b,{locale='en'}={}){
-    return new Intl.Collator(localeKey(locale),{numeric:true,sensitivity:'base'}).compare(displayName(a,{locale}),displayName(b,{locale}));
+    return displayCollators[localeKey(locale)].compare(displayName(a,{locale}),displayName(b,{locale}));
   }
+
   function coverage(entries,locale){
     const ids=[...new Set((entries||[]).map(entry=>String(Number(entry?.no)||'')).filter(Boolean))];
     const lang=localeKey(locale),translated=ids.filter(id=>Object.prototype.hasOwnProperty.call(catalogs[lang]||{},id));
@@ -119,5 +141,5 @@
     return Object.freeze(summary);
   }
 
-  root.pokemonNames=Object.freeze({localeKey,identity,originalLabel,speciesName,speciesIdByEnglishName,normalizeSpeciesLookup,displayName,resolveDisplayName,searchLabels,compareDisplay,coverage,variantCoverage,regionalParts,variantSource:variantCatalog.source||null,structuredFormSource:structuredForms.source||null});
+  root.pokemonNames=Object.freeze({costumeDisplayName,localeKey,identity,originalLabel,speciesName,speciesIdByEnglishName,normalizeSpeciesLookup,displayName,resolveDisplayName,searchLabels,compareDisplay,coverage,variantCoverage,regionalParts,variantSource:variantCatalog.source||null,structuredFormSource:structuredForms.source||null});
 })(window);

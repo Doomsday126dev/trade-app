@@ -26,6 +26,7 @@ test('ordinary Trainers addition persists, repeated ensure preserves tags, share
 });
 test('shared-list new addition queues honestly and survives reload with the same operation',async({page})=>{
  const f=await candidate();await routeEmulators(page,f,{candidate:true});await login(page,f);await settled(page);
+ await expect.poll(()=>page.evaluate(()=>!!managedFavoriteAdditions)).toBe(true);
  await page.evaluate(name=>{window.__incidentRejectWrites=true;_activeShareView={username:name,type:'wishlist'};return toggleTrainerFavorite(name);},f.newName);
  await expect.poll(()=>page.evaluate(async()=>{const value=await managedFavoriteAdditions.snapshot();return value.rows.at(-1)?.state;})).toBe('pending');
  expect((await account(f)).favorites?.[f.newUid]).toBeUndefined();
@@ -41,6 +42,7 @@ test('a full browser process restart retains pending Favorite intent and confirm
  let context=await chromium.launchPersistentContext(profile,{baseURL:'http://localhost:4188',headless:true,serviceWorkers:'block'});
  try{
   let page=context.pages()[0];await routeEmulators(page,f,{candidate:true});await login(page,f);await settled(page);
+  await expect.poll(()=>page.evaluate(()=>!!managedFavoriteAdditions)).toBe(true);
   await page.evaluate(name=>{window.__incidentRejectWrites=true;return toggleTrainerFavorite(name);},f.newName);
   const intent=await page.evaluate(async()=>(await managedFavoriteAdditions.snapshot()).rows.at(-1));expect(intent.state).toBe('pending');await context.close();
   context=await chromium.launchPersistentContext(profile,{baseURL:'http://localhost:4188',headless:true,serviceWorkers:'block'});page=context.pages()[0];await routeEmulators(page,f,{candidate:true,legacy:false});await page.goto('./');

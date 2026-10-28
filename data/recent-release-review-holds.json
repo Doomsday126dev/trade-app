@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-10-27",
+  "entries": [
+    {
+      "id": "form:705:hisuian",
+      "name": "H-Sliggoo",
+      "no": 705,
+      "releaseStatus": "announced",
+      "artState": "art-available-identity-review-required",
+      "releaseOnOrAfter": "2026-11-06",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
+    },
+    {
+      "id": "form:706:hisuian",
+      "name": "H-Goodra",
+      "no": 706,
+      "releaseStatus": "announced",
+      "artState": "art-available-identity-review-required",
+      "releaseOnOrAfter": "2026-11-06",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
+    },
+    {
+      "id": "dynamax:483",
+      "name": "Dialga (Dynamax)",
+      "no": 483,
+      "releaseStatus": "announced",
+      "artState": "art-available-identity-review-required",
+      "releaseOnOrAfter": "2026-11-06",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
+    },
+    {
+      "id": "dynamax:484",
+      "name": "Palkia (Dynamax)",
+      "no": 484,
+      "releaseStatus": "announced",
+      "artState": "art-available-identity-review-required",
+      "releaseOnOrAfter": "2026-11-06",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
+    },
+    {
+      "id": "gmax:884",
+      "name": "Duraludon (Gigantamax)",
+      "no": 884,
+      "releaseStatus": "announced",
+      "artState": "art-available-identity-review-required",
+      "releaseOnOrAfter": "2026-11-06",
+      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
+      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
+    },
+    {
+      "id": "form:571:hisuian-shiny",
+      "name": "H-Zoroark (Shiny)",
+      "no": 571,
+      "releaseStatus": "uncertain",
+      "artState": "verified-art-available",
+      "source": "https://pokemongo.com/news/ultra-unlock-hisui",
+      "action": "Normal Hisuian Zoroark debuted July 8, 2025. Shiny release evidence is unverified. Preserve exact artwork and saved variants; a want may be created before obtainability is confirmed. Review a passive evidence label without globally restricting new requests."
+    },
+    {
+      "id": "form:20:alolan-female-art",
+      "name": "A-Raticate (female artwork qualification)",
+      "no": 20,
+      "releaseStatus": "released-source-claim",
+      "artState": "female-art-qualification-source-blocked",
+      "source": "https://img.pokemondb.net/sprites/home/normal/raticate-alolan-female.png",
+      "action": "Default normal/Shiny form art is verified. Direct female-art request returned HTTP 403; source check stopped without retry or proxy. Verify explicit same-form gender equivalence or an independent exact female GO asset; never substitute Kantonian Raticate. The verified default entry is selectable with optional gender selection disabled; the female-art gap remains open."
+    }
+  ]
+}

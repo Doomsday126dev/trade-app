@@ -15,7 +15,7 @@ const sprites=window.PogoDomain.spriteSlugs;
 
 test('only the eighteen reviewed Scatterbug identities share species 664 art',()=>{
   for(const pattern of sprites.SCATTERBUG_VISUAL_EQUIVALENTS)
-    assert.equal(sprites.verifiedEquivalentSpriteUrl(`Scatterbug (${pattern})`,664),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/664.png');
+    assert.equal(sprites.verifiedEquivalentSpriteUrl(`Scatterbug (${pattern})`,664),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/664.png');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Scatterbug (Invented)',664),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Vivillon (Garden)',666),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Scatterbug (Garden)',666),'');
@@ -24,8 +24,8 @@ test('only the eighteen reviewed Scatterbug identities share species 664 art',()
 test('finite Dynamax equivalence preserves every underlying visible form',()=>{
   assert.equal(window.POGO_TRADE_DB,undefined,'anonymous public shell must not need data.js');
   const max=sourceWindow.POGO_TRADE_DB.dynamax;
-  assert.equal(max.length,125);
-  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,125);
+  assert.equal(max.length,151);
+  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,151);
   for(const entry of max){
     const name=`${entry.name} (Dynamax)`;
     assert.equal(sprites.reviewedDynamaxBase(name,entry.no),entry.name,name);
@@ -33,19 +33,32 @@ test('finite Dynamax equivalence preserves every underlying visible form',()=>{
     assert.equal(sprites.verifiedEquivalentSpriteUrl(name,entry.no+1),'',name);
   }
   for(const [name,form] of [
-    ['Toxtricity (Amped) (Dynamax)','toxtricity-amped'],
-    ['Toxtricity (Low Key) (Dynamax)','toxtricity-low-key'],
-    ['Urshifu (Single Strike) (Dynamax)','urshifu-single-strike'],
-    ['Urshifu (Rapid Strike) (Dynamax)','urshifu-rapid-strike']
-  ])assert.equal(sprites.verifiedEquivalentSpriteUrl(name,name.startsWith('Toxtricity')?849:892),`https://img.pokemondb.net/sprites/home/normal/${form}.png`);
+    ['Toxtricity (Amped) (Dynamax)',849],
+    ['Toxtricity (Low Key) (Dynamax)',10184],
+    ['Urshifu (Single Strike) (Dynamax)',892],
+    ['Urshifu (Rapid Strike) (Dynamax)',10191]
+  ])assert.equal(sprites.verifiedEquivalentSpriteUrl(name,name.startsWith('Toxtricity')?849:892),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${form}.png`);
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Charmander (Gigantamax)',4),'');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Invented (Dynamax)',4),'');
 });
 
 test('Rockruff Dusk shares appearance, but ambiguous Gigantamax Urshifu never substitutes art',()=>{
-  assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',744),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/744.png');
+  assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',744),'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/10151.png');
   assert.equal(sprites.verifiedEquivalentSpriteUrl('Rockruff (Dusk)',745),'');
   assert.equal(sprites.isAmbiguousVisibleForm('Urshifu (Gigantamax)',892),true);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Urshifu (Gigantamax)','',892)),[]);
   assert.equal(sprites.isAmbiguousVisibleForm('Urshifu (Rapid Strike)',892),false);
+});
+
+test('reviewed equivalent forms retain Shiny color without normal fallback',()=>{
+ for(const [name,no]of [['Scatterbug (Garden)',664],['Rockruff (Dusk)',744]]){
+  assert.equal(sprites.verifiedEquivalentSpriteUrl(name,no,'',true),`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${no===744?10151:no}.png`);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls(name,'',no,true)),[`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${no===744?10151:no}.png`]);
+ }
+});
+
+test('a reviewed normal equivalent override cannot replace a requested Shiny chain',()=>{
+ const app=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');const start=app.indexOf('function reviewedEquivalentSpriteOverride('),end=app.indexOf('// ── PER-IMAGE SPRITE NORMALIZATION',start);
+ const vetted=vm.runInNewContext(app.slice(start,end)+';vettedSpriteUrlOverride',{spriteSlugsDomain:sprites,isApprovedRuntimeSpriteUrl:()=>true,publicSpriteUrls:sprites.publicSpriteUrls});
+ for(const [name,no]of [['Scatterbug (Garden)',664],['Rockruff (Dusk)',744]]){const chain=Array.from(sprites.publicSpriteUrls(name,'',no,true));const normal=sprites.verifiedEquivalentSpriteUrl(name,no);assert.equal(vetted(no,name,'',name,normal,chain),'');assert.equal(vetted(no,name,'',name,chain[0],chain),chain[0]);}
 });

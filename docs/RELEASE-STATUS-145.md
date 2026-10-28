@@ -1,0 +1,21 @@
+# .145 local release checkpoint
+
+The final isolated source is `4536e64b26e0a1204bcecefc246704c4e8285ce7` on `fix/costume-and-list145`. It contains only reviewed Pikachu Shiny artwork/eligibility corrections and approved current-design list/picker/Events-status/More-spacing polish. It is not published or deployed.
+
+Local isolated qualification: 1,944 passing unit tests and 12 existing skips; 34 passing browser cases across Chromium/WebKit; eight original performance tests passing; mandatory frontend release checks passing. Source assets and all supported Shiny genders were decoded and inspected. Existing unsupported saved qualifiers were verified to survive priority-only edits and change only on explicit correction.
+
+The integration branch preserves unpublished main editor/share work. Its independent preflight has 2,003 passing unit tests, 12 existing skips and 11 read-contract failures because .145 is intentionally not yet registered. Its eight artwork and nine UI browser cases pass. Do not treat this as a green aggregate or deploy it.
+
+Automatic approval review denied the exact-source registration/workflow change twice. Neither denied command executed. Their precursor source was `9581a61b8b3127d8fae518b950882871e9f2f954`; the final child only corrects a stale test-count assertion, with byte-identical frontend and read semantics. No registration was retried for the child SHA. Do not retry or use an alternate route without materially new applicable user approval. Required approval is for registering this exact SHA under the existing recovery read contract, extending the local release selector to .145, adding positive/unknown-SHA/changed-private-target regression cases, and pinning the isolated-runtime qualification workflow to this source while preserving existing permissions and candidate budgets. No OAuth, database rules, read paths, credentials or production account data changes are proposed.
+
+A read-only semantic comparison against the registered .144 runtime confirmed all 24 read sites, paths, feature gates, audiences and handler hashes are identical. This evidence is not itself release approval. The seven ambiguous costume gaps and baseline expiry `2026-11-02T00:40:09.188Z` remain; the explicitly reviewed baseline delta covers only 76 intended mapping changes and the explicit Detective 2023 record.
+
+Synthetic phone/desktop screenshots were rendered and inspected. Library delivery could not start because the current required prepared-upload companion `library_hosted_apps.py` was unavailable. No upload was attempted and no Library IDs were created for these screenshots.
+
+## Approved release resumed
+
+The user explicitly approved the exact-source registration and qualification-workflow update on October 26 at 12:40 UTC. The previously nonexecuted action was retried once and accepted. Exact-source, unknown-SHA and changed-private-target tests pass (66 total); the complete integration aggregate now passes 2,017 tests with 12 existing skips. Permissions, read paths, guards and original performance budgets are unchanged. Required CI and protected deployment remain mandatory; later starter/form/evolution extensions are excluded.
+
+Library previews were subsequently saved successfully: list `libfile_127ce1fe995481918cbb217c09390eb6` (settled-animation correction, version 1), picker `libfile_d0e296c0ba748191b8c0615db1dc87d9`, More phone `libfile_b9b25268af3c8191abb36556da9a0b88`, More desktop `libfile_039699233a1c81918b5f3e26f16d7da8`. The earlier failure paragraph is historical. Computed opacity is 1 after the existing 250ms row animation, with 15.1:1 name contrast; no runtime change was needed.
+
+CI exposed a legacy quick-add test that clicked Advanced while the new family suggestion popup covered it. The current test dismisses the popup with Escape, verifies it is hidden, and retains all prefill/gender/cancellation assertions. Three focused browser projects pass. Exact-runtime qualification overlays only that current test harness and verifies all frontend paths remain byte-identical to the pinned runtime. No app source or performance threshold changed.

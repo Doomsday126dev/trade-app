@@ -20,11 +20,13 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // against its reviewed .123 contract. Pages always supplies the target SHA;
 // this local-only selection must not downgrade an explicitly identified target.
 const localReleaseSource=runtimeSourceSha?'':readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
-const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142))';/.test(localReleaseSource)
+const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8']:null;
 const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23\.123|2026-10-19\.12[5-7]|2026-10-20\.128|2026-10-22\.129)';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localRecoveryContract||localControlContract||defaultSourceCallContract;
+const localCatalogueContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.161)';/.test(localReleaseSource)
+  ?SOURCE_CALL_CONTRACTS['ef0d1fcaa26827564fb29c1029ba6e9a77d6923f']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);

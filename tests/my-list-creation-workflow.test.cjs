@@ -23,22 +23,22 @@ test('normal add hierarchy keeps lookup, priority, Add, and per-entry details to
   assert.match(add,/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
   assert.match(add,/class="add-pri-group"/);
   assert.match(add,/class="bsave"[^>]+myList\.addAction/);
-  assert.match(add,/myList\.flagsAndDetails/);
+  assert.match(add,/wantEditor\.options/);
   assert.doesNotMatch(add,/aria-controls="export-menu"/);
 });
 
 test('list-wide actions are discoverable beside Share and Select in one compact tools menu',()=>{
-  assert.match(toolbar,/onclick="openProductShare\('link','full',this\)"/);assert.match(toolbar,/onclick="startWantsSelection\(\)"/);
+  assert.match(toolbar,/onclick="openProductShare\(\)"/);assert.match(toolbar,/onclick="startWantsSelection\(\)"/);
   assert.match(toolbar,/<details id="wants-list-tools"/);assert.match(toolbar,/<summary[^>]*>/);
   for(const key of ['workflow.findInList','myList.importAction','workflow.aboutSearches'])assert.match(toolbar,new RegExp(key.replace('.','\\.')));
   assert.equal((toolbar.match(/id="wants-list-tools"/g)||[]).length,1);
   assert.doesNotMatch(toolbar,/mylist-reorder-toggle|speedAdd|bulkEdit/);
 });
 
-test('native catalog lookup is named and does not advertise the removed voice action',()=>{
-  assert.match(add,/id="wants-add-name"[^>]*list="combined-catalog"[^>]*required/);
+test('canonical catalog lookup is named and does not advertise the removed voice action',()=>{
+  assert.match(add,/id="wants-add-name"[^>]*required/);
   assert.match(add,/data-i18n-aria-label="myList\.searchPlaceholder"/);
-  assert.match(html,/id="combined-catalog"/);assert.match(html,/onfocus="prepareWantsCatalog\(\)"/);
+  assert.match(html,/input.setAttribute\('role','combobox'\)/);assert.match(html,/onfocus="prepareWantsCatalog\(\)"/);
   assert.doesNotMatch(add,/voice-btn|toggleVoiceInput/);
 });
 

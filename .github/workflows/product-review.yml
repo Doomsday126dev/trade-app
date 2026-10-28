@@ -1,8 +1,13 @@
 name: Changed-area product contracts
 on:
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 permissions:
   contents: read
   actions: read
@@ -10,7 +15,7 @@ concurrency:
   group: product-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
-  public-share:
+  contracts:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -51,8 +56,77 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Syntax, hygiene and changed-area contracts
         run: node scripts/ci/product-evidence.cjs node
-      - name: Affected browser journeys
-        if: steps.selection.outputs.browser == 'true'
+      - name: Discover and balance the complete browser inventory
+        run: node scripts/ci/product-browser-shards.cjs plan
+      - name: Retain exact browser shard plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: product-browser-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-browser-plan/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Sanitize isolated test evidence
+        id: evidence
+        if: always()
+        run: python3 scripts/ci/sanitize-product-evidence.py
+      - name: Retain product qualification evidence
+        if: always() && steps.evidence.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: product-contracts-${{ github.run_id }}-${{ github.run_attempt }}-contracts
+          path: |
+            product-ci-artifacts/
+            test-results/
+          if-no-files-found: error
+          retention-days: 30
+    outputs:
+      browser: ${{ steps.selection.outputs.browser }}
+  browser:
+    needs: contracts
+    if: needs.contracts.outputs.browser == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard:
+          - 1
+          - 2
+          - 3
+          - 4
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Read the exact discovered browser plan
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: product-browser-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-browser-plan/
+      - name: Prefer official HTTPS archive for browser OS dependencies
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Prepare reviewed browser sprites
+        run: |
+          node scripts/prepare-recent-catalog-sprite-fixture.cjs --selectable-repair
+          mkdir -p /tmp/max-originals /tmp/trade-recent-catalog-evidence
+          curl -fsSL https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/25.png -o /tmp/max-originals/pikachu.png
+          curl -fsSL https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/female/133.png -o /tmp/max-originals/eevee-female-shiny.png
+      - name: Exact single-worker browser shard
+        env:
+          CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
+          PRODUCT_BROWSER_WORKERS: "1"
+          PRODUCT_BROWSER_SHARD: ${{ matrix.shard }}
         run: node scripts/ci/product-evidence.cjs browser
       - name: Sanitize isolated test evidence
         id: evidence
@@ -60,12 +134,44 @@ jobs:
         run: python3 scripts/ci/sanitize-product-evidence.py
       - name: Retain product qualification evidence
         if: always() && steps.evidence.outcome == 'success'
-        # actions/upload-artifact v4.6.2; never upload profiles or the workspace.
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: product-contracts-${{ github.run_id }}-${{ github.run_attempt }}
+          name: product-contracts-${{ github.run_id }}-${{ github.run_attempt }}-browser-${{ matrix.shard }}
           path: |
             product-ci-artifacts/
             test-results/
           if-no-files-found: error
           retention-days: 30
+  public-share:
+    needs:
+      - contracts
+      - browser
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Read the exact discovered browser plan
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: product-browser-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-browser-plan/
+      - name: Read all isolated browser evidence
+        if: needs.contracts.outputs.browser == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: product-contracts-${{ github.run_id }}-${{ github.run_attempt }}-browser-*
+          path: product-browser-evidence/
+      - name: Require passing jobs and exact complete case union
+        env:
+          NODE_RESULT: ${{ needs.contracts.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: node scripts/ci/product-browser-shards.cjs verify product-browser-evidence

@@ -1,0 +1,2 @@
+const {defineConfig}=require('@playwright/test');
+module.exports=defineConfig({testDir:'./tests',testMatch:['recent-release-catalog.spec.js'],timeout:90000,workers:1,reporter:'list',outputDir:'/tmp/trade153-evidence/released/results',use:{baseURL:'http://127.0.0.1:4395',serviceWorkers:'block'},webServer:{command:'python3 -m http.server 4395 --bind 127.0.0.1',url:'http://127.0.0.1:4395',reuseExistingServer:false},projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}]});

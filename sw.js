@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-10-26.142';
+const RELEASE='2026-10-28.161';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
@@ -120,10 +120,18 @@ const OPTIONAL_SHELL_URLS=[
   `./?v=${RELEASE}`,
   './manifest.json',
   './assets/tradeloop-icon.svg',
+  './assets/brand/apri.webp',
+  './assets/brand/ivory-paper.webp',
   './assets/tradeloop-icon-96.png',
   './assets/tradeloop-icon-180.png',
   './assets/tradeloop-icon-192.png',
   './assets/tradeloop-icon-512.png',
+  './assets/brand/apri-icon-32.png',
+  './assets/brand/apri-icon-96.png',
+  './assets/brand/apri-icon-180.png',
+  './assets/brand/apri-icon-192.png',
+  './assets/brand/apri-icon-512.png',
+  './assets/brand/apri-icon-512-maskable.png',
   './assets/max-cloud.svg'
 ];
 const OPTIONAL_RUNTIME_PATHS=new Set(OPTIONAL_SHELL_URLS.filter(path=>!path.startsWith('./?')).map(path=>new URL(path,self.location.href).pathname));

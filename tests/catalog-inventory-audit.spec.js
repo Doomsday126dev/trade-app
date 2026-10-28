@@ -1,0 +1,15 @@
+const {test,expect}=require('@playwright/test');test.use({serviceWorkers:'block'});const fs=require('node:fs');const {normalFixture}=require('./helpers/usability-fixture.cjs');
+const bases=require('../data/base-species-coverage.json').records,regions=require('../data/regional-species-coverage.json').records.filter(r=>r.eligibleForTradeCatalogue!==false);
+test('independent base and regional inventories appear once in actual picker with exact normal/Shiny candidates',async({page},info)=>{
+ await normalFixture(page);
+ const evidence=await page.evaluate(({bases,regions})=>{const items=_specialAllItems();return{count:items.length,rows:[...bases,...regions].map(r=>({name:r.name,no:r.no,matches:items.filter(i=>i.name===r.name).map(i=>({name:i.name,no:i.no})),normal:Array.from(publicSpriteUrls(r.name,'',r.no,false)),shiny:Array.from(publicSpriteUrls(r.name,'',r.no,true)),inline:entrySpriteUrl({no:r.no,name:r.name}),exportNormal:exportSpriteFallbackUrls({no:r.no,name:r.name}),exportShiny:exportSpriteFallbackUrls({no:r.no,name:r.name,shiny:true})}))};},{bases,regions});
+ for(const record of [...bases,...regions]){const row=evidence.rows.find(r=>r.name===record.name);expect(row.matches,record.name).toEqual([{name:record.name,no:record.no}]);const id=record.id||record.no;expect(row.normal[0],record.name).toContain('/home/'+id+'.png');expect(row.shiny[0],record.name).toContain('/home/shiny/'+id+'.png');expect(row.exportNormal[0],record.name).toContain('/home/'+id+'.png');expect(row.exportShiny[0],record.name).toContain('/home/shiny/'+id+'.png');if(record.id)expect(row.inline,record.name).toContain('/home/'+id+'.png');}
+ fs.mkdirSync('/tmp/trade153-evidence',{recursive:true});fs.writeFileSync(`/tmp/trade153-evidence/${info.project.name}-actual-picker.json`,JSON.stringify(evidence,null,2));
+ await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('verified Alolan Raticate default is selectable while optional gender art remains unresolved',async({page})=>{
+ await normalFixture(page);await page.locator('#wants-add-name').fill('A-Raticate');await page.getByRole('option',{name:'A-Raticate',exact:true}).click();await page.keyboard.press('Escape');await page.locator('.add-advanced-toggle').click();await expect(page.locator('#combined-gender')).toBeDisabled();await expect(page.locator('#combined-gender option')).toHaveCount(1);await expect(page.locator('#combined-gender')).toHaveValue('');
+ await page.evaluate(()=>{document.getElementById('combined-gender').innerHTML+='<option value="f">♀</option>';document.getElementById('combined-gender').value='f';refreshCombinedGenderOptions();});await expect(page.locator('#combined-gender')).toHaveValue('');
+ const urls=await page.evaluate(()=>({normal:Array.from(publicSpriteUrls('A-Raticate','',20,false)),shiny:Array.from(publicSpriteUrls('A-Raticate','',20,true)),female:Array.from(publicSpriteUrls('A-Raticate','f',20,true))}));expect(urls.normal[0]).toContain('/home/10092.png');expect(urls.shiny[0]).toContain('/home/shiny/10092.png');expect(urls.female.every(url=>!url.endsWith('/10092.png')&&!url.endsWith('/20.png'))).toBe(true);await page.evaluate(()=>stopAccountSyncRuntime());
+});

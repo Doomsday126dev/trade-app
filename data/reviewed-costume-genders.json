@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "Eleven recently imported Pikachu identities only. No blanket rule for older or future costumes. Evidence reviewed with parent research; not inferred from generic asset filenames.",
+  "scope": "Reviewed per-costume and fixed-species gender availability. No blanket single-gender rule; saved invalid qualifiers require explicit correction.",
   "records": [
     {
       "name": "Pikachu (Cosmog Spacesuit)",
@@ -134,6 +134,326 @@
       ],
       "reviewedAt": "2026-10-26",
       "basis": "Database 50/50; preserve both genders. Moderate evidence, no independently verified catch screenshots."
+    },
+    {
+      "name": "Pikachu (Libre)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published collection VARIANTS_RAW marks these cosplay costumes F (female-only); matching heart-tipped artwork independently inspected. Existing conflicting saved gender remains preserved by editor policy."
+    },
+    {
+      "name": "Pikachu (Rock Star)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published collection VARIANTS_RAW marks these cosplay costumes F (female-only); matching heart-tipped artwork independently inspected. Existing conflicting saved gender remains preserved by editor policy."
+    },
+    {
+      "name": "Pikachu (Pop Star)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published collection VARIANTS_RAW marks these cosplay costumes F (female-only); matching heart-tipped artwork independently inspected. Existing conflicting saved gender remains preserved by editor policy."
+    },
+    {
+      "name": "Pikachu (Kurta)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.reddit.com/r/TheSilphRoad/comments/1jg0dg3"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Male-only after March20,2025 retroactive correction https://www.reddit.com/r/TheSilphRoad/comments/1jg0dg3"
+    },
+    {
+      "name": "Pikachu (Mimikyu)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Male-only"
+    },
+    {
+      "name": "Pikachu (Saree)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Female-only; unsuffixed source pixels have heart tail, not male"
+    },
+    {
+      "name": "Pikachu (Clone)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published per-costume availability. Unreleased Shiny is not inferred from mined artwork. Saved conflicting qualifiers remain preserved."
+    },
+    {
+      "name": "Pikachu (Ph_D)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/",
+        "https://www.serebii.net/pokemongo/shiny.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Published per-costume availability. Unreleased Shiny is not inferred from mined artwork. Saved conflicting qualifiers remain preserved."
+    },
+    {
+      "name": "Nidorino Party Hat",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/033.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Chansey (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/113.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Blissey (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/242.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Happiny (Flower Crown)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/440.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender verified on species page. Existing saved invalid qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Nidoqueen Crown",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/031.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Nidoking Crown",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/034.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Ditto Blue Party Hat",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/132.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Ditto Yellow Party Hat",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/132.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Smoochum (Bow)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/238.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Falinks Train",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/870.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Gimmighoul 9th Anniversary Coin",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/999.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Plant)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Sandy)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Wormadam (Trash)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/413.shtml"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Fixed species gender or genderless identity. Saved incompatible qualifiers remain unchanged until explicit correction."
+    },
+    {
+      "name": "Pikachu (Orange Hanbok)",
+      "availableGenders": [
+        "f"
+      ],
+      "evidence": [
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-26",
+      "basis": "Female-only availability is collector-documented (pikachugo), not explicitly stated by the official event announcement; the published PNGs independently show female tails."
+    },
+    {
+      "name": "Sinistea (Bow)",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "reviewedAt": "2026-10-27",
+      "basis": "Sinistea is genderless. Distinct Phony/Antique source identities; generic form unspecified. No preference inferred."
+    },
+    {
+      "name": "Sinistea (Bow, Phony)",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "reviewedAt": "2026-10-27",
+      "basis": "Sinistea is genderless. Distinct Phony/Antique source identities; generic form unspecified. No preference inferred."
+    },
+    {
+      "name": "Sinistea (Bow, Antique)",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/events/halloween2026part1.shtml"
+      ],
+      "reviewedAt": "2026-10-27",
+      "basis": "Sinistea is genderless. Distinct Phony/Antique source identities; generic form unspecified. No preference inferred."
+    },
+    {
+      "name": "Gimmighoul (10th Anniversary Coin)",
+      "availableGenders": [],
+      "evidence": [
+        "https://www.serebii.net/pokemongo/pokemon/999.shtml"
+      ],
+      "reviewedAt": "2026-10-27T09:05:32.371317+00:00",
+      "basis": "Gimmighoul is a genderless species; fixed species metadata, not an asset-absence inference."
+    },
+    {
+      "name": "Pikachu (PokeXciting Taiwan)",
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-taiwan-01"
+      ],
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "basis": "Independently labelled male and female exact originals exist for both normal and Shiny; not an inference from absent art."
+    },
+    {
+      "name": "Pikachu (PokeXciting Philippines)",
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "evidence": [
+        "https://www.dittobase.com/pokemon-go/pokedex/pikachu-anniversary-2026-philippine-01"
+      ],
+      "reviewedAt": "2026-10-27T10:06:58.122544+00:00",
+      "basis": "Independently labelled male and female exact originals exist for both normal and Shiny; not an inference from absent art."
+    },
+    {
+      "name": "Pikachu (Detective Hat 2019)",
+      "availableGenders": [
+        "m"
+      ],
+      "evidence": [
+        "https://pokemongolive.com/news/pikapika2019",
+        "https://pikachugo.vercel.app/"
+      ],
+      "reviewedAt": "2026-10-27T14:09:42.737162+00:00",
+      "basis": "Year-specific game identity inventory and original pinned male/female sprites; 2019 optional female remains unoffered rather than substituting male art."
     }
   ],
   "independentVerification": "Cosmog 0% male/100% female and Worlds 100% male/0% female verified directly in source pages. Collector source HTML independently inspected: explicit M=male-only,F=female-only legend and Cosmog F/Worlds M/Astronaut M records. Other eight preserve both genders per linked parent research; shirts have moderate database evidence."

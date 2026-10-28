@@ -15,6 +15,28 @@ on:
       - 'scripts/check-deployed-costume-catalog.cjs'
       - 'tests/deployed-costume-catalog.test.cjs'
       - 'tests/costume-gap-deltas.test.cjs'
+      - 'data.js'
+      - 'js/domain/pokemonKeys.js'
+      - 'js/domain/publicPokemonDex.js'
+      - 'js/domain/spriteSlugs.js'
+      - 'scripts/generate-public-sprite-dex.cjs'
+      - 'data/recent-release-coverage.json'
+      - 'data/base-species-coverage.json'
+      - 'data/regional-species-coverage.json'
+      - 'data/caterpie-release-coverage.json'
+      - 'data/catalogue-*'
+      - 'data/catalogue-sources/**'
+      - 'data/public-form-sprite-identities.json'
+      - 'data/reviewed-variant-status.json'
+      - 'scripts/reconcile-catalogue.cjs'
+      - 'scripts/catalogue-source-observation.cjs'
+      - 'tests/catalogue-reconciliation.test.cjs'
+      - 'data/recent-release-review-holds.json'
+      - 'data/release-discovery-snapshot.json'
+      - 'scripts/check-released-catalog.cjs'
+      - 'scripts/check-release-discovery.cjs'
+      - 'tests/recent-release-coverage.test.cjs'
+      - 'tests/release-discovery.test.cjs'
       - '.github/workflows/sprite-catalog-freshness.yml'
 
 permissions:
@@ -29,16 +51,29 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: 22
+      - name: Install locked parser and qualification dependencies
+        run: npm ci --ignore-scripts
       - name: Verify reviewed assets and generated runtime
         run: |
           node scripts/generate-costume-sprite-runtime.cjs --check
           node scripts/generate-public-sprite-dex.cjs --check
           node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs tests/deployed-costume-catalog.test.cjs tests/costume-gap-deltas.test.cjs
+          node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs tests/deployed-costume-catalog.test.cjs
+      - name: Reconcile independent released inventory and validate discovery failure handling
+        run: |
+          node scripts/check-released-catalog.cjs
+          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs tests/catalogue-reconciliation.test.cjs
+      - name: Reconcile cached independent inventories on pull requests
+        if: always() && github.event_name == 'pull_request'
+        run: node scripts/check-release-discovery.cjs --offline --report-only
+      - name: Reconcile live announcements, GO inventories and mined sprites
+        if: always() && github.event_name != 'pull_request'
+        run: node scripts/check-release-discovery.cjs
       - name: Offline review integrity (pull requests)
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --offline --report costume-freshness.json --summary costume-freshness.md
       - name: Live source and review freshness (daily or manual)
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
         run: node scripts/check-costume-sprite-freshness.cjs --report costume-freshness.json --summary costume-freshness.md
       - name: Generate review candidate and verify deployed coverage
         if: always()
@@ -52,6 +87,9 @@ jobs:
             costume-freshness.md
             costume-maintenance.json
             costume-maintenance.md
+            catalogue-reconciliation.json
+            release-discovery.json
+            release-discovery.md
       - name: Publish review summary even when attention is required
         if: always()
         run: |
@@ -63,4 +101,10 @@ jobs:
 
           if test -f costume-maintenance.md; then
             cat costume-maintenance.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if test -f release-discovery.md; then
+            cat release-discovery.md >> "$GITHUB_STEP_SUMMARY"
+          elif test "${{ github.event_name }}" != "pull_request"; then
+            printf '%s\n' 'Release discovery produced no report. Coverage is unknown; inspect the failed discovery step.' >> "$GITHUB_STEP_SUMMARY"
           fi

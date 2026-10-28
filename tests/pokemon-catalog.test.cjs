@@ -45,9 +45,9 @@ test('reviewed duplicate inventory has the exact accepted relationship counts',(
   const groups=catalog.VERIFIED_IDENTITIES.filter(def=>def.aliases.length>1);
   const pairRelationships=groups.reduce((sum,def)=>sum+(def.aliases.length*(def.aliases.length-1))/2,0);
   const redundantRows=groups.reduce((sum,def)=>sum+def.aliases.length-1,0);
-  assert.equal(groups.length,48);
-  assert.equal(pairRelationships,50);
-  assert.equal(redundantRows,49);
+  assert.equal(groups.length,49);
+  assert.equal(pairRelationships,58);
+  assert.equal(redundantRows,53);
 });
 
 test('canonical IDs and aliases are unique and display-name independent',()=>{
@@ -102,11 +102,11 @@ test('all seven Flying Pikachu identities remain distinct',()=>{
   assert.equal(new Set(ids).size,7);
 });
 
-test('the eight identity-unresolved rows remain separate and are never guessed as aliases',()=>{
-  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,8);
+test('the four identity-unresolved rows remain separate and are never guessed as aliases',()=>{
+  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,4);
   const rows=selectablePikachu.filter(entry=>catalog.UNRESOLVED_COSTUME_KEYS.includes(entry.name));
-  assert.equal(rows.length,8);
-  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,8);
+  assert.equal(rows.length,4);
+  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,4);
   for(const key of catalog.UNRESOLVED_COSTUME_KEYS)assert.equal(catalog.resolveLegacyKey(key),null,key);
 });
 
@@ -209,4 +209,20 @@ test('Find by Pokemon keyboard contract traverses and scrolls the full rendered 
   assert.match(html,/favoriteAction==='select-browse'/);
   assert.match(html,/\.favorite-browse-search \.ac-dropdown\{z-index:350\}/);
   assert.match(html,/\.ac-dropdown\{[^}]*overflow-y:auto/);
+});
+
+test('indexed legacy alias lookups preserve every reviewed stored ID and return independent arrays',()=>{
+ const rows=JSON.parse(source('js/domain/pokemonKeys.js').match(/const REVIEWED_PICKER_ALIASES=Object.freeze\((\[.*?\])\);/s)[1]);
+ for(const row of rows){
+  assert.deepEqual(Array.from(catalog.legacyCatalogIds(row.id)),Object.values(row.old));
+  const copy=catalog.legacyCatalogIds(row.id);copy.length=0;assert.equal(catalog.legacyCatalogIds(row.id).length,Object.keys(row.old).length);
+  for(const [name,id] of Object.entries(row.old)){assert.equal(catalog.legacyCatalogIdForName(name),id);assert.equal(catalog.legacyCatalogIdForName(' '+name.toUpperCase()+' '),id);}
+  const entries=Object.keys(row.old).map(name=>({no:row.no,name})),merged=catalog.canonicalizeEntries(entries);assert.equal(merged.length,1);assert.equal(merged[0].name,row.primary);assert.equal(merged[0].catalogId,row.id);
+ }
+ assert.equal(catalog.legacyCatalogIdForName('Unreviewed future costume'),'');assert.deepEqual(Array.from(catalog.legacyCatalogIds('unknown')),[]);
+});
+
+test('locale-independent catalogue normalization preserves previous English casing',()=>{
+ const names=Object.values(dataWindow.POGO_TRADE_DB).filter(Array.isArray).flatMap(rows=>rows.flatMap(e=>[e.name,e.displayName])).concat(['İstanbul','IıΣςßẞKＦＯＯ','  ピカチュウ  ',null,0]);
+ for(const value of names)assert.equal(catalog.normalizeCatalogKey(value),String(value||'').normalize('NFKC').trim().toLocaleLowerCase('en-US'));
 });
