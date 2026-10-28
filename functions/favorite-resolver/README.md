@@ -99,3 +99,16 @@ values reach UUID v3/v5/v6 or output buffers. The framework's CloudEvents helper
 uses UUID v4 without a caller buffer. This is a recorded dependency limitation,
 not evidence that advisories are absent. No force-upgrade across SDK major
 versions was applied as an incident fix.
+
+## Approved failure diagnostics
+
+Failure events contain exactly `operation` (a finite server-side stage enum) and
+`dependencyStatus` (an allowlisted HTTP status, or zero when unknown). No request
+context, identities, handles, paths, bodies, headers, credentials, SDK messages or
+exception objects are serialized. Expected missing quota objects, replay conflicts
+and retriable CAS conflicts remain silent. The same error crossing multiple
+boundaries is reported once. Diagnostic-emitter failure is swallowed and the
+original dependency error is rethrown unchanged. HTTP responses, quotas, retries,
+leases, reads, permissions and retention settings are unchanged. These events
+provide evidence for future failures; they do not establish the cause of the
+retained historical 503s.

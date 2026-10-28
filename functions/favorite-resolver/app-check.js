@@ -2,7 +2,7 @@
 const { digest } = require('./contract');
 const { PREFIX } = require('./quota');
 const REPLAY_PREFIX = `${PREFIX}app-check-replay/`;
-function createGcsReplayStore(bucket) {
+function createGcsReplayStore(bucket, diagnostics) {
   if (!bucket?.file) throw new TypeError('Favorite App Check replay store is required');
   return Object.freeze({
     async consume(token) {
@@ -16,6 +16,7 @@ function createGcsReplayStore(bucket) {
         return true;
       } catch (error) {
         if (error?.code === 412) return false;
+        diagnostics?.report('app-check-replay-create', error);
         throw error;
       }
     }
