@@ -43,10 +43,6 @@ jobs:
             sleep 1
           done
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
-      - name: Exact Halloween artwork and approved Options journeys
-        run: |
-          npx playwright test -c playwright.halloween.config.cjs
-          npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
       - name: Decode actual packaged brand assets and verify unprimed Favorites
         run: npx playwright test -c playwright.apri151.config.cjs
       - name: Approved Share Events and list-feedback regressions
@@ -58,8 +54,6 @@ jobs:
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
 
-      - name: Optional owner variant clarification and preserved data journeys
-        run: npx playwright test -c playwright.variant-clarification.config.cjs
 
   catalogue-browser:
     strategy:
@@ -128,6 +122,13 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - name: Exact Share states Favorites order and Apri install icon qualification
         run: npx playwright test -c playwright.share-refinement.config.cjs
+
+      - name: Exact Halloween artwork and approved Options journeys
+        run: |
+          npx playwright test -c playwright.halloween.config.cjs
+          npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
+      - name: Optional owner variant clarification and preserved data journeys
+        run: npx playwright test -c playwright.variant-clarification.config.cjs
 
   traffic-runtime:
     if: always()
