@@ -35,7 +35,12 @@ complete; do not repeat it or retrieve payloads for readiness checks.
 Build source contexts with `python3 scripts/staging/build-login-artifacts.py`.
 The generated manifest pins every input and both deterministic tar hashes.
 The disabled public config is intentionally unusable until scoped configuration
-is approved. Docker is unavailable here: these are source contexts, not built
+is approved. The gateway accepts `DISCORD_PUBLIC_CONFIG` as trusted public JSON
+configuration, validates its exact staging origin/project/app/Enterprise key and
+allowed public fields, and serves it with no-store. It rejects extra fields that
+could accidentally publish secrets. Omission retains the disabled template;
+activation requires two explicit canary UIDs. Each Secret Manager file must use
+a separate mount directory: Cloud Run rejects different secrets sharing one. Docker is unavailable here: these are source contexts, not built
 OCI images. Pin base-image and output-image digests during the approved build;
 package lockfiles are already included. Do not deploy a floating image tag.
 
@@ -51,8 +56,8 @@ and gates except the explicitly reviewed canary changes.
    `e1-identity-authority-runtime@trainer-hub-staging-37ib4wct.iam.gserviceaccount.com`.
    Mount enabled version **1** of `discord-oauth-client-secret`,
    `discord-oauth-state-key-v1`, `discord-oauth-subject-key-v1` at respectively
-   `/var/run/discord/client-secret`, `/var/run/discord/state-key`,
-   `/var/run/discord/subject-key`. No payload reads by the operator are required.
+   `/var/run/discord/client/value`, `/var/run/discord/state/value`,
+   `/var/run/discord/subject/value`. No payload reads by the operator are required.
    Existing narrow secret/read/sign permissions are retained.
 2. Create a staging-only public `discord-login-canary` Cloud Run service and
    dedicated `discord-login-canary-runtime` service account. Grant that identity

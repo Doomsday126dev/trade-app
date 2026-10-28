@@ -46,3 +46,19 @@ test('browser bootstrap matches existing staging Enterprise App Check configurat
  await vm.runInNewContext('(async()=>{'+source.replace(/^import .*;\n/gm,'')+'})()',context);
  assert.ok(observed.provider instanceof Enterprise);assert.equal(observed.provider.siteKey,metadata.siteKey);assert.equal(observed.app.options.appId,metadata.appId);assert.equal(observed.isTokenAutoRefreshEnabled,true);assert.equal(await options.getAppCheckToken({limitedUse:false}),'synthetic-normal');assert.equal(await options.getAppCheckToken({limitedUse:true}),'synthetic-limited');assert.deepEqual(calls,['normal','limited']);
 });
+
+test('Cloud Run secret mounts use a distinct directory for each saved secret',()=>{
+ const {SECRET_PATHS}=require('../staging/authority.entry.cjs');
+ assert.deepEqual(Object.keys(SECRET_PATHS).sort(),['client-secret','state-key','subject-key']);
+ assert.equal(new Set(Object.values(SECRET_PATHS).map(value=>path.dirname(value))).size,3);
+ for(const value of Object.values(SECRET_PATHS))assert.match(value,/^\/var\/run\/discord\/(client|state|subject)\/value$/);
+});
+test('public runtime config accepts only exact staging metadata and named activation',async t=>{
+ const {runtimePublicConfig}=require('../staging/gateway.entry.cjs'),origin='https://staging.example.test';
+ const value={enabled:false,projectId:'trainer-hub-staging-37ib4wct',origin,gatewayUrl:origin+'/v1/discord-oauth',firebase:{projectId:'trainer-hub-staging-37ib4wct',appId:'1:391359988648:web:d5455df9a12624d3f8d39d',authDomain:'trainer-hub-staging-37ib4wct.firebaseapp.com',apiKey:'AIza'+'x'.repeat(35)},appCheckSiteKey:'6LeC-n0tAAAAAFRXDuCnTVeMSiHZNcByWKzgAzvR',existingCanaryUid:'',googleCanaryUid:''};
+ assert.equal(runtimePublicConfig(undefined,origin),null);assert.deepEqual(JSON.parse(runtimePublicConfig(JSON.stringify(value),origin)),value);
+ for(const invalid of [{...value,clientSecret:'must-never-be-published'},{...value,enabled:true},{...value,origin:'https://wrong.example'},{...value,gatewayUrl:'https://wrong.example/v1/discord-oauth'},{...value,firebase:{...value.firebase,projectId:'trade-list-a4297'}},{...value,firebase:{...value.firebase,privateKey:'must-never-be-published'}}])assert.throws(()=>runtimePublicConfig(JSON.stringify(invalid),origin));
+ const active={...value,enabled:true,existingCanaryUid:'synthetic-existing',googleCanaryUid:'synthetic-google'};assert.equal(JSON.parse(runtimePublicConfig(JSON.stringify(active),origin)).enabled,true);
+ const handler=publicBuild({APP_ENVIRONMENT:'emulator',FIREBASE_PROJECT_ID:'demo-pogo-discord',DISCORD_AUTHORITY_URL:'http://127.0.0.1:1',DISCORD_ALLOWED_ORIGIN:origin,DISCORD_PUBLIC_CONFIG:JSON.stringify(value)},{getOidcToken:async()=>{throw Error('static configuration must not call authority');}});
+ const server=http.createServer(handler),url=await listen(server);t.after(()=>new Promise(resolve=>server.close(resolve)));const response=await fetch(url+'/config.json');assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');assert.deepEqual(await response.json(),value);
+});

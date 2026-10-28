@@ -1,5 +1,5 @@
 {
-  "status": "local-candidate-not-deployed",
+  "status": "local-packaging-correction-not-deployed",
   "reviewedBaseline": "e576de927c34c8e3e5a9be227989db0e80027e2a",
   "projectId": "trainer-hub-staging-37ib4wct",
   "region": "us-central1",
@@ -23,12 +23,12 @@
   "sourceArtifacts": {
     "authority": {
       "file": "authority-context.tar",
-      "sha256": "d6983d2f18ef2c8a6474d4953817aeccb6eddf776f7fc7e063b18bad45860e52",
+      "sha256": "23dfae1d7cdd7286fc600d8a1f06ba5cf43cab1feb0b1ef47f9e10be80cbd4d4",
       "dockerfile": "functions/staging/authority.Dockerfile"
     },
     "gateway": {
       "file": "gateway-context.tar",
-      "sha256": "d6983d2f18ef2c8a6474d4953817aeccb6eddf776f7fc7e063b18bad45860e52",
+      "sha256": "23dfae1d7cdd7286fc600d8a1f06ba5cf43cab1feb0b1ef47f9e10be80cbd4d4",
       "dockerfile": "functions/staging/gateway.Dockerfile"
     }
   },
@@ -56,5 +56,11 @@
     "secret payload retrieval",
     "real OAuth grant"
   ],
-  "documentation": "docs/STAGING-LOGIN-RELEASE.md"
+  "documentation": "docs/STAGING-LOGIN-RELEASE.md",
+  "secretMounts": {
+    "discord-oauth-client-secret": "/var/run/discord/client/value",
+    "discord-oauth-state-key-v1": "/var/run/discord/state/value",
+    "discord-oauth-subject-key-v1": "/var/run/discord/subject/value"
+  },
+  "publicRuntimeConfiguration": "DISCORD_PUBLIC_CONFIG (validated public JSON; absent means disabled template)"
 }
