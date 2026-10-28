@@ -1,0 +1,73 @@
+const{test,expect}=require('@playwright/test'),fs=require('node:fs');
+const{normalFixture,settled}=require('./helpers/usability-fixture.cjs');
+async function seed(page){await normalFixture(page);await page.evaluate(async()=>{
+ const controller=managedAccountSyncRuntime.controller,mutations=[];window.__clarifySources={};
+ for(const name of ['Spinda','Urshifu (Gigantamax)','Pikachu (Detective)']){
+  const catalog=accountSyncCatalogIdentity('wishlist',name),identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
+  const values=accountSyncProduct.tradeValues({priority:'H',variant:'saved legacy detail',gender:'f',lucky:true,xxl:true,shiny:true,backgroundId:'test-background',sortOrder:7,quantity:4,note:'Keep all saved preferences',mirror:true});
+  mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,patch:values});
+  __clarifySources[name]=entityId;
+ }
+ const result=await controller.mutateBatch(mutations);if(!result.ok)throw Error(result.error.code);
+});await settled(page);await page.evaluate(()=>{combinedRowCache.clear();renderMyList();});}
+async function open(page,name){await page.evaluate(name=>openCombinedEditor(combinedKey(productDeclarations().entries.find(e=>e.name===name))),name);await page.locator('#variant-clarification-panel summary').click();}
+async function originals(page){return page.evaluate(()=>Object.fromEntries(Object.entries(__clarifySources).map(([name,id])=>[name,structuredClone(managedAccountSyncRuntime.controller.getEntity('tradeEntry',id))])));}
+for(const width of [390,820,1440])test(`owner notice/Options choices and confirmation stay usable at ${width}`,async({page},info)=>{
+ await page.setViewportSize({width,height:width===390?844:1000});await seed(page);const before=await originals(page);
+ for(const theme of ['light','dark']){
+  await page.evaluate(t=>applyTheme(t),theme);await expect(page.locator('#variant-clarification-notice')).toBeVisible();await expect(page.locator('#combined-editor-modal')).toBeHidden();await expect(page.locator('#toast')).toBeHidden({timeout:7000});if(width!==820){fs.mkdirSync('/tmp/trade-variant-clarification-captures',{recursive:true});await page.screenshot({path:`/tmp/trade-variant-clarification-captures/${info.project.name}-${width}-${theme}-notice.png`,animations:'disabled'});}
+  await open(page,'Spinda');await expect(page.locator('#variant-clarification-choice option')).toHaveCount(10);await page.locator('#variant-clarification-choice').selectOption('Spinda (Heart)');
+  await expect(page.locator('#variant-clarification-preview img')).toBeVisible();await page.locator('#variant-clarification-preview img').evaluate(async img=>{img.loading='eager';await img.decode();if(img.naturalWidth<2)throw Error('undecoded artwork');});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await expect(page.locator('#toast')).toBeHidden({timeout:7000});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  if(width!==820){fs.mkdirSync('/tmp/trade-variant-clarification-captures',{recursive:true});await page.screenshot({path:`/tmp/trade-variant-clarification-captures/${info.project.name}-${width}-${theme}-choices.png`,animations:'disabled'});}
+  await page.locator('#variant-clarification-keep').click();await expect(page.locator('#variant-clarification-panel details')).not.toHaveAttribute('open','');await page.locator('#combined-close').click();
+ }
+ expect(await originals(page)).toEqual(before);await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('all three explicit variants copy exactly; only explicit post-confirmation removal affects original',async({page})=>{
+ await seed(page);const before=await originals(page);
+ for(const [name,choice] of [['Spinda','Spinda (Form 1)'],['Urshifu (Gigantamax)','Urshifu (Rapid Strike Style) (Gigantamax)'],['Pikachu (Detective)','Pikachu (Detective Hat 2019)']]){
+  await open(page,name);await page.locator('#variant-clarification-choice').selectOption(choice);await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();
+  const state=await page.evaluate(()=>{const d=variantClarificationDraft;return{source:structuredClone(d.controller.getEntity('tradeEntry',d.source.entityId)),target:structuredClone(d.controller.getEntity('tradeEntry',d.plan.mutation.entityId))};});expect(state.source).toEqual(before[name]);expect(state.target.values).toEqual(before[name].values);expect(state.target.identity.catalogId).not.toBe(before[name].identity.catalogId);
+  await page.locator('#combined-close').click();
+ }
+ expect(await originals(page)).toEqual(before);
+ // Reopening finds an existing target: no inferred association or overwrite.
+ await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 1)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-status')).toContainText('already exists');await expect(page.locator('#variant-clarification-remove')).toBeHidden();await page.locator('#combined-close').click();
+ await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 2)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();await page.locator('#variant-clarification-remove').click();await settled(page);
+ const after=await originals(page);expect(after.Spinda.deleted).toBe(true);expect(after.Spinda.values).toEqual(before.Spinda.values);expect(after['Urshifu (Gigantamax)']).toEqual(before['Urshifu (Gigantamax)']);await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('dismissal persists locally, retains later entry point and never writes; account boundary cannot inherit dismissal',async({page})=>{
+ await seed(page);const before=await page.evaluate(()=>__normal.writes.length);await page.locator('#variant-clarification-notice').getByRole('button',{name:'Dismiss',exact:true}).click();await page.evaluate(()=>renderMyList());await expect(page.locator('#variant-clarification-notice')).toBeHidden();expect(await page.evaluate(()=>__normal.writes.length)).toBe(before);
+ await open(page,'Spinda');await expect(page.locator('#variant-clarification-choice')).toBeVisible();await page.locator('#combined-close').click();
+ const result=await page.evaluate(()=>{const old=auth;auth={currentUser:{uid:'different-owner'}};const ignored=variantClarificationIgnored().size;auth=old;return ignored;});expect(result).toBe(0);await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('pending/failure, changed records and account switch never permit original removal',async({page})=>{
+ await seed(page);const before=await originals(page);await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 3)');
+ await page.evaluate(()=>{window.__clarifyApply=applyAccountSyncTradeMutations;applyAccountSyncTradeMutations=async()=>({ok:false,error:{code:'account-sync/journal-write-failed'}});});await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-status')).toContainText('original is kept');await expect(page.locator('#variant-clarification-remove')).toBeHidden();expect(await originals(page)).toEqual(before);
+ await page.evaluate(()=>{applyAccountSyncTradeMutations=__clarifyApply;});await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();
+ await page.evaluate(async()=>{await managedAccountSyncRuntime.controller.patchEntity({entityType:'tradeEntry',entityId:__clarifySources.Spinda,patch:{note:'Other device edit'}});await managedAccountSyncRuntime.controller.drain();});await page.evaluate(()=>checkClarifiedVariant());await expect(page.locator('#variant-clarification-remove')).toBeHidden();
+ await page.evaluate(async()=>{const previous=auth;auth={currentUser:{uid:'other-owner'}};await removeClarifiedOriginal();auth=previous;});expect((await originals(page)).Spinda.deleted).toBe(false);await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('offline copy survives journal restart, keeps original and never auto-removes it',async({page})=>{
+ await seed(page);const before=await originals(page),ids=await page.evaluate(()=>structuredClone(__clarifySources));await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 4)');
+ await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,get:()=>false});window.dispatchEvent(new Event('offline'));});await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-status')).toContainText('saved on this device');await expect(page.locator('#variant-clarification-remove')).toBeHidden();expect((await originals(page)).Spinda).toEqual(before.Spinda);
+ const targetId=await page.evaluate(()=>variantClarificationDraft.plan.mutation.entityId);const remote=await page.evaluate(()=>structuredClone(__normal.remote));await page.locator('#combined-close').click();await page.evaluate(()=>stopAccountSyncRuntime());// The next document starts online; do not resume the old fake backend then replace it with an older snapshot.
+ const source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8'),install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');await install(page,remote);await settled(page);await page.evaluate(ids=>{window.__clarifySources=ids;renderMyList();},ids);
+ const state=await page.evaluate(id=>structuredClone(managedAccountSyncRuntime.controller.getEntity('tradeEntry',id)),targetId);expect(state,'pending exact request must survive restart').toBeTruthy();expect(state.values).toEqual(before.Spinda.values);expect((await originals(page)).Spinda).toEqual(before.Spinda);await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('grouped aliases require review, unsaved preferences are not discarded, anonymous view has no notice',async({page})=>{
+ await seed(page);await open(page,'Spinda');await page.locator('#combined-preferences').evaluate(e=>e.open=true);await page.locator('#combined-note').fill('Unsaved note');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 5)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-status')).toContainText('Save your edits first');await page.locator('#combined-close').click();
+ await page.evaluate(async()=>{const old=managedAccountSyncRuntime.controller.getEntity('tradeEntry',__clarifySources.Spinda),identity={...old.identity,surface:'special-board',lane:'looking-for'},entityId=accountSyncModel.tradeEntryId(identity);await managedAccountSyncRuntime.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:old.values});});await settled(page);await page.evaluate(()=>renderMyList());await open(page,'Spinda');await expect(page.locator('#variant-clarification-choice')).toBeDisabled();await expect(page.locator('#variant-clarification-status')).toContainText('separate review');await page.locator('#combined-close').click();
+ await page.evaluate(()=>{auth=null;renderVariantClarificationNotice();});await expect(page.locator('#variant-clarification-notice')).toBeHidden();await page.evaluate(()=>stopAccountSyncRuntime());
+});
+test('account switch while copy admission is pending cannot enqueue the old request',async({page})=>{
+ await seed(page);await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 6)');const before=await page.evaluate(()=>__normal.writes.length);
+ await page.evaluate(async()=>{window.__clarifyAuth=auth;window.__clarifyAuthority=accountSyncMutationAuthority;const result=await accountSyncMutationAuthority();accountSyncMutationAuthority=()=>new Promise(resolve=>{window.__clarifyRelease=()=>resolve(result);});});await page.locator('#variant-clarification-add').click();await page.evaluate(()=>{auth={currentUser:{uid:'different-owner'}};__clarifyRelease();});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));expect(await page.evaluate(()=>__normal.writes.length)).toBe(before);await expect(page.locator('#variant-clarification-remove')).toBeHidden();await page.evaluate(()=>{auth=__clarifyAuth;accountSyncMutationAuthority=__clarifyAuthority;});await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('closing during copy admission prevents enqueue; after journaling Close never removes original',async({page})=>{
+ await seed(page);await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 7)');const before=await page.evaluate(()=>__normal.writes.length);
+ await page.evaluate(async()=>{window.__clarifyAuthority=accountSyncMutationAuthority;const result=await accountSyncMutationAuthority();accountSyncMutationAuthority=()=>new Promise(resolve=>{window.__clarifyRelease=()=>resolve(result);});});await page.locator('#variant-clarification-add').click();await expect(page.locator('#combined-close')).toHaveText('Close');await page.locator('#combined-close').click();await page.evaluate(()=>{__clarifyRelease();accountSyncMutationAuthority=__clarifyAuthority;});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));expect(await page.evaluate(()=>__normal.writes.length)).toBe(before);
+ await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 7)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();await expect(page.locator('#combined-save')).toBeHidden();await expect(page.locator('#wants-remove')).toBeHidden();await expect(page.locator('#combined-note')).toBeDisabled();await page.locator('#combined-close').click();expect((await originals(page)).Spinda.deleted).toBe(false);await page.evaluate(()=>stopAccountSyncRuntime());
+});

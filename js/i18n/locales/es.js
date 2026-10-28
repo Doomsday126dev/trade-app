@@ -1,6 +1,25 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({
+    "clarify.notice":"Algunas variantes no están especificadas.",
+    "clarify.action":"Precisar variante",
+    "clarify.dismiss":"Cerrar",
+    "clarify.help":"Opcional. Añade una solicitud exacta con las mismas preferencias guardadas. La original se conserva.",
+    "clarify.pattern":"Patrón",
+    "clarify.style":"Estilo",
+    "clarify.year":"Año",
+    "clarify.unspecified":"Dejar sin especificar",
+    "clarify.add":"Añadir solicitud exacta",
+    "clarify.check":"Comprobar guardado",
+    "clarify.remove":"Eliminar original",
+    "clarify.grouped":"Los registros agrupados requieren revisión por separado. No se combinarán.",
+    "clarify.saveFirst":"Guarda los cambios antes de precisar la variante.",
+    "clarify.changed":"Las solicitudes cambiaron. Revísalas antes de continuar.",
+    "clarify.collision":"La solicitud exacta ya existe. No se cambió nada.",
+    "clarify.failed":"No se pudo confirmar la solicitud exacta. Se conserva la original.",
+    "clarify.pending":"Solicitud exacta guardada en este dispositivo. Conserva la original hasta confirmar la sincronización.",
+    "clarify.confirmed":"Solicitud exacta sincronizada. Conserva ambas o elimina la original.",
+
     "feedback.viewUpdated":"Vista actualizada.",
     "accountSync.publishing":"Guardado; actualizando lista compartida",
     "accountSync.publishingDetail":"Tus cambios privados están guardados. Tu lista compartida se está actualizando automáticamente.",

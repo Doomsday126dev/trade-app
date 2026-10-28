@@ -2560,3 +2560,27 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 @media(max-width:600px){#events-out .event-agenda-card{grid-template-columns:minmax(0,1fr) 44px}#tab-schedule .event-filter-scroll{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:4px}#tab-schedule .event-filter-row{min-width:0;padding-right:0}#tab-schedule .event-filter-scroll::after{position:static;grid-column:2;grid-row:1;width:36px;height:44px;background:none}#events-out .event-group-title{font-size:17px}}
 
 @media(max-width:600px){.ptr-indicator{top:calc(var(--topbar-h) + 6px)}body:has(#ptr-indicator.visible) #app .page.active{padding-top:calc(var(--space-3) + 48px)}}
+
+/* Optional, owner-only saved variant clarification. */
+.variant-clarification-notice{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-size:.85rem;margin:8px 0 12px}
+.variant-clarification-notice>span{flex:1 1 180px}
+.variant-clarification-notice[hidden],.variant-clarification-panel[hidden]{display:none}
+.variant-clarification-panel{border:1px solid var(--border2);border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.variant-clarification-panel summary{cursor:pointer;font-weight:600;min-height:30px;display:list-item}
+.variant-clarification-panel p{color:var(--muted);font-size:.85rem;margin:8px 0}
+.variant-clarification-panel label{font-size:.85rem;display:block;margin:8px 0 4px}
+.variant-clarification-preview{display:flex;gap:10px;align-items:center;margin-top:8px;min-width:0}
+.variant-clarification-preview>span{min-width:0;overflow-wrap:anywhere;font-size:.9rem}
+.variant-clarification-preview small{display:block;color:var(--muted)}
+.variant-clarification-actions{display:flex;gap:8px;flex-wrap:wrap}
+.variant-clarification-actions .btn,.variant-clarification-notice .btn{min-height:44px;white-space:normal}
+
+#combined-editor-modal .variant-clarification-panel details{margin:0;padding:0;border:0}
+#combined-editor-modal .variant-clarification-panel summary{min-height:44px;padding:0}
+
+.variant-clarification-notice .clarification-dismiss{width:44px;padding:0;font-size:22px}
+.variant-clarification-notice>span{min-width:0}
+.variant-clarification-notice>.btn:not(.clarification-dismiss){max-width:105px}
+
+@media(min-width:700px){.variant-clarification-notice>.btn:not(.clarification-dismiss){max-width:none;white-space:nowrap}}
+#combined-editor-modal .clarification-copy-created .mact{display:flex;justify-content:flex-end}

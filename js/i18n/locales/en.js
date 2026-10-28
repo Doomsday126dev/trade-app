@@ -1,6 +1,25 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    "clarify.notice":"Some variants are unspecified.",
+    "clarify.action":"Clarify variant",
+    "clarify.dismiss":"Dismiss",
+    "clarify.help":"Optional. Add an exact request with the same saved preferences. The original stays.",
+    "clarify.pattern":"Pattern",
+    "clarify.style":"Style",
+    "clarify.year":"Year",
+    "clarify.unspecified":"Keep unspecified",
+    "clarify.add":"Add exact request",
+    "clarify.check":"Check save",
+    "clarify.remove":"Remove original",
+    "clarify.grouped":"Grouped records need separate review. No records will be merged.",
+    "clarify.saveFirst":"Save your edits first, then clarify the variant.",
+    "clarify.changed":"Requests changed. Review them before continuing.",
+    "clarify.collision":"The exact request already exists. Nothing was changed.",
+    "clarify.failed":"The exact request could not be confirmed. The original is kept.",
+    "clarify.pending":"Exact request saved on this device. Keep the original until sync confirms.",
+    "clarify.confirmed":"Exact request synced. Keep both, or remove the original.",
+
     "feedback.viewUpdated":"View updated.",
     "accountSync.publishing":"Saved; updating shared list",
     "accountSync.publishingDetail":"Your private changes are saved. Your shared list is updating automatically.",
