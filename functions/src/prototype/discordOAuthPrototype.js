@@ -317,7 +317,7 @@ function createDiscordOAuthPrototype({
         return Object.freeze({ ok: true, operation: 'sign-in', status: 'onboarding-required', ...(registrationToken?{registrationToken,expiresInMs:settings.flowTtlMs}:{}) });
       }
       authority(await currentAuthority(), { required: false });
-      const customToken = await customTokenMinter(resolved.uid);
+      const customToken = await customTokenMinter(resolved.uid,{providerSubjectKey,mappingRevision:resolved.mappingRevision});
       authority(await currentAuthority(), { required: false });
       if (typeof customToken !== 'string' || customToken.length < 8 || customToken.length > 8192) {
         fail('internal', 'discord/custom_token_invalid');
@@ -369,7 +369,7 @@ function createDiscordOAuthPrototype({
     authority(await currentAuthority(),{required:false});
     const before=await store.resolveSubject({providerSubjectKey:created.providerSubjectKey});
     if(before?.uid!==created.uid)fail('stale_state','discord/mapping_changed');
-    const customToken=await customTokenMinter(created.uid);authority(await currentAuthority(),{required:false});
+    const customToken=await customTokenMinter(created.uid,{providerSubjectKey:created.providerSubjectKey,mappingRevision:before.mappingRevision});authority(await currentAuthority(),{required:false});
     if(typeof customToken!=='string'||customToken.length<8||customToken.length>8192)fail('internal','discord/custom_token_invalid');
     const after=await store.resolveSubject({providerSubjectKey:created.providerSubjectKey});
     if(after?.uid!==created.uid||after.mappingRevision!==before.mappingRevision)fail('stale_state','discord/mapping_changed');

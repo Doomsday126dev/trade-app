@@ -1,7 +1,7 @@
 'use strict';
 const {fail}=require('../domain/errors');
 const {fingerprint}=require('../domain/fingerprints');
-function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,projectId,now=Date.now}={}){
+function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,projectId,now=Date.now,onVerifiedAccountRead=async()=>{}}={}){
   if(!firebaseAuth?.verifyIdToken||!firebaseAuth?.getUser||!store?.readFoundation||typeof verifyLegacyBinding!=='function'||!/^[-a-z0-9]+$/.test(projectId||''))throw new TypeError('Verified Discord authority dependencies required');
   async function verified({idToken,lifecycleId,requirePassword=false,requireRecent=true}){
     if(typeof idToken!=='string'||idToken.length>16384||!/^[A-Za-z0-9._:-]{8,160}$/.test(lifecycleId||''))fail('unauthenticated','discord/auth_required');
@@ -16,7 +16,7 @@ function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,pr
       const binding=await verifyLegacyBinding({uid:claims.uid,expectedUsername:foundation.account.legacyUsername,idToken});
       if(binding?.uid!==claims.uid||binding.username!==foundation.account.legacyUsername||binding.active!==true)fail('permission_denied','discord/legacy_binding_invalid');
     }else if(requirePassword)fail('permission_denied','discord/alternate_access_required');
-    return{uid:claims.uid,lifecycleId,accountFingerprint:foundation.accountFingerprint,recentAuth:true,verifiedAt:at};
+    return{uid:claims.uid,lifecycleId,accountFingerprint:foundation.accountFingerprint,recentAuth:true,verifiedAt:at,bootstrapProof:claims.discordBootstrap,authCreatedAt:Date.parse(user.metadata?.creationTime)};
   }
   async function unlink({idToken,lifecycleId,requestId,expectedProviderRevision}){
     const current=await verified({idToken,lifecycleId,requirePassword:true});
@@ -31,7 +31,8 @@ function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,pr
   }
   async function readAccount({idToken,lifecycleId}){
     const current=await verified({idToken,lifecycleId,requireRecent:false});
-    const {account}=await store.readDiscordAccount({uid:current.uid});
+    const {account,providerSubjectKey}=await store.readDiscordAccount({uid:current.uid});
+    await onVerifiedAccountRead({...current,providerSubjectKey});
     const keys=['schemaVersion','canonicalTrainerName','normalizedTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername','revision','status'];
     return Object.freeze({ok:true,operation:'read-account',foundation:Object.freeze(Object.fromEntries(keys.map(key=>[key,account[key]])))});
   }

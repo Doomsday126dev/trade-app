@@ -24,3 +24,10 @@ test('cross-project token and custom-token UID substitution are rejected',async(
   assert.equal(await h.api.mintCustomToken(UID),'synthetic-custom-token');
   await assert.rejects(h.api.mintCustomToken('other-owner'));assert.deepEqual(h.calls,[['mint',UID]]);
 });
+
+test('candidate minter checks mapping after signing and does not widen a missing-user error',async()=>{
+ const {createDiscordCandidateTokenMinter}=require('../src/prototype/discordCandidateComposition');const subject='v1_discord_'+'a'.repeat(64);let reads=0,mints=0;
+ const mint=createDiscordCandidateTokenMinter({enabled:true,firebaseAuth:{getUser:async()=>({uid:UID,disabled:false}),createCustomToken:async()=>{mints++;return'synthetic-custom-token';}},store:{resolveSubject:async()=>({uid:UID,mappingRevision:++reads===1?1:2}),readDiscordAccount:async()=>({account:{identityKind:'legacy_migrated'},providerSubjectKey:subject})},registrationStore:{authorizeMint:async()=>null}});
+ await assert.rejects(mint(UID,{providerSubjectKey:subject,mappingRevision:1}),error=>error.reason==='discord/mapping_changed');assert.equal(mints,1);
+ await assert.rejects(createDiscordCandidateTokenMinter()(),error=>error.reason==='discord/minter_disabled');
+});

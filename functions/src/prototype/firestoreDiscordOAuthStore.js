@@ -128,7 +128,7 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
     const accepted=await foundation(tx,uid),provider=data(await tx.get(providerRef(uid)));
     if(!provider||provider.state!=='linked')fail('permission_denied','discord/provider_required');
     coherent(provider,data(await tx.get(subjectRef(provider.providerSubjectKey))),uid,provider.providerSubjectKey);
-    return accepted;
+    return{...accepted,providerSubjectKey:provider.providerSubjectKey};
   });}
   async function unlinkSubjectAtomic(input){
     check(input.requestFingerprint,HASH,'discord/fingerprint_invalid');timestamp(input.timestamp);
