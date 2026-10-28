@@ -164,9 +164,10 @@ test('Favorites stay in a loading state until same-UID account-sync projection i
   const hydration=html.slice(html.indexOf('function accountSyncOrganizationHydrating'),html.indexOf('function accountSyncClone'));
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function accountSyncFavoriteUid'));
   assert.match(hydration,/managedAccountSyncRuntime\?\.projectionReady!==true/);
-  assert.match(render,/if\(accountSyncOrganizationHydrating\(\)\)/);
+  const loadingGuard='if(!store||accountSyncOrganizationHydrating())';
+  assert.ok(render.includes(loadingGuard));
   assert.match(render,/trainer\.syncHydrating/);
-  assert.ok(render.indexOf('if(accountSyncOrganizationHydrating())')<render.indexOf('const state=store.read()'));
+  assert.ok(render.indexOf(loadingGuard)<render.indexOf('const state=store.read()'));
 });
 
 test('Favorite UI uses one compact tag organizer and makes removal destructive',()=>{
