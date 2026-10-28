@@ -903,7 +903,8 @@ async function checkClarifiedVariant(){
   const confirmed=!clarificationHasUnsavedEdits(draft.editor)&&accountSyncProduct.clarificationConfirmed({plan:draft.plan,source,target,state,operationId:draft.operationId});
   draft.confirmed=confirmed;document.getElementById('variant-clarification-remove').hidden=!confirmed;
   const check=document.getElementById('variant-clarification-check'),focused=check===document.activeElement;check.hidden=confirmed;if(confirmed&&focused)document.getElementById('variant-clarification-remove').focus();
-  clarificationMessage(confirmed?'confirmed':source&&accountSyncModel.canonicalJson(source)!==draft.plan.sourceBefore?'changed':'pending');return confirmed;
+  const changed=!source||accountSyncModel.canonicalJson(source)!==draft.plan.sourceBefore||target&&(target.deleted||target.generation!==1||target.revision!==1||target.lifecycleMutation!==draft.operationId||accountSyncModel.canonicalJson(target.values)!==accountSyncModel.canonicalJson(draft.plan.mutation.values));
+  clarificationMessage(confirmed?'confirmed':changed?'changed':state.blockedCount||state.conflictCount||state.state==='sync-error'?'failed':'pending');return confirmed;
 }
 async function removeClarifiedOriginal(){
   const draft=variantClarificationDraft;if(!await checkClarifiedVariant()||!clarificationSessionCurrent(draft))return;
