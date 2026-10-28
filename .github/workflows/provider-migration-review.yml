@@ -5,6 +5,10 @@ on:
     paths:
       - '.github/workflows/provider-migration-review.yml'
       - 'functions/src/prototype/**'
+      - 'functions/staging/**'
+      - 'staging/**'
+      - 'scripts/staging/**'
+      - 'functions/test/discord-staging-entry.test.cjs'
       - 'functions/test/discord-oauth-prototype.test.cjs'
       - 'js/dev/**'
       - 'js/app/application.js'

@@ -1,0 +1,60 @@
+{
+  "status": "local-candidate-not-deployed",
+  "reviewedBaseline": "e576de927c34c8e3e5a9be227989db0e80027e2a",
+  "projectId": "trainer-hub-staging-37ib4wct",
+  "region": "us-central1",
+  "databaseId": "phase-e-identity",
+  "privateService": "e1-identity-authority",
+  "rollbackRevision": "e1-identity-authority-00019-lgm",
+  "proposedPublicService": "discord-login-canary",
+  "proposedGatewayIdentity": "discord-login-canary-runtime@trainer-hub-staging-37ib4wct.iam.gserviceaccount.com",
+  "secretVersions": {
+    "discord-oauth-client-secret": "1",
+    "discord-oauth-state-key-v1": "1",
+    "discord-oauth-subject-key-v1": "1"
+  },
+  "discordApplicationId": "1564289039526268938",
+  "callbackProposal": "<verified gateway origin>/auth/discord.html",
+  "scopes": [
+    "identify"
+  ],
+  "defaultEnabled": false,
+  "imageBuilt": false,
+  "sourceArtifacts": {
+    "authority": {
+      "file": "authority-context.tar",
+      "sha256": "2bb8cfb174d5a0dcbc39a4bbb859d9b8e9d631b8b957fd215ff4235ea7d973f5",
+      "dockerfile": "functions/staging/authority.Dockerfile"
+    },
+    "gateway": {
+      "file": "gateway-context.tar",
+      "sha256": "2bb8cfb174d5a0dcbc39a4bbb859d9b8e9d631b8b957fd215ff4235ea7d973f5",
+      "dockerfile": "functions/staging/gateway.Dockerfile"
+    }
+  },
+  "pendingApprovals": [
+    "pinned build and staging revisions",
+    "new public gateway and dedicated runtime identity",
+    "gateway-only private authority invocation",
+    "App Check limited-use verification permission",
+    "specific provider hostnames and added callback",
+    "route-specific callback request-log protection",
+    "fresh namespace certification and any staging provisioning freeze",
+    "named canary OAuth grant/link consent separately"
+  ],
+  "unresolved": [
+    "verified gateway origin",
+    "public staging Firebase/App Check metadata",
+    "dedicated existing/new canary identities",
+    "delayed bootstrap support procedure",
+    "full-product browser/profile/list/publication qualification"
+  ],
+  "prohibitedInThisMilestone": [
+    "production activation",
+    "PIN cutoff",
+    "automatic migration",
+    "secret payload retrieval",
+    "real OAuth grant"
+  ],
+  "documentation": "docs/STAGING-LOGIN-RELEASE.md"
+}

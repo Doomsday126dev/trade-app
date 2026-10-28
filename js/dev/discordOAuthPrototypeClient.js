@@ -14,15 +14,15 @@
     fetchImpl=global.fetch.bind(global),location=global.location,history=global.history,
     storage=global.sessionStorage,cryptoApi=global.crypto,clock=()=>Date.now(),
     getAuthorizationHeader=async()=>'',getSessionBinding,signInWithCustomToken,
-    endpointRoot='/__local/discord/oauth',callbackUri,candidateMode=false,requestTransport,onStatus=()=>{}
+    endpointRoot='/__local/discord/oauth',callbackUri,candidateMode=false,candidateOrigin,requestTransport,onStatus=()=>{}
   }={}){
     if(!fetchImpl||!location||!history||!storage||!cryptoApi?.getRandomValues||typeof getSessionBinding!=='function')throw new TypeError('Discord prototype client dependencies are incomplete');
     const initial=new URL(location.href),origin=initial.origin;
-    if(candidateMode){if(origin!=='https://doomsday126dev.github.io'||typeof requestTransport!=='function')throw failure('discord/candidate-config-invalid');}
+    if(candidateMode){if(origin!==(candidateOrigin||'https://doomsday126dev.github.io')||(candidateOrigin&&initial.protocol!=='https:'&&!['127.0.0.1','localhost'].includes(initial.hostname))||typeof requestTransport!=='function')throw failure('discord/candidate-config-invalid');}
     else if(initial.protocol!=='http:'||!['localhost','127.0.0.1','[::1]'].includes(initial.hostname)||endpointRoot!=='/__local/discord/oauth')throw failure('discord/development-only');
     if(typeof callbackUri!=='string'||!callbackUri)throw failure('discord/callback-invalid');
     const redirect=new URL(callbackUri,origin);
-    if(candidateMode&&redirect.pathname!=='/trade-app/auth/discord.html')throw failure('discord/callback-invalid');
+    if(candidateMode&&redirect.pathname!==(candidateOrigin?'/auth/discord.html':'/trade-app/auth/discord.html'))throw failure('discord/callback-invalid');
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
     let generation=0,activeRun=null,review=null,coordinationBlocked=false;
@@ -176,7 +176,7 @@
       review=null;return Object.freeze({status:result.status});
     });}
     async function readAccount(){return exclusive(async run=>{
-      const captured={...session('link'),operation:'link'};
+      const captured={...session('link'),operation:'link',...(candidateMode?{browserBinding:base64url(cryptoApi.getRandomValues(new Uint8Array(32)))}:{})};
       const result=await request('readAccount',captured,{},run);
       const foundation=result?.foundation;
       if(!exactKeys(result,['ok','operation','foundation'])||result.ok!==true||result.operation!=='read-account'||
