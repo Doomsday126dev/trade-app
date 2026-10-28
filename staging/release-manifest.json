@@ -23,12 +23,12 @@
   "sourceArtifacts": {
     "authority": {
       "file": "authority-context.tar",
-      "sha256": "2bb8cfb174d5a0dcbc39a4bbb859d9b8e9d631b8b957fd215ff4235ea7d973f5",
+      "sha256": "ea64f88a5d0fcc6e6301fff106a62999fa811871d448b7d9bd66817b2eed1a75",
       "dockerfile": "functions/staging/authority.Dockerfile"
     },
     "gateway": {
       "file": "gateway-context.tar",
-      "sha256": "2bb8cfb174d5a0dcbc39a4bbb859d9b8e9d631b8b957fd215ff4235ea7d973f5",
+      "sha256": "ea64f88a5d0fcc6e6301fff106a62999fa811871d448b7d9bd66817b2eed1a75",
       "dockerfile": "functions/staging/gateway.Dockerfile"
     }
   },

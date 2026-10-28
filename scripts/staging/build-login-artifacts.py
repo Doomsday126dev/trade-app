@@ -10,7 +10,7 @@ for folder in ['functions/src','functions/e1-authority-service','functions/e1-ga
  for file in (root/folder).rglob('*'):
   if not file.is_file() or 'node_modules' in file.parts or file.suffix not in ['.js','.cjs','.Dockerfile'] and file.name not in ['package.json','package-lock.json']:continue
   files[str(file.relative_to(root))]=file.read_bytes()
-for name in ['index.html','bootstrap.js','discord.html']:files['staging/public/'+name]=(root/'staging/public'/name).read_bytes()
+for name in ['index.html','bootstrap.mjs','discord.html']:files['staging/public/'+name]=(root/'staging/public'/name).read_bytes()
 files['staging/public/config.json']=(root/'staging/public/config.template.json').read_bytes()
 for name in modules:files['staging/public/modules/'+name+'.js']=(root/'js/dev'/(name+'.js')).read_bytes()
 files['staging/public/modules/providerAccountFoundation.js']=(root/'js/services/providerAccountFoundation.js').read_bytes()
