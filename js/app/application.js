@@ -450,12 +450,13 @@ function combinedGroups(model=productDeclarations(),keyFor=combinedKey){
 }
 const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
-  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
+  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;variantClarificationDraft=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
   const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
   const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
+  renderVariantClarificationNotice(model,groups);
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
   const allSections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
@@ -780,6 +781,10 @@ function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  variantClarificationDraft=null;setClarificationControlsLocked(false);
+  document.querySelector('#combined-editor-modal form').classList.remove('clarification-copy-created');
+  document.getElementById('combined-save').hidden=false;
+  const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
   const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
   input.value=entry.name||'';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
@@ -798,10 +803,122 @@ function openCombinedEditor(index,options={}){
   renderCombinedPokemonSummary();
   document.getElementById('wants-remove').hidden=!entries?.length;
   document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
+  renderVariantClarificationPanel();
   openModal('combined-editor-modal',{returnFocus:options.returnFocus,initialFocus:document.getElementById('combined-name-field').hidden?'#combined-priorities input:checked':'#combined-name'});
 }
+let variantClarificationDraft=null;
+const variantClarificationDismissed=new Map();
+function variantClarificationKey(){return `variant-clarification-v1:${auth?.currentUser?.uid||''}:${cur||''}`;}
+function variantClarificationSources(entries){
+  const sources=new Map();
+  for(const entry of entries||[])for(const raw of [entry,...entry.aliases||[]]){const entity=combinedSourceEntity(raw);if(entity)sources.set(entity.entityId,entity);else return [];}
+  return [...sources.values()];
+}
+function variantClarificationFamily(entry){
+  if(!entry||!accountSyncProduct.clarificationFamily(entry.name,entry.shiny)||!auth?.currentUser?.uid||!accountSyncProjectionReady())return '';
+  const sources=variantClarificationSources([entry]);
+  if(!sources.length||sources.some(source=>source.ownerUid!==auth.currentUser.uid))return '';
+  const families=sources.map(source=>accountSyncProduct.clarificationFamily(accountSyncCatalogEntryForId(source.identity.catalogId)?.name,source.values.shiny));
+  return families[0]&&families.every(family=>family===families[0])?families[0]:'';
+}
+function variantClarificationIgnored(){
+  try{return new Set([...(variantClarificationDismissed.get(variantClarificationKey())||[]),...JSON.parse(localStorage.getItem(variantClarificationKey())||'[]')]);}catch{return new Set(variantClarificationDismissed.get(variantClarificationKey())||[]);}
+}
+function ignoreVariantClarifications(ids){
+  const ignored=variantClarificationIgnored();ids.forEach(id=>ignored.add(id));
+  variantClarificationDismissed.set(variantClarificationKey(),ignored);
+  try{localStorage.setItem(variantClarificationKey(),JSON.stringify([...ignored].slice(-300)));}catch{}
+  renderVariantClarificationNotice();
+}
+function variantClarificationRows(model=productDeclarations(),groups=combinedGroups(model)){
+  return groups.filter(entries=>variantClarificationFamily(entries[0]));
+}
+function renderVariantClarificationNotice(model=productDeclarations(),groups){
+  const host=document.getElementById('variant-clarification-notice');if(!host)return;
+  const ignored=variantClarificationIgnored(),rows=variantClarificationRows(model,groups).filter(entries=>variantClarificationSources(entries).some(e=>!ignored.has(e.entityId)));
+  host.hidden=!rows.length;if(!rows.length){host.replaceChildren();return;}
+  host.innerHTML=`<span>${escHtml(i18nCore.t('clarify.notice'))}</span><button type="button" class="btn btn-ghost" onclick="openFirstVariantClarification()">${escHtml(i18nCore.t('clarify.action'))}</button><button type="button" class="btn btn-ghost clarification-dismiss" onclick="dismissVariantClarificationNotice()" aria-label="${escAttr(i18nCore.t('clarify.dismiss'))}" title="${escAttr(i18nCore.t('clarify.dismiss'))}"><span aria-hidden="true">×</span></button>`;
+}
+function dismissVariantClarificationNotice(){ignoreVariantClarifications(variantClarificationRows().flatMap(variantClarificationSources).map(e=>e.entityId));document.querySelector('#combined-list .myrow-name')?.focus({preventScroll:true});}
+function openFirstVariantClarification(){
+  const ignored=variantClarificationIgnored(),entries=variantClarificationRows().find(rows=>variantClarificationSources(rows).some(e=>!ignored.has(e.entityId)));if(!entries)return;
+  openCombinedEditor(combinedKey(entries[0]),{returnFocus:document.querySelector('[data-wants-priority-filter="ALL"]')});const details=document.querySelector('#variant-clarification-panel details');if(details){details.open=true;details.querySelector('select')?.focus();}
+}
+function renderVariantClarificationPanel(){
+  const host=document.getElementById('variant-clarification-panel'),entry=combinedEditor?.entries?.[0],family=variantClarificationFamily(entry);
+  host.hidden=!family;host.replaceChildren();if(!family)return;
+  const sources=variantClarificationSources(combinedEditor.entries),choices=accountSyncProduct.CLARIFICATION_CHOICES[family].filter(name=>accountSyncCatalogIdentity('wishlist',name));
+  host.innerHTML=`<details><summary>${escHtml(i18nCore.t('clarify.action'))}</summary><p>${escHtml(i18nCore.t('clarify.help'))}</p><label for="variant-clarification-choice">${escHtml(i18nCore.t(({pattern:'clarify.pattern',style:'clarify.style',year:'clarify.year'})[family]))}</label><select class="field-control" id="variant-clarification-choice" onchange="updateVariantClarificationPreview()"><option value="">${escHtml(i18nCore.t('clarify.unspecified'))}</option>${choices.map(name=>`<option value="${escAttr(name)}">${escHtml(pokemonDisplayName(accountSyncCatalogEntryForName('wishlist',name)||{name}))}</option>`).join('')}</select><div id="variant-clarification-preview" class="variant-clarification-preview"></div><p id="variant-clarification-status" role="status"></p><div class="variant-clarification-actions"><button type="button" id="variant-clarification-add" class="btn btn-secondary" onclick="addClarifiedVariant()" disabled>${escHtml(i18nCore.t('clarify.add'))}</button><button type="button" id="variant-clarification-keep" class="btn btn-ghost" onclick="keepVariantUnspecified()">${escHtml(i18nCore.t('clarify.unspecified'))}</button><button type="button" id="variant-clarification-check" class="btn btn-secondary" onclick="checkClarifiedVariant()" hidden>${escHtml(i18nCore.t('clarify.check'))}</button><button type="button" id="variant-clarification-remove" class="btn btn-secondary" onclick="removeClarifiedOriginal()" hidden>${escHtml(i18nCore.t('clarify.remove'))}</button></div></details>`;
+  if(sources.length!==1){document.getElementById('variant-clarification-choice').disabled=true;document.getElementById('variant-clarification-status').textContent=i18nCore.t('clarify.grouped');}
+}
+function updateVariantClarificationPreview(){
+  const name=document.getElementById('variant-clarification-choice').value,entry=combinedEditor?.entries?.[0],catalog=accountSyncCatalogEntryForName('wishlist',name),host=document.getElementById('variant-clarification-preview');
+  document.getElementById('variant-clarification-add').disabled=!catalog||!!variantClarificationDraft;
+  host.innerHTML=catalog?`${spriteImg(catalog.no,64,'',name,entry?.gender||'',pokemonDisplayName(catalog),{shiny:entry?.shiny===true,catalogId:catalog.catalogId})}<span>${escHtml(pokemonDisplayName(catalog))}${entry?.shiny?`<small>${escHtml(i18nCore.t('share.flagShiny'))}</small>`:''}<small>${escHtml(catalogueVariantReleaseLabel({...catalog,shiny:entry?.shiny===true})||'')}</small></span>`:'';
+}
+function keepVariantUnspecified(){
+  if(!combinedEditor)return;ignoreVariantClarifications(variantClarificationSources(combinedEditor.entries).map(e=>e.entityId));
+  const details=document.querySelector('#variant-clarification-panel details');details.open=false;details.querySelector('summary')?.focus();
+}
+function clarificationSessionCurrent(draft){return draft&&draft.editor===combinedEditor&&document.getElementById('combined-editor-modal')?.classList.contains('open')&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.user===auth?.currentUser&&draft.generation===_sessionTransientGeneration&&draft.controller===managedAccountSyncRuntime?.controller;}
+function clarificationMessage(key){const host=document.getElementById('variant-clarification-status');if(host){const messageKey=`clarify.${key}`;host.textContent=i18nCore.t(messageKey);}}
+function clarificationHasUnsavedEdits(draft){
+  const entry=draft.entries[0];return ['mod','note','gender'].some(f=>document.getElementById('combined-'+f).value!==(entry[f]||''))||['shiny','lucky','xxl','xxs'].some(f=>document.getElementById('combined-'+f).checked!==(entry[f]===true))||document.getElementById('combined-priority').value!==(entry.p||'');
+}
+function setClarificationControlsLocked(locked){
+  document.querySelectorAll('#combined-editor-modal input,#combined-editor-modal textarea,#combined-editor-modal select,#combined-save,#wants-remove').forEach(control=>{
+    if(locked){if(!Object.hasOwn(control.dataset,'clarifyDisabledBefore'))control.dataset.clarifyDisabledBefore=String(control.disabled);control.disabled=true;}
+    else if(Object.hasOwn(control.dataset,'clarifyDisabledBefore')){control.disabled=control.dataset.clarifyDisabledBefore==='true';delete control.dataset.clarifyDisabledBefore;}
+  });
+}
+async function addClarifiedVariant(){
+  const editor=combinedEditor,button=document.getElementById('variant-clarification-add');if(!editor||button.disabled||variantClarificationDraft)return;
+  if(clarificationHasUnsavedEdits(editor)){clarificationMessage('saveFirst');return;}
+  const sources=variantClarificationSources(editor.entries),name=document.getElementById('variant-clarification-choice').value,catalog=accountSyncCatalogIdentity('wishlist',name);
+  if(sources.length!==1||!catalog){clarificationMessage('grouped');return;}
+  const source=accountSyncClone(sources[0]),draft={editor,owner:cur,uid:auth?.currentUser?.uid,user:auth?.currentUser,generation:_sessionTransientGeneration,source,controller:managedAccountSyncRuntime?.controller};button.disabled=true;setClarificationControlsLocked(true);
+  const close=document.getElementById('combined-close');close.dataset.i18n='common.close';close.textContent=i18nCore.t('common.close');
+  try{
+    const authority=await accountSyncMutationAuthority();if(!clarificationSessionCurrent(draft))return;if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)){clarificationMessage('failed');return;}
+    if(accountSyncModel.canonicalJson(draft.controller.getEntity('tradeEntry',source.entityId))!==accountSyncModel.canonicalJson(source)){clarificationMessage('changed');return;}
+    const identity={...source.identity,catalogId:catalog.catalogId},targetId=accountSyncModel.tradeEntryId(identity);
+    const plan=accountSyncProduct.clarificationPlan({source,sourceName:editor.entries[0].name,targetName:name,targetCatalogId:catalog.catalogId,existing:draft.controller.getEntity('tradeEntry',targetId)});
+    if(!plan.ok){clarificationMessage(plan.code==='collision'?'collision':'changed');return;}
+    const result=await applyAccountSyncTradeMutations([plan.mutation],authority.controller);
+    if(!clarificationSessionCurrent(draft))return;
+    if(!result?.ok){clarificationMessage('failed');return;}
+    variantClarificationDraft={...draft,plan,operationId:result.operations[0].operationId};
+    document.querySelector('#combined-editor-modal form').classList.add('clarification-copy-created');
+    document.getElementById('combined-save').hidden=true;document.getElementById('wants-remove').hidden=true;button.hidden=true;
+    document.getElementById('variant-clarification-choice').disabled=true;document.getElementById('variant-clarification-keep').hidden=true;
+    document.getElementById('variant-clarification-check').hidden=false;document.getElementById('variant-clarification-check').focus();clarificationMessage('pending');
+    await authority.controller.drain();if(clarificationSessionCurrent(draft))await checkClarifiedVariant();
+  }catch{if(clarificationSessionCurrent(draft))clarificationMessage('failed');}
+  finally{if(editor===combinedEditor){button.disabled=!!variantClarificationDraft;if(!variantClarificationDraft){setClarificationControlsLocked(false);close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');}}}
+}
+async function checkClarifiedVariant(){
+  const draft=variantClarificationDraft;if(!clarificationSessionCurrent(draft))return false;
+  const state=await draft.controller.snapshot();if(!clarificationSessionCurrent(draft))return false;
+  const source=draft.controller.getEntity('tradeEntry',draft.source.entityId),target=draft.controller.getEntity('tradeEntry',draft.plan.mutation.entityId);
+  const confirmed=!clarificationHasUnsavedEdits(draft.editor)&&accountSyncProduct.clarificationConfirmed({plan:draft.plan,source,target,state,operationId:draft.operationId});
+  draft.confirmed=confirmed;document.getElementById('variant-clarification-remove').hidden=!confirmed;
+  const check=document.getElementById('variant-clarification-check'),focused=check===document.activeElement;check.hidden=confirmed;if(confirmed&&focused)document.getElementById('variant-clarification-remove').focus();
+  const changed=!source||accountSyncModel.canonicalJson(source)!==draft.plan.sourceBefore||target&&(target.deleted||target.generation!==1||target.revision!==1||target.lifecycleMutation!==draft.operationId||accountSyncModel.canonicalJson(target.values)!==accountSyncModel.canonicalJson(draft.plan.mutation.values));
+  clarificationMessage(confirmed?'confirmed':changed?'changed':state.blockedCount||state.conflictCount||state.state==='sync-error'?'failed':'pending');return confirmed;
+}
+async function removeClarifiedOriginal(){
+  const draft=variantClarificationDraft;if(!await checkClarifiedVariant()||!clarificationSessionCurrent(draft))return;
+  const authority=await accountSyncMutationAuthority();if(!clarificationSessionCurrent(draft)||authority.controller!==draft.controller||!accountSyncAuthorityCurrent(authority)||!await checkClarifiedVariant())return;
+  const button=document.getElementById('variant-clarification-remove');button.disabled=true;
+  try{
+    const result=await applyAccountSyncTradeMutations([{kind:'delete',entityType:'tradeEntry',entityId:draft.source.entityId,expectedGeneration:draft.source.generation}],draft.controller);
+    if(!clarificationSessionCurrent(draft))return;
+    if(!result?.ok){clarificationMessage('failed');return;}
+    closeModal('combined-editor-modal');renderMyList();
+  }catch{if(clarificationSessionCurrent(draft))clarificationMessage('failed');}finally{if(clarificationSessionCurrent(draft))button.disabled=false;}
+}
 function combinedSourceEntity(entry){
-  const ref=entry.ref;if(ref?.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
+  const ref=entry.ref;if(!ref)return null;if(ref.managed)return accountSyncCanonicalEntities.find(e=>e.entityId===ref.entityId&&!e.deleted);
   const catalog=accountSyncCatalogIdentity(ref?.type||'wishlist',entry.name,entry);if(!catalog)return null;
   const identity={surface:ref.surface,lane:ref.surface==='special-board'?(entry.intent==='lf'?'looking-for':'for-trade'):ref.type,catalogId:catalog.catalogId};
   const id=accountSyncModel.tradeEntryId(identity);
@@ -4203,6 +4320,7 @@ async function applyAccountSyncTradeMutations(mutations,controller=managedAccoun
   if(!controller)return accountSyncModel.failure('account-sync/session-inactive','Cross-device sync session is not active');
   return controller.mutateBatch(mutations.map(mutation=>({
     entityType:mutation.entityType,entityId:mutation.entityId,identity:mutation.identity,kind:mutation.kind,
+    ...(mutation.expectedGeneration!==undefined?{intentExpectedGeneration:mutation.expectedGeneration}:{}),
     patch:mutation.kind==='add'?mutation.values:(mutation.kind==='patch'?mutation.patch:{})
   })));
 }
@@ -7635,7 +7753,7 @@ function _renderBrowseInner(){
 
 // ── MY LIST ───────────────────────────────────────────────────
 function resetMyListCategoryForAccountBoundary(){
-  myListIntent='lf';boardHiddenKeys=new Set();boardCurationOwner='';publicLinkAttempt++;
+  myListIntent='lf';boardHiddenKeys=new Set();boardCurationOwner='';publicLinkAttempt++;variantClarificationDraft=null;
   myListType='wishlist';
   addTray=[];
   myListCollapsedPrioritySections.clear();

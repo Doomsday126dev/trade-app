@@ -1,0 +1,2 @@
+const{defineConfig}=require('@playwright/test');
+module.exports=defineConfig({testDir:'./tests',testMatch:'variant-clarification.spec.js',timeout:45000,workers:1,reporter:'list',outputDir:'/tmp/trade-variant-clarification-results',use:{baseURL:'http://127.0.0.1:4498',serviceWorkers:'block'},webServer:{command:'python3 -m http.server 4498 --bind 127.0.0.1',url:'http://127.0.0.1:4498',reuseExistingServer:false},projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}]});

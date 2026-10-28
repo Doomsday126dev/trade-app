@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 76c4abd76d636ef09cd75dde406fb2557d2da470
+          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -58,6 +58,9 @@ jobs:
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
 
+      - name: Optional owner variant clarification and preserved data journeys
+        run: npx playwright test -c playwright.variant-clarification.config.cjs
+
   catalogue-browser:
     strategy:
       fail-fast: false
@@ -68,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 76c4abd76d636ef09cd75dde406fb2557d2da470
+          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -107,7 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 76c4abd76d636ef09cd75dde406fb2557d2da470
+          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
