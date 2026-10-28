@@ -1,0 +1,171 @@
+# Reviewed checkpoint reconciliation and demo server import
+
+This bounded milestone follows the independently reviewed `f05d338c` checkpoint.
+It is source qualification only. Discord/reminder paths remain default-off; no
+provider, credential, deployment, PIN, production database or permission changes
+are made. No new application endpoint exports the recovery executor.
+
+## Reconcile a proven completed auth operation
+
+The auth gate now records a uniquely identified local outcome receipt after a
+verified SDK sign-in/sign-out succeeds, before settling the shared IndexedDB
+checkpoint. If the final checkpoint write fails, the successful auth result
+remains truthful and further mutations remain blocked. The receipt permits a
+specific recovery case: the SDK finished, its receipt was durably stored, and
+only final checkpoint settlement was interrupted.
+
+A host may inject a trusted `verifyCurrentAuth` verifier and expose
+`prepareCheckpointRecovery()` followed by
+`confirmCheckpointRecovery(ticket, {accepted: true})`. Preparation reads the
+pending checkpoint and completed receipt under the same Web Lock, waits for
+Firebase initialization, matches operation ID, revision, kind, previous UID and
+result UID, and requires fresh verification of the actual current user. It
+returns a review ticket showing the operation and UID without changing auth or
+storage. Confirmation repeats those checks under the lock, requires the exact
+in-memory ticket/evidence and explicit acceptance, then settles the checkpoint.
+The host clears its warning only after successful settlement. Its configured
+canary UID remains mandatory. Reload requires a new review; two competing reviews
+cannot both succeed. There is no expiration, reset button or arbitrary UID override.
+
+The production application does not supply that verifier or a recovery UI, so
+this flow remains unavailable there. A future host must use trusted server ID-token
+verification (including revocation/disabled-user checks), never trust a supplied
+UID or file checksum. The pinned Firebase SDK emulator test exercises actual
+custom-token sign-in, a failed settlement write, a recreated gate, fresh admin
+ID-token verification and explicit recovery. Browser tests independently cover
+real IndexedDB persistence/reload and Web Lock arbitration in two tabs.
+
+A crash before the completed receipt, a missing receipt, an interrupted preserve
+operation (link/unlink/password change), a mismatched user, failed verification,
+or changed checkpoint stays blocked. Local receipts do not prove backend provider
+linkage or confer identity/permissions. Recovery of these unknown outcomes and
+production UI/server-verifier binding remain unimplemented; no automatic repair
+is claimed. The existing all-host/cooperative-tab rollout requirement still applies.
+
+## Server-authorized additive import, emulator only
+
+`functions/src/prototype/recoveryImportEmulator.js` is disabled by default and
+requires the exact `demo-pogo-discord` project plus loopback Auth and Firestore
+emulators. It writes only `recoveryImportSandboxes`, `recoveryImportReviews` and
+`recoveryImportReceipts`, not canonical production collections. The tests use the
+actual access-authority verifier, Auth tokens, reciprocal account/handle records,
+Firestore transactions and existing domain validation/merge models.
+
+Preparation verifies current account authority and the source UID, reads the
+server target, computes a fresh dry run and stores a bounded five-minute review.
+Confirmation requires its exact digest and explicit acceptance, verifies current
+authority again, transactionally checks the account foundation and unchanged
+target, revalidates the plan, checks unchanged Favorite target foundation fingerprints, and atomically
+writes additive content plus a durable receipt. Only own canonical generation-1
+trade entries, Favorites and tags can be added. Existing entities, tombstones and
+conflicting lifecycle content require separate review. Duplicate/concurrent
+confirmation or process restart reuses the receipt. It never reapplies content
+removed after the original commit. A verified readback is distinct from a
+committed receipt: unavailable readback returns `committed-readback-unavailable`;
+changed content returns `committed-content-changed`. Neither reports a rollback.
+
+Sandbox limits are 128 KiB per reviewed record/bundle and 50 additions. Bundles
+with no supported additions are refused without rewriting the target. This is a
+bounded qualification executor, not a production import service. Cross-UID
+recovery is refused even when the file checksum is valid.
+
+Unsupported import sections are all noncanonical data: legacy-only lists,
+profile, local ordering, journal/history, preferences, groups/memberships,
+permissions/admin status, shared URL/ownership references and related evidence.
+They are inventoried in the dry run and left untouched. Export collectors for
+enabled provider-only, share-visibility and synced-preference features still fail
+closed until their dedicated adapters exist. This milestone does not claim full
+recovery fidelity or preservation of old shared URLs across a new account.
+
+## Qualification and remaining approval boundary
+
+Regression coverage includes rejected confirmation, unknown auth outcomes,
+wrong UID, changed review, failed verification/storage, reload, competing tabs,
+actual pinned SDK authentication, revoked/disabled import authority, stale target,
+concurrent/restarted import, permission preservation, readback outage and later
+content removal. CI also runs Google, account-sync, release, performance and
+function contract suites.
+
+The staging approval package remains in `DISCORD-BACKEND-DECISION.md`: owner/team
+and dedicated canary selection are unresolved. No existing admin-config 403 was
+retried or bypassed. Discord application/callback, identify-only grant, managed
+secrets, narrow runtime permissions, TTL and reviewed staging deployment each
+remain pending explicit action-time approval. Production writer activation,
+unknown-outcome reconciliation, cross-UID ownership recovery, remaining collectors
+and visible recovery UX need further implementation/review; they are not made
+safe merely by supplying provider credentials.
+
+## Focused readback correction after c9999da9
+
+An ordinary domain PATCH preserves the original ADD lifecycle marker/hash.
+Consequently, ADD replay returning `idempotent` proved the operation had already
+happened, but did not prove unchanged current content. The emulator regression
+imports priority H, applies the actual domain PATCH to L, rebuilds a valid bundle
+and replays confirmation; the prior implementation incorrectly returned
+`verified`.
+
+Schema-2 receipts now atomically capture a SHA-256 fingerprint for each exact
+imported entity, including values and revision/mutation metadata. Readback compares
+those fingerprints, so a later PATCH or removal reports
+`committed-content-changed` without rewriting newer owner data. Unrelated section
+changes do not invalidate imported-entity verification. Older receipts without
+that exact evidence report `committed-readback-unavailable`; the executor neither
+upgrades their proof nor reapplies them automatically.
+
+Additional emulator transactions import a tag and Favorite together, retain
+existing tags/Favorites and tag references, preserve every noncanonical section,
+and verify idempotent retry. Review records capture Favorite foundation
+fingerprints; a changed but still valid foundation revision between prepare and
+confirm rejects atomically and requires fresh review. This remains a demo-only
+qualification executor with no production endpoint or activation.
+
+## 2026-10-28 content and dual-account recovery candidate
+
+The new optional content adapters restore profile records, legacy lists/orders,
+device preferences and owned history records additively into demo sandbox bundles.
+Canonical profiles use the real profile validator. History must have a supported
+version and reciprocal source owner; a verified cross-UID transfer rebases only
+its owner metadata. Existing content is unchanged or marked conflict-review.
+Privilege-bearing fields are rejected, and groups, roles, memberships, share
+ownership and sync queues never become writes. Exact content digests join the
+receipt readback, so a later profile/history edit reports changed content and is
+never overwritten by replay. Adapters remain absent by default.
+
+The optional demo transfer authority requires fresh verified control of BOTH
+source and target accounts at preparation and confirmation. It binds the source
+bundle digest and both reciprocal foundation fingerprints to a five-minute grant.
+The import transaction checks and consumes that grant atomically with content and
+receipt writes. Another review cannot reuse it. A file checksum, supplied UID,
+matching email, administrator boolean or possession of a bundle is not proof.
+Source data/accounts are retained. Revoked/disabled source access fails closed.
+This is not recovery for someone unable to authenticate the source; an independent
+reviewed identity-recovery protocol would still be needed for that case.
+
+Provider-only backup no longer fabricates a legacy identity read. Its owner reader
+requires a verified provider foundation and reads UID-rooted membership/share
+paths. Enabled provider sharing, synced preferences and visibility features require
+explicit complete owner-bound capture adapters. Missing adapters, wrong owners,
+unknown canonical collections or changed captures fail before export. Captured
+feature data remains export/reference content; its active production restore is
+not implemented by the sandbox adapter.
+
+Remaining limits must prevent a full-fidelity/PIN-retirement claim: restore still
+writes sandbox bundle records, not production profile/list/preference consumers;
+legacy lists need reviewed catalog conversion before activation; pending journals
+are evidence rather than replayable mutations; feature-specific production readers
+must be connected; large restore segmentation beyond 128 KiB/50 additions is not
+implemented; original shared URL ownership cannot transfer across UIDs; groups and
+permissions require their own grants. No production restore writer or forced
+migration is enabled. Same-UID linking remains the preferred way to retain lists,
+Favorites, tags, URLs and permissions.
+
+The current minimal external setup package is DISCORD-STAGING-MINIMAL-APPROVAL.md.
+The earlier unresolved Discord app/owner/callback and disabled-billing notes above
+are historical; their newer verified state is recorded in that package.
+
+Qualification on this follow-up: migration unit 125 passed with two emulator-only
+skips; Auth/Firestore/pinned-SDK emulator 37 passed. The profile runtime suite has
+102 passing cases and one existing skip, including new initial-profile failure
+and lost-response restart checks. Those checks preserve the durable first draft,
+perform no duplicate profile initialization, and publish nothing before a failed
+initial profile is ready. Google 132 and fixed-callable contract checks passed.

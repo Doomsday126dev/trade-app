@@ -224,3 +224,13 @@ test('sprite cache clones before queued cache work while browser consumes the re
   assert.ok(cached,'sprite should be retained for offline loading');
   assert.equal(await cached.text(),'sprite-bytes');
 });
+
+test('Discord callbacks bypass release caches and never receive offline account shell',async()=>{
+  for(const online of[true,false]){
+    const calls=[];const run=createHarness({fetchImpl:async(req,options)=>{calls.push({req,options});if(!online)throw Error('offline');return response(200,'callback');}});
+    const url=`https://example.test/trade-app/auth/discord.html?code=synthetic-code&state=synthetic-state&v=${run.release}`;
+    const result=run.dispatchFetch(request(url,'navigate')),value=await result.response;
+    assert.equal(value.status,online?200:503);assert.equal(run.stores.size,0);assert.equal(calls[0].options.cache,'no-store');assert.equal(calls[0].options.referrerPolicy,'no-referrer');
+    if(!online)assert.doesNotMatch(await value.text(),/index.html|synthetic-code|synthetic-state/);
+  }
+});

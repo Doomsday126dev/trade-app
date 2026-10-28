@@ -194,6 +194,7 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       providerId: input.providerId,
       providerSubjectKey: input.providerSubjectKey,
       providerSubjectKeyVersion: input.providerSubjectKeyVersion,
+      ...(input.providerKey === 'discord' ? { state: 'claimed', updatedAt: timestamp } : {}),
       linkedAt: timestamp,
       revision: 1
     };

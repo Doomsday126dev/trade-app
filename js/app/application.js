@@ -6,6 +6,19 @@ let firebaseAppCheckInitializationPromise=null;
 let firebaseDataProtectionPromise=null;
 let firebaseAppCheckStage='not-started';
 function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof getDatabase==='function'&&typeof getAuth==='function';}
+function installProviderHostAuthGateCandidate(early){
+  if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__!==true)return early.authMod;
+  const install=window.PogoDev?.providerHostAuthGate?.install;
+  if(typeof install!=='function'||!window.PogoDev?.providerCheckpointRecovery?.createVerifier)throw new Error('Provider auth canary gate or verified recovery adapter is unavailable');
+  window.__pogoProviderHostAuthGate=install({enabled:true,auth:early.auth,sdk:early.authMod,
+    expectedSignInUid:window.__POGO_PROVIDER_AUTH_GATE_CANARY_UID__,
+    verifyCurrentAuth:window.PogoDev.providerCheckpointRecovery.createVerifier({enabled:true,auth:early.auth,projectId:early.app.options.projectId,apiKey:early.app.options.apiKey}),
+    onStatus:state=>{
+      window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}));
+      if(state.authCoordinationBlocked)toast('Signed in, but account changes are blocked by an unresolved sign-in checkpoint.',6000);
+    }});
+  return window.__pogoProviderHostAuthGate.sdk;
+}
 async function loadFirebaseSdk(){
   if(firebaseSdkReady())return true;
   if(!firebaseSdkPromise){
@@ -14,7 +27,9 @@ async function loadFirebaseSdk(){
       startPogoEarlyAuth(),
       import(`${base}/firebase-database.js`)
     ]).then(([early,dbMod])=>{
-      const appMod=early.appMod,authMod=early.authMod;
+      const appMod=early.appMod;
+      let authMod=early.authMod;
+      authMod=installProviderHostAuthGateCandidate(early);
       initializeApp=appMod.initializeApp;
       getDatabase=dbMod.getDatabase;
       ref=dbMod.ref;
@@ -420,6 +435,7 @@ const FIREBASE_RULES_STATUS=Object.freeze({
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let providerLinkingController=null;
 let providerOnboardingController=null;
+let providerGoogleOnboardingSession=null;
 let providerLinkingUnsubscribe=null;
 let providerAuthLifecycleGeneration=0;
 let providerAuthLifecycleUid='';
@@ -428,6 +444,9 @@ let providerGoogleAccountResolution=null;
 let providerPendingAction=null;
 let providerAccountFoundationClient=null;
 let providerIdentityResolutionPromise=null;
+let providerDiscordResolutionPromise=null;
+let providerRecoveryViewCleanup=null;
+let providerCheckpointViewCleanup=null;
 let providerIdentityResolutionBinding='';
 let activeCanonicalIdentity=null;
 let e1ClientFoundationCanary=null;
@@ -1918,7 +1937,7 @@ function validCanonicalFoundation(value,uid){
     value.legacyAccessConfigured===(value.identityKind==='legacy_migrated')&&
     (value.identityKind==='provider_only'?value.legacyUsername===null:value.legacyUsername===value.canonicalTrainerName);
 }
-async function resolveGoogleAccountBinding(uid){
+async function resolveGoogleAccountBinding(uid,{readFoundation}={}){
   const expectedUid=String(uid||''),authority=providerAuthSnapshot();
   const requireCurrent=()=>{
     const current=providerAuthSnapshot();
@@ -1933,7 +1952,7 @@ async function resolveGoogleAccountBinding(uid){
   await ensureFirebaseDataProtection();requireCurrent();
   // Missing is affirmative authority evidence. An unavailable or conflicting
   // canonical read must never downgrade to legacy login or new-account creation.
-  const canonical=await ensureProviderAccountFoundationClient().read();requireCurrent();
+  const canonical=await (readFoundation?readFoundation():ensureProviderAccountFoundationClient().read());requireCurrent();
   const foundation=canonical.status==='ready'?canonical.foundation:null;
   if(foundation){
     if(!validCanonicalFoundation(foundation,expectedUid))invalid();
@@ -1957,6 +1976,27 @@ async function resolveGoogleAccountBinding(uid){
   // Existing reciprocal ownership needs no namespace backfill or foundation write.
   return Object.freeze({status:'existing',uid:expectedUid,username,foundation,lifecycleId:authority.lifecycleId,
     userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
+}
+async function activateDiscordAccountCandidate(runtime=window.__pogoDiscordCandidateRuntime){
+  if(window.__POGO_DISCORD_HOST_CANARY__!==true||!runtime?.available)throw providerFailure('discord/host-disabled');
+  if(providerDiscordResolutionPromise)return providerDiscordResolutionPromise;
+  const authority=providerAuthSnapshot();
+  if(!authority||authority.uid!==window.__POGO_DISCORD_HOST_CANARY_UID__||window.__pogoProviderHostAuthGate?.snapshot?.().authCoordinationBlocked!==false)throw providerFailure('discord/canary-owner-required');
+  const current=()=>{const value=providerAuthSnapshot();if(value?.uid!==authority.uid||value.lifecycleId!==authority.lifecycleId)throw providerFailure('discord/session-changed');};
+  const work=(async()=>{
+    const resolution=await resolveGoogleAccountBinding(authority.uid,{readFoundation:async()=>{const value=await runtime.readAccount();current();return{status:'ready',foundation:value.foundation};}});
+    current();
+    // Both providers enter the existing UID-bound profile/sync/publication runtime.
+    // No legacy namespace or second UID is created by this activation.
+    return activateGoogleResolvedAccount(resolution);
+  })();
+  providerDiscordResolutionPromise=work;
+  try{return await work;}finally{if(providerDiscordResolutionPromise===work)providerDiscordResolutionPromise=null;}
+}
+function bindDiscordHostCandidate(runtime){
+  if(window.__POGO_DISCORD_HOST_CANARY__!==true||!runtime?.available)return Object.freeze({available:false});
+  window.__pogoDiscordCandidateRuntime=runtime;
+  return Object.freeze({available:true,onRegistered:()=>activateDiscordAccountCandidate(runtime),resume:()=>activateDiscordAccountCandidate(runtime)});
 }
 async function checkGoogleOnboardingHandle(handle,binding){
   const authority=providerAuthSnapshot();
@@ -2096,10 +2136,25 @@ function syncGoogleOnboardingUi(){
   }
   return state;
 }
+function googleOnboardingSessionCurrent(session){
+  const current=providerAuthSnapshot();
+  return!!session&&providerGoogleOnboardingSession===session&&current?.uid===session.uid&&current.lifecycleId===session.lifecycleId;
+}
+function requireGoogleOnboardingSession(session){
+  if(!googleOnboardingSessionCurrent(session)||session.closing)throw providerFailure('provider-onboarding/auth-lifecycle-changed','canceled');
+}
 async function beginGoogleOnboarding(){
   if(!PROVIDER_CAPABILITIES.providerAccountCreation)throw providerFailure('provider-account/creation-disabled');
+  const authority=providerAuthSnapshot();
+  if(!authority)throw providerFailure('provider-onboarding/auth-lifecycle-changed','canceled');
+  const session={uid:authority.uid,lifecycleId:authority.lifecycleId,closing:false};
+  providerGoogleOnboardingSession=session;
   const resumed=await providerOnboardingController.begin({providerKey:'google'});
-  if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
+  requireGoogleOnboardingSession(session);
+  const pending=await ensureProviderAccountFoundationClient().pendingForCurrentOwner();
+  requireGoogleOnboardingSession(session);
+  if(pending)providerOnboardingController.resumePendingCreation(pending.handle);
+  else if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
   showGoogleOnboarding();
   return providerOnboardingController.snapshot();
 }
@@ -2129,14 +2184,17 @@ async function continueWithGoogle(){
   }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
 }
 async function checkGoogleOnboarding(){
+  const session=providerGoogleOnboardingSession;
   const input=document.getElementById('google-onboarding-handle'),status=document.getElementById('google-onboarding-status');
   const friendCode=String(document.getElementById('google-onboarding-friend-code')?.value||'').trim();
   try{
+    requireGoogleOnboardingSession(session);
     let state=providerOnboardingController.snapshot(),result=null;
     if(state.status==='onboarding-required')state=providerOnboardingController.startHandleChoice();
     const pending=!!ensureProviderAccountFoundationClient().pending();
     if(['choosing-handle','handle-unavailable'].includes(state.status)||state.status==='retryable-failure'&&!pending){
       state=await providerOnboardingController.chooseHandle(input?.value||'');
+      requireGoogleOnboardingSession(session);
       if(state.status==='ready-to-create'){
         providerOnboardingController.confirmProfile({friendCode});
         syncGoogleOnboardingUi();
@@ -2148,19 +2206,45 @@ async function checkGoogleOnboarding(){
     }else if(['ambiguous-result','retryable-failure'].includes(state.status)&&pending){
       result=await providerOnboardingController.reconcile();
     }
+    requireGoogleOnboardingSession(session);
     if(result?.status==='account-ready'){
-      const resolution=Object.freeze({status:'existing',uid:auth.currentUser.uid,
+      const resolution=Object.freeze({status:'existing',uid:session.uid,lifecycleId:session.lifecycleId,
         username:result.foundation.canonicalTrainerName,foundation:result.foundation,
         ...(result.initialProfile?{profile:result.initialProfile}: {})});
-      providerGoogleAccountResolution=resolution;hideGoogleOnboarding();return activateGoogleResolvedAccount(resolution);
+      providerGoogleAccountResolution=resolution;
+      const activated=await activateGoogleResolvedAccount(resolution);
+      requireGoogleOnboardingSession(session);
+      hideGoogleOnboarding();providerGoogleOnboardingSession=null;return activated;
     }
     syncGoogleOnboardingUi();return state;
-  }catch(error){syncGoogleOnboardingUi();if(status)status.textContent=providerUiMessage(error?.code);return null;}
+  }catch(error){
+    if(googleOnboardingSessionCurrent(session)&&!session.closing){syncGoogleOnboardingUi();if(status)status.textContent=providerUiMessage(error?.code);}
+    return null;
+  }
 }
 async function cancelGoogleOnboarding(){
-  providerOnboardingController?.cancel();providerGoogleAccountResolution=null;hideGoogleOnboarding();
-  if(auth?.currentUser&&typeof firebaseSignOut==='function')await firebaseSignOut(auth);
-  showLogin({preserveCredentials:true});
+  const session=providerGoogleOnboardingSession;
+  if(!googleOnboardingSessionCurrent(session))return Object.freeze({status:'stale'});
+  if(session.closing)return Object.freeze({status:'pending'});
+  session.closing=true;
+  try{
+    const gate=window.__pogoProviderHostAuthGate;
+    // New signup stays gated until all auth mutations participate in this gate.
+    if(!gate?.available)throw providerFailure('provider-auth/gate-required');
+    await gate.prepareSignOut();
+    if(!googleOnboardingSessionCurrent(session))return Object.freeze({status:'stale'});
+    await firebaseSignOut(auth);
+    if(auth?.currentUser||providerGoogleOnboardingSession!==session)return Object.freeze({status:'stale'});
+    providerOnboardingController?.cancel();
+    providerGoogleOnboardingSession=null;providerGoogleAccountResolution=null;hideGoogleOnboarding();
+    showLogin({preserveCredentials:true});return Object.freeze({status:'canceled'});
+  }catch(error){
+    if(googleOnboardingSessionCurrent(session)){
+      const target=document.getElementById('google-onboarding-status');
+      if(target)target.textContent=providerUiMessage(error?.code);
+    }
+    return Object.freeze({status:'blocked',code:String(error?.code||'provider-auth/sign-out-failed')});
+  }finally{session.closing=false;}
 }
 
 async function resumeGoogleIdentityAfterAuth(uid){
@@ -2174,7 +2258,7 @@ async function resumeGoogleIdentityAfterAuth(uid){
       const resolution=await resolveGoogleAccountBinding(uid);providerGoogleAccountResolution=resolution;
       if(resolution.status==='existing')return activateGoogleResolvedAccount(resolution);
       if(!PROVIDER_CAPABILITIES.providerAccountCreation)throw providerFailure('provider-account/creation-disabled');
-      showLogin({preserveCredentials:true});beginGoogleOnboarding();return Object.freeze({status:'onboarding-required'});
+      showLogin({preserveCredentials:true});await beginGoogleOnboarding();return Object.freeze({status:'onboarding-required'});
     }catch(error){
       showLogin({preserveCredentials:true});const target=document.getElementById('login-err');if(target)target.textContent=providerUiMessage(error?.code);return null;
     }
@@ -2233,6 +2317,9 @@ function bindAuthObserver(){
       const rememberedUsername=cur||checkSession();
       const rememberedIdentity=rememberedUsername?getLocal().users?.[rememberedUsername]:null;
       const googleLinked=(user.providerData||[]).some(item=>item?.providerId==='google.com');
+      if(window.__POGO_DISCORD_HOST_CANARY__===true&&user.uid===window.__POGO_DISCORD_HOST_CANARY_UID__&&window.__pogoDiscordCandidateRuntime?.getState?.().status==='idle'&&activeCanonicalIdentity?.uid!==user.uid){
+        activateDiscordAccountCandidate().catch(error=>{if(auth?.currentUser?.uid===user.uid)toast(providerUiMessage(error?.code),6000);});return;
+      }
       if(PROVIDER_CAPABILITIES.providerAccountCompatibility&&googleLinked&&providerPendingAction!=='google-sign-in'&&
         activeCanonicalIdentity?.uid!==user.uid&&(!rememberedUsername||rememberedIdentity?.identityKind==='provider_only')){
         if(_authDropTimer){clearTimeout(_authDropTimer);_authDropTimer=null;}
@@ -2396,6 +2483,8 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  if(typeof providerCheckpointViewCleanup!=='undefined'&&providerCheckpointViewCleanup){providerCheckpointViewCleanup();providerCheckpointViewCleanup=null;}
+  if(typeof providerRecoveryViewCleanup!=='undefined'&&providerRecoveryViewCleanup){providerRecoveryViewCleanup();providerRecoveryViewCleanup=null;}
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
@@ -4006,6 +4095,126 @@ async function accountSyncReadLegacySources({account}={}){
     })
   });
 }
+function createOwnerRecoveryConsumerCandidate(){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const user=auth?.currentUser,uid=user?.uid,username=cur,runtime=managedAccountSyncRuntime,generation=accountSyncRuntimeGeneration;
+  if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||!username||!runtime||runtime.ownerUid!==uid||!accountSyncProjectionReady()||window.__pogoProviderHostAuthGate?.snapshot?.().authCoordinationBlocked!==false)
+    throw providerFailure('recovery/session-not-ready');
+  const candidate=window.PogoDev;
+  if(!candidate?.accountRecoveryOwnerConsumer||!candidate.accountRecoveryBatchPlan||!candidate.accountRecoveryBundle)throw providerFailure('recovery/candidate-unavailable');
+  const bound=()=>auth?.currentUser===user&&cur===username&&managedAccountSyncRuntime===runtime&&accountSyncRuntimeGeneration===generation;
+  let repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
+  if(window.PogoDomain?.favoriteCapabilities?.resolverEnabled===true){
+    const transport=window.PogoServices.favoriteWriteTransport.createFavoriteWriteTransport({auth,ownerUid:uid,appCheckReady:firebaseAppCheckReady,loadAppCheckSdk:loadFirebaseAppCheckSdk,sessionCurrent:bound});
+    repository=window.PogoData.favoriteAdditionRepository.createFavoriteAdditionRepository({repository,database:db,ref,get,update:transport.update,serverTimestamp,ownerUid:uid,enabled:true,sessionCurrent:bound});
+  }
+  const sink={ownerUid:uid,readAccount:()=>{if(!bound())throw providerFailure('recovery/session-changed');return repository.readAccount();},
+    applyOperation:operation=>runtime.controller.runAuthorizedWatchedMutation({write:()=>{if(!bound())throw providerFailure('recovery/session-changed');return repository.applyOperation(operation);},
+      reconcile:({account})=>{const entity=account?.[{tradeEntry:'tradeEntries',favorite:'favorites',tag:'tags'}[operation.entityType]]?.[operation.entityId];const result=window.PogoDomain.accountSyncMerge.mergeOperation(entity,operation,{acceptedAt:Date.now()});return result.ok&&result.status==='idempotent'?{ok:true,status:'reconciled',value:entity}:accountSyncModel.failure('recovery/readback-unverified','Recovery write needs verification');}})};
+  return candidate.accountRecoveryOwnerConsumer.create({enabled:true,repository:sink,journal:accountSyncJournalData.createAccountSyncJournal({ownerUid:uid}),bundleModel:candidate.accountRecoveryBundle.createAccountRecoveryBundle(),batchPlanner:candidate.accountRecoveryBatchPlan.create(),
+    getSession:()=>bound()?{...providerAuthSnapshot(),accountReady:accountSyncProjectionReady()}:null,
+    verifyTradeIdentity:identity=>accountSyncCatalogEntryForId(identity.catalogId,identity),
+    verifyFavoriteTarget:async(targetUid,operation)=>{const result=await resolveFavoriteIdentityForSession(operation.patch.displayName,targetUid,{allowIncidentResolver:false});return result?.targetUid===targetUid?{uid:targetUid}:null;},
+    onBatch:async()=>{if(!bound())throw providerFailure('recovery/session-changed');await runtime.publishCurrentProjection('recovery-import');}});
+}
+async function restoreOwnerRecoveryProfileCandidate(bundle){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)throw providerFailure('recovery/candidate-unavailable');
+  const uid=auth?.currentUser?.uid,runtime=managedAccountSyncRuntime,authority=providerAuthSnapshot();
+  if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||runtime?.ownerUid!==uid||!providerOnlyIdentityActive(uid)||!accountSyncProjectionReady())throw providerFailure('recovery/session-not-ready');
+  const source=await window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle().verify(bundle);
+  const current=providerAuthSnapshot();if(source.source.ownerUid!==uid||current?.uid!==uid||current.lifecycleId!==authority.lifecycleId||runtime!==managedAccountSyncRuntime)throw providerFailure('recovery/session-changed');
+  const canonical=source.sections.profile.records.find(row=>row.id==='canonical-profile')?.value;
+  if(canonical&&!accountSyncModel.validateProfileRecord(canonical,{ownerUid:uid}).ok)throw providerFailure('recovery/profile-invalid');
+  const legacy=source.sections.profile.records.find(row=>row.id==='legacy-profile')?.value||{},normalized=accountSyncModel.normalizeProfileValues(accountSyncModel.profileValues(canonical||legacy));
+  if(!normalized.ok)throw providerFailure('recovery/profile-invalid');
+  const before=runtime.providerProfile,patch={},conflicts=[];
+  for(const [key,value]of Object.entries(normalized.value)){if(!value||before[key]===value)continue;if(before[key])conflicts.push(key);else patch[key]=value;}
+  if(conflicts.length)return Object.freeze({status:'conflict-review',fields:conflicts});
+  const result=await runtime.updateProviderProfile(patch,{expectedRevision:before.revision});
+  const after=providerAuthSnapshot();if(after?.uid!==uid||after.lifecycleId!==authority.lifecycleId||runtime!==managedAccountSyncRuntime)throw providerFailure('recovery/session-changed');
+  return result;
+}
+async function restoreOwnerRecoveryHistoryCandidate(bundle){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)throw providerFailure('recovery/candidate-unavailable');
+  const uid=auth?.currentUser?.uid,username=cur,authority=providerAuthSnapshot();if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__)throw providerFailure('recovery/session-not-ready');
+  const source=await window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle().verify(bundle),current=providerAuthSnapshot();
+  if(source.source.ownerUid!==uid||source.source.trainerHandle!==username||current?.uid!==uid||current.lifecycleId!==authority.lifecycleId)throw providerFailure('recovery/session-changed');
+  const store=ensureTrainerHistoryStore(),history=source.sections.preferences.records.find(row=>row.id==='history')?.value;
+  if(!history)return{ok:true,status:'unchanged'};
+  return store.restoreOwnedHistoryArchive({sourceDigest:source.integrity.digest,history});
+}
+function createOwnerRecoveryCollectorCandidate({readProviderFoundation,features,featureAdapters={}}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const uid=auth?.currentUser?.uid,user=auth?.currentUser,username=cur,life=providerAuthSnapshot()?.lifecycleId,runtime=managedAccountSyncRuntime,candidate=window.PogoDev;
+  if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||!username||!runtime||runtime.ownerUid!==uid||!accountSyncProjectionReady()||!candidate?.accountRecoveryCollector||!candidate.accountRecoveryJournalSnapshot)throw providerFailure('recovery/session-not-ready');
+  if(!features||Object.keys(features).sort().join(',')!=='providerPublicShares,shareVisibility,syncedPreferences'||Object.values(features).some(value=>typeof value!=='boolean'))throw providerFailure('recovery/feature-collector-required');
+  const bound=()=>auth?.currentUser===user&&cur===username&&providerAuthSnapshot()?.lifecycleId===life&&managedAccountSyncRuntime===runtime&&accountSyncProjectionReady();
+  const historyStore=ensureTrainerHistoryStore(),parse=key=>{const raw=localStorage.getItem(key);return raw===null?null:JSON.parse(raw);};
+  const readLocal=async()=>{if(!bound())throw providerFailure('recovery/session-changed');const local=getLocal(),history=parse(historyStore.key)||historyStore.read(),recoveredHistoryArchives=[];
+    for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(`${historyStore.key}:recovery-v1:`)){const value=parse(key);if(value?.owner?.uid!==uid||value.owner.username!==username)throw providerFailure('recovery/history-owner-or-version-invalid');recoveredHistoryArchives.push({key,value});}}
+    recoveredHistoryArchives.sort((a,b)=>a.key.localeCompare(b.key));
+    const draft=local.users?.[username]||{},localProfileDraft=Object.fromEntries(['friendCode','bio','discord','avatarPokemon','wallpaper','specialTradeBoard','intentDeclarations','lastUpdated'].filter(key=>draft[key]!==undefined).map(key=>[key,accountSyncClone(draft[key])]));
+    return{owner:{uid,username},history,retainedHistory:parse(historyStore.retainedKey),lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,accountSyncClone(local[type]?.[username]||{})])),orders:accountSyncOrdersSnapshot(),pendingQueue:accountSyncClone(syncQueue||{}),
+      preferences:{theme:lsGet('pogoTheme','auto'),locale:i18nCore.readStoredLocale()||i18nCore.getLocale(),pokemonGoSearchLocale:localStorage.getItem(POGO_SEARCH_LANGUAGE_KEY),pokemonGoSearchLocaleOverride:localStorage.getItem(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY),localProfileDraft,recoveredHistoryArchives}};
+  };
+  const ownerReader=candidate.accountRecoveryCollector.createOwnerRecoveryReader({database:db,ref,get,uid,trainerHandle:username,sessionCurrent:bound,readLocal,features,featureAdapters,identityKind:providerOnlyIdentityActive(uid)?'provider_only':'legacy',
+    readProviderFoundation:typeof readProviderFoundation==='function'?async()=>{const result=await readProviderFoundation(),foundation=result?.foundation||result;if(!bound()||!validCanonicalFoundation(foundation,uid))throw providerFailure('recovery/identity-pair-invalid');return{...foundation,uid};}:undefined});
+  return candidate.accountRecoveryCollector.createAccountRecoveryCollector({repository:accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid}),journal:candidate.accountRecoveryJournalSnapshot.createAccountRecoveryJournalSnapshot({ownerUid:uid}),ownerReader,
+    getSession:()=>bound()?{uid,username,lifecycleId:life,accountReady:true}:null,bundleModel:candidate.accountRecoveryBundle.createAccountRecoveryBundle(),sha256:accountSyncModel.sha256Hex,validateEntity:window.PogoDomain.accountSyncMerge.validateEntity});
+}
+function createOwnerRecoveryReviewCandidate({collector,collectorOptions}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  collector||=createOwnerRecoveryCollectorCandidate(collectorOptions);
+  const module=window.PogoDev?.accountRecoveryReview;if(!module||!collector?.collect)throw providerFailure('recovery/candidate-unavailable');
+  const user=auth?.currentUser,username=cur,runtime=managedAccountSyncRuntime,life=providerAuthSnapshot()?.lifecycleId,ownerConsumer=createOwnerRecoveryConsumerCandidate();
+  return module.create({enabled:true,bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),collector,ownerConsumer,
+    dryRun:window.PogoDev.accountRecoveryDryRun.createAccountRecoveryDryRun({bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),resolveFavoriteTarget:async({expectedUid,displayName})=>{const result=await resolveFavoriteIdentityForSession(displayName,expectedUid,{allowIncidentResolver:false});return result?.targetUid===expectedUid?{uid:expectedUid}:null;}}),
+    getSession:()=>auth?.currentUser===user&&cur===username&&managedAccountSyncRuntime===runtime&&providerAuthSnapshot()?.lifecycleId===life?{uid:user.uid,lifecycleId:life,accountReady:accountSyncProjectionReady()}:null,
+    restoreProfile:restoreOwnerRecoveryProfileCandidate,restoreHistory:restoreOwnerRecoveryHistoryCandidate,restorePreferences:async bundle=>{const preferences=createOwnerRecoveryPreferencesCandidate();return preferences.apply(await preferences.review({sourceBundle:bundle,accepted:true}));}});
+}
+function mountProviderCheckpointRecoveryCandidate({container,returnFocus}={}){
+  if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__!==true)return Object.freeze({available:false});
+  const host=window.__pogoProviderHostAuthGate,module=window.PogoDev?.providerCheckpointRecovery;
+  if(!host?.available||!module?.mount)throw providerFailure('provider-auth/reconciliation-unavailable');
+  providerCheckpointViewCleanup?.();const cleanup=module.mount({container,host,returnFocus});let closed=false;
+  const close=()=>{if(closed)return;closed=true;cleanup();if(providerCheckpointViewCleanup===close)providerCheckpointViewCleanup=null;};providerCheckpointViewCleanup=close;
+  return Object.freeze({available:true,close});
+}
+function mountOwnerRecoveryReviewCandidate({container,returnFocus,...options}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const controller=createOwnerRecoveryReviewCandidate(options);providerRecoveryViewCleanup?.();
+  const cleanup=window.PogoDev.accountRecoveryReview.mount({container,controller,returnFocus});let closed=false;
+  const close=()=>{if(closed)return;closed=true;cleanup();if(providerRecoveryViewCleanup===close)providerRecoveryViewCleanup=null;};providerRecoveryViewCleanup=close;
+  return Object.freeze({available:true,controller,close});
+}
+function createOwnerRecoveryPreferencesCandidate(){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const uid=auth?.currentUser?.uid,life=providerAuthSnapshot()?.lifecycleId;
+  if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||!cur||!life)throw providerFailure('recovery/session-not-ready');
+  const module=window.PogoDev?.accountRecoveryPreferences;if(!module)throw providerFailure('recovery/candidate-unavailable');
+  const consumer=module.create({enabled:true,storage:localStorage,bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),getSession:()=>auth?.currentUser?.uid===uid&&providerAuthSnapshot()?.lifecycleId===life?{uid,lifecycleId:life}:null});
+  return Object.freeze({...consumer,async apply(ticket){const result=consumer.confirm(ticket);await refreshOwnerRecoveryPreferencesCandidate();return result;}});
+}
+function recoveredDisplayPreference(field,fallback){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true||auth?.currentUser?.uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||!cur)return fallback;
+  try{return createOwnerRecoveryPreferencesCandidate().read(field,fallback);}catch{return fallback;}
+}
+async function refreshOwnerRecoveryPreferencesCandidate(){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return;
+  const before=providerAuthSnapshot(),username=cur,baseLocale=()=>i18nCore.readStoredLocale()||i18nCore.detectBrowserLocale(),locale=recoveredDisplayPreference('locale',baseLocale());
+  await window.__pogoEnsureLocale?.(locale);
+  const after=providerAuthSnapshot();if(after?.uid!==before?.uid||after?.lifecycleId!==before?.lifecycleId||cur!==username||recoveredDisplayPreference('locale',baseLocale())!==locale)return;
+  i18nCore.setLocale(locale,{persist:false});renderInterimProductLabels();
+  applyTheme(recoveredDisplayPreference('theme',lsGet('pogoTheme','auto')),{persist:false});
+}
+function noteDisplayPreferenceChoice(field){
+  window.PogoDev?.accountRecoveryPreferences?.noteNormalWrite(localStorage,field);
+}
+function createRecoveryLegacyConversionCandidate(){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)throw providerFailure('recovery/candidate-unavailable');
+  const candidate=window.PogoDev;if(!candidate?.accountRecoveryLegacyConversion||!candidate.accountRecoveryBundle)throw providerFailure('recovery/candidate-unavailable');
+  return candidate.accountRecoveryLegacyConversion.create({bundleModel:candidate.accountRecoveryBundle.createAccountRecoveryBundle(),parseListValue:value=>parsePri(value),catalogIdentity:accountSyncLegacyCatalogIdentity,genderForVariant:entryGender,resolveFavoriteUid:(name,raw)=>accountSyncExactFavoriteUid(name,raw)});
+}
 function accountSyncEncodedPriority(values={}){
   let variant=normalizeTradeQualifier(values.variant||'');
   if(values.gender&&entryGender(variant)!==values.gender){
@@ -5553,7 +5762,12 @@ async function doLogin(){
   }
 }
 
-function logout(){
+async function logout(){
+  if(window.__pogoProviderHostAuthGate?.available&&auth){
+    try{await window.__pogoProviderHostAuthGate.prepareSignOut();}catch(error){
+      toast(error?.code==='provider-auth/commit-in-progress'?'Sign-in is still finishing. Please try signing out again.':'Sign-out is blocked by an unresolved sign-in checkpoint. This account is still signed in.',6000);return;
+    }
+  }
   closeAccountMenu(false);
   if(parseSettingsRoute().matches)history.replaceState({},'',settingsRouteUrl(false));
   resetMyListCategoryForAccountBoundary();
@@ -5633,6 +5847,7 @@ function showConfig(){
   document.getElementById('app').style.display='none';
 }
 function showLogin({preserveCredentials=false}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__===true){initTheme();i18nCore.setLocale(i18nCore.readStoredLocale()||i18nCore.detectBrowserLocale(),{persist:false});}
   hidePreAuth();
   document.getElementById('config-pg').style.display='none';
   document.getElementById('login-pg').style.display='flex';
@@ -5800,6 +6015,7 @@ async function changeInterfaceLocale(locale){
   const scrollX=window.scrollX,scrollY=window.scrollY;
   await window.__pogoEnsureLocale?.(locale);
   i18nCore.setLocale(locale);
+  noteDisplayPreferenceChoice('locale');
   renderInterimProductLabels();
   if(cur){
     const active=activeTabName();
@@ -6044,7 +6260,7 @@ function resetTrainerOrganizerState(){
 function ensureTrainerHistoryStore(){
   const uid=auth?.currentUser?.uid;
   if(!uid||!cur)return null;
-  trainerHistoryStore=trainerHistoryStoreData.createTrainerHistoryStore({storage:localStorage,identity:{uid,username:cur}});
+  trainerHistoryStore=trainerHistoryStoreData.createTrainerHistoryStore({storage:localStorage,identity:{uid,username:cur},recoveryEnabled:window.__POGO_RECOVERY_OWNER_CANARY__===true&&uid===window.__POGO_RECOVERY_OWNER_CANARY_UID__});
   return trainerHistoryStore;
 }
 function ensureFavoriteShareSessionCache(){
@@ -7050,6 +7266,7 @@ function refreshOwnedAvatarChrome(){
   });
 }
 function showApp(){
+  refreshOwnerRecoveryPreferencesCandidate().catch(error=>console.warn('Recovery display preferences unavailable',error?.code||'recovery/display-failed'));
   hidePreAuth();
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
@@ -10377,6 +10594,7 @@ async function saveProfile(event){
   }
 }
 async function savePinSettings(){
+  if(!usernamePinAccessUsable())return;
   if(_pinSaveOperation?.session.uiCurrent())return;
   const p1=document.getElementById('np1')?.value||'',p2=document.getElementById('np2')?.value||'',err=document.getElementById('pin-err');if(err)err.textContent='';
   if(!isSixDigitPin(p1)){if(err)err.textContent=i18nCore.t('validation.pinSixDigits');return;}
@@ -13232,7 +13450,7 @@ function showSkeletonMyList(){
 }
 
 // ── THEME TOGGLE (#18) ────────────────────────────────────────
-function applyTheme(theme){
+function applyTheme(theme,{persist=true}={}){
   if(theme==='auto'){document.documentElement.removeAttribute('data-theme');}
   else document.documentElement.setAttribute('data-theme',theme);
   const btn=document.getElementById('theme-toggle');
@@ -13241,13 +13459,13 @@ function applyTheme(theme){
     btn.innerHTML=uiIconMarkup(effective==='dark'?'moon':'sun','ui-icon ui-icon-sm');
     btn.title=`Theme: ${theme} (click to cycle)`;
   }
-  lsSet('pogoTheme',theme);
+  if(persist){lsSet('pogoTheme',theme);noteDisplayPreferenceChoice('theme');}
   applyWallpaperForTheme(allData?.users?.[cur]?.wallpaper||document.getElementById('prof-wallpaper')?.value||'mono');
   syncAppearanceControls();
 }
 function setSettingsTheme(theme){applyTheme(theme);}
 function syncAppearanceControls(){
-  const theme=lsGet('pogoTheme','auto'),effective=effectiveTheme(theme),wallpaper=allData?.users?.[cur]?.wallpaper||document.getElementById('prof-wallpaper')?.value||'mono';
+  const theme=recoveredDisplayPreference('theme',lsGet('pogoTheme','auto')),effective=effectiveTheme(theme),wallpaper=allData?.users?.[cur]?.wallpaper||document.getElementById('prof-wallpaper')?.value||'mono';
   document.querySelectorAll('[data-settings-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.settingsTheme===theme)));
   const hidden=document.getElementById('prof-wallpaper');if(hidden)hidden.value=wallpaper;
   const picker=document.getElementById('wp-picker');if(picker){picker.innerHTML=wallpaperPickerHtml(wallpaper);picker.querySelectorAll('button').forEach(button=>{button.disabled=effective!=='dark';button.setAttribute('aria-disabled',String(effective!=='dark'));});}
@@ -13255,11 +13473,11 @@ function syncAppearanceControls(){
   const status=document.getElementById('settings-background-status');if(status)status.textContent=effective==='dark'?'':i18nCore.t('settings.backgroundInactive');
 }
 function toggleTheme(){
-  const cur=lsGet('pogoTheme','auto');
+  const cur=recoveredDisplayPreference('theme',lsGet('pogoTheme','auto'));
   const next=cur==='auto'?'light':cur==='light'?'dark':'auto';
   applyTheme(next);
 }
-function initTheme(){applyTheme(lsGet('pogoTheme','auto'));}
+function initTheme(){applyTheme(lsGet('pogoTheme','auto'),{persist:false});}
 
 // ── POKEMON TYPE COLORS ───────────────────────────────────────
 function applyTypeColorToElement(el){

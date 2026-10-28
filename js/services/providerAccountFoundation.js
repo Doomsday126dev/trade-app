@@ -145,17 +145,43 @@
       return!!foundation&&foundation.identityKind==='provider_only'&&foundation.canonicalTrainerName===operation.requestedHandle&&
         foundation.normalizedTrainerName===operation.normalizedTrainerName&&foundation.handleKey===operation.handleKey;
     }
+    function pendingOperation(){const operation=loadOperation();return operation?.phase==='complete'?null:operation;}
+    async function validateOperationOwner(operation){
+      const expected=lifecycle(),digest=await uidDigest(expected.uid);current(expected);
+      if(operation.uidDigest!==digest)fail('provider-account/pending-owner-mismatch','blocked');
+      const handle=normalizeHandle(operation.requestedHandle);
+      const fingerprint=await requestFingerprint({uid:expected.uid,requestId:operation.requestId,
+        normalizedTrainerName:operation.normalizedTrainerName,handleKey:operation.handleKey,
+        lifecycleId:operation.lifecycleId,providerAccountProtocolVersion:operation.providerAccountProtocolVersion},cryptoImpl);
+      current(expected);
+      if(handle.normalized!==operation.normalizedTrainerName||handle.handleKey!==operation.handleKey||fingerprint!==operation.idempotencyFingerprint)
+        fail('provider-account/pending-invalid','blocked');
+      return operation;
+    }
+    async function pendingForCurrentOwner(){
+      const operation=pendingOperation();if(!operation||operation.phase==='prepared')return null;
+      await validateOperationOwner(operation);
+      return Object.freeze({handle:operation.requestedHandle,phase:operation.phase});
+    }
     async function reconcile(operation){
+      const expected=lifecycle();
+      if(!operation||!['dispatched','ambiguous','complete'].includes(operation.phase))fail('provider-account/pending-invalid','blocked');
+      await validateOperationOwner(operation);current(expected);
+      if(JSON.stringify(loadOperation())!==JSON.stringify(operation))fail('provider-account/pending-invalid','blocked');
       const result=await read();
+      current(expected);
+      if(JSON.stringify(loadOperation())!==JSON.stringify(operation))fail('provider-account/pending-invalid','blocked');
       if(exactFoundation(result,operation)){
-        saveOperation({...operation,phase:'complete'});
+        if(operation.phase!=='complete')saveOperation({...operation,phase:'complete'});
         return Object.freeze({status:'account-ready',code:'RECONCILED',foundation:result.foundation});
       }
+      if(operation.phase==='complete')throw failure('provider-account/completed-foundation-changed','blocked');
       saveOperation({...operation,phase:'ambiguous'});
       throw failure('provider-account/ambiguous-result','ambiguous');
     }
     async function prepare(rawHandle,expected){
       const handle=normalizeHandle(rawHandle),digest=await uidDigest(expected.uid),stored=loadOperation();
+      current(expected);
       if(stored&&stored.uidDigest===digest&&stored.requestedHandle===handle.display&&
         stored.lifecycleId===expected.lifecycleId&&stored.providerAccountProtocolVersion===providerAccountProtocolVersion)return stored;
       if(stored&&['dispatched','ambiguous'].includes(stored.phase))fail('provider-account/pending-reconciliation','ambiguous');
@@ -165,7 +191,7 @@
       const operation={schemaVersion:1,uidDigest:digest,requestId,requestedHandle:handle.display,
         normalizedTrainerName:handle.normalized,handleKey:handle.handleKey,lifecycleId:expected.lifecycleId,
         providerAccountProtocolVersion,clientRelease,idempotencyFingerprint:await requestFingerprint(input,cryptoImpl),phase:'prepared'};
-      return saveOperation(operation);
+      current(expected);return saveOperation(operation);
     }
     async function create({requestedHandle}={}){
       const expected=lifecycle(),operation=await prepare(requestedHandle,expected);current(expected);
@@ -192,7 +218,7 @@
       return reconcile(dispatched);
     }
     function close(){generation++;return Object.freeze({ok:true});}
-    return Object.freeze({read,create,reconcilePending:async()=>{const operation=loadOperation();if(!operation)fail('provider-account/no-pending-operation');return reconcile(operation);},clearPending:clearOperation,close,pending:loadOperation});
+    return Object.freeze({read,create,reconcilePending:async()=>{const operation=pendingOperation();if(!operation)fail('provider-account/no-pending-operation');return reconcile(operation);},clearPending:clearOperation,close,pending:pendingOperation,pendingForCurrentOwner});
   }
 
   root.providerAccountFoundation=Object.freeze({

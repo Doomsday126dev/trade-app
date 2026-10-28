@@ -1,0 +1,66 @@
+name: Provider migration source qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/provider-migration-review.yml'
+      - 'functions/src/prototype/**'
+      - 'functions/staging/**'
+      - 'staging/**'
+      - 'scripts/staging/**'
+      - 'functions/test/discord-staging-entry.test.cjs'
+      - 'functions/test/discord-oauth-prototype.test.cjs'
+      - 'js/dev/**'
+      - 'js/app/application.js'
+      - 'sw.js'
+      - 'tests/service-worker-cache-lifecycle.test.cjs'
+      - 'auth/discord.html'
+      - 'tests/discord-candidate-runtime.test.cjs'
+      - 'js/data/accountSyncJournal.js'
+      - 'tests/account-recovery-collector.test.cjs'
+      - 'tests/provider-auth-commit-gate.test.cjs'
+      - 'tests/provider-checkpoint-reconciliation.test.cjs'
+      - 'tests/provider-auth-sdk-emulator.test.cjs'
+      - 'tests/provider-auth-browser-emulator.test.cjs'
+      - 'functions/test/discord-candidate-gateway.test.cjs'
+      - 'functions/test/firestore-discord-store.test.cjs'
+      - 'functions/test/recovery-import-emulator.test.cjs'
+      - 'functions/test/discord-access-authority.test.cjs'
+      - 'tests/firebase/firebase.discord-prototype.json'
+      - 'scripts/check-discord-prototype-emulator.sh'
+      - 'tests/account-recovery-bundle.test.cjs'
+      - 'tests/discord-oauth-prototype-client.test.cjs'
+      - 'tests/provider-migration-*.test.cjs'
+      - 'tests/provider-migration-preview.spec.js'
+      - 'tests/fixtures/provider-migration-preview.html'
+      - 'playwright.provider-migration.config.cjs'
+permissions:
+  contents: read
+jobs:
+  source-and-synthetic-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm run test:provider-migration
+      - run: npm run test:provider-migration:emulator
+      - run: npm run test:provider-migration:browser
+      - run: npm run test:google-provider
+      - run: npm run test:account-sync
+      - run: npm run check:durable-auth-readiness
+      - run: npm run test:pages-release
+      - run: npm run test:performance:static
+      - run: npm --prefix functions run check:contract

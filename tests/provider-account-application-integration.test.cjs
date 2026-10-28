@@ -71,6 +71,8 @@ test('Google-only Settings hides PIN controls and labels legacy access as not co
   context.allData.users.owner.pin='123456';context.auth.currentUser.providerData=[{providerId:'password'}];context.renderConnectedAccounts();assert.equal(panel.hidden,false);assert.equal(row.dataset.providerState,'connected');
   context.auth.currentUser.uid='different-owner';context.renderConnectedAccounts();assert.equal(panel.hidden,true);
 
+  const save=section('async function savePinSettings','async function ');
+  assert.match(save,/if\(!usernamePinAccessUsable\(\)\)return/);
 });
 
 test('provider account client is present only in the development-gated asset set',()=>{

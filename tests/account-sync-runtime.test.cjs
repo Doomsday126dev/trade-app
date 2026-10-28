@@ -965,3 +965,25 @@ test('legacy publication failure is retried from current accepted canonical rows
   await runtime.start();assert.ok((await runtime.snapshot()).lastProjectionError);assert.equal(calls,1);
   ready=true;assert.equal((await runtime.retryPublicProjection()).status,'published');assert.equal(calls,2);assert.equal(published.length,1);assert.equal((await runtime.snapshot()).lastProjectionError,'');await runtime.stop();
 });
+
+for(const outcome of ['before-commit','lost-response'])test(`provider initial profile survives ${outcome} and restart without duplicate initialization`,async()=>{
+ const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState();
+ const write=state.repository.writeProfile;let writes=0,publications=0;
+ state.repository.writeProfile=async(...args)=>{writes++;if(outcome==='lost-response')await write(...args);throw Error('synthetic profile delivery failure');};
+ const options={initializationKind:'provider-only',initialProviderProfile:{friendCode:'000011112222',bio:'Initial draft'},listenerReadyTimeoutMs:10};
+ const first=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>{publications++;return{ok:true};},options);
+ if(outcome==='before-commit'){await assert.rejects(first.start());assert.equal(publications,0);assert.equal(journal.meta.has('provider-profile-pending-v1'),true);}
+ else assert.equal((await first.start()).ok,true);
+ await first.stop();state.repository.writeProfile=async(...args)=>{writes++;return write(...args);};
+ const reopened=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only',initialProviderProfile:{bio:'Must not replace durable content'},listenerReadyTimeoutMs:10});
+ assert.equal((await reopened.start()).ok,true);assert.equal(reopened.providerProfile.bio,'Initial draft');assert.equal(reopened.providerProfile.friendCode,'0000 1111 2222');
+ assert.equal(journal.meta.has('provider-profile-pending-v1'),false);assert.equal(writes,outcome==='before-commit'?2:1);assert.equal(state.calls.createMigration,0);await reopened.stop();
+});
+
+test('profile recovery expected revision prevents replacing a later owner edit',async()=>{
+ const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState();
+ const runtime=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});await runtime.start();
+ const revision=runtime.providerProfile.revision;await runtime.updateProviderProfile({bio:'Newer owner content'});
+ const writes=state.calls.writeProfile,result=await runtime.updateProviderProfile({bio:'Old backup'},{expectedRevision:revision});
+ assert.equal(result.ok,false);assert.equal(result.error.code,'account-sync/profile-conflict');assert.equal(runtime.providerProfile.bio,'Newer owner content');assert.equal(state.calls.writeProfile,writes);await runtime.stop();
+});

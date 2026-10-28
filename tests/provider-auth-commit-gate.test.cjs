@@ -1,0 +1,66 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
+function setup(){
+  const window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/dev/providerAuthCommitGate.js'),'utf8'),{window,Object,Error,String,TypeError});
+  let tail=Promise.resolve(),lifecycle='out-1',hooks=new Set();const auth={currentUser:null},calls=[];
+  const locks={request(name,options,work){const next=tail.then(work);tail=next.catch(()=>{});return next;}};
+  async function transition(user){for(const hook of hooks)await hook(user);auth.currentUser=user;lifecycle=`life-${lifecycle}`;}
+  const create=(overrides={})=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth,locks,getLifecycle:()=>lifecycle,
+    beforeAuthStateChanged:(a,hook)=>{hooks.add(hook);return()=>hooks.delete(hook);},signInWithCustomToken:async(a,token)=>{calls.push(token);await transition({uid:'synthetic-owner'});return{user:auth.currentUser};},...overrides});
+  return{auth,create,transition,calls,hooks,locks,get lifecycle(){return lifecycle;}};
+}
+test('exact mapped UID commits once under a shared cross-tab lock',async()=>{
+  const h=setup(),one=h.create(),two=h.create(),input={customToken:'synthetic-custom-token',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle};
+  const results=await Promise.allSettled([one.commitCustomToken(input),two.commitCustomToken(input)]);
+  assert.deepEqual(results.map(r=>r.status),['fulfilled','rejected']);assert.deepEqual(h.calls,['synthetic-custom-token']);assert.equal(h.hooks.size,0);
+});
+test('stale signed-out continuation cannot replace an existing login',async()=>{
+  const h=setup(),gate=h.create(),old=h.lifecycle;await h.transition({uid:'other-owner'});
+  await assert.rejects(gate.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:old}),{code:'provider-auth/session-changed'});
+  assert.equal(h.auth.currentUser.uid,'other-owner');assert.deepEqual(h.calls,[]);
+});
+test('Firebase before-auth guard rejects a wrong-account transition during a pending commit',async()=>{
+  const h=setup(),gate=h.create();let release,entered;const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const running=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle},async()=>{entered();await held;await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};});
+  await ready;await assert.rejects(h.transition({uid:'wrong-owner'}),{code:'provider-auth/unexpected-account'});assert.equal(h.auth.currentUser,null);release();await running;assert.equal(h.auth.currentUser.uid,'synthetic-owner');
+});
+test('link/unlink preserve exact UID and release guard after cancellation',async()=>{
+  const h=setup();await h.transition({uid:'synthetic-owner'});const gate=h.create();
+  await assert.rejects(gate.run({expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle},async()=>{throw Error('canceled');}),/canceled/);
+  assert.equal(h.hooks.size,0);assert.equal(h.auth.currentUser.uid,'synthetic-owner');
+});
+test('no Web Locks support fails closed rather than using an unsafe localStorage lease',()=>{
+  const h=setup();const window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/dev/providerAuthCommitGate.js'),'utf8'),{window,Object,Error,String,TypeError});
+  assert.throws(()=>window.PogoDev.providerAuthCommitGate.createProviderAuthCommitGate({auth:h.auth}),/Serialized auth/);
+});
+test('cancellation after an auth request starts is checked by the blocking SDK hook',async()=>{
+  const h=setup(),gate=h.create();let valid=true,release,entered;
+  const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const pending=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle,isCurrent:()=>valid},async()=>{entered();await held;await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};});
+  await ready;valid=false;release();await assert.rejects(pending,{code:'provider-auth/canceled'});assert.equal(h.auth.currentUser,null);assert.equal(h.hooks.size,0);
+});
+test('later middleware cannot turn an accepted commit into a false cancellation result',async()=>{
+  const h=setup(),gate=h.create();let active=true,boundary=false,entered,release;
+  const ready=new Promise(resolve=>{entered=resolve;}),held=new Promise(resolve=>{release=resolve;});
+  const pending=gate.run({kind:'sign-in',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle,isActive:()=>active,
+    onCommitBoundary:()=>{boundary=true;}},async()=>{
+    h.hooks.add(async()=>{entered();await held;});await h.transition({uid:'synthetic-owner'});return{user:h.auth.currentUser};
+  });
+  await ready;assert.equal(boundary,true);active=false;release();
+  assert.equal((await pending).user.uid,'synthetic-owner');assert.equal(h.auth.currentUser.uid,'synthetic-owner');
+});
+
+test('shared checkpoint refuses a stale tab even when its local observer still says signed out',async()=>{
+ const a=setup(),b=setup();let record={revision:0,uid:null,status:'settled'};
+ const coordination={read:async()=>({...record}),write:async value=>{record={...value};}};
+ const first=a.create({coordination}),second=b.create({coordination,locks:a.locks});await Promise.all([first.ready(),second.ready()]);
+ const results=await Promise.allSettled([first.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:a.lifecycle}),second.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:b.lifecycle})]);
+ assert.deepEqual(results.map(row=>row.status),['fulfilled','rejected']);assert.equal(results[1].reason.code,'provider-auth/session-changed');assert.equal(b.calls.length,0);
+});
+test('an interrupted checkpoint blocks new SDK requests and failed final storage does not misreport a committed sign-in',async()=>{
+ const h=setup();let record={revision:0,uid:null,status:'settled'};
+ const coordination={read:async()=>({...record}),write:async value=>{if(value.status==='settled')throw Error('storage unavailable');record={...value};}};
+ const gate=h.create({coordination});const result=await gate.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:h.lifecycle});
+ assert.equal(result.user.uid,'synthetic-owner');assert.equal(result.authCoordinationBlocked,true);assert.equal(record.status,'pending');
+ const b=setup(),other=b.create({coordination,locks:h.locks});await assert.rejects(other.commitCustomToken({customToken:'synthetic-token',expectedUid:'synthetic-owner',expectedLifecycle:b.lifecycle}),{code:'provider-auth/session-changed'});assert.equal(b.calls.length,0);
+});
