@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "sourceReviewSha256": "84a242f1d1ddcb9d9515f06a20fbcfe2e9354945ab5c70092305a7e8e281e18a",
+  "scope": "Only five qualified non-battle-only form pairs from existing research. Original bytes retained. Mimikyu Busted, Mega/Primal, Apex and Clone Shiny remain separate.",
+  "records": [
+    {
+      "name": "Darmanitan (Zen Mode)",
+      "no": 555,
+      "goIdentityEvidence": "DARMANITAN_ZEN",
+      "HOMEModelId": null,
+      "identityKind": "named early-art form; GO persistent/battle acquisition unverified",
+      "artReview": "Two paired contact sheets inspected in prior pass; hashes reverified2026-10-28 without redownload.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm555.fZEN.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+          "sourcePath": "Images/Pokemon/Addressable Assets/pm555.fZEN.icon.png",
+          "gitBlobSha": "5bcf33bc32311bb62b88f55cba93d5b553a0302f",
+          "http": 200,
+          "sha256": "31b29b11953ed783120d0878a59bc4cb520c7604b1d325d7c6b3c571deb67069",
+          "bytes": 29895,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 13473,
+            "pixelHash": "cab1c975",
+            "bounds": [
+              76,
+              100,
+              213,
+              231
+            ]
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm555.fZEN.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+          "sourcePath": "Images/Pokemon/Addressable Assets/pm555.fZEN.s.icon.png",
+          "gitBlobSha": "8defe1d70067fab7839f72e1258c03e72d00f367",
+          "http": 200,
+          "sha256": "b8cea424d69bf18fa0a7f0a9a60c576eb6863ae0e7e180a1f88a7c110754bd40",
+          "bytes": 27919,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 13540,
+            "pixelHash": "3b8f008c",
+            "bounds": [
+              82,
+              100,
+              215,
+              231
+            ]
+          }
+        }
+      },
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "genderQualification": "No form-specific gender eligibility is inferred; no new gender preference options enabled."
+    },
+    {
+      "name": "Darmanitan (Galarian Zen Mode)",
+      "no": 555,
+      "goIdentityEvidence": "DARMANITAN_GALARIAN_ZEN",
+      "HOMEModelId": null,
+      "identityKind": "named early-art form; GO persistent/battle acquisition unverified",
+      "artReview": "Two paired contact sheets inspected in prior pass; hashes reverified2026-10-28 without redownload.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm555.fGALARIAN_ZEN.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+          "sourcePath": "Images/Pokemon/Addressable Assets/pm555.fGALARIAN_ZEN.icon.png",
+          "gitBlobSha": "0d92480a4041a0ee7cd3b62caf8966fb11a2279c",
+          "http": 200,
+          "sha256": "9c1ccd83f3b8cd444d0a61a6ceb52ec4875e4ef67fd9a6b435e8cb0563c7e8bc",
+          "bytes": 37153,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 22171,
+            "pixelHash": "7a6f4f85",
+            "bounds": [
+              36,
+              10,
+              213,
+              249
+            ]
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm555.fGALARIAN_ZEN.s.icon.png",
+          "sourceCommit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
+          "sourcePath": "Images/Pokemon/Addressable Assets/pm555.fGALARIAN_ZEN.s.icon.png",
+          "gitBlobSha": "85a613ac22b0b4e11aabf4c370e6367f64699774",
+          "http": 200,
+          "sha256": "c660b18c5f8fb01f48ce41ea6638e5ffe3c31e860e497b28afbbb8745fc0d79c",
+          "bytes": 36732,
+          "decoded": {
+            "status": "decoded",
+            "width": 256,
+            "height": 256,
+            "visiblePixels": 22183,
+            "pixelHash": "5b4d3d72",
+            "bounds": [
+              36,
+              10,
+              213,
+              249
+            ]
+          }
+        }
+      },
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "genderQualification": "No form-specific gender eligibility is inferred; no new gender preference options enabled."
+    },
+    {
+      "name": "Ash-Greninja",
+      "no": 658,
+      "goIdentityEvidence": "localized form_greninja_ash; not current dedicated GO template",
+      "HOMEModelId": 10117,
+      "identityKind": "named early-art form; GO persistent/battle acquisition unverified",
+      "artReview": "Two paired contact sheets inspected in prior pass; hashes reverified2026-10-28 without redownload.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10117.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/10117.png",
+          "gitBlobSha": "a7bca1f0965c6fe6f26059033382034cc1a198d6",
+          "http": 200,
+          "sha256": "3da667012b9fb93c09a781f0b263069e3f035433727fde57a8f49e5d9c0824ac",
+          "bytes": 96894,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 38107,
+            "pixelHash": "3ecf8836",
+            "bounds": [
+              107,
+              60,
+              405,
+              503
+            ]
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10117.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10117.png",
+          "gitBlobSha": "cd7ab5d02118e8a37f7e115bcf3cea3cd429124e",
+          "http": 200,
+          "sha256": "41603be683e2bd25a179eff121294d31512d98e04e8b0fde2b4afbfab6e32499",
+          "bytes": 94173,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 38125,
+            "pixelHash": "f90bf82e",
+            "bounds": [
+              107,
+              60,
+              405,
+              503
+            ]
+          }
+        }
+      },
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "genderQualification": "No form-specific gender eligibility is inferred; no new gender preference options enabled."
+    },
+    {
+      "name": "Ultra Necrozma",
+      "no": 800,
+      "goIdentityEvidence": "NECROZMA_ULTRA",
+      "HOMEModelId": 10157,
+      "identityKind": "named early-art form; GO persistent/battle acquisition unverified",
+      "artReview": "Two paired contact sheets inspected in prior pass; hashes reverified2026-10-28 without redownload.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10157.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/10157.png",
+          "gitBlobSha": "43f1c024d155f53fc15ee6bc6b270323bd1cd071",
+          "http": 200,
+          "sha256": "f4192d21de64ea4186f2075088d90d3d2c4810967d690231ce9b54a1b7788463",
+          "bytes": 102986,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 54045,
+            "pixelHash": "60c12441",
+            "bounds": [
+              14,
+              78,
+              499,
+              435
+            ]
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10157.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10157.png",
+          "gitBlobSha": "52c60d57d7fb7654c7f0831491e332806d5a5bdd",
+          "http": 200,
+          "sha256": "e735a5ef1a0d2f349964c4f75ceadfa0ab7e128886f1222d1d1bcac81d917ebd",
+          "bytes": 101048,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 53863,
+            "pixelHash": "e665f360",
+            "bounds": [
+              14,
+              78,
+              499,
+              435
+            ]
+          }
+        }
+      },
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "genderQualification": "No form-specific gender eligibility is inferred; no new gender preference options enabled."
+    },
+    {
+      "name": "Eiscue (Noice Face)",
+      "no": 875,
+      "goIdentityEvidence": "EISCUE_NOICE",
+      "HOMEModelId": 10185,
+      "identityKind": "named early-art form; GO persistent/battle acquisition unverified",
+      "artReview": "Two paired contact sheets inspected in prior pass; hashes reverified2026-10-28 without redownload.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/10185.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/10185.png",
+          "gitBlobSha": "2ed5d781d1e77f9684dbadb570ea6c8365a9a441",
+          "http": 200,
+          "sha256": "5d36f0372ffd76a4e84ea404034884175b0c01eb5891bb340f4812c211181f91",
+          "bytes": 52340,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 26897,
+            "pixelHash": "1049cf97",
+            "bounds": [
+              157,
+              132,
+              360,
+              503
+            ]
+          }
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeAPI/sprites/d8c2fb78563e28ad7b3abe938cf6e79998d04e90/sprites/pokemon/other/home/shiny/10185.png",
+          "sourceCommit": "d8c2fb78563e28ad7b3abe938cf6e79998d04e90",
+          "sourcePath": "sprites/pokemon/other/home/shiny/10185.png",
+          "gitBlobSha": "d876546540be452cd0af4ce8455af3cceb359abe",
+          "http": 200,
+          "sha256": "d346e70dc72ed8feccc13fc8cd4a65ca41f54ad4d69b5f381384c0d7aa8cb156",
+          "bytes": 50692,
+          "decoded": {
+            "status": "decoded",
+            "width": 512,
+            "height": 512,
+            "visiblePixels": 26895,
+            "pixelHash": "ca72e785",
+            "bounds": [
+              157,
+              132,
+              360,
+              503
+            ]
+          }
+        }
+      },
+      "normalRelease": "unverified",
+      "shinyRelease": "unverified",
+      "genderQualification": "No form-specific gender eligibility is inferred; no new gender preference options enabled."
+    }
+  ]
+}

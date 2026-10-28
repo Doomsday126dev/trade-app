@@ -9,16 +9,18 @@ const html=read('index.html'),application=read('js/app/application.js'),worker=r
 const inventory=JSON.parse(read('scripts/pages/frontend-files.json'));
 const releaseAssets=new Set([...worker.matchAll(/^\s+'([^']+)',?$/gm)].map(match=>match[1]));
 
-test('production Connected Accounts exposes username and PIN while providers stay hidden and inert',()=>{
+test('Connected Accounts keeps provider actions hidden initially and separates the guarded PIN panel',()=>{
   const start=html.indexOf('id="settings-account-security"'),end=html.indexOf('</section>',start),panel=html.slice(start,end);
   assert.match(panel,/data-i18n-aria-label="security\.methodsLabel"/);
   assert.match(panel,/data-provider="username-pin"/);assert.match(panel,/data-provider="username-pin"[\s\S]*data-i18n="security\.connected"/);
   for(const provider of['google','discord'])assert.match(panel,new RegExp(`account-security-provider-development[^>]+data-provider="${provider}" hidden`));
   assert.doesNotMatch(panel,/data-provider="email"|data-provider="legacy-pin"/);
   const primary=panel.slice(panel.indexOf('data-provider="username-pin"'),panel.indexOf('data-provider="google"'));
+  // PIN controls live in their guarded parent panel, not in a provider action.
   assert.match(panel,/id="settings-security-pin-panel"/);
+  for(const id of ['np1','np2'])assert.match(panel,new RegExp(`type="password" id="${id}" autocomplete="new-password"[^>]*maxlength="6"`));
   assert.match(panel,/id="settings-pin-save"[^>]+onclick="savePinSettings\(\)"/);
-  assert.doesNotMatch(primary,/href=|data-provider-action|handleGoogleAccountAction/);
+  assert.doesNotMatch(primary,/onclick=|href=|data-provider-action|handleGoogleAccountAction/);
   assert.match(panel,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+onclick="handleGoogleAccountAction\(\)" hidden/);
 });
 

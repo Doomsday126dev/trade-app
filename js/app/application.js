@@ -758,6 +758,8 @@ function renderCombinedPokemonSummary(){
   const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
   form.replaceChildren();form.hidden=!type;
   if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
+  const release=document.getElementById('combined-identity-release'),releaseLabel=catalogueVariantReleaseLabel({name,shiny});
+  release.hidden=!releaseLabel;release.textContent=releaseLabel;
   document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
 }
 function changeCombinedPokemon(){
@@ -6020,6 +6022,7 @@ async function changeInterfaceLocale(locale){
     _specialAcItems=null;
     if(active==='mylist'){buildAcItems();renderMyList();}
     else if(active==='find')renderFindTrainer();
+    else if(active==='updates')renderUpdates();
     else if(active==='schedule')renderEventsOnly();
     else if(active==='strings')renderStrings();
     else if(active==='admin')renderAdmin();
@@ -6370,7 +6373,7 @@ function renderTrainerDiscoveryHeading(){
   setText('find-trainer-title',copy[0]);
   setText('find-trainer-description',copy[1]);
 }
-function setTrainerDiscoveryMode(mode){
+function setTrainerDiscoveryMode(mode,{renderFavorites=false}={}){
   const allowed=['trainers','favorites','pokemon'];
   trainerDiscoveryMode=allowed.includes(mode)?mode:'trainers';
   const content=document.querySelector('.trainer-discovery-content');
@@ -6383,13 +6386,16 @@ function setTrainerDiscoveryMode(mode){
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
   renderTrainerDiscoveryHeading();
-  observeFavoritePublications();
+  // The first Trainers render may precede owner restoration. Visible Favorites
+  // must initialize on entry rather than depend on that earlier render.
+  if(renderFavorites&&trainerDiscoveryMode==='favorites')renderTrainerQuickLists({favoritesOnly:true});
+  else observeFavoritePublications();
   if(trainerDiscoveryMode==='pokemon'){favoriteLookupControls();if(!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}}
 }
 function focusTrainerDiscoveryMode(mode){
   const modeButton=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${mode}"]`);
   if(!modeButton)return;
-  setTrainerDiscoveryMode(mode);
+  setTrainerDiscoveryMode(mode,{renderFavorites:true});
   if(mode==='trainers'){
     const input=document.getElementById('find-trainer-input');
     input?.focus({preventScroll:true});input?.select();return;
@@ -6404,7 +6410,7 @@ function trainerDiscoveryModeKeydown(event,mode){
   const modes=['trainers','favorites','pokemon'],current=modes.indexOf(mode);
   const next=event.key==='Home'?0:event.key==='End'?modes.length-1:(current+(event.key==='ArrowRight'?1:-1)+modes.length)%modes.length;
   const button=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${modes[next]}"]`);
-  setTrainerDiscoveryMode(modes[next]);button?.focus({preventScroll:true});
+  setTrainerDiscoveryMode(modes[next],{renderFavorites:true});button?.focus({preventScroll:true});
 }
 function positionTrainerSuggestions(){
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions');if(!input||!box)return;
@@ -6891,8 +6897,8 @@ function observeFavoritePublications(){
 }
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
-  if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
-  if(accountSyncOrganizationHydrating()){
+  if(!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
+  if(!store||accountSyncOrganizationHydrating()){
     const loading=stateHtml(stateModel('loading',{title:i18nCore.t('trainer.syncHydrating'),detail:i18nCore.t('trainer.syncHydratingHelp')}));
     favoritesControlsEl.innerHTML=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">—</span></div>`;
     favoritesListEl.innerHTML=loading;
@@ -7290,7 +7296,6 @@ function showApp(){
   window.__pogoStartup.signedInReadyAt=performance.now();
   try{performance.mark('pogo:signed-in-ready')}catch{}
   if(isAdmin)ensureLoginDirectoryPublished();
-  checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
   // Subscribe to my own pending-decrements queue (counterparties' trade-accepts)
@@ -7331,6 +7336,7 @@ function renderActiveTab(t=activeTabName()){
   if(!cur)return;
   if(t==='mylist')renderMyList();
   else if(t==='find')renderFindTrainer();
+  else if(t==='updates')renderUpdates();
   else if(t==='schedule')renderSchedule();
   else if(t==='admin'&&protectedOwnerSession()){
     startLegacyAdminReads();
@@ -7354,7 +7360,6 @@ function queueRefreshAll(reason=''){
   });
 }
 function refreshBadgesAndLightChrome(){
-  checkWhatsNew();
 }
 function switchTab(t,opts={}){
   if(t==='have')t='mylist';
@@ -7366,7 +7371,7 @@ function switchTab(t,opts={}){
   if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const navTarget=t==='admin'?'more':t;
+  const navTarget=['admin','updates'].includes(t)?'more':t;
   const tabBtn=document.querySelector(`[data-tab="${navTarget}"]`);
   const page=document.getElementById(`tab-${t}`);
   if(!page)return;
@@ -12307,102 +12312,22 @@ async function triggerInstall(){
 }
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
-const WHATS_NEW=[
-  {version:'4.6.31',title:'📅 Schedule outside-app trades',desc:'Schedule can now reserve regular, special, or remote trades with someone who is not on the app, so your daily counters stay accurate.'},
-  {version:'4.6.27',title:'🤝 Trade match in Inventory',desc:'Trade Match now lives in Inventory → Browse community beside each trainer, where their posted inventory is already in context.'},
-  {version:'4.6.26',notify:false,title:'🤝 Trade match view',desc:'Trade Match shows what they have that you want, what you have that they want, and possible mirrors.'},
-  {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
-  {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
-  {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
-  {version:'4.6.14',title:'🗑️ "Safe-to-transfer" search string',desc:'Strings tab → generate a PoGo bag-search string for every species nobody on your chosen trade-partner list wants. Auto-filters favorites, shinies, hundos, shadows, and events.'},
-  {version:'4.6.6',title:'↩️ Cancelling a trade restores both inventories',desc:'When you ✗ cancel a reserved trade, your Pokémon return immediately. The other trainer\'s side restores on their next sync.'},
-  {version:'4.6.4',title:'🎒 Inventory tab rename',desc:'The old Have tab is now Inventory. Keyboard shortcut works as both `i` and `h`. Posting a public offer also no longer silently fails when the browser blocks the clipboard.'},
-  {version:'4.6.3',title:'⚖️ Clearer priority mismatches in Compare mode',desc:'Badges now label whose H/M/L is whose ("You H · AC53 M"). Matching priorities show a ✓.'},
-  {version:'4.6.0',title:'📱 Cross-device "What\'s New" sync',desc:'Read the changelog on desktop, your phone won\'t re-prompt.'},
-  {version:'4.5.2',title:'📵 "Edits not syncing" banner',desc:'When your sign-in quietly expires, an amber banner explains and offers one-tap re-sign-in.'},
-  {version:'4.5',title:'⚡ Speed-add mode',desc:'My List toggle so priority and flags stay selected while you add a big batch of Pokémon.'},
-  {version:'4.4',title:'🩺 Login health check',desc:'"Having trouble signing in?" link on the login screen runs diagnostics and tells you what\'s wrong.'},
-  {version:'4.3',title:'🎯 Special Trade Board (image export)',desc:'Build a Looking-For / For-Trade board with shiny + mirror toggles, export as a clean image ready for Discord.'},
-  {version:'4.2',title:'🌟 Every legendary + multi-form Pokémon',desc:'Mewtwo, Mew, all Ultra Beasts, Galar/Hisui/Paldea legendaries, and Paradox Pokémon. Multi-form Pokémon each get their own entry.'},
-  {version:'4.1',title:'♂ ♀ Track Pokémon by gender',desc:'Keep separate ♂ / ♀ rows for species where gender matters (Heracross, Nidoran, etc.).'},
-  {version:'4.0',title:'✨ Shiny flag, offline mode, shortcuts, welcome tour',desc:'New ✨ Shiny flag. App works offline once loaded. Press ? for keyboard shortcuts. New users get a quick tour.'},
-  {version:'3.6',title:'🔓 Stay signed in',desc:'Sessions now last 30 days and refresh every time you use the app. No more re-entering your PIN every time you open the app.'},
-  {version:'3.5',title:'🌙 New "Dark Cards" image export style',desc:'Image exports come in two styles now — Classic (light) and Dark Cards. Both have cleaner, more consistent sprite quality.'},
-  {version:'3.4',title:'☑ Bulk inventory edits',desc:'Select multiple inventory entries to change their return mode, bump quantities, or delete in one go.'},
-  {version:'3.3',title:'🤝 + 📤 Two new inventory modes',desc:'Mark items as "Fair trade" (comparable rarity from your wishlist) or "Giveaway" (take it off my hands for anything reasonable).'},
-  {version:'3.2',title:'🎒 Mirror-only inventory',desc:'Mark items as "Mirror only" when you only want the exact same Pokémon back. Browse and offer screens show this clearly.'},
-  {version:'3.1',title:'📅 Edit scheduled trades',desc:'You can now edit a scheduled trade after creating it — switch between Regular / Special / Remote, change date/time, etc.'},
-  {version:'3.0',title:'📅 Trade Schedule tab',desc:'New Schedule tab with a week-view calendar. Plan trades with specific trainers, track your daily quota, and see live Pokémon GO events.'},
-  {version:'2.9',title:'🔔 Public offers (first-come-first-served)',desc:'Offers on inventory items are now public, so you can see who offered what and when. The first offer gets a green "1st" badge so everyone respects FCFS.'},
-  {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade. Others can browse your inventory and offer trades. ⭐ Auto-highlights items that match your wishlist.'},
-  {version:'2.7',title:'Updated Max lists',desc:'Dynamax list matches the current Pokémon GO roster, including Drilbur and Excadrill.'},
-  {version:'2.6',title:'Compare two trainers',desc:'Tap the scale icon in Strings to compare your list against another trainer. See what you both want, only you want, or only they want.'},
-  {version:'2.5',title:'Visual polish',desc:'Type colors, theme toggle, smoother animations, nicer empty states, "what\'s new" notifications.'},
-  {version:'2.4',title:'Export & share',desc:'Export your list as Markdown (Discord/Reddit) or CSV. Send a read-only share link to anyone.'},
-  {version:'2.3',title:'Mobile-first',desc:'Swipe to delete on My List. Pull to refresh. Cleaner mobile add form.'},
-  {version:'2.2',title:'Trainer profiles',desc:'Custom Pokémon avatars, bios, Discord handles. Diff view shows what changed in someone\'s list since you last looked.'},
-  {version:'2.1',title:'Bulk operations',desc:'Toggle bulk edit to select multiple entries and apply priority, flags, or delete in one go.'},
-  {version:'2.0',title:'Flags & filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by any combination.'}
+// Historical version-by-version copy is preserved in
+// docs/release-history/legacy-whats-new.json, not presented as current guidance.
+const RECENT_UPDATES=[
+  {date:'2026-10-28',title:'updates.latestTitle',items:['updates.clarify','updates.favorites']},
+  {date:'2026-10-27',title:'updates.listsTitle',items:['updates.options','updates.share','updates.artwork']}
 ];
-function whatsNewVisibleEntries(){
-  const isAdmin=!!(cur&&allData.users?.[cur]?.isAdmin);
-  return WHATS_NEW.filter(w=>!w.adminOnly||isAdmin);
+function renderUpdates(){
+  const list=document.getElementById('updates-list');if(!list)return;
+  list.innerHTML=RECENT_UPDATES.map(entry=>`<article class="updates-entry"><time class="updates-date" datetime="${entry.date}">${escHtml(i18nCore.formatDate(entry.date+'T12:00:00Z',{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}))}</time><h3>${escHtml(i18nCore.t(entry.title))}</h3><ul>${entry.items.map(key=>`<li>${escHtml(i18nCore.t(key))}</li>`).join('')}</ul></article>`).join('');
 }
-function whatsNewNotifiableEntries(){
-  return whatsNewVisibleEntries().filter(w=>w.notify!==false);
+function openUpdates(){
+  switchTab('updates');renderUpdates();document.getElementById('updates-title')?.focus({preventScroll:true});
 }
-function whatsNewLatestVersion(){return whatsNewNotifiableEntries()[0]?.version||whatsNewVisibleEntries()[0]?.version||'1.0';}
-// "Have I seen the latest changelog yet?" — used to live in localStorage, which
-// meant the bell badge re-fired on every device (mobile would show it again
-// even after you read it on desktop). Now we prefer the value stored on the
-// user record (users/{cur}/whatsNewSeen), which syncs across devices via
-// Firebase. localStorage stays as a fallback for unauthenticated/offline use
-// and gets updated alongside the user record so we degrade gracefully.
-function _maxSemver(a,b){
-  const sa=String(a||''),sb=String(b||'');
-  if(!sa)return sb;if(!sb)return sa;
-  const pa=sa.split('.').map(n=>parseInt(n)||0);
-  const pb=sb.split('.').map(n=>parseInt(n)||0);
-  for(let i=0;i<Math.max(pa.length,pb.length);i++){
-    const x=pa[i]||0,y=pb[i]||0;
-    if(x>y)return sa;
-    if(y>x)return sb;
-  }
-  return sa;
-}
-function getWhatsNewSeen(){
-  // Take the HIGHER of (user-record value, localStorage value) so the badge
-  // doesn't re-fire during the brief window between local mark-as-seen and
-  // the Firebase echo, AND so cross-device "I saw it on desktop" propagates
-  // correctly the moment Firebase syncs.
-  return _maxSemver(allData.users?.[cur]?.whatsNewSeen||'',lsGet('pogoWhatsNewSeen','')||'');
-}
-function checkWhatsNew(){
-  const seen=getWhatsNewSeen();
-  const latest=whatsNewLatestVersion();
-  const badge=document.getElementById('bell-badge');
-  if(seen!==latest)badge?.classList.add('show');
-  else badge?.classList.remove('show');
-}
-function openWhatsNew(){
-  const list=document.getElementById('whatsnew-list');
-  if(list){
-    list.innerHTML=whatsNewVisibleEntries().map(w=>`<div class="whats-new-item">
-      <div class="whats-new-version">v${w.version}</div>
-      <div class="whats-new-title">${w.title}</div>
-      <div class="whats-new-desc">${w.desc}</div>
-    </div>`).join('');
-  }
-  openModal('whatsnew-modal');
-  // Mark as seen — both locally (offline-safe) and in the user record (cross-device)
-  const latest=whatsNewLatestVersion();
-  lsSet('pogoWhatsNewSeen',latest);
-  if(cur&&allData.users?.[cur]?.whatsNewSeen!==latest){
-    writeUser(cur,{whatsNewSeen:latest}).catch(e=>console.warn('Could not sync whatsNewSeen',e));
-  }
-  document.getElementById('bell-badge')?.classList.remove('show');
-}
-function closeWhatsNew(){closeModal('whatsnew-modal');}
+function closeUpdates(){switchTab('more');document.getElementById('more-updates')?.focus({preventScroll:true});}
+// Compatibility for older callers; opening Updates never writes a seen marker.
+function openWhatsNew(){openUpdates();}
 
 // ── PROFILE CUSTOMIZATION (#8) ───────────────────────────────
 let avatarPickerEntriesCache=null,avatarPickerFocusIndex=-1,avatarPickerReturnFocus=null;
@@ -15467,7 +15392,7 @@ Object.assign(window,{
   setOwnerCommunityPreview,
   startVoiceInput,toggleFlagFilter,recordBackup,renderBackupReminder,confirmRemove,lsSet,
   // Latest batch
-  triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,changeInterfaceLocale,
+  triggerInstall,openUpdates,closeUpdates,openWhatsNew,updateAvatarPreview,changeInterfaceLocale,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,validateSpriteLoad,
   openAvatarPicker,closeAvatarPicker,renderAvatarPicker,avatarPickerKeydown,selectAvatarOption,clearAvatarSelection,

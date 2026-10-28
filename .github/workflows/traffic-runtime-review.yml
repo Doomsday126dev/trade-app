@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
+          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -43,10 +43,6 @@ jobs:
             sleep 1
           done
           PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run test:performance:browser
-      - name: Exact Halloween artwork and approved Options journeys
-        run: |
-          npx playwright test -c playwright.halloween.config.cjs
-          npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
       - name: Decode actual packaged brand assets and verify unprimed Favorites
         run: npx playwright test -c playwright.apri151.config.cjs
       - name: Approved Share Events and list-feedback regressions
@@ -58,8 +54,6 @@ jobs:
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
 
-      - name: Optional owner variant clarification and preserved data journeys
-        run: npx playwright test -c playwright.variant-clarification.config.cjs
 
   catalogue-browser:
     strategy:
@@ -71,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
+          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -88,6 +82,8 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - name: Prepare exact cached artwork for restored ordinary species
         run: node scripts/prepare-recent-catalog-sprite-fixture.cjs --selectable-repair
+      - name: Five exact early-want pairs and anonymous privacy journeys
+        run: npx playwright test -c playwright.early-want.config.cjs --project=${{ matrix.project }}
       - name: Exact finite artwork aliases preserved IDs and anonymous export journeys
         env:
           CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
@@ -110,7 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: cb96b14274d0c5e6f05972697e35a6abb8f0da02
+          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -126,6 +122,13 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - name: Exact Share states Favorites order and Apri install icon qualification
         run: npx playwright test -c playwright.share-refinement.config.cjs
+
+      - name: Exact Halloween artwork and approved Options journeys
+        run: |
+          npx playwright test -c playwright.halloween.config.cjs
+          npx playwright test -c playwright.apri.config.cjs tests/apri-options.spec.js
+      - name: Optional owner variant clarification and preserved data journeys
+        run: npx playwright test -c playwright.variant-clarification.config.cjs
 
   traffic-runtime:
     if: always()

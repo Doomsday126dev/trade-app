@@ -63,3 +63,25 @@ test('active pull indicator has a temporary clear lane above a long phone traine
   await page.evaluate(()=>{ptrStart({touches:[{clientY:20}]});ptrMove({touches:[{clientY:50}],preventDefault(){}});ptrEnd();});await expect(indicator).not.toHaveClass(/visible/);expect(Math.abs((await name.boundingBox()).y-before.y)).toBeLessThanOrEqual(1);expect(await page.evaluate(()=>__pullRefreshes)).toBe(1);
  }
 });
+
+for(const width of [390,820,1440])test(`quiet Updates is read-only, localized and returns to More at ${width}`,async({page},info)=>{
+ const{normalFixture}=require('./helpers/usability-fixture.cjs');await page.setViewportSize({width,height:width===390?844:1000});await normalFixture(page);
+ await expect(page.locator('#toast')).toBeHidden({timeout:7000});
+ const before=await page.evaluate(()=>({seen:localStorage.getItem('pogoWhatsNewSeen'),accountSeen:allData.users[cur]?.whatsNewSeen||null}));
+ await page.evaluate(()=>{window.__updatesWrites=0;window.__updatesOriginalWrite=writeUser;writeUser=(...args)=>{__updatesWrites++;return __updatesOriginalWrite(...args);};});
+ for(const theme of ['light','dark']){
+  await page.evaluate(t=>applyTheme(t),theme);await page.locator('#nav-more').click();await page.locator('#more-updates').click();
+  await expect(page.locator('#tab-updates')).toBeVisible();await expect(page.locator('#nav-more')).toHaveAttribute('aria-selected','true');await expect(page.locator('#updates-title')).toBeFocused();
+  await expect(page.locator('#updates-list article')).toHaveCount(2);await expect(page.locator('#updates-list li')).toHaveCount(5);await expect(page.locator('#bell-btn,#bell-badge,#whatsnew-modal')).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const mark=page.locator('#app .brand-mark');await mark.evaluate(async img=>{await img.decode();if(!img.naturalWidth)throw Error('Undecoded Apri');});
+  fs.mkdirSync('/tmp/trade-updates-captures',{recursive:true});await page.screenshot({path:`/tmp/trade-updates-captures/after-${info.project.name}-${width}-${theme}.png`,animations:'disabled'});
+  await page.keyboard.press('Shift+Tab');await expect(page.locator('#updates-back')).toBeFocused();await page.keyboard.press('Enter');await expect(page.locator('#tab-more')).toBeVisible();await expect(page.locator('#more-updates')).toBeFocused();
+ }
+ for(const locale of ['es','de','ja','en']){
+  await page.evaluate(locale=>changeInterfaceLocale(locale),locale);await page.locator('#more-updates').click();await expect(page.locator('#updates-list article')).toHaveCount(2);expect(await page.locator('#updates-list').innerText()).not.toContain('updates.');await page.locator('#updates-back').click();
+ }
+ expect(await page.evaluate(()=>({seen:localStorage.getItem('pogoWhatsNewSeen'),accountSeen:allData.users[cur]?.whatsNewSeen||null}))).toEqual(before);
+ expect(await page.evaluate(()=>__updatesWrites)).toBe(0);
+ await page.evaluate(()=>{writeUser=__updatesOriginalWrite;stopAccountSyncRuntime();});
+});

@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "qualification": "Historical release copy retained verbatim as data; not current feature, eligibility or catalogue-completeness guidance.",
+  "entries": [
+    {
+      "version": "4.6.31",
+      "title": "📅 Schedule outside-app trades",
+      "desc": "Schedule can now reserve regular, special, or remote trades with someone who is not on the app, so your daily counters stay accurate."
+    },
+    {
+      "version": "4.6.27",
+      "title": "🤝 Trade match in Inventory",
+      "desc": "Trade Match now lives in Inventory → Browse community beside each trainer, where their posted inventory is already in context."
+    },
+    {
+      "version": "4.6.26",
+      "notify": false,
+      "title": "🤝 Trade match view",
+      "desc": "Trade Match shows what they have that you want, what you have that they want, and possible mirrors."
+    },
+    {
+      "version": "4.6.25",
+      "notify": false,
+      "title": "Small reliability cleanup",
+      "desc": "Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell."
+    },
+    {
+      "version": "4.6.18",
+      "title": "🚫 Untradeable Mythicals out of the trade list",
+      "desc": "Mythicals that can't actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do."
+    },
+    {
+      "version": "4.6.15",
+      "title": "🎯 Sprite rework — size & alignment",
+      "desc": "Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr."
+    },
+    {
+      "version": "4.6.14",
+      "title": "🗑️ \"Safe-to-transfer\" search string",
+      "desc": "Strings tab → generate a PoGo bag-search string for every species nobody on your chosen trade-partner list wants. Auto-filters favorites, shinies, hundos, shadows, and events."
+    },
+    {
+      "version": "4.6.6",
+      "title": "↩️ Cancelling a trade restores both inventories",
+      "desc": "When you ✗ cancel a reserved trade, your Pokémon return immediately. The other trainer's side restores on their next sync."
+    },
+    {
+      "version": "4.6.4",
+      "title": "🎒 Inventory tab rename",
+      "desc": "The old Have tab is now Inventory. Keyboard shortcut works as both `i` and `h`. Posting a public offer also no longer silently fails when the browser blocks the clipboard."
+    },
+    {
+      "version": "4.6.3",
+      "title": "⚖️ Clearer priority mismatches in Compare mode",
+      "desc": "Badges now label whose H/M/L is whose (\"You H · AC53 M\"). Matching priorities show a ✓."
+    },
+    {
+      "version": "4.6.0",
+      "title": "📱 Cross-device \"What's New\" sync",
+      "desc": "Read the changelog on desktop, your phone won't re-prompt."
+    },
+    {
+      "version": "4.5.2",
+      "title": "📵 \"Edits not syncing\" banner",
+      "desc": "When your sign-in quietly expires, an amber banner explains and offers one-tap re-sign-in."
+    },
+    {
+      "version": "4.5",
+      "title": "⚡ Speed-add mode",
+      "desc": "My List toggle so priority and flags stay selected while you add a big batch of Pokémon."
+    },
+    {
+      "version": "4.4",
+      "title": "🩺 Login health check",
+      "desc": "\"Having trouble signing in?\" link on the login screen runs diagnostics and tells you what's wrong."
+    },
+    {
+      "version": "4.3",
+      "title": "🎯 Special Trade Board (image export)",
+      "desc": "Build a Looking-For / For-Trade board with shiny + mirror toggles, export as a clean image ready for Discord."
+    },
+    {
+      "version": "4.2",
+      "title": "🌟 Every legendary + multi-form Pokémon",
+      "desc": "Mewtwo, Mew, all Ultra Beasts, Galar/Hisui/Paldea legendaries, and Paradox Pokémon. Multi-form Pokémon each get their own entry."
+    },
+    {
+      "version": "4.1",
+      "title": "♂ ♀ Track Pokémon by gender",
+      "desc": "Keep separate ♂ / ♀ rows for species where gender matters (Heracross, Nidoran, etc.)."
+    },
+    {
+      "version": "4.0",
+      "title": "✨ Shiny flag, offline mode, shortcuts, welcome tour",
+      "desc": "New ✨ Shiny flag. App works offline once loaded. Press ? for keyboard shortcuts. New users get a quick tour."
+    },
+    {
+      "version": "3.6",
+      "title": "🔓 Stay signed in",
+      "desc": "Sessions now last 30 days and refresh every time you use the app. No more re-entering your PIN every time you open the app."
+    },
+    {
+      "version": "3.5",
+      "title": "🌙 New \"Dark Cards\" image export style",
+      "desc": "Image exports come in two styles now — Classic (light) and Dark Cards. Both have cleaner, more consistent sprite quality."
+    },
+    {
+      "version": "3.4",
+      "title": "☑ Bulk inventory edits",
+      "desc": "Select multiple inventory entries to change their return mode, bump quantities, or delete in one go."
+    },
+    {
+      "version": "3.3",
+      "title": "🤝 + 📤 Two new inventory modes",
+      "desc": "Mark items as \"Fair trade\" (comparable rarity from your wishlist) or \"Giveaway\" (take it off my hands for anything reasonable)."
+    },
+    {
+      "version": "3.2",
+      "title": "🎒 Mirror-only inventory",
+      "desc": "Mark items as \"Mirror only\" when you only want the exact same Pokémon back. Browse and offer screens show this clearly."
+    },
+    {
+      "version": "3.1",
+      "title": "📅 Edit scheduled trades",
+      "desc": "You can now edit a scheduled trade after creating it — switch between Regular / Special / Remote, change date/time, etc."
+    },
+    {
+      "version": "3.0",
+      "title": "📅 Trade Schedule tab",
+      "desc": "New Schedule tab with a week-view calendar. Plan trades with specific trainers, track your daily quota, and see live Pokémon GO events."
+    },
+    {
+      "version": "2.9",
+      "title": "🔔 Public offers (first-come-first-served)",
+      "desc": "Offers on inventory items are now public, so you can see who offered what and when. The first offer gets a green \"1st\" badge so everyone respects FCFS."
+    },
+    {
+      "version": "2.8",
+      "title": "🎒 Inventory (\"Have\" tab)",
+      "desc": "Track what Pokémon you have to trade. Others can browse your inventory and offer trades. ⭐ Auto-highlights items that match your wishlist."
+    },
+    {
+      "version": "2.7",
+      "title": "Updated Max lists",
+      "desc": "Dynamax list matches the current Pokémon GO roster, including Drilbur and Excadrill."
+    },
+    {
+      "version": "2.6",
+      "title": "Compare two trainers",
+      "desc": "Tap the scale icon in Strings to compare your list against another trainer. See what you both want, only you want, or only they want."
+    },
+    {
+      "version": "2.5",
+      "title": "Visual polish",
+      "desc": "Type colors, theme toggle, smoother animations, nicer empty states, \"what's new\" notifications."
+    },
+    {
+      "version": "2.4",
+      "title": "Export & share",
+      "desc": "Export your list as Markdown (Discord/Reddit) or CSV. Send a read-only share link to anyone."
+    },
+    {
+      "version": "2.3",
+      "title": "Mobile-first",
+      "desc": "Swipe to delete on My List. Pull to refresh. Cleaner mobile add form."
+    },
+    {
+      "version": "2.2",
+      "title": "Trainer profiles",
+      "desc": "Custom Pokémon avatars, bios, Discord handles. Diff view shows what changed in someone's list since you last looked."
+    },
+    {
+      "version": "2.1",
+      "title": "Bulk operations",
+      "desc": "Toggle bulk edit to select multiple entries and apply priority, flags, or delete in one go."
+    },
+    {
+      "version": "2.0",
+      "title": "Flags & filters",
+      "desc": "Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by any combination."
+    }
+  ]
+}

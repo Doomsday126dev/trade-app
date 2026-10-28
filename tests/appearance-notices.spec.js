@@ -6,8 +6,7 @@ test.use({serviceWorkers:'block'});
 const output=process.env.APPEARANCE_OUTPUT_DIR;
 async function capture(page,name){if(!output)return;fs.mkdirSync(output,{recursive:true});await expect(page.locator('#toast')).toBeHidden();await page.screenshot({path:path.join(output,`${name}.png`),animations:'disabled'});}
 async function localeThroughSettings(page,locale){
-  await page.locator('#nav-more').click();await page.locator('#more-settings').click();
-  await page.locator('[data-settings-target="language"]').click();
+  await page.locator('#nav-more').click();await page.locator('.more-entry[onclick*="section:\'language\'"]').click();
   await page.locator('#settings-language').selectOption(locale);
   await page.locator('.settings-modal-close').click();
   await page.locator('#nav-mylist').click();
@@ -17,12 +16,12 @@ function noOverflow(page){return page.evaluate(()=>document.documentElement.scro
 test('neutral default is the coherent dark canvas and a clear Settings choice',async({page})=>{
   await page.setViewportSize({width:1440,height:900});await install(page);
   const writes=await page.evaluate(()=>[...__editorFixture.writes]);
-  await page.locator('#more-settings').click();await page.locator('[data-settings-target="appearance"]').click();
+  await page.locator('.more-entry[onclick*="section:\'appearance\'"]').click();
   await page.locator('[data-settings-theme="dark"]').click();
-  expect(await page.evaluate(()=>({wallpaper:allData.users[cur].wallpaper||null,background:getComputedStyle(document.body).backgroundColor,canvas:getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()}))).toMatchObject({wallpaper:null,background:'rgb(17, 19, 22)'});
+  expect(await page.evaluate(()=>({wallpaper:allData.users[cur].wallpaper||null,background:getComputedStyle(document.body).backgroundColor,canvas:getComputedStyle(document.documentElement).getPropertyValue('--surface-canvas').trim()}))).toMatchObject({wallpaper:null,background:'rgb(25, 27, 32)',canvas:'#191b20'});
   expect(await page.evaluate(async()=>({splash:(await(await fetch('manifest.json')).json()).background_color,chrome:document.querySelector('meta[name="theme-color"]').content}))).toEqual({splash:'#111316',chrome:'#111316'});
   await expect(page.locator('#wp-picker .mono')).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('#wp-picker .mono')).toHaveAttribute('aria-label','Neutral');
+  await expect(page.locator('#wp-picker .mono')).toHaveAttribute('aria-label','Default');
   await capture(page,'appearance-desktop-neutral');
   await page.setViewportSize({width:390,height:900});await capture(page,'appearance-mobile-neutral');
   await page.locator('.settings-modal-close').click();
@@ -30,7 +29,7 @@ test('neutral default is the coherent dark canvas and a clear Settings choice',a
 });
 
 test('explicit wallpaper survives save, cancel, theme changes and a synthetic-account reload',async({page})=>{
-  await install(page);await page.locator('#more-settings').click();await page.locator('[data-settings-target="appearance"]').click();
+  await install(page);await page.locator('.more-entry[onclick*="section:\'appearance\'"]').click();
   await page.locator('[data-settings-theme="dark"]').click();await page.locator('#wp-picker .ocean').click();
   await page.locator('#settings-background-group .btn-primary').click();
   await settled(page);
@@ -38,7 +37,7 @@ test('explicit wallpaper survives save, cancel, theme changes and a synthetic-ac
   await page.setViewportSize({width:390,height:900});await capture(page,'appearance-mobile-saved-ocean');
   await page.locator('#wp-picker .forest').click();
   await page.locator('.settings-modal-close').click();
-  await page.locator('#more-settings').click();await page.locator('[data-settings-target="appearance"]').click();
+  await page.locator('.more-entry[onclick*="section:\'appearance\'"]').click();
   await expect(page.locator('#wp-picker .ocean')).toHaveAttribute('aria-pressed','true');
   expect(await page.evaluate(()=>allData.users[cur].wallpaper)).toBe('ocean');
   await page.locator('[data-settings-theme="light"]').click();
@@ -49,44 +48,38 @@ test('explicit wallpaper survives save, cancel, theme changes and a synthetic-ac
   await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('wp-ocean'))).toBe(true);
   await page.locator('.settings-modal-close').click();
   const remote=await page.evaluate(()=>structuredClone(__editorFixture.remote));await installEditor(page,remote);await page.evaluate(seedDiscovery);
-  await page.locator('#more-settings').click();await page.locator('[data-settings-target="appearance"]').click();
+  await page.locator('.more-entry[onclick*="section:\'appearance\'"]').click();
   await expect(page.locator('#wp-picker .ocean')).toHaveAttribute('aria-pressed','true');
   expect(await page.evaluate(()=>allData.users[cur].wallpaper)).toBe('ocean');
 });
 
-test('hydrated first-use guidance is inline, localized, and never mistaken for loading or filtered-empty',async({page})=>{
+test('hydrated empty My List stays concise, localized and distinct from a filtered populated list',async({page})=>{
   await install(page,{empty:true});await page.locator('#nav-mylist').click();
+  const empty=page.locator('#combined-list > .empty');
+  const writes=await page.evaluate(()=>[...__editorFixture.writes]);
   for(const width of [1440,390]){
     await page.setViewportSize({width,height:900});
-    await expect(page.locator('#wants-empty-import')).toBeVisible();await expect(page.locator('#wants-share-guide')).toHaveCount(0);
-    await expect(page.locator('#wants-empty-import strong')).toHaveText('Start with a Pokémon you want');
+    await expect(empty).toBeVisible();await expect(empty).toHaveText(await page.evaluate(()=>i18nCore.t('contextSearch.empty')));
+    await expect(page.locator('#wants-empty-import,#wants-share-guide')).toHaveCount(0);
+    await expect(page.locator('#wants-add-name')).toBeVisible();
     expect(await noOverflow(page)).toBe(true);await capture(page,`first-use-${width}`);
   }
-  await page.evaluate(async()=>{await stopAccountSyncRuntime();_firstSyncDone=false;__editorFixture.holdReads=true;window.__pendingAppearanceHydration=ensureAccountSyncRuntime();renderMyList();});
-  await expect.poll(()=>page.evaluate(()=>__editorFixture.readWaiters.length)).toBeGreaterThan(0);
-  await expect(page.locator('#wants-empty-import')).toBeHidden();await expect(page.locator('#wants-share-guide')).toHaveCount(0);
-  await page.evaluate(async()=>{__editorFixture.holdReads=false;__editorFixture.readWaiters.splice(0).forEach(resolve=>resolve());await __pendingAppearanceHydration;renderMyList();});await settled(page);
-  await expect(page.locator('#wants-empty-import')).toBeVisible();
-  for(const [locale,title] of [['ja','欲しいポケモンから始めましょう'],['es','Empieza con un Pokémon que quieras'],['de','Beginne mit einem Pokémon, das du suchst']]){
-    await localeThroughSettings(page,locale);await expect(page.locator('#wants-empty-import strong')).toHaveText(title);
+  for(const locale of ['ja','es','de']){
+    await localeThroughSettings(page,locale);await expect(empty).toHaveText(await page.evaluate(()=>i18nCore.t('contextSearch.empty')));
     expect(await noOverflow(page)).toBe(true);
   }
   await page.setViewportSize({width:320,height:650});await page.evaluate(()=>document.documentElement.style.fontSize='200%');
   expect(await noOverflow(page)).toBe(true);await capture(page,'first-use-320-de-text-200');
-  await page.locator('#wants-empty-import button').scrollIntoViewIfNeeded();await expect(page.locator('#wants-empty-import button')).toBeInViewport();
-  await capture(page,'first-use-320-de-text-200-action');
-  await page.evaluate(()=>{document.documentElement.style.fontSize='';applyTheme('dark')});await page.setViewportSize({width:390,height:900});await capture(page,'first-use-dark-390');
+  await page.locator('#wants-add-name').scrollIntoViewIfNeeded();await expect(page.locator('#wants-add-name')).toBeInViewport();
+  await page.evaluate(()=>{document.documentElement.style.fontSize='';applyTheme('dark')});await page.setViewportSize({width:390,height:900});
   await localeThroughSettings(page,'en');
-  const writes=await page.evaluate(()=>[...__editorFixture.writes]);
-  await page.locator('#wants-empty-import button').focus();await page.keyboard.press('Enter');
-  await expect(page.locator('#import-modal')).toBeVisible();await page.keyboard.press('Escape');
-  await expect(page.locator('#wants-empty-import button')).toBeFocused();
   expect(await page.evaluate(()=>__editorFixture.writes)).toEqual(writes);
-  await page.locator('#wants-add-name').fill('Bulbasaur');await page.locator('[data-wants-add-priority="H"]').click();
-  await page.locator('.wants-add-form [type="submit"]').click();await settled(page);
-  await expect(page.locator('#wants-empty-import')).toBeHidden();await expect(page.locator('#combined-list .wants-row')).toHaveCount(1);
+  await page.locator('#wants-add-name').fill('Bulbasaur');await page.locator('#wants-add-name').press('Escape');
+  await page.locator('[data-wants-add-priority="H"]').click();await page.locator('.wants-add-form [type="submit"]').click();await settled(page);
+  await expect(empty).toHaveCount(0);await expect(page.locator('#combined-list .wants-row')).toHaveCount(1);
   await page.evaluate(()=>setWantsFindOpen(true));await page.locator('#combined-filter').fill('NoMatchingSpecies');
-  await expect(page.locator('#combined-list .wants-row')).toHaveCount(0);await expect(page.locator('#wants-empty-import')).toBeHidden();
+  await expect(page.locator('#combined-list .wants-row')).toHaveCount(0);await expect(empty).toHaveCount(0);
+  await expect(page.locator('#wants-empty-import,#wants-share-guide')).toHaveCount(0);
 });
 
 test('populated My List leaves Share in the toolbar without a redundant reminder or viewing writes',async({page})=>{
@@ -115,34 +108,28 @@ test('populated My List leaves Share in the toolbar without a redundant reminder
   await expect(page.locator('#combined-list .wants-row')).toHaveCount(0);await expect(page.locator('#wants-empty-import')).toBeHidden();
 });
 
-test('red bell is opt-in versioned history; established seen state and operational alert stay distinct',async({page})=>{
+test('Updates stays quiet and read-only while operational sync alerts remain visible',async({page})=>{
   await install(page,{empty:true});await page.locator('#nav-mylist').click();
-  await page.evaluate(()=>checkWhatsNew());
-  await expect(page.locator('#bell-badge')).toHaveClass(/show/);
-  await expect(page.locator('#whatsnew-modal')).toBeHidden();
+  await expect(page.locator('#bell-btn,#bell-badge,#whatsnew-modal')).toHaveCount(0);
   await expect(page.locator('#sync-banner')).toBeHidden();
   const before=await page.evaluate(()=>({writes:[...__editorFixture.writes],seen:allData.users[cur].whatsNewSeen||null,local:localStorage.getItem('pogoWhatsNewSeen')}));
-  await page.locator('#bell-btn').focus();await page.keyboard.press('Enter');
-  await expect(page.locator('#whatsnew-modal')).toBeVisible();
-  await expect(page.locator('#whatsnew-list .whats-new-item').first()).toContainText('v4.6.31');
-  await expect(page.locator('#whatsnew-list')).toContainText('v4.6.14');
-  await expect(page.locator('#bell-badge')).not.toHaveClass(/show/);
-  await capture(page,'notice-fresh-entry');
-  await expect.poll(()=>page.evaluate(()=>allData.users[cur].whatsNewSeen)).toBe('4.6.31');
-  await page.locator('#whatsnew-modal .mact button').click();await expect(page.locator('#bell-btn')).toBeFocused();
+  await page.locator('#nav-more').click();await page.locator('#more-updates').focus();await page.keyboard.press('Enter');
+  await expect(page.locator('#tab-updates')).toBeVisible();await expect(page.locator('#updates-title')).toBeFocused();
+  await expect(page.locator('#updates-list article')).toHaveCount(2);
+  await expect(page.locator('#updates-list')).not.toContainText('v4.6.31');
+  await capture(page,'quiet-updates');
+  await page.locator('#updates-back').click();await expect(page.locator('#more-updates')).toBeFocused();
   await settled(page);
   const after=await page.evaluate(()=>({writes:[...__editorFixture.writes],seen:allData.users[cur].whatsNewSeen,local:localStorage.getItem('pogoWhatsNewSeen'),remote:structuredClone(__editorFixture.remote)}));
-  expect(after.seen).toBe('4.6.31');expect(after.writes.length).toBeGreaterThanOrEqual(before.writes.length);
-  expect(after.local).not.toBe(before.local);
-  await page.evaluate(()=>localStorage.removeItem('pogoWhatsNewSeen'));
+  expect(after.seen||null).toBe(before.seen);expect(after.writes).toEqual(before.writes);
+  expect(after.local).toBe(before.local);
   after.remote.wishlist.LocalTrainer={Pikachu:'H'};
-  await installEditor(page,after.remote);await page.evaluate(seedDiscovery);await page.evaluate(()=>checkWhatsNew());
-  await expect(page.locator('#bell-badge')).not.toHaveClass(/show/);
+  await installEditor(page,after.remote);await page.evaluate(seedDiscovery);
+  await expect(page.locator('#bell-btn,#bell-badge')).toHaveCount(0);
   await expect(page.locator('#wants-empty-import')).toBeHidden();
-  await page.locator('#bell-btn').click();await expect(page.locator('#whatsnew-modal')).toBeVisible();
-  await expect(page.locator('#whatsnew-list .whats-new-item').first()).toContainText('v4.6.31');
-  await capture(page,'notice-established-entry');
-  await page.keyboard.press('Escape');await expect(page.locator('#bell-btn')).toBeFocused();
+  await page.locator('#nav-more').click();await page.locator('#more-updates').click();
+  await expect(page.locator('#tab-updates')).toBeVisible();
+  await page.locator('#updates-back').click();
   await page.evaluate(()=>setSyncStatus('localOnly'));await expect(page.locator('#sync-banner')).toBeVisible();
-  await expect(page.locator('#sync-banner-action')).toBeVisible();await expect(page.locator('#bell-badge')).not.toHaveClass(/show/);
+  await expect(page.locator('#sync-banner-action')).toBeVisible();await expect(page.locator('#bell-btn,#bell-badge')).toHaveCount(0);
 });
