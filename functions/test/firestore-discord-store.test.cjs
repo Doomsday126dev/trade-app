@@ -108,3 +108,17 @@ test('confirm racing unlink never reconnects the method after the release transa
   assert.equal(results[1].status,'fulfilled');if(results[0].status==='rejected')assert.equal(results[0].reason.reason,'discord/provider_changed');
   assert.equal(await h.store.resolveSubject({providerSubjectKey:provider.providerSubjectKey}),null);
 });
+
+test('Discord provider-only foundation is resolvable by the existing Discord sign-in store',async()=>{
+  const db=await database(),n=++sequence,uid=`discord-new-${n}`,handle=`DiscordTrainer${n}`;
+  const {createFirestoreE1AuthorityAdapter}=require('../e1-authority-service/firestoreE1AuthorityAdapter');
+  const {normalizeHandle}=require('../e1-authority-service/handleNormalization');
+  const normalized=normalizeHandle(handle),key=`v1_discord_${hash('new-discord-'+n)}`;
+  await db.doc('authorityConfig/legacyProvisioningFreeze').set({schemaVersion:1,state:'active',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-synthetic-0001',provisioningContractDigest:'d'.repeat(64),activatedAt:100,releasedAt:null});
+  await db.doc('authorityConfig/providerAccountCreation').set({schemaVersion:2,state:'certified',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-synthetic-0001',provisioningContractDigest:'d'.repeat(64),normalizationVersion:1,legacyNamespaceCoverageCertified:true,activeLegacyHandleCount:0,certifiedHandleCount:0,coverageDigest:'c'.repeat(64),inventoryCapturedAt:200,certifiedAt:300,expiresAt:10000});
+  const adapter=createFirestoreE1AuthorityAdapter({firestore:db,now:()=>1000});
+  const input={uid,canonicalTrainerName:normalized.display,normalizedTrainerName:normalized.normalized,handleKey:normalized.handleKey,requestId:`discord-create-${n}`,providerKey:'discord',providerId:'discord.com',providerSubjectKey:key,providerSubjectKeyVersion:1,fingerprint:hash('create-'+n)};
+  await adapter.createProviderAccountFoundation(input);
+  const store=createFirestoreDiscordOAuthStore({firestore:db,now:()=>1000});
+  assert.equal((await store.resolveSubject({providerSubjectKey:key})).uid,uid);
+});
