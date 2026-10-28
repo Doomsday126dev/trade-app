@@ -452,11 +452,11 @@ const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
   if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;variantClarificationDraft=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
-  renderVariantClarificationNotice(model);
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
   const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
   const groups=combinedGroups(model,keyFor),valid=new Set(groups.flat().map(productSelectionKey));
+  renderVariantClarificationNotice(model,groups);
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const byEntry=new Map(groups.map(entries=>[entries[0],entries]));
   const allSections=window.PogoDomain.priorityValues.wantSections([...byEntry.keys()]);
@@ -830,19 +830,19 @@ function ignoreVariantClarifications(ids){
   try{localStorage.setItem(variantClarificationKey(),JSON.stringify([...ignored].slice(-300)));}catch{}
   renderVariantClarificationNotice();
 }
-function variantClarificationRows(model=productDeclarations()){
-  return combinedGroups(model).filter(entries=>variantClarificationFamily(entries[0]));
+function variantClarificationRows(model=productDeclarations(),groups=combinedGroups(model)){
+  return groups.filter(entries=>variantClarificationFamily(entries[0]));
 }
-function renderVariantClarificationNotice(model=productDeclarations()){
+function renderVariantClarificationNotice(model=productDeclarations(),groups){
   const host=document.getElementById('variant-clarification-notice');if(!host)return;
-  const ignored=variantClarificationIgnored(),rows=variantClarificationRows(model).filter(entries=>variantClarificationSources(entries).some(e=>!ignored.has(e.entityId)));
+  const ignored=variantClarificationIgnored(),rows=variantClarificationRows(model,groups).filter(entries=>variantClarificationSources(entries).some(e=>!ignored.has(e.entityId)));
   host.hidden=!rows.length;if(!rows.length){host.replaceChildren();return;}
   host.innerHTML=`<span>${escHtml(i18nCore.t('clarify.notice'))}</span><button type="button" class="btn btn-ghost" onclick="openFirstVariantClarification()">${escHtml(i18nCore.t('clarify.action'))}</button><button type="button" class="btn btn-ghost clarification-dismiss" onclick="dismissVariantClarificationNotice()" aria-label="${escAttr(i18nCore.t('clarify.dismiss'))}" title="${escAttr(i18nCore.t('clarify.dismiss'))}"><span aria-hidden="true">×</span></button>`;
 }
 function dismissVariantClarificationNotice(){ignoreVariantClarifications(variantClarificationRows().flatMap(variantClarificationSources).map(e=>e.entityId));document.querySelector('#combined-list .myrow-name')?.focus({preventScroll:true});}
 function openFirstVariantClarification(){
   const ignored=variantClarificationIgnored(),entries=variantClarificationRows().find(rows=>variantClarificationSources(rows).some(e=>!ignored.has(e.entityId)));if(!entries)return;
-  openCombinedEditor(combinedKey(entries[0]));const details=document.querySelector('#variant-clarification-panel details');if(details){details.open=true;details.querySelector('select')?.focus();}
+  openCombinedEditor(combinedKey(entries[0]),{returnFocus:document.querySelector('[data-wants-priority-filter="ALL"]')});const details=document.querySelector('#variant-clarification-panel details');if(details){details.open=true;details.querySelector('select')?.focus();}
 }
 function renderVariantClarificationPanel(){
   const host=document.getElementById('variant-clarification-panel'),entry=combinedEditor?.entries?.[0],family=variantClarificationFamily(entry);
