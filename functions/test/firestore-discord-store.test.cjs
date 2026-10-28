@@ -168,14 +168,14 @@ test('registration rejects absent consent, wrong browser, expired review and aut
 test('trainer name collision does not consume review or overwrite the existing owner',async()=>{
   const h=await registrationHarness(),{normalizeHandle}=require('../e1-authority-service/handleNormalization');
   const key=normalizeHandle(h.input.requestedHandle).handleKey,target=h.db.doc(`trainerHandles/${key}`),original={uid:'existing-name-owner',state:'legacy_hold',revision:1};await target.set(original);
-  await assert.rejects(h.confirm(),error=>error.code==='e1/handle-conflict');assert.deepEqual((await target.get()).data(),original);
+  await assert.rejects(h.confirm(),error=>error.reason==='discord/handle_conflict');assert.deepEqual((await target.get()).data(),original);
   assert.equal((await h.confirm({requestedHandle:`Alternative${h.n}`})).status,'account-created');
 });
 test('two registrations for one subject produce one UID without cross-account rebind',async()=>{
   const h=await registrationHarness(),secondId=`discord-second-${h.n}`,second=await h.review(secondId);
   const results=await Promise.allSettled([h.confirm(),h.confirm({requestId:secondId,registrationToken:second.registrationToken,requestedHandle:`SecondName${h.n}`})]);
   assert.equal(results.filter(x=>x.status==='fulfilled').length,1);
-  assert.equal(results.find(x=>x.status==='rejected').reason.code,'e1/provider-subject-conflict');
+  assert.equal(results.find(x=>x.status==='rejected').reason.reason,'provider/subject_already_linked');
 });
 test('cancel racing confirm either prevents all claims or reports the retained completed account',async()=>{
   const h=await registrationHarness(),results=await Promise.allSettled([h.confirm(),h.cancel()]);
@@ -194,5 +194,12 @@ test('new Discord registration creates the exact Firebase UID only after canonic
     const response=await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=synthetic-key`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:created.customToken,returnSecureToken:true})});
     assert.equal(response.status,200);const result=await response.json();assert.equal((await adminAuth.getAuth(app).getUser(created.uid)).uid,created.uid);
     const verified=await adminAuth.getAuth(app).verifyIdToken(result.idToken);assert.equal(verified.uid,created.uid);
+    const {createDiscordAccessAuthority}=require('../src/prototype/discordAccessAuthority');
+    const authority=createDiscordAccessAuthority({firebaseAuth:adminAuth.getAuth(app),store:h.store,projectId:'demo-pogo-discord',now:()=>Date.now(),verifyLegacyBinding:async()=>{throw Error('new Discord account must not require legacy data');}});
+    const read=await authority.readAccount({idToken:result.idToken,lifecycleId:'synthetic-registration-read'});
+    assert.equal(read.foundation.canonicalTrainerName,created.canonicalTrainerName);assert.equal(read.foundation.identityKind,'provider_only');assert.equal(Object.hasOwn(read.foundation,'uid'),false);
+    const providerRef=h.db.doc(`accounts/${created.uid}/providers/discord`),provider=(await providerRef.get()).data();
+    await providerRef.set({...provider,state:'unlinked',revision:2});
+    await assert.rejects(authority.readAccount({idToken:result.idToken,lifecycleId:'synthetic-registration-read'}),error=>error.reason==='discord/provider_required');
   }finally{await adminApp.deleteApp(app);}
 });

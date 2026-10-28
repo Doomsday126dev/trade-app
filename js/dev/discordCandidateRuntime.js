@@ -19,7 +19,7 @@
       return client.completeFromLocation(url.href);
     }
     function cleanup(){removePopupListener?.();removePopupListener=null;try{popup?.close();}catch{}popup=null;}
-    const api={available:true,begin:client.begin,confirmLink:client.confirmLink,getState:client.getState,completeCallback,
+    const api={available:true,begin:client.begin,confirmLink:client.confirmLink,confirmRegistration:client.confirmRegistration,cancelRegistration:client.cancelRegistration,readAccount:client.readAccount,getState:client.getState,completeCallback,
       cancel(){const result=client.cancel();if(result.canCancel)cleanup();return result;},
       async startPopup(operation,{open=global.open?.bind(global),onResult,onError}={}){
         if(popup||client.getState().status==='pending'||client.getState().status==='committing')throw Object.assign(new Error('discord/operation-pending'),{code:'discord/operation-pending'});

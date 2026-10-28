@@ -360,7 +360,12 @@ function createDiscordOAuthPrototype({
     await rateLimit('complete',clientKey,now());authority(await currentAuthority(),{required:false});
     const input={reviewHash:stateHash(registrationToken),requestId:id,browserBindingHash:bindingHash(binding)};
     if(action==='cancel')return Object.freeze({ok:true,operation:'registration',...await registrationStore.cancel(input)});
-    const created=await registrationStore.confirm({...input,requestedHandle,reviewAccepted});
+    let created;
+    try{created=await registrationStore.confirm({...input,requestedHandle,reviewAccepted});}catch(error){
+      if(error?.code==='e1/handle-conflict')fail('conflict','discord/handle_conflict');
+      if(error?.code==='e1/provider-subject-conflict')fail('conflict','provider/subject_already_linked');
+      throw error;
+    }
     authority(await currentAuthority(),{required:false});
     const before=await store.resolveSubject({providerSubjectKey:created.providerSubjectKey});
     if(before?.uid!==created.uid)fail('stale_state','discord/mapping_changed');

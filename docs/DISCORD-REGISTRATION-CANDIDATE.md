@@ -45,16 +45,11 @@ and failed token delivery. The Auth/Firestore emulator test proves that the new
 Firebase UID does not exist before custom-token sign-in, then verifies that the
 created Auth user and ID token use exactly the canonical claim UID.
 
-This is the server candidate. The production browser still has no enabled Discord
-signup button. Its current exact-response validator deliberately rejects the new
-registration response until reviewed UI/continuation wiring is added. That wiring
-must use the existing shared auth commit gate for the exact server-issued UID,
-explain current sharing behavior, qualify profile initialization/readback, and
-handle cancellation before versus after the non-cancelable SDK boundary.
-The existing provider-only foundation reader verifies a linked Google identity;
-Discord-only custom-auth users still need a separately verified read adapter that
-checks current Firebase Auth authority and the exact durable Discord mapping. Do
-not relax the Google verifier or activate registration before that path is ready.
+The browser/read candidate integration is described below. The production browser
+still has no enabled Discord signup button. Production host bootstrap, profile
+initialization/readback and release configuration need staging qualification.
+The Google foundation verifier remains unchanged; the separate Discord read
+adapter verifies current Firebase Auth authority and the exact durable mapping.
 No full-fidelity backup/restore or PIN retirement is claimed.
 
 The selected Discord application and callback already exist. Staging secret
@@ -62,3 +57,65 @@ storage/transfer, runtime user-read/signing permissions, TTL policies, deploymen
 and dedicated canary consent remain separate scoped approvals. Billing restoration
 was verified on 2026-10-28; the prior billing-disabled note is obsolete. No secret,
 IAM, billing, TTL or live provider activation was performed by this candidate.
+
+## Browser and authenticated-read integration, 2026-10-28
+
+The candidate client/runtime now accept the server registration review and expose
+confirmRegistration, cancelRegistration and readAccount. Review capabilities stay
+in memory; reload requires a fresh OAuth flow. The server then resolves an already
+committed account to the same UID. An uncertain confirmation retains the reviewed
+name for exact retry; a definite name conflict permits a new explicit choice.
+Custom tokens pass directly into the shared auth gate. Cancellation before the
+commit discards late responses; after its non-cancelable boundary the UI says
+sign-in is finishing. A pending server claim may still complete; cancellation
+never pretends to delete it.
+
+`discordRegistrationView` is a candidate-only accessible DOM mount using the
+existing field-control/btn/card classes, with trainer-name and sharing review,
+explicit consent and status text. It contains no Updates or catalogue edits and
+is absent from production asset inventories. Production signup remains disabled.
+
+The fixed candidate readAccount route accepts no owner UID. It verifies a revoked-
+checked Firebase ID token, current user, issuer/audience, expiry and token-validity
+cutoff; regular reads do not require recent reauthentication. It then rechecks the
+reciprocal account/name and Discord method/subject claim transactionally. Legacy
+accounts still require reciprocal legacy ownership. It returns only the canonical
+foundation allowlist; the browser validates that exact schema. Google verification
+is unchanged. Unlink and recent-auth requirements remain unchanged.
+
+### Exact remaining activation decisions
+
+- Provision the three previously proposed staging secret resources (Discord
+  application client secret, state HMAC key, subject HMAC key); transfer only via
+  an approved private secret path. Existing app 1564289039526268938 and registered
+  callback need no duplicate creation. Scope remains identify only.
+- Approve named runtime firebaseauth.users.get and narrowly scoped signing access
+  on the existing staging authority/signing identity. Runtime composition must
+  mint a newly claimed UID only after the registration transaction; the existing
+  access-authority mintCustomToken helper requires an existing Auth user and is
+  insufficient for first sign-in. Synthetic tests inject Admin createCustomToken
+  and prove its Auth creation boundary; no cloud composition is activated.
+- Review namespace protection and fresh certification, the new fixed gateway
+  operations, callback asset release and all-entry-point auth-gate bootstrap.
+  The canary gate remains exact-UID restricted; broad provider-first enrollment
+  needs a reviewed host policy for server-issued new UIDs.
+- Select dedicated staging canary identities and approve their persistent OAuth
+  consent/linkage; qualify service configuration and deploy only after approval.
+- TTL cleanup would add discordRegistrationReviews.deleteAfter to the earlier
+  flow/review/rate collection proposal. Logical expiry already fails closed;
+  TTL is cleanup and may be deferred to avoid an unnecessary permission change.
+- Activate staging capability flags only after end-to-end callback, account-sync
+  profile initialization, sharing/public-read behavior and rollback are reviewed.
+  This candidate does not connect its read adapter to production application.js.
+
+### Backup and PIN-migration gaps
+
+The existing recovery writer remains demo-only, additive and same-UID. It does not
+constitute full-fidelity migration to a new account. Legacy-only content, profile,
+ordering/history/preferences and enabled future provider-only/visibility/synced-
+preference collectors need dedicated supported adapters. Groups, memberships,
+permissions and share ownership are review references, not imported privileges.
+Cross-UID restore requires a separate server-authorized recovery protocol. Never
+infer authority from an uploaded bundle. PIN removal remains blocked until these
+coverage gaps and real account readback/recovery are qualified. Linking should
+retain the original UID, lists, Favorites, tags, URLs and permissions.

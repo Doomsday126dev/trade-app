@@ -124,6 +124,12 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
     coherent(data(await tx.get(providerRef(reverse.uid))),reverse,reverse.uid,providerSubjectKey);
     return{uid:reverse.uid,mappingRevision:reverse.revision};
   });}
+  async function readDiscordAccount({uid}){return firestore.runTransaction(async tx=>{
+    const accepted=await foundation(tx,uid),provider=data(await tx.get(providerRef(uid)));
+    if(!provider||provider.state!=='linked')fail('permission_denied','discord/provider_required');
+    coherent(provider,data(await tx.get(subjectRef(provider.providerSubjectKey))),uid,provider.providerSubjectKey);
+    return accepted;
+  });}
   async function unlinkSubjectAtomic(input){
     check(input.requestFingerprint,HASH,'discord/fingerprint_invalid');timestamp(input.timestamp);
     return firestore.runTransaction(async tx=>{
@@ -143,6 +149,6 @@ function createFirestoreDiscordOAuthStore({firestore,now=Date.now}={}){
       return{status:'unlinked',replay:false};
     });
   }
-  return Object.freeze({readFoundation,readFoundationInTransaction:(tx,{uid})=>foundation(tx,uid),readProviderLifecycle,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
+  return Object.freeze({readFoundation,readFoundationInTransaction:(tx,{uid})=>foundation(tx,uid),readProviderLifecycle,readDiscordAccount,consumeRateLimit,createFlow,consumeFlow,finishFlow,createLinkReview,readLinkReview,finishLinkReview,linkSubjectAtomic,resolveSubject,unlinkSubjectAtomic});
 }
 module.exports={createFirestoreDiscordOAuthStore};

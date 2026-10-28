@@ -2,6 +2,7 @@
 const {fail,stableError}=require('../domain/errors');
 const BINDING=/^[A-Za-z0-9_-]{43,128}$/,LIFECYCLE=/^[A-Za-z0-9._:-]{8,160}$/;
 const FIELDS={
+  readAccount:['browserBinding','lifecycleId'],
   begin:['operation','requestId','browserBinding','lifecycleId'],
   complete:['issuer','code','state','requestId','browserBinding','lifecycleId'],
   confirm:['confirmationToken','requestId','browserBinding','lifecycleId'],
@@ -27,6 +28,7 @@ function createDiscordCandidateGateway({enabled=false,oauth,authority,verifyAppC
       if(action==='register')return await oauth.confirmRegistration(base);
       if(action==='cancelRegistration')return await oauth.cancelRegistration(base);
       if(!context.idToken)fail('unauthenticated','discord/auth_required');
+      if(action==='readAccount')return await authority.readAccount({idToken:context.idToken,lifecycleId:input.lifecycleId});
       // No caller may supply an alternate-method assertion or raw Firestore path.
       return await authority.unlink({idToken:context.idToken,lifecycleId:input.lifecycleId,requestId:input.requestId,expectedProviderRevision:input.expectedProviderRevision});
     }catch(error){return{ok:false,error:stableError(error)};}

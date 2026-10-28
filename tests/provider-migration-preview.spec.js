@@ -112,3 +112,61 @@ test('reviewed checkpoint reconciliation survives reload and arbitrates two tabs
  const results=await Promise.all([page,other].map(target=>target.evaluate(async()=>{try{return(await recoveryGate.confirmReconciliation(ticket,{accepted:true})).status;}catch{return'blocked';}})));
  expect(results.filter(value=>value==='reconciled')).toHaveLength(1);expect(await page.evaluate(async()=>(await ledger.read()).uid)).toBe('synthetic-recovery-owner');await other.close();
 });
+
+async function registrationPreview(page,{holdCommit=false}={}){
+ const path=require('node:path');
+ await page.route('https://doomsday126dev.github.io/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:24px;font:16px system-ui;background:#f5f1e9;color:#252b28"><main style="max-width:560px;margin:auto" id="registration"></main></body></html>'}));
+ await page.goto('https://doomsday126dev.github.io/trade-app/');
+ await page.addStyleTag({path:path.join(__dirname,'../css/app.css')});
+ for(const file of['discordOAuthPrototypeClient.js','discordCandidateRuntime.js','discordRegistrationView.js'])await page.addScriptTag({path:path.join(__dirname,'../js/dev',file)});
+ await page.evaluate(async hold=>{
+   const lifecycle=`v1_${'a'.repeat(64)}`,state='s'.repeat(43),binding='b'.repeat(43);let owner='',commits=0;
+   const calls=[];let runtime;
+   runtime=PogoDev.discordCandidateRuntime.createDiscordCandidateRuntime({enabled:true,location:{href:location.href,assign(){}},getSessionBinding:()=>({ownerBinding:owner,lifecycleBinding:lifecycle}),getAuthorizationHeader:async()=>owner?'Bearer synthetic-id-token':'',
+     invokeGateway:async(action,input)=>{calls.push(action);if(action==='complete')return{ok:true,operation:'sign-in',status:'onboarding-required',registrationToken:'r'.repeat(43),expiresInMs:300000};
+       if(action==='register')return{ok:true,operation:'registration',status:'account-created',uid:'synthetic-browser-uid',customToken:'synthetic-token',canonicalTrainerName:input.requestedHandle,replay:false};
+       if(action==='cancelRegistration')return{ok:true,operation:'registration',status:'canceled'};
+       if(action==='readAccount'&&window.failAccountRead){window.failAccountRead=false;throw Error('synthetic account read unavailable');}
+       if(action==='readAccount')return{ok:true,operation:'read-account',foundation:{schemaVersion:1,canonicalTrainerName:'TrainerNew',normalizedTrainerName:'trainernew',handleKey:'v1_747261696e65726e6577',identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null,revision:1,status:'active'}};
+       throw Error('unexpected route');},
+     authGate:{commitCustomToken:async input=>{if(input.expectedUid!=='synthetic-browser-uid'||!input.isCurrent())throw Error('wrong uid');input.onCommitBoundary();if(hold)await new Promise(resolve=>window.releaseRegistration=resolve);owner=`v1_${'c'.repeat(64)}`;commits++;return{};}}});
+   sessionStorage.setItem('pogo.discord.prototype.request',JSON.stringify({operation:'sign-in',requestId:`discord-${'q'.repeat(43)}`,ownerBinding:'',lifecycleBinding:lifecycle,state,issuedAt:Date.now(),expiresAt:Date.now()+300000,browserBinding:binding}));
+   await runtime.completeCallback({type:'pogo:discord-callback',code:'synthetic-code',state,iss:'https://discord.com'});
+   PogoDev.discordRegistrationView.mount({container:document.getElementById('registration'),runtime,onComplete:async()=>{window.accountRead=await runtime.readAccount();}});
+   window.registration={runtime,calls,get commits(){return commits;},switchOwner(){owner=`v1_${'d'.repeat(64)}`;}};
+ },holdCommit);
+}
+test('new Discord review requires consent and reads only the committed account',async({page})=>{
+ await registrationPreview(page);await page.getByLabel('Trainer name',{exact:true}).fill('TrainerNew');
+ await page.screenshot({path:`.local/provider-migration/${test.info().project.name}-registration-review.png`,fullPage:true});
+ await page.getByRole('button',{name:'Create account',exact:true}).click();await expect(page.getByRole('status')).toContainText('Review the sharing');
+ expect(await page.evaluate(()=>registration.commits)).toBe(0);
+ await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Create account',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Finish trainer setup'})).toHaveCount(0);
+ expect(await page.evaluate(()=>registration.commits)).toBe(1);expect(await page.evaluate(()=>accountRead.foundation.canonicalTrainerName)).toBe('TrainerNew');
+ expect(await page.evaluate(()=>Object.keys(sessionStorage).filter(k=>sessionStorage.getItem(k).includes('synthetic-token')))).toHaveLength(0);
+});
+test('registration review cancels on the server and never signs in',async({page})=>{
+ await registrationPreview(page);await page.getByRole('button',{name:'Cancel',exact:true}).click();await expect(page.getByRole('heading',{name:'Finish trainer setup'})).toHaveCount(0);
+ expect(await page.evaluate(()=>registration.commits)).toBe(0);expect(await page.evaluate(()=>registration.calls)).toEqual(['complete','cancelRegistration']);
+});
+test('registration refuses cancellation after the SDK commit boundary',async({page})=>{
+ await registrationPreview(page,{holdCommit:true});await page.getByLabel('Trainer name',{exact:true}).fill('TrainerNew');await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Create account',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>registration.runtime.getState().status)).toBe('committing');
+ await page.getByRole('button',{name:'Cancel',exact:true}).click();await expect(page.getByRole('status')).toContainText('Finishing sign-in');
+ expect(await page.evaluate(()=>registration.runtime.cancel().canCancel)).toBe(false);await page.evaluate(()=>releaseRegistration());
+ await expect.poll(()=>page.evaluate(()=>registration.commits)).toBe(1);
+});
+test('provider switch before confirmation cannot create or read another UID',async({page})=>{
+ await registrationPreview(page);await page.getByLabel('Trainer name',{exact:true}).fill('TrainerNew');await page.getByRole('checkbox').check();await page.evaluate(()=>registration.switchOwner());
+ await page.getByRole('button',{name:'Create account',exact:true}).click();await expect(page.getByRole('status')).toContainText('needs checking');
+ expect(await page.evaluate(()=>registration.commits)).toBe(0);expect(await page.evaluate(()=>registration.calls)).toEqual(['complete']);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('completed registration retries account loading without another auth commit',async({page})=>{
+ await registrationPreview(page);await page.evaluate(()=>window.failAccountRead=true);await page.getByLabel('Trainer name',{exact:true}).fill('TrainerNew');await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Create account',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('You are signed in');expect(await page.evaluate(()=>registration.commits)).toBe(1);
+ await page.getByRole('button',{name:'Retry loading account',exact:true}).click();await expect(page.getByRole('heading',{name:'Finish trainer setup'})).toHaveCount(0);
+ expect(await page.evaluate(()=>registration.commits)).toBe(1);expect(await page.evaluate(()=>registration.calls.filter(x=>x==='register').length)).toBe(1);
+});

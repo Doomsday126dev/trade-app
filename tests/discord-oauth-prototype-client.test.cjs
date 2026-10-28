@@ -22,6 +22,8 @@ function env(options={}){
       authorize.search=new URLSearchParams({response_type:'code',client_id:'157730590492196864',redirect_uri:`${ORIGIN}/trade-app/`,scope:'identify',prompt:'consent',state:STATE,code_challenge:'c'.repeat(43),code_challenge_method:'S256'});
       return new Response(JSON.stringify({authorizeUrl:authorize.href,expiresInMs:300000}));
     }
+    if(url.endsWith('/register'))return new Response(JSON.stringify(options.registrationResult||{ok:true,operation:'registration',status:'account-created',uid:'synthetic-new-owner',customToken:'synthetic-custom-token',canonicalTrainerName:'TrainerNew',replay:false}));
+    if(url.endsWith('/cancelRegistration'))return new Response(JSON.stringify({ok:true,operation:'registration',status:'canceled'}));
     if(url.endsWith('/confirm'))return new Response(JSON.stringify({ok:true,operation:'link',status:'linked',replay:false}));
     return new Response(JSON.stringify(options.completeResult||{ok:true,operation:'link',status:'confirmation-required',confirmationToken:CONFIRM,discordLabel:'SyntheticDiscordUser',expiresInMs:300000}));
   };
@@ -135,4 +137,50 @@ test('successful sign-in with blocked coordination propagates warning and never 
  const h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'existing-account',uid:'synthetic-owner',customToken:'synthetic-token'},signInWithCustomToken:async()=>({user:{uid:'synthetic-owner'},authCoordinationBlocked:true})});
  h.continuation('sign-in');const result=await h.client.completeFromLocation();assert.equal(result.status,'existing-account');assert.equal(result.authCoordinationBlocked,true);
  assert.equal(h.client.getState().status,'coordination-blocked');assert.equal(h.client.cancel().canCancel,false);await assert.rejects(h.client.begin('sign-in'),{code:'provider-auth/coordination-blocked'});
+});
+
+function registrationEnv(options={}){const h=env({href:callback,signedOut:true,completeResult:{ok:true,operation:'sign-in',status:'onboarding-required',registrationToken:CONFIRM,expiresInMs:300000},...options});h.continuation('sign-in');return h;}
+test('registration review remains in memory, requires consent and commits exact server UID',async()=>{
+ const h=registrationEnv();await h.client.completeFromLocation();assert.equal(h.client.getState().status,'onboarding');
+ await assert.rejects(h.client.confirmRegistration({requestedHandle:'TrainerNew'}),{code:'discord/registration-review-required'});
+ assert.equal((await h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true})).status,'account-created');assert.deepEqual(h.signIns,['synthetic-custom-token']);
+ assert.doesNotMatch(h.writes.join(''),new RegExp(CONFIRM+'|synthetic-custom-token'));
+ await assert.rejects(h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true}),{code:'discord/registration-expired'});
+});
+test('registration cancellation calls server once; reload requires fresh OAuth',async()=>{
+ const h=registrationEnv();await h.client.completeFromLocation();assert.equal((await h.client.cancelRegistration()).status,'canceled');assert.ok(h.calls.at(-1).url.endsWith('/cancelRegistration'));
+ const reloaded=env({signedOut:true});await assert.rejects(reloaded.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true}),{code:'discord/registration-expired'});assert.equal(reloaded.signIns.length,0);
+});
+test('switching account after registration review prevents confirmation',async()=>{
+ const h=registrationEnv();await h.client.completeFromLocation();h.setBinding(A);
+ await assert.rejects(h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true}),{code:'discord/session-changed'});assert.equal(h.calls.length,1);
+});
+test('registration cancel before response prevents auth commit; cancel after commit boundary is refused',async()=>{
+ let release,entered;const ready=new Promise(r=>entered=r),held=new Promise(r=>release=r);
+ const h=registrationEnv({signInWithCustomToken:async(token,guard)=>{guard.onCommitBoundary();entered();await held;}});await h.client.completeFromLocation();
+ const pending=h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true});await ready;assert.equal(h.client.cancel().canCancel,false);release();assert.equal((await pending).status,'account-created');
+});
+
+test('lost registration response retries only the reviewed name; pending cancellation discards the token',async()=>{
+ let count=0,release,entered;const ready=new Promise(r=>entered=r),held=new Promise(r=>release=r);
+ const registration={ok:true,operation:'registration',status:'account-created',uid:'synthetic-new-owner',customToken:'synthetic-custom-token',canonicalTrainerName:'TrainerNew',replay:true};
+ const h=registrationEnv({fetchImpl:async url=>{
+   if(url.endsWith('/complete'))return new Response(JSON.stringify({ok:true,operation:'sign-in',status:'onboarding-required',registrationToken:CONFIRM,expiresInMs:300000}));
+   if(++count===1)throw Error('lost response');return new Response(JSON.stringify(registration));
+ }});
+ await h.client.completeFromLocation();await assert.rejects(h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true}),/lost response/);
+ await assert.rejects(h.client.confirmRegistration({requestedHandle:'DifferentTrainer',reviewAccepted:true}),{code:'discord/registration-retry-same-handle'});
+ assert.equal((await h.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true})).status,'account-created');assert.equal(h.signIns.length,1);
+ const c=registrationEnv({fetchImpl:async url=>{if(url.endsWith('/complete'))return new Response(JSON.stringify({ok:true,operation:'sign-in',status:'onboarding-required',registrationToken:CONFIRM,expiresInMs:300000}));entered();await held;return new Response(JSON.stringify(registration));}});
+ await c.client.completeFromLocation();const pending=c.client.confirmRegistration({requestedHandle:'TrainerNew',reviewAccepted:true});await ready;c.client.cancel();release();
+ await assert.rejects(pending,{code:'discord/canceled'});assert.equal(c.signIns.length,0);
+});
+
+test('authenticated account reads validate the exact foundation schema and never accept an injected UID',async()=>{
+ const foundation={schemaVersion:1,canonicalTrainerName:'TrainerNew',normalizedTrainerName:'trainernew',handleKey:'v1_747261696e65726e6577',identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null,revision:1,status:'active'};
+ for(const altered of[foundation,{...foundation,uid:'other-owner'},{...foundation,legacyAccessConfigured:true}]){
+  const h=env({fetchImpl:async()=>new Response(JSON.stringify({ok:true,operation:'read-account',foundation:altered}))});
+  if(altered===foundation)assert.equal((await h.client.readAccount()).foundation.canonicalTrainerName,'TrainerNew');
+  else await assert.rejects(h.client.readAccount(),{code:'discord/response-invalid'});
+ }
 });

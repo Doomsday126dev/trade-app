@@ -6,7 +6,7 @@
   const TOKEN=/^[A-Za-z0-9_-]{43}$/;
   const BINDING=/^v1_[a-f0-9]{64}$/;
   const SAFE_REASONS=new Set(['provider/subject_already_linked','provider/account_already_linked','discord/auth_lifecycle_changed',
-    'discord/rate_limited','auth/recent_auth_required','discord/confirmation_expired']);
+    'discord/handle_conflict','discord/registration_canceled','discord/registration_expired','discord/registration_review_required','discord/rate_limited','auth/recent_auth_required','discord/confirmation_expired']);
   function failure(code){return Object.assign(new Error(code),{code});}
   function exactKeys(value,keys){return value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')===keys.slice().sort().join(',');}
   function base64url(bytes){let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return global.btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
@@ -26,7 +26,7 @@
     if(redirect.origin!==origin||redirect.search||redirect.hash||redirect.username||redirect.password)throw failure('discord/callback-invalid');
     const endpoint=route=>new URL(`${endpointRoot}/${route}`,origin).href;
     let generation=0,activeRun=null,review=null,coordinationBlocked=false;
-    const getState=()=>Object.freeze({status:coordinationBlocked?'coordination-blocked':activeRun?.committing?'committing':activeRun?'pending':review?'review':'idle',canCancel:!coordinationBlocked&&!activeRun?.committing});
+    const getState=()=>Object.freeze({status:coordinationBlocked?'coordination-blocked':activeRun?.committing?'committing':activeRun?'pending':review?.kind==='registration'?'onboarding':review?'review':'idle',canCancel:!coordinationBlocked&&!activeRun?.committing});
     function notify(){try{onStatus(getState());}catch{/* UI observers cannot alter auth decisions. */}}
     function session(operation){
       const value=getSessionBinding();
@@ -131,16 +131,62 @@
         run.check();coordinationBlocked=committed?.authCoordinationBlocked===true;
         return Object.freeze({status:'existing-account',...(coordinationBlocked?{authCoordinationBlocked:true}:{})});
       }
+      if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status','registrationToken','expiresInMs'])&&result.status==='onboarding-required'&&TOKEN.test(result.registrationToken)&&Number.isSafeInteger(result.expiresInMs)&&result.expiresInMs>0&&result.expiresInMs<=TTL_MS){
+        review={...pending,kind:'registration',registrationToken:result.registrationToken,expiresAt:clock()+result.expiresInMs,requestedHandle:null};
+        return Object.freeze({status:'onboarding-required'});
+      }
       if(pending.operation==='sign-in'&&exactKeys(result,['ok','operation','status'])&&result.status==='onboarding-required')return Object.freeze({status:'onboarding-required'});
       throw failure('discord/response-invalid');
     });}
     async function confirmLink(){return exclusive(async run=>{
-      if(!review||clock()>=review.expiresAt)throw failure('discord/confirmation-expired');
+      if(!review||review.kind==='registration'||clock()>=review.expiresAt)throw failure('discord/confirmation-expired');
       const captured=review;
       const result=await request('confirm',captured,{confirmationToken:captured.confirmationToken,requestId:captured.requestId},run);
       if(!exactKeys(result,['ok','operation','status','replay'])||result.ok!==true||result.operation!=='link'||
         !['linked','already-linked'].includes(result.status)||typeof result.replay!=='boolean')throw failure('discord/response-invalid');
       review=null;return Object.freeze({status:result.status});
+    });}
+    async function confirmRegistration({requestedHandle,reviewAccepted=false}={}){return exclusive(async run=>{
+      const captured=review;
+      if(captured?.kind!=='registration'||clock()>=captured.expiresAt)throw failure('discord/registration-expired');
+      if(reviewAccepted!==true)throw failure('discord/registration-review-required');
+      const handle=String(requestedHandle||'').normalize('NFKC').trim();
+      if(!handle||handle.length>64)throw failure('discord/handle-invalid');
+      if(captured.requestedHandle&&captured.requestedHandle!==handle)throw failure('discord/registration-retry-same-handle');
+      // After dispatch an unknown outcome must retain this exact reviewed name.
+      captured.requestedHandle=handle;
+      let result;
+      try{result=await request('register',captured,{registrationToken:captured.registrationToken,requestId:captured.requestId,requestedHandle:handle,reviewAccepted:true},run);}
+      catch(error){if(error.code==='discord/handle_conflict')captured.requestedHandle=null;throw error;}
+      if(!exactKeys(result,['ok','operation','status','uid','customToken','canonicalTrainerName','replay'])||result.ok!==true||result.operation!=='registration'||result.status!=='account-created'||
+        !/^[A-Za-z0-9_-]{6,128}$/.test(result.uid||'')||typeof result.customToken!=='string'||result.customToken.length<8||result.customToken.length>8192||result.canonicalTrainerName!==handle||typeof result.replay!=='boolean')throw failure('discord/response-invalid');
+      if(typeof signInWithCustomToken!=='function')throw failure('discord/sign-in-unavailable');
+      run.check();assertCurrent(captured);
+      const committed=await signInWithCustomToken(result.customToken,{expectedUid:result.uid,expectedLifecycle:captured.lifecycleBinding,
+        onCommitBoundary:()=>{run.check();assertCurrent(captured);run.committing=true;notify();},
+        isActive:()=>{try{run.check();return true;}catch{return false;}},isCurrent:()=>{try{run.check();assertCurrent(captured);return true;}catch{return false;}}});
+      run.check();coordinationBlocked=committed?.authCoordinationBlocked===true;review=null;
+      return Object.freeze({status:'account-created',...(coordinationBlocked?{authCoordinationBlocked:true}:{})});
+    });}
+    async function cancelRegistration(){return exclusive(async run=>{
+      const captured=review;
+      if(captured?.kind!=='registration')throw failure('discord/registration-expired');
+      const result=await request('cancelRegistration',captured,{registrationToken:captured.registrationToken,requestId:captured.requestId},run);
+      if(!exactKeys(result,['ok','operation','status'])||result.ok!==true||result.operation!=='registration'||!['canceled','already-created'].includes(result.status))throw failure('discord/response-invalid');
+      review=null;return Object.freeze({status:result.status});
+    });}
+    async function readAccount(){return exclusive(async run=>{
+      const captured={...session('link'),operation:'link'};
+      const result=await request('readAccount',captured,{},run);
+      const foundation=result?.foundation;
+      if(!exactKeys(result,['ok','operation','foundation'])||result.ok!==true||result.operation!=='read-account'||
+        !exactKeys(foundation,['schemaVersion','canonicalTrainerName','normalizedTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername','revision','status'])||
+        foundation.schemaVersion!==1||foundation.status!=='active'||!Number.isSafeInteger(foundation.revision)||foundation.revision<1||
+        typeof foundation.canonicalTrainerName!=='string'||!foundation.canonicalTrainerName||foundation.canonicalTrainerName.length>128||
+        foundation.normalizedTrainerName!==foundation.canonicalTrainerName.normalize('NFKC').toLowerCase()||!/^v1_[a-f0-9]{2,512}$/.test(foundation.handleKey||'')||
+        !['provider_only','legacy_migrated'].includes(foundation.identityKind)||foundation.legacyAccessConfigured!==(foundation.identityKind==='legacy_migrated')||
+        (foundation.identityKind==='provider_only'?foundation.legacyUsername!==null:foundation.legacyUsername!==foundation.canonicalTrainerName))throw failure('discord/response-invalid');
+      return result;
     });}
     function cancel(){
       if(coordinationBlocked)return Object.freeze({status:'coordination-blocked',canCancel:false});
@@ -148,7 +194,7 @@
       generation++;const previous=activeRun;activeRun=null;previous?.controller?.abort();review=null;clearPending();notify();
       return Object.freeze({status:'canceled',canCancel:true});
     }
-    return Object.freeze({begin,completeFromLocation,confirmLink,cancel,getState});
+    return Object.freeze({begin,completeFromLocation,confirmLink,confirmRegistration,cancelRegistration,readAccount,cancel,getState});
   }
   root.discordOAuthPrototypeClient=Object.freeze({REQUEST_KEY,TTL_MS,createDiscordOAuthPrototypeClient});
 })(window);

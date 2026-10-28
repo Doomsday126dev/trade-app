@@ -3,11 +3,11 @@ const {fail}=require('../domain/errors');
 const {fingerprint}=require('../domain/fingerprints');
 function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,projectId,now=Date.now}={}){
   if(!firebaseAuth?.verifyIdToken||!firebaseAuth?.getUser||!store?.readFoundation||typeof verifyLegacyBinding!=='function'||!/^[-a-z0-9]+$/.test(projectId||''))throw new TypeError('Verified Discord authority dependencies required');
-  async function verified({idToken,lifecycleId,requirePassword=false}){
+  async function verified({idToken,lifecycleId,requirePassword=false,requireRecent=true}){
     if(typeof idToken!=='string'||idToken.length>16384||!/^[A-Za-z0-9._:-]{8,160}$/.test(lifecycleId||''))fail('unauthenticated','discord/auth_required');
     let claims,user;try{claims=await firebaseAuth.verifyIdToken(idToken,true);user=await firebaseAuth.getUser(claims.uid);}catch{fail('unauthenticated','discord/auth_invalid');}
     const at=now(),authAt=claims.auth_time*1000;
-    if(!claims.uid||claims.sub!==claims.uid||claims.aud!==projectId||claims.iss!==`https://securetoken.google.com/${projectId}`||user.uid!==claims.uid||user.disabled===true||!Number.isSafeInteger(claims.exp)||!Number.isSafeInteger(at)||!Number.isSafeInteger(authAt)||authAt>at||at-authAt>600000||claims.exp*1000<=at)fail('unauthenticated','discord/recent_auth_required');
+    if(!claims.uid||claims.sub!==claims.uid||claims.aud!==projectId||claims.iss!==`https://securetoken.google.com/${projectId}`||user.uid!==claims.uid||user.disabled===true||!Number.isSafeInteger(claims.exp)||!Number.isSafeInteger(at)||!Number.isSafeInteger(authAt)||authAt>at||(requireRecent&&at-authAt>600000)||claims.exp*1000<=at)fail('unauthenticated','discord/recent_auth_required');
     const revokedAt=Date.parse(user.tokensValidAfterTime||'');
     if(Number.isFinite(revokedAt)&&authAt<revokedAt)fail('unauthenticated','discord/auth_invalid');
     if(requirePassword&&(claims.firebase?.sign_in_provider!=='password'||!user.providerData?.some(provider=>provider.providerId==='password')))fail('permission_denied','discord/alternate_access_required');
@@ -29,6 +29,12 @@ function createDiscordAccessAuthority({firebaseAuth,store,verifyLegacyBinding,pr
     const user=await firebaseAuth.getUser(uid);if(user.uid!==uid||user.disabled)fail('unauthenticated','discord/auth_invalid');
     return firebaseAuth.createCustomToken(uid);
   }
-  return Object.freeze({verify:verified,unlink,mintCustomToken});
+  async function readAccount({idToken,lifecycleId}){
+    const current=await verified({idToken,lifecycleId,requireRecent:false});
+    const {account}=await store.readDiscordAccount({uid:current.uid});
+    const keys=['schemaVersion','canonicalTrainerName','normalizedTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername','revision','status'];
+    return Object.freeze({ok:true,operation:'read-account',foundation:Object.freeze(Object.fromEntries(keys.map(key=>[key,account[key]])))});
+  }
+  return Object.freeze({verify:verified,unlink,mintCustomToken,readAccount});
 }
 module.exports={createDiscordAccessAuthority};
