@@ -185,9 +185,9 @@ test('inline tag creation selects new or normalized-existing tags and has scoped
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
 
-test('Settings exposes five destinations and retains the legacy Tools deep link',()=>{
-  for(const section of ['profile','language','appearance','security','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
-  assert.doesNotMatch(html,/data-settings-target="tools"/);
+test('Settings exposes six destinations and retains the Tools deep link',()=>{
+  for(const section of ['profile','language','appearance','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+  assert.match(html,/data-settings-target="tools"/);
   assert.match(html,/data-settings-section="tools"/);
   assert.match(html,/function selectSettingsSection/);assert.match(html,/function showSettingsSectionList/);
   assert.match(html,/settings-layout\.mobile-list \.settings-detail\{display:none\}/);
@@ -195,7 +195,7 @@ test('Settings exposes five destinations and retains the legacy Tools deep link'
   assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
-  for(const tool of ['import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}',this\\)`));
+  for(const tool of ['import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
   assert.doesNotMatch(html,/openSettingsTool\('inventory'\)/);
   assert.doesNotMatch(html,/openSettingsTool\('restore'\)/);
   assert.match(html,/settings-admin-only[^>]+hidden/);

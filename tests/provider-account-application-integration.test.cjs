@@ -64,10 +64,13 @@ test('provider-only account sync uses explicit initialization and canonical publ
 
 test('Google-only Settings hides PIN controls and labels legacy access as not configured',()=>{
   assert.match(html,/id="settings-security-pin-panel"/);
-  assert.match(app,/pinToggle\.hidden=!usernamePinAvailable/);
-  assert.match(app,/if\(!usernamePinAvailable\)toggleSettingsPinForm\(false\)/);
-  assert.match(app,/const show=usernamePinAccessUsable\(\)&&/);
-  assert.match(app,/security\.usernamePinNotConfigured/);
+  const source=section('function usernamePinAccessUsable()','async function handleGoogleAccountAction('),panel={hidden:false},detail={textContent:''},row={dataset:{},querySelector:selector=>selector==='[data-provider-detail]'?detail:null};
+  const context={cur:'owner',allData:{users:{owner:{authUid:'owner-uid',pin:''}}},auth:{currentUser:{uid:'owner-uid',providerData:[{providerId:'google.com'}]}},providerLinkingController:null,providerLinkingRegistry:null,PROVIDER_LINKING_STATUS_KEYS:{connected:'security.connected',unavailable:'security.unavailable'},i18nCore:{t:key=>key},document:{getElementById:id=>id==='settings-security-pin-panel'?panel:null,querySelector:()=>row}};
+  require('node:vm').runInNewContext(source,context);context.renderConnectedAccounts();
+  assert.equal(panel.hidden,true);assert.equal(row.dataset.providerState,'unavailable');assert.equal(detail.textContent,'security.usernamePinNotConfigured');
+  context.allData.users.owner.pin='123456';context.auth.currentUser.providerData=[{providerId:'password'}];context.renderConnectedAccounts();assert.equal(panel.hidden,false);assert.equal(row.dataset.providerState,'connected');
+  context.auth.currentUser.uid='different-owner';context.renderConnectedAccounts();assert.equal(panel.hidden,true);
+
 });
 
 test('provider account client is present only in the development-gated asset set',()=>{

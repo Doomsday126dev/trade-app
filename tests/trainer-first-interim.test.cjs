@@ -29,7 +29,7 @@ test('interim navigation exposes trainer-first retained surfaces only',()=>{
   assert.doesNotMatch(account,/account-legacy-inventory-action|openLegacyInventoryTool\(\)|Legacy Inventory/);
   const settings=between('data-settings-section="tools"','data-settings-section="data"');
   assert.doesNotMatch(settings,/openSettingsTool\('inventory'\)|nav\.legacyInventory/);
-  assert.match(settings,/openSettingsTool\('safe-transfer',this\)/);
+  assert.match(settings,/openSettingsTool\('safe-transfer'\)/);
   assert.match(tabs,/data-tab="more"/);
 });
 
