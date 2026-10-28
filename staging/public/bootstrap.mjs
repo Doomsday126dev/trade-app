@@ -1,10 +1,10 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
 import * as sdk from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js';
-import {initializeAppCheck,ReCaptchaV3Provider,getToken,getLimitedUseToken} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js';
+import {initializeAppCheck,ReCaptchaEnterpriseProvider,getToken,getLimitedUseToken} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app-check.js';
 const response=await fetch('/config.json',{cache:'no-store'}),config=await response.json();
 if(config.enabled!==true||config.origin!==location.origin)throw Error('staging bootstrap not configured');
 for(const name of ['providerAuthCommitGate','providerCheckpointRecovery','discordOAuthPrototypeClient','discordCandidateRuntime','discordRegistrationView','providerMigrationOnboarding','providerAccountFoundation','stagingLoginBootstrap'])await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/modules/'+name+'.js';script.onload=resolve;script.onerror=reject;document.head.append(script);});
-const app=initializeApp(config.firebase),auth=sdk.getAuth(app),check=initializeAppCheck(app,{provider:new ReCaptchaV3Provider(config.appCheckSiteKey),isTokenAutoRefreshEnabled:true});
+const app=initializeApp(config.firebase),auth=sdk.getAuth(app),check=initializeAppCheck(app,{provider:new ReCaptchaEnterpriseProvider(config.appCheckSiteKey),isTokenAutoRefreshEnabled:true});
 const runtime=await PogoDev.stagingLoginBootstrap.create({config,auth,sdk,getAppCheckToken:async({limitedUse=false}={})=>(await (limitedUse?getLimitedUseToken(check):getToken(check))).token});
 const status=document.getElementById('status'),show=value=>status.textContent=value;
 const completed=async()=>{const account=await runtime.readDiscord();show('Verified trainer: '+account.foundation.canonicalTrainerName);};
