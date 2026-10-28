@@ -56,10 +56,10 @@ function harness({responses=[],lifecycle={uid:'uid-new',lifecycleId:'auth-1'},ap
       return{data:typeof next==='function'?await next(body):next};
     }
   };
-  const client=service.createProviderAccountClient({firebaseApp:{options:{appId:'app'}},auth,
+  const reopen=()=>service.createProviderAccountClient({firebaseApp:{options:{appId:'app'}},auth,
     firebaseAppCheckReady:async()=>appCheck,getLifecycleSnapshot:()=>currentLifecycle,
     importFunctionsSdk:async()=>sdk,storage:store,cryptoImpl,timeoutMs:2000});
-  return{service,client,calls,tokens,store,auth,setLifecycle:value=>{currentLifecycle=value;}};
+  return{service,client:reopen(),reopen,calls,tokens,store,auth,setLifecycle:value=>{currentLifecycle=value;}};
 }
 
 function authorityEnvironment(overrides={}){
@@ -266,7 +266,15 @@ test('pending creation survives lifecycle replacement only for its verified owne
   h.setLifecycle({uid:'uid-new',lifecycleId:'auth-2'});
   assert.equal((await h.client.pendingForCurrentOwner()).handle,'TrainerNew');
   assert.equal((await h.client.reconcilePending()).status,'account-ready');
-  const record=JSON.parse(h.store.getItem(h.service.STORAGE_KEY));record.idempotencyFingerprint='a'.repeat(64);
+  const record=JSON.parse(h.store.getItem(h.service.STORAGE_KEY));record.phase='ambiguous';record.idempotencyFingerprint='a'.repeat(64);
   h.store.setItem(h.service.STORAGE_KEY,JSON.stringify(record));
   await assert.rejects(h.client.pendingForCurrentOwner(),{code:'provider-account/pending-invalid'});
+});
+
+test('completed signup does not remain pending for another UID after client reopen',async()=>{
+ const h=harness({responses:[{code:'SUCCESS',foundation:createFoundation()},{code:'SUCCESS',foundation:readFoundation()},{code:'SUCCESS',foundation:createFoundation({canonicalTrainerName:'TrainerOther',normalizedTrainerName:'trainerother',handleKey:'v1_747261696e65726f74686572'})},{code:'SUCCESS',foundation:readFoundation({canonicalTrainerName:'TrainerOther',normalizedTrainerName:'trainerother',handleKey:'v1_747261696e65726f74686572'})}]});
+ assert.equal((await h.client.create({requestedHandle:'TrainerNew'})).status,'account-ready');const completed=h.store.getItem(h.service.STORAGE_KEY);assert.equal(JSON.parse(completed).phase,'complete');h.client.close();h.auth.currentUser=null;
+ h.auth.currentUser={uid:'uid-other',getIdToken:async()=> 'synthetic-other-token'};h.setLifecycle({uid:'uid-other',lifecycleId:'auth-2'});const reopened=h.reopen();
+ assert.equal(await reopened.pendingForCurrentOwner(),null);assert.equal(reopened.pending(),null);assert.equal(h.store.getItem(h.service.STORAGE_KEY),completed);
+ assert.equal((await reopened.create({requestedHandle:'TrainerOther'})).foundation.canonicalTrainerName,'TrainerOther');assert.equal(h.calls.filter(row=>row.name==='createE1ProviderAccountFoundation').length,2);assert.equal(reopened.pending(),null);
 });
