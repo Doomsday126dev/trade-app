@@ -5,14 +5,20 @@ const { key, fail, LIMITS } = require('./contract');
 // is accepted only after both sides exist. Any fence (hold or retired) rejects it.
 // The Favorite create/re-add Rules recheck the exact tuple and both fences at
 // commit time; a response is not a write authorization or a private-list grant.
-function createIdentityReader(database) {
-  const scalar = async path => (await database.ref(path).get()).val();
+function createIdentityReader(database, diagnostics) {
+  const scalar = async path => {
+    try { return (await database.ref(path).get()).val(); }
+    catch (error) { diagnostics?.report('identity-scalar-read', error); throw error; }
+  };
   return Object.freeze({
     callerHandle: uid => scalar(`authIndex/${uid}/username`),
     targetUid: handle => scalar(`users/${handle}/authUid`),
     reverseHandle: uid => scalar(`authIndex/${uid}/username`),
     // Return existence only; malformed and partial holds must also fail closed.
-    isFenced: async uid => (await database.ref(`legacyIdentityFences/${uid}`).get()).exists()
+    isFenced: async uid => {
+      try { return (await database.ref(`legacyIdentityFences/${uid}`).get()).exists(); }
+      catch (error) { diagnostics?.report('identity-fence-read', error); throw error; }
+    }
   });
 }
 function createIdentityResolver(reader) {

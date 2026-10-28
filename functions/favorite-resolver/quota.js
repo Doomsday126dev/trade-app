@@ -3,23 +3,26 @@ const { randomUUID } = require('node:crypto');
 const { LIMITS, digest, exact, plain, fail } = require('./contract');
 const PREFIX = 'favorite-resolver/v1/';
 const MAX_BYTES = 4096;
-function createGcsQuotaStore(bucket) {
+function createGcsQuotaStore(bucket, diagnostics) {
   return Object.freeze({
     async read(subject) {
       const name = `${PREFIX}${subject}.json`;
       let meta;
       try { [meta] = await bucket.file(name).getMetadata(); }
-      catch (error) { if (error.code === 404) return { generation: 0, value: null }; throw error; }
+      catch (error) { if (error.code === 404) return { generation: 0, value: null }; diagnostics?.report('quota-metadata-read', error); throw error; }
       {
         if (!/^[1-9][0-9]*$/.test(meta.generation || '') || !Number.isSafeInteger(Number(meta.size)) || Number(meta.size) < 0 || Number(meta.size) > MAX_BYTES) fail('favorite/quota-unavailable');
-        const [bytes] = await bucket.file(name, { generation: meta.generation }).download();
+        let bytes;
+        try { [bytes] = await bucket.file(name, { generation: meta.generation }).download(); }
+        catch (error) { diagnostics?.report('quota-generation-read', error); throw error; }
         if (bytes.length > MAX_BYTES) fail('favorite/quota-unavailable');
         return { generation: meta.generation, value: JSON.parse(bytes.toString('utf8')) };
       }
     },
     async compareAndSwap(subject, generation, value) {
       const bytes = JSON.stringify(value); if (Buffer.byteLength(bytes) > MAX_BYTES) fail('favorite/quota-unavailable');
-      await bucket.file(`${PREFIX}${subject}.json`).save(bytes, { resumable: false, contentType: 'application/json', preconditionOpts: { ifGenerationMatch: generation } });
+      try { await bucket.file(`${PREFIX}${subject}.json`).save(bytes, { resumable: false, contentType: 'application/json', preconditionOpts: { ifGenerationMatch: generation } }); }
+      catch (error) { if (error?.code !== 412) diagnostics?.report('quota-compare-and-swap', error); throw error; }
     }
   });
 }
