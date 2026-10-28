@@ -6157,7 +6157,7 @@ function renderTrainerDiscoveryHeading(){
   setText('find-trainer-title',copy[0]);
   setText('find-trainer-description',copy[1]);
 }
-function setTrainerDiscoveryMode(mode){
+function setTrainerDiscoveryMode(mode,{renderFavorites=false}={}){
   const allowed=['trainers','favorites','pokemon'];
   trainerDiscoveryMode=allowed.includes(mode)?mode:'trainers';
   const content=document.querySelector('.trainer-discovery-content');
@@ -6170,13 +6170,16 @@ function setTrainerDiscoveryMode(mode){
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
   renderTrainerDiscoveryHeading();
-  observeFavoritePublications();
+  // The first Trainers render may precede owner restoration. Visible Favorites
+  // must initialize on entry rather than depend on that earlier render.
+  if(renderFavorites&&trainerDiscoveryMode==='favorites')renderTrainerQuickLists({favoritesOnly:true});
+  else observeFavoritePublications();
   if(trainerDiscoveryMode==='pokemon'){favoriteLookupControls();if(!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}}
 }
 function focusTrainerDiscoveryMode(mode){
   const modeButton=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${mode}"]`);
   if(!modeButton)return;
-  setTrainerDiscoveryMode(mode);
+  setTrainerDiscoveryMode(mode,{renderFavorites:true});
   if(mode==='trainers'){
     const input=document.getElementById('find-trainer-input');
     input?.focus({preventScroll:true});input?.select();return;
@@ -6191,7 +6194,7 @@ function trainerDiscoveryModeKeydown(event,mode){
   const modes=['trainers','favorites','pokemon'],current=modes.indexOf(mode);
   const next=event.key==='Home'?0:event.key==='End'?modes.length-1:(current+(event.key==='ArrowRight'?1:-1)+modes.length)%modes.length;
   const button=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${modes[next]}"]`);
-  setTrainerDiscoveryMode(modes[next]);button?.focus({preventScroll:true});
+  setTrainerDiscoveryMode(modes[next],{renderFavorites:true});button?.focus({preventScroll:true});
 }
 function positionTrainerSuggestions(){
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions');if(!input||!box)return;
@@ -6678,8 +6681,8 @@ function observeFavoritePublications(){
 }
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false,favoriteGroupFocusId=''}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
-  if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
-  if(accountSyncOrganizationHydrating()){
+  if(!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
+  if(!store||accountSyncOrganizationHydrating()){
     const loading=stateHtml(stateModel('loading',{title:i18nCore.t('trainer.syncHydrating'),detail:i18nCore.t('trainer.syncHydratingHelp')}));
     favoritesControlsEl.innerHTML=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">—</span></div>`;
     favoritesListEl.innerHTML=loading;

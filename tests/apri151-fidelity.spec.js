@@ -1,5 +1,44 @@
 const{test,expect}=require('@playwright/test'),{fixture}=require('./helpers/usability-fixture.cjs'),fs=require('node:fs');
 const out='/tmp/trade151-qa';fs.mkdirSync(out,{recursive:true});
+test('Favorites entry renders after delayed owner restoration instead of a blank panel',async({page},info)=>{
+ await page.setViewportSize({width:390,height:844});
+ await fixture(page);
+ await page.evaluate(()=>{const store=ensureTrainerHistoryStore();for(let i=1;i<=5;i++)store.toggleFavorite('StartupTrainer'+i);});
+ const before=await page.evaluate(()=>{const store=ensureTrainerHistoryStore();return{key:store.key,raw:localStorage.getItem(store.key),count:store.read().favorites.length,writes:structuredClone(window.__trustedWrites||[]),lists:JSON.stringify([allData.wishlist,allData.dynamax,allData.gmax,allData.costumes,allData.users[cur].specialTradeBoard])};});
+ await page.evaluate(()=>{window.__delayedFavoriteAuth=auth;auth={currentUser:null};});
+ await page.locator('#nav-find').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await page.evaluate(()=>{auth=window.__delayedFavoriteAuth;delete window.__delayedFavoriteAuth;});
+ await page.locator('#trainer-mode-favorites').click();
+ await expect(page.locator('#favorite-trainers-list .favorite-card-shell')).toHaveCount(before.count);
+ expect(before.count).toBe(7);
+ expect(await page.evaluate(key=>localStorage.getItem(key),before.key)).toBe(before.raw);
+ expect(await page.evaluate(()=>window.__trustedWrites||[])).toEqual(before.writes);
+ expect(await page.evaluate(()=>JSON.stringify([allData.wishlist,allData.dynamax,allData.gmax,allData.costumes,allData.users[cur].specialTradeBoard]))).toBe(before.lists);
+ await page.screenshot({path:`/tmp/trade164-${info.project.name}-favorites-restored-phone.png`,animations:'disabled'});
+});
+test('Favorites keyboard entry renders after delayed owner restoration and retains tab focus',async({page})=>{
+ await fixture(page);
+ await page.evaluate(()=>{window.__delayedFavoriteAuth=auth;auth={currentUser:null};});
+ await page.locator('#nav-find').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await page.evaluate(()=>{auth=window.__delayedFavoriteAuth;delete window.__delayedFavoriteAuth;});
+ await page.locator('#trainer-mode-trainers').focus();await page.keyboard.press('ArrowRight');
+ await expect(page.locator('#trainer-mode-favorites')).toBeFocused();
+ await expect(page.locator('#favorite-trainers-list .favorite-card-shell')).toHaveCount(2);
+});
+test('Favorites shows owner-pending state and recovers on the normal readiness render',async({page})=>{
+ await fixture(page);
+ const before=await page.evaluate(()=>{const store=ensureTrainerHistoryStore();return{key:store.key,raw:localStorage.getItem(store.key)};});
+ await page.evaluate(()=>{window.__delayedFavoriteAuth=auth;auth={currentUser:null};});
+ await page.locator('#nav-find').click();await page.locator('#trainer-mode-favorites').click();
+ await expect(page.locator('#favorite-trainers-list .favorite-card-shell')).toHaveCount(0);
+ await expect(page.locator('#favorite-trainers-list')).not.toBeEmpty();
+ await expect(page.locator('#favorite-trainers-list .ui-state-loading')).toBeVisible();
+ await page.evaluate(()=>{auth=window.__delayedFavoriteAuth;delete window.__delayedFavoriteAuth;queueRefreshAll('startup-fixture:owner-ready');});
+ await expect(page.locator('#favorite-trainers-list .favorite-card-shell')).toHaveCount(2);
+ expect(await page.evaluate(key=>localStorage.getItem(key),before.key)).toBe(before.raw);
+});
 test('packaged referenced mascot and paper decode in both themes at phone and desktop widths',async({page,request},info)=>{
  for(const file of ['apri.webp','ivory-paper.webp']){const r=await request.get('./assets/brand/'+file);expect(r.status()).toBe(200);expect(r.headers()['content-type']).toContain('image/webp');}
  await fixture(page);

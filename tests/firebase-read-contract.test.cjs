@@ -13,7 +13,7 @@ const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
