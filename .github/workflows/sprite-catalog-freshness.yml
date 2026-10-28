@@ -29,6 +29,8 @@ on:
       - 'data/public-form-sprite-identities.json'
       - 'data/reviewed-variant-status.json'
       - 'scripts/reconcile-catalogue.cjs'
+      - 'scripts/catalogue-review-summary.cjs'
+      - 'tests/catalogue-review-summary.test.cjs'
       - 'scripts/catalogue-source-observation.cjs'
       - 'tests/catalogue-reconciliation.test.cjs'
       - 'data/recent-release-review-holds.json'
@@ -62,7 +64,7 @@ jobs:
       - name: Reconcile independent released inventory and validate discovery failure handling
         run: |
           node scripts/check-released-catalog.cjs
-          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs tests/catalogue-reconciliation.test.cjs
+          node --test tests/recent-release-coverage.test.cjs tests/release-discovery.test.cjs tests/catalogue-reconciliation.test.cjs tests/catalogue-review-summary.test.cjs
       - name: Reconcile cached independent inventories on pull requests
         if: always() && github.event_name == 'pull_request'
         run: node scripts/check-release-discovery.cjs --offline --report-only
