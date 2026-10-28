@@ -337,6 +337,7 @@
 "share.linkCopied":"リンクをコピーしました。",
 "share.linkCopyFailed":"コピーできませんでした。下の選択されたリンクを使うか、再試行してください。",
 "share.checkListDetails":"リストの詳細を確認",
-"share.linkUnavailable":"共有を利用できません"
+"share.linkUnavailable":"共有を利用できません",
+"updates.title":"更新情報","updates.latestTitle":"姿の指定とお気に入り","updates.clarify":"未指定のリクエストに模様や姿を指定するか、そのまま残せます。元の項目は、自分で削除するまで残ります。","updates.favorites":"お気に入りは公開日時の新しい順に表示され、日時の読み込みも改善されました。","updates.listsTitle":"リスト・共有・画像","updates.options":"オプション画面を整理しました。希望条件の指定は任意です。優先度フィルターで長いリストも探しやすくなりました。","updates.share":"共有形式を1か所で選べます。公開済みの最新リンクをコピーし、リスト変更後は更新して共有できます。","updates.artwork":"通常・色違い・マックスの正確な画像を追加し、重複する候補を整理しました。登場未確認の表示は維持しています。",
 });
 })(window);

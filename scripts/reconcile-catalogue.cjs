@@ -19,6 +19,8 @@ function loadSources(now=new Date(),readFile=fs.readFileSync){
   }catch(error){issues.push({source:source.id,kind:'source-integrity-failed',error:error.message});}
  }
  for(const id of Object.keys(floors))if(!manifest.sources.some(s=>s.id===id))issues.push({source:id,kind:'missing-source'});
+ const watch=manifest.secondarySources?.find(row=>row.id==='pokeminers-head');
+ if(!watch||watch.url!=='https://api.github.com/repos/PokeMiners/pogo_assets/commits/master'||!/^([a-f0-9]{40})$/.test(watch.reviewedCommit||'')||!watch.scope)issues.push({source:'pokeminers-head',kind:'missing-or-invalid-secondary-watch'});
  return{manifest,data,issues};
 }
 function loadIdentities({database}={}){
@@ -34,6 +36,32 @@ function loadIdentities({database}={}){
  vm.runInContext(declarations.join('\n')+'\nwindow.__selectable=_specialAllItems();',ctx);
  const all=window.__selectable;if(!all.length)throw Error('Selectable catalogue is empty; coverage is unknown');
  return{all,publicAll,catalog,database:database||window.POGO_TRADE_DB,isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist};
+}
+
+// A file is an identity lead, never proof of an entire normal/Shiny pair.
+// Only a unique actual picker identity plus separately reviewed variants closes it.
+function minedPairCoverage(group,{identities,art,verified}){
+ const fileName=value=>{try{return path.basename(decodeURIComponent(/^https:\/\//.test(value)?new URL(value).pathname:value));}catch{return'';}};
+ const files=new Set(group.files.map(file=>path.basename(file.path)));
+ const linked=art.entries.filter(row=>row.no===group.no&&[row.sourceFile,...Object.values(row.sourceFiles||{}),...Object.values(row.artProof||{}).map(proof=>proof.url)].filter(value=>typeof value==='string').some(value=>files.has(fileName(value))));
+ const matches=row=>{
+  const resolved=new Set((row.names||[]).map(name=>identities.catalog?.resolveLegacyKey?.(name)?.catalogId).filter(Boolean));
+  return identities.all.filter(item=>item.no===group.no&&((row.names||[]).includes(item.name)||(item.legacyAliases||[]).some(name=>(row.names||[]).includes(name))||resolved.has(item.catalogId)));
+ };
+ const targets=new Map();for(const row of linked)for(const item of matches(row))targets.set(item.catalogId,item);
+ const base=!group.token||group.token==='00';
+ if(base&&!linked.length)for(const item of identities.all.filter(item=>item.no===group.no&&!/[()]/.test(item.name)))targets.set(item.catalogId,item);
+ const ids=[...targets.keys()].filter(Boolean),unique=ids.length===1;
+ const exactRows=unique?linked.filter(row=>row.status==='exact'&&matches(row).some(item=>item.catalogId===ids[0])):[];
+ const qualified=variant=>unique&&(exactRows.some(row=>{
+  const asset=row.assets?.[variant==='normal'?'default':'shiny'];
+  if(!asset||row.blockedVariants?.[variant])return false;
+  const same=row.assets?.default===row.assets?.shiny||row.sha256?.default&&row.sha256.default===row.sha256?.shiny;
+  return variant==='normal'||!same||row.no===1024&&JSON.stringify(row.names)==='["Terapagos (Stellar Form)"]'&&row.sameAppearanceEvidence==='stellar-palette-10277-v1';
+ })||base&&!linked.length&&verified.has(group.no+'|'+variant+'|'));
+ const shinyFile=file=>/\.s(?:\.|$)/.test(file.path)||/_shiny\.png$/.test(file.path);
+ const variants={normal:{sourceAvailable:group.files.some(file=>!shinyFile(file)),artQualified:qualified('normal')},shiny:{sourceAvailable:group.files.some(shinyFile),artQualified:qualified('shiny')}};
+ return{selectableCatalogIds:ids,reviewedNames:[...new Set(linked.flatMap(row=>row.names||[]))],variants,complete:unique&&variants.normal.artQualified&&variants.shiny.artQualified};
 }
 
 function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],pendingArt=[],eligibility=[],variantIssues=[],now=new Date()}){
@@ -90,26 +118,24 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
   const token=m[2].replace(/\.g\d+|\.s(?=\.|$)/g,''),id='mined:'+m[1]+token;
   if(!groups.has(id))groups.set(id,{id,no:Number(m[1]),token,files:[]});groups.get(id).files.push({path:file.path,gitBlobSha:file.sha,...(file.discoveredAt?{discoveredAt:file.discoveredAt}:{})});
  }
- const reviewedFiles=new Set(art.entries.flatMap(r=>[r.sourceFile,...Object.values(r.sourceFiles||{})].filter(Boolean)));
- let minedMatched=0;
+ let minedMatched=0;const minedVariants={normal:0,shiny:0};
  for(const group of groups.values()){
-  const normal=group.files.some(r=>!/\.s\.(?:icon|portrait)\.png$/.test(r.path)),shiny=group.files.some(r=>/\.s\.(?:icon|portrait)\.png$/.test(r.path));
-  const reviewed=group.files.some(r=>reviewedFiles.has(path.basename(r.path)));
-  if(reviewed){minedMatched++;continue;}
-  // Base assets can be related to a species without guessing any form token.
-  if(!group.token&&identities.all.some(r=>r.no===group.no&&!/[()]/.test(r.name))){minedMatched++;continue;}
-  push({...group,source:'pokemod',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets/tree/'+sources.manifest.sources.find(r=>r.id==='pokemod')?.commit+'/Images/Pokemon',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'available-at-source',normal,shiny,priority:/2026|HALLOWEEN/.test(group.token)?'urgent':'review',disposition:'exact-game-form-alias-review-required'});
+  const pair=minedPairCoverage(group,{identities,art,verified});
+  for(const variant of ['normal','shiny'])if(pair.variants[variant].artQualified)minedVariants[variant]++;
+  if(pair.complete){minedMatched++;continue;}
+  push({...group,...pair,source:'pokemod',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets/tree/'+sources.manifest.sources.find(r=>r.id==='pokemod')?.commit+'/Images/Pokemon',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'exact-pair-or-picker-review-required',normal:pair.variants.normal.sourceAvailable,shiny:pair.variants.shiny.sourceAvailable,priority:/2026|HALLOWEEN/.test(group.token)?'urgent':'review',disposition:'exact-game-form-alias-review-required'});
  }
  const legacy=new Map(),unparsed=[];
  for(const file of tree?.tree||[]){if(!file.path.endsWith('.png'))continue;if(file.path.startsWith('Addressable Assets/')){if(!/^Addressable Assets\/pm\d+.*\.(?:icon|portrait)\.png$/.test(file.path))unparsed.push(file);continue;}const m=file.path.match(/^pokemon_icon_(?:pm)?(\d+)_(.*?)(?:_shiny)?\.png$/);if(!m){unparsed.push(file);continue;}const id='legacy-mined:'+Number(m[1])+':'+m[2];if(!legacy.has(id))legacy.set(id,{id,no:Number(m[1]),token:m[2],files:[]});legacy.get(id).files.push({path:file.path,gitBlobSha:file.sha,...(file.discoveredAt?{discoveredAt:file.discoveredAt}:{})});}
- let legacyMapped=0;
+ let legacyMapped=0;const legacyVariants={normal:0,shiny:0};
  for(const group of legacy.values()){
-  const mapped=group.files.some(f=>reviewedFiles.has(f.path))||group.token==='00'&&identities.all.some(r=>r.no===group.no&&!/[()]/.test(r.name));
-  if(mapped){legacyMapped++;continue;}
-  push({...group,source:'pokemod-legacy',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'available-at-source',priority:'review',disposition:'legacy-form-costume-number-review-required'});
+  const pair=minedPairCoverage(group,{identities,art,verified});
+  for(const variant of ['normal','shiny'])if(pair.variants[variant].artQualified)legacyVariants[variant]++;
+  if(pair.complete){legacyMapped++;continue;}
+  push({...group,...pair,source:'pokemod-legacy',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'available-at-source',priority:'review',disposition:'legacy-form-costume-number-review-required'});
  }
  for(const file of unparsed)push({id:'unparsed-mined:'+file.path,source:'pokemod',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets',discoveredAt:file.discoveredAt||sourceDate('pokemod'),releaseState:'uncertain',artState:'available-at-source',priority:'urgent',disposition:'unparsed-art-filename',file});
- coverage.pokemod={denominator:groups.size,unit:'addressable-icon-or-portrait-file-groups',iconFiles:[...groups.values()].reduce((n,g)=>n+g.files.filter(f=>f.path.endsWith('.icon.png')).length,0),portraitFiles:[...groups.values()].reduce((n,g)=>n+g.files.filter(f=>f.path.endsWith('.portrait.png')).length,0),mapped:minedMatched,unmatched:groups.size-minedMatched,legacyGroups:legacy.size,legacyFiles:[...legacy.values()].reduce((n,g)=>n+g.files.length,0),legacyMapped,legacyUnmapped:legacy.size-legacyMapped,unparsedImages:unparsed.length};
+ coverage.pokemod={denominator:groups.size,unit:'addressable-icon-or-portrait-file-groups',iconFiles:[...groups.values()].reduce((n,g)=>n+g.files.filter(f=>f.path.endsWith('.icon.png')).length,0),portraitFiles:[...groups.values()].reduce((n,g)=>n+g.files.filter(f=>f.path.endsWith('.portrait.png')).length,0),mapped:minedMatched,unmatched:groups.size-minedMatched,variantDenominator:groups.size*2,qualifiedVariants:minedVariants,qualification:'Matched requires one actual selectable canonical identity and separately qualified default normal/Shiny artwork; optional gender and release remain separate.',legacyGroups:legacy.size,legacyFiles:[...legacy.values()].reduce((n,g)=>n+g.files.length,0),legacyMapped,legacyUnmapped:legacy.size-legacyMapped,legacyVariantDenominator:legacy.size*2,legacyQualifiedVariants:legacyVariants,unparsedImages:unparsed.length};
  // Missing art is always an open item, even if older metadata called it unavailable.
  for(const row of art.entries.filter(r=>r.status==='unavailable')){const review=pendingArt.find(r=>row.names.includes(r.displayIdentity));push({id:'missing-art:'+row.no+':'+row.names[0],source:'local-review',no:row.no,name:row.names[0],discoveredAt:sources.manifest.importedAt,releaseState:row.identityStatus||'uncertain',artState:review?.reasonCategory==='mapping-ambiguous'?'exact-identity-ambiguous':review?.reasonCategory==='identity-unverified'?'game-identity-unverified':'missing-exact-art',priority:'urgent',disposition:'owner-attention-required',reason:review?.candidate?.reason||row.unavailableReason,sources:review?.acceptedSourcePage?[review.acceptedSourcePage]:[],lastReviewedDate:review?.lastReviewedDate,nextAction:review?.nextReviewAction||'Recheck active sprite inventory and exact costume aliases; report identity and source blocker to owner. Never substitute or close as unavailable.'});}
  for(const issue of variantIssues){if(!issue.id||!Number.isInteger(issue.no)||!issue.name||!issue.reason||!issue.sources?.length||!issue.nextAction)throw Error('Incomplete exact variant owner issue');push({...issue,id:'exact-variant:'+issue.id,source:'exact-variant-review',sourceUrl:issue.sources[0],priority:'urgent',disposition:'owner-attention-required'});}

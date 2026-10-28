@@ -155,5 +155,14 @@
       "sha256": "f5857ba29f00ef9871d0261226f09cd8a9c6e34efe487f33d15d1e1a501c80c4",
       "bytes": 145416
     }
+  ],
+  "secondarySources": [
+    {
+      "id": "pokeminers-head",
+      "url": "https://api.github.com/repos/PokeMiners/pogo_assets/commits/master",
+      "reviewedCommit": "c2a686eb08ace6e890d8fe3d2134c76988db87b5",
+      "sourceUpdatedAt": "2026-10-08T20:42:48Z",
+      "scope": "Head-change watch only; existing artwork identity and release coverage remain separately unresolved. A changed head requires review, not automatic asset approval."
+    }
   ]
 }

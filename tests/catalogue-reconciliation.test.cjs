@@ -91,3 +91,42 @@ test('actual selectable reconciliation retains explicit existing Mythical policy
  const input=inputs();input.identities.isTradeableForWishlist=entry=>entry.no!==151;input.sources.data['shiny-inventory']=[];input.sources.data['normal-inventory']=[{no:151,name:'Mew',sourceSprite:'https://example.test/151.png',source:'https://example.test/inventory',availabilityClaim:'listed-without-unavailable-marker'}];
  const report=reconcile(input);assert.equal(report.coverage['normal-inventory'].policyExcluded,1);assert.equal(report.coverage['normal-inventory'].unmatched,0);assert.ok(report.queue.some(r=>r.no===151&&r.disposition==='excluded-existing-trade-policy'&&r.priority==='review'));
 });
+
+test('a reviewed normal miner file cannot hide missing Shiny artwork or an absent picker form',()=>{
+ const input=inputs();input.sources.data['normal-inventory']=[];
+ input.sources.data.pokemod.tree=[{path:'Addressable Assets/pm999.fEXACT.icon.png',sha:'normal'},{path:'Addressable Assets/pm999.fEXACT.s.icon.png',sha:'shiny'}];
+ input.identities.all=[{no:999,name:'New Species (Exact)',catalogId:'exact'}];
+ input.art.entries=[{no:999,names:['New Species (Exact)'],status:'exact',sourceFile:'pm999.fEXACT.icon.png',assets:{default:'normal.png'}}];
+ let result=reconcile(input),row=result.queue.find(r=>r.id==='mined:999.fEXACT');
+ assert.equal(result.coverage.pokemod.mapped,0);assert.equal(row.variants.normal.artQualified,true);assert.equal(row.variants.shiny.artQualified,false);assert.equal(row.variants.shiny.sourceAvailable,true);assert.deepEqual(row.selectableCatalogIds,['exact']);
+ input.art.entries[0].assets.shiny='shiny.png';result=reconcile(input);assert.equal(result.coverage.pokemod.mapped,1);assert.equal(result.coverage.pokemod.variantDenominator,2);
+ input.identities.all=[];result=reconcile(input);row=result.queue.find(r=>r.id==='mined:999.fEXACT');assert.ok(row);assert.deepEqual(row.selectableCatalogIds,[]);assert.equal(row.variants.normal.artQualified,false);assert.equal(result.coverage.pokemod.mapped,0);
+});
+test('legacy miner pairs remain separate and same-art fallback cannot close Shiny',()=>{
+ const input=inputs();input.sources.data['normal-inventory']=[];input.identities.all=[{no:999,name:'New Species (Hat)',catalogId:'hat'}];
+ input.sources.data.pokemod.tree=[{path:'pokemon_icon_999_01.png',sha:'normal'},{path:'pokemon_icon_999_01_shiny.png',sha:'shiny'}];
+ input.art.entries=[{no:999,names:['New Species (Hat)'],status:'exact',sourceFile:'pokemon_icon_999_01.png',assets:{default:'normal.png',shiny:'normal.png'}}];
+ let result=reconcile(input);assert.equal(result.coverage.pokemod.legacyMapped,0);assert.equal(result.coverage.pokemod.legacyVariantDenominator,2);assert.equal(result.queue.find(r=>r.id==='legacy-mined:999:01').variants.shiny.artQualified,false);
+ input.art.entries[0].sameAppearanceEvidence='stellar-palette-10277-v1';result=reconcile(input);assert.equal(result.coverage.pokemod.legacyMapped,0);
+ input.art.entries[0].assets.shiny='exact-shiny.png';result=reconcile(input);assert.equal(result.coverage.pokemod.legacyMapped,1);
+});
+test('ordinary miner identity matching requires separately decoded normal and Shiny proofs',()=>{
+ const input=inputs();input.sources.data['normal-inventory']=[];input.sources.data.pokemod.tree=[{path:'Addressable Assets/pm999.icon.png',sha:'normal'},{path:'Addressable Assets/pm999.s.icon.png',sha:'shiny'}];input.identities.all=[{no:999,name:'New Species',catalogId:'base'}];
+ input.verifiedArt=[{no:999,shiny:false,status:'verified-bytes',decoded:true}];let result=reconcile(input);assert.equal(result.coverage.pokemod.mapped,0);assert.deepEqual(result.coverage.pokemod.qualifiedVariants,{normal:1,shiny:0});
+ input.verifiedArt.push({no:999,shiny:true,status:'verified-bytes',decoded:true});result=reconcile(input);assert.equal(result.coverage.pokemod.mapped,1);
+ input.identities.all=[];assert.equal(reconcile(input).coverage.pokemod.mapped,0);
+});
+
+test('independent miner head changes require review and failures never become a fresh baseline',async()=>{
+ const url='https://api.github.com/repos/PokeMiners/pogo_assets/commits/master',old='1'.repeat(40),latest='2'.repeat(40);
+ const make=()=>{const value=inputs().sources;value.manifest.secondarySources=[{id:'pokeminers-head',url,reviewedCommit:old,scope:'head watch only'}];return value;};
+ for(const success of [true,false]){
+  const input=make(),calls=[];
+  const result=await observeInventories(input,{now,fetchImpl:async target=>{calls.push(target);return target===url&&success?{ok:true,status:200,arrayBuffer:async()=>Buffer.from(JSON.stringify({sha:latest,commit:{committer:{date:'2026-10-26T12:00:00Z'}}}))}:{ok:false,status:503};}});
+  assert.equal(calls.filter(value=>value===url).length,1);assert.equal(result.manifest.secondarySources[0].reviewedCommit,old);assert.equal(input.manifest.secondarySources[0].observedAt,undefined);
+  if(success){assert.ok(result.assetChanges.some(row=>row.id==='secondary-miner-head:'+latest&&row.releaseState==='uncertain'));assert.equal(result.manifest.secondarySources[0].sourceUpdatedAt,'2026-10-26T12:00:00Z');assert.equal(result.manifest.secondarySources[0].observedAt,now.toISOString());}
+  else{assert.ok(result.issues.some(row=>row.source==='pokeminers-head'&&row.kind==='live-source-failed'));assert.equal(result.manifest.secondarySources[0].observedAt,undefined);}
+ }
+ const current=JSON.parse(fs.readFileSync(require('node:path').join(__dirname,'../data/catalogue-sources/manifest.json')));delete current.secondarySources;
+ assert.ok(loadSources(now,file=>String(file).endsWith('/manifest.json')?Buffer.from(JSON.stringify(current)):fs.readFileSync(file)).issues.some(row=>row.kind==='missing-or-invalid-secondary-watch'));
+});

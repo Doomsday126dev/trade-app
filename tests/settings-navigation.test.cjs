@@ -6,11 +6,11 @@ const {join}=require('node:path');
 const root=join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
-test('signed-in desktop Settings has five destinations and retains legacy Tools route compatibility',()=>{
+test('signed-in desktop Settings has six destinations and retains Tools route compatibility',()=>{
   assert.match(html,/const SETTINGS_DESKTOP_QUERY='\(min-width:768px\)'/);
   assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
-  for(const section of ['profile','language','appearance','security','data'])assert.match(html,new RegExp(`data-settings-target="${section}"`));
-  assert.doesNotMatch(html,/data-settings-target="tools"/);
+  for(const section of ['profile','language','appearance','security','tools','data'])assert.match(html,new RegExp(`data-settings-target="${section}"`));
+  assert.match(html,/data-settings-target="tools"/);
   assert.match(html,/function settingsRouteHash\(section=null\)\{return section&&SETTINGS_SECTIONS\.includes\(section\)\?`#settings\/\$\{section\}`:'#settings';\}/);
   assert.match(html,/\.settings-overlay\.settings-page-mode\{[^}]*background:var\(--bg\)/);
   assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*max-width:var\(--container-wide\)[^}]*grid-template-columns:200px minmax\(0,1fr\)/);
