@@ -7,3 +7,5 @@ The five form pairs need ten new immutable PNG paths in the protected frontend a
 The reviewed protected-control process must promote the exact allowlist delta and preserve all current read guards, handler contracts, permissions, timeout/performance budgets, deployment provenance and expected-live checks. No requirement is relaxed. Exact-source registration and release stamping belong to that later reviewed release; this draft keeps its inherited stamp and makes no tags or dispatch.
 
 The PNG originals and hashes are pinned in `data/catalogue-sources/early-want-form-evidence.json`. Local artifact/reference validation and decoded browser routes pass. Existing allowlist paths remain present; only ten asset paths are added.
+
+Owner publication approval received for PR194 then PR195 and this specific ten-image amendment. The first release is now byte-verified .162 under control4a979f983be646bf20d9834337a680dad72021b4. Promote the exact ten-path delta into the next immutable control and preserve all other read/access/build guards. The .163 runtime and later exact-SHA registration must be frozen before dispatcher repin and final hosted qualification.
