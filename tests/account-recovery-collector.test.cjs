@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
-function load(){const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,TextEncoder,Uint8Array,unescape,encodeURIComponent,decodeURIComponent,JSON,Object,Number,Error,TypeError,URL});for(const file of['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/dev/accountRecoveryBundle.js','js/dev/accountRecoveryCollector.js','js/dev/accountRecoveryDryRun.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);return window;}
+function load(){const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,TextEncoder,Uint8Array,unescape,encodeURIComponent,decodeURIComponent,JSON,Object,Number,Error,TypeError,URL});for(const file of['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/dev/accountRecoveryLegacyConversion.js','js/dev/accountRecoveryBatchPlan.js','js/dev/accountRecoveryOwnerConsumer.js','js/dev/accountRecoveryPreferences.js','js/dev/accountRecoveryBundle.js','js/dev/accountRecoveryCollector.js','js/dev/accountRecoveryDryRun.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);return window;}
 async function harness(){
   const w=load(),model=w.PogoDomain.accountSyncModel,merge=w.PogoDomain.accountSyncMerge,bundle=w.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),uid='synthetic-owner',username='SyntheticTrainer',paths=[];
   let session={uid,username,lifecycleId:'synthetic-life',accountReady:true};
@@ -100,4 +100,103 @@ test('typed content adapters retain conflicts, rebind owned history metadata and
  assert.equal(plan.additions.some(row=>['permissions','groups','sharing','journal'].includes(row.section)),false);
  source.sections.preferences.records.find(row=>row.id==='device').value.isAdmin=true;
  assert.throws(()=>adapter.prepare({source,current}),{code:'recovery/privileged-content-forbidden'});
+});
+
+test('legacy conversion requires real catalog identity and preserves unresolved content for review',async()=>{
+ const h=await harness(),source=await h.make().collect();
+ const converter=h.w.PogoDev.accountRecoveryLegacyConversion.create({bundleModel:h.bundle,parseListValue:value=>({priority:value}),catalogIdentity:(lane,name)=>name==='Pikachu'?{catalogId:'pokemon:25:base'}:null,resolveFavoriteUid:async()=>null});
+ const converted=await converter.convert(source);assert.equal(converted.bundle.source.ownerUid,h.uid);
+ assert.deepEqual(JSON.parse(JSON.stringify(converted.bundle.sections.legacyLists)),JSON.parse(JSON.stringify(source.sections.legacyLists)));
+ const unresolved=h.w.PogoDev.accountRecoveryLegacyConversion.create({bundleModel:h.bundle,parseListValue:value=>({priority:value}),catalogIdentity:()=>({catalogId:'legacy:unknown'}),resolveFavoriteUid:async()=>null});
+ assert.ok((await unresolved.convert(source)).manualReview.some(row=>row.reason==='catalog-identity-unresolved'));
+});
+test('large restore batch plan is stable, bounded and refuses wrong-owner or duplicate operations',async()=>{
+ const h=await harness(),ops=[];
+ for(let n=0;n<101;n++){const identity={surface:'my-list',lane:'wishlist',catalogId:`pokemon:test${n}`};ops.push((await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:h.model.tradeEntryId(identity),identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10,operationId:`op_test_large_recovery_${String(n).padStart(8,'0')}`})).value);}
+ const planner=h.w.PogoDev.accountRecoveryBatchPlan.create({maxItems:25,maxBytes:65536}),args={operations:ops,ownerUid:h.uid,sourceDigest:'a'.repeat(64)};
+ const plan=await planner.prepare(args);assert.equal(plan.batches.length,5);assert.equal(plan.operationCount,101);assert.deepEqual(await planner.prepare({...args,operations:[...ops].reverse()}),plan);
+ assert.ok(plan.batches.every(batch=>batch.operations.length<=25&&Buffer.byteLength(JSON.stringify(batch.operations))<=65536));
+ await assert.rejects(planner.prepare({...args,ownerUid:'other-owner'}),{code:'recovery/batch-operation-invalid'});
+ await assert.rejects(planner.prepare({...args,operations:[ops[0],ops[0]]}),{code:'recovery/batch-operation-invalid'});
+});
+
+test('owner consumer resumes a lost acknowledgement without resending and rejects later owner changes',async()=>{
+ const h=await harness(),source=await h.make().collect(),entity=h.entity,identity=entity.identity;
+ const op=(await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:entity.entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10,operationId:'op_owner_recovery_consumer_12345678'})).value;
+ const meta=new Map();let current=null,writes=0,drop=true,session={uid:h.uid,lifecycleId:'life-1',accountReady:true};
+ const repository={ownerUid:h.uid,readAccount:async()=>({meta:{ownerUid:h.uid,initialized:true},tradeEntries:current?{[op.entityId]:current}:{}}),applyOperation:async operation=>{writes++;current=h.merge.mergeOperation(null,operation,{acceptedAt:11}).value;if(drop){drop=false;throw Error('lost acknowledgement');}return{ok:true,value:current};}};
+ const args={enabled:true,repository,journal:{getMeta:async key=>meta.get(key),setMeta:async(key,value)=>meta.set(key,JSON.parse(JSON.stringify(value)))},bundleModel:h.bundle,batchPlanner:h.w.PogoDev.accountRecoveryBatchPlan.create(),verifyTradeIdentity:identity=>identity,getSession:()=>session};
+ const first=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),ticket=await first.review({sourceBundle:source,operations:[op],accepted:true});await assert.rejects(first.run(ticket),/lost acknowledgement/);
+ const reopened=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),review=await reopened.review({sourceBundle:source,resumeDigest:ticket.digest,accepted:true});assert.equal((await reopened.run(review)).status,'verified');assert.equal(writes,1);
+ current={...current,values:{...current.values,priority:'L'}};await assert.rejects(reopened.run(review),{code:'recovery/committed-content-changed'});assert.equal(writes,1);
+ session={uid:'other-owner',lifecycleId:'life-2',accountReady:true};await assert.rejects(reopened.run(review));assert.equal(writes,1);
+});
+
+test('history production consumer is default-off, owner-bound and append-only',()=>{
+ const window={},context=vm.createContext({window,console,Object,JSON,Date,Number,Set,Map,Error,TypeError});window.PogoDomain={productLimits:{MAX_FAVORITES:100}};
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/data/trainerHistoryStore.js'),'utf8'),context);
+ const map=new Map(),storage={get length(){return map.size;},key:i=>[...map.keys()][i],getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value),removeItem:key=>map.delete(key)};
+ const identity={uid:'history-owner',username:'HistoryTrainer'},api=window.PogoData.trainerHistoryStore;
+ const off=api.createTrainerHistoryStore({storage,identity}),history={version:3,owner:identity,recent:[{displayName:'Other Trainer',openedAt:100}],snapshots:{'other trainer':{seenAt:100,snapshot:{wishlist:{Pikachu:'H'}}}},favorites:[{displayName:'Must not become favorite'}],tags:{}};
+ assert.equal(off.restoreOwnedHistoryArchive({sourceDigest:'a'.repeat(64),history}).code,'recovery/disabled');
+ const store=api.createTrainerHistoryStore({storage,identity,recoveryEnabled:true});storage.setItem(store.key,JSON.stringify({version:3,schemaVersion:3,migrationVersion:3,owner:identity,recent:[],favorites:[],tags:{},snapshots:{}}));const original=storage.getItem(store.key);
+ assert.equal(store.restoreOwnedHistoryArchive({sourceDigest:'a'.repeat(64),history}).ok,true);assert.equal(storage.getItem(store.key),original);
+ assert.equal(store.read().recent[0].displayName,'Other Trainer');assert.equal(store.read().favorites.length,0);assert.equal(store.snapshotFor('Other Trainer').snapshot.wishlist.Pikachu,'H');
+ assert.equal(store.restoreOwnedHistoryArchive({sourceDigest:'a'.repeat(64),history}).status,'idempotent');
+ assert.equal(store.restoreOwnedHistoryArchive({sourceDigest:'b'.repeat(64),history:{...history,owner:{uid:'other-owner',username:'OtherTrainer'}}}).ok,false);
+});
+
+test('display preference recovery is reviewed, owner-bound, reloadable and yields to normal choices',async()=>{
+ const h=await harness(),source=JSON.parse(JSON.stringify(await h.make().collect()));source.sections.preferences.records.find(row=>row.id==='device').value={theme:'dark',locale:'ja',shareVisibility:'public'};
+ const bundle=await h.bundle.create({source:source.source,sections:source.sections}),map=new Map([['pogoTheme','"light"'],['pogoUiLocale:v1','en']]);
+ const storage={get length(){return map.size;},key:i=>[...map.keys()][i],getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value)};
+ let session={uid:h.uid,lifecycleId:'life'};const module=h.w.PogoDev.accountRecoveryPreferences,args={enabled:true,storage,bundleModel:h.bundle,getSession:()=>session};
+ assert.equal(module.create().available,false);const consumer=module.create(args);
+ await assert.rejects(consumer.review({sourceBundle:bundle}),{code:'recovery/explicit-review-required'});
+ const ticket=await consumer.review({sourceBundle:bundle,accepted:true});assert.deepEqual([...ticket.unsupported],['shareVisibility']);assert.equal(consumer.confirm(ticket).status,'restored');
+ assert.equal(storage.getItem('pogoTheme'),'"light"');assert.equal(storage.getItem('pogoUiLocale:v1'),'en');
+ const reopened=module.create(args);assert.equal(reopened.read('theme','light'),'dark');assert.equal(reopened.read('locale','en'),'ja');
+ session={uid:'another-owner',lifecycleId:'other'};assert.equal(reopened.read('theme','light'),'light');session={uid:h.uid,lifecycleId:'life'};
+ module.noteNormalWrite(storage,'theme');assert.equal(reopened.read('theme','light'),'light');
+ const next=await reopened.review({sourceBundle:bundle,accepted:true});storage.setItem('pogoUiLocale:v1','es');assert.throws(()=>reopened.confirm(next),{code:'recovery/preference-conflict'});
+ const pending=await reopened.review({sourceBundle:bundle,accepted:true});session={uid:h.uid,lifecycleId:'reload'};assert.throws(()=>reopened.confirm(pending),{code:'recovery/session-changed'});
+});
+
+test('competing recovered preferences report conflict through fallback and never overwrite device choices',async()=>{
+ const h=await harness(),source=await h.make().collect(),map=new Map(),storage={get length(){return map.size;},key:i=>[...map.keys()][i],getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value)};
+ const consumer=h.w.PogoDev.accountRecoveryPreferences.create({enabled:true,storage,bundleModel:h.bundle,getSession:()=>({uid:h.uid,lifecycleId:'life'})});
+ consumer.confirm(await consumer.review({sourceBundle:source,accepted:true}));const different=JSON.parse(JSON.stringify(source));different.sections.preferences.records.find(row=>row.id==='device').value.theme='light';
+ const bundle=await h.bundle.create({source:different.source,sections:different.sections});consumer.confirm(await consumer.review({sourceBundle:bundle,accepted:true}));assert.equal(consumer.read('theme','auto'),'auto');assert.equal(storage.getItem('pogoTheme'),null);
+});
+
+test('multiple restore batches resume after interruption, preserve unrelated edits and refuse missing uncertain writes',async()=>{
+ const h=await harness(),source=await h.make().collect(),operations=[],entities={};
+ for(let i=0;i<7;i++){const identity={surface:'my-list',lane:'wishlist',catalogId:`pokemon:${i+1}:base`},op=(await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:h.model.tradeEntryId(identity),identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10,operationId:`op_batch_restore_${String(i).padStart(20,'0')}`})).value;operations.push(op);entities[`tradeEntry:${op.entityId}`]=h.merge.mergeOperation(null,op,{acceptedAt:11}).value;}
+ source.sections.canonicalEntities.records=Object.entries(entities).map(([id,value])=>({id,value}));const bundle=await h.bundle.create({source:source.source,sections:source.sections});
+ const meta=new Map(),rows={},calls=[];let interrupt=true,session={uid:h.uid,lifecycleId:'life',accountReady:true};
+ const repository={ownerUid:h.uid,readAccount:async()=>({meta:{ownerUid:h.uid,initialized:true},tradeEntries:rows}),applyOperation:async op=>{calls.push(op.operationId);rows[op.entityId]=h.merge.mergeOperation(rows[op.entityId]||null,op,{acceptedAt:11}).value;return{ok:true};}};
+ const args={enabled:true,repository,journal:{getMeta:async key=>meta.get(key),setMeta:async(key,value)=>meta.set(key,JSON.parse(JSON.stringify(value)))},bundleModel:h.bundle,batchPlanner:h.w.PogoDev.accountRecoveryBatchPlan.create({maxItems:2}),verifyTradeIdentity:identity=>identity,getSession:()=>session,onBatch:async()=>{if(interrupt){interrupt=false;throw Error('reload interruption');}}};
+ const first=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),ticket=await first.review({sourceBundle:bundle,operations,accepted:true});assert.equal(ticket.batchCount,4);await assert.rejects(first.run(ticket),/reload interruption/);assert.equal(calls.length,2);
+ rows.unrelated={ownerUid:h.uid,values:{priority:'L'}};const reopened=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),review=await reopened.review({sourceBundle:bundle,resumeDigest:ticket.digest,accepted:true});assert.equal((await reopened.run(review)).verified,7);assert.equal(calls.length,7);assert.equal(rows.unrelated.values.priority,'L');
+ assert.equal((await reopened.run(review)).verified,7);assert.equal(calls.length,7);
+ const patched=operations[0],patch=(await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:patched.entityId,identity:patched.identity,kind:'patch',baseGeneration:1,generation:1,baseFieldRevisions:{priority:1},patch:{priority:'L'},clientAt:12,operationId:'op_batch_later_owner_patch_123456'})).value;
+ const result=h.merge.mergeOperation(rows[patched.entityId],patch,{acceptedAt:13});assert.equal(result.ok,true);rows[patched.entityId]=result.value;
+ await assert.rejects(reopened.run(review),{code:'recovery/committed-content-changed'});assert.equal(rows[patched.entityId].values.priority,'L');assert.equal(calls.length,7);
+ session={uid:'different-user',lifecycleId:'other',accountReady:true};await assert.rejects(reopened.run(review));assert.equal(calls.length,7);
+});
+
+test('uncertain missing write remains blocked after reload until authoritative readback proves its outcome',async()=>{
+ const h=await harness(),source=await h.make().collect(),entity=h.entity,op=(await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:entity.entityId,identity:entity.identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:entity.values,clientAt:10,operationId:'op_missing_pending_recovery_12345'})).value;
+ let row=null,writes=0,mode='reject';const meta=new Map(),args={enabled:true,repository:{ownerUid:h.uid,readAccount:async()=>({meta:{ownerUid:h.uid,initialized:true},tradeEntries:row?{[op.entityId]:row}:{}}),applyOperation:async operation=>{writes++;if(mode==='reject')throw Error('unknown network outcome');row=h.merge.mergeOperation(null,operation,{acceptedAt:11}).value;return{ok:true};}},journal:{getMeta:async key=>meta.get(key),setMeta:async(key,value)=>meta.set(key,JSON.parse(JSON.stringify(value)))},bundleModel:h.bundle,batchPlanner:h.w.PogoDev.accountRecoveryBatchPlan.create(),verifyTradeIdentity:identity=>identity,getSession:()=>({uid:h.uid,lifecycleId:'life',accountReady:true})};
+ const create=()=>h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),first=create(),ticket=await first.review({sourceBundle:source,operations:[op],accepted:true});await assert.rejects(first.run(ticket),/unknown network outcome/);
+ const reopened=create(),again=await reopened.review({sourceBundle:source,resumeDigest:ticket.digest,accepted:true});await assert.rejects(reopened.run(again),{code:'recovery/outcome-unproven'});assert.equal(writes,1);
+ // Independent proof arrives through the authoritative repository, never a reset of the checkpoint.
+ row=h.merge.mergeOperation(null,op,{acceptedAt:11}).value;assert.equal((await reopened.run(again)).status,'verified');assert.equal(writes,1);
+});
+
+test('cancel during an already-started restore write leaves a durable checkpoint and reconciles without another write',async()=>{
+ const h=await harness(),source=await h.make().collect(),op=(await h.model.createOperation({ownerUid:h.uid,entityType:'tradeEntry',entityId:h.entity.entityId,identity:h.entity.identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10,operationId:'op_canceled_recovery_commit_12345'})).value;
+ let row=null,writes=0,release,entered;const wait=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve),meta=new Map(),args={enabled:true,repository:{ownerUid:h.uid,readAccount:async()=>({meta:{ownerUid:h.uid,initialized:true},tradeEntries:row?{[op.entityId]:row}:{}}),applyOperation:async operation=>{writes++;entered();await wait;row=h.merge.mergeOperation(null,operation,{acceptedAt:11}).value;return{ok:true};}},journal:{getMeta:async key=>meta.get(key),setMeta:async(key,value)=>meta.set(key,JSON.parse(JSON.stringify(value)))},bundleModel:h.bundle,batchPlanner:h.w.PogoDev.accountRecoveryBatchPlan.create(),verifyTradeIdentity:identity=>identity,getSession:()=>({uid:h.uid,lifecycleId:'life',accountReady:true})};
+ const first=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),ticket=await first.review({sourceBundle:source,operations:[op],accepted:true}),pending=first.run(ticket);await started;assert.equal(first.cancel().status,'stopping-after-current-write');release();await assert.rejects(pending,{code:'recovery/session-changed'});
+ const reopened=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),review=await reopened.review({sourceBundle:source,resumeDigest:ticket.digest,accepted:true});assert.equal((await reopened.run(review)).status,'verified');assert.equal(writes,1);
 });

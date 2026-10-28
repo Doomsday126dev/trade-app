@@ -302,10 +302,11 @@
       }
       return flushProviderProfile(queued);
     }
-    function updateProviderProfile(patch={}){
+    function updateProviderProfile(patch={},{expectedRevision}={}){
       const work=profileMutationPromise.then(async()=>{
         requireRunning();
         if(initializationKind!=='provider-only'||!profileReady||!providerProfile)return model.failure('account-sync/profile-not-ready','Provider profile is not ready');
+        if(expectedRevision!==undefined&&(providerProfile.revision!==expectedRevision||providerProfilePending))return model.failure('account-sync/profile-conflict','Provider profile changed after recovery review');
         if(!model.plainObject(patch)||Object.keys(patch).some(key=>!model.PROFILE_VALUE_FIELDS.includes(key)))return model.failure('account-sync/profile-invalid','Provider profile edit contains unknown fields');
         const baseValues=providerProfilePending?.values||model.profileValues(providerProfile),normalized=model.normalizeProfileValues({...baseValues,...patch});
         if(!normalized.ok)return normalized;

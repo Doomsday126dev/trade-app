@@ -33,7 +33,7 @@
   function timestamp(value,fallback=0){const parsed=Number(value);return Number.isFinite(parsed)&&parsed>=0?parsed:fallback;}
   function plainObject(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
   function empty(identity){return{version:VERSION,schemaVersion:VERSION,migrationVersion:VERSION,owner:{uid:String(identity.uid),username:String(identity.username)},favorites:[],recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};}
-  function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
+  function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,recoveryEnabled=false,now=()=>Date.now()}={}){
     if(!storage)throw new TypeError('trainer history requires storage');
     const key=ownerKey(identity);
     const retainedKey=`${key}:before-canonical-v1`;
@@ -91,6 +91,13 @@
       return state;
     }
     function write(value){const clean=normalize({...value,version:VERSION,owner:{uid:identity.uid,username:identity.username}});storage.setItem(key,JSON.stringify(clean));return clean;}
+    const archivePrefix=`${key}:recovery-v1:`;
+    function archives(){
+      const values=[];if(recoveryEnabled!==true||typeof storage.key!=='function')return values;
+      for(let i=0;i<storage.length;i++){const name=storage.key(i);if(!name?.startsWith(archivePrefix))continue;
+        try{const row=JSON.parse(storage.getItem(name));if(row?.owner?.uid===identity.uid&&row.owner.username===identity.username&&Number.isSafeInteger(row.version)&&row.version>=1&&row.version<=VERSION)values.push({name,row});}catch{}
+      }return values.sort((a,b)=>a.name.localeCompare(b.name)).map(value=>value.row);
+    }
     function read(){
       try{
         const raw=JSON.parse(storage.getItem(key)||'null');
@@ -99,6 +106,13 @@
         const state=normalize(raw);
         const migrationNeeded=raw&&raw.owner?.uid===identity.uid&&raw.owner?.username===identity.username&&(raw.version!==VERSION||raw.schemaVersion!==VERSION||raw.migrationVersion!==VERSION);
         if(migrationNeeded){try{storage.setItem(key,JSON.stringify(state));}catch{} }
+        let recoveredBytes=Object.values(state.snapshots).reduce((total,value)=>total+utf8ByteLength(JSON.stringify(value)),0);
+        for(const archive of archives()){
+          const recent=new Map(state.recent.map(item=>[item.key,item]));
+          for(const item of Array.isArray(archive.recent)?archive.recent:[]){const clean=cleanRecent(item);if(clean&&!recent.has(clean.key))recent.set(clean.key,clean);}
+          state.recent=[...recent.values()].sort((a,b)=>b.openedAt-a.openedAt).slice(0,maxRecent);
+          for(const [name,value]of Object.entries(plainObject(archive.snapshots)))if(!state.snapshots[name]){const clean=cleanSnapshot(value);if(clean){const bytes=utf8ByteLength(JSON.stringify(clean));if(recoveredBytes+bytes<=MAX_HISTORY_BYTES){state.snapshots[name]=clean;recoveredBytes+=bytes;}}}
+        }
         return state;
       }catch{return empty(identity);}
     }
@@ -106,6 +120,16 @@
     function uniqueTagId(state){let suffix=Number(now()).toString(36),id=`tag_${suffix}`,index=1;while(state.tags[id])id=`tag_${suffix}_${index++}`;return id;}
     return Object.freeze({
       key,retainedKey,read,favoriteFor,
+      restoreOwnedHistoryArchive({sourceDigest,history}={}){
+        if(recoveryEnabled!==true)return{ok:false,code:'recovery/disabled'};
+        if(!/^[a-f0-9]{64}$/.test(sourceDigest||'')||history?.owner?.uid!==identity.uid||history.owner.username!==identity.username||!Number.isSafeInteger(history.version)||history.version<1||history.version>VERSION||[history.schemaVersion,history.migrationVersion].some(version=>version!==undefined&&(!Number.isSafeInteger(version)||version>VERSION)))return{ok:false,code:'recovery/history-owner-or-version-invalid'};
+        const payload={version:history.version,owner:{...history.owner},recent:history.recent||[],snapshots:history.snapshots||{}};
+        const serialized=JSON.stringify(payload);if(utf8ByteLength(serialized)>MAX_HISTORY_BYTES)return{ok:false,code:'recovery/history-size-limit'};
+        const target=archivePrefix+sourceDigest,prior=storage.getItem(target);
+        if(prior!==null&&prior!==serialized)return{ok:false,code:'recovery/history-conflict'};
+        if(prior===null)storage.setItem(target,serialized);
+        return{ok:storage.getItem(target)===serialized,status:prior===null?'restored':'idempotent',favoritesAndTagsImported:false,value:read()};
+      },
       isFavorite:username=>!!favoriteFor(username),
       toggleFavorite(username,{targetUid=''}={}){
         const state=read(),item=trainerRef(username),index=state.favorites.findIndex(value=>value.key===item.key),timestamp=Number(now());
@@ -211,7 +235,7 @@
           return(!needle||text.includes(needle))&&(!selected.length||selected.every(id=>item.tagIds.includes(id)));
         });
       },
-      clear(){storage.removeItem(key);}
+      clear(){storage.removeItem(key);if(recoveryEnabled===true){const keys=[];for(let i=0;i<storage.length;i++){const name=storage.key(i);if(name?.startsWith(archivePrefix))keys.push(name);}for(const name of keys)storage.removeItem(name);}}
     });
   }
   root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_SNAPSHOT_BYTES,MAX_HISTORY_BYTES,createTrainerHistoryStore});

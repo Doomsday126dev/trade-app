@@ -979,3 +979,11 @@ for(const outcome of ['before-commit','lost-response'])test(`provider initial pr
  assert.equal((await reopened.start()).ok,true);assert.equal(reopened.providerProfile.bio,'Initial draft');assert.equal(reopened.providerProfile.friendCode,'0000 1111 2222');
  assert.equal(journal.meta.has('provider-profile-pending-v1'),false);assert.equal(writes,outcome==='before-commit'?2:1);assert.equal(state.calls.createMigration,0);await reopened.stop();
 });
+
+test('profile recovery expected revision prevents replacing a later owner edit',async()=>{
+ const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),journal=h.createMemoryJournalState();
+ const runtime=createRuntime(window,h,state,journal,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});await runtime.start();
+ const revision=runtime.providerProfile.revision;await runtime.updateProviderProfile({bio:'Newer owner content'});
+ const writes=state.calls.writeProfile,result=await runtime.updateProviderProfile({bio:'Old backup'},{expectedRevision:revision});
+ assert.equal(result.ok,false);assert.equal(result.error.code,'account-sync/profile-conflict');assert.equal(runtime.providerProfile.bio,'Newer owner content');assert.equal(state.calls.writeProfile,writes);await runtime.stop();
+});

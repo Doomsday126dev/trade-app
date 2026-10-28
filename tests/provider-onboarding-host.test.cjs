@@ -1,12 +1,12 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),acorn=require('acorn');
 const source=fs.readFileSync('js/app/application.js','utf8'),ast=acorn.parse(source,{ecmaVersion:'latest'});
-const names=['googleOnboardingSessionCurrent','requireGoogleOnboardingSession','beginGoogleOnboarding','checkGoogleOnboarding','cancelGoogleOnboarding'];
+const names=['googleOnboardingSessionCurrent','requireGoogleOnboardingSession','beginGoogleOnboarding','checkGoogleOnboarding','cancelGoogleOnboarding','activateDiscordAccountCandidate','bindDiscordHostCandidate','createOwnerRecoveryConsumerCandidate','restoreOwnerRecoveryProfileCandidate','restoreOwnerRecoveryHistoryCandidate','refreshOwnerRecoveryPreferencesCandidate'];
 const code=names.map(name=>{const node=ast.body.find(node=>node.type==='FunctionDeclaration'&&node.id.name===name);assert.ok(node,name);return source.slice(node.start,node.end);}).join('\n');
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return{promise,resolve,reject};}
 function fixture(){
  const calls=[],elements=new Map(),user={uid:'new-google-uid'},session={uid:user.uid,lifecycleId:'auth-1',closing:false};
- const ctx={window:{},auth:{currentUser:user},providerGoogleOnboardingSession:session,providerGoogleAccountResolution:null,
+ const ctx={window:{},auth:{currentUser:user},providerGoogleOnboardingSession:session,providerGoogleAccountResolution:null,providerDiscordResolutionPromise:null,
   PROVIDER_CAPABILITIES:{providerAccountCreation:true},providerAuthSnapshot:()=>ctx.auth.currentUser?{uid:ctx.auth.currentUser.uid,lifecycleId:ctx.lifecycle}:null,lifecycle:'auth-1',
   document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{value:id.includes('handle')?'TrainerNew':'',textContent:''});return elements.get(id);}},
   providerFailure:(code,state)=>Object.assign(new Error(code),{code,state}),providerUiMessage:code=>code,
@@ -56,4 +56,44 @@ test('verified completion binds the original UID and lifecycle before activation
  const h=fixture();h.ctx.providerOnboardingController.create=async()=>({status:'account-ready',foundation:{canonicalTrainerName:'TrainerNew'}});
  assert.equal((await h.ctx.checkGoogleOnboarding()).status,'opened');const result=h.calls.find(v=>Array.isArray(v))[1];
  assert.equal(result.uid,h.user.uid);assert.equal(result.lifecycleId,'auth-1');assert.equal(h.ctx.providerGoogleOnboardingSession,null);
+});
+
+test('Discord host activation uses the verified account reader and original UID',async()=>{
+ const h=fixture();h.ctx.window.__POGO_DISCORD_HOST_CANARY__=true;h.ctx.window.__POGO_DISCORD_HOST_CANARY_UID__=h.user.uid;h.ctx.window.__pogoProviderHostAuthGate.snapshot=()=>({authCoordinationBlocked:false});
+ h.ctx.resolveGoogleAccountBinding=async(uid,{readFoundation})=>{const result=await readFoundation();return{status:'existing',uid,username:'TrainerNew',foundation:result.foundation,lifecycleId:'auth-1'};};
+ const runtime={available:true,readAccount:async()=>{h.calls.push('verified-discord-read');return{foundation:{canonicalTrainerName:'TrainerNew',identityKind:'provider_only'}};}};
+ const host=h.ctx.bindDiscordHostCandidate(runtime);assert.equal((await host.onRegistered()).status,'opened');assert.equal(h.calls[0],'verified-discord-read');assert.equal(h.calls[1][1].uid,h.user.uid);
+});
+test('Discord activation rejects a switched UID before opening any account',async()=>{
+ const h=fixture(),wait=deferred();h.ctx.window.__POGO_DISCORD_HOST_CANARY__=true;h.ctx.window.__POGO_DISCORD_HOST_CANARY_UID__=h.user.uid;h.ctx.window.__pogoProviderHostAuthGate.snapshot=()=>({authCoordinationBlocked:false});
+ h.ctx.resolveGoogleAccountBinding=async(uid,{readFoundation})=>{await readFoundation();return{status:'existing',uid};};
+ const pending=h.ctx.activateDiscordAccountCandidate({available:true,readAccount:()=>wait.promise});h.ctx.auth.currentUser={uid:'other-owner'};wait.resolve({foundation:{canonicalTrainerName:'TrainerNew'}});
+ await assert.rejects(pending,{code:'discord/session-changed'});assert.equal(h.calls.length,0);
+});
+test('host recovery and Discord factories are disabled without explicit candidate flags',async()=>{
+ const h=fixture();assert.equal(h.ctx.createOwnerRecoveryConsumerCandidate().available,false);assert.equal(h.ctx.bindDiscordHostCandidate({available:true}).available,false);
+ await assert.rejects(h.ctx.activateDiscordAccountCandidate({available:true}),{code:'discord/host-disabled'});
+});
+
+function recoveryHostFixture(){
+ const h=fixture(),uid=h.user.uid;h.ctx.window.__POGO_RECOVERY_OWNER_CANARY__=true;h.ctx.window.__POGO_RECOVERY_OWNER_CANARY_UID__=uid;h.ctx.cur='TrainerNew';h.ctx.accountSyncProjectionReady=()=>true;h.ctx.providerOnlyIdentityActive=()=>true;
+ h.ctx.accountSyncModel={validateProfileRecord:()=>({ok:true}),profileValues:value=>value.values||value,normalizeProfileValues:value=>({ok:true,value})};
+ h.ctx.managedAccountSyncRuntime={ownerUid:uid,providerProfile:{bio:'',friendCode:'',discord:'',avatarPokemon:'',revision:4},updateProviderProfile:async(patch,options)=>{h.calls.push(['profile-write',patch,options]);return{ok:true};}};
+ h.ctx.window.PogoDev={accountRecoveryBundle:{createAccountRecoveryBundle:()=>({verify:async value=>value})}};return h;
+}
+test('host profile restore fills blank owned fields with the captured revision and preserves conflicting fields',async()=>{
+ const h=recoveryHostFixture(),source={source:{ownerUid:h.user.uid},sections:{profile:{records:[{id:'canonical-profile',value:{values:{bio:'Recovered'}}}]}}};
+ assert.equal((await h.ctx.restoreOwnerRecoveryProfileCandidate(source)).ok,true);assert.equal(h.calls[0][1].bio,'Recovered');assert.equal(h.calls[0][2].expectedRevision,4);
+ h.calls.length=0;h.ctx.managedAccountSyncRuntime.providerProfile.bio='Owner changed this';assert.equal((await h.ctx.restoreOwnerRecoveryProfileCandidate(source)).status,'conflict-review');assert.equal(h.calls.length,0);
+});
+test('host profile and history restores reject a lifecycle switch during verification before writes',async()=>{
+ const h=recoveryHostFixture(),wait=deferred();h.ctx.window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle=()=>({verify:()=>wait.promise});
+ h.ctx.ensureTrainerHistoryStore=()=>({restoreOwnedHistoryArchive:()=>{throw Error('must not write');}});
+ const profile=h.ctx.restoreOwnerRecoveryProfileCandidate({}),history=h.ctx.restoreOwnerRecoveryHistoryCandidate({});h.ctx.lifecycle='replacement';wait.resolve({source:{ownerUid:h.user.uid,trainerHandle:'TrainerNew'}});
+ await assert.rejects(profile,{code:'recovery/session-changed'});await assert.rejects(history,{code:'recovery/session-changed'});assert.equal(h.calls.length,0);
+});
+test('delayed preference rendering cannot apply to a switched account or replace a newer language choice',async()=>{
+ const h=recoveryHostFixture();let locale='ja';const wait=deferred();h.ctx.window.__pogoEnsureLocale=()=>wait.promise;h.ctx.i18nCore={readStoredLocale:()=>locale,detectBrowserLocale:()=> 'en',setLocale:value=>h.calls.push(['locale',value])};h.ctx.recoveredDisplayPreference=(_field,fallback)=>fallback;h.ctx.applyTheme=value=>h.calls.push(['theme',value]);h.ctx.lsGet=()=> 'light';h.ctx.renderInterimProductLabels=()=>{};
+ const first=h.ctx.refreshOwnerRecoveryPreferencesCandidate();h.ctx.auth.currentUser={uid:'different-owner'};wait.resolve();await first;assert.equal(h.calls.length,0);
+ h.ctx.auth.currentUser=h.user;const next=deferred();h.ctx.window.__pogoEnsureLocale=()=>next.promise;const second=h.ctx.refreshOwnerRecoveryPreferencesCandidate();locale='es';next.resolve();await second;assert.equal(h.calls.length,0);
 });

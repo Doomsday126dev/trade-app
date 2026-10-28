@@ -63,3 +63,31 @@ proofs. Recovery transfers/imports remain demo-only and are not staging setup.
 
 No owner input is needed to continue the remaining local integration. This is a
 review package, not a request to perform all steps under blanket authorization.
+
+## Canary identity and test-cost read-only follow-up (2026-10-28)
+
+No saved, dedicated canary name/UID was verified in the available workspace.
+The E1-D3 runbook's `E1D3Canary` naming policy and setup UID pattern are examples,
+not evidence that those accounts exist. Do not substitute an admin or enumerate
+real user lists to invent a canary. The current Chrome developer URL redirected
+to Discord login; no login, OAuth grant or linkage was attempted. Personal app
+ownership remains known, but the intended consenting Discord test user and any
+existing linkage remain unresolved.
+
+Observed staging authority controls were max instances 2, concurrency 1,
+15-second timeout, 0.5 CPU and 512 MiB, request-based CPU throttling. These are
+capacity controls, not a hard cap on all charges. A local runner can stop at a
+fixed request count/deadline and the first unexpected result without additional
+permissions. This bounds our test traffic, not traffic from other callers.
+
+An illustrative 100 gateway-call validation budget, counting 200 service
+invocations at 5 billed seconds, conservatively 1 CPU and 0.5 GiB each, plus
+1,000 reads, 500 writes, 100 deletes and 100 secret accesses, is about $0.03
+in direct usage before any shared free allowance. Three active secret versions
+kept for a month add up to $0.18 before shared allowances. This is not measured
+usage or an all-in bill: build/deploy, artifacts, logs, network and existing
+storage are excluded. The named Firestore database has no database free quota.
+No eligibility for shared allowances or hard cap is assumed. Sources:
+https://cloud.google.com/run/pricing,
+https://cloud.google.com/firestore/pricing,
+https://cloud.google.com/secret-manager/pricing.
