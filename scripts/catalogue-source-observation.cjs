@@ -68,6 +68,17 @@ async function observeInventories(sources,{fetchImpl=fetch,now=new Date()}={}){
   observed.data.pokemod=tree;record.commit=metadata.sha;record.observedAt=now.toISOString();record.sourceUpdatedAt=metadata.commit.committer.date;
   observed.issues=observed.issues.filter(r=>r.source!=='pokemod'||r.kind!=='stale-or-failed-source');
  }catch(e){fail('pokemod',e);}
+ // A bounded independent miner head check catches changes while the primary
+ // miner is quiet. It is not a second automatic form/eligibility classifier.
+ for(const watch of observed.manifest.secondarySources||[]){
+  try{
+   if(watch.id!=='pokeminers-head'||watch.url!=='https://api.github.com/repos/PokeMiners/pogo_assets/commits/master'||!/^[a-f0-9]{40}$/.test(watch.reviewedCommit||''))throw Error('Unreviewed secondary source watch');
+   const metadata=JSON.parse(await get(watch.url)),published=metadata.commit?.committer?.date;
+   if(!/^[a-f0-9]{40}$/.test(metadata.sha||'')||!Number.isFinite(Date.parse(published))||Date.parse(published)>now.getTime())throw Error('Invalid secondary source identity/date');
+   watch.observedAt=now.toISOString();watch.observedCommit=metadata.sha;watch.sourceUpdatedAt=published;
+   if(metadata.sha!==watch.reviewedCommit)assetChanges.push({id:'secondary-miner-head:'+metadata.sha,source:watch.id,sourceUrl:'https://github.com/PokeMiners/pogo_assets/commit/'+metadata.sha,discoveredAt:now.toISOString(),releaseState:'uncertain',artState:'source-head-changed-needs-art-review',priority:'urgent',disposition:'secondary-miner-change-review-required',reviewedCommit:watch.reviewedCommit,observedCommit:metadata.sha});
+  }catch(error){fail(watch.id||'secondary-miner',error);}
+ }
  for(const url of ['https://leekduck.com/events/','https://pokemongohub.net/feed/']){
   try{discoveries.push({sourceUrl:url,links:parseNewsFeed(await get(url),url)});}catch(e){fail(url,e);}
  }
