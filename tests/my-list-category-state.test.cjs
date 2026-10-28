@@ -42,9 +42,14 @@ test('category count compatibility reads declarations instead of raw duplicate a
 test('CSV exports the unified wants snapshot without changing selection or writing Firebase',()=>{
  const csv=block('function exportMyListCSV(','let publicLinkAttempt=');assert.match(csv,/productTextRows\(\)/);assert.match(csv,/wants\.csv/);
  assert.doesNotMatch(csv,/myListType\s*=|setMyList\(|allData\s*=|queueSync\(|writeList|writeListItem|set\s*\(\s*ref|update\s*\(\s*ref/);
- const helper=block('function productCSVText(','function exportMyListCSV(');assert.match(csv,/productCSVText\(entries\)/);
- const context={};vm.runInNewContext(helper,context);
- assert.equal(context.productCSVText([{name:'=SUM(A1)',note:'say \"hi\"'},{name:'@cmd',note:'safe'}]),'\"name\",\"note\"\n\"\'=SUM(A1)\",\"say \"\"hi\"\"\"\n\"\'@cmd\",\"safe\"');
+ const entries=[{name:'=SUM(A1)',note:'say "hi"'},{name:'@cmd',note:'safe'}],before=JSON.stringify(entries),captured={};
+ const anchor={click(){captured.clicked=true;},remove(){captured.removed=true;}};
+ const context={productTextRows:()=>entries,cur:'AuditOwner',safeFilePart:value=>value,i18nCore:{t:key=>key},toast:()=>{},setTimeout:fn=>fn(),
+  Blob:class{constructor(parts){this.text=parts.join('');}},URL:{createObjectURL(blob){captured.csv=blob.text;return'blob:fixture';},revokeObjectURL(url){captured.revoked=url;}},document:{createElement:()=>anchor,body:{append:()=>{}}}};
+ vm.runInNewContext(csv,context);context.exportMyListCSV();
+ assert.equal(captured.csv,'"name","note"\n"\'=SUM(A1)","say ""hi"""\n"\'@cmd","safe"');
+ assert.equal(anchor.download,'pogo-AuditOwner-wants.csv');assert.equal(captured.clicked,true);assert.equal(captured.removed,true);assert.equal(captured.revoked,'blob:fixture');assert.equal(JSON.stringify(entries),before);
+
 });
 test('priority headings retain text, counts and restrained semantic accents',()=>{
  assert.match(combined,/mylist-priority-heading/);assert.match(combined,/wants-section-title/);assert.match(html,/\.mylist-priority-heading\{[^}]*border-left:3px solid/);
