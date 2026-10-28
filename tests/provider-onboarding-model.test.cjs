@@ -174,3 +174,10 @@ test('invalid handles are deterministic',async()=>{
   const h=harness();await beginChoice(h.model);
   await assert.rejects(h.model.chooseHandle('bad/name'),error=>error.code==='provider-onboarding/handle-invalid');
 });
+
+test('pending account creation can resume after lifecycle replacement without redispatch',async()=>{
+  const store=storage(),h=harness({storage:store});await beginChoice(h.model);await h.model.chooseHandle('TrainerNew');h.model.cancel();
+  h.setAuthority({uid:'uid-new',lifecycleId:'auth-2'});await h.model.begin();
+  assert.equal(h.model.resumePendingCreation('TrainerNew').status,'ambiguous-result');
+  assert.equal((await h.model.reconcile()).status,'account-ready');assert.equal(h.createInputs.length,0);
+});

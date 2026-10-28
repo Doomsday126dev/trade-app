@@ -10,7 +10,7 @@ function fixture(){
   PROVIDER_CAPABILITIES:{providerAccountCreation:true},providerAuthSnapshot:()=>ctx.auth.currentUser?{uid:ctx.auth.currentUser.uid,lifecycleId:ctx.lifecycle}:null,lifecycle:'auth-1',
   document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{value:id.includes('handle')?'TrainerNew':'',textContent:''});return elements.get(id);}},
   providerFailure:(code,state)=>Object.assign(new Error(code),{code,state}),providerUiMessage:code=>code,
-  ensureProviderAccountFoundationClient:()=>({pending:()=>false}),syncGoogleOnboardingUi:()=>calls.push('sync'),hideGoogleOnboarding:()=>calls.push('hide'),showGoogleOnboarding:()=>calls.push('show'),showLogin:()=>calls.push('login'),
+  ensureProviderAccountFoundationClient:()=>({pending:()=>false,pendingForCurrentOwner:async()=>null}),syncGoogleOnboardingUi:()=>calls.push('sync'),hideGoogleOnboarding:()=>calls.push('hide'),showGoogleOnboarding:()=>calls.push('show'),showLogin:()=>calls.push('login'),
   activateGoogleResolvedAccount:async result=>{calls.push(['activate',result]);return{status:'opened'};},
   firebaseSignOut:async()=>{calls.push('signOut');ctx.auth.currentUser=null;},
   providerOnboardingController:{snapshot:()=>({status:'ready-to-create'}),confirmProfile:()=>calls.push('profile'),cancel:()=>calls.push('cancel'),begin:async()=>({status:'checking-account'}),resolveAccount:()=>calls.push('resolve')}

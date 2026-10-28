@@ -145,11 +145,25 @@
       return!!foundation&&foundation.identityKind==='provider_only'&&foundation.canonicalTrainerName===operation.requestedHandle&&
         foundation.normalizedTrainerName===operation.normalizedTrainerName&&foundation.handleKey===operation.handleKey;
     }
-    async function reconcile(operation){
+    async function pendingForCurrentOwner(){
+      const operation=loadOperation();if(!operation||operation.phase==='prepared')return null;
       const expected=lifecycle(),digest=await uidDigest(expected.uid);current(expected);
       if(operation.uidDigest!==digest)fail('provider-account/pending-owner-mismatch','blocked');
+      const handle=normalizeHandle(operation.requestedHandle);
+      const fingerprint=await requestFingerprint({uid:expected.uid,requestId:operation.requestId,
+        normalizedTrainerName:operation.normalizedTrainerName,handleKey:operation.handleKey,
+        lifecycleId:operation.lifecycleId,providerAccountProtocolVersion:operation.providerAccountProtocolVersion},cryptoImpl);
+      current(expected);
+      if(handle.normalized!==operation.normalizedTrainerName||handle.handleKey!==operation.handleKey||fingerprint!==operation.idempotencyFingerprint)
+        fail('provider-account/pending-invalid','blocked');
+      return Object.freeze({handle:operation.requestedHandle,phase:operation.phase});
+    }
+    async function reconcile(operation){
+      const expected=lifecycle(),pending=await pendingForCurrentOwner();current(expected);
+      if(!pending||JSON.stringify(loadOperation())!==JSON.stringify(operation))fail('provider-account/pending-invalid','blocked');
       const result=await read();
       current(expected);
+      if(JSON.stringify(loadOperation())!==JSON.stringify(operation))fail('provider-account/pending-invalid','blocked');
       if(exactFoundation(result,operation)){
         saveOperation({...operation,phase:'complete'});
         return Object.freeze({status:'account-ready',code:'RECONCILED',foundation:result.foundation});
@@ -196,7 +210,7 @@
       return reconcile(dispatched);
     }
     function close(){generation++;return Object.freeze({ok:true});}
-    return Object.freeze({read,create,reconcilePending:async()=>{const operation=loadOperation();if(!operation)fail('provider-account/no-pending-operation');return reconcile(operation);},clearPending:clearOperation,close,pending:loadOperation});
+    return Object.freeze({read,create,reconcilePending:async()=>{const operation=loadOperation();if(!operation)fail('provider-account/no-pending-operation');return reconcile(operation);},clearPending:clearOperation,close,pending:loadOperation,pendingForCurrentOwner});
   }
 
   root.providerAccountFoundation=Object.freeze({

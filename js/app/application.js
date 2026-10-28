@@ -2122,7 +2122,10 @@ async function beginGoogleOnboarding(){
   providerGoogleOnboardingSession=session;
   const resumed=await providerOnboardingController.begin({providerKey:'google'});
   requireGoogleOnboardingSession(session);
-  if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
+  const pending=await ensureProviderAccountFoundationClient().pendingForCurrentOwner();
+  requireGoogleOnboardingSession(session);
+  if(pending)providerOnboardingController.resumePendingCreation(pending.handle);
+  else if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
   showGoogleOnboarding();
   return providerOnboardingController.snapshot();
 }

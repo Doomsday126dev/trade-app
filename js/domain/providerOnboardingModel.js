@@ -104,6 +104,10 @@
       if(['missing','unlinked'].includes(result.status))return save({status:'onboarding-required',providerKey:state.providerKey,handle:state.handle,code:''});
       throw failure('provider-onboarding/account-resolution-invalid','blocked-conflict');
     }
+    function resumePendingCreation(handle){
+      requireCurrent();
+      return save({status:'ambiguous-result',providerKey:state.providerKey,handle:cleanHandle(handle),code:'provider-onboarding/ambiguous-result'});
+    }
     function startHandleChoice(){
       requireCurrent();
       if(!['onboarding-required','handle-unavailable','retryable-failure','choosing-handle'].includes(state.status))throw failure('provider-onboarding/state-invalid');
@@ -179,7 +183,7 @@
       const providerKey=state.providerKey;binding=null;profile=null;profileInvalid=false;clear();
       state=Object.freeze({status:'canceled',providerKey,handle:'',code:'provider-onboarding/canceled'});return state;
     }
-    return Object.freeze({snapshot:()=>state,begin,resolveAccount,startHandleChoice,chooseHandle,confirmProfile,create,reconcile,cancel});
+    return Object.freeze({snapshot:()=>state,begin,resolveAccount,resumePendingCreation,startHandleChoice,chooseHandle,confirmProfile,create,reconcile,cancel});
   }
 
   root.providerOnboardingModel=Object.freeze({

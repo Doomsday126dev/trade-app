@@ -259,3 +259,14 @@ test('reconciliation cannot consume a pending operation from another UID',async(
   await assert.rejects(h.client.reconcilePending(),{code:'provider-account/pending-owner-mismatch'});
   assert.equal(h.calls.length,calls);assert.equal(h.store.getItem(h.service.STORAGE_KEY),original);
 });
+
+test('pending creation survives lifecycle replacement only for its verified owner and unmodified request',async()=>{
+  const h=harness({responses:[Object.assign(new Error('lost'),{code:'functions/unavailable'}),{code:'FOUNDATION_NOT_INITIALIZED'},{code:'SUCCESS',foundation:readFoundation()}]});
+  await assert.rejects(h.client.create({requestedHandle:'TrainerNew'}),{code:'provider-account/ambiguous-result'});
+  h.setLifecycle({uid:'uid-new',lifecycleId:'auth-2'});
+  assert.equal((await h.client.pendingForCurrentOwner()).handle,'TrainerNew');
+  assert.equal((await h.client.reconcilePending()).status,'account-ready');
+  const record=JSON.parse(h.store.getItem(h.service.STORAGE_KEY));record.idempotencyFingerprint='a'.repeat(64);
+  h.store.setItem(h.service.STORAGE_KEY,JSON.stringify(record));
+  await assert.rejects(h.client.pendingForCurrentOwner(),{code:'provider-account/pending-invalid'});
+});
