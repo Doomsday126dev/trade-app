@@ -52,8 +52,10 @@ Repository state is synthetic in the reload fixture; this is not a production
 migration proof. Emulator server-authorized cross-UID transfer remains separately
 restricted to fresh control of both accounts and durable receipts.
 
-This does not make PIN retirement ready. A full end-user recovery review interface
-and export composition/coverage certification still need scoped review. Group
+This does not make PIN retirement ready. A default-off end-user review interface
+and real owner-source export composition are now implemented and require
+independent review and staging qualification. Coverage certifies the provided
+bundle schema/sections and explicit feature attestations, not universal recovery. Group
 memberships, permissions, administrative roles, share URLs/visibility, raw sync
 queues and receipts are retained as reference evidence, not restored grants.
 Wallpaper, search-language overrides and unknown preference fields need explicit
@@ -63,8 +65,11 @@ cross-UID imports still have the demo executor's 50-addition/128-KiB review limi
 the batching path here is same-UID only. Recovery without source-account control
 has no implemented policy/bypass. Existing PIN accounts remain available.
 
-A live first-signup custom-token minter composition, reviewed namespace inventory,
-all-entry-point activation policy, dedicated named canaries, identify-only OAuth
-consent and the narrow staging permissions/secrets in
+The injected first-signup custom-token minter composition is implemented and
+qualified locally. Reviewed namespace inventory, all-entry-point activation policy,
+dedicated named canaries, identify-only OAuth consent, staging end-to-end proof
+and the narrow staging permissions/secrets in
 [the staging package](DISCORD-STAGING-MINIMAL-APPROVAL.md) remain prerequisites.
 No fake enabled Discord button or production provider-first registration is added.
+
+The finite release boundary is [the signup/linking acceptance checklist](PROVIDER-SIGNUP-LINKING-ACCEPTANCE.md). Large cross-UID restore and source-inaccessible recovery are later requirements, not blockers to safe ordinary signup or same-UID linking.

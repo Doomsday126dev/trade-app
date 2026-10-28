@@ -442,6 +442,7 @@ let providerPendingAction=null;
 let providerAccountFoundationClient=null;
 let providerIdentityResolutionPromise=null;
 let providerDiscordResolutionPromise=null;
+let providerRecoveryViewCleanup=null;
 let providerIdentityResolutionBinding='';
 let activeCanonicalIdentity=null;
 let e1ClientFoundationCanary=null;
@@ -2476,6 +2477,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  if(typeof providerRecoveryViewCleanup!=='undefined'&&providerRecoveryViewCleanup){providerRecoveryViewCleanup();providerRecoveryViewCleanup=null;}
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
@@ -4133,6 +4135,42 @@ async function restoreOwnerRecoveryHistoryCandidate(bundle){
   const store=ensureTrainerHistoryStore(),history=source.sections.preferences.records.find(row=>row.id==='history')?.value;
   if(!history)return{ok:true,status:'unchanged'};
   return store.restoreOwnedHistoryArchive({sourceDigest:source.integrity.digest,history});
+}
+function createOwnerRecoveryCollectorCandidate({readProviderFoundation,features,featureAdapters={}}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const uid=auth?.currentUser?.uid,user=auth?.currentUser,username=cur,life=providerAuthSnapshot()?.lifecycleId,runtime=managedAccountSyncRuntime,candidate=window.PogoDev;
+  if(!uid||uid!==window.__POGO_RECOVERY_OWNER_CANARY_UID__||!username||!runtime||runtime.ownerUid!==uid||!accountSyncProjectionReady()||!candidate?.accountRecoveryCollector||!candidate.accountRecoveryJournalSnapshot)throw providerFailure('recovery/session-not-ready');
+  if(!features||Object.keys(features).sort().join(',')!=='providerPublicShares,shareVisibility,syncedPreferences'||Object.values(features).some(value=>typeof value!=='boolean'))throw providerFailure('recovery/feature-collector-required');
+  const bound=()=>auth?.currentUser===user&&cur===username&&providerAuthSnapshot()?.lifecycleId===life&&managedAccountSyncRuntime===runtime&&accountSyncProjectionReady();
+  const historyStore=ensureTrainerHistoryStore(),parse=key=>{const raw=localStorage.getItem(key);return raw===null?null:JSON.parse(raw);};
+  const readLocal=async()=>{if(!bound())throw providerFailure('recovery/session-changed');const local=getLocal(),history=parse(historyStore.key)||historyStore.read(),recoveredHistoryArchives=[];
+    for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(`${historyStore.key}:recovery-v1:`)){const value=parse(key);if(value?.owner?.uid!==uid||value.owner.username!==username)throw providerFailure('recovery/history-owner-or-version-invalid');recoveredHistoryArchives.push({key,value});}}
+    recoveredHistoryArchives.sort((a,b)=>a.key.localeCompare(b.key));
+    const draft=local.users?.[username]||{},localProfileDraft=Object.fromEntries(['friendCode','bio','discord','avatarPokemon','wallpaper','specialTradeBoard','intentDeclarations','lastUpdated'].filter(key=>draft[key]!==undefined).map(key=>[key,accountSyncClone(draft[key])]));
+    return{owner:{uid,username},history,retainedHistory:parse(historyStore.retainedKey),lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,accountSyncClone(local[type]?.[username]||{})])),orders:accountSyncOrdersSnapshot(),pendingQueue:accountSyncClone(syncQueue||{}),
+      preferences:{theme:lsGet('pogoTheme','auto'),locale:i18nCore.readStoredLocale()||i18nCore.getLocale(),pokemonGoSearchLocale:localStorage.getItem(POGO_SEARCH_LANGUAGE_KEY),pokemonGoSearchLocaleOverride:localStorage.getItem(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY),localProfileDraft,recoveredHistoryArchives}};
+  };
+  const ownerReader=candidate.accountRecoveryCollector.createOwnerRecoveryReader({database:db,ref,get,uid,trainerHandle:username,sessionCurrent:bound,readLocal,features,featureAdapters,identityKind:providerOnlyIdentityActive(uid)?'provider_only':'legacy',
+    readProviderFoundation:typeof readProviderFoundation==='function'?async()=>{const result=await readProviderFoundation(),foundation=result?.foundation||result;if(!bound()||!validCanonicalFoundation(foundation,uid))throw providerFailure('recovery/identity-pair-invalid');return{...foundation,uid};}:undefined});
+  return candidate.accountRecoveryCollector.createAccountRecoveryCollector({repository:accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid}),journal:candidate.accountRecoveryJournalSnapshot.createAccountRecoveryJournalSnapshot({ownerUid:uid}),ownerReader,
+    getSession:()=>bound()?{uid,username,lifecycleId:life,accountReady:true}:null,bundleModel:candidate.accountRecoveryBundle.createAccountRecoveryBundle(),sha256:accountSyncModel.sha256Hex,validateEntity:window.PogoDomain.accountSyncMerge.validateEntity});
+}
+function createOwnerRecoveryReviewCandidate({collector,collectorOptions}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  collector||=createOwnerRecoveryCollectorCandidate(collectorOptions);
+  const module=window.PogoDev?.accountRecoveryReview;if(!module||!collector?.collect)throw providerFailure('recovery/candidate-unavailable');
+  const user=auth?.currentUser,username=cur,runtime=managedAccountSyncRuntime,life=providerAuthSnapshot()?.lifecycleId,ownerConsumer=createOwnerRecoveryConsumerCandidate();
+  return module.create({enabled:true,bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),collector,ownerConsumer,
+    dryRun:window.PogoDev.accountRecoveryDryRun.createAccountRecoveryDryRun({bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),resolveFavoriteTarget:async({expectedUid,displayName})=>{const result=await resolveFavoriteIdentityForSession(displayName,expectedUid,{allowIncidentResolver:false});return result?.targetUid===expectedUid?{uid:expectedUid}:null;}}),
+    getSession:()=>auth?.currentUser===user&&cur===username&&managedAccountSyncRuntime===runtime&&providerAuthSnapshot()?.lifecycleId===life?{uid:user.uid,lifecycleId:life,accountReady:accountSyncProjectionReady()}:null,
+    restoreProfile:restoreOwnerRecoveryProfileCandidate,restoreHistory:restoreOwnerRecoveryHistoryCandidate,restorePreferences:async bundle=>{const preferences=createOwnerRecoveryPreferencesCandidate();return preferences.apply(await preferences.review({sourceBundle:bundle,accepted:true}));}});
+}
+function mountOwnerRecoveryReviewCandidate({container,returnFocus,...options}={}){
+  if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});
+  const controller=createOwnerRecoveryReviewCandidate(options);providerRecoveryViewCleanup?.();
+  const cleanup=window.PogoDev.accountRecoveryReview.mount({container,controller,returnFocus});let closed=false;
+  const close=()=>{if(closed)return;closed=true;cleanup();if(providerRecoveryViewCleanup===close)providerRecoveryViewCleanup=null;};providerRecoveryViewCleanup=close;
+  return Object.freeze({available:true,controller,close});
 }
 function createOwnerRecoveryPreferencesCandidate(){
   if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});

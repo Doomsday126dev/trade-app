@@ -20,7 +20,7 @@
         if(!sameOwner&&authorizedSourceUid!==source.source.ownerUid)status='identity-recovery-required';
         else if(present)status=model.canonicalJson(present)===model.canonicalJson(entity)?'unchanged':'conflict-review';
         else if(entity.deleted||entity.generation!==1)status='lifecycle-review';
-        else if(entity.entityType==='favorite'&&(typeof resolveFavoriteTarget!=='function'||(await resolveFavoriteTarget({expectedUid:entity.identity.targetUid}))?.uid!==entity.identity.targetUid))status='favorite-identity-review';
+        else if(entity.entityType==='favorite'&&(typeof resolveFavoriteTarget!=='function'||(await resolveFavoriteTarget({expectedUid:entity.identity.targetUid,displayName:entity.values.displayName}))?.uid!==entity.identity.targetUid))status='favorite-identity-review';
         else if(entity.entityType==='favorite'&&Object.entries(entity.values.tagIds||{}).some(([id,included])=>included===true&&!sourceTags.has(id)&&!currentTags.has(id)))status='tag-reference-review';
         else status='proposed-add';
         const row={section:'canonicalEntities',id:record.id,status};rows.push(row);

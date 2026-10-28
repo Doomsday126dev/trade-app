@@ -104,7 +104,14 @@ test('duplicate clicks cannot start two browser operations',async()=>{
   const first=h.client.begin('link');await assert.rejects(h.client.begin('link'),{code:'discord/operation-pending'});release();await assert.rejects(first);assert.equal(h.calls.length,1);
 });
 test('candidate stays outside production loaders and caches',()=>{
-  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json','js/app/application.js'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun/);
+  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun|accountRecoveryReview|accountRecoveryOwnerConsumer|accountRecoveryPreferences/);
+  const app=fs.readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8'),ast=require('acorn').parse(app,{ecmaVersion:'latest'});
+  let outside=app;for(const name of ['createOwnerRecoveryCollectorCandidate','createOwnerRecoveryReviewCandidate']){
+    const node=ast.body.find(node=>node.type==='FunctionDeclaration'&&node.id.name===name);assert.ok(node);const body=app.slice(node.start,node.end);
+    assert.match(body,/if\(window\.__POGO_RECOVERY_OWNER_CANARY__!==true\)return Object\.freeze\(\{available:false\}\);/);outside=outside.replace(body,'');
+  }
+  assert.doesNotMatch(outside,/accountRecoveryCollector|accountRecoveryDryRun/);
+  assert.doesNotMatch(app,/import\s*\([^)]*(?:js\/dev|accountRecovery)/);
   assert.doesNotMatch(SOURCE,/localStorage|indexedDB|accountSync|journal|DISCORD_CLIENT_SECRET/);
 });
 test('cancel invalidates pending sign-in completion before any auth commit',async()=>{
@@ -183,4 +190,8 @@ test('authenticated account reads validate the exact foundation schema and never
   if(altered===foundation)assert.equal((await h.client.readAccount()).foundation.canonicalTrainerName,'TrainerNew');
   else await assert.rejects(h.client.readAccount(),{code:'discord/response-invalid'});
  }
+});
+
+test('expired bootstrap is a stable safe error and never starts a Firebase sign-in',async()=>{
+ const h=env({href:callback,signedOut:true,fetchImpl:async()=>new Response(JSON.stringify({ok:false,error:{code:'stale_state',reason:'discord/bootstrap_expired'}}))});h.continuation('sign-in');await assert.rejects(h.client.completeFromLocation(),{code:'discord/bootstrap_expired'});assert.deepEqual(h.signIns,[]);
 });

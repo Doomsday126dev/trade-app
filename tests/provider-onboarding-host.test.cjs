@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),acorn=require('acorn');
 const source=fs.readFileSync('js/app/application.js','utf8'),ast=acorn.parse(source,{ecmaVersion:'latest'});
-const names=['googleOnboardingSessionCurrent','requireGoogleOnboardingSession','beginGoogleOnboarding','checkGoogleOnboarding','cancelGoogleOnboarding','activateDiscordAccountCandidate','bindDiscordHostCandidate','createOwnerRecoveryConsumerCandidate','restoreOwnerRecoveryProfileCandidate','restoreOwnerRecoveryHistoryCandidate','refreshOwnerRecoveryPreferencesCandidate'];
+const names=['googleOnboardingSessionCurrent','requireGoogleOnboardingSession','beginGoogleOnboarding','checkGoogleOnboarding','cancelGoogleOnboarding','activateDiscordAccountCandidate','bindDiscordHostCandidate','createOwnerRecoveryConsumerCandidate','createOwnerRecoveryReviewCandidate','createOwnerRecoveryCollectorCandidate','restoreOwnerRecoveryProfileCandidate','restoreOwnerRecoveryHistoryCandidate','refreshOwnerRecoveryPreferencesCandidate'];
 const code=names.map(name=>{const node=ast.body.find(node=>node.type==='FunctionDeclaration'&&node.id.name===name);assert.ok(node,name);return source.slice(node.start,node.end);}).join('\n');
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return{promise,resolve,reject};}
 function fixture(){
@@ -71,7 +71,7 @@ test('Discord activation rejects a switched UID before opening any account',asyn
  await assert.rejects(pending,{code:'discord/session-changed'});assert.equal(h.calls.length,0);
 });
 test('host recovery and Discord factories are disabled without explicit candidate flags',async()=>{
- const h=fixture();assert.equal(h.ctx.createOwnerRecoveryConsumerCandidate().available,false);assert.equal(h.ctx.bindDiscordHostCandidate({available:true}).available,false);
+ const h=fixture();assert.equal(h.ctx.createOwnerRecoveryConsumerCandidate().available,false);assert.equal(h.ctx.createOwnerRecoveryReviewCandidate().available,false);assert.equal(h.ctx.createOwnerRecoveryCollectorCandidate().available,false);assert.equal(h.ctx.bindDiscordHostCandidate({available:true}).available,false);
  await assert.rejects(h.ctx.activateDiscordAccountCandidate({available:true}),{code:'discord/host-disabled'});
 });
 
@@ -96,4 +96,13 @@ test('delayed preference rendering cannot apply to a switched account or replace
  const h=recoveryHostFixture();let locale='ja';const wait=deferred();h.ctx.window.__pogoEnsureLocale=()=>wait.promise;h.ctx.i18nCore={readStoredLocale:()=>locale,detectBrowserLocale:()=> 'en',setLocale:value=>h.calls.push(['locale',value])};h.ctx.recoveredDisplayPreference=(_field,fallback)=>fallback;h.ctx.applyTheme=value=>h.calls.push(['theme',value]);h.ctx.lsGet=()=> 'light';h.ctx.renderInterimProductLabels=()=>{};
  const first=h.ctx.refreshOwnerRecoveryPreferencesCandidate();h.ctx.auth.currentUser={uid:'different-owner'};wait.resolve();await first;assert.equal(h.calls.length,0);
  h.ctx.auth.currentUser=h.user;const next=deferred();h.ctx.window.__pogoEnsureLocale=()=>next.promise;const second=h.ctx.refreshOwnerRecoveryPreferencesCandidate();locale='es';next.resolve();await second;assert.equal(h.calls.length,0);
+});
+
+test('host collector captures actual owner-local sources without credentials or another owner partition',async()=>{
+ const h=recoveryHostFixture(),uid=h.user.uid,name='TrainerNew',history={version:3,owner:{uid,username:name},recent:[],snapshots:{},favorites:[],tags:{}},key=`pogoTrainerHistory_v1:${uid}`,map=new Map([[key,JSON.stringify(history)],[key+':before-canonical-v1',JSON.stringify(history)],[key+':recovery-v1:abc',JSON.stringify(history)],['pogoTrainerHistory_v1:other-owner:recovery-v1:def','must-not-read']]);
+ Object.assign(h.ctx,{db:{},ref:()=>{},get:()=>{},onValue:()=>{},runTransaction:()=>{},serverTimestamp:()=>{},localStorage:{get length(){return map.size;},key:i=>[...map.keys()][i],getItem:key=>map.get(key)??null},POGO_SEARCH_LANGUAGE_KEY:'search-language',POGO_SEARCH_LANGUAGE_OVERRIDE_KEY:'search-override',OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],syncQueue:{},accountSyncClone:value=>JSON.parse(JSON.stringify(value)),accountSyncOrdersSnapshot:()=>({wishlist:{priorities:{}}}),lsGet:()=> 'dark',i18nCore:{readStoredLocale:()=> 'ja'},getLocal:()=>({users:{TrainerNew:{bio:'Local unsent bio',pin:'NEVER-EXPORT'},OtherOwner:{bio:'MUST-NOT-EXPORT'}},wishlist:{TrainerNew:{Pikachu:'H'},OtherOwner:{Secret:'L'}}}),ensureTrainerHistoryStore:()=>({key,retainedKey:key+':before-canonical-v1',read:()=>history}),accountSyncRepositoryData:{createAccountSyncRepository:input=>({ownerUid:input.ownerUid})},validCanonicalFoundation:()=>true});
+ h.ctx.window.PogoDomain={accountSyncMerge:{validateEntity:()=>({ok:true})}};h.ctx.window.PogoDev.accountRecoveryCollector={createOwnerRecoveryReader:input=>input,createAccountRecoveryCollector:input=>input};h.ctx.window.PogoDev.accountRecoveryJournalSnapshot={createAccountRecoveryJournalSnapshot:input=>({ownerUid:input.ownerUid,readOnly:true})};
+ const collector=h.ctx.createOwnerRecoveryCollectorCandidate({features:{providerPublicShares:false,syncedPreferences:false,shareVisibility:false},readProviderFoundation:async()=>({foundation:{canonicalTrainerName:name,identityKind:'provider_only',legacyAccessConfigured:false}})}),local=await collector.ownerReader.readLocal(),serialized=JSON.stringify(local);
+ assert.equal(collector.repository.ownerUid,uid);assert.equal(collector.journal.readOnly,true);assert.equal(local.preferences.localProfileDraft.bio,'Local unsent bio');assert.equal(local.preferences.recoveredHistoryArchives.length,1);assert.equal(serialized.includes('NEVER-EXPORT'),false);assert.equal(serialized.includes('MUST-NOT-EXPORT'),false);assert.equal(serialized.includes('Secret'),false);assert.equal((await collector.ownerReader.readProviderFoundation()).uid,uid);
+ h.ctx.lifecycle='changed';assert.equal(collector.getSession(),null);await assert.rejects(collector.ownerReader.readLocal(),{code:'recovery/session-changed'});
 });

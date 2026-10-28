@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
-function load(){const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,TextEncoder,Uint8Array,unescape,encodeURIComponent,decodeURIComponent,JSON,Object,Number,Error,TypeError,URL});for(const file of['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/dev/accountRecoveryLegacyConversion.js','js/dev/accountRecoveryBatchPlan.js','js/dev/accountRecoveryOwnerConsumer.js','js/dev/accountRecoveryPreferences.js','js/dev/accountRecoveryBundle.js','js/dev/accountRecoveryCollector.js','js/dev/accountRecoveryDryRun.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);return window;}
+function load(){const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,TextEncoder,Uint8Array,unescape,encodeURIComponent,decodeURIComponent,JSON,Object,Number,Error,TypeError,URL});for(const file of['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/dev/accountRecoveryLegacyConversion.js','js/dev/accountRecoveryBatchPlan.js','js/dev/accountRecoveryOwnerConsumer.js','js/dev/accountRecoveryPreferences.js','js/dev/accountRecoveryReview.js','js/dev/accountRecoveryBundle.js','js/dev/accountRecoveryCollector.js','js/dev/accountRecoveryDryRun.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);return window;}
 async function harness(){
   const w=load(),model=w.PogoDomain.accountSyncModel,merge=w.PogoDomain.accountSyncMerge,bundle=w.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),uid='synthetic-owner',username='SyntheticTrainer',paths=[];
   let session={uid,username,lifecycleId:'synthetic-life',accountReady:true};
@@ -199,4 +199,22 @@ test('cancel during an already-started restore write leaves a durable checkpoint
  let row=null,writes=0,release,entered;const wait=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve),meta=new Map(),args={enabled:true,repository:{ownerUid:h.uid,readAccount:async()=>({meta:{ownerUid:h.uid,initialized:true},tradeEntries:row?{[op.entityId]:row}:{}}),applyOperation:async operation=>{writes++;entered();await wait;row=h.merge.mergeOperation(null,operation,{acceptedAt:11}).value;return{ok:true};}},journal:{getMeta:async key=>meta.get(key),setMeta:async(key,value)=>meta.set(key,JSON.parse(JSON.stringify(value)))},bundleModel:h.bundle,batchPlanner:h.w.PogoDev.accountRecoveryBatchPlan.create(),verifyTradeIdentity:identity=>identity,getSession:()=>({uid:h.uid,lifecycleId:'life',accountReady:true})};
  const first=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),ticket=await first.review({sourceBundle:source,operations:[op],accepted:true}),pending=first.run(ticket);await started;assert.equal(first.cancel().status,'stopping-after-current-write');release();await assert.rejects(pending,{code:'recovery/session-changed'});
  const reopened=h.w.PogoDev.accountRecoveryOwnerConsumer.create(args),review=await reopened.review({sourceBundle:source,resumeDigest:ticket.digest,accepted:true});assert.equal((await reopened.run(review)).status,'verified');assert.equal(writes,1);
+});
+
+async function reviewHarness(){
+ const h=await harness(),source=await h.make().collect();h.remote.tradeEntries={};const target=await h.make().collect();let session={uid:h.uid,lifecycleId:'review-life',accountReady:true},writes=0,failOnce=true;
+ const consumer={review:async()=>({ticket:true}),run:async()=>{writes++;if(failOnce){failOnce=false;throw Error('synthetic interruption');}return{status:'verified'};},cancel:()=>{}};
+ const args={enabled:true,bundleModel:h.bundle,collector:{collect:async()=>target},dryRun:h.w.PogoDev.accountRecoveryDryRun.createAccountRecoveryDryRun({bundleModel:h.bundle}),ownerConsumer:consumer,getSession:()=>session};
+ return{...h,source,target,args,create:()=>h.w.PogoDev.accountRecoveryReview.create(args),setSession:value=>session=value,get writes(){return writes;}};
+}
+test('recovery review certifies every section, requires explicit scope, and retries an interrupted reviewed ticket',async()=>{
+ const h=await reviewHarness(),api=h.w.PogoDev.accountRecoveryReview;assert.equal(api.create().available,false);const controller=h.create(),review=await controller.prepare(h.source);assert.equal(review.coverage.rows.length,12);assert.equal(review.coverage.fullRestore,false);assert.equal(review.operationCount,1);
+ await assert.rejects(controller.apply({entries:true}),{code:'recovery/explicit-review-required'});assert.equal(h.writes,0);
+ await assert.rejects(controller.apply({accepted:true,entries:true}),/synthetic interruption/);await assert.rejects(controller.apply({accepted:true,entries:true,profile:true}),{code:'recovery/review-scope-changed'});assert.equal((await controller.apply({accepted:true,entries:true})).phase,'finished');assert.equal(h.writes,2);
+ h.setSession({uid:'other-owner',lifecycleId:'other',accountReady:true});await assert.rejects(controller.prepare(h.source),{code:'recovery/identity-recovery-required'});assert.equal(h.writes,2);
+});
+test('file read and backup collection cannot outlive cancellation, account switching or a newer review',async()=>{
+ const h=await reviewHarness(),controller=h.create();let release;const reading=controller.prepareFile({size:10,text:()=>new Promise(resolve=>release=resolve)});h.setSession({uid:h.uid,lifecycleId:'replacement',accountReady:true});release(JSON.stringify(h.source));await assert.rejects(reading,{code:'recovery/session-changed'});assert.equal(h.writes,0);
+ let finish;h.args.collector.collect=()=>new Promise(resolve=>finish=resolve);const exporting=controller.exportBackup(()=>{throw Error('must not save after cancel');});controller.cancel();finish(h.target);await assert.rejects(exporting,{code:'recovery/session-changed'});
+ h.args.collector.collect=async()=>h.target;const result=await controller.exportBackup(bundle=>assert.equal(bundle.integrity.digest,h.target.integrity.digest));assert.equal(result.phase,'exported');
 });

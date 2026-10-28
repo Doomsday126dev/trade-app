@@ -91,25 +91,11 @@ certification. Historical inventory in PROVIDER-IDENTITY-COVERAGE.md is not curr
 certification. Freeze/collision holds/backfill and activation need separate scoped
 review and approval; existing PIN sign-in must remain available.
 
-Discord needs a server-owned registration continuation bound to the verified OAuth
-subject, browser and flow; it must not trust a client-supplied provider key/UID.
-Use the same canonical authority for atomic name/subject/account claims and durable
-receipts. Design the Firebase identity provisioning failure/retry boundary before
-minting a token; an OAuth success alone cannot commit signup. Reconcile namespace
-and subject ownership again at confirmation, reject stale consent, and preserve
-the existing-link branch. Add this protocol and emulator tests before frontend
-signup wiring; do not weaken the Google-only endpoint to accept arbitrary custom
-auth assertions.
+Discord now has a default-off server-owned registration continuation, atomic UID/name/subject claims, durable bootstrap receipts and an injected server composition. The local Firebase emulator qualifies custom-token first signup, activation readback and returning sign-in. Missing or deleted activated Auth users are not automatically recreated. No Google-only endpoint was broadened to accept arbitrary custom auth assertions.
 
-Externally, Discord app `PoGo Trades Staging` (`1564289039526268938`) and redirect
-`https://doomsday126dev.github.io/trade-app/auth/discord.html` were already approved
-and registered. Secret transfer/storage, runtime permissions, TTL, service
-configuration/deployment and canary OAuth linkage remain unapproved. The latest
-allowed billing check found staging and production billing disabled; no billing
-change is approved. The earlier denied Firebase configuration reads were not
-retried. Live readiness, privacy behavior and rollout must be qualified before
-enabling signup. No PIN cutoff, real-account migration or auth deployment occurs
-in this milestone.
+Discord app `PoGo Trades Staging` (`1564289039526268938`) and redirect `https://doomsday126dev.github.io/trade-app/auth/discord.html` were already approved and registered. Billing was restored by the owner and verified enabled on 2026-10-28; earlier disabled findings are historical. Secret Manager API, the three named secrets, narrow runtime permissions and scoped staging release/canary consent remain pending. No denied Firebase configuration read was retried.
+
+Use [the finite acceptance checklist](PROVIDER-SIGNUP-LINKING-ACCEPTANCE.md) for current release gates and [the exact staging package](DISCORD-STAGING-MINIMAL-APPROVAL.md) for setup targets. Recovery supports a reviewed default-off same-owner candidate, not automatic account replacement. Large cross-UID restore and source-inaccessible recovery do not block same-UID linking or ordinary new signup. No PIN cutoff or auth deployment is part of this milestone.
 
 ## Local verification
 

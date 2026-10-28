@@ -38,7 +38,7 @@ Implementation approval does not authorize these configuration changes.
    Production activation is a separate request. Namespace protection requires a
    fresh reviewed inventory/certification; no production freeze/backfill or rules
    change is included in this package. The existing all-auth-entry-point gate
-   and first-sign-in token-minter composition must be qualified before release.
+   and first-sign-in token-minter composition have local qualification; staging proof is still required before release.
 5. Select dedicated canaries: one existing Firebase UID with reciprocal account
    and trainer handle plus working PIN fallback; one fresh signup test identity;
    and the exact Discord test user for each. Approve identify-only OAuth consent
@@ -59,7 +59,7 @@ request could set deleteAfter TTL on discordOAuthFlows, discordLinkReviews,
 discordRegistrationReviews and discordRateLimits in phase-e-identity. TTL deletes
 are billed: https://firebase.google.com/docs/firestore/ttl. Do not TTL canonical
 mappings, unlink tombstones, operation/import receipts or consumed transfer
-proofs. Recovery transfers/imports remain demo-only and are not staging setup.
+proofs. New durable discordRegistrationClaims bootstrap/activation records are also never TTL targets. Recovery transfers/imports remain demo-only and are not staging setup.
 
 No owner input is needed to continue the remaining local integration. This is a
 review package, not a request to perform all steps under blanket authorization.

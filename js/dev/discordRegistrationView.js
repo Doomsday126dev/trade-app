@@ -22,7 +22,7 @@
         if(!completedResult)completedResult=await runtime.confirmRegistration({requestedHandle:input.value,reviewAccepted:true});
         if(!removed){status.textContent='Account verified.';cancel.textContent='Close';await onComplete(completedResult);cleanup();}
       }
-      catch(error){if(!removed)status.textContent=completedResult?'You are signed in. Loading your account failed; retry loading it.':error.code==='discord/handle_conflict'?'That trainer name is taken. Choose another name.':'Account result needs checking. Retry the same name, or sign in again to recover any completed account.';}
+      catch(error){if(!removed)status.textContent=completedResult?'You are signed in. Loading your account failed; retry loading it.':error.code==='discord/handle_conflict'?'That trainer name is taken. Choose another name.':error.code==='discord/bootstrap_expired'?'Account setup is saved, but its initial sign-in window expired. Do not create a second account. Retry Discord sign-in; if it remains blocked, ask support to review the saved setup.':'Account result needs checking. Retry the same name, or sign in again to recover any completed account.';}
       finally{if(!removed){create.disabled=false;input.disabled=!!completedResult;consent.disabled=!!completedResult;if(completedResult)create.textContent='Retry loading account';}}
     };
     cancel.onclick=async()=>{
