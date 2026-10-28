@@ -249,3 +249,13 @@ test('provider client contains no direct Firestore or RTDB identity writer',()=>
   assert.match(source,/createE1ProviderAccountFoundation/u);
   assert.match(source,/limitedUseAppCheckTokens:true/u);
 });
+
+test('reconciliation cannot consume a pending operation from another UID',async()=>{
+  const h=harness({responses:[Object.assign(new Error('lost'),{code:'functions/unavailable'}),{code:'FOUNDATION_NOT_INITIALIZED'}]});
+  await assert.rejects(h.client.create({requestedHandle:'TrainerNew'}),{code:'provider-account/ambiguous-result'});
+  const original=h.store.getItem(h.service.STORAGE_KEY),calls=h.calls.length;
+  h.auth.currentUser={uid:'uid-other',getIdToken:async()=> 'synthetic-token'};
+  h.setLifecycle({uid:'uid-other',lifecycleId:'auth-2'});
+  await assert.rejects(h.client.reconcilePending(),{code:'provider-account/pending-owner-mismatch'});
+  assert.equal(h.calls.length,calls);assert.equal(h.store.getItem(h.service.STORAGE_KEY),original);
+});

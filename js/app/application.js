@@ -432,6 +432,7 @@ const FIREBASE_RULES_STATUS=Object.freeze({
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let providerLinkingController=null;
 let providerOnboardingController=null;
+let providerGoogleOnboardingSession=null;
 let providerLinkingUnsubscribe=null;
 let providerAuthLifecycleGeneration=0;
 let providerAuthLifecycleUid='';
@@ -2106,9 +2107,21 @@ function syncGoogleOnboardingUi(){
   }
   return state;
 }
+function googleOnboardingSessionCurrent(session){
+  const current=providerAuthSnapshot();
+  return!!session&&providerGoogleOnboardingSession===session&&current?.uid===session.uid&&current.lifecycleId===session.lifecycleId;
+}
+function requireGoogleOnboardingSession(session){
+  if(!googleOnboardingSessionCurrent(session)||session.closing)throw providerFailure('provider-onboarding/auth-lifecycle-changed','canceled');
+}
 async function beginGoogleOnboarding(){
   if(!PROVIDER_CAPABILITIES.providerAccountCreation)throw providerFailure('provider-account/creation-disabled');
+  const authority=providerAuthSnapshot();
+  if(!authority)throw providerFailure('provider-onboarding/auth-lifecycle-changed','canceled');
+  const session={uid:authority.uid,lifecycleId:authority.lifecycleId,closing:false};
+  providerGoogleOnboardingSession=session;
   const resumed=await providerOnboardingController.begin({providerKey:'google'});
+  requireGoogleOnboardingSession(session);
   if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
   showGoogleOnboarding();
   return providerOnboardingController.snapshot();
@@ -2139,14 +2152,17 @@ async function continueWithGoogle(){
   }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
 }
 async function checkGoogleOnboarding(){
+  const session=providerGoogleOnboardingSession;
   const input=document.getElementById('google-onboarding-handle'),status=document.getElementById('google-onboarding-status');
   const friendCode=String(document.getElementById('google-onboarding-friend-code')?.value||'').trim();
   try{
+    requireGoogleOnboardingSession(session);
     let state=providerOnboardingController.snapshot(),result=null;
     if(state.status==='onboarding-required')state=providerOnboardingController.startHandleChoice();
     const pending=!!ensureProviderAccountFoundationClient().pending();
     if(['choosing-handle','handle-unavailable'].includes(state.status)||state.status==='retryable-failure'&&!pending){
       state=await providerOnboardingController.chooseHandle(input?.value||'');
+      requireGoogleOnboardingSession(session);
       if(state.status==='ready-to-create'){
         providerOnboardingController.confirmProfile({friendCode});
         syncGoogleOnboardingUi();
@@ -2158,19 +2174,45 @@ async function checkGoogleOnboarding(){
     }else if(['ambiguous-result','retryable-failure'].includes(state.status)&&pending){
       result=await providerOnboardingController.reconcile();
     }
+    requireGoogleOnboardingSession(session);
     if(result?.status==='account-ready'){
-      const resolution=Object.freeze({status:'existing',uid:auth.currentUser.uid,
+      const resolution=Object.freeze({status:'existing',uid:session.uid,lifecycleId:session.lifecycleId,
         username:result.foundation.canonicalTrainerName,foundation:result.foundation,
         ...(result.initialProfile?{profile:result.initialProfile}: {})});
-      providerGoogleAccountResolution=resolution;hideGoogleOnboarding();return activateGoogleResolvedAccount(resolution);
+      providerGoogleAccountResolution=resolution;
+      const activated=await activateGoogleResolvedAccount(resolution);
+      requireGoogleOnboardingSession(session);
+      hideGoogleOnboarding();providerGoogleOnboardingSession=null;return activated;
     }
     syncGoogleOnboardingUi();return state;
-  }catch(error){syncGoogleOnboardingUi();if(status)status.textContent=providerUiMessage(error?.code);return null;}
+  }catch(error){
+    if(googleOnboardingSessionCurrent(session)&&!session.closing){syncGoogleOnboardingUi();if(status)status.textContent=providerUiMessage(error?.code);}
+    return null;
+  }
 }
 async function cancelGoogleOnboarding(){
-  providerOnboardingController?.cancel();providerGoogleAccountResolution=null;hideGoogleOnboarding();
-  if(auth?.currentUser&&typeof firebaseSignOut==='function')await firebaseSignOut(auth);
-  showLogin({preserveCredentials:true});
+  const session=providerGoogleOnboardingSession;
+  if(!googleOnboardingSessionCurrent(session))return Object.freeze({status:'stale'});
+  if(session.closing)return Object.freeze({status:'pending'});
+  session.closing=true;
+  try{
+    const gate=window.__pogoProviderHostAuthGate;
+    // New signup stays gated until all auth mutations participate in this gate.
+    if(!gate?.available)throw providerFailure('provider-auth/gate-required');
+    await gate.prepareSignOut();
+    if(!googleOnboardingSessionCurrent(session))return Object.freeze({status:'stale'});
+    await firebaseSignOut(auth);
+    if(auth?.currentUser||providerGoogleOnboardingSession!==session)return Object.freeze({status:'stale'});
+    providerOnboardingController?.cancel();
+    providerGoogleOnboardingSession=null;providerGoogleAccountResolution=null;hideGoogleOnboarding();
+    showLogin({preserveCredentials:true});return Object.freeze({status:'canceled'});
+  }catch(error){
+    if(googleOnboardingSessionCurrent(session)){
+      const target=document.getElementById('google-onboarding-status');
+      if(target)target.textContent=providerUiMessage(error?.code);
+    }
+    return Object.freeze({status:'blocked',code:String(error?.code||'provider-auth/sign-out-failed')});
+  }finally{session.closing=false;}
 }
 
 async function resumeGoogleIdentityAfterAuth(uid){
@@ -2184,7 +2226,7 @@ async function resumeGoogleIdentityAfterAuth(uid){
       const resolution=await resolveGoogleAccountBinding(uid);providerGoogleAccountResolution=resolution;
       if(resolution.status==='existing')return activateGoogleResolvedAccount(resolution);
       if(!PROVIDER_CAPABILITIES.providerAccountCreation)throw providerFailure('provider-account/creation-disabled');
-      showLogin({preserveCredentials:true});beginGoogleOnboarding();return Object.freeze({status:'onboarding-required'});
+      showLogin({preserveCredentials:true});await beginGoogleOnboarding();return Object.freeze({status:'onboarding-required'});
     }catch(error){
       showLogin({preserveCredentials:true});const target=document.getElementById('login-err');if(target)target.textContent=providerUiMessage(error?.code);return null;
     }
@@ -10389,6 +10431,7 @@ async function saveProfile(event){
   }
 }
 async function savePinSettings(){
+  if(!usernamePinAccessUsable())return;
   if(_pinSaveOperation?.session.uiCurrent())return;
   const p1=document.getElementById('np1')?.value||'',p2=document.getElementById('np2')?.value||'',err=document.getElementById('pin-err');if(err)err.textContent='';
   if(!isSixDigitPin(p1)){if(err)err.textContent=i18nCore.t('validation.pinSixDigits');return;}

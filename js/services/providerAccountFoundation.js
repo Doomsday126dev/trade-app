@@ -146,7 +146,10 @@
         foundation.normalizedTrainerName===operation.normalizedTrainerName&&foundation.handleKey===operation.handleKey;
     }
     async function reconcile(operation){
+      const expected=lifecycle(),digest=await uidDigest(expected.uid);current(expected);
+      if(operation.uidDigest!==digest)fail('provider-account/pending-owner-mismatch','blocked');
       const result=await read();
+      current(expected);
       if(exactFoundation(result,operation)){
         saveOperation({...operation,phase:'complete'});
         return Object.freeze({status:'account-ready',code:'RECONCILED',foundation:result.foundation});
@@ -156,6 +159,7 @@
     }
     async function prepare(rawHandle,expected){
       const handle=normalizeHandle(rawHandle),digest=await uidDigest(expected.uid),stored=loadOperation();
+      current(expected);
       if(stored&&stored.uidDigest===digest&&stored.requestedHandle===handle.display&&
         stored.lifecycleId===expected.lifecycleId&&stored.providerAccountProtocolVersion===providerAccountProtocolVersion)return stored;
       if(stored&&['dispatched','ambiguous'].includes(stored.phase))fail('provider-account/pending-reconciliation','ambiguous');
@@ -165,7 +169,7 @@
       const operation={schemaVersion:1,uidDigest:digest,requestId,requestedHandle:handle.display,
         normalizedTrainerName:handle.normalized,handleKey:handle.handleKey,lifecycleId:expected.lifecycleId,
         providerAccountProtocolVersion,clientRelease,idempotencyFingerprint:await requestFingerprint(input,cryptoImpl),phase:'prepared'};
-      return saveOperation(operation);
+      current(expected);return saveOperation(operation);
     }
     async function create({requestedHandle}={}){
       const expected=lifecycle(),operation=await prepare(requestedHandle,expected);current(expected);
