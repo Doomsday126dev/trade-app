@@ -25,3 +25,5 @@ Local repair branch only, based on .163 merge ef1a6750cd5b1d8380e2b18c9a35b8d1ae
 ## Approved .164 publication preparation
 
 The owner explicitly approved the scoped repair PR, fresh release tags and exact-source deployment registration. The release uses .164 consistently in the HTML/cache URLs, client marker and service worker. Extend only its finite local recognizer and register the frozen SHA under the existing unchanged catalogue read contract. The frontend inventory remains 1,337 files; no packaging or read-handler allowance change. The owner restored-entry browser checks and final required hosted qualification must pass; native live QA remains coordinated through the parent.
+
+Frozen runtime: `2cd8e3e228c4dd45a6c584dad1d978937ef8151b`. The immutable control adds only this exact mapping to the existing CATALOGUE_ID_SOURCE_CALL_CONTRACT; all handler hashes, paths, scopes, counts, expiry and permission/performance budgets remain unchanged. Three hosted runtime checkouts select this frozen source. Dispatcher repin is the subsequent isolated commit.
