@@ -118,3 +118,54 @@ and verify idempotent retry. Review records capture Favorite foundation
 fingerprints; a changed but still valid foundation revision between prepare and
 confirm rejects atomically and requires fresh review. This remains a demo-only
 qualification executor with no production endpoint or activation.
+
+## 2026-10-28 content and dual-account recovery candidate
+
+The new optional content adapters restore profile records, legacy lists/orders,
+device preferences and owned history records additively into demo sandbox bundles.
+Canonical profiles use the real profile validator. History must have a supported
+version and reciprocal source owner; a verified cross-UID transfer rebases only
+its owner metadata. Existing content is unchanged or marked conflict-review.
+Privilege-bearing fields are rejected, and groups, roles, memberships, share
+ownership and sync queues never become writes. Exact content digests join the
+receipt readback, so a later profile/history edit reports changed content and is
+never overwritten by replay. Adapters remain absent by default.
+
+The optional demo transfer authority requires fresh verified control of BOTH
+source and target accounts at preparation and confirmation. It binds the source
+bundle digest and both reciprocal foundation fingerprints to a five-minute grant.
+The import transaction checks and consumes that grant atomically with content and
+receipt writes. Another review cannot reuse it. A file checksum, supplied UID,
+matching email, administrator boolean or possession of a bundle is not proof.
+Source data/accounts are retained. Revoked/disabled source access fails closed.
+This is not recovery for someone unable to authenticate the source; an independent
+reviewed identity-recovery protocol would still be needed for that case.
+
+Provider-only backup no longer fabricates a legacy identity read. Its owner reader
+requires a verified provider foundation and reads UID-rooted membership/share
+paths. Enabled provider sharing, synced preferences and visibility features require
+explicit complete owner-bound capture adapters. Missing adapters, wrong owners,
+unknown canonical collections or changed captures fail before export. Captured
+feature data remains export/reference content; its active production restore is
+not implemented by the sandbox adapter.
+
+Remaining limits must prevent a full-fidelity/PIN-retirement claim: restore still
+writes sandbox bundle records, not production profile/list/preference consumers;
+legacy lists need reviewed catalog conversion before activation; pending journals
+are evidence rather than replayable mutations; feature-specific production readers
+must be connected; large restore segmentation beyond 128 KiB/50 additions is not
+implemented; original shared URL ownership cannot transfer across UIDs; groups and
+permissions require their own grants. No production restore writer or forced
+migration is enabled. Same-UID linking remains the preferred way to retain lists,
+Favorites, tags, URLs and permissions.
+
+The current minimal external setup package is DISCORD-STAGING-MINIMAL-APPROVAL.md.
+The earlier unresolved Discord app/owner/callback and disabled-billing notes above
+are historical; their newer verified state is recorded in that package.
+
+Qualification on this follow-up: migration unit 125 passed with two emulator-only
+skips; Auth/Firestore/pinned-SDK emulator 37 passed. The profile runtime suite has
+102 passing cases and one existing skip, including new initial-profile failure
+and lost-response restart checks. Those checks preserve the durable first draft,
+perform no duplicate profile initialization, and publish nothing before a failed
+initial profile is ready. Google 132 and fixed-callable contract checks passed.

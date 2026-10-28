@@ -74,3 +74,30 @@ test('Favorites require exact target proof and restorable tag dependencies befor
   empty.sections.canonicalEntities.records=[{id:'tag:tag_group',value:tombstone}];const currentWithTombstone=await h.bundle.create({source:empty.source,sections:empty.sections});
   const conflict=await make(async()=>({uid:'synthetic-favorite'})).prepare({...args,currentBundle:currentWithTombstone});assert.equal(conflict.operations.length,0);assert.equal(conflict.rows.find(row=>row.id.startsWith('favorite:')).status,'tag-reference-review');
 });
+
+test('provider-only export uses canonical ownership and complete owner-bound feature adapters',async()=>{
+ const h=await harness(),features={providerPublicShares:true,syncedPreferences:true,shareVisibility:true},paths=[];
+ const featureAdapters=Object.fromEntries(Object.keys(features).map(key=>[key,{capture:async()=>({schemaVersion:1,ownerUid:h.uid,complete:true,value:{feature:key,version:1}})}]));
+ const reader=h.w.PogoDev.accountRecoveryCollector.createOwnerRecoveryReader({database:{},ref:(db,path)=>path,get:async path=>{paths.push(path);return{exists:()=>false};},uid:h.uid,trainerHandle:h.username,sessionCurrent:()=>true,readLocal:async()=>h.local,identityKind:'provider_only',readProviderFoundation:async()=>({uid:h.uid,canonicalTrainerName:h.username,identityKind:'provider_only',legacyAccessConfigured:false}),features,featureAdapters});
+ const source=await h.make({ownerReader:reader}).collect();
+ assert.ok(paths.every(path=>path===`userCommunities/${h.uid}`||path===`trainerShares/${h.uid}`));
+ assert.equal(source.sections.preferences.records.find(row=>row.id==='feature:syncedPreferences').value.version,1);
+ assert.equal(source.sections.sharing.records.filter(row=>row.id.startsWith('feature:')).length,2);
+ featureAdapters.syncedPreferences.capture=async()=>({schemaVersion:1,ownerUid:'other-owner',complete:true,value:{}});
+ await assert.rejects(h.make({ownerReader:reader}).collect(),{code:'recovery/feature-source-invalid'});
+});
+
+test('typed content adapters retain conflicts, rebind owned history metadata and reject privilege fields',async()=>{
+ const h=await harness(),{createRecoveryContentAdapters}=require('../functions/src/prototype/recoveryContentAdapters'),adapter=createRecoveryContentAdapters({model:h.model});
+ const source=JSON.parse(JSON.stringify(await h.make().collect())),current=JSON.parse(JSON.stringify(source));
+ current.source.ownerUid='replacement-owner';current.source.trainerHandle='ReplacementTrainer';
+ current.sections.profile.records=[];current.sections.legacyLists.records=[];current.sections.preferences.records=[{id:'device',value:{theme:'light'}}];
+ const plan=adapter.prepare({source,current});
+ assert.equal(plan.rows.find(row=>row.section==='preferences'&&row.id==='device').status,'conflict-review');
+ const history=plan.additions.find(row=>row.section==='preferences'&&row.id==='history');assert.equal(history.value.owner.uid,'replacement-owner');assert.equal(history.value.owner.username,'ReplacementTrainer');
+ const applied=adapter.apply(JSON.parse(JSON.stringify(current.sections)),plan);
+ assert.equal(applied.preferences.records.find(row=>row.id==='device').value.theme,'light');assert.equal(applied.permissions.records[0].value.legacyRoleReferences.isAdmin,true);
+ assert.equal(plan.additions.some(row=>['permissions','groups','sharing','journal'].includes(row.section)),false);
+ source.sections.preferences.records.find(row=>row.id==='device').value.isAdmin=true;
+ assert.throws(()=>adapter.prepare({source,current}),{code:'recovery/privileged-content-forbidden'});
+});

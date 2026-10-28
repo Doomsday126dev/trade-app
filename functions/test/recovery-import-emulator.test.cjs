@@ -123,4 +123,66 @@ test('server-authorized import stores durable receipts and verifies additive rea
   const target=db.doc(`recoveryImportSandboxes/${h.uid}`),before=(await target.get()).data();assert.equal((await make().confirm(input,h.authContext)).status,'committed-readback-unavailable');assert.deepEqual((await target.get()).data(),before);assert.deepEqual((await receiptRef.get()).data(),receipt);
  });
 
+ await t.test('cross-UID recovery requires both fresh proofs and a single bound transfer grant',async()=>{
+  const source=await fixture(),target=await fixture();
+  const {createRecoveryTransferAuthorityEmulator}=require('../src/prototype/recoveryTransferAuthorityEmulator');
+  const transfer=createRecoveryTransferAuthorityEmulator({enabled:true,firestore:db,authority,foundationStore:store});
+  const api=createRecoveryImportEmulator({enabled:true,firestore:db,authority,foundationStore:store,bundleModel,dryRun,model,merge,transferAuthority:transfer});
+  const grant=await transfer.prepare({sourceDigest:source.source.integrity.digest,accepted:true,sourceContext:source.authContext,targetContext:target.authContext});
+  const context={...target.authContext,sourceContext:source.authContext};
+  await assert.rejects(api.prepare({sourceBundle:source.source,transferGrant:grant.grantId},{...target.authContext,sourceContext:target.authContext}),{code:'recovery/transfer-owner-invalid'});
+  const review=await api.prepare({sourceBundle:source.source,transferGrant:grant.grantId},context);
+  assert.equal(review.plan.sameOwner,false);assert.equal(review.plan.operations[0].ownerUid,target.uid);
+  const input={reviewId:review.reviewId,digest:review.digest,accepted:true};
+  await assert.rejects(api.confirm(input,target.authContext),{code:'recovery/transfer-mismatch'});
+  const original=JSON.stringify((await db.doc(`recoveryImportSandboxes/${source.uid}`).get()).data());
+  assert.equal((await api.confirm(input,context)).status,'verified');assert.equal((await api.confirm(input,context)).replay,true);
+  const after=(await db.doc(`recoveryImportSandboxes/${target.uid}`).get()).data().bundle;
+  assert.equal(after.sections.canonicalEntities.records[0].value.ownerUid,target.uid);assert.equal(after.sections.permissions.records.length,0);assert.equal(after.sections.groups.records.length,0);
+  assert.equal(JSON.stringify((await db.doc(`recoveryImportSandboxes/${source.uid}`).get()).data()),original);
+  const proof=await transfer.proof({sourceContext:source.authContext,targetContext:target.authContext});
+  await assert.rejects(db.runTransaction(tx=>transfer.check(tx,{grantId:grant.grantId,sourceUid:source.uid,targetUid:target.uid,sourceDigest:source.source.integrity.digest,proof,reviewId:'another-review'})),{code:'recovery/transfer-consumed'});
+ });
+ await t.test('cross-UID grant cannot authorize another bundle or a revoked source account',async()=>{
+  const source=await fixture(),target=await fixture();
+  const {createRecoveryTransferAuthorityEmulator}=require('../src/prototype/recoveryTransferAuthorityEmulator');
+  const transfer=createRecoveryTransferAuthorityEmulator({enabled:true,firestore:db,authority,foundationStore:store});
+  const api=createRecoveryImportEmulator({enabled:true,firestore:db,authority,foundationStore:store,bundleModel,dryRun,model,merge,transferAuthority:transfer});
+  const grant=await transfer.prepare({sourceDigest:'a'.repeat(64),accepted:true,sourceContext:source.authContext,targetContext:target.authContext});
+  await assert.rejects(api.prepare({sourceBundle:source.source,transferGrant:grant.grantId},{...target.authContext,sourceContext:source.authContext}),{code:'recovery/transfer-mismatch'});
+  const correct=await transfer.prepare({sourceDigest:source.source.integrity.digest,accepted:true,sourceContext:source.authContext,targetContext:target.authContext});
+  const context={...target.authContext,sourceContext:source.authContext},review=await api.prepare({sourceBundle:source.source,transferGrant:correct.grantId},context);
+  await admin.updateUser(source.uid,{disabled:true});
+  await assert.rejects(api.confirm({reviewId:review.reviewId,digest:review.digest,accepted:true},context));
+  assert.equal((await db.doc(`recoveryImportSandboxes/${target.uid}`).get()).data().bundle.sections.canonicalEntities.records.length,0);
+ });
+
+ await t.test('typed profile, legacy content, device preferences and history restore additively with exact readback',async()=>{
+  const h=await fixture(),{createRecoveryContentAdapters}=require('../src/prototype/recoveryContentAdapters');
+  const contentAdapters=createRecoveryContentAdapters({model});
+  const api=createRecoveryImportEmulator({enabled:true,firestore:db,authority,foundationStore:store,bundleModel,dryRun,model,merge,contentAdapters});
+  const sections=JSON.parse(JSON.stringify(h.source.sections));sections.canonicalEntities.records=[];
+  sections.profile.records=[{id:'legacy-profile',value:{friendCode:'0000 1111 2222',bio:'Preserved',specialTradeBoard:{lf:[],ft:[]}}}];
+  sections.legacyLists.records=[{id:'remote',value:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}}},{id:'orders',value:{wishlist:['Pikachu']}}];
+  sections.preferences.records=[{id:'device',value:{theme:'dark'}},{id:'history',value:{version:3,owner:{uid:h.uid,username:h.uid},favorites:[],snapshots:{public:{seenAt:123}},recent:[]}}];
+  const source=await bundleModel.create({source:h.source.source,sections}),review=await api.prepare({sourceBundle:source},h.authContext),input={reviewId:review.reviewId,digest:review.digest,accepted:true};
+  assert.equal(review.plan.content.additions.length,5);assert.equal((await api.confirm(input,h.authContext)).status,'verified');assert.equal((await api.confirm(input,h.authContext)).replay,true);
+  const ref=db.doc(`recoveryImportSandboxes/${h.uid}`),data=(await ref.get()).data();assert.equal(data.bundle.sections.profile.records[0].value.bio,'Preserved');assert.equal(data.bundle.sections.preferences.records.find(row=>row.id==='device').value.theme,'dark');
+  const profile=data.bundle.sections.profile.records[0];profile.value.bio='New owner edit';data.bundle=JSON.parse(JSON.stringify(await bundleModel.create({source:data.bundle.source,sections:data.bundle.sections})));await ref.set(data);
+  assert.equal((await api.confirm(input,h.authContext)).status,'committed-content-changed');assert.equal((await ref.get()).data().bundle.sections.profile.records[0].value.bio,'New owner edit');
+ });
+
+ await t.test('unconsumed transfer expiry and source-foundation changes require a new authorization',async()=>{
+  const source=await fixture(),target=await fixture();let clock=Date.now();
+  const {createRecoveryTransferAuthorityEmulator}=require('../src/prototype/recoveryTransferAuthorityEmulator');
+  const transfer=createRecoveryTransferAuthorityEmulator({enabled:true,firestore:db,authority,foundationStore:store,now:()=>clock});
+  const proof=await transfer.proof({sourceContext:source.authContext,targetContext:target.authContext});
+  const grant=await transfer.prepare({sourceDigest:source.source.integrity.digest,accepted:true,sourceContext:source.authContext,targetContext:target.authContext});
+  clock+=300001;
+  await assert.rejects(db.runTransaction(tx=>transfer.check(tx,{grantId:grant.grantId,sourceUid:source.uid,targetUid:target.uid,sourceDigest:source.source.integrity.digest,proof})),{code:'recovery/transfer-expired'});
+  clock-=300001;
+  const ref=db.doc(`accounts/${source.uid}`),prior=(await ref.get()).data();await ref.set({...prior,revision:prior.revision+1});
+  await assert.rejects(db.runTransaction(tx=>transfer.check(tx,{grantId:grant.grantId,sourceUid:source.uid,targetUid:target.uid,sourceDigest:source.source.integrity.digest,proof})),{code:'recovery/stale-plan'});
+ });
+
 });

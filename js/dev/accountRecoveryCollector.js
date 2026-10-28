@@ -7,19 +7,33 @@
   function fail(code){throw Object.assign(new Error(code),{code});}
   function object(value){return value&&typeof value==='object'&&!Array.isArray(value);}
   function clone(value){return JSON.parse(JSON.stringify(value));}
-  function createOwnerRecoveryReader({database,ref,get,uid,trainerHandle,sessionCurrent,readLocal,features={providerPublicShares:false,syncedPreferences:false,shareVisibility:false}}={}){
+  function createOwnerRecoveryReader({database,ref,get,uid,trainerHandle,sessionCurrent,readLocal,identityKind='legacy',readProviderFoundation,featureAdapters={},features={providerPublicShares:false,syncedPreferences:false,shareVisibility:false}}={}){
     if(!database||!ref||!get||!uid||!trainerHandle||/[.#$\[\]/\u0000-\u001f\u007f]/.test(uid+trainerHandle)||typeof sessionCurrent!=='function'||typeof readLocal!=='function')throw new TypeError('Owner recovery reader dependencies required');
-    if(Object.keys(features).sort().join(',')!=='providerPublicShares,shareVisibility,syncedPreferences'||Object.values(features).some(Boolean))fail('recovery/feature-collector-required');
+    if(Object.keys(features).sort().join(',')!=='providerPublicShares,shareVisibility,syncedPreferences'||Object.values(features).some(value=>typeof value!=='boolean')||Object.entries(features).some(([key,enabled])=>enabled&&typeof featureAdapters[key]?.capture!=='function'))fail('recovery/feature-collector-required');
+    if(!['legacy','provider_only'].includes(identityKind)||identityKind==='provider_only'&&typeof readProviderFoundation!=='function')fail('recovery/provider-foundation-required');
     const read=async path=>{if(!sessionCurrent())fail('recovery/session-changed');const snapshot=await get(ref(database,path));if(!sessionCurrent())fail('recovery/session-changed');return snapshot.exists()?snapshot.val():null;};
     async function capture(){
       const paths=[`users/${trainerHandle}`,`authIndex/${uid}`,`userCommunities/${uid}`,`publicShares/${trainerHandle}`,...TYPES.map(type=>`${type}/${trainerHandle}`)];
-      const [profile,index,memberships,share,...lists]=await Promise.all(paths.map(read));
+      let captured;
+      if(identityKind==='provider_only'){
+        const foundation=await readProviderFoundation();
+        if(!sessionCurrent()||foundation?.uid!==uid||foundation.canonicalTrainerName!==trainerHandle||foundation.identityKind!=='provider_only'||foundation.legacyAccessConfigured!==false)fail('recovery/identity-pair-invalid');
+        const [memberships,share]=await Promise.all([read(`userCommunities/${uid}`),read(`trainerShares/${uid}`)]);
+        captured=[{authUid:uid},{username:trainerHandle},memberships,share,...TYPES.map(()=>({}))];
+      }else captured=await Promise.all(paths.map(read));
+      const [profile,index,memberships,share,...lists]=captured;
+      const featureData={};
+      for(const [key,enabled]of Object.entries(features))if(enabled){
+        const record=await featureAdapters[key].capture();
+        if(!sessionCurrent()||record?.ownerUid!==uid||record.schemaVersion!==1||record.complete!==true||!Object.hasOwn(record,'value'))fail('recovery/feature-source-invalid');
+        featureData[key]=clone(record.value);
+      }
       if(profile?.authUid!==uid||index?.username!==trainerHandle)fail('recovery/identity-pair-invalid');
       const local=await readLocal();if(!sessionCurrent()||local?.owner?.uid!==uid||local.owner.username!==trainerHandle)fail('recovery/session-changed');
       const allowed=['owner','history','retainedHistory','lists','orders','preferences','pendingQueue'];
       if(Object.keys(local).sort().join(',')!==allowed.sort().join(',')||!object(local.orders)||!object(local.preferences)||!object(local.pendingQueue)||TYPES.some(type=>!object(local.lists?.[type])))fail('recovery/local-source-incomplete');
       for(const history of[local.history,local.retainedHistory].filter(Boolean))if(history.owner?.uid!==uid||history.owner?.username!==trainerHandle||!Number.isSafeInteger(history.version)||history.version<1||history.version>3)fail('recovery/history-owner-or-version-invalid');
-      return{owner:{uid,username:trainerHandle},features:{...features},profile:Object.fromEntries(PROFILE_KEYS.filter(key=>profile[key]!==undefined).map(key=>[key,profile[key]])),
+      return{owner:{uid,username:trainerHandle},features:{...features},featureData,profile:Object.fromEntries(PROFILE_KEYS.filter(key=>profile[key]!==undefined).map(key=>[key,profile[key]])),
         memberships:memberships||{},sharing:{legacyUrls:TYPES.map(type=>`https://doomsday126dev.github.io/trade-app/?view=${encodeURIComponent(trainerHandle)}&list=${type}`),legacyProjection:share},
         permissions:{legacyRoleReferences:{isAdmin:profile.isAdmin===true,isOwner:profile.isOwner===true},memberships:memberships||{}},
         legacyLists:Object.fromEntries(TYPES.map((type,index)=>[type,lists[index]||{}])),local:clone(local)};
@@ -47,6 +61,7 @@
         if(!validateEntity(value,{ownerUid:session.uid,entityType:type,entityId:id}).ok)fail('recovery/canonical-invalid');
         add('canonicalEntities',`${type}:${id}`,value);
       }
+      for(const[key,value]of Object.entries(first.views.featureData||{}))add(key==='syncedPreferences'?'preferences':'sharing',`feature:${key}`,value);
       add('profile','legacy-profile',first.views.profile);if(first.remote.profile){if(!global.PogoDomain.accountSyncModel.validateProfileRecord(first.remote.profile,{ownerUid:session.uid}).ok)fail('recovery/profile-invalid');add('profile','canonical-profile',first.remote.profile);}
       add('legacyLists','remote',first.views.legacyLists);add('legacyLists','local',first.views.local.lists);add('legacyLists','orders',first.views.local.orders||{});
       add('favorites','history',first.views.local.history?.favorites||[]);add('tags','history',first.views.local.history?.tags||{});

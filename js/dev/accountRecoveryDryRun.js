@@ -4,7 +4,7 @@
   function fail(code){throw Object.assign(new Error(code),{code});}
   function createAccountRecoveryDryRun({bundleModel,model=global.PogoDomain?.accountSyncModel,merge=global.PogoDomain?.accountSyncMerge,resolveFavoriteTarget}={}){
     if(!bundleModel?.verify||!model||!merge)throw new TypeError('Recovery dry-run dependencies required');
-    async function prepare({sourceBundle,currentBundle,targetUid}={}){
+    async function prepare({sourceBundle,currentBundle,targetUid,authorizedSourceUid}={}){
       const source=await bundleModel.verify(sourceBundle),target=await bundleModel.verify(currentBundle);
       if(target.source.ownerUid!==targetUid)fail('recovery/target-owner-mismatch');
       const sameOwner=source.source.ownerUid===targetUid,rows=[],operations=[];
@@ -17,7 +17,7 @@
         const present=existing.get(record.id);
         if(present&&!merge.validateEntity(present,{ownerUid:targetUid,entityType:entity.entityType,entityId:entity.entityId}).ok)fail('recovery/canonical-invalid');
         let status;
-        if(!sameOwner)status='identity-recovery-required';
+        if(!sameOwner&&authorizedSourceUid!==source.source.ownerUid)status='identity-recovery-required';
         else if(present)status=model.canonicalJson(present)===model.canonicalJson(entity)?'unchanged':'conflict-review';
         else if(entity.deleted||entity.generation!==1)status='lifecycle-review';
         else if(entity.entityType==='favorite'&&(typeof resolveFavoriteTarget!=='function'||(await resolveFavoriteTarget({expectedUid:entity.identity.targetUid}))?.uid!==entity.identity.targetUid))status='favorite-identity-review';
@@ -39,12 +39,12 @@
       }
       const order={tag:0,favorite:1,tradeEntry:2};operations.sort((a,b)=>order[a.entityType]-order[b.entityType]||a.entityId.localeCompare(b.entityId));
       return{schemaVersion:1,targetUid,sourceDigest:source.integrity.digest,expectedTargetRevision:target.source.revision,sameOwner,
-        automaticApply:false,rows,operations};
+        automaticApply:false,...(authorizedSourceUid?{authorizedSourceUid}:{}),rows,operations};
     }
-    async function revalidate({plan,sourceBundle,currentBundle,targetUid}={}){
+    async function revalidate({plan,sourceBundle,currentBundle,targetUid,authorizedSourceUid}={}){
       const current=await bundleModel.verify(currentBundle);
       if(current.source.revision!==plan.expectedTargetRevision||targetUid!==plan.targetUid)fail('recovery/stale-plan');
-      const rebuilt=await prepare({sourceBundle,currentBundle,targetUid});
+      const rebuilt=await prepare({sourceBundle,currentBundle,targetUid,authorizedSourceUid});
       if(model.canonicalJson(rebuilt)!==model.canonicalJson(plan))fail('recovery/plan-changed');
       return{ok:true,automaticApply:false,operations:rebuilt.operations};
     }
