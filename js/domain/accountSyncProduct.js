@@ -196,8 +196,32 @@
     return uid&&String(authIndex?.[uid]?.username||'')===name?uid:'';
   }
 
+  const CLARIFICATION_CHOICES=Object.freeze({
+    pattern:Object.freeze([...Array.from({length:8},(_,i)=>`Spinda (Form ${i+1})`),'Spinda (Heart)']),
+    style:Object.freeze(['Urshifu (Single Strike Style) (Gigantamax)','Urshifu (Rapid Strike Style) (Gigantamax)']),
+    year:Object.freeze(['Pikachu (Detective Hat 2019)','Pikachu (Detective 2023)'])
+  });
+  function clarificationFamily(name,shiny=false){
+    return name==='Spinda'?'pattern':name==='Urshifu (Gigantamax)'?'style':name==='Pikachu (Detective)'&&shiny===true?'year':'';
+  }
+  function clarificationPlan({source,sourceName,targetName,targetCatalogId,existing}={}){
+    const family=clarificationFamily(sourceName,source?.values?.shiny);
+    if(!source||source.deleted||source.entityType!=='tradeEntry'||!family||!CLARIFICATION_CHOICES[family].includes(targetName)||!targetCatalogId)return{ok:false,code:'identity'};
+    if(Object.entries(source.values||{}).some(([field,value])=>!model.TRADE_FIELDS.includes(field)||!model.fieldValueValid('tradeEntry',field,value)))return{ok:false,code:'preferences'};
+    const identity={...source.identity,catalogId:targetCatalogId},entityId=model.tradeEntryId(identity);
+    // Existing active records and tombstones require owner review, never merge/re-add.
+    if(existing||entityId===source.entityId)return{ok:false,code:'collision'};
+    return{ok:true,sourceId:source.entityId,sourceBefore:model.canonicalJson(source),targetName,
+      mutation:{kind:'add',entityType:'tradeEntry',entityId,identity,expectedGeneration:0,values:JSON.parse(JSON.stringify(source.values))}};
+  }
+  function clarificationConfirmed({plan,source,target,state,operationId}={}){
+    return!!(plan?.ok&&state?.state==='saved'&&state.listenerHealthy&&state.controllerHealthy&&!state.pendingCount&&!state.blockedCount&&!state.conflictCount&&
+      source&&!source.deleted&&model.canonicalJson(source)===plan.sourceBefore&&target&&!target.deleted&&target.generation===1&&target.revision===1&&target.lifecycleMutation===operationId&&
+      model.canonicalJson(target.identity)===model.canonicalJson(plan.mutation.identity)&&model.canonicalJson(target.values)===model.canonicalJson(plan.mutation.values));
+  }
+
   root.accountSyncProduct=Object.freeze({
-    MY_LIST_LANES,SPECIAL_BOARD_LANES,DEVICE_LOCAL_STATE,TRADE_DEFAULTS,LIST_QUALIFIER_FIELDS,tradeValues,listQualifierValues,rebaseListEdit,listRows,specialBoardRows,
+    CLARIFICATION_CHOICES,clarificationFamily,clarificationPlan,clarificationConfirmed,MY_LIST_LANES,SPECIAL_BOARD_LANES,DEVICE_LOCAL_STATE,TRADE_DEFAULTS,LIST_QUALIFIER_FIELDS,tradeValues,listQualifierValues,rebaseListEdit,listRows,specialBoardRows,
     changedFields,planTradeMutations,projectTradeEntities,projectAcceptedPublicRows,organizerProjection,favoritePatch,favoriteTagPatch,exactFavoriteTargetUid,normalSyncEligibility,canonicalSyncState
   });
 })(window);

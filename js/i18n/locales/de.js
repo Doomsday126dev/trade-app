@@ -1,6 +1,25 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({
+    "clarify.notice":"Einige Varianten sind nicht angegeben.",
+    "clarify.action":"Variante präzisieren",
+    "clarify.dismiss":"Schließen",
+    "clarify.help":"Optional. Füge ein genaues Gesuch mit denselben gespeicherten Wünschen hinzu. Das Original bleibt erhalten.",
+    "clarify.pattern":"Muster",
+    "clarify.style":"Stil",
+    "clarify.year":"Jahr",
+    "clarify.unspecified":"Nicht angeben",
+    "clarify.add":"Genaues Gesuch hinzufügen",
+    "clarify.check":"Speicherung prüfen",
+    "clarify.remove":"Original entfernen",
+    "clarify.grouped":"Gruppierte Einträge müssen einzeln geprüft werden. Es wird nichts zusammengeführt.",
+    "clarify.saveFirst":"Speichere erst deine Änderungen und präzisiere dann die Variante.",
+    "clarify.changed":"Die Gesuche wurden geändert. Prüfe sie, bevor du fortfährst.",
+    "clarify.collision":"Das genaue Gesuch existiert bereits. Nichts wurde geändert.",
+    "clarify.failed":"Das genaue Gesuch konnte nicht bestätigt werden. Das Original bleibt erhalten.",
+    "clarify.pending":"Genaues Gesuch auf diesem Gerät gespeichert. Behalte das Original bis zur bestätigten Synchronisierung.",
+    "clarify.confirmed":"Genaues Gesuch synchronisiert. Behalte beide oder entferne das Original.",
+
     "feedback.viewUpdated":"Ansicht aktualisiert.",
     "accountSync.publishing":"Gespeichert; geteilte Liste wird aktualisiert",
     "accountSync.publishingDetail":"Deine privaten Änderungen sind gespeichert. Deine geteilte Liste wird automatisch aktualisiert.",

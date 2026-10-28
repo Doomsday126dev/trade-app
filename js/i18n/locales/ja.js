@@ -1,6 +1,25 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({
+    "clarify.notice":"バリエーションが未指定のリクエストがあります。",
+    "clarify.action":"バリエーションを指定",
+    "clarify.dismiss":"閉じる",
+    "clarify.help":"任意です。保存済みの希望条件を引き継いで、正確なリクエストを追加します。元のリクエストは残ります。",
+    "clarify.pattern":"模様",
+    "clarify.style":"スタイル",
+    "clarify.year":"年",
+    "clarify.unspecified":"未指定のままにする",
+    "clarify.add":"正確なリクエストを追加",
+    "clarify.check":"保存を確認",
+    "clarify.remove":"元のリクエストを削除",
+    "clarify.grouped":"まとめられた記録は個別の確認が必要です。自動で統合しません。",
+    "clarify.saveFirst":"先に変更を保存してから、バリエーションを指定してください。",
+    "clarify.changed":"リクエストが変更されました。続行する前に確認してください。",
+    "clarify.collision":"正確なリクエストは既にあります。変更はありません。",
+    "clarify.failed":"正確なリクエストを確認できませんでした。元のリクエストは残っています。",
+    "clarify.pending":"この端末に保存しました。同期を確認するまで元のリクエストを残してください。",
+    "clarify.confirmed":"同期を確認しました。両方を残すか、元のリクエストを削除できます。",
+
     "feedback.viewUpdated":"表示を更新しました。",
     "accountSync.publishing":"保存済み・共有リストを更新中",
     "accountSync.publishingDetail":"非公開の変更は保存済みです。共有リストを自動更新しています。",
