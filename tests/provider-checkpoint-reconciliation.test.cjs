@@ -29,3 +29,14 @@ test('two tabs reviewing one receipt cannot both reconcile, and a failed recover
  await assert.rejects(one.confirmReconciliation(tickets[0],{accepted:true}),/synthetic crash/);assert.equal(h.record.status,'pending');
  h.repairStorage();const results=await Promise.allSettled([one.confirmReconciliation(tickets[0],{accepted:true}),two.confirmReconciliation(tickets[1],{accepted:true})]);assert.equal(results.filter(x=>x.status==='fulfilled').length,1);assert.equal(h.record.status,'settled');
 });
+
+test('real checkpoint verifier forces fresh token and Firebase lookup, rejects revocation, substitution and session races',async()=>{
+ const now=Date.now(),uid='verified-checkpoint-owner',projectId='demo-pogo-discord',claims={sub:uid,aud:projectId,iss:`https://securetoken.google.com/${projectId}`,exp:Math.floor(now/1000)+60,auth_time:Math.floor(now/1000)-10},calls=[];let reply={users:[{localId:uid,validSince:'0'}]};
+ const user={uid,getIdTokenResult:async force=>{assert.equal(force,true);return{token:'synthetic-id-token',claims};}},auth={app:{options:{projectId}},currentUser:user,authStateReady:async()=>{}};
+ const window={AbortController,setTimeout,clearTimeout},context=vm.createContext({window,Error,Object,TypeError,Number,Date,JSON,String});vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/dev/providerCheckpointRecovery.js'),'utf8'),context);
+ const verify=window.PogoDev.providerCheckpointRecovery.createVerifier({enabled:true,auth,projectId,apiKey:'synthetic-api-key',clock:()=>now,fetchImpl:async(url,options)=>{calls.push({url,options});return{ok:true,json:async()=>reply};}});
+ assert.equal((await verify({user,expectedUid:uid})).verified,true);assert.match(calls[0].url,/^https:\/\/identitytoolkit.googleapis.com\/v1\/accounts:lookup\?/);assert.equal(calls[0].options.redirect,'error');assert.equal(calls[0].options.credentials,'omit');
+ reply={users:[{localId:uid,validSince:String(claims.auth_time+1)}]};await assert.rejects(verify({user,expectedUid:uid}),{code:'provider-auth/verification-failed'});reply={users:[{localId:'another-owner'}]};await assert.rejects(verify({user,expectedUid:uid}),{code:'provider-auth/verification-failed'});
+ auth.currentUser={uid:'other'};await assert.rejects(verify({user,expectedUid:uid}),{code:'provider-auth/session-changed'});auth.currentUser=null;assert.equal((await verify({user:null,expectedUid:''})).uid,'');
+ assert.throws(()=>window.PogoDev.providerCheckpointRecovery.createVerifier({enabled:true,auth:{...auth,emulatorConfig:{host:'example.test',protocol:'http',port:9898}},projectId,apiKey:'synthetic-key',fetchImpl:async()=>{}}),{code:'provider-auth/verification-target-invalid'});
+});

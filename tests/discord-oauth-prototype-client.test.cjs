@@ -104,7 +104,7 @@ test('duplicate clicks cannot start two browser operations',async()=>{
   const first=h.client.begin('link');await assert.rejects(h.client.begin('link'),{code:'discord/operation-pending'});release();await assert.rejects(first);assert.equal(h.calls.length,1);
 });
 test('candidate stays outside production loaders and caches',()=>{
-  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun|accountRecoveryReview|accountRecoveryOwnerConsumer|accountRecoveryPreferences/);
+  for(const file of['index.html','sw.js','scripts/pages/frontend-files.json'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),/discordOAuthPrototypeClient|providerMigrationOnboarding|providerAuthCommitGate|accountRecoveryCollector|accountRecoveryDryRun|accountRecoveryReview|accountRecoveryOwnerConsumer|accountRecoveryPreferences|providerCheckpointRecovery/);
   const app=fs.readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8'),ast=require('acorn').parse(app,{ecmaVersion:'latest'});
   let outside=app;for(const name of ['createOwnerRecoveryCollectorCandidate','createOwnerRecoveryReviewCandidate']){
     const node=ast.body.find(node=>node.type==='FunctionDeclaration'&&node.id.name===name);assert.ok(node);const body=app.slice(node.start,node.end);
@@ -194,4 +194,8 @@ test('authenticated account reads validate the exact foundation schema and never
 
 test('expired bootstrap is a stable safe error and never starts a Firebase sign-in',async()=>{
  const h=env({href:callback,signedOut:true,fetchImpl:async()=>new Response(JSON.stringify({ok:false,error:{code:'stale_state',reason:'discord/bootstrap_expired'}}))});h.continuation('sign-in');await assert.rejects(h.client.completeFromLocation(),{code:'discord/bootstrap_expired'});assert.deepEqual(h.signIns,[]);
+});
+
+test('delayed activation refusal is surfaced without another auth commit',async()=>{
+ const h=env({fetchImpl:async()=>new Response(JSON.stringify({ok:false,error:{code:'permission_denied',reason:'discord/bootstrap_proof_required'}}))});await assert.rejects(h.client.readAccount(),{code:'discord/bootstrap_proof_required'});assert.deepEqual(h.signIns,[]);
 });

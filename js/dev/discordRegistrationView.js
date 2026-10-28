@@ -13,7 +13,7 @@
     const consentLabel=doc.createElement('label'),consent=doc.createElement('input');consent.type='checkbox';consentLabel.append(consent,doc.createTextNode(' I reviewed my trainer name and sharing information.'));section.append(consentLabel);
     const status=doc.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');section.append(status);
     const create=doc.createElement('button'),cancel=doc.createElement('button');create.type=cancel.type='button';create.className='btn btn-primary';cancel.className='btn';create.textContent='Create account';cancel.textContent='Cancel';const actions=doc.createElement('div');actions.className='provider-onboarding-actions';actions.append(create,cancel);section.append(actions);
-    let removed=false,completedResult=null;
+    let removed=false,completedResult=null,activationBlocked=false;
     function cleanup(){removed=true;section.remove();returnFocus?.focus?.();}
     create.onclick=async()=>{
       if(!completedResult&&!consent.checked){status.textContent='Review the sharing information before creating your account.';consent.focus();return;}
@@ -22,8 +22,11 @@
         if(!completedResult)completedResult=await runtime.confirmRegistration({requestedHandle:input.value,reviewAccepted:true});
         if(!removed){status.textContent='Account verified.';cancel.textContent='Close';await onComplete(completedResult);cleanup();}
       }
-      catch(error){if(!removed)status.textContent=completedResult?'You are signed in. Loading your account failed; retry loading it.':error.code==='discord/handle_conflict'?'That trainer name is taken. Choose another name.':error.code==='discord/bootstrap_expired'?'Account setup is saved, but its initial sign-in window expired. Do not create a second account. Retry Discord sign-in; if it remains blocked, ask support to review the saved setup.':'Account result needs checking. Retry the same name, or sign in again to recover any completed account.';}
-      finally{if(!removed){create.disabled=false;input.disabled=!!completedResult;consent.disabled=!!completedResult;if(completedResult)create.textContent='Retry loading account';}}
+      catch(error){
+        activationBlocked=['discord/bootstrap_expired','discord/bootstrap_proof_required'].includes(error?.code);
+        if(!removed)status.textContent=activationBlocked?(completedResult?'Firebase sign-in succeeded, but this trainer setup needs support review. Existing data is retained. Do not create another account.':'Account setup is saved, but its initial sign-in window expired. Support must review it before another attempt. Do not create a second account.'):completedResult?'You are signed in. Loading your account failed; retry loading it.':error.code==='discord/handle_conflict'?'That trainer name is taken. Choose another name.':'Account result needs checking. Retry the same name, or sign in again to recover any completed account.';
+      }
+      finally{if(!removed){create.disabled=activationBlocked;input.disabled=!!completedResult||activationBlocked;consent.disabled=!!completedResult||activationBlocked;if(activationBlocked)create.textContent='Support review needed';else if(completedResult)create.textContent='Retry loading account';}}
     };
     cancel.onclick=async()=>{
       if(completedResult){cleanup();return;}

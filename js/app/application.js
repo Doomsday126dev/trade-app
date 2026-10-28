@@ -6,6 +6,19 @@ let firebaseAppCheckInitializationPromise=null;
 let firebaseDataProtectionPromise=null;
 let firebaseAppCheckStage='not-started';
 function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof getDatabase==='function'&&typeof getAuth==='function';}
+function installProviderHostAuthGateCandidate(early){
+  if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__!==true)return early.authMod;
+  const install=window.PogoDev?.providerHostAuthGate?.install;
+  if(typeof install!=='function'||!window.PogoDev?.providerCheckpointRecovery?.createVerifier)throw new Error('Provider auth canary gate or verified recovery adapter is unavailable');
+  window.__pogoProviderHostAuthGate=install({enabled:true,auth:early.auth,sdk:early.authMod,
+    expectedSignInUid:window.__POGO_PROVIDER_AUTH_GATE_CANARY_UID__,
+    verifyCurrentAuth:window.PogoDev.providerCheckpointRecovery.createVerifier({enabled:true,auth:early.auth,projectId:early.app.options.projectId,apiKey:early.app.options.apiKey}),
+    onStatus:state=>{
+      window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}));
+      if(state.authCoordinationBlocked)toast('Signed in, but account changes are blocked by an unresolved sign-in checkpoint.',6000);
+    }});
+  return window.__pogoProviderHostAuthGate.sdk;
+}
 async function loadFirebaseSdk(){
   if(firebaseSdkReady())return true;
   if(!firebaseSdkPromise){
@@ -16,17 +29,7 @@ async function loadFirebaseSdk(){
     ]).then(([early,dbMod])=>{
       const appMod=early.appMod;
       let authMod=early.authMod;
-      if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__===true){
-        const install=window.PogoDev?.providerHostAuthGate?.install;
-        if(typeof install!=='function')throw new Error('Provider auth canary gate is unavailable');
-        window.__pogoProviderHostAuthGate=install({enabled:true,auth:early.auth,sdk:authMod,
-          expectedSignInUid:window.__POGO_PROVIDER_AUTH_GATE_CANARY_UID__,
-          onStatus:state=>{
-            window.dispatchEvent(new CustomEvent('pogo:auth-commit-state',{detail:state}));
-            if(state.authCoordinationBlocked)toast('Signed in, but account changes are blocked by an unresolved sign-in checkpoint.',6000);
-          }});
-        authMod=window.__pogoProviderHostAuthGate.sdk;
-      }
+      authMod=installProviderHostAuthGateCandidate(early);
       initializeApp=appMod.initializeApp;
       getDatabase=dbMod.getDatabase;
       ref=dbMod.ref;
@@ -443,6 +446,7 @@ let providerAccountFoundationClient=null;
 let providerIdentityResolutionPromise=null;
 let providerDiscordResolutionPromise=null;
 let providerRecoveryViewCleanup=null;
+let providerCheckpointViewCleanup=null;
 let providerIdentityResolutionBinding='';
 let activeCanonicalIdentity=null;
 let e1ClientFoundationCanary=null;
@@ -2477,6 +2481,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  if(typeof providerCheckpointViewCleanup!=='undefined'&&providerCheckpointViewCleanup){providerCheckpointViewCleanup();providerCheckpointViewCleanup=null;}
   if(typeof providerRecoveryViewCleanup!=='undefined'&&providerRecoveryViewCleanup){providerRecoveryViewCleanup();providerRecoveryViewCleanup=null;}
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
   document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
@@ -4164,6 +4169,14 @@ function createOwnerRecoveryReviewCandidate({collector,collectorOptions}={}){
     dryRun:window.PogoDev.accountRecoveryDryRun.createAccountRecoveryDryRun({bundleModel:window.PogoDev.accountRecoveryBundle.createAccountRecoveryBundle(),resolveFavoriteTarget:async({expectedUid,displayName})=>{const result=await resolveFavoriteIdentityForSession(displayName,expectedUid,{allowIncidentResolver:false});return result?.targetUid===expectedUid?{uid:expectedUid}:null;}}),
     getSession:()=>auth?.currentUser===user&&cur===username&&managedAccountSyncRuntime===runtime&&providerAuthSnapshot()?.lifecycleId===life?{uid:user.uid,lifecycleId:life,accountReady:accountSyncProjectionReady()}:null,
     restoreProfile:restoreOwnerRecoveryProfileCandidate,restoreHistory:restoreOwnerRecoveryHistoryCandidate,restorePreferences:async bundle=>{const preferences=createOwnerRecoveryPreferencesCandidate();return preferences.apply(await preferences.review({sourceBundle:bundle,accepted:true}));}});
+}
+function mountProviderCheckpointRecoveryCandidate({container,returnFocus}={}){
+  if(window.__POGO_PROVIDER_AUTH_GATE_CANARY__!==true)return Object.freeze({available:false});
+  const host=window.__pogoProviderHostAuthGate,module=window.PogoDev?.providerCheckpointRecovery;
+  if(!host?.available||!module?.mount)throw providerFailure('provider-auth/reconciliation-unavailable');
+  providerCheckpointViewCleanup?.();const cleanup=module.mount({container,host,returnFocus});let closed=false;
+  const close=()=>{if(closed)return;closed=true;cleanup();if(providerCheckpointViewCleanup===close)providerCheckpointViewCleanup=null;};providerCheckpointViewCleanup=close;
+  return Object.freeze({available:true,close});
 }
 function mountOwnerRecoveryReviewCandidate({container,returnFocus,...options}={}){
   if(window.__POGO_RECOVERY_OWNER_CANARY__!==true)return Object.freeze({available:false});

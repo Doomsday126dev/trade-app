@@ -96,3 +96,20 @@ test('Firebase 12.14.0 blocking hook rejects wrong-UID sign-in and permits only 
   assert.equal(auth.currentUser.uid,a.user.uid);await reloadedGate.assertSession();reloadedGate.dispose();
 
 });
+
+test('actual host candidate wires fresh Firebase verification and explicitly reconciles completed sign-in and sign-out',{skip:!enabled},async t=>{
+ const local=path.join(__dirname,'../.local/firebase-auth-sdk/node_modules'),modules=fs.existsSync(local)?local:null,appSdk=require(modules?path.join(modules,'@firebase/app'):'@firebase/app'),sdk=require(modules?path.join(modules,'@firebase/auth'):'@firebase/auth');
+ const app=appSdk.initializeApp({projectId:'demo-pogo-discord',apiKey:'synthetic-demo-api-key',authDomain:'localhost'},`checkpoint-host-${Date.now()}`),auth=sdk.initializeAuth(app,{persistence:sdk.inMemoryPersistence});sdk.connectAuthEmulator(auth,`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`,{disableWarnings:true});t.after(()=>appSdk.deleteApp(app));await auth.authStateReady();
+ const email=`host-checkpoint-${Date.now()}@example.test`,password='synthetic-emulator-password',created=await sdk.createUserWithEmailAndPassword(auth,email,password);await sdk.signOut(auth);
+ const w={crypto:require('node:crypto').webcrypto,AbortController,setTimeout,clearTimeout,fetch,__POGO_PROVIDER_AUTH_GATE_CANARY__:true,__POGO_PROVIDER_AUTH_GATE_CANARY_UID__:created.user.uid,dispatchEvent:()=>{}};const context=vm.createContext({window:w,Object,Error,TypeError,String,Number,Date,JSON,Promise,CustomEvent:function(){},toast:()=>{}});
+ for(const file of ['providerAuthCommitGate','providerHostAuthGate','providerCheckpointRecovery'])vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/dev/${file}.js`),'utf8'),context);
+ let checkpoint={revision:0,uid:null,status:'settled'},broken=true,tail=Promise.resolve();const outcomes=new Map(),coordination={read:async()=>structuredClone(checkpoint),write:async value=>{if(broken&&value.status==='settled')throw Error('synthetic final write failure');checkpoint=structuredClone(value);},readOutcome:async id=>outcomes.get(id),writeOutcome:async value=>outcomes.set(value.operationId,structuredClone(value))};
+ // Only persistence/locking are fixture dependencies. The actual application
+ // installer supplies the real verifier; its getIdTokenResult + lookup are live
+ // requests to the local Auth emulator, with no injected acceptance predicate.
+ const original=w.PogoDev.providerHostAuthGate.install;w.PogoDev.providerHostAuthGate={install:options=>original({...options,coordination,locks:{request:(_name,_options,work)=>{const task=tail.then(work);tail=task.catch(()=>{});return task;}}})};
+ const source=fs.readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8'),ast=require('acorn').parse(source,{ecmaVersion:'latest'}),node=ast.body.find(node=>node.type==='FunctionDeclaration'&&node.id.name==='installProviderHostAuthGateCandidate');assert.ok(node);vm.runInContext(source.slice(node.start,node.end),context);
+ const wrapped=context.installProviderHostAuthGateCandidate({auth,app,authMod:sdk}),host=w.__pogoProviderHostAuthGate,result=await wrapped.signInWithEmailAndPassword(auth,email,password);assert.equal(result.authCoordinationBlocked,true);assert.equal(checkpoint.status,'pending');broken=false;
+ const ticket=await host.prepareCheckpointRecovery();assert.equal(ticket.uid,created.user.uid);await assert.rejects(host.confirmCheckpointRecovery(ticket),{code:'provider-auth/explicit-review-required'});await host.confirmCheckpointRecovery(ticket,{accepted:true});assert.equal(checkpoint.status,'settled');assert.equal(auth.currentUser.uid,created.user.uid);
+ broken=true;assert.equal((await wrapped.signOut(auth)).authCoordinationBlocked,true);assert.equal(auth.currentUser,null);broken=false;const signedOut=await host.prepareCheckpointRecovery();assert.equal(signedOut.uid,'');await host.confirmCheckpointRecovery(signedOut,{accepted:true});assert.equal(checkpoint.status,'settled');assert.equal(checkpoint.uid,'');
+});

@@ -18,13 +18,17 @@ All candidates remain off. Source qualification and CI are not activation approv
   durable private registration claim. Firebase custom-token exchange creates the
   exact UID; the server needs no Auth user-creation permission. Initial issuance
   is bounded to five minutes after the claim. Verified signed readback activates
-  its durable receipt. Missing/disabled/changed activated users fail closed.
+  its durable receipt only if Firebase created the user inside that original
+  window; readback is not unconditional recovery. Missing/disabled/changed activated users fail closed.
 - [x] Pre-existing UID collision, infrastructure errors, lost mint response,
   replay, expired initial issuance, unlinked subject and wrong UID are tested.
   The bootstrap window does not shorten Firebase's issued-token lifetime; no
   instant revocation guarantee is claimed for a token already issued.
 - [x] Shared auth gate covers SDK commit boundaries, logout, competing tabs,
-  blocked persistence and explicit checkpoint reconciliation. A non-cancelable
+  blocked persistence and explicit checkpoint reconciliation. The actual host
+  installer now supplies a fresh-token/Firebase-account-lookup verifier and an
+  explicit review UI. Signed-out recovery verifies SDK absence plus the exact
+  completed sign-out receipt; it does not claim server-token revocation. A non-cancelable
   commit is reported accurately; no automatic checkpoint expiry/reset.
 - [x] Candidate Discord account reads enter the same UID-bound host profile,
   sync and publication runtime. Host/runtime and browser fixtures test reload,
@@ -64,8 +68,13 @@ All candidates remain off. Source qualification and CI are not activation approv
   disabled backend behavior, cross-tab account switching, and honest failure UI.
 - [ ] Approve the fail-closed support response for an expired, unactivated Discord
   bootstrap claim. The identity is retained, not reset or reassigned. Verified
-  current Auth readback can finish activation; no source-inaccessible bypass or
-  automatic extension is implemented. This known exception must be disclosed
+  current Auth readback can finish activation only if the Firebase user was
+  created by the original bootstrap inside its five-minute window. A token minted
+  inside the window may still be accepted by Firebase after that deadline, while
+  the trainer authority refuses activation. That delayed-exchange case is tested:
+  Auth success is not app readiness, and retry UI requests support rather than
+  looping or creating another account. No automatic extension, privileged reset
+  or source-inaccessible bypass is implemented. This known exception must be disclosed
   before public signup, not hidden behind another-account creation advice.
 
 ## 3. Production release decision (separate, specific approval)

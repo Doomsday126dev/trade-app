@@ -48,11 +48,12 @@ test('reviewed recovery refuses edited plan, forged ticket and account switch be
 test('application SDK binding installs the canary wrapper before exposing mutation functions',async()=>{
  const source=fs.readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8').split('function loadFirebaseAppCheckSdk()')[0].replace('import(`${base}/firebase-database.js`)','Promise.resolve(dbSdk)');
  for(const enabled of[false,true]){
-  const raw={getAuth(){},signInWithEmailAndPassword(){},signOut(){}},wrapped={...raw,signInWithEmailAndPassword:()=> 'guarded'},calls=[];
-  const window={__POGO_PROVIDER_AUTH_GATE_CANARY__:enabled,__POGO_PROVIDER_AUTH_GATE_CANARY_UID__:'synthetic-owner',PogoDev:{providerHostAuthGate:{install:options=>{calls.push(options);return{available:true,sdk:wrapped};}}}};
-  const context=vm.createContext({window,Promise,Error,dbSdk:{getDatabase(){}},startPogoEarlyAuth:async()=>({appMod:{initializeApp(){}},authMod:raw,auth:{currentUser:null}})});
+  const raw={getAuth(){},signInWithEmailAndPassword(){},signOut(){}},wrapped={...raw,signInWithEmailAndPassword:()=> 'guarded'},calls=[],verifier=async()=>({verified:true}),verifierOptions=[];
+  const window={__POGO_PROVIDER_AUTH_GATE_CANARY__:enabled,__POGO_PROVIDER_AUTH_GATE_CANARY_UID__:'synthetic-owner',PogoDev:{providerHostAuthGate:{install:options=>{calls.push(options);return{available:true,sdk:wrapped};}},providerCheckpointRecovery:{createVerifier:options=>{verifierOptions.push(options);return verifier;}}}};
+  const context=vm.createContext({window,Promise,Error,dbSdk:{getDatabase(){}},startPogoEarlyAuth:async()=>({appMod:{initializeApp(){}},app:{options:{projectId:'demo-pogo-discord',apiKey:'synthetic-demo-key'}},authMod:raw,auth:{currentUser:null}})});
   await vm.runInContext(source+'\nloadFirebaseSdk()',context);
-  assert.equal(calls.length,enabled?1:0);assert.equal(vm.runInContext('signInWithEmailAndPassword',context),enabled?wrapped.signInWithEmailAndPassword:raw.signInWithEmailAndPassword);
+  assert.equal(calls.length,enabled?1:0);assert.equal(verifierOptions.length,enabled?1:0);if(enabled){assert.equal(calls[0].verifyCurrentAuth,verifier);assert.equal(verifierOptions[0].projectId,'demo-pogo-discord');}
+  assert.equal(vm.runInContext('signInWithEmailAndPassword',context),enabled?wrapped.signInWithEmailAndPassword:raw.signInWithEmailAndPassword);
  }
 });
 

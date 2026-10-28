@@ -6,7 +6,7 @@
   const TOKEN=/^[A-Za-z0-9_-]{43}$/;
   const BINDING=/^v1_[a-f0-9]{64}$/;
   const SAFE_REASONS=new Set(['provider/subject_already_linked','provider/account_already_linked','discord/auth_lifecycle_changed',
-    'discord/bootstrap_expired','discord/auth_uid_collision','discord/auth_user_changed','discord/auth_user_missing','discord/handle_conflict','discord/registration_canceled','discord/registration_expired','discord/registration_review_required','discord/rate_limited','auth/recent_auth_required','discord/confirmation_expired']);
+    'discord/bootstrap_expired','discord/bootstrap_proof_required','discord/auth_uid_collision','discord/auth_user_changed','discord/auth_user_missing','discord/handle_conflict','discord/registration_canceled','discord/registration_expired','discord/registration_review_required','discord/rate_limited','auth/recent_auth_required','discord/confirmation_expired']);
   function failure(code){return Object.assign(new Error(code),{code});}
   function exactKeys(value,keys){return value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')===keys.slice().sort().join(',');}
   function base64url(bytes){let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return global.btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
