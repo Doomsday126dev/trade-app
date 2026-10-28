@@ -21,3 +21,7 @@ Pointer and keyboard selection explicitly request Favorites rendering. Internal 
 ## Publication boundary
 
 Local repair branch only, based on .163 merge ef1a6750cd5b1d8380e2b18c9a35b8d1ae8ce58e. It deliberately retains the inherited .163 stamp until a distinct .164 runtime/source registration is prepared. Do not deploy this unstamped branch as .163 or move existing immutable tags. Publication needs a scoped PR, final exact-head hosted qualification, the normal exact-source registration/control dispatcher process, fresh immutable release/control tags and protected Pages deployment. No artwork allowlist change, new read allowance, backend, auth, billing, credentials or permissions change is required. Parent coordinates the focused visual/native check before publication.
+
+## Approved .164 publication preparation
+
+The owner explicitly approved the scoped repair PR, fresh release tags and exact-source deployment registration. The release uses .164 consistently in the HTML/cache URLs, client marker and service worker. Extend only its finite local recognizer and register the frozen SHA under the existing unchanged catalogue read contract. The frontend inventory remains 1,337 files; no packaging or read-handler allowance change. The owner restored-entry browser checks and final required hosted qualification must pass; native live QA remains coordinated through the parent.
