@@ -40,7 +40,7 @@ function loadIdentities({database}={}){
 
 // A file is an identity lead, never proof of an entire normal/Shiny pair.
 // Only a unique actual picker identity plus separately reviewed variants closes it.
-function minedPairCoverage(group,{identities,art,verified}){
+function minedPairCoverage(group,{identities,art,verified,baseNames}){
  const fileName=value=>{try{return path.basename(decodeURIComponent(/^https:\/\//.test(value)?new URL(value).pathname:value));}catch{return'';}};
  const files=new Set(group.files.map(file=>path.basename(file.path)));
  const linked=art.entries.filter(row=>row.no===group.no&&[row.sourceFile,...Object.values(row.sourceFiles||{}),...Object.values(row.artProof||{}).map(proof=>proof.url)].filter(value=>typeof value==='string').some(value=>files.has(fileName(value))));
@@ -50,7 +50,7 @@ function minedPairCoverage(group,{identities,art,verified}){
  };
  const targets=new Map();for(const row of linked)for(const item of matches(row))targets.set(item.catalogId,item);
  const base=!group.token||group.token==='00';
- if(base&&!linked.length)for(const item of identities.all.filter(item=>item.no===group.no&&!/[()]/.test(item.name)))targets.set(item.catalogId,item);
+ if(base&&!linked.length)for(const item of identities.all.filter(item=>item.no===group.no&&baseNames.get(group.no)?.has(identityKey(item.name))))targets.set(item.catalogId,item);
  const ids=[...targets.keys()].filter(Boolean),unique=ids.length===1;
  const exactRows=unique?linked.filter(row=>row.status==='exact'&&matches(row).some(item=>item.catalogId===ids[0])):[];
  const qualified=variant=>unique&&(exactRows.some(row=>{
@@ -113,6 +113,10 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
  const gmax=sources.data['gigantamax-inventory']||[];const gmaxMapped=gmax.filter(row=>identities.database.gmax?.some(entry=>entry.no===row.no));
  for(const row of gmax.filter(row=>!gmaxMapped.includes(row)))push({id:'gigantamax:'+row.no,source:'gigantamax-inventory',sourceUrl:row.source,discoveredAt:sourceDate('gigantamax-inventory'),no:row.no,name:row.name+' (Gigantamax)',releaseState:'uncertain',artState:'exact-gigantamax-art-review-required',priority:'urgent',disposition:'release-and-identity-review-required'});
  coverage['gigantamax-inventory']={denominator:gmax.length,identityMatched:gmaxMapped.length,unmatched:gmax.length-gmaxMapped.length,appEntriesOutsideSource:(identities.database.gmax||[]).filter(row=>!gmax.some(source=>source.no===row.no)).map(row=>({no:row.no,name:row.name})),qualification:'Species-level identity presence only. Extra app entries and absent source rows require official release evidence; this secondary table may lag.'};
+ const baseNames=new Map();
+ const addBase=(no,name)=>{if(!baseNames.has(no))baseNames.set(no,new Set());baseNames.get(no).add(identityKey(name));};
+ for(const row of sources.data['normal-inventory']||[])if(new RegExp('/0*'+row.no+'\\.png$').test(row.sourceSprite||''))addBase(row.no,row.name);
+ for(const row of forms.records||[])if(row.id===row.speciesId)addBase(row.speciesId,row.name);
  const tree=sources.data.pokemod;const groups=new Map();
  for(const file of tree?.tree||[]){const m=file.path.match(/^Addressable Assets\/pm(\d+)(.*?)\.(?:icon|portrait)\.png$/);if(!m)continue;
   const token=m[2].replace(/\.g\d+|\.s(?=\.|$)/g,''),id='mined:'+m[1]+token;
@@ -120,7 +124,7 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
  }
  let minedMatched=0;const minedVariants={normal:0,shiny:0};
  for(const group of groups.values()){
-  const pair=minedPairCoverage(group,{identities,art,verified});
+  const pair=minedPairCoverage(group,{identities,art,verified,baseNames});
   for(const variant of ['normal','shiny'])if(pair.variants[variant].artQualified)minedVariants[variant]++;
   if(pair.complete){minedMatched++;continue;}
   push({...group,...pair,source:'pokemod',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets/tree/'+sources.manifest.sources.find(r=>r.id==='pokemod')?.commit+'/Images/Pokemon',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'exact-pair-or-picker-review-required',normal:pair.variants.normal.sourceAvailable,shiny:pair.variants.shiny.sourceAvailable,priority:/2026|HALLOWEEN/.test(group.token)?'urgent':'review',disposition:'exact-game-form-alias-review-required'});
@@ -129,7 +133,7 @@ function reconcile({sources,identities,art,forms,verifiedArt=[],dispositions=[],
  for(const file of tree?.tree||[]){if(!file.path.endsWith('.png'))continue;if(file.path.startsWith('Addressable Assets/')){if(!/^Addressable Assets\/pm\d+.*\.(?:icon|portrait)\.png$/.test(file.path))unparsed.push(file);continue;}const m=file.path.match(/^pokemon_icon_(?:pm)?(\d+)_(.*?)(?:_shiny)?\.png$/);if(!m){unparsed.push(file);continue;}const id='legacy-mined:'+Number(m[1])+':'+m[2];if(!legacy.has(id))legacy.set(id,{id,no:Number(m[1]),token:m[2],files:[]});legacy.get(id).files.push({path:file.path,gitBlobSha:file.sha,...(file.discoveredAt?{discoveredAt:file.discoveredAt}:{})});}
  let legacyMapped=0;const legacyVariants={normal:0,shiny:0};
  for(const group of legacy.values()){
-  const pair=minedPairCoverage(group,{identities,art,verified});
+  const pair=minedPairCoverage(group,{identities,art,verified,baseNames});
   for(const variant of ['normal','shiny'])if(pair.variants[variant].artQualified)legacyVariants[variant]++;
   if(pair.complete){legacyMapped++;continue;}
   push({...group,...pair,source:'pokemod-legacy',sourceUrl:'https://github.com/The-Pokemod-Group/pogo_assets',discoveredAt:group.files.map(f=>f.discoveredAt).filter(Boolean).sort()[0]||sourceDate('pokemod'),releaseState:'uncertain',artState:'available-at-source',priority:'review',disposition:'legacy-form-costume-number-review-required'});

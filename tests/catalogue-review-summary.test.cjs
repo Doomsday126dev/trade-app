@@ -13,7 +13,7 @@ test('normal source/hash evidence never closes missing Shiny and raw rows remain
 });
 test('changed source blob or removed variant re-enters actionable review; fetch time alone does not',()=>{
  const f=fixture();f.report.queue[0].discoveredAt='later';assert.equal(summarize(f.report,f.register,f.context).rows[0].sourceUnchanged,true);
- f.report.queue[0].files[1].gitBlobSha='changed';assert.equal(summarize(f.report,f.register,f.context).rows[0].category,'new-or-changed-source');f.report.queue[0].files.pop();assert.equal(summarize(f.report,f.register,f.context).counts['changed-review'],1);
+ f.report.queue[0].files[1].gitBlobSha='changed';assert.equal(summarize(f.report,f.register,f.context).rows[0].category,'unreviewed-or-changed-source-evidence');f.report.queue[0].files.pop();assert.equal(summarize(f.report,f.register,f.context).counts['changed-review'],1);
 });
 test('changed selector, exact URL or hash invalidates the corresponding runtime proof',()=>{
  const f=fixture();f.context.identities.all=[];assert.equal(summarize(f.report,f.register,f.context).rows[0].category,'selectable-identity-changed');f.context.identities.all=[{catalogId:'base'}];f.context.proofs.get('base')[0].url='https://example.test/changed';const changed=summarize(f.report,f.register,f.context).rows[0];assert.equal(changed.category,'runtime-route-or-proof-changed');assert.equal(changed.variants.normal.runtimeArtQualified,false);
