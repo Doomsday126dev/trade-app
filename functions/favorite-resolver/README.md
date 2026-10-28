@@ -112,3 +112,21 @@ original dependency error is rethrown unchanged. HTTP responses, quotas, retries
 leases, reads, permissions and retention settings are unchanged. These events
 provide evidence for future failures; they do not establish the cause of the
 retained historical 503s.
+
+## Bounded quota-write throttling recovery
+
+Only an explicit storage CAS error code 429 (numeric or exact string) receives
+a delayed retry: at most two 1,100 ms waits per quota update, inside the existing
+six-CAS-attempt ceiling shared with generation conflicts. A 429 retry retains
+the identical payload, generation precondition and lease ID; a 412 re-reads
+authoritative state. Discovering the same admission lease after a conflict
+returns its receipt without charging or writing it twice. Other errors and
+application rate/concurrency limits are not retried. Exhaustion fails closed.
+
+The handler passes its original 20-second deadline into acquire and release.
+Checks before new reads/writes and after sleeps prevent a new retry after the
+deadline or request cancellation. A wait that cannot fit is skipped. The
+30-second platform timeout, caller budgets, concurrency limits, lease lifetime,
+no-refund semantics, IAM, configuration and diagnostic privacy remain unchanged.
+An in-flight storage operation retains its existing platform timeout behavior;
+this change does not claim to cancel an already-started network operation.
