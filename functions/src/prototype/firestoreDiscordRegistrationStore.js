@@ -50,7 +50,10 @@ function createFirestoreDiscordRegistrationStore({firestore,now=Date.now,randomB
       }
       const result=await work(tx);
       tx.set(target,{...current,status:'complete',creationFingerprint:identity.fingerprint});
-      if(!claim)tx.create(claimTarget,{schemaVersion:1,uid:initial.uid,providerSubjectKey:initial.providerSubjectKey,creationFingerprint:identity.fingerprint,state:'pending-auth',createdAt:now(),bootstrapExpiresAt:now()+300000,firstMintAt:null,activatedAt:null,authCreatedAt:null});
+      if(!claim){
+        const createdAt=now();
+        tx.create(claimTarget,{schemaVersion:1,uid:initial.uid,providerSubjectKey:initial.providerSubjectKey,creationFingerprint:identity.fingerprint,state:'pending-auth',createdAt,bootstrapExpiresAt:createdAt+300000,firstMintAt:null,activatedAt:null,authCreatedAt:null});
+      }
       return result;
     })}});
     const result=await adapter.createProviderAccountFoundation(identity);
@@ -74,11 +77,12 @@ function createFirestoreDiscordRegistrationStore({firestore,now=Date.now,randomB
     if(claim.state==='active-auth'){
       if(!user||Date.parse(user.metadata?.creationTime)!==claim.authCreatedAt)fail('unauthenticated','discord/auth_user_changed');return null;
     }
-    if(allowBootstrap!==true||now()<claim.createdAt||now()>=claim.bootstrapExpiresAt)fail('stale_state','discord/bootstrap_expired');
+    const timestamp=now();
+    if(allowBootstrap!==true||timestamp<claim.createdAt||timestamp>=claim.bootstrapExpiresAt)fail('stale_state','discord/bootstrap_expired');
     if(user&&(!Number.isSafeInteger(claim.firstMintAt)||Date.parse(user.metadata?.creationTime)<claim.firstMintAt||!Number.isFinite(Date.parse(user.metadata?.creationTime))||user.email||user.phoneNumber||(user.providerData||[]).length))fail('conflict','discord/auth_uid_collision');
     // Firebase creationTime has whole-second precision. The first missing-user
     // observation must precede any allowed existing-user bootstrap retry.
-    if(claim.firstMintAt===null)tx.set(target,{...claim,firstMintAt:Math.floor(now()/1000)*1000});
+    if(claim.firstMintAt===null)tx.set(target,{...claim,firstMintAt:Math.floor(timestamp/1000)*1000});
     return{discordBootstrap:claim.creationFingerprint};
   });}
   async function markAuthActivated({uid,providerSubjectKey,bootstrapProof,authCreatedAt}={}){return firestore.runTransaction(async tx=>{

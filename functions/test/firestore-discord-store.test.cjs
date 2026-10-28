@@ -123,22 +123,23 @@ test('Discord provider-only foundation is resolvable by the existing Discord sig
   assert.equal((await store.resolveSubject({providerSubjectKey:key})).uid,uid);
 });
 
-async function registrationHarness({enabled=true,mint,minterFactory,at=NOW}={}){
+async function registrationHarness({enabled=true,mint,minterFactory,at=NOW,clockStep=0}={}){
   const db=await database(),n=++sequence;let clock=at,current=null,subject=`903511102246789${n}`;
+  const readClock=()=>{const value=clock;clock+=clockStep;return value;};
   const binding=Buffer.from(hash(`registration-browser-${n}`),'hex').toString('base64url'),id=`discord-registration-${n}`;
   const freeze={schemaVersion:1,state:'active',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-registration-0001',provisioningContractDigest:'d'.repeat(64),activatedAt:100,releasedAt:null};
   await db.doc('authorityConfig/legacyProvisioningFreeze').set(freeze);
   await db.doc('authorityConfig/providerAccountCreation').set({schemaVersion:2,state:'certified',provisioningModel:freeze.provisioningModel,freezeId:freeze.freezeId,provisioningContractDigest:freeze.provisioningContractDigest,normalizationVersion:1,legacyNamespaceCoverageCertified:true,activeLegacyHandleCount:0,certifiedHandleCount:0,coverageDigest:'c'.repeat(64),inventoryCapturedAt:200,certifiedAt:300,expiresAt:at+600000});
-  const store=createFirestoreDiscordOAuthStore({firestore:db,now:()=>clock});
+  const store=createFirestoreDiscordOAuthStore({firestore:db,now:readClock});
   const {createFirestoreDiscordRegistrationStore}=require('../src/prototype/firestoreDiscordRegistrationStore');
-  const registrationStore=createFirestoreDiscordRegistrationStore({firestore:db,now:()=>clock});
+  const registrationStore=createFirestoreDiscordRegistrationStore({firestore:db,now:readClock});
   const config={clientId:'157730590492196864',clientSecret:'synthetic-client-secret',statePepper:'synthetic-state-pepper',subjectPepper:'synthetic-subject-pepper',redirectUri:'http://127.0.0.1:8886/callback'};
-  const oauth=createDiscordOAuthPrototype({registrationEnabled:enabled,registrationStore,store,now:()=>clock,config,customTokenMinter:minterFactory?minterFactory({store,registrationStore}):mint||(async uid=>`synthetic-token-${uid}`),discord:{exchangeCode:async()=>({accessToken:'synthetic-access-token',scope:'identify',tokenType:'Bearer'}),getCurrentUser:async()=>({subject,label:'Synthetic Registration'}),revokeToken:async()=>{}}});
+  const oauth=createDiscordOAuthPrototype({registrationEnabled:enabled,registrationStore,store,now:readClock,config,customTokenMinter:minterFactory?minterFactory({store,registrationStore}):mint||(async uid=>`synthetic-token-${uid}`),discord:{exchangeCode:async()=>({accessToken:'synthetic-access-token',scope:'identify',tokenType:'Bearer'}),getCurrentUser:async()=>({subject,label:'Synthetic Registration'}),revokeToken:async()=>{}}});
   const base={requestId:id,browserBinding:binding,clientKey:binding,currentAuthority:async()=>current};
   async function review(requestId=id){const args={...base,requestId},started=await oauth.begin({...args,operation:'sign-in'});return oauth.complete({...args,issuer:'https://discord.com',code:'synthetic-code',state:new URL(started.authorizeUrl).searchParams.get('state'),observedRedirectUri:config.redirectUri});}
   const token=await review();
   const input={...base,registrationToken:token.registrationToken,requestedHandle:`DiscordNew${n}`,reviewAccepted:true};
-  return{db,n,oauth,store,registrationStore,token,input,review,confirm:extra=>oauth.confirmRegistration({...input,...extra}),cancel:()=>oauth.cancelRegistration(input),setCurrent:value=>{current=value;},advance:ms=>{clock+=ms;}};
+  return{db,n,oauth,store,registrationStore,token,input,review,confirm:extra=>oauth.confirmRegistration({...input,...extra}),cancel:()=>oauth.cancelRegistration(input),setCurrent:value=>{current=value;},advance:ms=>{clock+=ms;},get time(){return clock;}};
 }
 
 test('registration is default-off and unknown identity creates only a review when enabled',async()=>{
@@ -244,4 +245,41 @@ test('default-off server composition qualifies the entire new-signup and returni
    const existingOnly=createDiscordCandidateComposition({...options,registrationEnabled:false}),signin=await complete(`composition-existing-${h.n}`,existingOnly);assert.equal(signin.status,'existing-account');assert.equal(signin.uid,created.uid);
    const privateRead=await fetch(`http://${process.env.FIRESTORE_EMULATOR_HOST}/v1/projects/demo-pogo-discord/databases/(default)/documents/discordRegistrationClaims/${created.uid}`);assert.equal(privateRead.status,403);
  }finally{await adminApp.deleteApp(app);}
+});
+
+test('advancing clock commits a valid bootstrap claim and lost mint retry activates the same account',async()=>{
+ const {createDiscordCandidateTokenMinter}=require('../src/prototype/discordCandidateComposition');let mintCalls=0,claims,user=null;
+ const auth={getUser:async()=>{if(!user)throw Object.assign(Error('synthetic missing user'),{code:'auth/user-not-found'});return user;},createCustomToken:async(uid,value)=>{mintCalls++;claims=value;if(mintCalls===1)throw Error('advancing clock mint response lost');return`synthetic-custom-token-${uid}`;}};
+ const h=await registrationHarness({clockStep:1,minterFactory:({store,registrationStore})=>createDiscordCandidateTokenMinter({enabled:true,allowBootstrap:true,firebaseAuth:auth,store,registrationStore})});
+ await assert.rejects(h.confirm(),/advancing clock mint response lost/);
+ const reviewHash=createHmac('sha256','synthetic-state-pepper').update(`discord-oauth-state\0${h.token.registrationToken}`).digest('hex'),review=(await h.db.doc(`discordRegistrationReviews/${reviewHash}`).get()).data(),uid=review.uid;
+ const claimRef=h.db.doc(`discordRegistrationClaims/${uid}`),claim=(await claimRef.get()).data(),foundation=await h.store.readDiscordAccount({uid});
+ assert.equal(review.status,'complete');assert.equal(claim.bootstrapExpiresAt-claim.createdAt,300000);assert.equal(mintCalls,1);assert.equal(foundation.account.uid,uid);assert.equal(foundation.handle.uid,uid);assert.equal((await h.store.resolveSubject({providerSubjectKey:claim.providerSubjectKey})).uid,uid);
+ const retried=await h.confirm();assert.equal(retried.uid,uid);assert.equal(retried.replay,true);assert.equal(mintCalls,2);assert.deepEqual(await h.store.readDiscordAccount({uid}),foundation);assert.equal((await claimRef.get()).data().createdAt,claim.createdAt);
+ const authCreatedAt=h.time;user={uid,disabled:false,metadata:{creationTime:new Date(authCreatedAt).toISOString()},providerData:[]};await h.registrationStore.markAuthActivated({uid,providerSubjectKey:claim.providerSubjectKey,bootstrapProof:claims.discordBootstrap,authCreatedAt});
+ const activated=(await claimRef.get()).data();assert.equal(activated.state,'active-auth');assert.equal(activated.authCreatedAt,authCreatedAt);
+ const existingOnly=createDiscordCandidateTokenMinter({enabled:true,allowBootstrap:false,firebaseAuth:auth,store:h.store,registrationStore:h.registrationStore});assert.equal(await existingOnly(uid,{providerSubjectKey:claim.providerSubjectKey,mappingRevision:1}),`synthetic-custom-token-${uid}`);assert.equal(mintCalls,3);assert.deepEqual(await h.store.readDiscordAccount({uid}),foundation);
+});
+
+test('bootstrap authorization uses one clock observation at the expiry boundary',async()=>{
+ const {createFirestoreDiscordRegistrationStore}=require('../src/prototype/firestoreDiscordRegistrationStore'),db=await database(),uid=`clock-boundary-${++sequence}`,providerSubjectKey=`v1_discord_${hash(uid)}`,expiresAt=NOW+300000;
+ let tick=expiresAt-2;const store=createFirestoreDiscordRegistrationStore({firestore:db,now:()=>++tick}),target=db.doc(`discordRegistrationClaims/${uid}`);
+ await target.set({schemaVersion:1,uid,providerSubjectKey,creationFingerprint:hash('clock-boundary-claim'),state:'pending-auth',createdAt:NOW,bootstrapExpiresAt:expiresAt,firstMintAt:null,activatedAt:null,authCreatedAt:null});
+ assert.deepEqual(await store.authorizeMint({uid,providerSubjectKey,user:null,allowBootstrap:true}),{discordBootstrap:hash('clock-boundary-claim')});
+ const granted=(await target.get()).data();assert.equal(granted.firstMintAt,expiresAt-1000);
+ await assert.rejects(store.authorizeMint({uid,providerSubjectKey,user:null,allowBootstrap:true}),error=>error.reason==='discord/bootstrap_expired');assert.deepEqual((await target.get()).data(),granted);
+});
+
+test('a token accepted after the bootstrap creation window does not imply recoverable account activation',{skip:process.env.DISCORD_FIRESTORE_EMULATOR!=='1'},async()=>{
+ const apps=require('firebase-admin/app'),authApi=require('firebase-admin/auth'),app=apps.initializeApp({projectId:'demo-pogo-discord'},`delayed-bootstrap-${Date.now()}`);
+ try{
+   const {createDiscordCandidateTokenMinter}=require('../src/prototype/discordCandidateComposition'),auth=authApi.getAuth(app);
+   // Advance the authority's logical six-minute timeline without sleeping or
+   // altering Firebase user metadata. Firebase still exchanges a real demo token.
+   const h=await registrationHarness({at:Date.now()-360000,minterFactory:({store,registrationStore})=>createDiscordCandidateTokenMinter({enabled:true,allowBootstrap:true,firebaseAuth:auth,store,registrationStore})}),created=await h.confirm(),claimRef=h.db.doc(`discordRegistrationClaims/${created.uid}`),claim=(await claimRef.get()).data(),before=await h.store.readDiscordAccount({uid:created.uid});
+   const response=await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=synthetic-key`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:created.customToken,returnSecureToken:true})});assert.equal(response.status,200);const result=await response.json(),user=await auth.getUser(created.uid);assert.equal((await auth.verifyIdToken(result.idToken)).uid,created.uid);assert.ok(Date.parse(user.metadata.creationTime)>claim.bootstrapExpiresAt);
+   const {createDiscordAccessAuthority}=require('../src/prototype/discordAccessAuthority'),authority=createDiscordAccessAuthority({firebaseAuth:auth,store:h.store,projectId:'demo-pogo-discord',onVerifiedAccountRead:input=>h.registrationStore.markAuthActivated(input),verifyLegacyBinding:async()=>{throw Error('no legacy access');}});
+   await assert.rejects(authority.readAccount({idToken:result.idToken,lifecycleId:'delayed-bootstrap-read'}),error=>error.reason==='discord/bootstrap_proof_required');assert.equal((await claimRef.get()).data().state,'pending-auth');assert.deepEqual(await h.store.readDiscordAccount({uid:created.uid}),before);
+   h.advance(360000);const mint=createDiscordCandidateTokenMinter({enabled:true,allowBootstrap:true,firebaseAuth:auth,store:h.store,registrationStore:h.registrationStore});await assert.rejects(mint(created.uid,{providerSubjectKey:claim.providerSubjectKey,mappingRevision:1}),error=>error.reason==='discord/bootstrap_expired');assert.equal((await auth.getUser(created.uid)).uid,created.uid);
+ }finally{await apps.deleteApp(app);}
 });
