@@ -209,6 +209,11 @@
 
 
   const verifiedMissingEntries=Object.freeze([
+    Object.freeze({"no":555,"name":"Darmanitan (Zen Mode)","displayName":"Darmanitan (Zen Mode)","users":{}}),
+    Object.freeze({"no":555,"name":"Darmanitan (Galarian Zen Mode)","displayName":"Darmanitan (Galarian Zen Mode)","users":{}}),
+    Object.freeze({"no":658,"name":"Ash-Greninja","displayName":"Ash-Greninja","users":{}}),
+    Object.freeze({"no":800,"name":"Ultra Necrozma","displayName":"Ultra Necrozma","users":{}}),
+    Object.freeze({"no":875,"name":"Eiscue (Noice Face)","displayName":"Eiscue (Noice Face)","users":{}}),
     Object.freeze({"no":25,"name":"Pikachu (Hat and Capelet)","displayName":"Pikachu (Hat and Capelet)","users":{}}),
     Object.freeze({"no":41,"name":"Zubat (Top Hat)","displayName":"Zubat (Top Hat)","users":{}}),
     Object.freeze({"no":854,"name":"Sinistea (Bow, Phony)","displayName":"Sinistea (Bow, Phony)","users":{}}),

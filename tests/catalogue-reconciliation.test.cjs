@@ -45,7 +45,7 @@ test('reviewed missing identity counts cannot retain an already integrated exact
 });
 
 test('finite queue art stays hash-pinned, Shiny duplicates stay blocked, and Zen labels survive line breaks',()=>{
- const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,86);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,stellar.assets.default);assert.equal(stellar.sameAppearanceEvidence,'stellar-palette-10277-v1');assert.equal(stellar.blockedVariants,undefined);assert.equal(records.filter(row=>row.assets.shiny).length,66);
+ const {validateReviewedAssets}=require('../scripts/sprites/catalogue-review.cjs'),path=require('node:path');const allRecords=validateReviewedAssets(path.join(__dirname,'..')),records=allRecords.filter(r=>!r.sourceId.startsWith('variant-followup:'));assert.equal(allRecords.length,91);assert.equal(records.length,66);const stellar=records.find(row=>row.names[0]==='Terapagos (Stellar Form)');assert.ok(stellar.assets.default);assert.equal(stellar.assets.shiny,stellar.assets.default);assert.equal(stellar.sameAppearanceEvidence,'stellar-palette-10277-v1');assert.equal(stellar.blockedVariants,undefined);assert.equal(records.filter(row=>row.assets.shiny).length,66);
  const input=inputs();input.sources.data['normal-inventory']=[];assert.equal(reconcile(input).status,'reconciled');const html='<img src="/pokemongo/pokemon/555-gz.png"><td class="fooinfo"><a href="/pokemongo/pokemon/555.shtml">Darmanitan</a> (Galarian Form<br />Zen Mode)</td>';assert.equal(parseGOInventory(html,'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal')[0].name,'Darmanitan (Galarian Form Zen Mode)');
 });
 
@@ -66,14 +66,14 @@ test('Spooky Festival sources preserve all eight sizes and reject crossed size, 
  try{fs.mkdirSync(path.join(root,'data'));fs.symlinkSync(path.join(__dirname,'../assets'),path.join(root,'assets'));fs.copyFileSync(path.join(__dirname,'../data/stellar-same-appearance-evidence.json'),path.join(root,'data/stellar-same-appearance-evidence.json'));
  const rows=original.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:'));assert.equal(rows.length,8);assert.equal(new Set(rows.flatMap(r=>Object.values(r.assets))).size,16);
  const validate=mutate=>{const data=structuredClone(original);mutate(data.records.filter(r=>r.sourceId.startsWith('variant-followup:spooky-size:')));fs.writeFileSync(path.join(root,'data/catalogue-reviewed-assets.json'),JSON.stringify(data));return validateReviewedAssets(root);};
- assert.equal(validate(()=>{}).length,86);
+ assert.equal(validate(()=>{}).length,91);
  for(const mutate of [r=>r[0].artProof.default.url=r[1].artProof.default.url,r=>r[0].artProof.shiny.url=r[1].artProof.shiny.url,r=>r[0].no=711,r=>r[0].artProof.shiny.url=r[0].artProof.default.url])assert.throws(()=>validate(mutate),/Wrong Spooky Festival/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 
 test('selectable denominator follows runtime picker seeds and cannot be satisfied by sprite names alone',()=>{
  const {loadIdentities}=require('../scripts/reconcile-catalogue.cjs'),current=loadIdentities(),repairs=require('../data/catalogue-selectable-repair.json').records;
- assert.equal(current.all.length,1753);assert.equal(repairs.length,61);
+ assert.equal(current.all.length,1758);assert.equal(repairs.length,61);
  for(const row of repairs)assert.ok(current.all.some(e=>e.name===row.name&&e.no===row.no),row.name);
  const database=JSON.parse(JSON.stringify(current.database));database.wishlist=database.wishlist.filter(r=>r.name!=='Ivysaur');const missing=loadIdentities({database});
  assert.ok(missing.publicAll.some(e=>e.name==='Ivysaur'));assert.ok(!missing.all.some(e=>e.name==='Ivysaur'));
@@ -111,7 +111,7 @@ test('legacy miner pairs remain separate and same-art fallback cannot close Shin
  input.art.entries[0].assets.shiny='exact-shiny.png';result=reconcile(input);assert.equal(result.coverage.pokemod.legacyMapped,1);
 });
 test('ordinary miner identity matching requires separately decoded normal and Shiny proofs',()=>{
- const input=inputs();input.sources.data['normal-inventory']=[];input.sources.data.pokemod.tree=[{path:'Addressable Assets/pm999.icon.png',sha:'normal'},{path:'Addressable Assets/pm999.s.icon.png',sha:'shiny'}];input.identities.all=[{no:999,name:'New Species',catalogId:'base'}];
+ const input=inputs();input.sources.data.pokemod.tree=[{path:'Addressable Assets/pm999.icon.png',sha:'normal'},{path:'Addressable Assets/pm999.s.icon.png',sha:'shiny'}];input.identities.all=[{no:999,name:'New Species',catalogId:'base'}];
  input.verifiedArt=[{no:999,shiny:false,status:'verified-bytes',decoded:true}];let result=reconcile(input);assert.equal(result.coverage.pokemod.mapped,0);assert.deepEqual(result.coverage.pokemod.qualifiedVariants,{normal:1,shiny:0});
  input.verifiedArt.push({no:999,shiny:true,status:'verified-bytes',decoded:true});result=reconcile(input);assert.equal(result.coverage.pokemod.mapped,1);
  input.identities.all=[];assert.equal(reconcile(input).coverage.pokemod.mapped,0);
@@ -129,4 +129,8 @@ test('independent miner head changes require review and failures never become a 
  }
  const current=JSON.parse(fs.readFileSync(require('node:path').join(__dirname,'../data/catalogue-sources/manifest.json')));delete current.secondarySources;
  assert.ok(loadSources(now,file=>String(file).endsWith('/manifest.json')?Buffer.from(JSON.stringify(current)):fs.readFileSync(file)).issues.some(row=>row.kind==='missing-or-invalid-secondary-watch'));
+});
+
+test('plain source namespaces cannot bind unparenthesized costume or alternate-form names',()=>{
+ const input=inputs();input.sources.data.pokemod.tree=[{path:'Addressable Assets/pm999.icon.png',sha:'normal'},{path:'Addressable Assets/pm999.s.icon.png',sha:'shiny'}];input.identities.all=[{no:999,name:'New Species',catalogId:'base'},{no:999,name:'New Species Party Hat',catalogId:'hat'},{no:999,name:'Ultra New Species',catalogId:'ultra'}];input.verifiedArt=[{no:999,shiny:false,status:'verified-bytes',decoded:true}];let result=reconcile(input),row=result.queue.find(r=>r.id==='mined:999');assert.deepEqual(row.selectableCatalogIds,['base']);assert.equal(row.variants.normal.artQualified,true);assert.equal(row.variants.shiny.artQualified,false);input.verifiedArt.push({no:999,shiny:true,status:'verified-bytes',decoded:true});assert.equal(reconcile(input).coverage.pokemod.mapped,1);input.sources.data['normal-inventory']=[];row=reconcile(input).queue.find(r=>r.id==='mined:999');assert.deepEqual(row.selectableCatalogIds,[]);assert.equal(row.variants.normal.artQualified,false);
 });

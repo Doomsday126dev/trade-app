@@ -34,7 +34,7 @@ test('all three explicit variants copy exactly; only explicit post-confirmation 
  expect(await originals(page)).toEqual(before);
  // Reopening finds an existing target: no inferred association or overwrite.
  await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 1)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-status')).toContainText('already exists');await expect(page.locator('#variant-clarification-remove')).toBeHidden();await page.locator('#combined-close').click();
- await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 2)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();await page.locator('#variant-clarification-remove').click();await settled(page);
+ await open(page,'Spinda');await page.locator('#variant-clarification-choice').selectOption('Spinda (Form 2)');await page.locator('#variant-clarification-add').click();await expect(page.locator('#variant-clarification-remove')).toBeVisible();await page.locator('#variant-clarification-remove').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
  const after=await originals(page);expect(after.Spinda.deleted).toBe(true);expect(after.Spinda.values).toEqual(before.Spinda.values);expect(after['Urshifu (Gigantamax)']).toEqual(before['Urshifu (Gigantamax)']);await page.evaluate(()=>stopAccountSyncRuntime());
 });
 test('dismissal persists locally, retains later entry point and never writes; account boundary cannot inherit dismissal',async({page})=>{
