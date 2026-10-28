@@ -35,7 +35,7 @@ function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, re
         if (!key(caller?.uid) || !current()) fail('favorite/auth-required');
         try { if (await verifyAppCheck(appToken) !== true) fail('favorite/app-check-required'); } catch { fail('favorite/app-check-required'); }
         if (!current()) fail('favorite/unavailable');
-        lease = await quota.acquire(caller.uid, handles.length);
+        lease = await quota.acquire(caller.uid, handles.length, { deadlineAt: started + LIMITS.deadlineMs, current });
         if (!current()) fail('favorite/unavailable');
         return { version: 1, results: await resolve(caller.uid, handles, current) };
       })();
@@ -52,7 +52,7 @@ function createHandler({ enabled, origins, verifyAuth, verifyAppCheck, quota, re
       open = false; clearTimeout(timer);
       // An unfinished timeout keeps its lease through the platform's 30s hard
       // timeout (lease is 60s); no new work can use this request after deadline.
-      if (lease && settled) try { await quota.release(lease); } catch (error) { diagnostics?.report('quota-release', error); /* The bounded lease expires; quota is never refunded. */ }
+      if (lease && settled) try { await quota.release(lease, { deadlineAt: started + LIMITS.deadlineMs }); } catch (error) { diagnostics?.report('quota-release', error); /* The bounded lease expires; quota is never refunded. */ }
     }
   };
 }
