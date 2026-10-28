@@ -1,6 +1,6 @@
 const{test,expect}=require('@playwright/test'),fs=require('node:fs');
 const{normalFixture,settled}=require('./helpers/usability-fixture.cjs');
-async function seed(page){await normalFixture(page);await page.evaluate(async()=>{
+async function seed(page){await normalFixture(page);await page.route('https://raw.githubusercontent.com/PokeAPI/**/25.png',route=>route.fulfill({path:require('node:path').join(__dirname,'fixtures/art/pikachu-normal.png'),contentType:'image/png'}));await page.evaluate(async()=>{
  const controller=managedAccountSyncRuntime.controller,mutations=[];window.__clarifySources={};
  for(const name of ['Spinda','Urshifu (Gigantamax)','Pikachu (Detective)']){
   const catalog=accountSyncCatalogIdentity('wishlist',name),identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
