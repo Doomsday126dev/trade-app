@@ -34,3 +34,7 @@ Actual picker: 1,762 identities (1,758 preserved + four). Pinned Max source: 138
 Offline reconciliation is integrity evidence only. It is not a fresh source observation and the failed scheduled run has not been rerun. Existing source/parser/outage failure behavior remains fail-closed. No guarantee about all news sites or instantaneous detection is made.
 
 Tests cover missing entire picker identities, actual option text, exact normal/Shiny/gender URLs, decoded editor art, saved reload, canvas exports, unchanged existing records, fingerprint scoping, actionable summary, stale source behavior and packaging/performance contracts. Six checked-in offline Max test originals match existing approved source hashes, so browser tests do not require production traffic or temporary downloads.
+
+## Publication preparation
+
+Owner subsequently approved pushing this patch, required qualification and deployment. Frozen .165 runtime: `e03c431669206b4a81be6896056df2fa423c7686`. Source registration reuses the exact catalogue read contract (52 surfaces, 24 direct gets, zero direct listeners); no handler or permission changes. The reviewed four-image allowlist amendment is included in this source. Exact final-head hosted gates and protected deployment remain mandatory. No PR approval review is authorized.

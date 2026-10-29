@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
+          ref: e03c431669206b4a81be6896056df2fa423c7686
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
+          ref: e03c431669206b4a81be6896056df2fa423c7686
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -84,6 +84,8 @@ jobs:
         run: node scripts/prepare-recent-catalog-sprite-fixture.cjs --selectable-repair
       - name: Five exact early-want pairs and anonymous privacy journeys
         run: npx playwright test -c playwright.early-want.config.cjs --project=${{ matrix.project }}
+      - name: New Max and Thailand exact normal Shiny picker reload and export
+        run: npx playwright test -c playwright.catalogue-monitor-followup.config.cjs --project=${{ matrix.project }}
       - name: Exact finite artwork aliases preserved IDs and anonymous export journeys
         env:
           CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
@@ -106,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 2cd8e3e228c4dd45a6c584dad1d978937ef8151b
+          ref: e03c431669206b4a81be6896056df2fa423c7686
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
