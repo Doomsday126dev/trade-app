@@ -124,7 +124,7 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     }
     if(record.sourceProvider==='pokeminers-thailand-reviewed'){
       const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokeminers-thailand-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
-      if(!reviewed||['no','names','sourceCommit','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','availableGenders','identityEvidence','shinyEvidence'].some(key=>JSON.stringify(reviewed[key])!==JSON.stringify(record[key])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      if(!reviewed||['no','names','sourceCommit','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','availableGenders','identityEvidence','shinyEvidence','artProof'].some(key=>JSON.stringify(reviewed[key])!==JSON.stringify(record[key])))problems.push({kind:'source-provenance',identity:record.names[0]});
       continue;
     }
     if(record.sourceProvider==='pokemod-reviewed-released'){

@@ -24,8 +24,8 @@ test('only the eighteen reviewed Scatterbug identities share species 664 art',()
 test('finite Dynamax equivalence preserves every underlying visible form',()=>{
   assert.equal(window.POGO_TRADE_DB,undefined,'anonymous public shell must not need data.js');
   const max=sourceWindow.POGO_TRADE_DB.dynamax;
-  assert.equal(max.length,151);
-  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,151);
+  assert.equal(max.length,154);
+  assert.equal(window.PogoDomain.publicPokemonDex.dynamaxSize,154);
   for(const entry of max){
     const name=`${entry.name} (Dynamax)`;
     assert.equal(sprites.reviewedDynamaxBase(name,entry.no),entry.name,name);
