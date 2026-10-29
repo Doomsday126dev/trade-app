@@ -38,3 +38,5 @@ Tests cover missing entire picker identities, actual option text, exact normal/S
 ## Publication preparation
 
 Owner subsequently approved pushing this patch, required qualification and deployment. Frozen .165 runtime: `e03c431669206b4a81be6896056df2fa423c7686`. Source registration reuses the exact catalogue read contract (52 surfaces, 24 direct gets, zero direct listeners); no handler or permission changes. The reviewed four-image allowlist amendment is included in this source. Exact final-head hosted gates and protected deployment remain mandatory. No PR approval review is authorized.
+
+Final qualification correction runtime: `14717f44aec3aa49573820108457aab869defe2d`. Hosted failure diagnosis added exact Thailand provenance to offline freshness, updated fixed counts, retained the original 17-form journey separately from new Max coverage, and made export evidence output work on clean runners. Frontend bytes are unchanged since the original stamped runtime. Six preserved Chromium/WebKit browser journeys passed locally; 59 freshness checks passed. Final hosted checks must use this source.
