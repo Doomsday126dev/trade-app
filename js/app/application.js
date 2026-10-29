@@ -684,7 +684,9 @@ function prepareWantsCatalog(){
     });
   }
 }
-function catalogueVariantReleaseLabel(entry){const review=window.PogoDomain.publicPokemonDex.variantStatus?.(entry.name),state=entry.shiny?review?.shiny:review?.normal;return state==='unverified'?i18nCore.t('catalogue.releaseUnverified'):state==='announced'?i18nCore.t('catalogue.releaseAnnounced'):'';}
+// Review states remain available to catalogue monitoring; uncertain availability is not a user-facing label.
+function catalogueVariantReleaseLabel(entry){return '';}
+
 function refreshCombinedShinyAvailability(){
   const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
   const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
