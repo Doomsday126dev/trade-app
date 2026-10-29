@@ -22,7 +22,7 @@ function onePage(){return {schemaVersion:1,capturedAt:'2026-09-06T00:00:00Z',pag
 test('offline report verifies the production inventory without claiming live freshness',()=>{
   const report=buildReport(inputs());
   assert.equal(report.status,'offline-check-passed');
-  assert.deepEqual(report.counts,{canonical:402,exact:395,unsupported:7});
+  assert.deepEqual(report.counts,{canonical:403,exact:396,unsupported:7});
   assert.equal(report.candidates.length,7);
   assert.equal(report.coverage.releaseEvidenceEntries,26);
   assert.equal(report.upcomingIdentities.length,0);
@@ -216,4 +216,8 @@ test('October review tracks released costumes without substituting base art and 
 
 test('overdue announced identity is flagged even when a catalog record exists, without auto release',()=>{
  const data=inputs(),row=data.releases.entries.find(x=>x.catalogName==='Pikachu (Astronaut)');row.lifecycleStatus='announced';row.releaseDate='2026-10-01';data.now=new Date('2026-10-25T00:00:00Z');const before=JSON.stringify(data.releases);assert.ok(buildReport(data).problems.some(x=>x.kind==='release-status-review'&&x.identity===row.catalogName));assert.equal(JSON.stringify(data.releases),before);data.now=new Date('2026-09-30T23:59:59.999Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),false);data.now=new Date('2026-10-01T00:00:00.000Z');assert.equal(buildReport(data).problems.some(x=>x.kind==='release-status-review'),true);assert.equal(JSON.stringify(data.releases),before);
+});
+
+test('Thailand pinned family is reviewed separately from gallery but source variant drift stays actionable',()=>{
+ const data=inputs(),row=data.catalog.entries.find(r=>r.sourceProvider==='pokeminers-thailand-reviewed');assert(row);assert.equal(buildReport(data).status,'offline-check-passed');row.sourceFiles.femaleShiny=row.sourceFiles.shiny;const report=buildReport(data);assert.equal(report.status,'review-required');assert(report.problems.some(p=>p.kind==='source-provenance'&&p.identity===row.names[0]));
 });

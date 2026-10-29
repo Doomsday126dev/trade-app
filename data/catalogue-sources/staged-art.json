@@ -1168,6 +1168,78 @@
         "pixelHash": "2a41ccd7"
       },
       "asset": "assets/sprites/go/variant-6defadcec9c791b03464.png"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+      "observedAt": "2026-10-29",
+      "http": 200,
+      "sha256": "bcd33ed025dcca1866998b456fc52e8ba5803d67159ca0438edac4d62398fab6",
+      "bytes": 25471,
+      "path": "pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+      "asset": "assets/sprites/go/pokeminers-thailand-default.png",
+      "gitBlobSha": "4bc099e5184d6f82e2391ff4fb1bc90ddbe25061",
+      "decoded": {
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 6325,
+        "pixelHash": "87be2e6be1a81caa75f92869d54b9a96cef08233c61620cb7adb0c53f45af4fa",
+        "status": "decoded"
+      },
+      "qualification": "Four unchanged pinned region-coded originals visually inspected: yellow hair/black regional shirt, distinct normal/Shiny palette and male versus heart-shaped female tail. Artwork availability does not establish release; Bangkok event is future February 13–14, 2027."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.s.icon.png",
+      "observedAt": "2026-10-29",
+      "http": 200,
+      "sha256": "f92517df2fc76c1936806e4a69a118e3798e376d08bf4b83fc84690d6afc1a58",
+      "bytes": 27361,
+      "path": "pm25.fANNIVERSARY_2026_THAILAND_01.s.icon.png",
+      "asset": "assets/sprites/go/pokeminers-thailand-shiny.png",
+      "gitBlobSha": "70b193672e4bb75caf2a5e277bffdda538e7c80e",
+      "decoded": {
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 6119,
+        "pixelHash": "9d4658a6c57a04a0034c94f682c11e58fd169a428258a2fc864559400724f7a7",
+        "status": "decoded"
+      },
+      "qualification": "Four unchanged pinned region-coded originals visually inspected: yellow hair/black regional shirt, distinct normal/Shiny palette and male versus heart-shaped female tail. Artwork availability does not establish release; Bangkok event is future February 13–14, 2027."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.g2.icon.png",
+      "observedAt": "2026-10-29",
+      "http": 200,
+      "sha256": "7b3a8dc1e4634d5552a12da95c638559ca230a98d7a1cc33cf555974728b0509",
+      "bytes": 26752,
+      "path": "pm25.fANNIVERSARY_2026_THAILAND_01.g2.icon.png",
+      "asset": "assets/sprites/go/pokeminers-thailand-female.png",
+      "gitBlobSha": "ceabf50c0f4ad1f6eb11a145a6022c634c7619f8",
+      "decoded": {
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 6427,
+        "pixelHash": "82d634af3dec04a257484615098a3c36465efc5d86a0aa342cff93316f4815d3",
+        "status": "decoded"
+      },
+      "qualification": "Four unchanged pinned region-coded originals visually inspected: yellow hair/black regional shirt, distinct normal/Shiny palette and male versus heart-shaped female tail. Artwork availability does not establish release; Bangkok event is future February 13–14, 2027."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.g2.s.icon.png",
+      "observedAt": "2026-10-29",
+      "http": 200,
+      "sha256": "3af9544e914ea02b8575d33b75df01c3ffc94dcdcedc85eb911393f4d50f4e6b",
+      "bytes": 26953,
+      "path": "pm25.fANNIVERSARY_2026_THAILAND_01.g2.s.icon.png",
+      "asset": "assets/sprites/go/pokeminers-thailand-femaleShiny.png",
+      "gitBlobSha": "ee8b3f85fe4198279393e37f10dd23be5dd87679",
+      "decoded": {
+        "width": 256,
+        "height": 256,
+        "visiblePixels": 6155,
+        "pixelHash": "b188e0be146760483d49815df7093b597b0425bb6f33b437c813362bd7f2e275",
+        "status": "decoded"
+      },
+      "qualification": "Four unchanged pinned region-coded originals visually inspected: yellow hair/black regional shirt, distinct normal/Shiny palette and male versus heart-shaped female tail. Artwork availability does not establish release; Bangkok event is future February 13–14, 2027."
     }
   ]
 }

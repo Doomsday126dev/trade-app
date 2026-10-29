@@ -2894,6 +2894,70 @@
       ],
       "artEvidence": "data/catalogue-reviewed-assets.json",
       "reviewedAt": "2026-10-28T13:55:23.450Z"
+    },
+    {
+      "category": "costume",
+      "no": 25,
+      "name": "Pikachu (PokeXciting Thailand)",
+      "normal": "announced",
+      "shiny": "announced",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://pokemongo.com/news/event-apac-30th-anniversary-2026"
+      ],
+      "artEvidence": "data/pokeminers-thailand-costume-assets.json",
+      "reviewedAt": "2026-10-29",
+      "qualification": "Official Bangkok event February 13–14, 2027, 10:00–22:00 local time; distinct region-coded exact miner artwork is available now. Early wants allowed, no present release claim."
+    },
+    {
+      "no": 126,
+      "name": "Magmar (Dynamax)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "https://www.dittobase.com/pokemon-go/events/magmar-max-monday-aug-2026"
+      ],
+      "reviewedAt": "2026-10-29",
+      "qualification": "Magmar debut August 3, 2026; current Max inventory confirms capability. Ordinary-form art remains exact for Dynamax."
+    },
+    {
+      "no": 303,
+      "name": "Mawile (Dynamax)",
+      "normal": "unverified",
+      "shiny": "unverified",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml"
+      ],
+      "reviewedAt": "2026-10-29",
+      "qualification": "Listed in current Max-capability inventory; exact debut/acquisition independently unverified. Ordinary-form exact art is available; early wants allowed."
+    },
+    {
+      "no": 467,
+      "name": "Magmortar (Dynamax)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "m",
+        "f"
+      ],
+      "releaseEvidence": [
+        "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "https://www.dittobase.com/pokemon-go/events/magmar-max-monday-aug-2026"
+      ],
+      "reviewedAt": "2026-10-29",
+      "qualification": "Evolution of Dynamax Magmar, also listed in current Max-capability inventory; not a separate Max Battle debut claim."
     }
   ]
 }

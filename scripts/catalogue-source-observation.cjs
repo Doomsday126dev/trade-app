@@ -76,7 +76,7 @@ async function observeInventories(sources,{fetchImpl=fetch,now=new Date()}={}){
    const metadata=JSON.parse(await get(watch.url)),published=metadata.commit?.committer?.date;
    if(!/^[a-f0-9]{40}$/.test(metadata.sha||'')||!Number.isFinite(Date.parse(published))||Date.parse(published)>now.getTime())throw Error('Invalid secondary source identity/date');
    watch.observedAt=now.toISOString();watch.observedCommit=metadata.sha;watch.sourceUpdatedAt=published;
-   if(metadata.sha!==watch.reviewedCommit)assetChanges.push({id:'secondary-miner-head:'+metadata.sha,source:watch.id,sourceUrl:'https://github.com/PokeMiners/pogo_assets/commit/'+metadata.sha,discoveredAt:now.toISOString(),releaseState:'uncertain',artState:'source-head-changed-needs-art-review',priority:'urgent',disposition:'secondary-miner-change-review-required',reviewedCommit:watch.reviewedCommit,observedCommit:metadata.sha});
+   if(metadata.sha!==watch.reviewedCommit)assetChanges.push({id:'secondary-miner-head:'+metadata.sha,source:watch.id,sourceUrl:'https://github.com/PokeMiners/pogo_assets/commit/'+metadata.sha,discoveredAt:now.toISOString(),releaseState:'uncertain',artState:'source-head-changed-needs-art-review',priority:'urgent',disposition:'secondary-miner-change-review-required',reviewedCommit:watch.reviewedCommit,observedCommit:metadata.sha,headPokemonFiles:(metadata.files||[]).map(file=>file.filename).filter(file=>/^Images\/Pokemon[^/]*\//.test(file)&&file.endsWith('.png')).slice(0,30),headFilesScope:'Head commit only; use comparison link for all changes since reviewed commit. Empty list is not complete coverage.'});
   }catch(error){fail(watch.id||'secondary-miner',error);}
  }
  for(const url of ['https://leekduck.com/events/','https://pokemongohub.net/feed/']){

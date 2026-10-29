@@ -98,7 +98,7 @@ async function main(){
  fs.writeFileSync(path.join(root,'catalogue-reconciliation.json'),JSON.stringify(report,null,2)+'\n');
  fs.writeFileSync(path.join(root,'release-discovery.json'),JSON.stringify({status:report.status,findings:official.findings,sourceIssues:report.sourceIssues,observations:report.observations},null,2)+'\n');
  fs.writeFileSync(path.join(root,'release-discovery.md'),summary);console.log(summary);
- if(report.status==='source-failure'||report.status!=='reconciled'&&!process.argv.includes('--report-only'))process.exitCode=1;
+ if(report.status==='source-failure'||report.status!=='reconciled'&&!process.argv.includes('--report-only')){if(process.env.GITHUB_ACTIONS==='true')console.error(actionReview.annotation(report));process.exitCode=1;}
 }
 if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});
 module.exports={parseNews,parseSeason,compareDiscovery,observe,readHolds};

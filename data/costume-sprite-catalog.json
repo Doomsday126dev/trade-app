@@ -26971,6 +26971,73 @@
         "Exact mined Shiny artwork is available; release evidence is unverified; early wants remain allowed"
       ],
       "sourceUrl": "https://raw.githubusercontent.com/The-Pokemod-Group/pogo_assets/80a2323099f9c00207a8c9ee20d9386831f6b0ca/Images/Pokemon/Addressable%20Assets/pm25.cFEB_2019.icon.png"
+    },
+    {
+      "no": 25,
+      "names": [
+        "Pikachu (PokeXciting Thailand)",
+        "Pikachu (PokéXciting Thailand)"
+      ],
+      "status": "exact",
+      "sourceProvider": "pokeminers-thailand-reviewed",
+      "sourceCommit": "db10df75d6f6f92018d9786af0aecc238fecc4ef",
+      "sourceFile": "pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+      "sourceLabel": "PokeXciting Thailand (Yellow Hair)",
+      "sourceUrl": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+      "sourceFiles": {
+        "default": "pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+        "shiny": "pm25.fANNIVERSARY_2026_THAILAND_01.s.icon.png",
+        "female": "pm25.fANNIVERSARY_2026_THAILAND_01.g2.icon.png",
+        "femaleShiny": "pm25.fANNIVERSARY_2026_THAILAND_01.g2.s.icon.png"
+      },
+      "assets": {
+        "default": "assets/sprites/go/pokeminers-thailand-default.png",
+        "shiny": "assets/sprites/go/pokeminers-thailand-shiny.png",
+        "female": "assets/sprites/go/pokeminers-thailand-female.png",
+        "femaleShiny": "assets/sprites/go/pokeminers-thailand-femaleShiny.png"
+      },
+      "sha256": {
+        "default": "bcd33ed025dcca1866998b456fc52e8ba5803d67159ca0438edac4d62398fab6",
+        "shiny": "f92517df2fc76c1936806e4a69a118e3798e376d08bf4b83fc84690d6afc1a58",
+        "female": "7b3a8dc1e4634d5552a12da95c638559ca230a98d7a1cc33cf555974728b0509",
+        "femaleShiny": "3af9544e914ea02b8575d33b75df01c3ffc94dcdcedc85eb911393f4d50f4e6b"
+      },
+      "gitBlobShas": {
+        "default": "4bc099e5184d6f82e2391ff4fb1bc90ddbe25061",
+        "shiny": "70b193672e4bb75caf2a5e277bffdda538e7c80e",
+        "female": "ceabf50c0f4ad1f6eb11a145a6022c634c7619f8",
+        "femaleShiny": "ee8b3f85fe4198279393e37f10dd23be5dd87679"
+      },
+      "availableGenders": [
+        "f",
+        "m"
+      ],
+      "identityEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "shinyEvidence": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reviewedAt": "2026-10-29",
+      "pixelReview": "Four unchanged pinned region-coded originals visually inspected: yellow hair/black regional shirt, distinct normal/Shiny palette and male versus heart-shaped female tail. Artwork availability does not establish release; Bangkok event is future February 13–14, 2027.",
+      "artProof": {
+        "default": {
+          "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.icon.png",
+          "sha256": "bcd33ed025dcca1866998b456fc52e8ba5803d67159ca0438edac4d62398fab6",
+          "bytes": 25471
+        },
+        "shiny": {
+          "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.s.icon.png",
+          "sha256": "f92517df2fc76c1936806e4a69a118e3798e376d08bf4b83fc84690d6afc1a58",
+          "bytes": 27361
+        },
+        "female": {
+          "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.g2.icon.png",
+          "sha256": "7b3a8dc1e4634d5552a12da95c638559ca230a98d7a1cc33cf555974728b0509",
+          "bytes": 26752
+        },
+        "femaleShiny": {
+          "url": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/db10df75d6f6f92018d9786af0aecc238fecc4ef/Images/Pokemon%20-%20256x256/Addressable%20Assets/pm25.fANNIVERSARY_2026_THAILAND_01.g2.s.icon.png",
+          "sha256": "3af9544e914ea02b8575d33b75df01c3ffc94dcdcedc85eb911393f4d50f4e6b",
+          "bytes": 26953
+        }
+      }
     }
   ]
 }
