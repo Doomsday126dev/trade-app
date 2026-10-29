@@ -39,7 +39,7 @@ test('all reviewed semantic duplicates display once and preserve every former sa
  });expect(semantic).toEqual([]);
  const approvedArt=[...require('../data/costume-sprite-catalog.json').entries,...records];const actualPool=await page.evaluate(()=>_specialAllItems().map(r=>({name:r.name,no:r.no,catalogId:r.catalogId})));
  for(const art of approvedArt){const aliases=new Set(art.names||[]);expect(new Set(actualPool.filter(r=>r.no===art.no&&aliases.has(r.name)).map(r=>r.catalogId)).size,art.names[0]).toBeLessThanOrEqual(1);}
- expect(result.count).toBe(1758);
+ expect(result.count).toBe(1762);
  for(let i=0;i<groups.length;i++){const g=groups[i],actual=result.groups[i];expect(actual.options).toEqual([g.primary]);for(const row of actual.names){expect(row.resolved).toBe(g.canonicalCatalogId);expect(row.legacy).toBe(g.legacyIdsByName[row.name]);}for(const row of actual.ids){expect(row.resolved).toBe(row.id);expect(row.name).toBe(g.names[g.catalogIds.indexOf(row.id)]);}}
  for(const matches of result.search)expect(matches).toEqual(['Hoothoot (New Year)']);expect(new Set(result.distinct).size).toBe(5);expect(result.semantic.canonicalKey).toBe('Hoothoot (New Year)');
  const saved=await page.evaluate(()=>{
