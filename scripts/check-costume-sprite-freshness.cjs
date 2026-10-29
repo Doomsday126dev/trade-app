@@ -122,6 +122,11 @@ function buildReport({catalog,pending,releases,snapshot,observed=snapshot,now=ne
     if(record.evolutionShinyArtworkReview){
       try{require('./sprites/evolution-shiny-review.cjs').validateEvolutionShinyReview(record,root);}catch(error){problems.push({kind:'source-provenance',identity:record.names[0],message:error.message});}
     }
+    if(record.sourceProvider==='pokeminers-thailand-reviewed'){
+      const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokeminers-thailand-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
+      if(!reviewed||['no','names','sourceCommit','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','availableGenders','identityEvidence','shinyEvidence'].some(key=>JSON.stringify(reviewed[key])!==JSON.stringify(record[key])))problems.push({kind:'source-provenance',identity:record.names[0]});
+      continue;
+    }
     if(record.sourceProvider==='pokemod-reviewed-released'){
       const reviewed=JSON.parse(fs.readFileSync(path.join(root,'data/pokemod-released-costume-assets.json'))).records.find(r=>r.names[0]===record.names[0]);
       if(!reviewed||['sourceCommit','sourcePage','sourceUrl','sourceFiles','assets','sha256','gitBlobShas','identityEvidence','shinyEvidence'].some(k=>JSON.stringify(reviewed[k])!==JSON.stringify(record[k])))problems.push({kind:'source-provenance',identity:record.names[0]});

@@ -30,6 +30,8 @@ on:
       - 'data/reviewed-variant-status.json'
       - 'scripts/reconcile-catalogue.cjs'
       - 'scripts/catalogue-review-summary.cjs'
+      - 'scripts/catalogue-resolver-fingerprint.cjs'
+      - 'tests/catalogue-monitor-followup.test.cjs'
       - 'tests/catalogue-review-summary.test.cjs'
       - 'scripts/catalogue-source-observation.cjs'
       - 'tests/catalogue-reconciliation.test.cjs'
