@@ -5832,6 +5832,7 @@ let providerTrainerDirectory=new Map();
 let providerTrainerDirectoryRequests=new Map();
 let providerTrainerDirectoryBinding='';
 let eventTypeFilter='all';
+const collapsedEventCards=new Set();
 let eventCalendarDate='';
 let eventAllSchedule=false;
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -13552,13 +13553,7 @@ function eventBonusesHtml(event,{full=false}={}){
   const caveatRows=facts.caveats,visible=full?bonuses:bonuses.slice(0,3);
   const benefitRows=`<ul class="event-benefit-list">${eventBonusGroups(visible).map(group=>`<li>${group.scope?`<span class="event-benefit-scope">${escHtml(group.scope)}:</span> `:''}<span class="event-benefit-text">${group.items.map(eventBonusText).join('; ')}</span></li>`).join('')}</ul>`;
   const caveats=caveatRows.length?`<div class="event-bonus-caveats" role="note">${caveatRows.map(c=>`<p>${escHtml(c)}</p>`).join('')}</div>`:'';
-  const featured=facts.bosses.length?facts.bosses:facts.encounters;
-  // Suppress only an exact single-identity headline, never a base-species
-  // substring that could conceal a form, multiple bosses, or additional facts.
-  const headline=eventLabelsI18n.localizeEvent(event,i18nCore.getLocale()).localizedTitle;
-  const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
-  const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
-  const featuredHtml=full||headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+  const featuredHtml=full?'':eventCardHighlightsHtml(event,facts);
   if(bonuses.length)return`${full?'':featuredHtml}<div class="event-bonuses event-benefits"><h4>${escHtml(i18nCore.t('events.bonuses'))}</h4>${benefitRows}${caveats}${!full&&bonuses.length>3?`<button type="button" class="btn btn-secondary" data-event-action="details" data-event-id="${escAttr(eventStableId(event))}">${escHtml(i18nCore.t('events.allBonuses',{count:bonuses.length}))}</button>`:''}${full?attribution:''}</div>`;
   // Raid rotations have featured bosses, not necessarily an event multiplier.
   const features=facts.bosses.length?facts.bosses:facts.encounters;
@@ -13568,6 +13563,13 @@ function eventBonusesHtml(event,{full=false}={}){
   return`<p class="event-information-link">${escHtml(i18nCore.t('events.detailsPending'))}</p>`;
 }
 function eventsFeedIsStale(){const checked=Number(_eventData?.fetchedAt);return Boolean(_eventData?.stale||!checked||Date.now()-checked>=EVENT_CACHE_TTL);}
+function eventCardHighlightsHtml(event,facts=eventPresentationDomain.eventFacts(event,{locale:i18nCore.getLocale()})){
+  const featured=facts.bosses.length?facts.bosses:facts.encounters;
+  const headline=eventLabelsI18n.localizeEvent(event,i18nCore.getLocale()).localizedTitle;
+  const normalizeHeadline=value=>String(value||'').normalize('NFKC').trim().toLocaleLowerCase(i18nCore.getLocale());
+  const headlineStatesFeatured=featured.length===1&&[featured[0],`${featured[0]} ${localizedEventTypeLabel(event)}`].some(value=>normalizeHeadline(value)===normalizeHeadline(headline));
+  return headlineStatesFeatured?'':featured.length?`<p class="event-featured"><strong>${escHtml(i18nCore.t(facts.bosses.length?'events.raidBosses':'events.featuredPokemon'))}:</strong> ${escHtml(featured.join(' · '))}</p>`:renderEventFeaturedPokemonNames(event);
+}
 function eventsSourceHtml(){
   const checked=Number(_eventData?.fetchedAt),stale=eventsFeedIsStale();
   const date=checked?new Intl.DateTimeFormat(i18nCore.getLocale(),{dateStyle:'medium',timeStyle:'short'}).format(checked):i18nCore.t('events.notChecked');
@@ -13623,8 +13625,8 @@ function renderEventsOnly(){
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
-    const tag='article',linkAttrs='';
-    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta">${section.group!=='day'||timing.multiDay?`<span class="event-card-date">${escHtml(timing.dateLabel)}</span>`:''}${timing.timeLabel&&section.group!=='day'?`<span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-relative">${escHtml(relative)}</span>`:''}<span class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</span></div>${eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
+    const tag='article',linkAttrs='',isDay=section.group==='day',collapsed=isDay&&collapsedEventCards.has(localized.stableId);
+    return`<${tag} class="event-card card-row ${section.group==='day'?'event-agenda-card ':''}${eventPresentationDomain.eventGroup(event)==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}>${section.group==='day'?`<div class="event-agenda-hours">${escHtml(eventSelectedDayHours(event,timing))}</div>`:''}<div class="event-card-main"><div class="event-card-kicker">${eventPresentationDomain.eventGroup(event)==='now'&&!timing.zoneUncertain?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${isDay?`<button type="button" class="event-collapse-toggle" data-event-action="toggle-card" data-event-id="${escAttr(localized.stableId)}" aria-expanded="${!collapsed}"><span>${escHtml(title)}</span>${uiIconMarkup('chevron-down','ui-icon event-collapse-chevron')}</button>`:escHtml(title)}</h3><div class="event-card-time type-meta">${section.group!=='day'||timing.multiDay?`<span class="event-card-date">${escHtml(timing.dateLabel)}</span>`:''}${timing.timeLabel&&section.group!=='day'?`<span>${escHtml(eventHoursLabel(timing))}</span>`:''}${relative&&section.group!=='day'?`<span class="event-card-relative">${escHtml(relative)}</span>`:''}<span class="event-time-basis">${escHtml(eventTimeBasisLabel(event,{compact:true}))}</span></div>${isDay?`<div class="event-collapsed-highlights" ${collapsed?'':'hidden'}>${eventCardHighlightsHtml(event)}</div><div class="event-collapsible-body" ${collapsed?'hidden':''}>${eventBonusesHtml(event)}</div>`:eventBonusesHtml(event)}</div><button type="button" class="event-card-cue" data-event-action="details" data-event-id="${escAttr(localized.stableId)}" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</button></${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
   syncEventFilterScrollState(out.querySelector('.event-filter-row'));
@@ -13633,6 +13635,15 @@ function renderEventsOnly(){
 function eventsAction(event){
   const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
   const action=control.dataset.eventAction;
+  if(action==='toggle-card'){
+    const card=control.closest('.event-agenda-card'),id=control.dataset.eventId;if(!card||!id)return;
+    const collapse=control.getAttribute('aria-expanded')==='true';
+    if(collapse)collapsedEventCards.add(id);else collapsedEventCards.delete(id);
+    control.setAttribute('aria-expanded',String(!collapse));
+    const body=card.querySelector('.event-collapsible-body'),highlights=card.querySelector('.event-collapsed-highlights');
+    if(body)body.hidden=collapse;if(highlights)highlights.hidden=!collapse;
+    return;
+  }
   if(action==='all-schedule'){eventAllSchedule=true;eventCalendarDate='';renderEventsOnly();return;}
   if(action==='day-view'){eventAllSchedule=false;renderEventsOnly();return;}
   if(action==='week'){

@@ -7,7 +7,6 @@ for(const locale of ['en','ja'])test(`current public event source snapshot shows
  await page.locator('[data-event-action="all-schedule"]').first().click();
  const season=page.locator('.event-card[data-event-id="season-24-twilight-trails"]');
  await expect(season).toContainText('GO Pass Rank 1');await expect(season).toContainText('31+');
- await expect(season.locator('.event-bonus-source a')).toHaveAttribute('href','https://pokemongo.com/seasons/twilight-trails');
  await expect(page.locator('.event-card[data-event-id="pokemonspotlighthour2026-10-29"]')).toContainText('2× Evolution XP');
  await expect(page.locator('.event-card[data-event-id="palkia-in-5-star-raid-battles-october-2026"]')).toContainText('Palkia');
  await expect(page.locator('.event-card .event-unknown')).toHaveCount(0);
@@ -17,8 +16,7 @@ for(const locale of ['en','ja'])test(`current public event source snapshot shows
  await expect(pawniard.locator('.event-time-basis')).toHaveText(locale==='ja'?'現地時間':'Local time');
  await expect(page.locator('.events-credits')).toContainText('ScrapedDuck');await expect(page.locator('.events-credits')).toContainText('LeekDuck');
  await expect(page.locator('[data-event-disclosure="sources"]')).toHaveCount(0);
- if(locale==='ja')await expect(season).toContainText('情報元の詳細は英語です');
- await season.locator('[data-event-action="details"]').first().click();await expect(page.locator('#event-detail-body')).toContainText('Rank 75');
+ await season.locator('[data-event-action="details"]').first().click();await expect(page.locator('#event-detail-body')).toContainText('Rank 75');await expect(page.locator('#event-detail-body .event-bonus-source a')).toHaveAttribute('href','https://pokemongo.com/seasons/twilight-trails');if(locale==='ja')await expect(page.locator('#event-detail-body')).toContainText('情報元の詳細は英語です');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
 });
 test('cold start source outage keeps dated bundled facts and a stale status',async({page})=>{
