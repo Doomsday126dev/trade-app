@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-10-27",
+  "asOf": "2026-10-29",
   "scope": "Reviewed release expectations, including reported Max omissions and evolutions; not a global completeness claim.",
   "records": [
     {
@@ -298,6 +298,32 @@
       "sources": [
         "https://leekduck.com/events/max-mondays-2026-08-24/"
       ]
+    },
+    {
+      "id": "dynamax:126",
+      "collection": "dynamax",
+      "no": 126,
+      "name": "Magmar",
+      "releasedOn": "2026-08-03",
+      "releasedShiny": true,
+      "sources": [
+        "https://www.dittobase.com/pokemon-go/events/magmar-max-monday-aug-2026",
+        "https://www.serebii.net/pokemongo/maxbattles.shtml"
+      ],
+      "availabilityBasis": "Past event independently dated; current Max-capability inventory corroborates capability. GO Hub article contains a conflicting date and was not used to set this date."
+    },
+    {
+      "id": "dynamax:467",
+      "collection": "dynamax",
+      "no": 467,
+      "name": "Magmortar",
+      "releasedOn": "2026-08-03",
+      "releasedShiny": true,
+      "sources": [
+        "https://www.dittobase.com/pokemon-go/events/magmar-max-monday-aug-2026",
+        "https://www.serebii.net/pokemongo/maxbattles.shtml"
+      ],
+      "availabilityBasis": "Evolution of released Dynamax Magmar; not a separate Max Battle debut claim."
     }
   ]
 }

@@ -73,7 +73,7 @@ test('Spooky Festival sources preserve all eight sizes and reject crossed size, 
 
 test('selectable denominator follows runtime picker seeds and cannot be satisfied by sprite names alone',()=>{
  const {loadIdentities}=require('../scripts/reconcile-catalogue.cjs'),current=loadIdentities(),repairs=require('../data/catalogue-selectable-repair.json').records;
- assert.equal(current.all.length,1758);assert.equal(repairs.length,61);
+ assert.equal(current.all.length,1762);assert.equal(repairs.length,61);
  for(const row of repairs)assert.ok(current.all.some(e=>e.name===row.name&&e.no===row.no),row.name);
  const database=JSON.parse(JSON.stringify(current.database));database.wishlist=database.wishlist.filter(r=>r.name!=='Ivysaur');const missing=loadIdentities({database});
  assert.ok(missing.publicAll.some(e=>e.name==='Ivysaur'));assert.ok(!missing.all.some(e=>e.name==='Ivysaur'));

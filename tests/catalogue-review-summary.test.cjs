@@ -36,3 +36,18 @@ test('real crosswalk distinguishes base/costume and current Gigantamax ID; upcom
  assert.equal(register.knownIssues.find(r=>r.name==='Greavard').localStart,'2026-11-01T10:00:00');assert(context.identities.all.some(r=>r.name==='Greavard'));
  const now=new Date('2026-10-28T14:00:00Z'),raw=require('../scripts/reconcile-catalogue.cjs').build(now),before=JSON.stringify(raw);const result=summarize(raw,register,context);assert.equal(result.rows.length,raw.queue.length);assert.equal(JSON.stringify(raw),before);assert.equal(Object.values(result.counts).reduce((a,b)=>a+b,0),raw.queue.length);assert(result.knownIssues.some(r=>r.kind==='missing-exact-art'));
 });
+test('sprite fingerprint ignores unrelated UI but observes resolver bodies, call arguments and constants',()=>{
+ const {applicationSpriteScope:scope}=require('../scripts/catalogue-resolver-fingerprint.cjs');
+ const source='const SPRITE_BASE="a"; function helper(){return SPRITE_BASE;} function spriteUrl(e){return helper()+e.shiny;} function spriteFallbackChain(e){return [spriteUrl(e)];} function spriteImg(e){return spriteUrl(e);} function exportSpriteUrl(e){return spriteUrl(e);} function renderCard(e){return spriteImg(e);} function favorites(){return "old";}';
+ const initial=scope(source).hash;
+ assert.equal(scope(source.replace('"old"','"new"')).hash,initial);
+ assert.equal(scope(source+'\n// formatting only').hash,initial);
+ for(const next of [source.replace('SPRITE_BASE="a"','SPRITE_BASE="b"'),source.replace('return helper()+e.shiny','return helper()+false'),source.replace('return spriteImg(e)','return spriteImg({shiny:false})')])assert.notEqual(scope(next).hash,initial);
+ assert.throws(()=>scope('function spriteUrl(){}'),/scope missing/);
+});
+test('discovery summary puts missing Max names and changed miner compare link before retained backlog',()=>{
+ const {actionable,annotation}=require('../scripts/catalogue-review-summary.cjs'),f=fixture();
+ f.report.queue.push({id:'a',sourceUrl:'https://example.test/season',releaseState:'uncertain',finding:{kind:'announced-max-missing-catalog',type:'dynamax',name:'Mawile'}},{id:'b',source:'pokeminers-head',sourceUrl:'https://example.test/head',reviewedCommit:'a'.repeat(40),observedCommit:'b'.repeat(40),artState:'needs-review',disposition:'secondary-miner-change-review-required'});
+ const summary=summarize(f.report,f.register,f.context),md=markdown(summary);assert.equal(actionable(f.report).length,2);assert(md.indexOf('dynamax Mawile')<md.indexOf('Mimikyu'));assert.match(md,/compare\/a{40}\.\.\.b{40}/);assert.equal(summary.rows.length,3);
+ const note=annotation({...f.report,sourceIssues:[],actionSummary:summary});assert.match(note,/dynamax Mawile/);assert.match(annotation({queue:[],sourceIssues:[{source:'feed\n::warning::injected',kind:'failed'}]}),/%0A::warning/);
+});

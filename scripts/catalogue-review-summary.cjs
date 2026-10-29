@@ -26,9 +26,10 @@ function loadContext(root){
   const p={assetKey:key,url:r.artProof?.[key]?.url||r.sourceUrl||asset,asset,sha256:r.sha256[key],gitBlobSha:crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length+'\0'),bytes])).digest('hex')};
   for(const name of r.names)add(name,r.no,variant,p);
  }}
- const resolverHash=hash(['js/app/application.js','js/domain/spriteSlugs.js','js/domain/publicPokemonDex.js','js/domain/costumeSpriteCatalog.js','data.js'].map(file=>[file,hash(fs.readFileSync(path.join(root,file)))]));
+ const applicationScope=require('./catalogue-resolver-fingerprint.cjs').applicationSpriteScope(fs.readFileSync(path.join(root,'js/app/application.js'),'utf8'));
+ const resolverHash=hash([['applicationSpriteScopeV2',applicationScope.hash],...['js/domain/spriteSlugs.js','js/domain/publicPokemonDex.js','js/domain/costumeSpriteCatalog.js','data.js'].map(file=>[file,hash(fs.readFileSync(path.join(root,file)))])]);
  const fingerprint=id=>hash({resolverHash,catalogId:id,proofs:(proofs.get(id)||[]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))});
- return{identities,proofs,resolverHash,fingerprint};
+ return{identities,proofs,resolverHash,applicationScope,fingerprint};
 }
 function summarize(report,register,context){
  if(register.schemaVersion!==1||!Array.isArray(register.rows)||!Array.isArray(register.knownIssues))throw Error('Invalid monitor review crosswalk');
@@ -47,9 +48,26 @@ function summarize(report,register,context){
   rows.push({id:raw.id,category,bucket,sourceUnchanged,sourceEvidenceStatus:!pin?'not-reviewed':sourceUnchanged?'unchanged':'changed',identityPresent:Boolean(target),selectableCatalogId:target?.catalogId||null,runtimeUnchanged,variants});
  }
  const knownIssues=register.knownIssues.map(issue=>{const currentlySelectable=context.identities.all.some(r=>r.no===issue.no&&r.name===issue.name);return{...issue,currentlySelectable,...(currentlySelectable&&issue.kind==='qualified-early-want-addition'?{action:'Present in the inspected source; publication is separate. Standalone GO release/acquisition remains unverified, with no tradeability claim.'}:{})};});
- return{schemaVersion:1,rawRows:report.queue.length,rawObservationsRetained:true,counts,rows,knownIssues,reviewRowsNotObservedInRun:[...pins.keys()].filter(id=>!used.has(id)),qualification:'Classification is not artwork approval or release eligibility. Per-variant original hashes and separate current runtime proof are retained; different source artwork remains an evidence join. Nothing is suppressed, baseline-renewed or silently promoted. Missing selector, changed route/proof and changed source re-enter review.'};
+ return{schemaVersion:1,rawRows:report.queue.length,rawObservationsRetained:true,actions:actionable(report),counts,rows,knownIssues,reviewRowsNotObservedInRun:[...pins.keys()].filter(id=>!used.has(id)),qualification:'Classification is not artwork approval or release eligibility. Per-variant original hashes and separate current runtime proof are retained; different source artwork remains an evidence join. Nothing is suppressed, baseline-renewed or silently promoted. Missing selector, changed route/proof and changed source re-enter review.'};
+}
+function actionable(report){
+ const actions=[];
+ for(const row of report.queue){
+  const finding=row.finding;
+  if(['max-inventory','gigantamax-inventory'].includes(row.source)&&['release-and-identity-review-required','release-and-art-review-required'].includes(row.disposition))actions.push({kind:'missing-max-option',name:(row.source==='max-inventory'?'Dynamax ':'')+row.name,source:row.sourceUrl,state:row.releaseState,action:'Max capability missing from actual picker. Qualify exact artwork and release status separately.'});
+  if(finding?.kind==='announced-max-missing-catalog')actions.push({kind:'missing-max-option',name:finding.type+' '+finding.name,source:row.sourceUrl,state:row.releaseState,action:'Verify exact form and debut; add the missing picker capability only with qualified art.'});
+  else if(row.disposition==='secondary-miner-change-review-required')actions.push({kind:'changed-sprite-source',name:row.source,source:row.sourceUrl,state:row.artState,compareUrl:'https://github.com/PokeMiners/pogo_assets/compare/'+row.reviewedCommit+'...'+row.observedCommit,action:'Review changed Pokémon files; a miner head is not release evidence.'+(row.headPokemonFiles?.length?' Head-commit files: '+row.headPokemonFiles.join(', '):'')+' Head files are not the full commit-range inventory.'});
+  else if(finding?.kind==='new-announcement-needs-review')actions.push({kind:'new-announcement',name:finding.url,source:finding.url,state:row.releaseState,action:'Review identity, normal/Shiny artwork and event-local release time.'});
+ }
+ return actions;
+}
+function annotation(report){
+ const actions=report.actionSummary?.actions||actionable(report);
+ const text=report.sourceIssues?.length?'Source coverage unknown: '+report.sourceIssues.map(row=>row.source+': '+row.kind).join('; '):'Catalogue review required: '+actions.map(row=>row.name).join('; ')+(actions.length?'': 'retained unresolved review leads')+'. Raw leads are not a missing-Pokémon count. See the job summary.';
+ return '::error title=Catalogue source reconciliation::'+text.slice(0,1800).replace(/%/g,'%25').replace(/\r/g,'%0D').replace(/\n/g,'%0A');
 }
 function markdown(summary){
- return '\n\n### Actionable catalogue review\n\nChanged or previously unreviewed evidence: '+(summary.counts['changed-review']||0)+'. Known work below remains open; it is not newly discovered on every run.\n\n'+summary.knownIssues.map(r=>'- '+r.name+': '+r.kind+'; '+r.state+(r.currentlySelectable?' (already selectable)':' (not selectable)')+'. '+r.action).join('\n')+'\n\nRetained raw leads: '+summary.rawRows+'. Work buckets: '+JSON.stringify(summary.counts)+'. These are leads, not a count of missing Pokémon.\n\nSource classification never approves artwork or release. Exact source variants and current runtime proof remain separate. See actionSummary in catalogue-reconciliation.json for every retained row and pin state.\n';
+ const safe=value=>String(value).replace(/[<>]/g,c=>c==='<'?'&lt;':'&gt;').replace(/[\r\n]/g,' ');
+ return '\n\n### Actionable catalogue review\n\n'+(summary.actions?.length?summary.actions.map(r=>'- **'+safe(r.kind)+': '+safe(r.name)+'** — '+safe(r.state)+'. '+safe(r.action)+' Source: '+safe(r.source)+(r.compareUrl?' Compare: '+r.compareUrl:'')).join('\n')+'\n\n':'')+'Changed or previously unreviewed evidence: '+(summary.counts['changed-review']||0)+'. Known work below remains open; it is not newly discovered on every run.\n\n'+summary.knownIssues.map(r=>'- '+r.name+': '+r.kind+'; '+r.state+(r.currentlySelectable?' (already selectable)':' (not selectable)')+'. '+r.action).join('\n')+'\n\nRetained raw leads: '+summary.rawRows+'. Work buckets: '+JSON.stringify(summary.counts)+'. These are leads, not a count of missing Pokémon.\n\nSource classification never approves artwork or release. Exact source variants and current runtime proof remain separate. See actionSummary in catalogue-reconciliation.json for every retained row and pin state.\n';
 }
-module.exports={hash,observationHash,loadContext,summarize,markdown};
+module.exports={hash,observationHash,loadContext,summarize,actionable,annotation,markdown};
