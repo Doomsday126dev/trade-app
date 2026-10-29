@@ -2590,7 +2590,9 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 #combined-editor-modal .clarification-copy-created .mact{display:flex;justify-content:flex-end}
 
 /* Daily event headers retain their details control while allowing each body to collapse. */
-.event-collapse-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
-.event-collapse-toggle span:first-child{min-width:0;overflow-wrap:anywhere}.event-collapse-chevron{flex:none;color:var(--accent);width:18px;height:18px;transform:rotate(180deg)}
+.event-collapse-toggle{display:flex;align-items:flex-start;justify-content:flex-start;gap:8px;width:fit-content;max-width:100%;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.event-collapse-toggle span:first-child{min-width:0;overflow-wrap:anywhere}.event-collapse-chevron{flex:none;color:var(--accent);width:18px;height:18px;margin-top:2px;transform:rotate(180deg)}
 .event-collapse-toggle[aria-expanded="false"] .event-collapse-chevron{transform:none}.event-collapse-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
 .event-collapsed-highlights,.event-collapsible-body{grid-column:1/-1}.event-collapsed-highlights[hidden],.event-collapsible-body[hidden]{display:none}
+
+@media(min-width:601px){.event-agenda-card .event-card-kicker{align-self:start;min-height:24px}}
