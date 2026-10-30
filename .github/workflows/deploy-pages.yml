@@ -51,4 +51,4 @@ jobs:
       confirmation: ${{ inputs.confirmation }}
       control_selector_tag: ${{ github.ref_name }}
       dispatcher_sha: ${{ github.sha }}
-      control_workflow_sha: "fbf831af66e02a1eac83cc8e5b99fca3eb23cd5a"
+      control_workflow_sha: "588170211b2e26f82d2e2fb82d26213f80e3d060"
