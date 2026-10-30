@@ -633,6 +633,42 @@ test.describe('audit cross-browser contracts',()=>{
     expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
   });
 
+  test('preserved review names real differences before offering the saved-copy action',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?preserved-review-details=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    const result=await page.evaluate(async()=>{
+      const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:150:standard:legacy:Mewtwo'};
+      let current={identity,values:{priority:'H',sortOrder:2,note:'current note',backgroundId:''}};
+      const candidates=[
+        {candidateId:'candidate_order',entityType:'tradeEntry',entityId:'same',identity,values:{...current.values,sortOrder:100000},source:'legacy-remote'},
+        {candidateId:'candidate_note',entityType:'tradeEntry',entityId:'same',identity,values:{...current.values,note:'older note'},source:'legacy-remote'},
+        {candidateId:'candidate_removed',entityType:'tradeEntry',entityId:'removed',identity,values:current.values,source:'legacy-remote'}
+      ];
+      let writes=0;
+      const runtime={ownerUid:'synthetic-owner',async listRecoveryCandidates(){return candidates;},async completeRecoveryReviews(){writes++;return{ok:true};}};
+      const authority={mode:'canonical-review',uid:'synthetic-owner',runtime,controller:{getEntity(type,id){return id==='same'?current:{deleted:true};}},candidateIds:candidates.map(item=>item.candidateId).sort()};
+      accountSyncPreservedReviewAuthority=async()=>authority;
+      accountSyncPreservedReviewAuthorityCurrent=()=>true;
+      const details=document.getElementById('trainer-sync-preserved-review-details');
+      details.open=false;
+      await useSavedAccountCopyForPreservedReview();
+      const first=document.getElementById('trainer-sync-preserved-review-items').textContent;
+      current={...current,values:{...current.values,note:'newer note'}};
+      await useSavedAccountCopyForPreservedReview();
+      return{open:details.open,first,text:document.getElementById('trainer-sync-preserved-review-items').textContent,writes};
+    });
+    expect(result.open).toBe(true);
+    expect(result.first).toContain('1 older records match current content');
+    expect(result.first).toContain('2 need individual review');
+    expect(result.first).toContain('older note');
+    expect(result.first).toContain('current note');
+    expect(result.text).toContain('newer note');
+    expect(result.text).toContain('removed from the current saved list');
+    expect(result.writes).toBe(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
+  });
+
   test('standalone-style browser contexts keep compatibility storage isolated',async({browser,page})=>{
     await page.goto(`./?container-storage-a=${Date.now()}`,{waitUntil:'domcontentloaded'});
     const absoluteUrl=page.url(),databaseName=`pogo_context_isolation_${Date.now()}`;

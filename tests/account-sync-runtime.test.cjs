@@ -689,6 +689,19 @@ test('standalone migration accepts canonical drift when duplicate legacy snapsho
   assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(h.server.attempts.length,attemptsBefore);assert.equal(standalone.controller.activeEntities()[0].values.priority,'M');
 });
 
+test('a new device does not turn an unknown legacy order into a preserved change',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h);
+  const base=createRuntime(window,h,state,h.createMemoryJournalState(),async()=>source('order-base',{remote:{Pikachu:'H'}}));
+  await base.start();const entity=base.controller.activeEntities()[0];
+  assert.equal((await base.controller.patchEntity({entityType:entity.entityType,entityId:entity.entityId,patch:{sortOrder:4}})).ok,true);
+  await base.controller.drain();await base.stop();
+  const next=createRuntime(window,h,state,h.createMemoryJournalState(),async()=>source('order-new-device',{remote:{Pikachu:'H'}}));
+  const result=await next.start(),snapshot=await next.snapshot();
+  assert.equal(result.ok,true);assert.equal(snapshot.state,'saved');assert.equal(snapshot.recoveryCandidateCount,0);
+  assert.equal(result.plan.recoveryCandidates.length,0);assert.equal(next.controller.activeEntities()[0].values.sortOrder,4);
+  assert.equal(state.calls.createRecoveryCandidate,0);
+});
+
 test('stopping during migration source acquisition prevents later writes and projection',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),projections=[];
   let releaseSource;const sourceGate=new Promise(resolve=>{releaseSource=resolve;});

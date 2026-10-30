@@ -613,6 +613,11 @@ test('matching stale remote and local snapshots never masquerade as canonical ve
   const window=load(),model=window.PogoDomain.accountSyncModel,migration=window.PogoDomain.accountSyncMigration,legacy=migration.normalizeTradeValues({priority:'H'},{sortOrder:100000}),canonical=(name,values,deleted=false)=>{const identity={surface:'my-list',lane:'wishlist',catalogId:`pokemon:${name.toLowerCase()}`};return{entityType:'tradeEntry',entityId:model.tradeEntryId(identity),identity,values,deleted};},legacyLists={wishlist:{Pikachu:'H',Eevee:'H',Mewtwo:'H'}};
   const remoteCanonical=[canonical('Pikachu',{...legacy,sortOrder:400000}),canonical('Eevee',legacy,true),canonical('Mewtwo',{...legacy,note:'Current account value'})],plan=await migration.buildMigrationPlan({ownerUid:'uid-owner',username:'Owner',deviceInstallId:'device-stale-duplicates',legacyRemoteLists:legacyLists,legacyLocalLists:legacyLists,canonicalInitialized:true,remoteCanonical},{parseListValue:value=>({priority:String(value||'').charAt(0)}),catalogIdentity:(_type,name)=>({catalogId:`pokemon:${name.toLowerCase()}`}),resolveFavoriteUid:async()=>null});
   assert.equal(plan.tradeSeeds.length,0);assert.equal(plan.verificationSeeds.length,0);assert.equal(plan.recoveryCandidates.length,3);assert.ok(plan.recoveryCandidates.every(item=>item.reason==='legacy-after-canonical'&&item.source==='legacy-remote'));
+  const reduced=await migration.buildMigrationPlan({ownerUid:'uid-owner',username:'Owner',deviceInstallId:'device-stale-duplicates',legacyRemoteLists:legacyLists,legacyLocalLists:legacyLists,canonicalInitialized:true,remoteCanonical,ignoreUnknownLegacyOrder:true},{parseListValue:value=>({priority:String(value||'').charAt(0)}),catalogIdentity:(_type,name)=>({catalogId:`pokemon:${name.toLowerCase()}`}),resolveFavoriteUid:async()=>null});
+  assert.equal(reduced.deviceMigrationId,plan.deviceMigrationId);assert.equal(reduced.sourceFingerprint,plan.sourceFingerprint);
+  assert.equal(reduced.recoveryCandidates.length,2);assert.equal(reduced.verificationSeeds.length,0);
+  assert.equal(reduced.recoveryCandidates.some(item=>item.identity.catalogId==='pokemon:eevee'),true);
+  assert.equal(reduced.recoveryCandidates.some(item=>item.identity.catalogId==='pokemon:mewtwo'),true);
 });
 
 test('post-initialization queued updates replay only against an exact legacy base',async()=>{

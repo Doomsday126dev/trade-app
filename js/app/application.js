@@ -3913,6 +3913,14 @@ async function accountSyncPreservedReviewAuthority(){
 function accountSyncPreservedReviewAuthorityCurrent(authority){
   return authority?.mode==='canonical-review'&&authority.sessionGeneration===_sessionTransientGeneration&&authority.runtimeGeneration===accountSyncRuntimeGeneration&&accountSyncFavoriteReviewAuthorityCurrent(authority);
 }
+async function accountSyncPreservedReviewDisplayCurrent(authority){
+  const display=accountSyncPreservedReviewDisplay;
+  if(!display||display.uid!==authority.uid||display.runtime!==authority.runtime||!accountSyncPreservedReviewAuthorityCurrent(authority))return false;
+  const candidates=await authority.runtime.listRecoveryCandidates();
+  if(candidates.length!==authority.candidateIds.length||candidates.some(item=>!authority.candidateIds.includes(item.candidateId)))return false;
+  const fresh=window.PogoDomain.accountSyncMigration.classifyPreserved(candidates,(type,id)=>authority.controller.getEntity(type,id));
+  return accountSyncModel.canonicalJson(fresh)===accountSyncModel.canonicalJson(display.summary);
+}
 function accountSyncPreservedReviewReady(runtime=managedAccountSyncRuntime,snapshot=accountSyncUiState){
   return runtime?.projectionReady===true&&runtime.ownerUid===auth?.currentUser?.uid&&snapshot?.state==='review-required'&&snapshot?.active===true&&snapshot?.listenerHealthy===true&&snapshot?.controllerHealthy===true&&!Number(snapshot?.pendingCount)&&!Number(snapshot?.blockedCount)&&!Number(snapshot?.conflictCount)&&Number(snapshot?.recoveryCandidateCount)>0;
 }
@@ -10634,6 +10642,7 @@ async function saveAppearance(){
 // ── UI HELPERS ────────────────────────────────────────────────
 let _syncStatusCurrent='';
 let accountSyncPreservedReviewRunning=false;
+let accountSyncPreservedReviewDisplay=null;
 function accountSyncPresentation(){
   if(!accountSyncUiState?.eligible)return null;
   accountSyncClearStaleRecoveryPresentation();
@@ -10725,6 +10734,7 @@ function refreshSyncUi(){
     }
     const canReview=accountSyncPreservedReviewReady();
     if(preservedReview){preservedReview.hidden=!canReview;if(preservedReviewCount)preservedReviewCount.textContent=i18nCore.t('accountSync.preservedReviewDetail',{count:i18nCore.formatNumber(accountSyncUiState?.recoveryCandidateCount||0)});}
+    if(!canReview){accountSyncPreservedReviewDisplay=null;const details=document.getElementById('trainer-sync-preserved-review-details');if(details)details.open=false;document.getElementById('trainer-sync-preserved-review-items')?.replaceChildren();}
     if(preservedReviewAction){preservedReviewAction.disabled=accountSyncPreservedReviewRunning;preservedReviewAction.setAttribute('aria-busy',accountSyncPreservedReviewRunning?'true':'false');}
   }else{
     if(diagnostic){diagnostic.hidden=true;diagnostic.textContent='';}
@@ -10814,9 +10824,14 @@ async function useSavedAccountCopyForPreservedReview(){
   if(accountSyncPreservedReviewRunning)return;
   const authority=await accountSyncPreservedReviewAuthority();
   if(authority.mode!=='canonical-review'){toast(i18nCore.t('accountSync.preservedReviewUnavailable'),4500);return;}
+  const details=document.getElementById('trainer-sync-preserved-review-details');
+  if(details&&!details.open){details.open=true;await renderAccountSyncPreservedDetails();details.scrollIntoView({block:'nearest'});return;}
+  if(!await accountSyncPreservedReviewDisplayCurrent(authority)){
+    await renderAccountSyncPreservedDetails();return;
+  }
   const count=authority.candidateIds.length;
-  if(!confirm(i18nCore.t('accountSync.preservedReviewPrompt',{count:i18nCore.formatNumber(count)})))return;
-  if(!accountSyncPreservedReviewAuthorityCurrent(authority)){toast(i18nCore.t('accountSync.preservedReviewUnavailable'),4500);return;}
+  if(!confirm(i18nCore.t('accountSync.preservedReviewPrompt',{count:i18nCore.formatNumber(count),different:i18nCore.formatNumber(accountSyncPreservedReviewDisplay.summary.counts.needsReview)})))return;
+  if(!await accountSyncPreservedReviewDisplayCurrent(authority)){toast(i18nCore.t('accountSync.preservedReviewUnavailable'),4500);await renderAccountSyncPreservedDetails();return;}
   accountSyncPreservedReviewRunning=true;refreshSyncUi();
   try{
     const result=await authority.runtime.completeRecoveryReviews(authority.candidateIds);
@@ -10829,6 +10844,62 @@ async function useSavedAccountCopyForPreservedReview(){
     try{if(authority.runtime===managedAccountSyncRuntime)accountSyncUiState=await authority.runtime.snapshot();}catch{}
     refreshSyncUi();toast(i18nCore.t('accountSync.preservedReviewFailed'),5000);
   }finally{accountSyncPreservedReviewRunning=false;refreshSyncUi();}
+}
+async function renderAccountSyncPreservedDetails(){
+  const details=document.getElementById('trainer-sync-preserved-review-details'),host=document.getElementById('trainer-sync-preserved-review-items');
+  if(!details?.open||!host)return;
+  host.textContent=i18nCore.t('accountSync.preservedDetailsLoading');
+  const authority=await accountSyncPreservedReviewAuthority();
+  if(authority.mode!=='canonical-review'||!accountSyncPreservedReviewAuthorityCurrent(authority)){
+    host.textContent=i18nCore.t('accountSync.preservedReviewUnavailable');return;
+  }
+  try{
+    const candidates=await authority.runtime.listRecoveryCandidates();
+    if(!accountSyncPreservedReviewAuthorityCurrent(authority)||!details.open||
+      candidates.length!==authority.candidateIds.length){host.textContent=i18nCore.t('accountSync.preservedReviewUnavailable');return;}
+    const summary=window.PogoDomain.accountSyncMigration.classifyPreserved(candidates,(type,id)=>authority.controller.getEntity(type,id));
+    accountSyncPreservedReviewDisplay={uid:authority.uid,runtime:authority.runtime,candidateIds:authority.candidateIds,summary};
+    const intro=document.createElement('p');
+    intro.textContent=i18nCore.t('accountSync.preservedDetailsSummary',{
+      order:i18nCore.formatNumber(summary.counts.olderOrder+summary.counts.equivalent),
+      different:i18nCore.formatNumber(summary.counts.needsReview)
+    });
+    const nodes=[intro];
+    for(const item of summary.items){
+      const card=document.createElement('div');card.className='trainer-sync-preserved-item';
+      const name=document.createElement('strong');
+      if(item.candidate.entityType==='favorite')name.textContent=String(item.candidate.values?.displayName||i18nCore.t('accountSync.syncedItem'));
+      else{
+        const catalogId=String(item.candidate.identity?.catalogId||'');
+        let fallback='';try{fallback=decodeURIComponent(catalogId.split(':legacy:')[1]||'');}catch{}
+        const known=accountSyncConflictItemName(item.candidate);
+        name.textContent=known===i18nCore.t('accountSync.syncedItem')&&fallback?fallback:known;
+      }
+      card.append(name);
+      const description=document.createElement('p');
+      description.textContent=i18nCore.t({removed:'accountSync.preservedRemoved',missing:'accountSync.preservedMissing','unresolved-favorite':'accountSync.preservedFavorite'}[item.kind]||'accountSync.preservedDifferent');
+      card.append(description);
+      for(const field of item.fields){
+        const row=document.createElement('p');
+        const label=field==='backgroundId'?i18nCore.t('accountSync.fieldBackground'):accountSyncConflictFieldLabel(field);
+        const value=(raw,values)=>field==='backgroundId'&&raw?accountSyncPreservedBackgroundLabel(item.candidate.identity,values,raw):accountSyncConflictValue(field,raw);
+        row.textContent=i18nCore.t('accountSync.preservedFieldDifference',{
+          field:label,older:value(item.candidate.values?.[field],item.candidate.values),current:value(item.current?.values?.[field],item.current?.values)
+        });
+        card.append(row);
+      }
+      nodes.push(card);
+    }
+    if(!summary.items.length){const none=document.createElement('p');none.textContent=i18nCore.t('accountSync.preservedNoDifferences');nodes.push(none);}
+    host.replaceChildren(...nodes);
+  }catch{accountSyncPreservedReviewDisplay=null;host.textContent=i18nCore.t('accountSync.preservedReviewUnavailable');}
+}
+function accountSyncPreservedBackgroundLabel(identity,values,id){
+  try{
+    const entry=accountSyncCatalogEntryForId(identity?.catalogId,identity);
+    const choice=entry&&productShareBackgroundChoices({...entry,...values,catalogId:identity?.catalogId}).find(item=>item.id===id);
+    return choice?.label||String(id);
+  }catch{return String(id);}
 }
 async function requestAccountSyncRecovery(){
   const account=accountSyncPresentation();if(!account)return;
