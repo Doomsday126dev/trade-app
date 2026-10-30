@@ -168,11 +168,16 @@ assert.ok(indexSource.includes('managedSessionCache.writeQueue(syncQueue||{})'),
   'Pending sync writes must pass through the owner-bound queue boundary');
 assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
   'The unowned legacy sync queue must not remain active');
+const backgroundBundle=!!localBackgroundContract||SOURCE_CALL_CONTRACT===SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7'];
+if(backgroundBundle){
+  const cacheSource=readFileSync(path.join(root,'js/domain/cacheAdapters.js'),'utf8').replace('})(window);',"})(typeof window!=='undefined'?window:globalThis);");
+  assert.ok(readFileSync(path.join(root,'js/domain/backgroundPersistence.js'),'utf8').startsWith('// Owner-data adapter prelude: exact cacheAdapters.js source; checked by build-background-runtime.cjs.\n'+cacheSource+'\n// END OWNER-DATA ADAPTER PRELUDE\n'),'Owner-data bundle must preserve the exact cache adapter');
+}
 const moduleOrder=[
   'js/domain/publicSharePublication.js','js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
   'js/data/subscriptionManager.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js',
   'js/data/currentUserRepository.js','js/data/ownedDataCoordinator.js','js/data/publicShareRepository.js',
-  'js/domain/cacheAdapters.js'
+  backgroundBundle?'js/domain/backgroundPersistence.js':'js/domain/cacheAdapters.js'
 ];
 let previous=-1;
 for(const modulePath of moduleOrder){

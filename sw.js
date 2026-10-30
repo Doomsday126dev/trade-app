@@ -101,7 +101,6 @@ const RELEASE_ASSETS=[
   'js/data/favoriteAdditions.js',
   'js/data/favoriteRecoveryPreview.js',
   'js/data/accountSyncRuntime.js',
-  'js/domain/cacheAdapters.js',
   'js/app/favoritePicker.js',
   'js/domain/backgroundPersistence.js',
   'js/app/application.js'

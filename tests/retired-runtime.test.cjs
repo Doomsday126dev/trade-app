@@ -13,7 +13,7 @@ test('retired inventory entrypoints and background modules are absent from runti
     assert.equal(functions.has(name),false,name);
   }
   for(const file of ['index.html','sw.js','scripts/pages/frontend-files.json','js/app/application.js']){
-    assert.doesNotMatch(read(file),/backgroundCatalog|backgroundVisual|renderMyHave\(|renderHaveBrowse\(/,file);
+    assert.doesNotMatch(read(file),/\bbackgroundCatalog\b|\bbackgroundVisual\b|renderMyHave\(|renderHaveBrowse\(/,file);
   }
   for(const file of ['js/domain/backgroundCatalog.js','js/domain/backgroundVisual.js'])assert.equal(fs.existsSync(path.join(root,file)),false);
   assert.doesNotMatch(read('css/app.css'),/\.background-picker|\.background-trigger|--background-artwork/);

@@ -198,8 +198,8 @@ test('workflow permissions remain minimal and deploy/build jobs stay separate',(
 
 test('reviewed frontend allowlist stays exact and excludes control/private trees',()=>{
   const result=validator.validateReleaseCoherence(root,{expectedReleaseId:RELEASE_ID});
-  assert.equal(result.files.length,1613);assert.equal(result.scriptCount,91);
-  assert.equal(result.allowlist.hostedOnlyScriptFiles.length,5);
+  assert.equal(result.files.length,1613);assert.equal(result.scriptCount,90);
+  assert.equal(result.allowlist.hostedOnlyScriptFiles.length,6);
   assert.equal(result.allowlist.scriptFiles[0],'js/services/traffic.js');
   assert.ok(result.allowlist.lazyScriptFiles.includes('js/app/publicShareApp.js'));
   const safeTransferDomainIndex=result.allowlist.scriptFiles.indexOf('js/domain/safeTransferRestoration.js');
@@ -344,7 +344,7 @@ test('current-run matching rejects concurrent, zero, multiple, wrong selector, a
 test('postdeploy requires schema 2 and exact runtime/control provenance',async()=>{
   const files=runtimeFiles(),fetchImpl=pagesFetch(files);
   const result=await verifier.verifyServedDeployment({fetchImpl,siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST});
-  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,91);
+  assert.equal(result.sourceSha,RUNTIME_SHA);assert.equal(result.deploymentSelector,SELECTOR);assert.equal(result.scriptCount,90);
   files.set('deployment-manifest.json',JSON.stringify(legacyManifest()));
   await assert.rejects(verifier.verifyServedDeployment({fetchImpl:pagesFetch(files),siteOrigin:verifier.PAGES_ORIGIN,runtimeSourceSha:RUNTIME_SHA,runtimeReleaseId:RELEASE_ID,runtimeReleaseTag:RUNTIME_TAG,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,controlWorkflowSha:CONTROL_SHA,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST}),/not accepted post-deploy/);
 });

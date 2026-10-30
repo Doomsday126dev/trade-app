@@ -27,7 +27,7 @@ test('category compatibility selection remains in memory and cannot create remot
  assert.doesNotMatch(source,/localStorage|sessionStorage|queueSync|writeList/);
 });
 test('one fresh declaration snapshot drives visible wants and review state',()=>{
- const model={entries:[{name:'Synthetic'}]},calls=[],input={value:''},context={productShareIsOpen:()=>false,managedSessionCache:{snapshot:()=>({activeOwner:null})},cur:'',auth:null,myListFilterTimer:0,myListFilterGeneration:0,clearTimeout:()=>{},productDeclarations:()=>model,renderCombinedList:value=>calls.push(value),renderIntentEntries:(_query,value)=>calls.push(value),renderTradeComparisonReturn:()=>{},renderOwnerShareRepublishNotice:()=>{},document:{getElementById:id=>id==='combined-filter'?input:id==='tab-mylist'?{classList:{toggle:()=>{}}}:null}};
+ const model={entries:[{name:'Synthetic'}]},calls=[],input={value:''},context={backgroundOwnerRuntime:null,BACKGROUND_ROLLOUT:{enabled:false},renderBackgroundRecovery(){},productShareIsOpen:()=>false,managedSessionCache:{snapshot:()=>({activeOwner:null})},cur:'',auth:null,myListFilterTimer:0,myListFilterGeneration:0,clearTimeout:()=>{},productDeclarations:()=>model,renderCombinedList:value=>calls.push(value),renderIntentEntries:(_query,value)=>calls.push(value),renderTradeComparisonReturn:()=>{},renderOwnerShareRepublishNotice:()=>{},document:{getElementById:id=>id==='combined-filter'?input:id==='tab-mylist'?{classList:{toggle:()=>{}}}:null}};
  vm.runInNewContext(render,context);context.renderMyList('synthetic');assert.equal(input.value,'synthetic');assert.deepEqual(calls,[model,model]);
 });
 test('an empty unified list renders an explicit empty state rather than stale category controls',()=>{

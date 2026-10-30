@@ -13,7 +13,7 @@ function harness(){
     vm.runInContext(fs.readFileSync(path.join(root,'js/domain',file+'.js'),'utf8'),context);
   }
   const domain=window.PogoDomain;
-  Object.assign(context,{cur:'Owner',selectedTrainerRuntime:{},allData:{},OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],
+  Object.assign(context,{backgroundCatalogueReady:()=>false,cur:'Owner',selectedTrainerRuntime:{},allData:{},OWNED_MY_LIST_TYPES:['wishlist','dynamax','gmax','costumes'],
     isTradeableForWishlist:domain.pokemonEntryRules.isTradeableForWishlist,tradeListComparisonDomain:domain.tradeListComparison,accountSyncProduct:domain.accountSyncProduct,accountSyncModel:domain.accountSyncModel,
     accountSyncCatalogEntryForName:(_type,name)=>({name,no:{Pikachu:25,Eevee:133,Mew:151,Charmander:4}[name]}),
     pokemonCatalogDomain:{catalogKey:value=>value.toLowerCase()},normalizeTradeQualifier:value=>String(value||'').toLowerCase(),

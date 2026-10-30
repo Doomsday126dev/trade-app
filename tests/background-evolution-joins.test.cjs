@@ -23,12 +23,12 @@ test('each admitted evolution has an immutable-input exact same-lane progenitor,
   const records=catalog.records.filter(r=>r.id===bg&&r.catalogId===row.catalog_id&&r.shiny===shiny);assert.equal(records.length,1);assert.equal(records[0].sha256,row.art_sha256);
  }
 });
-test('disputed museum shiny and non-evolution form changes remain held; rollout stays disabled',()=>{
+test('disputed museum shiny and non-evolution form changes remain held under the approved subset',()=>{
  assert.equal(catalog.coverageComplete,false);
  for(const [bg,id,shiny]of holds.withdrawnShiny)assert.equal(keys.has(key(bg,id,shiny)),false);
  for(const slug of ['necrozma-dawn-wings','necrozma-dusk-mane','kyurem-black','kyurem-white','zacian-crowned-sword','zamazenta-crowned-shield','ivysaur-jan-2020'])assert.equal(review.admitted.some(r=>r.reviewed_evolution_chain[1]===slug),false);
  for(const h of holds.holds.filter(r=>r.sourceVariant==='blipbug'&&r.backgroundId.includes('esa')))assert.notEqual(h.shiny,'qualified_local');
- assert.ok(require('node:fs').readFileSync(require('node:path').join(__dirname,'../js/app/application.js'),'utf8').includes('const BACKGROUND_ROLLOUT={enabled:false};'));
+ assert.equal(catalog.releaseScope,'verified-subset');assert.ok(require('node:fs').readFileSync(require('node:path').join(__dirname,'../js/app/application.js'),'utf8').includes('const BACKGROUND_ROLLOUT={enabled:true};'));
 });
 const {validate}=require('../scripts/backgrounds/review-evolution-joins.cjs');
 const facts=new Map(review.input_pair_facts.map(p=>[p.background_id+'|'+p.source_variant_id,p]));

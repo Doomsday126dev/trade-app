@@ -7,7 +7,7 @@ module.exports=function installShareLinkState(source,context,domain){
     publicLinkConfirmation:null,publicLinkConfirmationEpoch:0,publicLinkBusy:null,publicLinkPublicationError:null,
     allData:{users:{Owner:{}},wishlist:{Owner:{}},dynamax:{Owner:{}},gmax:{Owner:{}},costumes:{Owner:{}}},
     publicSharePublicationDomain:domain,accountSyncModel:{canonicalJson:value=>JSON.stringify(value)},
-    PUBLIC_SHARE_TYPES:['wishlist','dynamax','gmax','costumes'],syncQueue:{},accountSyncUiState:null,managedAccountSyncRuntime:null,
+    BACKGROUND_ROLLOUT:{enabled:false},backgroundOwnerRuntime:null,PUBLIC_SHARE_TYPES:['wishlist','dynamax','gmax','costumes'],syncQueue:{},accountSyncUiState:null,managedAccountSyncRuntime:null,
     accountSyncProjectionReady:()=>false,publicShareSessionMatches:name=>name===context.cur&&context.auth.currentUser.uid===token.uid});
   vm.runInContext(source.slice(source.indexOf('function publicShareSnapshotForUser('),source.indexOf('function applyPublicShareSnapshot(')),context);
   vm.runInContext(source.slice(source.indexOf('function publicSnapshotContentKey('),source.indexOf('function observePublicWriteCompletion(')),context);
