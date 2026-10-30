@@ -44,13 +44,14 @@ async function seedWantEditor(saved){
   document.getElementById('my-un').textContent=username;switchTab('mylist',{render:false});
   const started=await ensureAccountSyncRuntime();renderMyList();setSyncStatus('online');return started;
 }
-async function install(page,saved=null,{favoriteTransport=false}={}){
+async function install(page,saved=null,{favoriteTransport=false,backgroundRollout=null}={}){
   if(favoriteTransport)await page.addInitScript(require('./favorite-transport.cjs').prepareFavoriteTransport);
   await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firestore\.googleapis\.com)/,r=>r.abort());
   await page.goto('./?want-editor-local');
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('want-editor-local'));
   await page.waitForFunction(()=>typeof ensureAccountSyncRuntime==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
+  if(backgroundRollout!==null)await page.evaluate(enabled=>{BACKGROUND_ROLLOUT.enabled=enabled;},backgroundRollout);
   expect((await page.evaluate(seedWantEditor,saved)).ok).toBe(true);await settled(page);
 }
 async function settled(page){

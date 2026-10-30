@@ -1,4 +1,5 @@
 const{test,expect}=require('@playwright/test');const{install,priority,entities}=require('./helpers/want-editor-application.cjs');const path=require('node:path');const fs=require('node:fs');
+test.use({serviceWorkers:'block'});
 const base='http://127.0.0.1:9220',ns='demo-pogo-background-reference';
 const{enable}=require('./helpers/background-authenticated.cjs');
 async function add(page,bg){await page.locator('#wants-add-name').fill('Pikachu');await page.locator('#wants-add-name').press('Escape');await page.locator('.add-advanced-toggle').click();await priority(page,'H');await page.locator('#combined-preferences summary').click();await page.locator('#combined-background').selectOption(bg);await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();}

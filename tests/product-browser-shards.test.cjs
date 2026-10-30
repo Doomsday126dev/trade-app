@@ -9,3 +9,14 @@ test('report identities retain project, nested title and exact file; duplicate o
 test('wrapper selects only a validated numeric shard and retains the normal serial path',()=>{const{stageArgs}=require('../scripts/ci/product-evidence.cjs');assert.deepEqual(stageArgs('browser',{}),['scripts/select-product-checks.cjs','--browser']);for(const index of ['1','2','3','4'])assert.deepEqual(stageArgs('browser',{PRODUCT_BROWSER_SHARD:index}),['scripts/ci/product-browser-shards.cjs','run',index]);for(const index of ['0','5','1;bad'])assert.throws(()=>stageArgs('browser',{PRODUCT_BROWSER_SHARD:index}));});
 
 test('native Playwright lists are relative to tests root while evidence IDs stay repository-relative',()=>{const p=plan(),s=p.shards[0];assert.equal(testListLines(p,s)[0],s.cases[0].replace(' › tests/',' › '));assert.ok(s.cases[0].includes(' › tests/'));});
+
+// Emulator ownership is attached to the exact selected cases; nothing is dropped.
+test('authenticated background cases require the real local emulator on precisely their shard',()=>{
+ const extra={id:'[desktop] › tests/background-authenticated-editor.spec.js › persisted save',file:'tests/background-authenticated-editor.spec.js',title:'persisted save'};
+ const p=makePlan([...rows,extra],{sourceSha:sha,base,files:['tests/sample.spec.js',extra.file],timings:{defaultSeconds:12,records:{}}});
+ const{requiresBackgroundEmulator}=require('../scripts/ci/product-browser-shards.cjs');
+ const owner=p.shards.find(s=>s.cases.includes(extra.id));
+ for(const s of p.shards)assert.equal(requiresBackgroundEmulator(p,s.index),s.index===owner.index);
+ assert.equal(p.cases.length,188);assert.deepEqual(validateResults(p,results(p)),{discovered:188,executed:188,shards:4});
+ assert.throws(()=>requiresBackgroundEmulator(p,0),/Invalid browser shard/);
+});
