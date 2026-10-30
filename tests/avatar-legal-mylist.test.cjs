@@ -77,6 +77,7 @@ test('reorder persists explicit within-priority order without rewriting Firebase
 
 test('Batch B adds no Firebase surface or new profile schema',()=>{
   assert.doesNotMatch(html,/avatarCatalogId|avatarPokemon\s*:\s*\{/);
-  assert.doesNotMatch(html,/onValue\(/);
+  const picker=html.slice(html.indexOf('let avatarPickerEntriesCache'),html.indexOf('// Build a <img>'));
+  assert.doesNotMatch(picker,/onValue\(|get\(ref\(/);
   assert.match(html,/avatarPokemon:raw\.avatarPokemon\.trim\(\)/);
 });

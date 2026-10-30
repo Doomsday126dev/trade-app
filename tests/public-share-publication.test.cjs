@@ -239,7 +239,7 @@ test('only confirmed list and profile changes request automatic publication',()=
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
   assert.match(canonicalAck,/publicShareSnapshotForUser\(username,source,'owned_list_edit',true\)/);
   assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
-  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(username,built.snapshot\)/);
+  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(username,built.snapshot,\{explicitBackgrounds:/);
   assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
   assert.match(profile,/requestPublicSharePublication\('share_profile_update'/);
 });

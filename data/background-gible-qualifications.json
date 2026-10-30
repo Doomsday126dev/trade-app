@@ -1,0 +1,110 @@
+[
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:444:standard:legacy:Gabite",
+    "pokemon": "gabite",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communitydayclassic-gible-september-2026",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Exact same-background Gible is independently qualified in this state; official Gible Community Day confirms its two-stage evolution. The source state, background and normal/Shiny are retained.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:443:standard:legacy:Gible",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:445:standard:legacy:Garchomp",
+    "pokemon": "garchomp",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communitydayclassic-gible-september-2026",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Exact same-background Gible is independently qualified in this state; official Gible Community Day confirms its two-stage evolution. The source state, background and normal/Shiny are retained.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:443:standard:legacy:Gible",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:444:standard:legacy:Gabite",
+    "pokemon": "gabite",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communitydayclassic-gible-september-2026",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Exact same-background Gible is independently qualified in this state; official Gible Community Day confirms its two-stage evolution. The source state, background and normal/Shiny are retained.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:443:standard:legacy:Gible",
+      true
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:445:standard:legacy:Garchomp",
+    "pokemon": "garchomp",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communitydayclassic-gible-september-2026",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Exact same-background Gible is independently qualified in this state; official Gible Community Day confirms its two-stage evolution. The source state, background and normal/Shiny are retained.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:443:standard:legacy:Gible",
+      true
+    ]
+  }
+]

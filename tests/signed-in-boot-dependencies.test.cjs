@@ -35,7 +35,10 @@ test('default signed-in graph excludes all six candidates in every locale',()=>{
 test('hosted, cached, signed-in and anonymous ownership remain distinct',()=>{
   const manifest=loadFrontendManifest(root),cached=workerRequired();
   for(const file of removed)assert.ok(manifest.files.includes(file)&&fs.existsSync(path.join(root,file)),file);
-  assert.deepEqual(manifest.hostedOnlyScriptFiles,removed.slice(0,-1));
+  assert.deepEqual(manifest.hostedOnlyScriptFiles,[...removed.slice(0,-1),'js/domain/cacheAdapters.js']);
+  assert.ok(defaultScripts('en').includes('js/domain/backgroundPersistence.js'));
+  assert.ok(!defaultScripts('en').includes('js/domain/cacheAdapters.js'));
+  require('../scripts/build-background-runtime.cjs');
   for(const file of manifest.hostedOnlyScriptFiles)assert.ok(!cached.includes(file),file);
   assert.ok(cached.includes('js/app/publicShareApp.js'));
   assert.ok(manifest.lazyScriptFiles.includes('js/app/publicShareApp.js'));

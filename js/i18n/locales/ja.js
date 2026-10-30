@@ -205,6 +205,11 @@
 "share.liveCaption":"誰でも開ける公開ページ",
 
 "share.searchCaption":"自分のゲーム内ポケモンを検索",
+"background.unavailable":"背景を表示できません",
+"background.addSeparate":"背景付きの希望を別に追加します。既存の希望は残ります。",
+"share.backgrounds":"背景",
+"share.backgroundFor":"{name}の背景",
+"share.noBackground":"背景なし",
 "share.imageSnapshot":"画像",
 "share.textSnapshot":"プレーンテキスト",
 "share.snapshotCaption":"選択内容のスナップショット",

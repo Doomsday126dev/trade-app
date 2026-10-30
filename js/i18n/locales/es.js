@@ -206,6 +206,11 @@
 "share.liveCaption":"Una página pública sin cuenta",
 
 "share.searchCaption":"Busca en tu propio inventario",
+"background.unavailable":"Fondo no disponible",
+"background.addSeparate":"Añade una solicitud de fondo independiente; la solicitud existente se conserva.",
+"share.backgrounds":"Fondos",
+"share.backgroundFor":"Fondo para {name}",
+"share.noBackground":"Sin fondo",
 "share.imageSnapshot":"Imagen",
 "share.textSnapshot":"Texto sin formato",
 "share.snapshotCaption":"Una captura de esta selección",

@@ -183,12 +183,18 @@ test('inactive future identity sharing and preference paths remain denied to eve
     `accounts/${IDS.ordinary}`,`shareGroupAccess/${IDS.ordinary}`,
     `privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,
     `publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1',
-    `accountSync/${IDS.ordinary}/favorites`,`favoriteSlots/${IDS.ordinary}`,
+    `favoriteSlots/${IDS.ordinary}`,
     'legacyProvisioningFreeze'
   ];
   for(const actor of [undefined,TOKENS.ordinary,TOKENS.other,TOKENS.admin]){
     for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   }
+  // accountSync has an existing owner-scoped parent read. It permits the owner
+  // to read an absent child, but grants neither foreign reads nor schema writes.
+  const syncChild=`accountSync/${IDS.ordinary}/favorites`;
+  await succeeds(db('GET',syncChild,undefined,TOKENS.ordinary),'existing owner accountSync read');
+  for(const actor of [undefined,TOKENS.other,TOKENS.admin])await fails(db('GET',syncChild,undefined,actor),'foreign accountSync child denied');
+  await fails(db('PUT',syncChild,{unexpected:true},TOKENS.ordinary),'unsupported accountSync child write denied');
   await fails(db('PUT',`userPreferences/${IDS.ordinary}/favoriteTrainers/${IDS.other}`,{trainerName:NAMES.other},TOKENS.ordinary),'disabled preference write');
   await fails(db('PUT',`shareAccess/${IDS.ordinary}/${IDS.other}`,true,TOKENS.ordinary),'disabled access write');
   await fails(db('PUT',`trainerShares/${IDS.ordinary}`,{schemaVersion:1},TOKENS.admin),'disabled admin share write');

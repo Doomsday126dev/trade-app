@@ -47,7 +47,12 @@ test('PR planning precedes dependency setup and executes the same changed-area s
   assert.deepEqual(stageArgs('node'),['scripts/select-product-checks.cjs']);
   assert.deepEqual(stageArgs('browser'),['scripts/select-product-checks.cjs','--browser']);
   const browser=jobs.browser;assert.equal(browser.needs,'contracts');assert.match(browser.if,/needs.contracts.outputs.browser == 'true'/);
-  assert.equal(browser.steps.find(step=>step.name==='Exact single-worker browser shard').run,'node scripts/ci/product-evidence.cjs browser');
+  const browserRun=browser.steps.find(step=>step.name==='Exact single-worker browser shard').run;
+  assert.match(browserRun,/product-browser-shards\.cjs requires-background-emulator/);
+  assert.match(browserRun,/firebase-tools@13\.31\.2 emulators:exec --only auth,database/);
+  assert.match(browserRun,/--project demo-pogo-background-reference/);
+  assert.match(browserRun,/--config proposals\/background-v2\/bounded-reference\/firebase\.json/);
+  assert.equal((browserRun.match(/node scripts\/ci\/product-evidence\.cjs browser/g)||[]).length,2);
   assert.deepEqual(jobs['public-share'].needs,['contracts','browser']);assert.equal(jobs['public-share'].if,'always()');
   assert.equal(jobs['public-share'].steps.at(-1).run,'node scripts/ci/product-browser-shards.cjs verify product-browser-evidence');
 });

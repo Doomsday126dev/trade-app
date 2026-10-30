@@ -575,6 +575,11 @@
 "share.liveCaption":"A public page anyone can open",
 
 "share.searchCaption":"Search your own game inventory",
+"background.unavailable":"Background unavailable",
+"background.addSeparate":"Adds a separate background request; the existing request stays.",
+"share.backgrounds":"Backgrounds",
+"share.backgroundFor":"Background for {name}",
+"share.noBackground":"No background",
 "share.imageSnapshot":"Image",
 "share.textSnapshot":"Plain text",
 "share.snapshotCaption":"A snapshot of this selection",

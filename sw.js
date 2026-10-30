@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-10-29.168';
+const RELEASE='2026-10-30.169';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
@@ -101,8 +101,8 @@ const RELEASE_ASSETS=[
   'js/data/favoriteAdditions.js',
   'js/data/favoriteRecoveryPreview.js',
   'js/data/accountSyncRuntime.js',
-  'js/domain/cacheAdapters.js',
   'js/app/favoritePicker.js',
+  'js/domain/backgroundPersistence.js',
   'js/app/application.js'
 ];
 // Required for offline features/routes, but intentionally omitted from the
@@ -210,6 +210,10 @@ self.addEventListener('message',ev=>{
 });
 
 function isSpriteRequest(url){
+  // Background artwork is immutable, public and named by its SHA-256. Reuse
+  // the existing bounded sprite cache; never cache arbitrary same-origin URLs.
+  const backgroundBase=new URL('./assets/backgrounds/',self.location.href).pathname;
+  if(url.origin===self.location.origin&&!url.search&&!url.hash&&url.pathname.startsWith(backgroundBase)&&/^[a-f0-9]{64}\.(?:png|jpg|webp)$/.test(url.pathname.slice(backgroundBase.length)))return true;
   if(url.origin===self.location.origin&&/\/assets\/sprites\/go\/[a-z0-9-]+\.png$/i.test(url.pathname))return true;
   if(!SPRITE_HOSTS.includes(url.hostname))return false;
   // Restrict to image-like requests

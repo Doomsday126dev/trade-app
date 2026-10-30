@@ -26,7 +26,13 @@ function runtimeReleaseTag(releaseId){return`release-${normalizeReleaseId(releas
 function controlSelectorTag(dispatcherSha){return`${CONTROL_SELECTOR_PREFIX}${normalizeSha(dispatcherSha,'dispatcher_sha')}`;}
 function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
   const file=path.join(manifestRoot,'scripts/pages/frontend-files.json');
-  const manifest=JSON.parse(fs.readFileSync(file,'utf8'));
+  let manifest=JSON.parse(fs.readFileSync(file,'utf8'));
+  const scripts=htmlScripts(readText(root,'index.html')).map(src=>new URL(src,'https://example.test/').pathname.replace(/^\//,''));
+  const selected=Object.entries(manifest.featureOverrides||{}).filter(([script])=>scripts.includes(script));
+  if(selected.length>1)fail('Ambiguous scoped frontend manifest');
+  const override=selected[0]?.[1];
+  if(override){for(const key of Object.keys(override))if(!['entryFiles','styleFiles','scriptFiles','lazyScriptFiles','hostedOnlyScriptFiles','developmentOnlyScriptFiles','assetFiles'].includes(key))fail('Unsupported scoped manifest override');manifest={...manifest,...override};}
+
   if(manifest.schemaVersion!==1)fail('Unsupported frontend-files manifest schema');
   // Hosted tooling/disabled candidates stay available without becoming HTML
   // dependencies or service-worker install requirements. Only the immutable

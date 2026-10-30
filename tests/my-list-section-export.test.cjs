@@ -15,7 +15,7 @@ function imageHarness(locale='en'){
   const canvas={width:0,height:0,getContext(){return ctx;},toBlob(done){done({type:'image/png',size:1024});}};
   const t=(key,values={})=>String(window.PogoLocales[locale][key]||key).replace(/\{(\w+)\}/g,(_,name)=>String(values[name]??''));
   Object.assign(context,{
-    PogoDomain:window.PogoDomain,
+    PogoDomain:window.PogoDomain,productShareBackgroundSelections:new Map(),
     i18nCore:{t,getLocale:()=>locale},
     document:{createElement(){return canvas;}},
     entrySpriteUrl(entry,name,gender){artRequests.push({name,gender,catalogId:entry.catalogId});return entry.spriteUrl||name;},
@@ -28,6 +28,7 @@ function imageHarness(locale='en'){
   const source=fs.readFileSync(path.join(root,'js/app/application.js'),'utf8');
   vm.runInContext(source.slice(source.indexOf('function maxPresentationType('),source.indexOf('const MAX_CLOUD_URL=')),context);
   vm.runInContext(source.slice(source.indexOf('function catalogueVariantReleaseLabel('),source.indexOf('function refreshCombinedShinyAvailability(')),context);
+  vm.runInContext(source.slice(source.indexOf('function productSelectionKey('),source.indexOf('\nfunction ',source.indexOf('function productSelectionKey(')+1)),context);
   const start=source.indexOf('function productShareCategoryLabel('),end=source.indexOf('\nfunction refreshAll()',start);
   assert.ok(start>=0&&end>start);
   vm.runInContext(source.slice(start,end),context);

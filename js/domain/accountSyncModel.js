@@ -162,10 +162,12 @@
     return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
   }
   function canonicalOperationInput(value){
-    return[
+    const input=[
       SCHEMA_VERSION,'pogo-account-sync-operation',value.operationId,value.ownerUid,value.entityType,value.entityId,
       value.kind,value.baseGeneration,value.generation,value.baseFieldRevisions,value.patch,value.clientAt
     ];
+    if(value.expectedRevision!==undefined)input.push(['expectedRevision',value.expectedRevision]);
+    return input;
   }
   async function createOperation(input={},options={}){
     const ownerUid=firebaseKey(input.ownerUid,128),entityType=String(input.entityType||''),entityId=firebaseKey(input.entityId,700);
@@ -174,6 +176,7 @@
     if(!ownerUid||!ENTITY_TYPES.includes(entityType)||!entityId||!['add','patch','delete'].includes(kind)||baseGeneration===null||generation===null||clientAt===null||!id){
       return failure('account-sync/operation-invalid','Sync operation metadata is invalid');
     }
+    if(input.expectedRevision!==undefined&&(kind!=='delete'||integer(input.expectedRevision)===null||input.expectedRevision<1))return failure('account-sync/revision-guard-invalid','Expected source revision is invalid');
     const patch=plainObject(input.patch)?stable(input.patch):{};
     if((kind==='patch'||kind==='add')&&!Object.keys(patch).length)return failure('account-sync/patch-empty','Sync operation has no fields');
     if(kind!=='patch'&&kind!=='add'&&Object.keys(patch).length)return failure('account-sync/patch-unexpected','Delete operations cannot include fields');
@@ -188,7 +191,7 @@
     if(kind!=='patch'&&generation!==baseGeneration+1)return failure('account-sync/generation-invalid','Lifecycle generation is invalid');
     const identity=stable(input.identity||{});
     if(kind==='add'&&!identityValid(entityType,entityId,identity))return failure('account-sync/identity-invalid','Sync entity identity is invalid');
-    const value={schemaVersion:SCHEMA_VERSION,operationId:id,ownerUid,entityType,entityId,kind,baseGeneration,generation,baseFieldRevisions,patch,identity:kind==='add'?identity:null,clientAt};
+    const value={schemaVersion:SCHEMA_VERSION,operationId:id,ownerUid,entityType,entityId,kind,baseGeneration,generation,baseFieldRevisions,patch,identity:kind==='add'?identity:null,clientAt,...(input.expectedRevision!==undefined?{expectedRevision:input.expectedRevision}:{})};
     const inputHash=await sha256Hex(canonicalJson(canonicalOperationInput(value)),options.crypto||global.crypto);
     return Object.freeze({ok:true,value:Object.freeze({...value,inputHash})});
   }

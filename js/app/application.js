@@ -452,6 +452,7 @@ const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
   if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;variantClarificationDraft=null;combinedRowCache.clear();combinedLimit=120;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();}
   const host=document.getElementById('combined-list');if(!host)return;
+  const focusedRowControl=host.contains(document.activeElement)&&document.activeElement.closest('.wants-row')?document.activeElement:null;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   // The model is fresh for every render; cache only within this synchronous pass.
   const renderKeys=new WeakMap(),keyFor=entry=>{if(!renderKeys.has(entry))renderKeys.set(entry,combinedKey(entry));return renderKeys.get(entry);};
@@ -502,12 +503,13 @@ function renderCombinedList(model=productDeclarations()){
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
-    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',catalogueVariantReleaseLabel(e),catalogueVariantReleaseLabel(e)],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+    const backgroundLabel=e.isBackgroundV2?(productShareBackgroundChoices(e).find(item=>item.id===e.backgroundId)?.label||i18nCore.t('background.unavailable')):'';
+    const traits=[['detail',backgroundLabel,backgroundLabel],['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',catalogueVariantReleaseLabel(e),catalogueVariantReleaseLabel(e)],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
-      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,{returnFocus:this})">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,{returnFocus:this})" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
@@ -535,6 +537,7 @@ function renderCombinedList(model=productDeclarations()){
   active.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
   while(host.children.length>active.length)host.lastElementChild.remove();
   if(!active.length)host.innerHTML=`<p class="empty" role="status">${escHtml(i18nCore.t(wantsPriorityFilter==='ALL'?'contextSearch.empty':'workflow.priorityEmpty',{priority:wantSectionLabel({priority:wantsPriorityFilter,flags:[]})}))}</p>`;
+  if(focusedRowControl&&!focusedRowControl.isConnected&&document.activeElement===document.body)document.getElementById('wants-add-name')?.focus({preventScroll:true});
   const visibleNodes=new Set(nodes),groupKeys=new Set(groups.map(entries=>keyFor(entries[0])));
   for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const cacheBudget=sections.reduce((sum,section,index)=>sum+Math.max(wantsSectionLimits.get(section.key)||0,limits[index]),0);
@@ -687,12 +690,33 @@ function prepareWantsCatalog(){
 // Review states remain available to catalogue monitoring; uncertain availability is not a user-facing label.
 function catalogueVariantReleaseLabel(entry){return '';}
 
+function refreshCombinedBackgroundChoices(){
+  const host=document.getElementById('combined-background-field'),select=document.getElementById('combined-background');
+  if(!host||!select)return;
+  const active=backgroundCatalogueReady()&&(backgroundV2PrototypeAdapter?.testOnly===true||(BACKGROUND_ROLLOUT.enabled&&!!auth?.currentUser?.uid));
+  const name=document.getElementById('combined-name').value,catalog=active?accountSyncCatalogIdentity('wishlist',name):null;
+  const source=catalog?_nameToSpriteEntry(name):null,category=source?(maxTypeForEntry(source,'wishlist')||'wishlist'):'wishlist';
+  const entry={name,catalogId:catalog?.catalogId,category,shiny:document.getElementById('combined-shiny').checked,gender:document.getElementById('combined-gender').value};
+  const choices=catalog?productShareBackgroundChoices(entry):[],saved=combinedEditor?.entries?.[0];
+  const valueFor=backgroundChoiceValue;
+  const previous=select.value;
+  host.hidden=!active||(!choices.length&&!saved?.isBackgroundV2);
+  select.innerHTML=`<option value="">${escHtml(i18nCore.t('share.noBackground'))}</option>`+choices.map(choice=>`<option value="${escAttr(valueFor(choice))}">${escHtml(choice.label)}${BackgroundEditorAdapter.intrinsicBinding(choice.catalogId)?' · '+escHtml(BackgroundEditorAdapter.intrinsicBinding(choice.catalogId).name):''}</option>`).join('');
+  if(choices.some(choice=>valueFor(choice)===previous))select.value=previous;else select.value='';
+  select.disabled=(BACKGROUND_ROLLOUT.enabled&&backgroundOwnerRuntime?.paused)||!!saved?.isBackgroundV2&&!choices.some(choice=>choice.id===saved.backgroundId&&choice.catalogId===saved.catalogId);
+  renderCombinedBackgroundHelp();
+}
+function renderCombinedBackgroundHelp(){
+  const host=document.getElementById('combined-background-help'),value=document.getElementById('combined-background')?.value;
+  if(!host)return;host.textContent='';renderCombinedPokemonSummary();
+}
 function refreshCombinedShinyAvailability(){
   const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
   const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
   box.disabled=!!blocked&&!box.checked;
   hint.hidden=!blocked;hint.textContent=blocked?i18nCore.t(status==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased'):'';
   renderCombinedPokemonSummary();
+  refreshCombinedBackgroundChoices();
 }
 function combinedAllowedGenders(name){
   const eligibility=window.PogoDomain.publicPokemonDex.variantStatus?.(name);if(eligibility)return eligibility.genders;
@@ -720,6 +744,7 @@ function refreshCombinedGenderOptions(savedValue){
   const hint=document.getElementById('combined-gender-hint');
   hint.hidden=!preserve&&allowed.length!==1;hint.textContent=preserve?i18nCore.t('costume.genderConflict'):allowed.length===1?i18nCore.t('wantEditor.releasedGender',{gender:label(allowed[0])}):'';
   renderCombinedPokemonSummary();
+  refreshCombinedBackgroundChoices();
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
@@ -731,14 +756,16 @@ function setCombinedPriority(value){
 function renderCombinedPokemonSummary(){
   const host=document.getElementById('combined-identity'),input=document.getElementById('combined-name'),field=document.getElementById('combined-name-field');
   if(!host||!input||!field)return;
-  const entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
+  let entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
+  const choice=backgroundExportCatalog.records.find(r=>backgroundChoiceValue(r)===document.getElementById('combined-background')?.value);if(choice&&BackgroundEditorAdapter.intrinsicBinding(choice.catalogId))entry=accountSyncCatalogEntryForId(choice.catalogId)||entry;
   const show=!!entry&&!field.dataset.editing;
   host.hidden=!show;field.hidden=show;
   if(!show)return;
   const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
   document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
   document.getElementById('combined-identity-art').innerHTML=entry.no?spriteImg(entry.no,60,'combined-identity-sprite',name,gender,entry.dn||entry.displayName||name,{shiny,catalogId:entry.catalogId}):'';
-  const type=maxPresentationType({name}),form=document.getElementById('combined-identity-form');
+  const savedCategory=combinedEditor?.entries?.[0]?.category;
+  const type=maxPresentationType({name})||(['dynamax','gmax'].includes(savedCategory)?savedCategory:''),form=document.getElementById('combined-identity-form');
   form.replaceChildren();form.hidden=!type;
   if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
   const release=document.getElementById('combined-identity-release'),releaseLabel=catalogueVariantReleaseLabel({name,shiny});
@@ -754,7 +781,7 @@ function changeCombinedPokemon(){
 function finishCombinedPokemonChoice(){
   const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
   if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
-  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();
+  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
   if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
 }
 function openWantsAddEditor(opener=document.activeElement){
@@ -774,7 +801,7 @@ async function submitWantsAdd(){
   button.disabled=true;
   try{
     openWantsAddEditor(button);await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';input.focus({preventScroll:true});}
+    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';closeWantsPicker(input);input.focus({preventScroll:true});}
   }finally{button.disabled=false;}
 }
 function useBoardSelection(){
@@ -784,21 +811,26 @@ function useBoardSelection(){
 function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  combinedEditor.sourceEntities=accountSyncClone([...new Map((entries||[]).flatMap(e=>[e,...e.aliases||[]]).filter(e=>!e.isBackgroundV2&&e.ref?.surface!=='background-prototype').map(combinedSourceEntity).filter(Boolean).map(e=>[e.entityId,e])).values()]);
+  combinedEditor.backgroundSource=entries?.[0]?.isBackgroundV2?accountSyncClone(backgroundOwnerRuntime?.repository.snapshot().entries.find(r=>BackgroundTransitions.recordKey(r)===entries[0].key)):null;
   variantClarificationDraft=null;setClarificationControlsLocked(false);
   document.querySelector('#combined-editor-modal form').classList.remove('clarification-copy-created');
   document.getElementById('combined-save').hidden=false;
   const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
-  const entry=entries?.[0]||{},input=document.getElementById('combined-name');
+  let entry=entries?.[0]||{};if(entries?.length===1&&!entry.isBackgroundV2){const saved=combinedSourceEntity(entry);if(saved?.values){const v=saved.values;entry={...entry,note:v.note||'',mod:v.variant||'',gender:v.gender||'',lucky:!!v.lucky,shiny:!!v.shiny,xxl:!!v.xxl,xxs:!!v.xxs,qty:v.quantity||1,mirror:!!v.mirror,sortOrder:v.sortOrder||0};}}
+  const input=document.getElementById('combined-name');
   const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
-  input.value=entry.name||'';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
+  input.value=entry.name||'';document.getElementById('combined-background').value='';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
   if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';
   document.getElementById('combined-preferences').open=false;
   prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
+  combinedEditor.initialValues=Object.fromEntries(['mod','note','gender','shiny','lucky','xxl','xxs'].map(field=>{const input=document.getElementById('combined-'+field);return [field,input.type==='checkbox'?input.checked:input.value];}));
   refreshCombinedShinyAvailability();
+  if(entry.isBackgroundV2)document.getElementById('combined-background').value=backgroundChoiceValue({id:entry.backgroundId,catalogId:entry.catalogId});
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
   setCombinedPriority([...priorities][0]||'');
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
@@ -918,7 +950,7 @@ async function removeClarifiedOriginal(){
     const result=await applyAccountSyncTradeMutations([{kind:'delete',entityType:'tradeEntry',entityId:draft.source.entityId,expectedGeneration:draft.source.generation}],draft.controller);
     if(!clarificationSessionCurrent(draft))return;
     if(!result?.ok){clarificationMessage('failed');return;}
-    closeModal('combined-editor-modal');renderMyList();
+    renderMyList();closeModal('combined-editor-modal');
   }catch{if(clarificationSessionCurrent(draft))clarificationMessage('failed');}finally{if(clarificationSessionCurrent(draft))button.disabled=false;}
 }
 function combinedSourceEntity(entry){
@@ -951,8 +983,41 @@ async function saveCombinedEditor(remove=false){
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
   button.disabled=true;
   try{
+    const selected=document.getElementById('combined-background')?.value||'',prototypeEntry=draft.entries[0]?.isBackgroundV2;
+    if((selected||prototypeEntry)&&backgroundCatalogueReady()){
+      if(!backgroundV2PrototypeAdapter&&BACKGROUND_ROLLOUT.enabled){await enrollBackgroundRequests({quiet:true});if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;refreshCombinedBackgroundChoices();}
+      if(!backgroundV2PrototypeAdapter)return fail('product.editSyncRequired');
+      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
+      if(!remove&&draft.entries.length&&((selected&&!prototypeEntry)||(!selected&&prototypeEntry))){
+        const authority=await accountSyncMutationAuthority();if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+        if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail('product.editSyncRequired');
+        const runtime=backgroundOwnerRuntime,transitions=backgroundTransitionsForRuntime(runtime,authority.controller);let plan;
+        if(prototypeEntry){const source=draft.backgroundSource;if(!source)return fail('phase2.changed');
+          const identity=source.plainIdentity||{surface:'my-list',lane:draft.entries[0].category||'wishlist',catalogId:source.catalogId};
+          const values=accountSyncProduct.tradeValues({...source,...changes,priority,variant:changes.mod,quantity:source.quantity,sortOrder:source.sortOrder||0,mirror:!!source.mirror,backgroundId:''});
+          plan={direction:'plain',source,identity,targetId:accountSyncModel.tradeEntryId(identity),values};
+        }else{const sources=draft.sourceEntities||[];if(sources.length!==1)return fail('accountSync.editReview');const source=sources[0],entry=_nameToSpriteEntry(name),category=maxTypeForEntry(entry,'wishlist')||'wishlist';
+          const choice=productShareBackgroundChoices({name,catalogId:catalog.catalogId,category,shiny:changes.shiny,gender:changes.gender}).find(item=>backgroundChoiceValue(item)===selected);if(!choice)return fail('phase2.changed');
+          plan={direction:'background',source,target:{catalogId:choice.catalogId,backgroundId:choice.id,priority,variant:changes.mod,gender:changes.gender,note:changes.note,shiny:changes.shiny,lucky:changes.lucky,xxl:changes.xxl,xxs:changes.xxs,quantity:source.values.quantity||1,sortOrder:source.values.sortOrder||0,mirror:!!source.values.mirror,plainIdentity:{...source.identity,catalogId:choice.catalogId}}};
+        }
+        const result=await transitions.start(plan);renderBackgroundRecovery();if(!result.ok)return fail(result.code==='target-collision'?'clarify.collision':'phase2.changed');
+        if(draft===combinedEditor){closeModal('combined-editor-modal');renderMyList();}return;
+      }
+      if(remove&&prototypeEntry)await backgroundV2PrototypeAdapter.remove(draft.uid,draft.entries[0].key,draft.entries[0].revision);
+      else if(!remove){
+        const source=_nameToSpriteEntry(name),category=maxTypeForEntry(source,'wishlist')||'wishlist';
+        const choice=productShareBackgroundChoices({name,catalogId:catalog.catalogId,category,shiny:changes.shiny,gender:changes.gender}).find(item=>backgroundChoiceValue(item)===selected);
+        if(!choice)return fail('phase2.changed');
+        await backgroundV2PrototypeAdapter.save(draft.uid,{name,catalogId:choice.catalogId,category,backgroundId:choice.id,p:priority,...changes,qty:draft.entries[0]?.qty||draft.entries[0]?.quantity||1,...(prototypeEntry?{mirror:!!draft.entries[0].mirror,sortOrder:draft.entries[0].sortOrder||0,plainIdentity:draft.entries[0].plainIdentity?{...draft.entries[0].plainIdentity,catalogId:choice.catalogId}:undefined}:{} )},{expectedKey:prototypeEntry?draft.entries[0].key:'',expectedRevision:prototypeEntry?draft.entries[0].revision:0});
+      }
+      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+      try{await publishSavedBackgroundChange();}catch{}
+      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+      closeModal('combined-editor-modal');renderMyList();return;
+    }
     const authority=await accountSyncMutationAuthority();
-    if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
+    if(draft!==combinedEditor)return;
+    if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||draft.sessionGeneration!==_sessionTransientGeneration||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail(accountSyncEditFailureKey(authority.code));
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
     for(const side of ['lf']){
@@ -964,9 +1029,8 @@ async function saveCombinedEditor(remove=false){
           if(!sides.includes(side)){mutations.push({kind:'delete',entityType:'tradeEntry',entityId:entity.entityId});continue;}
           const patch={};
           for(const [field,value] of Object.entries(changes)){
-            const empty=['shiny','lucky','xxl','xxs'].includes(field)?false:'';
             // A priority-only edit must not overwrite differing saved notes or flags.
-            if(value!==(draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
+            if(value!==draft.initialValues[field])patch[field==='mod'?'variant':field]=value;
           }
           if(side==='lf'&&priority!=='mixed'&&priority!==entry.p)patch.priority=priority;
           // Keep the existing list encoder's gender representation coherent.
@@ -988,7 +1052,7 @@ async function saveCombinedEditor(remove=false){
     if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
     closeModal('combined-editor-modal');renderMyList();
-  }catch(error){fail(accountSyncEditFailureKey(error?.code));}
+  }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
   finally{button.disabled=false;}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
@@ -1172,6 +1236,7 @@ function canvasSafeSpriteUrl(url){
   return url;
 }
 function spriteCatalogContext(no,name='',dn='',catalogId=''){
+  const binding=BackgroundEditorAdapter.intrinsicBinding(catalogId);if(binding){const base=accountSyncCatalogEntryForId(binding.baseCatalogId);if(base)return Object.freeze({...spriteCatalogContext(no,base.name,base.displayName||base.name,binding.baseCatalogId),catalogId:binding.catalogId,override:null});}
   const rawName=String(name||dn||'').trim();
   const resolved=pokemonCatalogDomain.resolveLegacyKey(rawName)||pokemonCatalogDomain.resolveLegacyKey(dn);
   const decorated=pokemonCatalogDomain.decorateCatalogEntry({no:Number(no)||null,name:resolved?.canonicalKey||rawName,displayName:dn||rawName,catalogId:catalogId||resolved?.catalogId});
@@ -1183,6 +1248,7 @@ function spriteCatalogContext(no,name='',dn='',catalogId=''){
   return Object.freeze({catalogId:canonicalId,canonicalName:decorated?.name||rawName,lookupKeys:uniqueLookupKeys,reviewed,unresolved,override:canonicalSpriteOverride(canonicalId)});
 }
 function entrySpriteUrl(entry,nameOverride='',gender=''){
+  const binding=BackgroundEditorAdapter.intrinsicBinding(entry?.catalogId);if(binding){const base=accountSyncCatalogEntryForId(binding.baseCatalogId);return base?publicSpriteUrls(base.name,binding.artGender||gender||entry?.gender||'',base.no,entry?.shiny===true)[0]||null:null;}
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(spriteSlugsDomain.isAmbiguousVisibleForm(context.canonicalName||resolvedName,entry?.no))return null;
@@ -1271,6 +1337,7 @@ function pokemondbSpriteUrl(name,dn,gender=''){
 //   3. Pokémon Database HOME render
 //   4. PokeAPI base dex
 function spriteFallbackChain(no,name,gender='',dn='',catalogId='',shiny=false){
+  const binding=BackgroundEditorAdapter.intrinsicBinding(catalogId);if(binding){const base=accountSyncCatalogEntryForId(binding.baseCatalogId);return base?Array.from(publicSpriteUrls(base.name,binding.artGender||gender,no,shiny)):[];}
   const urls=[];
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
@@ -2954,7 +3021,7 @@ function publicShareSnapshotForUser(username,source=allData,trigger='explicit_sh
   return publicSharePublicationDomain.buildPublicShareSnapshot({
     gate:managedPublicSharePublication,
     token:activePublicShareHydrationToken,
-    trigger,username,source,canonical,declarations:productDeclarations(username,source).entries
+    trigger,username,source,canonical,declarations:productDeclarations(username,source).entries.filter(entry=>!entry.isBackgroundV2)
   });
 }
 function applyPublicShareSnapshot(s,snapshot){
@@ -2973,7 +3040,7 @@ function applyPublicShareSnapshot(s,snapshot){
     lastSeen:null,
     lastUpdated:Number(profile.lastUpdated||snapshot.updatedAt||0)||null
   };
-  if(snapshot.version===2)s.users[username].publicDeclarations=snapshot.declarations;
+  if(snapshot.version===2||snapshot.version===3)s.users[username].publicDeclarations=snapshot.declarations;
   const lists=snapshot.lists&&typeof snapshot.lists==='object'?snapshot.lists:{};
   PUBLIC_SHARE_TYPES.forEach(type=>{
     if(!s[type])s[type]={};
@@ -2993,6 +3060,10 @@ function publicSharePublicationCurrent(result){
 }
 let lateLegacyPublicAcknowledgement=null;
 function publicSnapshotContentKey(snapshot,username){
+  if(BACKGROUND_ROLLOUT.enabled&&backgroundOwnerRuntime?.uid===auth?.currentUser?.uid&&username===cur){if(localStorage.getItem('background-transition-v1:'+auth.currentUser.uid))return null;const state=backgroundOwnerRuntime.repository.snapshot();if(state.pending||backgroundOwnerRuntime.remoteUnavailable||backgroundOwnerRuntime.hydrating||backgroundOwnerRuntime.remoteHead!==undefined&&backgroundOwnerRuntime.remoteHead!==state.head)return null;if(!state.entries.length&&!backgroundOwnerRuntime.active)return publicSnapshotContentKeyPlain(snapshot,username);snapshot={...snapshot,version:3,backgroundRef:backgroundOwnerRuntime.token,backgroundRevision:'r'+state.head};}
+  return publicSnapshotContentKeyPlain(snapshot,username);
+}
+function publicSnapshotContentKeyPlain(snapshot,username){
   const normalized=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
   if(!normalized.ok)return null;
   const {updatedAt,...content}=normalized.snapshot;return accountSyncModel.canonicalJson(content);
@@ -3119,9 +3190,11 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
   }
   return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
 }
-async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
+async function writeVerifiedLegacyPublicSnapshot(username,snapshot,{explicitBackgrounds=false}={}){
   const token=activePublicShareHydrationToken;
   if(!publicShareSessionMatches(username))throw new Error('share-publication/session-changed');
+  let backgroundRuntime=null;
+  if(BACKGROUND_ROLLOUT.enabled){if(localStorage.getItem('background-transition-v1:'+auth?.currentUser?.uid))throw Error('background-transition-pending');backgroundRuntime=await ensureBackgroundOwnerRuntime();if(backgroundRuntime){const state=backgroundRuntime.repository.snapshot(),visible=(await get(ref(db,'backgroundStores/'+backgroundRuntime.token+'/visible'))).val()===true;if(!explicitBackgrounds&&!visible&&state.entries.length){const prior=await get(ref(db,'publicShares/'+username));if(!publicShareSessionMatches(username))throw Error('session-changed');explicitBackgrounds=prior.exists()&&publicSharePublicationDomain.publicShareProjectionStatus(prior.val(),{username}).ok;}if(explicitBackgrounds||visible){if(state.pending)throw Error('background-pending');if(state.entries.length||backgroundRuntime.active){backgroundPublicDeclarations(state.entries);const shareRef=await backgroundRuntime.adapter.shareReference();if(explicitBackgrounds)await set(ref(db,'backgroundStores/'+backgroundRuntime.token+'/visible'),true);snapshot={...snapshot,version:3,...shareRef};}}}}
   const target=ref(db,`publicShares/${username}`);
   const proof=lateLegacyPublicAcknowledgement;
   if(proof){
@@ -3144,6 +3217,7 @@ async function writeVerifiedLegacyPublicSnapshot(username,snapshot){
   const normalized=publicSharePublicationDomain.publicShareProjectionStatus(readback.exists()?readback.val():null,{username});
   const expected=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username});
   if(token!==activePublicShareHydrationToken||!publicShareSessionMatches(username)||!normalized.ok||!expected.ok||accountSyncModel.canonicalJson(normalized.snapshot)!==accountSyncModel.canonicalJson(expected.snapshot))throw new Error('share-publication/not-current');
+  if(explicitBackgrounds&&backgroundRuntime&&backgroundRuntime.repository.snapshot().entries.length){await set(ref(db,'backgroundOwnerIndex/'+backgroundRuntime.uid+'/active'),true);backgroundRuntime.active=true;}
 }
 
 function currentPublicLinkConfirmation(){
@@ -3917,11 +3991,13 @@ function buildAccountSyncCatalogIndex(){
   return accountSyncCatalogIndex;
 }
 function accountSyncCatalogEntryForId(catalogId,identity={}){
+  const binding=BackgroundEditorAdapter.intrinsicBinding(catalogId);if(binding){const base=accountSyncCatalogEntryForId(binding.baseCatalogId,identity);return base?{...base,catalogId:binding.catalogId,name:binding.name,displayName:binding.name,legacyAliases:[],searchAliases:[]}:null;}
   const index=buildAccountSyncCatalogIndex(),id=String(catalogId||'');
   const lane=index.byLane.get(identity?.lane);
   return lane?.get(id)||index.byId.get(id)||null;
 }
 function accountSyncCatalogEntryForName(lane,name){
+  const binding=BackgroundEditorAdapter.intrinsicBindingForName(name);if(binding&&lane==='wishlist')return accountSyncCatalogEntryForId(binding.catalogId,{lane});
   const index=buildAccountSyncCatalogIndex(),key=pokemonCatalogDomain.normalizeCatalogKey(name);
   if(!key)return null;
   const exact=index.aliasesByLane.get(lane)?.get(key);
@@ -4054,7 +4130,7 @@ function providerAccountSyncPublicSnapshot(acceptedRows,session){
     publishedListTypes:[...OWNED_MY_LIST_TYPES],updatedAt:Math.max(1,Number(validProfile.value.lastUpdated)||Date.now())
   };
   const source={users:{[session.username]:{specialTradeBoard:projected.board,intentDeclarations:projected.intentDeclarations}},...Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,{[session.username]:projected.lists[type]}]))};
-  snapshot.version=2;snapshot.declarations=publicSharePublicationDomain.publicDeclarations(productDeclarations(session.username,source).entries);snapshot.declarationCount=snapshot.declarations.length;
+  snapshot.version=2;snapshot.declarations=publicSharePublicationDomain.publicDeclarations(productDeclarations(session.username,source).entries.filter(entry=>!entry.isBackgroundV2));snapshot.declarationCount=snapshot.declarations.length;
   const strict=providerPublicProjectionDomain.publicSnapshotStatus(snapshot,{trainerName:session.username});
   if(!strict.ok)throw providerFailure('provider-public/projection-invalid');
   return strict.snapshot;
@@ -4098,7 +4174,7 @@ async function publishAccountSyncProjection(acceptedRows,operation,activity){
   }
   if(!built.ok)throw Object.assign(new Error('Public projection is pending or unavailable'),{code:built.error?.code||'account-sync/public-projection-failed'});
   if(!currentSession())throw new Error('share-publication/session-changed');
-  await writeVerifiedLegacyPublicSnapshot(username,built.snapshot);
+  await writeVerifiedLegacyPublicSnapshot(username,built.snapshot,{explicitBackgrounds:/^explicit[-_]share$/.test(operation?.kind||'')});
   if(!currentSession())throw new Error('share-publication/session-changed');
   rememberPublicLinkConfirmation(built.snapshot,token);
   return{ok:true,status:'published'};
@@ -4325,6 +4401,8 @@ async function applyAccountSyncTradeMutations(mutations,controller=managedAccoun
   return controller.mutateBatch(mutations.map(mutation=>({
     entityType:mutation.entityType,entityId:mutation.entityId,identity:mutation.identity,kind:mutation.kind,
     ...(mutation.expectedGeneration!==undefined?{intentExpectedGeneration:mutation.expectedGeneration}:{}),
+    ...(mutation.expectedRevision!==undefined?{intentExpectedRevision:mutation.expectedRevision}:{}),
+    ...(mutation.operationId?{intentOperationId:mutation.operationId,intentClientAt:mutation.clientAt}:{}),
     patch:mutation.kind==='add'?mutation.values:(mutation.kind==='patch'?mutation.patch:{})
   })));
 }
@@ -5060,8 +5138,11 @@ async function loadPublicShareData(username,{requestGeneration=null}={}){
         const canonicalUsername=provider.snapshot.username;
         const s=selectedTrainerData(canonicalUsername);
         if(!applyPublicShareSnapshot(s,provider.snapshot))return{ok:false,status:'projection_unsupported'};
+        const backgroundRows=await resolveBackgroundPublicRows(provider.snapshot);
+        if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
+        appendResolvedBackgroundRows(s,canonicalUsername,backgroundRows);
         selectedTrainerRuntime.source='provider';
-        allData=runtimeDataWithSelectedTrainer(getLocal());setSyncStatus('online');return{...provider,username:canonicalUsername};
+        allData=canonicalUsername===cur?getLocal():runtimeDataWithSelectedTrainer(getLocal());setSyncStatus('online');return{...provider,username:canonicalUsername};
       }
       if(!['not_found','unavailable','disabled'].includes(provider.status))return{ok:false,status:'projection_unsupported'};
     }
@@ -5069,11 +5150,14 @@ async function loadPublicShareData(username,{requestGeneration=null}={}){
     if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
     if(!snap.exists())return{ok:false,status:'not_published'};
     const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.val(),{username});
+    const backgroundRows=projection.ok?await resolveBackgroundPublicRows(projection.snapshot):[];
+    if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
     if(!projection.ok)return projection;
     const s=selectedTrainerData(username);
     if(!applyPublicShareSnapshot(s,projection.snapshot))return{ok:false,status:'projection_unsupported'};
+    appendResolvedBackgroundRows(s,username,backgroundRows);
     selectedTrainerRuntime.source='legacy';
-    allData=runtimeDataWithSelectedTrainer(getLocal());
+    allData=username===cur?getLocal():runtimeDataWithSelectedTrainer(getLocal());
     setSyncStatus('online');
     return projection;
   }catch(e){
@@ -5110,7 +5194,9 @@ function clearShareViewSubscriptions(){
   clearSelectedTrainerData();
   allData=getLocal();
 }
-function onPublicShareSnapshot(username,snap){
+let backgroundShareSubscriptionGeneration=0;
+async function onPublicShareSnapshot(username,snap){
+  const generation=++backgroundShareSubscriptionGeneration,requestGeneration=_publicShareRequestGeneration;
   const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.exists()?snap.val():null,{username});
   if(!projection.ok){
     selectedTrainerRuntime={username,publicData:null,source:''};
@@ -5120,10 +5206,13 @@ function onPublicShareSnapshot(username,snap){
     }
     return;
   }
+  let backgroundRows;try{backgroundRows=await resolveBackgroundPublicRows(projection.snapshot);}catch{if(generation===backgroundShareSubscriptionGeneration&&selectedTrainerRuntime.username===username)renderUnavailableShareView(username,i18nCore.t('trainer.sharedReadFailed'));return;}
+  if(generation!==backgroundShareSubscriptionGeneration||requestGeneration!==_publicShareRequestGeneration||selectedTrainerRuntime.username!==username)return;
   const s=selectedTrainerData(username);
   if(!applyPublicShareSnapshot(s,projection.snapshot))return;
+  appendResolvedBackgroundRows(s,username,backgroundRows);
   selectedTrainerRuntime.source='legacy';
-  allData=runtimeDataWithSelectedTrainer(getLocal());
+  allData=username===cur?getLocal():runtimeDataWithSelectedTrainer(getLocal());
   setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
     renderShareView(_activeShareView.username,_activeShareView.type);
@@ -6056,18 +6145,18 @@ function ensureFavoriteShareSessionCache(){
   if(!favoriteShareSessionCache){
     const favoriteRepository=Object.freeze({
       async read(displayName,{targetUid=''}={}){
-        if(!targetUid)return managedPublicShareRepository.read(displayName);
+        if(!targetUid)return resolveBackgroundConsumerResult(await managedPublicShareRepository.read(displayName));
         let identity;
         try{identity=await resolveFavoriteIdentityForSession(displayName,targetUid);}
         catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
         if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
-        if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.read(identity.canonicalTrainerName);
+        if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return resolveBackgroundConsumerResult(await managedPublicShareRepository.read(identity.canonicalTrainerName));
         let provider;
         try{provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName);}
         catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
-        if(provider?.ok)return{ok:true,value:provider.snapshot};
+        if(provider?.ok)return resolveBackgroundConsumerResult({ok:true,value:provider.snapshot});
         if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
-        return managedPublicShareRepository.read(identity.canonicalTrainerName);
+        return resolveBackgroundConsumerResult(await managedPublicShareRepository.read(identity.canonicalTrainerName));
       }
     });
     favoriteShareSessionCache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({
@@ -7167,14 +7256,125 @@ function switchTab(t,opts={}){
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
 }
-let productShareScope='full',productShareSnapshot=[],productShareOwner='',productShareMode='link';
+let productShareScope='full',productShareSnapshot=[],productShareOwner='',productShareOwnerUid='',productShareMode='link';
+// Worldwide coverage remains incomplete; only explicitly reviewed subset records can be activated.
+let backgroundExportCatalog={coverageComplete:false,records:[]};
+function backgroundCatalogueReady(){return backgroundExportCatalog.coverageComplete===true||(BACKGROUND_ROLLOUT.enabled&&backgroundExportCatalog.loaded===true&&backgroundExportCatalog.releaseScope==='verified-subset');}
+let productShareBackgroundSelections=new Map();
+// Local prototype adapter only. No production adapter is wired or enabled.
+let backgroundV2PrototypeAdapter=null;
+// Rollout remains off until the exact subset, Rules and readers qualify.
+const BACKGROUND_ROLLOUT={enabled:true};
+let backgroundCatalogueLoading=null;
+async function loadReviewedBackgroundCatalogue(){
+  // No catalogue request or owner/database access while rollout is disabled.
+  if(!BACKGROUND_ROLLOUT.enabled||backgroundExportCatalog.loaded||backgroundExportCatalog.records.length)return backgroundExportCatalog;
+  if(!backgroundCatalogueLoading)backgroundCatalogueLoading=(async()=>{
+    const response=await fetch('data/background-runtime-catalog.json?v='+encodeURIComponent(window.PogoDomain.clientRelease.RELEASE_ID),{cache:'force-cache'});
+    if(!response.ok)throw Error('background-catalogue-unavailable');
+    backgroundExportCatalog=BackgroundEditorAdapter.readCatalogue(await response.json(),{resolveEntry:accountSyncCatalogEntryForId});
+    return backgroundExportCatalog;
+  })().catch(()=>backgroundExportCatalog={coverageComplete:false,records:[]}).finally(()=>{backgroundCatalogueLoading=null;});
+  return backgroundCatalogueLoading;
+}
+let backgroundOwnerRuntime=null,backgroundRuntimeLoading=null;
+function backgroundSession(){return{uid:auth?.currentUser?.uid||'',generation:_sessionTransientGeneration};}
+function backgroundEligible(record){const source=accountSyncCatalogEntryForId(record.catalogId);if(!source)return false;const category=maxTypeForEntry(source,'wishlist')||'wishlist';return productShareBackgroundChoices({...source,catalogId:record.catalogId,category,shiny:record.shiny,gender:record.gender}).some(choice=>choice.id===record.backgroundId);}
+async function ensureBackgroundOwnerRuntime(){
+  if(BACKGROUND_ROLLOUT.enabled)await loadReviewedBackgroundCatalogue();
+  if(!BACKGROUND_ROLLOUT.enabled||!backgroundCatalogueReady()||!auth?.currentUser?.uid||!db)return null;
+  const session=backgroundSession();if(backgroundOwnerRuntime?.uid===session.uid&&backgroundOwnerRuntime.generation===session.generation)return backgroundOwnerRuntime;
+  if(backgroundRuntimeLoading)return backgroundRuntimeLoading;
+  backgroundRuntimeLoading=(async()=>{
+    const same=()=>{const now=backgroundSession();return now.uid===session.uid&&now.generation===session.generation;};
+    let indexUnavailable=false,token;const cacheKey='background-store-token:'+session.uid;try{token=(await get(ref(db,'backgroundOwnerIndex/'+session.uid+'/token'))).val();if(/^bgs_[a-z0-9]{32}$/.test(token||''))localStorage.setItem(cacheKey,token);}catch{indexUnavailable=true;token=localStorage.getItem(cacheKey);}if(!same())throw Error('session-changed');
+    if(!/^bgs_[a-z0-9]{32}$/.test(token||''))return null;
+    const transport=async(method,path,value)=>{if(!same())throw Error('session-changed');const target=ref(db,path);let result;if(method==='GET'){const s=await get(target);result={status:200,value:s.val()};}else{if(method==='PATCH')await update(target,value);else if(method==='PUT')await set(target,value);else if(method==='DELETE')await set(target,null);else throw Error('unsupported-operation');result={status:200};}if(!same())throw Error('session-changed');return result;};
+    const protocol=BackgroundProtocol.createProtocol({token,db:transport,isEligible:backgroundEligible,bounded:true});
+    const repository=BackgroundRepository.createRepository({uid:session.uid,token,protocol,storage:localStorage,currentSession:backgroundSession,readHead:async()=>{const value=(await get(ref(db,'backgroundStores/'+token+'/head'))).val();if(value!==null&&!Number.isSafeInteger(value))throw Error('invalid-head');return value||0;}});
+    const adapter=BackgroundEditorAdapter.createEditorAdapter({repository,uid:session.uid,currentUid:()=>auth?.currentUser?.uid||'',catalogForId:accountSyncCatalogEntryForId});
+    let unavailable=indexUnavailable;try{await repository.hydrate();}catch(error){if(!repository.snapshot().head&&!repository.snapshot().pending)throw error;unavailable=true;}if(!same())throw Error('session-changed');let active=true,paused=false;try{active=(await get(ref(db,'backgroundOwnerIndex/'+session.uid+'/active'))).val()===true;paused=(await get(ref(db,'backgroundStores/'+token+'/mode'))).val()==='maintenance';}catch{unavailable=true;}backgroundOwnerRuntime={...session,token,protocol,repository,adapter,active,paused,remoteUnavailable:unavailable};backgroundV2PrototypeAdapter=adapter;const runtime=backgroundOwnerRuntime;managedSubscriptions.subscribe({key:'session:background-owner',scope:'session',fingerprint:session.uid+':'+session.generation+':'+token,start:({next,error})=>onValue(ref(db,'backgroundStores/'+token+'/head'),next,error),onValue:snapshot=>{if(backgroundOwnerRuntime!==runtime||!same())return;const head=snapshot.val();if(head!==null&&!Number.isSafeInteger(head)){runtime.remoteUnavailable=true;clearPublicLinkFeedback();renderBackgroundRecovery();return;}runtime.remoteUnavailable=false;runtime.remoteHead=head||0;const state=repository.snapshot();if(runtime.remoteHead!==state.head){clearPublicLinkFeedback();if(!state.pending&&!runtime.hydrating){runtime.hydrating=true;void repository.hydrate().then(()=>{if(backgroundOwnerRuntime===runtime&&same())renderMyList();}).catch(()=>{runtime.remoteUnavailable=true;}).finally(()=>{runtime.hydrating=false;renderBackgroundRecovery();});}else renderBackgroundRecovery();}},onError:()=>{if(backgroundOwnerRuntime===runtime&&same()){runtime.remoteUnavailable=true;clearPublicLinkFeedback();renderBackgroundRecovery();}}});renderBackgroundRecovery();return runtime;
+  })().finally(()=>{backgroundRuntimeLoading=null;});return backgroundRuntimeLoading;
+}
+async function publishSavedBackgroundChange(runtime=backgroundOwnerRuntime,controller=managedAccountSyncRuntime?.controller){
+ if(!runtime||!controller||runtime.uid!==auth?.currentUser?.uid||runtime.generation!==_sessionTransientGeneration||localStorage.getItem('background-transition-v1:'+runtime.uid))return;
+ const username=cur,session=backgroundSession(),prior=await get(ref(db,'publicShares/'+username));
+ if(runtime!==backgroundOwnerRuntime||username!==cur||session.uid!==auth?.currentUser?.uid||session.generation!==_sessionTransientGeneration)throw Error('session-changed');
+ if(prior.exists())return controller.publishAcceptedProjection(Object.freeze({kind:'background-request-edit'}));
+}
+function backgroundTransitionsForRuntime(runtime,controller=managedAccountSyncRuntime?.controller){
+ if(!runtime||!controller||runtime.uid!==auth?.currentUser?.uid)throw Error('session-changed');if(runtime.transitions&&runtime.transitionController===controller)return runtime.transitions;
+ const current=()=>{if(runtime!==backgroundOwnerRuntime||runtime.uid!==auth?.currentUser?.uid||runtime.generation!==_sessionTransientGeneration)throw Error('session-changed');};
+ const canonical={finished:()=>publishSavedBackgroundChange(runtime,controller),get:id=>{current();return controller.getEntity('tradeEntry',id);},drain:()=>{current();return controller.drain();},snapshot:()=>controller.snapshot(),backgroundReceipt:r=>runtime.protocol.receipt(r),
+  retire:(source,id,time)=>{current();return applyAccountSyncTradeMutations([{kind:'delete',entityType:'tradeEntry',entityId:source.entityId,expectedGeneration:source.generation,expectedRevision:source.revision,operationId:id,clientAt:time}],controller);},
+  create:(op,id,time)=>{current();return applyAccountSyncTradeMutations([{kind:'add',entityType:'tradeEntry',entityId:op.targetId,identity:op.identity,expectedGeneration:op.targetGeneration,values:op.values,operationId:id,clientAt:time}],controller);},
+  resolveGuard:async id=>{current();const state=await controller.snapshot();if(state.pendingCount)throw Error('canonical-pending');const conflict=(await controller.conflictDetails()).find(c=>c.conflictId==='conflict_'+id);if(conflict){const out=await controller.acceptConflict(conflict.conflictId);if(!out.ok)throw Error('canonical-review-required');}}
+ };
+ runtime.transitionController=controller;runtime.transitions=BackgroundTransitions.createTransitions({uid:runtime.uid,storage:localStorage,currentSession:backgroundSession,background:runtime.repository,canonical});return runtime.transitions;
+}
+async function enrollBackgroundRequests({quiet=false}={}){if(!BACKGROUND_ROLLOUT.enabled||!backgroundCatalogueReady()||!auth?.currentUser?.uid||!db)return;const session=backgroundSession();try{const existing=(await get(ref(db,'backgroundOwnerIndex/'+session.uid+'/token'))).val();if(!existing){const token='bgs_'+[...crypto.getRandomValues(new Uint8Array(16))].map(n=>n.toString(16).padStart(2,'0')).join('');await set(ref(db,'backgroundStores/'+token+'/ownerUid'),session.uid);if(backgroundSession().uid!==session.uid||backgroundSession().generation!==session.generation)return;await set(ref(db,'backgroundOwnerIndex/'+session.uid+'/token'),token);}await ensureBackgroundOwnerRuntime();renderMyList();}catch{if(!quiet)toast(i18nCore.t('product.editSyncRequired'));}}
+function renderBackgroundRecovery(){const host=document.getElementById('background-recovery');if(!host)return;host.hidden=!BACKGROUND_ROLLOUT.enabled||!backgroundCatalogueReady();if(host.hidden)return;const wasOpen=!!host.querySelector('details')?.open;if(!backgroundOwnerRuntime){host.hidden=true;host.replaceChildren();return;}const transitionPending=!!localStorage.getItem('background-transition-v1:'+backgroundOwnerRuntime.uid);const pending=transitionPending||!!backgroundOwnerRuntime.repository.snapshot().pending;host.hidden=!pending&&!backgroundOwnerRuntime.remoteUnavailable&&!backgroundOwnerRuntime.paused;if(host.hidden){host.replaceChildren();return;}host.replaceChildren();
+ const labels={en:['Background requests','Retry saved draft','Export requests','Import requests','A saved background draft needs attention.'],ja:['背景のリクエスト','保存済みの下書きを再試行','リクエストを書き出す','リクエストを読み込む','保存済みの背景の下書きを確認してください。'],es:['Solicitudes de fondos','Reintentar borrador guardado','Exportar solicitudes','Importar solicitudes','Revisa el borrador de fondos guardado.'],de:['Hintergrundwünsche','Gespeicherten Entwurf erneut versuchen','Wünsche exportieren','Wünsche importieren','Bitte den gespeicherten Hintergrundentwurf prüfen.']}[i18nCore.getLocale()]||['Background requests','Retry saved draft','Export requests','Import requests','A saved background draft needs attention.'];
+ const title=document.createElement('span');title.textContent=transitionPending?(({ja:'この編集を確認してください。再試行するか、残すリクエストを選んでください。',es:'Revisa este cambio. Reintenta o elige qué solicitudes conservar.',de:'Bitte prüfe diese Änderung. Erneut versuchen oder Wünsche zum Behalten wählen.'})[i18nCore.getLocale()]||'Review this edit. Retry or choose which requests to keep.'):pending?labels[4]:backgroundOwnerRuntime.remoteUnavailable?i18nCore.t('product.editSyncRequired'):labels[0];host.append(title);if(pending&&!transitionPending){const b=document.createElement('button');b.type='button';b.className='btn btn-ghost';b.textContent=({ja:'クラウドのリクエストを使用',es:'Usar solicitudes de la nube',de:'Cloud-Wünsche verwenden'})[i18nCore.getLocale()]||'Use cloud requests';b.onclick=async()=>{const runtime=backgroundOwnerRuntime;try{await runtime.repository.keepRemote();if(runtime===backgroundOwnerRuntime)renderMyList();}catch{toast(i18nCore.t('product.editSyncRequired'));}};host.append(b);}for(const [text,fn]of [[labels[1],retryBackgroundDraft],[labels[2],exportBackgroundRequests],[labels[3],()=>document.getElementById('background-request-file').click()]]){if(text===labels[1]&&!pending&&!backgroundOwnerRuntime.remoteUnavailable)continue;const b=document.createElement('button');b.type='button';b.className='btn btn-ghost';b.textContent=text;b.onclick=fn;host.append(b);}const input=document.createElement('input');input.type='file';input.accept='application/json,.json';input.id='background-request-file';input.hidden=true;input.onchange=()=>{const f=input.files?.[0];if(f)void importBackgroundRequests(f);};host.append(input);
+ if(transitionPending){const labels=({ja:['元のリクエストを残す','両方のリクエストを残す'],es:['Conservar solicitud original','Conservar ambas solicitudes'],de:['Ursprünglichen Wunsch behalten','Beide Wünsche behalten']})[i18nCore.getLocale()]||['Keep original request','Keep both requests'];for(const [label,choice]of [[labels[0],'original'],[labels[1],'both']]){const button=document.createElement('button');button.type='button';button.className='btn btn-ghost';button.textContent=label;button.onclick=async()=>{try{const result=await backgroundTransitionsForRuntime(backgroundOwnerRuntime).resolve(choice);if(!result.ok)throw Error(result.code);closeModal('combined-editor-modal');renderMyList();}catch{toast(i18nCore.t('phase2.changed'));}};host.append(button);}}
+ const modeLabels={en:['Pause background editing','Resume background editing','Unpublish backgrounds','Exit backgrounds'],ja:['背景の編集を一時停止','背景の編集を再開','背景の公開を停止','背景を終了'],es:['Pausar edición de fondos','Reanudar edición de fondos','Dejar de publicar fondos','Salir de fondos'],de:['Hintergrundbearbeitung pausieren','Hintergrundbearbeitung fortsetzen','Hintergründe nicht mehr veröffentlichen','Hintergründe beenden']}[i18nCore.getLocale()]||['Pause background editing','Resume background editing','Unpublish backgrounds','Exit backgrounds'];
+ for(const [text,action]of [[modeLabels[backgroundOwnerRuntime.paused?1:0],backgroundOwnerRuntime.paused?'resume':'pause'],[modeLabels[2],'unpublish'],...(!backgroundOwnerRuntime.repository.snapshot().entries.length?[[modeLabels[3],'exit']]:[])]){const b=document.createElement('button');b.type='button';b.className='btn btn-ghost';b.textContent=text;b.disabled=pending||backgroundOwnerRuntime.busy;b.onclick=()=>changeBackgroundMode(action);host.append(b);}
+ const details=document.createElement('details'),summary=document.createElement('summary'),actions=document.createElement('div');summary.textContent=title.textContent;summary.insertAdjacentHTML('afterbegin',uiIconMarkup('chevron-down','ui-icon ui-icon-sm'));details.open=wasOpen||pending;actions.className='background-recovery-actions';for(const node of [...host.childNodes])if(node!==title)actions.append(node);details.append(summary,actions);host.replaceChildren(details);
+}
+async function changeBackgroundMode(action){const runtime=await ensureBackgroundOwnerRuntime();if(!runtime||runtime.uid!==auth?.currentUser?.uid||runtime.busy)return;const username=cur;const check=()=>{if(runtime!==backgroundOwnerRuntime||runtime.uid!==auth?.currentUser?.uid||runtime.generation!==_sessionTransientGeneration||username!==cur)throw Error('session-changed');};const write=async(path,value)=>{check();await set(ref(db,path),value);check();};runtime.busy=true;renderBackgroundRecovery();try{const state=runtime.repository.snapshot();if(state.pending)throw Error('pending-intent');const path='backgroundStores/'+runtime.token;if(action==='pause'){await write(path+'/mode','maintenance');runtime.paused=true;}else if(action==='resume'){const result=await runtime.protocol.resume(state.head,state.entries);check();if(result.status!==200)throw Error('resume-failed');await runtime.repository.hydrate();check();runtime.paused=false;}else if(action==='unpublish'){await write(path+'/visible',false);await write('publicShares/'+username,null);}else if(action==='exit'){if(state.entries.length)throw Error('requests-remain');await write(path+'/mode','maintenance');runtime.paused=true;await write(path+'/visible',false);await write('publicShares/'+username,null);await write('backgroundOwnerIndex/'+runtime.uid+'/active',false);runtime.active=false;}clearPublicLinkFeedback();renderMyList();}catch{toast(i18nCore.t('phase2.changed'));}finally{runtime.busy=false;renderBackgroundRecovery();}}
+async function retryBackgroundDraft(){const runtime=await ensureBackgroundOwnerRuntime();if(!runtime)return;try{if(localStorage.getItem('background-transition-v1:'+runtime.uid)){const result=await backgroundTransitionsForRuntime(runtime).resume();if(!result.ok)throw Error(result.code);renderMyList();return;}const result=runtime.repository.snapshot().pending?await runtime.repository.flush():await runtime.repository.hydrate();if(!result.ok)toast(i18nCore.t('phase2.changed'));else{runtime.remoteUnavailable=false;renderMyList();}}catch{toast(i18nCore.t('product.editSyncRequired'));}renderBackgroundRecovery();}
+function exportBackgroundRequests(){const runtime=backgroundOwnerRuntime;if(!runtime||runtime.uid!==auth?.currentUser?.uid)return;const url=URL.createObjectURL(new Blob([runtime.repository.exportData({includePending:!!runtime.repository.snapshot().pending})],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='background-requests.json';a.click();URL.revokeObjectURL(url);}
+async function importBackgroundRequests(file){const runtime=await ensureBackgroundOwnerRuntime();if(!runtime||file.size>200000)return;try{const text=await file.text();if(runtime!==backgroundOwnerRuntime||runtime.uid!==auth?.currentUser?.uid)return;const result=await runtime.adapter.importData(text);if(!result.ok)throw Error('import-pending');renderMyList();}catch{toast(i18nCore.t('phase2.changed'));}renderBackgroundRecovery();}
+function appendResolvedBackgroundRows(data,username,rows){if(!rows.length)return;const user=data.users[username];if(!Array.isArray(user.publicDeclarations))throw Error('background-base-projection-unavailable');user.publicDeclarations.push(...rows.map(row=>{const source=accountSyncCatalogEntryForId(row.catalogId);if(!source)throw Error('background-identity-unavailable');return{...row,name:source.name,intent:'lf',category:maxTypeForEntry(source,'wishlist')||'wishlist',p:row.priority,mod:row.variant,isBackgroundV2:true};}));}
+function backgroundPublicDeclarations(rows){return publicSharePublicationDomain.publicDeclarations(rows.map(row=>{const source=accountSyncCatalogEntryForId(row.catalogId);if(!source)throw Error('background-identity-unavailable');return{name:source.name,intent:'lf',category:maxTypeForEntry(source,'wishlist')||'wishlist',p:row.priority,mod:row.variant,gender:row.gender,backgroundId:row.backgroundId,note:row.note,lucky:row.lucky,shiny:row.shiny,xxl:row.xxl,xxs:row.xxs};}));}
+async function resolveBackgroundConsumerResult(result){if(!result?.ok||result.value?.version!==3)return result;try{const snapshot=result.value,rows=await resolveBackgroundPublicRows(snapshot),declarations=[...(snapshot.declarations||[]),...backgroundPublicDeclarations(rows)],projection=publicSharePublicationDomain.publicShareProjectionStatus({...snapshot,version:2,declarations,declarationCount:declarations.length},{username:snapshot.username});return projection.ok?{...result,value:projection.snapshot}:{ok:false,error:{code:'background-public/unsupported'}};}catch{return{ok:false,error:{code:'background-public/unavailable'}};}}
+async function resolveBackgroundPublicRows(snapshot){
+ if(snapshot.version!==3)return[];if(!backgroundCatalogueReady()&&BACKGROUND_ROLLOUT.enabled)await loadReviewedBackgroundCatalogue();if(!backgroundCatalogueReady())throw Error('background-catalogue-unavailable');
+ const protocol=BackgroundProtocol.createProtocol({token:snapshot.backgroundRef,db:()=>{throw Error('read-only');},isEligible:backgroundEligible});
+ return BackgroundEditorAdapter.readV3({snapshot,validateEntries:protocol.validate,readPublic:async path=>{const s=await get(ref(db,path));return s.val();}});
+}
+
+function backgroundChoiceValue(choice){return BackgroundEditorAdapter.intrinsicBinding(choice.catalogId)?choice.id+'|'+choice.catalogId:choice.id;}
+function productShareBackgroundChoices(entry){
+  if(!backgroundCatalogueReady())return[];
+  const lane=entry.category||entry.type;
+  let catalogId=entry.catalogId||entry.ref?.catalogId||'';
+  if(!catalogId){
+    const key=pokemonCatalogDomain.normalizeCatalogKey(entry.name),ids=new Set();
+    for(const raw of listSource(lane)||[]){
+      const candidate=pokemonCatalogDomain.decorateCatalogEntry(raw);
+      if([candidate.name,candidate.displayName,...(candidate.legacyAliases||[])].some(name=>pokemonCatalogDomain.normalizeCatalogKey(name)===key))ids.add(candidate.catalogId);
+    }
+    if(ids.size===1)catalogId=[...ids][0];
+  }
+  if(!catalogId)return[];
+  const gender=entry.gender||'';
+  return backgroundExportCatalog.records.filter(record=>{const binding=BackgroundEditorAdapter.intrinsicBinding(record.catalogId);return (record.catalogId===catalogId||binding?.baseCatalogId===catalogId)&&(!binding?.artGender||!gender||binding.artGender===gender)&&record.category===lane&&record.shiny===!!entry.shiny&&
+    (!record.gender||record.gender===gender)&&/^assets\/backgrounds\/[a-zA-Z0-9._/-]+$/.test(record.url)&&!record.url.includes('..');});
+}
+function selectProductShareBackground(index,value){
+  const entry=productShareSnapshot[index];if(!entry)return;
+  const choice=productShareBackgroundChoices(entry).find(record=>record.id===value);
+  const key=productSelectionKey(entry);
+  if(choice)productShareBackgroundSelections.set(key,choice.id);else productShareBackgroundSelections.delete(key);
+}
+function renderProductShareBackgroundChoices(){
+  const host=document.getElementById('share-background-choices');if(!host)return;
+  const entries=productShareSnapshot.map((entry,index)=>({entry,index,choices:productShareBackgroundChoices(entry)})).filter(row=>!row.entry.isBackgroundV2&&row.choices.length);
+  host.hidden=!entries.length;
+  host.innerHTML=entries.length?`<summary>${escHtml(i18nCore.t('share.backgrounds'))}</summary>${entries.map(({entry,index,choices})=>{
+    const selected=productShareBackgroundSelections.get(productSelectionKey(entry))||'';
+    return `<label class="share-background-choice"><span>${escHtml(productShareDescription(entry))}</span><select class="field-control" aria-label="${escAttr(i18nCore.t('share.backgroundFor',{name:entry.dn||entry.name}))}" onchange="selectProductShareBackground(${index},this.value)"><option value="">${escHtml(i18nCore.t('share.noBackground'))}</option>${choices.map(choice=>`<option value="${escAttr(choice.id)}"${choice.id===selected?' selected':''}>${escHtml(choice.label)}</option>`).join('')}</select></label>`;
+  }).join('')}`:'';
+}
+
 function productSelectionKey(entry){return JSON.stringify([entry.key,entry.name,entry.ref?.surface,entry.ref?.type,entry.ref?.side,entry.ref?.index]);}
 function productScopeEntries(scope=productShareScope){
   const entries=productDeclarations().entries;
   return scope==='top'?entries.filter(e=>e.intent==='lf'&&e.p==='H'):scope==='selected'?entries.filter(e=>combinedSelection.has(productSelectionKey(e))):entries;
 }
 function openProductShare(mode='link'){
-  productShareScope='full';productShareOwner=cur;
+  productShareScope='full';productShareOwner=cur;productShareOwnerUid=auth?.currentUser?.uid||'';productShareBackgroundSelections.clear();
   document.getElementById('product-share-scope').value='full';
   productShareMode=mode;document.getElementById('product-share-preview-wrap').open=mode==='image';openModal('product-share-modal');refreshProductShare();
 }
@@ -7187,7 +7387,7 @@ function productShareCategoryLabel(entry){
   return markers.some(value=>name.includes(String(value||'').normalize('NFKC').toLocaleLowerCase()))?'':label;
 }
 function productShareDescription(entry){
-  return [entry.dn||entry.name,productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',catalogueVariantReleaseLabel(entry),entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,entry.isBackgroundV2?(productShareBackgroundChoices(entry).find(item=>item.id===entry.backgroundId)?.label||i18nCore.t('background.unavailable')):'',productShareCategoryLabel(entry),entry.shiny?i18nCore.t('share.flagShiny'):'',catalogueVariantReleaseLabel(entry),entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',publicSharePublicationDomain.publicNoteForDisplay(entry.note)].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -7195,6 +7395,7 @@ function refreshProductShare(){
   clearPublicLinkFeedback();publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
   preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
+  renderProductShareBackgroundChoices();
   setProductShareMode(productShareMode);
 }
 function setProductShareMode(mode){
@@ -7230,7 +7431,7 @@ function setShareGameLanguage(value){
   changePokemonGoSearchLocale(value);refreshProductShareSearch();
 }
 function productShareSnapshotCurrent(){
-  return productShareOwner===cur&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
+  return productShareOwner===cur&&productShareOwnerUid===(auth?.currentUser?.uid||'')&&JSON.stringify(productShareSnapshot)===JSON.stringify(productScopeEntries());
 }
 async function copyProductShareText(){
   if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
@@ -7242,8 +7443,9 @@ async function exportProductShareImage(){
   if(!productShareSnapshot.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const entries=accountSyncClone(productShareSnapshot),owner=cur,scope=productShareScope;
   try{
-    const blob=await renderProductShareImage(entries,owner);
-    if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent())return;
+    const selections=new Map(productShareBackgroundSelections);
+    const blob=await renderProductShareImage(entries,owner,selections);
+    if(owner!==cur||scope!==productShareScope||!productShareSnapshotCurrent()||JSON.stringify([...selections])!==JSON.stringify([...productShareBackgroundSelections]))return;
     await deliverImageBlob(blob,`pogo-${safeFilePart(owner)}-${scope}.png`,i18nCore.t('product.share'));
   }catch{toast(i18nCore.t('export.failed'));}
 }
@@ -7253,7 +7455,7 @@ function productShareImageDetails(entry,section){
   const form=productShareCategoryLabel(entry);
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
-  return [form,gender==='f'?'♀':gender==='m'?'♂':'',mod,catalogueVariantReleaseLabel(entry),
+  return [form,entry.isBackgroundV2?(productShareBackgroundChoices(entry).find(item=>item.id===entry.backgroundId)?.label||i18nCore.t('background.unavailable')):'',gender==='f'?'♀':gender==='m'?'♂':'',mod,catalogueVariantReleaseLabel(entry),
     flag('lucky',i18nCore.t('myList.lucky')),flag('xxl','XXL'),flag('xxs','XXS'),entry.note].filter(Boolean).join(' · ');
 }
 function drawProductShareMissingArt(ctx,x,y,width,height){
@@ -7265,7 +7467,7 @@ function drawProductShareMissingArt(ctx,x,y,width,height){
   ctx.fillText(i18nCore.t('export.artUnavailable'),x+width/2,y+height-10);
   ctx.textAlign='left';
 }
-async function renderProductShareImage(entries,owner){
+async function renderProductShareImage(entries,owner,selections=new Map()){
   const columns=8,width=900,padding=24,cellWidth=(width-padding*2)/columns;
   const sections=PogoDomain.priorityValues.wantSections(entries.filter(entry=>entry.intent==='lf'));
   const canvas=document.createElement('canvas'),measure=canvas.getContext('2d');measure.font='12px sans-serif';
@@ -7293,7 +7495,12 @@ async function renderProductShareImage(entries,owner){
       const image=await loadCanvasImageWithFallback(exportSpriteFallbackUrls({...entry,gender,spriteUrl:entrySpriteUrl(entry,entry.name,gender)})).catch(()=>null);
       const name=entry.dn||entry.name||i18nCore.t('contextSearch.unknown');
       const maxIcon=maxPresentationType(entry)?await loadCanvasImage(maxPresentationIcon(maxPresentationType(entry))):null;
-      return{entry,image,maxIcon,nameLines:wrap(maxPresentationName(name)),detailLines:wrap(productShareImageDetails(entry,section))};
+      const selectedId=selections.get(productSelectionKey(entry))||(entry.isBackgroundV2?entry.backgroundId:'');
+      const backgroundChoice=selectedId&&productShareBackgroundChoices(entry).find(record=>record.id===selectedId);
+      if(selectedId&&!backgroundChoice)throw new Error('Background selection is no longer eligible');
+      const background=backgroundChoice?await loadCanvasImage(backgroundChoice.url):null;
+      if(backgroundChoice&&!background)throw new Error('Background artwork unavailable');
+      return{entry,image,maxIcon,background,nameLines:wrap(maxPresentationName(name)),detailLines:wrap(productShareImageDetails(entry,section))};
     }));
     const heights=Array.from({length:Math.ceil(items.length/rowColumns)},(_,index)=>96+14*Math.max(...items.slice(index*rowColumns,(index+1)*rowColumns).map(item=>item.nameLines.length+item.detailLines.length)));
     return{section,items,heights,columns:rowColumns};
@@ -7322,10 +7529,11 @@ async function renderProductShareImage(entries,owner){
     drawFittedText(ctx,i18nCore.t('myList.priorityPokemonCount',{count:section.entries.length}),left+sectionWidth-12,y+26,110,{max:12,min:10,weight:500,color:'#a9b1b7'});
     ctx.textAlign='left';
     let rowTop=y+44;
-    items.forEach(({entry,image,maxIcon,nameLines,detailLines},index)=>{
+    items.forEach(({entry,image,maxIcon,background,nameLines,detailLines},index)=>{
       if(index&&index%rowColumns===0)rowTop+=heights[index/rowColumns-1];
       const x=left+(index%rowColumns)*cellWidth;
       const artX=x+(cellWidth-76)/2;
+      if(background)drawImageContain(ctx,background,artX,rowTop,76,76);
       if(image)drawImageContain(ctx,image,artX,rowTop,76,76);
       else drawProductShareMissingArt(ctx,artX,rowTop,76,76);
       if(maxIcon)drawImageContain(ctx,maxIcon,x+cellWidth-22,rowTop+2,18,18);
@@ -7786,7 +7994,7 @@ function productDeclarations(username=cur,providedSource){
   const entries=[],profile=data.users?.[username]||{},board=profile.specialTradeBoard||{};
   if(Array.isArray(profile.publicDeclarations))return{entries:profile.publicDeclarations.filter(raw=>raw.intent==='lf').map((raw,index)=>{
     const source=accountSyncCatalogEntryForName(raw.category,raw.name)||{name:raw.name,no:null};
-    return{...raw,backgroundId:'',type:raw.category==='costumes'?'wishlist':raw.category,dn:pokemonDisplayName({...source,name:raw.name}),no:source.no,key:`public:${index}`,aliases:[]};
+    return{...raw,backgroundId:raw.isBackgroundV2===true?raw.backgroundId:'',type:raw.category==='costumes'?'wishlist':raw.category,dn:pokemonDisplayName({...source,name:raw.name}),no:source.no,key:`public:${index}`,aliases:[]};
   }),duplicates:[],reviews:[]};
   const managed=Array.isArray(profile.intentDeclarations)?profile.intentDeclarations:[];
   for(const raw of managed){
@@ -7804,7 +8012,13 @@ function productDeclarations(username=cur,providedSource){
     const parsed=parsePri(value),source=accountSyncCatalogEntryForName(type,name)||{name,no:null};
     entries.push({...parsed,intent:'lf',name,type:type==='costumes'?'wishlist':type,category:type,gender:entryGender(parsed.mod),dn:pokemonDisplayName({...source,name}),no:source.no,key:`list:${type}:${name}`,ref:{surface:'my-list',type,name}});
   }
-  return tradeListComparisonDomain.unifyDeclarations(entries.map(entry=>({...entry,backgroundId:''})),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+  if(username===cur&&backgroundCatalogueReady()&&backgroundV2PrototypeAdapter?.testOnly===true){
+    for(const row of backgroundV2PrototypeAdapter.list(auth?.currentUser?.uid||'')){
+      const source=accountSyncCatalogEntryForId(row.catalogId)||{name:row.name,no:null};
+      entries.push({...row,intent:'lf',type:row.category,dn:pokemonDisplayName(source),no:source.no,key:row.key,isBackgroundV2:true,ref:{surface:'background-prototype',entityId:row.key,catalogId:row.catalogId}});
+    }
+  }
+  return tradeListComparisonDomain.unifyDeclarations(entries.map(entry=>entry.isBackgroundV2?entry:{...entry,backgroundId:''}),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
 }
 function setMyListIntent(intent){
   myListIntent='lf';
@@ -8199,6 +8413,9 @@ function waitForMyListRender(){
   return Promise.resolve(true);
 }
 function renderMyList(filterVal,options={}){
+  if(backgroundOwnerRuntime&&(backgroundOwnerRuntime.uid!==auth?.currentUser?.uid||backgroundOwnerRuntime.generation!==_sessionTransientGeneration)){managedSubscriptions.unsubscribeByKey('session:background-owner');backgroundOwnerRuntime=null;backgroundV2PrototypeAdapter=null;}
+  if(BACKGROUND_ROLLOUT.enabled&&!backgroundOwnerRuntime&&!backgroundRuntimeLoading)void ensureBackgroundOwnerRuntime().then(runtime=>{if(runtime)renderMyList();}).catch(()=>{});
+  renderBackgroundRecovery();
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
@@ -8233,6 +8450,7 @@ function exportSpriteUrl(e){
 // Build canvas-safe fallback chain for the export image
 // Uses the same multi-source cascade as inline images
 function exportSpriteFallbackUrls(e){
+  const binding=BackgroundEditorAdapter.intrinsicBinding(e.catalogId);if(binding){const base=accountSyncCatalogEntryForId(binding.baseCatalogId);return base?Array.from(publicSpriteUrls(base.name,binding.artGender||e.gender||'',base.no,e.shiny===true)).map(canvasSafeSpriteUrl).filter(Boolean):[];}
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn,e.catalogId,e.shiny===true);
   const context=spriteCatalogContext(e.no,e.spriteName||e.name,e.dn||e.name,e.catalogId);
   const identity=spriteSemanticIdentity(context.canonicalName||e.spriteName||e.name,e.gender,e.no);
@@ -10981,7 +11199,7 @@ function openModal(id,options={}){
     if(active?.classList.contains('open'))return;
   }
   const alreadyOpen=m.classList.contains('open')&&_modalActiveId===id;
-  if(!alreadyOpen)_modalPrevFocus=options.returnFocus||document.activeElement;
+  if(!alreadyOpen||options.returnFocus)_modalPrevFocus=options.returnFocus||document.activeElement;
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   if(_modalFocusTimer){clearTimeout(_modalFocusTimer);_modalFocusTimer=null;}
   _modalActiveId=id;
@@ -11005,6 +11223,12 @@ function openModal(id,options={}){
     if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,a[href],summary,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
+    if(id==='combined-editor-modal'){
+      const available=focusables.filter(el=>{const closed=el.closest('details:not([open])');return el.getClientRects().length&&!el.closest('[inert]')&&(!closed||el===closed.querySelector(':scope > summary'))&&(el.type!=='radio'||el.checked||!focusables.some(other=>other!==el&&other.type==='radio'&&other.name===el.name&&other.checked));});
+      if(!available.length)return;
+      const index=available.indexOf(document.activeElement),next=index<0?(ev.shiftKey?available.length-1:0):(index+(ev.shiftKey?-1:1)+available.length)%available.length;
+      ev.preventDefault();available[next].focus();return;
+    }
     const first=focusables[0],last=focusables[focusables.length-1];
     if(ev.shiftKey&&document.activeElement===first){last.focus();ev.preventDefault();}
     else if(!ev.shiftKey&&document.activeElement===last){first.focus();ev.preventDefault();}
@@ -11013,6 +11237,7 @@ function openModal(id,options={}){
 }
 function closeModal(id){
   const options=arguments[1]||{};
+  if(id==='combined-editor-modal')combinedEditor=null;
   if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   if(id==='safe-transfer-modal'&&typeof _safeTransferController!=='undefined')_safeTransferController?.invalidate?.('closed');
   if(id==='settings-modal'&&document.getElementById(id)?.classList.contains('open'))_settingsDraftGeneration++;
@@ -11023,6 +11248,7 @@ function closeModal(id){
   _modalActiveId='';
   if(id==='settings-modal')setSettingsUnderlyingContentInert(false);
   let returnFocus=_modalPrevFocus;_modalPrevFocus=null;
+  if(id==='combined-editor-modal'&&(!returnFocus?.isConnected||returnFocus.disabled))returnFocus=document.getElementById('wants-add-name');
   if(id==='product-share-modal'){
     const visible=node=>node?.isConnected&&!node.disabled&&(node.tabIndex>=0||node.hasAttribute('tabindex'))&&node.getClientRects().length&&!node.closest('[inert]');
     // Settings tools may replace their opener while launching Share. Do not
@@ -11455,17 +11681,17 @@ function _safeTransferCurrentBinding(){
   });
 }
 async function _safeTransferReadPublicShare(member,options={}){
-  if(!member.targetUid)return managedPublicShareRepository.readFresh(member.displayName,options);
+  if(!member.targetUid)return resolveBackgroundConsumerResult(await managedPublicShareRepository.readFresh(member.displayName,options));
   let identity;
   try{identity=await resolveFavoriteIdentityForSession(member.displayName,member.targetUid);}
   catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
   if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
-  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
+  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return resolveBackgroundConsumerResult(await managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options));
   try{
     const provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName,options);
-    if(provider?.ok)return{ok:true,value:provider.snapshot,evidence:provider.evidence};
+    if(provider?.ok)return resolveBackgroundConsumerResult({ok:true,value:provider.snapshot,evidence:provider.evidence});
     if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
-    return managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options);
+    return resolveBackgroundConsumerResult(await managedPublicShareRepository.readFresh(identity.canonicalTrainerName,options));
   }catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
 }
 async function _safeTransferLoadSnapshot(request,context={}){
@@ -12378,7 +12604,8 @@ function closeExportMenu(){
   document.removeEventListener('click',_closeExportOnOutside);
 }
 function productTextRows(){
-  return productDeclarations().entries.map(e=>({
+  const entries=productDeclarations().entries,withBackground=entries.some(e=>e.isBackgroundV2);
+  return entries.map(e=>({...(withBackground?{background:e.isBackgroundV2?e.backgroundId:''}:{}),
     intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
@@ -12386,7 +12613,7 @@ function productTextRows(){
 async function exportMyListMarkdown(){
   const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const profile=allData.users?.[cur]||{};
-  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
+  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.background,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 function exportMyListCSV(){
@@ -14186,6 +14413,7 @@ async function writeHave(username,inv){
   return true;
 }
 function _nameToSpriteEntry(name){
+  const binding=BackgroundEditorAdapter.intrinsicBindingForName(name);if(binding)return accountSyncCatalogEntryForId(binding.catalogId)||{name,no:null};
   // Lookup sprite metadata for a Pokemon name across all sources
   const srcs=['wishlist','dynamax','gmax','costumes'];
   for(const t of srcs){

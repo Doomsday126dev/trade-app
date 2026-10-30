@@ -42,10 +42,10 @@ test('canonical catalog lookup is named and does not advertise the removed voice
   assert.doesNotMatch(add,/voice-btn|toggleVoiceInput/);
 });
 
-test('flags and exact variant details live in the shared wants editor and omit backgrounds',()=>{
+test('flags and exact variant details live in the shared wants editor and optional verified backgrounds',()=>{
   assert.match(add,/onclick="openWantsAddEditor\(this\)"/);
   for(const id of ['combined-lucky','combined-shiny','combined-xxl','combined-xxs','combined-mod','combined-gender','combined-note'])assert.match(editor,new RegExp(`id="${id}"`));
-  assert.match(editor,/maxlength="160"/);assert.doesNotMatch(editor,/background-picker|combined-background/);
+  assert.match(editor,/maxlength="160"/);assert.match(editor,/id="combined-background"/);
   const save=html.slice(html.indexOf('async function saveCombinedEditor('),html.indexOf('let boardHiddenKeys='));
   assert.match(save,/if\(changes\.xxl&&changes\.xxs\)return fail/);
   assert.match(save,/workflow\.choosePriority/);assert.match(save,/applyAccountSyncTradeMutations\(mutations,authority\.controller\)/);

@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ff4be21ecb1949cbf5646ea40173948ca0757f86
+          ref: 0406dbf11b95faaa0f02b989c409779c129948ee
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ff4be21ecb1949cbf5646ea40173948ca0757f86
+          ref: 0406dbf11b95faaa0f02b989c409779c129948ee
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -108,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ff4be21ecb1949cbf5646ea40173948ca0757f86
+          ref: 0406dbf11b95faaa0f02b989c409779c129948ee
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -132,9 +132,45 @@ jobs:
       - name: Optional owner variant clarification and preserved data journeys
         run: npx playwright test -c playwright.variant-clarification.config.cjs
 
+  background-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: 0406dbf11b95faaa0f02b989c409779c129948ee
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Official browser dependency archive
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Bounded Rules and actual authenticated editor journeys
+        run: >-
+          npx --yes firebase-tools@13.31.2 emulators:exec --only auth,database --project demo-pogo-background-reference
+          --config proposals/background-v2/bounded-reference/firebase.json
+          'node --test proposals/background-v2/bounded-reference/test.cjs && npx playwright test --config=playwright.background-authenticated.config.cjs'
+      - name: Current public read and revocation boundary
+        run: >-
+          npx --yes firebase-tools@13.31.2 emulators:exec --only auth,database --project demo-pogo-background-reference
+          --config proposals/background-v2/bounded-reference/current.firebase.json
+          'node --test proposals/background-v2/bounded-reference/current-public.test.cjs'
+      - name: Guarded journal and complete ordinary-editor regression
+        run: |
+          node --test tests/account-sync-indexeddb.test.cjs
+          npx playwright test --config=playwright.background-editor-qa.config.cjs
+          npx playwright test --config=playwright.background-editor-cancel.config.cjs
+
   traffic-runtime:
     if: always()
-    needs: [runtime-core, share-runtime]
+    needs: [runtime-core, share-runtime, background-runtime]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -142,4 +178,5 @@ jobs:
         env:
           CORE_RESULT: ${{ needs.runtime-core.result }}
           SHARE_RESULT: ${{ needs.share-runtime.result }}
-        run: test "$CORE_RESULT" = success && test "$SHARE_RESULT" = success
+          BACKGROUND_RESULT: ${{ needs.background-runtime.result }}
+        run: test "$CORE_RESULT" = success && test "$SHARE_RESULT" = success && test "$BACKGROUND_RESULT" = success

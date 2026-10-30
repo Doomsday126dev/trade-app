@@ -26,7 +26,8 @@ const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23
   ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
 const localCatalogueContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['ef0d1fcaa26827564fb29c1029ba6e9a77d6923f']:null;
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
+const localBackgroundContract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-10-30\.169';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
@@ -167,11 +168,16 @@ assert.ok(indexSource.includes('managedSessionCache.writeQueue(syncQueue||{})'),
   'Pending sync writes must pass through the owner-bound queue boundary');
 assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
   'The unowned legacy sync queue must not remain active');
+const backgroundBundle=!!localBackgroundContract||SOURCE_CALL_CONTRACT===SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7'];
+if(backgroundBundle){
+  const cacheSource=readFileSync(path.join(root,'js/domain/cacheAdapters.js'),'utf8').replace('})(window);',"})(typeof window!=='undefined'?window:globalThis);");
+  assert.ok(readFileSync(path.join(root,'js/domain/backgroundPersistence.js'),'utf8').startsWith('// Owner-data adapter prelude: exact cacheAdapters.js source; checked by build-background-runtime.cjs.\n'+cacheSource+'\n// END OWNER-DATA ADAPTER PRELUDE\n'),'Owner-data bundle must preserve the exact cache adapter');
+}
 const moduleOrder=[
   'js/domain/publicSharePublication.js','js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
   'js/data/subscriptionManager.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js',
   'js/data/currentUserRepository.js','js/data/ownedDataCoordinator.js','js/data/publicShareRepository.js',
-  'js/domain/cacheAdapters.js'
+  backgroundBundle?'js/domain/backgroundPersistence.js':'js/domain/cacheAdapters.js'
 ];
 let previous=-1;
 for(const modulePath of moduleOrder){

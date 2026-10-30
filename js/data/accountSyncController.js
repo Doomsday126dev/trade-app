@@ -342,7 +342,7 @@
       }
       return Object.freeze({ok:true,status:'independent'});
     }
-    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt,intentExpectedGeneration},{working}){
+    async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false,intentOperationId,intentClientAt,intentExpectedGeneration,intentExpectedRevision},{working}){
       const entityKey=key(entityType,entityId),current=working.get(entityKey)||null,paths=Object.keys(patch),base=merge.operationBase(current,paths);
       if(intentExpectedGeneration!==undefined&&(current?.generation||0)!==intentExpectedGeneration)return model.failure('account-sync/lifecycle-conflict','This Favorite changed after the addition was requested');
       let baseGeneration=base.baseGeneration,generation=base.generation;
@@ -351,7 +351,7 @@
         model.SCHEMA_VERSION,'pogo-account-sync-migration-operation',owner,entityType,entityId,kind,
         kind==='add'?identity:null,baseGeneration,generation,base.baseFieldRevisions,patch
       ]),crypto)}`:intentOperationId;
-      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,clientAt:migration===true?0:(intentClientAt??Number(clock())),operationId},{crypto});
+      const operation=await model.createOperation({ownerUid:owner,entityType,entityId,identity,kind,patch,baseGeneration,generation,baseFieldRevisions:base.baseFieldRevisions,...(intentExpectedRevision!==undefined?{expectedRevision:intentExpectedRevision}:{}),clientAt:migration===true?0:(intentClientAt??Number(clock())),operationId},{crypto});
       if(!operation.ok)return operation;
       const optimistic=merge.mergeOperation(current,operation.value,{acceptedAt:operation.value.clientAt});
       if(!optimistic.ok)return optimistic;

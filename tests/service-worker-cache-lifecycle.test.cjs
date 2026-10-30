@@ -224,3 +224,20 @@ test('sprite cache clones before queued cache work while browser consumes the re
   assert.ok(cached,'sprite should be retained for offline loading');
   assert.equal(await cached.text(),'sprite-bytes');
 });
+
+test('content-addressed background art loads on demand and reuses the existing bounded cache',async()=>{
+ let requests=0;const run=createHarness({fetchImpl:async()=>{requests++;return response();}});
+ const url='https://example.test/trade-app/assets/backgrounds/'+'a'.repeat(64)+'.png';
+ assert.equal(run.stores.size,0,'no art preloaded');
+ const first=run.dispatchFetch(request(url));assert.equal((await first.response).ok,true);await first.complete;assert.equal(requests,1);
+ const second=run.dispatchFetch(request(url));assert.equal((await second.response).ok,true);await second.complete;assert.equal(requests,1,'second export uses cached bytes');
+ const sprites=run.stores.get(run.spriteName);assert.ok(await sprites.match(url));assert.ok((await sprites.keys()).length<=run.spriteLimit);
+ for(const invalid of ['https://example.test/trade-app/assets/backgrounds/not-a-hash.png','https://example.test/trade-app/assets/backgrounds/'+'a'.repeat(64)+'.png?x=1','https://other.test/trade-app/assets/backgrounds/'+'a'.repeat(64)+'.png','https://example.test/other/assets/backgrounds/'+'a'.repeat(64)+'.png']){
+  assert.equal(vm.runInContext(`isSpriteRequest(new URL(${JSON.stringify(invalid)}))`,run.context),false);
+ }
+});
+test('background cache does not retain failed responses and permits a later retry',async()=>{
+ let calls=0;const run=createHarness({fetchImpl:async()=>response(++calls===1?503:200)}),url='https://example.test/trade-app/assets/backgrounds/'+'b'.repeat(64)+'.webp';
+ const first=run.dispatchFetch(request(url));assert.equal((await first.response).status,503);await first.complete;
+ const second=run.dispatchFetch(request(url));assert.equal((await second.response).status,200);await second.complete;assert.equal(calls,2);
+});

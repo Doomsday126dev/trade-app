@@ -44,13 +44,14 @@ async function seedWantEditor(saved){
   document.getElementById('my-un').textContent=username;switchTab('mylist',{render:false});
   const started=await ensureAccountSyncRuntime();renderMyList();setSyncStatus('online');return started;
 }
-async function install(page,saved=null,{favoriteTransport=false}={}){
+async function install(page,saved=null,{favoriteTransport=false,backgroundRollout=null}={}){
   if(favoriteTransport)await page.addInitScript(require('./favorite-transport.cjs').prepareFavoriteTransport);
   await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firestore\.googleapis\.com)/,r=>r.abort());
   await page.goto('./?want-editor-local');
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('want-editor-local'));
   await page.waitForFunction(()=>typeof ensureAccountSyncRuntime==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
+  if(backgroundRollout!==null)await page.evaluate(enabled=>{BACKGROUND_ROLLOUT.enabled=enabled;},backgroundRollout);
   expect((await page.evaluate(seedWantEditor,saved)).ok).toBe(true);await settled(page);
 }
 async function settled(page){
@@ -64,8 +65,8 @@ async function settled(page){
     return runtime===managedAccountSyncRuntime?snapshot.state:'restarting';
   })).toBe('saved');
 }
-async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('#wants-add-name').press('Escape');await expect(page.locator('#wants-add-name-suggestions')).toBeHidden();await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();await expect(page.locator('#combined-name')).toBeFocused();if(await page.locator('#combined-name').getAttribute('aria-expanded')==='true')await page.locator('#combined-name').press('Escape');await expect(page.locator('#combined-name-suggestions')).toBeHidden();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
-async function edit(page,name){await page.locator('#combined-list .wants-row').filter({has:page.locator(`.wants-name[data-group]`,{hasText:new RegExp(`^${name}$`)})}).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText('Edit want');}
+async function addDialog(page,name=''){await page.locator('#wants-add-name').fill(name);await page.locator('#wants-add-name').press('Escape');await expect(page.locator('#wants-add-name-suggestions')).toBeHidden();await page.locator('.wants-add-form .add-advanced-toggle').click();await expect(page.locator('#combined-editor-modal')).toBeVisible();if(await page.locator('#combined-name-field').isHidden())await expect(page.locator('#combined-priorities input:checked')).toBeFocused();else await expect(page.locator('#combined-name')).toBeFocused();if(await page.locator('#combined-name').getAttribute('aria-expanded')==='true')await page.locator('#combined-name').press('Escape');await expect(page.locator('#combined-name-suggestions')).toBeHidden();await expect(page.locator('#combined-editor-modal')).toBeVisible();}
+async function edit(page,name){await page.locator(`#combined-list .wants-row[data-name=${JSON.stringify(name)}]`).first().locator('.myrow-edit').click();await expect(page.locator('#combined-editor-title')).toHaveText(await page.evaluate(()=>i18nCore.t('wantEditor.edit')));}
 async function priority(page,value){await page.locator(`#combined-priorities input[value="${value}"]`).check();}
 async function entities(page){return page.evaluate(()=>structuredClone(accountSyncCanonicalEntities));}
 module.exports={seedWantEditor,install,settled,addDialog,edit,priority,entities};

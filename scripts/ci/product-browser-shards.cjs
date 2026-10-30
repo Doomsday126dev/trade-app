@@ -40,6 +40,11 @@ function makePlan(cases,{sourceSha,base,files,timings,shardCount=SHARDS}={}){
  for(const shard of shards){shard.cases.sort();shard.estimatedSeconds=Math.round(shard.estimatedSeconds*1000)/1000;}
  const plan={schemaVersion:1,sourceSha,base,files:[...files],cases:rows,shards};plan.planDigest=digest(plan);validatePlan(plan);return plan;
 }
+function requiresBackgroundEmulator(plan,index){
+ validatePlan(plan);const shard=plan.shards.find(s=>s.index===index);if(!shard)fail('Invalid browser shard');
+ const rows=new Map(plan.cases.map(r=>[r.id,r]));
+ return shard.cases.some(id=>rows.get(id).file==='tests/background-authenticated-editor.spec.js');
+}
 function testListLines(plan,shard){
  const byId=new Map(plan.cases.map(r=>[r.id,r]));
  return shard.cases.map(id=>{const r=byId.get(id);if(!r||!r.file.startsWith('tests/'))fail('Invalid native test-list identity');return `[desktop] › ${r.file.slice(6)} › ${r.title}`;});
@@ -66,6 +71,8 @@ function main(){
  const mode=process.argv[2];
  if(mode==='plan'){
   const base=reviewBase(process.env.PRODUCT_BASE_SHA);if(!/^[a-f0-9]{40}$/.test(base||''))fail('Exact comparison base required');const files=select(changedFiles(base)).browser,rows=discover(files),timings=JSON.parse(fs.readFileSync(path.join(__dirname,'product-browser-timings.json'))),plan=makePlan(rows,{sourceSha:gitSha(),base,files,timings});fs.mkdirSync(PLAN_DIR,{recursive:true});fs.writeFileSync(path.join(PLAN_DIR,'inventory.json'),JSON.stringify(plan,null,2)+'\n');for(const s of plan.shards)fs.writeFileSync(path.join(PLAN_DIR,`shard-${s.index}.txt`),testListLines(plan,s).join('\n')+'\n');console.log(JSON.stringify({source:plan.sourceSha,count:rows.length,shards:plan.shards.map(s=>({index:s.index,cases:s.cases.length,estimatedSeconds:s.estimatedSeconds}))}));
+ }else if(mode==='requires-background-emulator'){
+  const plan=validatePlan(JSON.parse(fs.readFileSync(path.join(PLAN_DIR,'inventory.json'))));if(plan.sourceSha!==gitSha())fail('Browser plan checkout mismatch');console.log(requiresBackgroundEmulator(plan,Number(process.argv[3]))?'true':'false');
  }else if(mode==='run'){
   const index=Number(process.argv[3]),plan=validatePlan(JSON.parse(fs.readFileSync(path.join(PLAN_DIR,'inventory.json'))));if(plan.sourceSha!==gitSha())fail('Browser plan checkout mismatch');const shard=plan.shards.find(s=>s.index===index);if(!shard||!shard.cases.length)fail('Invalid/empty browser shard');const listFile=path.join(PLAN_DIR,`shard-${index}.txt`);if(!equal(fs.readFileSync(listFile,'utf8').trim().split('\n'),testListLines(plan,shard)))fail('Changed shard test list');const collected=discover(plan.files,{listFile});if(!equal(collected.map(r=>r.id),shard.cases))fail('Playwright test-list selection differs from planned cases');
   fs.mkdirSync(RESULT_DIR,{recursive:true});const args=['node_modules/@playwright/test/cli.js','test',...plan.files,'--project=desktop','--workers=1','--test-list',listFile];const execution=cp.spawnSync(process.execPath,args,{stdio:'inherit',env:{...process.env,PRODUCT_CI_EVIDENCE:'1'}});let cases=[],error='';try{cases=reportCases(JSON.parse(fs.readFileSync(path.join(RESULT_DIR,'browser-results.json'))));}catch(e){error=e.message;}const result={schemaVersion:1,index,sourceSha:plan.sourceSha,planDigest:plan.planDigest,code:execution.status??1,error,cases};fs.writeFileSync(path.join(RESULT_DIR,'shard-result.json'),JSON.stringify(result,null,2)+'\n');if(error||!equal(cases.map(r=>r.id),shard.cases))fail('Incomplete browser shard execution evidence');process.exitCode=result.code;
@@ -74,4 +81,4 @@ function main(){
  }else fail('Expected plan, run or verify');
 }
 if(require.main===module)try{main();}catch(e){console.error(e.message);process.exitCode=1;}
-module.exports={reportCases,makePlan,validatePlan,validateResults,discover,digest,testListLines};
+module.exports={requiresBackgroundEmulator,reportCases,makePlan,validatePlan,validateResults,discover,digest,testListLines};

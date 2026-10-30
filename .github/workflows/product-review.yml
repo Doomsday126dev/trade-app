@@ -127,7 +127,15 @@ jobs:
           CATALOG_SPRITE_CACHE: /tmp/trade-recent-catalog-sprite-cache
           PRODUCT_BROWSER_WORKERS: "1"
           PRODUCT_BROWSER_SHARD: ${{ matrix.shard }}
-        run: node scripts/ci/product-evidence.cjs browser
+        run: |
+          if test "$(node scripts/ci/product-browser-shards.cjs requires-background-emulator "$PRODUCT_BROWSER_SHARD")" = true; then
+            npx --yes firebase-tools@13.31.2 emulators:exec --only auth,database \
+              --project demo-pogo-background-reference \
+              --config proposals/background-v2/bounded-reference/firebase.json \
+              'node scripts/ci/product-evidence.cjs browser'
+          else
+            node scripts/ci/product-evidence.cjs browser
+          fi
       - name: Sanitize isolated test evidence
         id: evidence
         if: always()

@@ -34,7 +34,7 @@ test('TEST-02 Events deduplicates ordinary loads and a forced newer response win
 test('TEST-02 a stale public-profile exact read cannot replace a newer selected trainer',async()=>{
   const reads=[],applied=[];
   const context=vm.createContext({
-    db:{},PROVIDER_CAPABILITIES:{providerPublicReadSupport:false},selectedTrainerRuntime:{},_publicShareRequestGeneration:0,allData:{},Promise,console:{warn(){}},
+    resolveBackgroundPublicRows:async()=>[],db:{},PROVIDER_CAPABILITIES:{providerPublicReadSupport:false},selectedTrainerRuntime:{},_publicShareRequestGeneration:0,allData:{},Promise,console:{warn(){}},
     ref:(_db,path)=>path,get:path=>{const item=deferred();reads.push({path,item});return item.promise;},
     publicSharePublicationDomain:{publicShareProjectionStatus:(value,{username})=>({ok:true,status:'published',snapshot:{username,value}})},
     selectedTrainerData:username=>({username}),applyPublicShareSnapshot:(state,snapshot)=>{applied.push(snapshot.username);state.snapshot=snapshot;return true;},

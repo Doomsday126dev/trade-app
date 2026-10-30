@@ -165,3 +165,12 @@ test('recovery review acceptance reconciles a lost response and rejects malforme
   const changed=await lost.repository.readRecoveryReviewAcceptance({...record,candidateCount:65});assert.equal(changed.ok,false);assert.equal(changed.error.code,'account-sync/recovery-review-acceptance-conflict');
   const invalid=await lost.repository.createRecoveryReviewAcceptance({...record,evidenceFingerprint:'bad'});assert.equal(invalid.ok,false);assert.equal(invalid.error.code,'account-sync/recovery-review-acceptance-invalid');assert.equal(lost.transactionCalls,1);
 });
+
+test('guarded replacement survives serialized replay and rejects a concurrent field edit in the actual repository transaction',async()=>{
+ const window=load(),model=window.PogoDomain.accountSyncModel,fixture=repositoryFixture(window),seed=await operation(window);const first=await fixture.repository.applyOperation(seed.value);assert.equal(first.ok,true);
+ const oldDelete=await model.createOperation({...seed.value,kind:'delete',identity:null,baseGeneration:1,generation:2,patch:{},baseFieldRevisions:{},operationId:'op_0000000000000591',clientAt:10});
+ const guarded=await model.createOperation({...oldDelete.value,expectedRevision:first.value.revision});assert.equal(guarded.ok,true);assert.notEqual(guarded.value.inputHash,oldDelete.value.inputHash);assert.equal((await model.verifyOperation(JSON.parse(JSON.stringify(guarded.value)))).ok,true);assert.equal((await model.verifyOperation({...guarded.value,expectedRevision:2})).ok,false);assert.equal((await model.verifyOperation(oldDelete.value)).ok,true);
+ const token=model.fieldToken('priority'),edit=await operation(window,{kind:'patch',baseGeneration:1,generation:1,baseFieldRevisions:{priority:first.value.fieldRevisions[token]},patch:{priority:'L'},operationId:'op_0000000000000592'});assert.equal((await fixture.repository.applyOperation(edit.value)).ok,true);
+ const replay=await fixture.repository.applyOperation(JSON.parse(JSON.stringify(guarded.value)));assert.equal(replay.ok,false);assert.equal(replay.error.code,'account-sync/source-revision-conflict');assert.equal(fixture.current.deleted,false);assert.equal(fixture.current.values.priority,'L');
+ const current=await model.createOperation({...guarded.value,operationId:'op_0000000000000593',expectedRevision:fixture.current.revision});const removed=await fixture.repository.applyOperation(current.value);assert.equal(removed.ok,true);assert.equal((await fixture.repository.applyOperation(current.value)).status,'idempotent');
+});

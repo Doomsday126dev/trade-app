@@ -1,0 +1,218 @@
+[
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:634:standard:legacy:Zweilous",
+    "pokemon": "zweilous",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://bleedingcool.com/games/pokemon-go-to-hold-deino-community-day-classic-this-weekend/",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:633:standard:legacy:Deino",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:635:standard:legacy:Hydreigon",
+    "pokemon": "hydreigon",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://bleedingcool.com/games/pokemon-go-to-hold-deino-community-day-classic-this-weekend/",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:633:standard:legacy:Deino",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:634:standard:legacy:Zweilous",
+    "pokemon": "zweilous",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://bleedingcool.com/games/pokemon-go-to-hold-deino-community-day-classic-this-weekend/",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:633:standard:legacy:Deino",
+      true
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-finished/sb-community-days-2026.png",
+    "art_sha256": "ac31db13fbc7db44936dea459831130bba7ca999e8a10710e6e682f01acbc3e8",
+    "art_source": "https://assets.dittobase.com/go/backgrounds/sb-community-days-2026.png",
+    "art_source_blob": null,
+    "visual_evidence": "/tmp/trade-background-finished/sheet.png",
+    "art_qualification": "finished_static_presentation",
+    "background_id": "sb-community-days-2026",
+    "catalog_id": "pokemon:635:standard:legacy:Hydreigon",
+    "pokemon": "hydreigon",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://bleedingcool.com/games/pokemon-go-to-hold-deino-community-day-classic-this-weekend/",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-community-days-2026",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-community-days-2026",
+      "pokemon:633:standard:legacy:Deino",
+      true
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-18-might-and-mastery.png",
+    "art_sha256": "2496dc2668763e7216c4a8cb5211d22cec0001ce42c369af3b8866bf611d8fe4",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season18_MightAndMastery.png",
+    "art_source_blob": "03c50f1e8ec43cecf778ce98c89200299f413f13",
+    "visual_evidence": "/tmp/trade-background-originals/paired-4.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-18-might-and-mastery",
+    "catalog_id": "pokemon:67:standard:legacy:Machoke",
+    "pokemon": "machoke",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-18-might-and-mastery",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml",
+      "https://www.serebii.net/pokemongo/communityday/classic%3Amachop.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-season-18-might-and-mastery",
+      "pokemon:66:standard:legacy:Machop",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-18-might-and-mastery.png",
+    "art_sha256": "2496dc2668763e7216c4a8cb5211d22cec0001ce42c369af3b8866bf611d8fe4",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season18_MightAndMastery.png",
+    "art_source_blob": "03c50f1e8ec43cecf778ce98c89200299f413f13",
+    "visual_evidence": "/tmp/trade-background-originals/paired-4.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-18-might-and-mastery",
+    "catalog_id": "pokemon:68:standard:legacy:Machamp",
+    "pokemon": "machamp",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-18-might-and-mastery",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml",
+      "https://www.serebii.net/pokemongo/communityday/classic%3Amachop.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-season-18-might-and-mastery",
+      "pokemon:66:standard:legacy:Machop",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-18-might-and-mastery.png",
+    "art_sha256": "2496dc2668763e7216c4a8cb5211d22cec0001ce42c369af3b8866bf611d8fe4",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season18_MightAndMastery.png",
+    "art_source_blob": "03c50f1e8ec43cecf778ce98c89200299f413f13",
+    "visual_evidence": "/tmp/trade-background-originals/paired-4.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-18-might-and-mastery",
+    "catalog_id": "pokemon:67:standard:legacy:Machoke",
+    "pokemon": "machoke",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-18-might-and-mastery",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml",
+      "https://www.serebii.net/pokemongo/communityday/classic%3Amachop.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-season-18-might-and-mastery",
+      "pokemon:66:standard:legacy:Machop",
+      true
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-18-might-and-mastery.png",
+    "art_sha256": "2496dc2668763e7216c4a8cb5211d22cec0001ce42c369af3b8866bf611d8fe4",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season18_MightAndMastery.png",
+    "art_source_blob": "03c50f1e8ec43cecf778ce98c89200299f413f13",
+    "visual_evidence": "/tmp/trade-background-originals/paired-4.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-18-might-and-mastery",
+    "catalog_id": "pokemon:68:standard:legacy:Machamp",
+    "pokemon": "machamp",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-18-might-and-mastery",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml",
+      "https://www.serebii.net/pokemongo/communityday/classic%3Amachop.shtml"
+    ],
+    "eligibility_basis": "Previously qualified exact same-background same-state progenitor and matching captured event evolution; inspected event source confirms event background route. Ordinary evolution retains background and normal/Shiny state.",
+    "evidence_tier": "reviewed_exact_evolution_from_qualified_same_background_same_shiny_progenitor",
+    "eligibility_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution",
+    "qualified_same_background_progenitor": [
+      "sb-season-18-might-and-mastery",
+      "pokemon:66:standard:legacy:Machop",
+      true
+    ]
+  }
+]
