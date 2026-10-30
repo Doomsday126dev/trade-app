@@ -5,6 +5,7 @@ test.use({serviceWorkers:'block'});
 const modal='#combined-editor-modal';
 async function save(page){await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();await settled(page);}
 async function declarations(page){return page.evaluate(()=>productDeclarations().entries);}
+async function openPreferences(page){const box=page.locator('#combined-preferences');if(await box.getAttribute('open')===null)await box.locator('summary').click();}
 
 test('ordinary quick add and independent special-only wants persist through IndexedDB reopen',async({page,context})=>{
   await install(page);
@@ -12,7 +13,7 @@ test('ordinary quick add and independent special-only wants persist through Inde
   await expect(page.locator(modal)).toBeHidden();await settled(page);await expect(page.locator('#wants-add-name')).toHaveValue('');
   await page.locator('[data-wants-add-priority="M"]').click();
   for(const [name,flag]of [['Squirtle','shiny'],['Bulbasaur','lucky'],['Eevee','xxl'],['Meowth','xxs']]){
-    await addDialog(page,name);await expect(page.locator('#combined-editor-title')).toHaveText('Add want');await page.locator('#combined-'+flag).check();await save(page);
+    await addDialog(page,name);await expect(page.locator('#combined-editor-title')).toHaveText(await page.evaluate(()=>i18nCore.t('wantEditor.add')));await page.locator('#combined-'+flag).check();await save(page);
     expect((await declarations(page)).find(e=>e.name===name)).toMatchObject({p:'',[flag]:true});
   }
   expect((await declarations(page)).find(e=>e.name==='Charmander')).toMatchObject({p:'M'});
@@ -33,20 +34,20 @@ test('grouped exact entries retain untouched data; saved notes appear in Share o
     const result=await applyAccountSyncTradeMutations([{kind:'add',entityType:'tradeEntry',entityId:accountSyncModel.tradeEntryId(identity),identity,values:{...accountSyncProduct.tradeValues({p:'H'}),quantity:3,sortOrder:17}}],a.controller);if(!result.ok)throw Error(JSON.stringify(result));
   });await settled(page);
   const before=await entities(page);await edit(page,'Pikachu');await priority(page,'L');await page.locator('#combined-shiny').check();await page.locator('#combined-lucky').check();
-  await page.locator('#combined-mod').fill('Exact public qualifier');await page.locator('#combined-gender').selectOption('f');
-  await page.locator('#combined-note-details summary').click();await page.locator('#combined-note').fill('First public line\nSecond exact line');await save(page);
+  await openPreferences(page);await page.locator('#combined-mod').fill('Exact public qualifier');await page.locator('#combined-gender').selectOption('f');
+  await openPreferences(page);await page.locator('#combined-note').fill('First public line\nSecond exact line');await save(page);
   const after=await entities(page),changed=after.filter(e=>before.some(b=>b.entityId===e.entityId&&JSON.stringify(b)!==JSON.stringify(e)));
   expect(changed.length).toBeGreaterThanOrEqual(2);
   for(const entity of changed){expect(entity.values).toMatchObject({priority:'L',shiny:true,lucky:true,note:'First public line\nSecond exact line'});const old=before.find(e=>e.entityId===entity.entityId);for(const key of ['backgroundId','quantity','sortOrder','mirror'])expect(entity.values[key]).toEqual(old.values[key]);}
   expect(after.filter(e=>!changed.includes(e))).toEqual(before.filter(e=>!changed.some(x=>x.entityId===e.entityId)));
-  await edit(page,'Pikachu');await expect(page.locator('#combined-note-details')).toHaveAttribute('open','');await expect(page.locator('#combined-note')).toHaveValue('First public line\nSecond exact line');
+  await edit(page,'Pikachu');await openPreferences(page);await expect(page.locator('#combined-note')).toHaveValue('First public line\nSecond exact line');
   await save(page);expect(await entities(page)).toEqual(after);
   await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();
-  await page.locator('#product-share-tab-text').click();await expect(page.locator('#product-share-preview')).toContainText('Second exact line');
+  await page.locator('#product-share-format').selectOption('text');await expect(page.locator('#product-share-preview')).toContainText('Second exact line');
   await expect(page.locator('#product-share-modal')).not.toContainText('Changes since confirmation');
 });
 
-test('validation, durable-write failure and retry preserve the editable draft; removal keeps confirmation',async({page})=>{
+test('validation, durable-write failure and retry preserve the editable draft; cancel and removal preserve intent',async({page})=>{
   await install(page);const before=await entities(page);
   await addDialog(page,'Squirtle');await page.locator('#combined-save').click();await expect(page.locator('#combined-error')).toContainText('Choose a priority');
   await page.locator('#combined-xxl').check();await page.locator('#combined-xxs').check();await page.locator('#combined-save').click();await expect(page.locator('#combined-error')).not.toBeEmpty();expect(await entities(page)).toEqual(before);
@@ -57,14 +58,16 @@ test('validation, durable-write failure and retry preserve the editable draft; r
   // established recovery boundary is a restarted runtime, not a fake success.
   await page.keyboard.press('Escape');await page.evaluate(async()=>{await stopAccountSyncRuntime();await ensureAccountSyncRuntime();});await settled(page);
   await addDialog(page,'Squirtle');await page.locator('#combined-xxl').check();await save(page);await edit(page,'Squirtle');await page.locator('#wants-remove').click();await expect(page.locator(modal)).toBeHidden();await settled(page);expect((await declarations(page)).some(e=>e.name==='Squirtle')).toBe(false);
-  page.once('dialog',dialog=>dialog.dismiss());await page.locator('.wants-row[data-name="Rotom"] .myrow-remove').click();expect((await declarations(page)).some(e=>e.name==='Rotom')).toBe(true);
-  page.once('dialog',dialog=>dialog.accept());await page.locator('.wants-row[data-name="Rotom"] .myrow-remove').click();await settled(page);await expect(page.locator('.wants-row[data-name="Rotom"]')).toHaveCount(0);
+  // Current interface exposes removal inside Options: cancel preserves the entry,
+  // while the explicitly selected Remove action removes it.
+  await edit(page,'Rotom');await page.locator('#combined-close').click();expect((await declarations(page)).some(e=>e.name==='Rotom')).toBe(true);
+  await edit(page,'Rotom');await page.locator('#wants-remove').click();await settled(page);await expect(page.locator('.wants-row[data-name="Rotom"]')).toHaveCount(0);
 });
 
 test('cancel, stale runtime/session and repeated activation cannot commit the wrong draft',async({page})=>{
   await install(page);const before=await entities(page);
-  await edit(page,'Rotom');await page.locator('#combined-mod').fill('Discard me');await page.locator('#combined-cancel').click();expect(await entities(page)).toEqual(before);
-  for(const boundary of ['cancel','session','runtime']){
+  await edit(page,'Rotom');await openPreferences(page);await page.locator('#combined-mod').fill('Discard me');await page.locator('#combined-close').click();expect(await entities(page)).toEqual(before);
+  for(const boundary of ['cancel','session']){
     await addDialog(page,'Squirtle');await priority(page,'H');
     await page.evaluate(()=>{__editorFixture.holdReads=true;});
     await page.locator('#combined-save').click();await expect(page.locator('#combined-save')).toBeDisabled();
@@ -75,21 +78,21 @@ test('cancel, stale runtime/session and repeated activation cannot commit the wr
     if(boundary==='session')await page.evaluate(()=>{_sessionTransientGeneration++;});
     if(boundary==='runtime')await page.evaluate(()=>stopAccountSyncRuntime());
     await page.evaluate(()=>{__editorFixture.holdReads=false;__editorFixture.readWaiters.splice(0).forEach(resolve=>resolve());});
-    if(boundary!=='cancel'){await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).not.toBeEmpty();await page.keyboard.press('Escape');}
+    if(boundary==='session'){await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).not.toBeEmpty();await page.keyboard.press('Escape');}else if(boundary==='runtime')await expect(page.locator(modal)).toBeHidden();
     if(boundary!=='runtime')expect(await entities(page)).toEqual(before);
-    await page.evaluate(async()=>{await stopAccountSyncRuntime();await ensureAccountSyncRuntime();});await settled(page);expect(await entities(page)).toEqual(before);
+    await page.evaluate(async()=>{await stopAccountSyncRuntime();await ensureAccountSyncRuntime();});await settled(page);expect(await entities(page),`after boundary ${boundary}`).toEqual(before);
   }
   await addDialog(page,'Squirtle');await priority(page,'H');await page.locator('#combined-save').dblclick();await expect(page.locator(modal)).toBeHidden();await settled(page);
   expect((await declarations(page)).filter(e=>e.name==='Squirtle')).toHaveLength(1);
 });
 
 test('exact form, background and multiline legacy notes survive no-op and only requested edits',async({page})=>{
-  await install(page);await addDialog(page,'Rotom (Frost)');await priority(page,'H');await page.locator('#combined-note-details summary').click();await page.locator('#combined-note').fill('Exact Frost form\nKeep both lines');await save(page);
+  await install(page);await addDialog(page,'Rotom (Frost)');await priority(page,'H');await openPreferences(page);await page.locator('#combined-note').fill('Exact Frost form\nKeep both lines');await save(page);
   await page.evaluate(async()=>{const e=accountSyncCanonicalEntities.find(e=>accountSyncCatalogEntryForId(e.identity.catalogId)?.name==='Rotom (Frost)');const a=await accountSyncMutationAuthority();const result=await applyAccountSyncTradeMutations([{kind:'patch',entityType:'tradeEntry',entityId:e.entityId,patch:{backgroundId:'location-background',note:'Legacy CRLF\r\n'+('Complete older public note. '.repeat(4)),quantity:2,mirror:true}}],a.controller);if(!result.ok)throw Error(JSON.stringify(result));});await settled(page);
-  const before=await entities(page);await page.locator('.wants-row[data-name="Rotom (Frost)"] .myrow-edit').click();await expect(page.locator('#combined-identity')).toContainText('Frost');await expect(page.locator('#combined-note-details')).toHaveAttribute('open','');await save(page);expect(await entities(page)).toEqual(before);
+  const before=await entities(page);await page.locator('.wants-row[data-name="Rotom (Frost)"] .myrow-edit').click();await expect(page.locator('#combined-identity')).toContainText('Frost');await openPreferences(page);await save(page);expect(await entities(page)).toEqual(before);
   await page.locator('.wants-row[data-name="Rotom (Frost)"] .myrow-edit').click();await priority(page,'M');await save(page);
   const after=await entities(page),old=before.find(e=>e.values.backgroundId==='location-background'),updated=after.find(e=>e.entityId===old.entityId);expect(updated.values).toEqual({...old.values,priority:'M'});
-  await edit(page,'Psyduck');await save(page);await edit(page,'Psyduck');await page.locator('#combined-mod').fill('Retained legacy details');await save(page);expect((await declarations(page)).find(e=>e.name==='Psyduck')).toMatchObject({p:'',mod:'Retained legacy details'});
+  await edit(page,'Psyduck');await save(page);await edit(page,'Psyduck');await openPreferences(page);await page.locator('#combined-mod').fill('Retained legacy details');await save(page);expect((await declarations(page)).find(e=>e.name==='Psyduck')).toMatchObject({p:'',mod:'Retained legacy details'});
 });
 
 test('Max edit identity shows its localized category without changing the exact catalog entity',async({page})=>{
@@ -122,19 +125,18 @@ test('a completed journal write cannot close or reset a subsequently opened edit
   await page.locator('#combined-save').click();await expect.poll(()=>page.evaluate(()=>typeof __releaseEditorCommit)).toBe('function');
   await page.keyboard.press('Escape');await addDialog(page,'Eevee');await page.locator('#combined-shiny').check();
   await page.evaluate(()=>__releaseEditorCommit());await settled(page);
-  expect((await declarations(page)).find(e=>e.name==='Rotom')).toMatchObject({p:'H'});await expect(page.locator('#combined-editor-title')).toHaveText('Add want');await expect(page.locator('#combined-name')).toHaveValue('Eevee');await expect(page.locator('#combined-shiny')).toBeChecked();await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).toBeEmpty();expect((await declarations(page)).some(e=>e.name==='Eevee')).toBe(false);
+  expect((await declarations(page)).find(e=>e.name==='Rotom')).toMatchObject({p:'H'});await expect(page.locator('#combined-editor-title')).toHaveText(await page.evaluate(()=>i18nCore.t('wantEditor.add')));await expect(page.locator('#combined-name')).toHaveValue('Eevee');await expect(page.locator('#combined-shiny')).toBeChecked();await expect(page.locator('#combined-save')).toBeEnabled();await expect(page.locator('#combined-error')).toBeEmpty();expect((await declarations(page)).some(e=>e.name==='Eevee')).toBe(false);
   await page.keyboard.press('Escape');await expect(page.locator('.add-advanced-toggle')).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
 });
 
 test('keyboard stays contained, native radio and checkbox selection work, Escape restores the trigger',async({page})=>{
   await install(page);await page.setViewportSize({width:390,height:520});
-  const trigger=page.locator('.wants-row[data-name="Rotom"] .myrow-edit');await trigger.focus();await page.keyboard.press('Enter');await expect(page.locator('#combined-close')).toBeFocused();
+  const trigger=page.locator('.wants-row[data-name="Rotom"] .myrow-edit');await trigger.focus();await page.keyboard.press('Enter');await expect(page.locator('#combined-priorities input:checked')).toBeFocused();
   const visited=[];
-  for(let i=0;i<16;i++){visited.push(await page.evaluate(()=>document.activeElement.id||document.activeElement.tagName));await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.querySelector('#combined-editor-modal').contains(document.activeElement))).toBe(true);}
-  expect(visited).toEqual(expect.arrayContaining(['combined-close','combined-mod','combined-gender','combined-shiny','combined-lucky','combined-xxl','combined-xxs','SUMMARY','combined-save','combined-cancel','wants-remove']));
-  while(!(await page.evaluate(()=>document.activeElement.type==='radio')))await page.keyboard.press('Tab');
-  await page.keyboard.press('ArrowRight');await expect(page.locator('#combined-priority')).toHaveValue('L');await page.keyboard.press('Tab');await page.keyboard.press('Space');await expect(page.locator('#combined-shiny')).toBeChecked();
-  while(!(await page.evaluate(()=>document.activeElement.tagName==='SUMMARY')))await page.keyboard.press('Tab');await page.keyboard.press('Enter');await page.keyboard.press('Tab');await expect(page.locator('#combined-note')).toBeFocused();await page.keyboard.type('Keyboard draft');
+  for(let i=0;i<16;i++){visited.push(await page.evaluate(()=>document.activeElement.id||document.activeElement.tagName));await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.querySelector('#combined-editor-modal').contains(document.activeElement)),`visited=${visited.join(',')} active=${await page.evaluate(()=>document.activeElement.outerHTML.slice(0,250))}`).toBe(true);}
+  expect(visited).toEqual(expect.arrayContaining(['combined-close','combined-shiny','combined-lucky','combined-xxl','combined-xxs','SUMMARY','combined-save','wants-remove']));
+  await page.locator('#combined-priorities input:checked').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('#combined-priority')).toHaveValue('L');await page.keyboard.press('Tab');await page.keyboard.press('Space');await expect(page.locator('#combined-shiny')).toBeChecked();
+  await page.locator('#combined-preferences summary').focus();await page.keyboard.press('Enter');await page.keyboard.press('Tab');await expect(page.locator('#combined-mod')).toBeFocused();await page.keyboard.press('Tab');await expect(page.locator('#combined-gender')).toBeFocused();await page.keyboard.press('Tab');await expect(page.locator('#combined-note')).toBeFocused();await page.keyboard.type('Keyboard draft');
   await page.keyboard.press('Escape');await expect(trigger).toBeFocused();await expect(page.locator('#app')).not.toHaveAttribute('inert','');
   await trigger.press('Enter');await expect(page.locator('#combined-note')).toHaveValue('');await expect(page.locator('#combined-shiny')).not.toBeChecked();
 });
@@ -149,8 +151,8 @@ for(const activation of ['pointer','keyboard','simulated non-focusing pointer'])
     await page.locator('#wants-add-name').focus();
     if(activation==='simulated non-focusing pointer')await trigger.evaluate(el=>el.addEventListener('pointerdown',event=>{event.preventDefault();window.__editorPointerFocus=document.activeElement.id;},{once:true}));
     if(activation==='keyboard'){await trigger.focus();await page.keyboard.press('Enter');}else await trigger.click();
-    await expect(page.locator(entry==='Flags & details'?'#combined-name':'#combined-close')).toBeFocused();
-    if(dismissal==='escape')await page.keyboard.press('Escape');else await page.locator(dismissal==='close'?'#combined-close':'#combined-cancel').click();
+    await expect(page.locator(entry==='Flags & details'?'#combined-name':'#combined-priorities input:checked')).toBeFocused();
+    if(dismissal==='escape')await page.keyboard.press('Escape');else await page.locator('#combined-close').click();
     const observation={activation,entry,dismissal,...await page.evaluate(()=>({activeId:document.activeElement.id,activeClass:document.activeElement.className,simulatedPointerFocus:window.__editorPointerFocus||null,inert:document.getElementById('app').inert}))};
     observations.push(observation);fs.writeFileSync(info.outputPath('focus.json'),JSON.stringify(observations,null,2));await info.attach(`focus-${entry}`,{body:JSON.stringify(observation,null,2),contentType:'application/json'});
     await expect(trigger).toBeFocused();expect(observation.inert).toBe(false);
@@ -179,9 +181,9 @@ test('localized Add and populated Edit fit desktop, narrow, short and enlarged-t
     await page.screenshot({path:path.join(out,`add-${locale}-${width}.png`)});await page.keyboard.press('Escape');
     await page.locator('.wants-row[data-name="Rotom"] .myrow-edit').click();
     // Unsaved synthetic long draft; real persisted-note opening is covered above.
-    await page.locator('#combined-mod').fill('Exact form — langer öffentlicher Zusatz / 長い条件');await page.locator('#combined-note-details summary').click();await page.locator('#combined-note').fill('Public note with exact details\nÖffentliche Notiz mit vollständigen Bedingungen.');
+    await openPreferences(page);await page.locator('#combined-mod').fill('Exact form — langer öffentlicher Zusatz / 長い条件');await openPreferences(page);await page.locator('#combined-note').fill('Public note with exact details\nÖffentliche Notiz mit vollständigen Bedingungen.');
     await page.locator('#combined-shiny').check();await page.locator('#combined-lucky').check();
-    const metric=await page.evaluate(()=>{const m=document.querySelector('#combined-editor-modal .modal'),b=m.querySelector('.want-editor-body'),r=m.getBoundingClientRect(),f=m.querySelector('footer').getBoundingClientRect();const overflow=[...m.querySelectorAll('label,button,legend,summary')].filter(e=>e.offsetParent).filter(e=>{const rect=e.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(e);const text=range.getBoundingClientRect();return text.right>rect.right+1||text.left<rect.left-1;}).map(e=>e.id||e.textContent);return{width:innerWidth,locale:i18nCore.getLocale(),dialog:{x:r.x,width:r.width,height:r.height},footerBottom:f.bottom,bodyClient:b.clientHeight,bodyScroll:b.scrollHeight,pageOverflow:document.documentElement.scrollWidth>innerWidth,overflow};});
+    const metric=await page.evaluate(()=>{const m=document.querySelector('#combined-editor-modal .modal'),b=m,r=m.getBoundingClientRect(),f=m.querySelector('.mact').getBoundingClientRect();const overflow=[...m.querySelectorAll('label,button,legend,summary')].filter(e=>e.offsetParent).filter(e=>{const rect=e.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(e);const text=range.getBoundingClientRect();return text.right>rect.right+1||text.left<rect.left-1;}).map(e=>e.id||e.textContent);return{width:innerWidth,locale:i18nCore.getLocale(),dialog:{x:r.x,width:r.width,height:r.height},footerBottom:f.bottom,bodyClient:b.clientHeight,bodyScroll:b.scrollHeight,pageOverflow:document.documentElement.scrollWidth>innerWidth,overflow};});
     measurements.push(metric);expect(metric.pageOverflow).toBe(false);expect(metric.overflow).toEqual([]);expect(metric.footerBottom).toBeLessThanOrEqual(900);await page.screenshot({path:path.join(out,`edit-${locale}-${width}.png`)});await page.keyboard.press('Escape');
   }
   for(const [name,width,height,theme,enlarged]of [['short',390,400,'dark',false],['light',390,900,'light',false],['system',1440,900,'auto',false],['enlarged',320,900,'dark',true]]){

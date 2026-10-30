@@ -206,6 +206,11 @@
 "share.liveCaption":"Öffentliche Seite ohne Konto",
 
 "share.searchCaption":"Eigene Pokémon im Spiel suchen",
+"background.unavailable":"Hintergrund nicht verfügbar",
+"background.addSeparate":"Fügt einen separaten Hintergrundwunsch hinzu; der bestehende Wunsch bleibt erhalten.",
+"share.backgrounds":"Hintergründe",
+"share.backgroundFor":"Hintergrund für {name}",
+"share.noBackground":"Kein Hintergrund",
 "share.imageSnapshot":"Bild",
 "share.textSnapshot":"Klartext",
 "share.snapshotCaption":"Momentaufnahme der Auswahl",

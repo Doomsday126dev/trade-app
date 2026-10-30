@@ -2494,6 +2494,7 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 #combined-editor-modal .mact:has(#wants-remove:not([hidden])){grid-template-columns:1fr 1fr 2fr}
 #combined-editor-modal .mact button{min-height:48px;min-width:0}
 @media(max-width:600px){#combined-editor-modal .combined-editor{padding:22px 20px}.combined-identity{gap:10px}.combined-identity-copy strong{font-size:17px}#combined-editor-modal .mact{bottom:-22px;margin-inline:-20px;margin-bottom:-22px;padding-inline:20px;padding-bottom:22px}}
+@media(max-width:380px){#combined-editor-modal .mact:has(#wants-remove:not([hidden])){grid-template-columns:repeat(2,minmax(0,1fr))}#combined-editor-modal .mact:has(#wants-remove:not([hidden])) #combined-save{grid-column:1 / -1}}
 #combined-editor-modal .combined-checks input{accent-color:var(--option-check-accent,#8a6500)}
 #combined-list .wants-section-search{min-width:0;max-width:min(220px,60vw);justify-self:end}
 /* Reserve the fixed touch-control cluster; allow only brand text to truncate. */
@@ -2596,3 +2597,9 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 .event-collapsed-highlights,.event-collapsible-body{grid-column:1/-1}.event-collapsed-highlights[hidden],.event-collapsible-body[hidden]{display:none}
 
 @media(min-width:601px){.event-agenda-card .event-card-kicker{align-self:start;min-height:24px}}
+
+.share-background-choices{flex-basis:100%}.share-background-choice{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,200px);gap:8px;align-items:center;margin-top:8px}.share-background-choice span{overflow-wrap:anywhere}@media(max-width:480px){.share-background-choice{grid-template-columns:1fr}}
+
+#background-recovery{display:block}#background-recovery[hidden]{display:none}#background-recovery summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#background-recovery .background-recovery-actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px}#background-recovery .btn{max-width:100%;white-space:normal}
+
+#background-recovery summary{gap:8px}#background-recovery summary>.ui-icon{transform:rotate(-90deg)}#background-recovery details[open]>summary>.ui-icon{transform:none}

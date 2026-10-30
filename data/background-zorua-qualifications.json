@@ -1,0 +1,86 @@
+[
+  {
+    "art_path": "/tmp/trade-background-originals/sb-go-tour-2025-enigma.png",
+    "art_sha256": "eed51d58cdffb3c018aa39b5d859fd8e14547488a4eff43b75ef07c82d576c8c",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_GoTour2025_enigma.png",
+    "art_source_blob": "e6802a1de41fc671045a6956bdeb44ff25ab3ce5",
+    "visual_evidence": "/tmp/trade-background-originals/paired-3.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-go-tour-2025-enigma",
+    "catalog_id": "pokemon:570:standard:legacy:Zorua",
+    "pokemon": "zorua",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/tour-pass-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-go-tour-2025-enigma"
+    ],
+    "eligibility_basis": "Official Tour Pass states that the exact Zorua Special Background reward may be Shiny; the independent exact background index identifies the Enigma scene. Zoroark is ordinary evolution of that background-bearing Zorua and retains its Shiny state.",
+    "evidence_tier": "primary_exact_reward_shiny_footnote_and_independent_exact_scene",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "tour_pass_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-go-tour-2025-enigma.png",
+    "art_sha256": "eed51d58cdffb3c018aa39b5d859fd8e14547488a4eff43b75ef07c82d576c8c",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_GoTour2025_enigma.png",
+    "art_source_blob": "e6802a1de41fc671045a6956bdeb44ff25ab3ce5",
+    "visual_evidence": "/tmp/trade-background-originals/paired-3.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-go-tour-2025-enigma",
+    "catalog_id": "pokemon:571:standard:legacy:Zoroark",
+    "pokemon": "zoroark",
+    "shiny": false,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/tour-pass-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-go-tour-2025-enigma"
+    ],
+    "eligibility_basis": "Official Tour Pass states that the exact Zorua Special Background reward may be Shiny; the independent exact background index identifies the Enigma scene. Zoroark is ordinary evolution of that background-bearing Zorua and retains its Shiny state.",
+    "evidence_tier": "primary_exact_reward_shiny_footnote_and_independent_exact_scene",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-go-tour-2025-enigma.png",
+    "art_sha256": "eed51d58cdffb3c018aa39b5d859fd8e14547488a4eff43b75ef07c82d576c8c",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_GoTour2025_enigma.png",
+    "art_source_blob": "e6802a1de41fc671045a6956bdeb44ff25ab3ce5",
+    "visual_evidence": "/tmp/trade-background-originals/paired-3.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-go-tour-2025-enigma",
+    "catalog_id": "pokemon:570:standard:legacy:Zorua",
+    "pokemon": "zorua",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/tour-pass-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-go-tour-2025-enigma"
+    ],
+    "eligibility_basis": "Official Tour Pass states that the exact Zorua Special Background reward may be Shiny; the independent exact background index identifies the Enigma scene. Zoroark is ordinary evolution of that background-bearing Zorua and retains its Shiny state.",
+    "evidence_tier": "primary_exact_reward_shiny_footnote_and_independent_exact_scene",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "tour_pass_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-go-tour-2025-enigma.png",
+    "art_sha256": "eed51d58cdffb3c018aa39b5d859fd8e14547488a4eff43b75ef07c82d576c8c",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_GoTour2025_enigma.png",
+    "art_source_blob": "e6802a1de41fc671045a6956bdeb44ff25ab3ce5",
+    "visual_evidence": "/tmp/trade-background-originals/paired-3.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-go-tour-2025-enigma",
+    "catalog_id": "pokemon:571:standard:legacy:Zoroark",
+    "pokemon": "zoroark",
+    "shiny": true,
+    "eligibility_sources": [
+      "https://pokemongo.com/news/tour-pass-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-go-tour-2025-enigma"
+    ],
+    "eligibility_basis": "Official Tour Pass states that the exact Zorua Special Background reward may be Shiny; the independent exact background index identifies the Enigma scene. Zoroark is ordinary evolution of that background-bearing Zorua and retains its Shiny state.",
+    "evidence_tier": "primary_exact_reward_shiny_footnote_and_independent_exact_scene",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "ordinary_evolution"
+  }
+]

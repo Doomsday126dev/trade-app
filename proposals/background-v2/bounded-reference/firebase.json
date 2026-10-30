@@ -1,0 +1,1 @@
+{"database": {"rules": "full.rules.json"}, "emulators": {"database": {"port": 9220}, "auth": {"port": 9319}, "ui": {"enabled": false}, "singleProjectMode": true}}

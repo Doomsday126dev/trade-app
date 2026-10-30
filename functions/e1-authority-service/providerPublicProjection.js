@@ -32,7 +32,7 @@ function optionalFields(value, fields) {
 }
 
 function projectionFields(value) {
-  return optionalFields(value, value?.schemaVersion === 2 ? [...TOP_LEVEL_FIELDS, 'declarations', 'declarationCount'] : TOP_LEVEL_FIELDS) && REQUIRED_TOP_LEVEL_FIELDS.every((field) => Object.hasOwn(value, field));
+  return optionalFields(value, [2,3].includes(value?.schemaVersion) ? [...TOP_LEVEL_FIELDS, 'declarations', 'declarationCount', ...(value.schemaVersion===3?['backgroundRef','backgroundRevision']:[])] : TOP_LEVEL_FIELDS) && REQUIRED_TOP_LEVEL_FIELDS.every((field) => Object.hasOwn(value, field));
 }
 
 function safeString(value, max, { empty = true } = {}) {
@@ -62,7 +62,7 @@ function sanitizeProviderPublicProjection(value, { trainerName } = {}) {
   const expectedTrainerName = String(trainerName || '').trim();
   let bytes;
   try { bytes = Buffer.byteLength(JSON.stringify(value)); } catch { return null; }
-  if (bytes > MAX_PROJECTION_BYTES || !projectionFields(value) || ![1, 2].includes(value.schemaVersion) ||
+  if (bytes > MAX_PROJECTION_BYTES || !projectionFields(value) || ![1, 2, 3].includes(value.schemaVersion) ||
       !Number.isSafeInteger(value.shareVersion) || value.shareVersion < 1 ||
       !safeString(value.trainerName, 64, { empty: false }) ||
       expectedTrainerName && value.trainerName !== expectedTrainerName ||
@@ -94,8 +94,9 @@ function sanitizeProviderPublicProjection(value, { trainerName } = {}) {
     Object.freeze(lists[type]);
   }
 
+  if(value.schemaVersion===3&&(!/^bgs_[a-z0-9]{32}$/.test(value.backgroundRef||'')||!/^r[1-9][0-9]*$/.test(value.backgroundRevision||'')))return null;
   let declarations;
-  if (value.schemaVersion === 2) {
+  if (value.schemaVersion === 2 || value.schemaVersion === 3) {
     declarations = value.declarations ?? [];
     if (!Array.isArray(declarations) || declarations.length > MAX_TOTAL_ENTRIES || value.declarationCount !== declarations.length) return null;
     for (const entry of declarations) {
@@ -108,6 +109,7 @@ function sanitizeProviderPublicProjection(value, { trainerName } = {}) {
   }
   return Object.freeze({
     version: value.schemaVersion,
+    ...(value.schemaVersion===3?{backgroundRef:value.backgroundRef,backgroundRevision:value.backgroundRevision}:{}),
     ...(declarations ? { declarations: Object.freeze(declarations), declarationCount: declarations.length } : {}),
     username: value.trainerName,
     profile: Object.freeze({ ...profile }),

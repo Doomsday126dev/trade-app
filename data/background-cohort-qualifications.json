@@ -1,0 +1,286 @@
+[
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-19-delightful-days.png",
+    "art_sha256": "7bba07c8ba31e127a3461b10f0e48a9de568075f26d153d7dcdfc1685f5873af",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season19_DelightfulDays.png",
+    "art_source_blob": "f904c147b3db2b39face633737832ff620a9d336",
+    "visual_evidence": "/tmp/trade-background-originals/paired-2.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-19-delightful-days",
+    "catalog_id": "pokemon:146:standard:legacy:Moltres",
+    "pokemon": "moltres",
+    "shiny": false,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/monthly-rewards-august-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-19-delightful-days",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-19-delightful-days.png",
+    "art_sha256": "7bba07c8ba31e127a3461b10f0e48a9de568075f26d153d7dcdfc1685f5873af",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season19_DelightfulDays.png",
+    "art_source_blob": "f904c147b3db2b39face633737832ff620a9d336",
+    "visual_evidence": "/tmp/trade-background-originals/paired-2.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-19-delightful-days",
+    "catalog_id": "pokemon:146:standard:legacy:Moltres",
+    "pokemon": "moltres",
+    "shiny": true,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/monthly-rewards-august-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-19-delightful-days",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:639:standard:legacy:Terrakion",
+    "pokemon": "terrakion",
+    "shiny": false,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/go-pass-october-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:639:standard:legacy:Terrakion",
+    "pokemon": "terrakion",
+    "shiny": true,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/go-pass-october-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:640:standard:legacy:Virizion",
+    "pokemon": "virizion",
+    "shiny": false,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/go-pass-november-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:640:standard:legacy:Virizion",
+    "pokemon": "virizion",
+    "shiny": true,
+    "eligibility_basis": "Official GO Pass explicitly marks the named background-bearing reward as Shiny-capable.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/go-pass-november-2025",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:731:standard:legacy:Pikipek",
+    "pokemon": "pikipek",
+    "shiny": false,
+    "eligibility_basis": "Official Community Day describes the exact Pikipek lure encounter as having increased Shiny chance and possible seasonal background in the same encounter route.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:732:standard:legacy:Trumbeak",
+    "pokemon": "trumbeak",
+    "shiny": false,
+    "eligibility_basis": "Official Community Day specifies the Pikipek evolution family; the qualified exact same-background Pikipek retains its normal/Shiny state through evolution.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "evolution_only",
+    "qualified_same_background_progenitor": [
+      "sb-season-20-tales-of-transformation",
+      "pokemon:731:standard:legacy:Pikipek",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:733:standard:legacy:Toucannon",
+    "pokemon": "toucannon",
+    "shiny": false,
+    "eligibility_basis": "Official Community Day specifies the Pikipek evolution family; the qualified exact same-background Pikipek retains its normal/Shiny state through evolution.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "evolution_only",
+    "qualified_same_background_progenitor": [
+      "sb-season-20-tales-of-transformation",
+      "pokemon:731:standard:legacy:Pikipek",
+      false
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:731:standard:legacy:Pikipek",
+    "pokemon": "pikipek",
+    "shiny": true,
+    "eligibility_basis": "Official Community Day describes the exact Pikipek lure encounter as having increased Shiny chance and possible seasonal background in the same encounter route.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "exact_event_reward"
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:732:standard:legacy:Trumbeak",
+    "pokemon": "trumbeak",
+    "shiny": true,
+    "eligibility_basis": "Official Community Day specifies the Pikipek evolution family; the qualified exact same-background Pikipek retains its normal/Shiny state through evolution.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "evolution_only",
+    "qualified_same_background_progenitor": [
+      "sb-season-20-tales-of-transformation",
+      "pokemon:731:standard:legacy:Pikipek",
+      true
+    ]
+  },
+  {
+    "art_path": "/tmp/trade-background-originals/sb-season-20-tales-of-transformation.png",
+    "art_sha256": "27622a21cf9fd34d0b7875a55fe1ee0c98c5bf0fe86f741076303111372a552a",
+    "art_source": "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/LocationCards/sb_Season20_TalesOfTransformation.png",
+    "art_source_blob": "4d5c73391350a004fd840be5c60495283f525645",
+    "visual_evidence": "/tmp/trade-background-originals/paired-10.png",
+    "art_qualification": "miner_original",
+    "background_id": "sb-season-20-tales-of-transformation",
+    "catalog_id": "pokemon:733:standard:legacy:Toucannon",
+    "pokemon": "toucannon",
+    "shiny": true,
+    "eligibility_basis": "Official Community Day specifies the Pikipek evolution family; the qualified exact same-background Pikipek retains its normal/Shiny state through evolution.",
+    "eligibility_sources": [
+      "https://pokemongo.com/news/communityday-november-2025-pikipek",
+      "https://www.dittobase.com/pokemon-go/backgrounds/sb-season-20-tales-of-transformation",
+      "https://www.serebii.net/pokemongo/backgrounds.shtml"
+    ],
+    "evidence_tier": "primary_exact_event_background_and_shiny_reward",
+    "evidence_checked_on": "2026-10-30",
+    "scope": "local_review_only_not_activation",
+    "acquisition": "evolution_only",
+    "qualified_same_background_progenitor": [
+      "sb-season-20-tales-of-transformation",
+      "pokemon:731:standard:legacy:Pikipek",
+      true
+    ]
+  }
+]

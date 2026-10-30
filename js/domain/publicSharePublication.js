@@ -63,7 +63,7 @@
     });
   }
   function intentEntries(snapshot,intent='lf',category){
-    if(snapshot?.version===2)return(snapshot.declarations||[]).filter(entry=>entry.intent===intent&&(!category||entry.category===category));
+    if((snapshot?.version===2||snapshot?.version===3))return(snapshot.declarations||[]).filter(entry=>entry.intent===intent&&(!category||entry.category===category));
     if(intent!=='lf')return[];
     return REQUIRED_LIST_SURFACES.filter(type=>!category||type===category).flatMap(type=>Object.entries(snapshot?.lists?.[type]||{}).map(([name,value])=>({name,value,intent:'lf',category:type})));
   }
@@ -108,14 +108,15 @@
     if(!source&&publishedTypes.length!==REQUIRED_LIST_SURFACES.length){
       return{ok:false,status:'projection_incomplete',rejectionCounts:{missing_list_projection:1}};
     }
-    if(snapshot.version!==1&&snapshot.version!==2&&source?.shape!=='legacy'){
+    if(snapshot.version!==1&&snapshot.version!==2&&snapshot.version!==3&&source?.shape!=='legacy'){
       return{ok:false,status:'projection_unsupported',rejectionCounts:{unsupported_version:1}};
     }
     const normalized=normalizeProjectionEntries(source?.container||{},{strictCategories:source?.shape==='current'});
     const rejected=Object.values(normalized.rejectionCounts).reduce((count,value)=>count+value,0);
     if(rejected)return{ok:false,status:'projection_unsupported',rejectionCounts:normalized.rejectionCounts};
+    if(snapshot.version===3&&(!/^bgs_[a-z0-9]{32}$/.test(snapshot.backgroundRef||'')||!/^r[1-9][0-9]*$/.test(snapshot.backgroundRevision||'')))return{ok:false,status:'projection_unsupported'};
     let declarations;
-    if(snapshot.version===2){
+    if(snapshot.version===2||snapshot.version===3){
       try{declarations=publicDeclarations(snapshot.declarations??[],{strict:true});}catch{return{ok:false,status:'projection_unsupported'};}
       if(snapshot.declarationCount!==declarations.length)return{ok:false,status:'projection_incomplete'};
     }
@@ -124,7 +125,7 @@
       ok:true,status:entryCount?'published':'published_empty',entryCount,
       shape:source?.shape||'current',rejectionCounts:normalized.rejectionCounts,
       snapshot:{
-        version:declarations?2:1,...(declarations?{declarations,declarationCount:declarations.length}:{}),username:snapshotUsername,profile:normalizedPublicProfile(snapshot.profile),
+        version:snapshot.version===3?3:declarations?2:1,...(snapshot.version===3?{backgroundRef:snapshot.backgroundRef,backgroundRevision:snapshot.backgroundRevision}:{}),...(declarations?{declarations,declarationCount:declarations.length}:{}),username:snapshotUsername,profile:normalizedPublicProfile(snapshot.profile),
         lists:normalized.lists,publishedListTypes:[...REQUIRED_LIST_SURFACES],
         updatedAt:Number(snapshot.updatedAt||0)||null
       }

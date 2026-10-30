@@ -143,6 +143,7 @@
     if(!current)return Object.freeze({ok:false,error:model.failure('account-sync/entity-missing','Sync entity does not exist').error,conflicts:Object.freeze([conflict(operation,'entity-missing')])});
     if(operation.kind==='delete'){
       if(current.lifecycleMutation===operation.operationId&&current.lifecycleMutationHash===operation.inputHash)return Object.freeze({ok:true,status:'idempotent',value:current,conflicts:Object.freeze([])});
+      if(operation.expectedRevision!==undefined&&current.revision!==operation.expectedRevision)return Object.freeze({ok:false,error:model.failure('account-sync/source-revision-conflict','This request changed before replacement').error,conflicts:Object.freeze([conflict(operation,'source-revision-conflict',[],current)])});
       if(current.deleted||operation.baseGeneration!==current.generation||operation.generation!==current.generation+1){
         return Object.freeze({ok:false,error:model.failure('account-sync/lifecycle-conflict','Entity lifecycle changed before this delete').error,conflicts:Object.freeze([conflict(operation,'lifecycle-conflict',[],current)])});
       }
