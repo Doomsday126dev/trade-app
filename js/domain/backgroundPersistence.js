@@ -84,7 +84,8 @@ function createRepository({uid,token,protocol,readHead,storage,currentSession}){
  const current=()=>{const s=currentSession();return s.uid===uid&&s.generation===session.generation;};
  const check=()=>{if(!current())throw Error('session-changed');};
  let state=JSON.parse(storage.getItem(key)||'{"head":0,"entries":[],"pending":null}');
- const persist=()=>storage.setItem(key,JSON.stringify(state));
+ let mutationVersion=0,hydrationGeneration=0;
+ const persist=()=>{mutationVersion++;storage.setItem(key,JSON.stringify(state));};
  const copy=v=>structuredClone(v);
  async function flush(){check();if(!state.pending)return {ok:true};const op=copy(state.pending);
   // Save intent is durable before dispatch. Failed/uncertain outcomes retain it.
@@ -96,10 +97,10 @@ function createRepository({uid,token,protocol,readHead,storage,currentSession}){
  }
  return Object.freeze({
   snapshot:()=>copy(state),
-  async hydrate(){check();if(state.pending)return{ok:false,code:'pending-intent'};const head=await readHead();check();const rows=head?await protocol.read('r'+head):[];check();state={head,entries:rows,pending:null};persist();return{ok:true};},
+  async hydrate(){check();if(state.pending)return{ok:false,code:'pending-intent'};const version=mutationVersion,generation=++hydrationGeneration;const head=await readHead();check();const rows=head?await protocol.read('r'+head):[];check();if(state.pending)return{ok:false,code:'pending-intent'};if(version!==mutationVersion||generation!==hydrationGeneration||head<state.head)return{ok:false,code:'stale-hydration'};state={head,entries:rows,pending:null};persist();return{ok:true};},
   async replace(entries,{operationId}={}){check();if(operationId!==undefined&&!/^[a-zA-Z0-9_-]{1,80}$/.test(operationId))throw Error('invalid-operation-id');if(state.pending)throw Error('pending-intent');protocol.validate(entries);state.pending={base:state.head,entries:copy(entries),...(protocol.operationIds?{opId:operationId||globalThis.crypto.randomUUID()}:{})};persist();return flush();},flush,
   exportData({includePending=false}={}){check();return JSON.stringify({schemaVersion:1,backgroundRequests:includePending&&state.pending?state.pending.entries:state.entries});},
-  async keepRemote(){check();const head=await readHead();check();const entries=head?await protocol.read('r'+head):[];check();state={head,entries,pending:null};persist();return{ok:true};},
+  async keepRemote(){check();const version=mutationVersion;const head=await readHead();check();const entries=head?await protocol.read('r'+head):[];check();if(version!==mutationVersion||head<state.head)return{ok:false,code:'state-changed'};state={head,entries,pending:null};persist();return{ok:true};},
   async importData(text){check();const value=JSON.parse(text);if(value.schemaVersion!==1||Object.keys(value).sort().join(',')!=='backgroundRequests,schemaVersion'||!Array.isArray(value.backgroundRequests))throw Error('invalid-import');return this.replace([...state.entries,...value.backgroundRequests]);},
   async shareReference(){check();if(state.pending)throw Error('pending-intent');const revision='r'+state.head;const result=await protocol.publish(revision);check();if(result.status!==200)throw Error('publication-failed');return{backgroundRef:token,backgroundRevision:revision};}
  });

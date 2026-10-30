@@ -994,7 +994,7 @@ async function saveCombinedEditor(remove=false){
         const runtime=backgroundOwnerRuntime,transitions=backgroundTransitionsForRuntime(runtime,authority.controller);let plan;
         if(prototypeEntry){const source=draft.backgroundSource;if(!source)return fail('phase2.changed');
           const identity=source.plainIdentity||{surface:'my-list',lane:draft.entries[0].category||'wishlist',catalogId:source.catalogId};
-          const values=accountSyncProduct.tradeValues({...source,...changes,p:priority,mod:changes.mod,quantity:source.quantity,sortOrder:source.sortOrder||0,mirror:!!source.mirror,backgroundId:''});
+          const values=accountSyncProduct.tradeValues({...source,...changes,priority,variant:changes.mod,quantity:source.quantity,sortOrder:source.sortOrder||0,mirror:!!source.mirror,backgroundId:''});
           plan={direction:'plain',source,identity,targetId:accountSyncModel.tradeEntryId(identity),values};
         }else{const sources=draft.sourceEntities||[];if(sources.length!==1)return fail('accountSync.editReview');const source=sources[0],entry=_nameToSpriteEntry(name),category=maxTypeForEntry(entry,'wishlist')||'wishlist';
           const choice=productShareBackgroundChoices({name,catalogId:catalog.catalogId,category,shiny:changes.shiny,gender:changes.gender}).find(item=>backgroundChoiceValue(item)===selected);if(!choice)return fail('phase2.changed');
