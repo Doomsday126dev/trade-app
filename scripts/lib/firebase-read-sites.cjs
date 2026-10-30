@@ -20,12 +20,12 @@ function collectReadSites(root,{repository=false}={}){
         handlerHash=createHash('sha256').update(expressionKey(source.slice(node.start,node.end))).digest('hex');
       }
       if(node.type==='CallExpression'&&node.callee.type==='Identifier'&&['get','onValue'].includes(node.callee.name)){
-        if(!repository)result.push({file,line:node.loc.start.line+lineOffset,handler,handlerHash,operation:node.callee.name,expression:source.slice(node.start,node.end)});
+        if(!repository)result.push({file,line:node.loc.start.line+lineOffset,column:node.loc.start.column,handler,handlerHash,operation:node.callee.name,expression:source.slice(node.start,node.end)});
       }
       if(repository&&node.type==='CallExpression'&&node.callee.type==='MemberExpression'&&node.callee.object.name==='client'){
         const method=node.callee.computed?node.callee.property.value:node.callee.property.name;
         if(node.callee.computed&&typeof method!=='string')throw new Error(`Dynamic client method requires review: ${file}:${node.loc.start.line}`);
-        if(['read','listen'].includes(method))result.push({file,line:node.loc.start.line+lineOffset,handler,operation:method,expression:source.slice(node.start,node.end)});
+        if(['read','listen'].includes(method))result.push({file,line:node.loc.start.line+lineOffset,column:node.loc.start.column,handler,operation:method,expression:source.slice(node.start,node.end)});
       }
       for(const [key,value] of Object.entries(node)){
         if(['loc','start','end'].includes(key))continue;

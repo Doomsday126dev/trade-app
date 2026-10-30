@@ -103,6 +103,7 @@ const RELEASE_ASSETS=[
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
   'js/app/favoritePicker.js',
+  'js/domain/backgroundPersistence.js',
   'js/app/application.js'
 ];
 // Required for offline features/routes, but intentionally omitted from the

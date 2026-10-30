@@ -26,7 +26,8 @@ const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23
   ?SOURCE_CALL_CONTRACTS['62482523588e5f7a3065936c93bfa043d4d31fb5']:null;
 const localCatalogueContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['ef0d1fcaa26827564fb29c1029ba6e9a77d6923f']:null;
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
+const localBackgroundContract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-10-30\.169';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);

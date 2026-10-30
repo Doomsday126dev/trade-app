@@ -14,7 +14,8 @@ const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim(
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const current=requestedRuntimeSha||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
+const localBackground=/2026-10-30\.169/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const current=requestedRuntimeSha||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
@@ -43,7 +44,7 @@ test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const inventory=reconcileReadSites(actual,contract.directReadSites,contract.readHandlerHashes);
   assert.equal(inventory.filter(site=>site.operation==='get').length,contract.directGetCount);
   assert.equal(inventory.filter(site=>site.operation==='onValue').length,contract.directOnValueCount);
-  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}`)).size,actual.length);
+  assert.equal(new Set(inventory.map(site=>`${site.file}:${site.line}:${site.column}`)).size,actual.length);
   const observation=newContract.directReadSites.find(site=>site.operation==='onValue');
   assert.equal(observation.handler,'observePublicShareForConditionalWrite');
   assert.equal(observation.normalizedPath,'publicShares/{currentUsername} | trainerShares/{currentUid}');
@@ -77,7 +78,8 @@ test('conditional publication listener cannot become broad or outlive the write'
   if(!hasConditionalObservation){
     assert.equal(newContract.directOnValueCount,1);
     assert.equal(newContract.directReadSites.filter(site=>site.operation==='onValue').length,1);
-    assert.equal(contract.directOnValueCount,0);
+    assert.equal(contract.directOnValueCount,localBackground?1:0);
+    if(localBackground){const owner=contract.directReadSites.filter(site=>site.operation==='onValue');assert.equal(owner.length,1);assert.equal(owner[0].handler,'ensureBackgroundOwnerRuntime');assert.equal(owner[0].ownerScope,'session');}
     return;
   }
   const dir=fixture(t);
@@ -123,7 +125,7 @@ test('a repository call in an unregistered file fails',t=>{
   assert.match(check(dir).stderr,/Repository read sites changed/);
 });
 test('snapshot handler tampering still fails the preserved handler hash',t=>{
-  const dir=fixture(t);change(dir,'js/app/application.js',"selectedTrainerRuntime.source='legacy';\n  allData=runtimeDataWithSelectedTrainer(getLocal());","selectedTrainerRuntime.source='legacy';\n  saveLocal(allData);\n  allData=runtimeDataWithSelectedTrainer(getLocal());");
+  const dir=fixture(t);change(dir,'js/app/application.js',(localBackground?"selectedTrainerRuntime.source='legacy';\n  allData=username===cur?getLocal():runtimeDataWithSelectedTrainer(getLocal());":"selectedTrainerRuntime.source='legacy';\n  allData=runtimeDataWithSelectedTrainer(getLocal());"),(localBackground?"selectedTrainerRuntime.source='legacy';\n  saveLocal(allData);\n  allData=username===cur?getLocal():runtimeDataWithSelectedTrainer(getLocal());":"selectedTrainerRuntime.source='legacy';\n  saveLocal(allData);\n  allData=runtimeDataWithSelectedTrainer(getLocal());"));
   assert.match(check(dir).stderr,/snapshot behavior changed/);
 });
 test('computed repository reads cannot evade the call inventory',t=>{
