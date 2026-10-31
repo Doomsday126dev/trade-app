@@ -121,6 +121,40 @@
     },
     "_ping": {
       ".write": "auth != null"
+    },
+    "backgroundOwnerIndex": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "backgroundStores": {
+      "$token": {
+        "ownerUid": {
+          ".read": "auth != null && auth.uid === data.val()"
+        },
+        "mode": {
+          ".read": "auth != null && auth.uid === root.child('backgroundStores').child($token).child('ownerUid').val()"
+        },
+        "visible": {
+          ".read": "auth != null && auth.uid === root.child('backgroundStores').child($token).child('ownerUid').val()"
+        },
+        "head": {
+          ".read": "auth != null && auth.uid === root.child('backgroundStores').child($token).child('ownerUid').val()"
+        },
+        "snapshotSlots": {
+          ".read": "auth != null && auth.uid === root.child('backgroundStores').child($token).child('ownerUid').val()"
+        },
+        "snapshots": {
+          "$revision": {
+            ".read": "(auth != null && auth.uid === root.child('backgroundStores').child($token).child('ownerUid').val()) || (root.child('backgroundStores').child($token).child('visible').val() === true && root.child('backgroundStores').child($token).child('published').child($revision).val() === true && root.child('publicShares').child(root.child('authIndex').child(root.child('backgroundStores').child($token).child('ownerUid').val()).child('username').val()).child('version').val() === 3 && root.child('publicShares').child(root.child('authIndex').child(root.child('backgroundStores').child($token).child('ownerUid').val()).child('username').val()).child('backgroundRef').val() === $token && root.child('publicShares').child(root.child('authIndex').child(root.child('backgroundStores').child($token).child('ownerUid').val()).child('username').val()).child('backgroundRevision').val() === $revision)"
+          }
+        }
+      }
+    },
+    "accountSync": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }
