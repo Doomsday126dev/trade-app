@@ -82,6 +82,26 @@ test('signed-in recipient sections preserve special wants and copy only that tra
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__recipientBefore));
 });
 
+test('signed-in recipient shows exact background art and label only on its saved request',async({page})=>{
+  await fixture(page);
+  const record=require('../data/background-runtime-catalog.json').records.find(row=>row.id==='lc-2026-jp-jetgreen'&&row.catalogId==='pokemon:1:standard:legacy:Bulbasaur'&&!row.shiny);
+  expect(record).toBeTruthy();
+  await page.evaluate(item=>{
+    backgroundExportCatalog={coverageComplete:true,loaded:true,releaseScope:'verified-subset',records:[item]};
+    allData.users.RecipientFixture={publicDeclarations:[
+      {intent:'lf',category:'wishlist',name:'Bulbasaur',p:'H',mod:'',gender:'',backgroundId:item.id,note:'',lucky:false,shiny:false,xxl:false,xxs:false,isBackgroundV2:true},
+      {intent:'lf',category:'wishlist',name:'Pikachu',p:'M',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}
+    ]};
+    document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('RecipientFixture','wishlist');
+  },record);
+  const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(2);
+  await expect(cards.filter({hasText:'Bulbasaur'}).locator('.share-pcard-background-label')).toHaveText(record.label);
+  await expect(cards.filter({hasText:'Bulbasaur'}).locator('img.share-pcard-background')).toHaveAttribute('src',record.url);
+  const layering=await cards.filter({hasText:'Bulbasaur'}).evaluate(card=>({background:getComputedStyle(card.querySelector('img.share-pcard-background')).zIndex,sprite:getComputedStyle(card.querySelector('img.share-pcard-sprite')).zIndex}));
+  expect(layering).toEqual({background:'0',sprite:'1'});
+  await expect(cards.filter({hasText:'Pikachu'}).locator('.share-pcard-background-label, img.share-pcard-background')).toHaveCount(0);
+});
+
 test('large signed-in recipient sections page cards while preserving the full search',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{

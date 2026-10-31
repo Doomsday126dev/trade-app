@@ -13381,6 +13381,8 @@ function renderShareView(username,type,intent){
         ${contextualIntentSearchHtml(entries,label,{compact:true})}
       </div>
       <div class="share-section-content" id="${id}-entries"${collapsed?' hidden':''}><div class="share-pgrid">${(collapsed?[]:sorted.slice(0,limit)).map(e=>{
+        const backgroundChoice=e.isBackgroundV2&&e.backgroundId?productShareBackgroundChoices(e).find(choice=>choice.id===e.backgroundId):null;
+        const backgroundLabel=e.isBackgroundV2&&e.backgroundId?(backgroundChoice?.label||i18nCore.t('background.unavailable')):'';
         const flagsHtml=[
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
@@ -13395,13 +13397,14 @@ function renderShareView(username,type,intent){
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
         // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
-          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${maxPresentationMarkup(e)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          ?`<div class="share-pcard-sprite-wrap">${backgroundChoice?`<img class="share-pcard-background" src="${escAttr(backgroundChoice.url)}" alt="" loading="lazy" decoding="async">`:''}${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn,{shiny:e.shiny===true})}${maxPresentationMarkup(e)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
         return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
 
           ${spriteHtml}
           <div class="share-pcard-info">
             <span class="share-pcard-name">${escHtml(maxPresentationName(e.dn))}</span>
+            ${backgroundLabel?`<span class="share-pcard-background-label">${escHtml(backgroundLabel)}</span>`:''}
             ${metaHtml}${e.note?`<p class="share-pcard-mod">${escHtml(e.note)}</p>`:''}
           </div>
         </div>`;
