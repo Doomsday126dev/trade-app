@@ -479,15 +479,26 @@
       }
       const sources=await readMigrationSources({account:accountBefore});
       requireRunning();
-      const plan=await migration.buildMigrationPlan({
+      const migrationInput={
         ownerUid:owner,username:name,deviceInstallId:sources.deviceInstallId,
         legacyRemoteLists:sources.legacyRemoteLists,legacyLocalLists:sources.legacyLocalLists,
         legacyRemoteBoard:sources.legacyRemoteBoard,legacyLocalBoard:sources.legacyLocalBoard,
         legacyQueue:sources.legacyQueue,orders:sources.orders,favorites:sources.favorites,tags:sources.tags,
         remoteCanonical:[...Object.values(accountBefore?.tradeEntries||{}),...Object.values(accountBefore?.favorites||{}),...Object.values(accountBefore?.tags||{})],remoteRecoveryCandidates:accountBefore?.recoveryCandidates,canonicalInitialized:accountBefore?.meta?.initialized===true
-      },sources.dependencies||{});
+      };
+      let plan=await migration.buildMigrationPlan(migrationInput,sources.dependencies||{});
       requireRunning();
       if(!plan.ok)throw Object.assign(new Error(plan.error.message),{code:plan.error.code});
+      // The persisted candidate count distinguishes old receipts from the
+      // reduced comparison on restart, including before the local completion
+      // marker is saved. Historical receipts keep their original plan.
+      const priorReceipt=migrationRecord(accountBefore,plan.deviceMigrationId);
+      if(!priorReceipt||priorReceipt.candidateCount!==plan.recoveryCandidates.length){
+        const reduced=await migration.buildMigrationPlan({...migrationInput,ignoreUnknownLegacyOrder:true},sources.dependencies||{});
+        requireRunning();
+        if(!reduced.ok||reduced.deviceMigrationId!==plan.deviceMigrationId||reduced.sourceFingerprint!==plan.sourceFingerprint)throw Object.assign(new Error('Reduced migration evidence changed source identity'),{code:'account-sync/migration-evidence-conflict'});
+        if(!priorReceipt||priorReceipt.candidateCount===reduced.recoveryCandidates.length)plan=reduced;
+      }
       if(sources.legacyRetainedSnapshot){
         const backupKey=`legacy-source:${plan.deviceMigrationId}`;
         if(!await journal.getMeta(backupKey))await journal.setMeta(backupKey,sources.legacyRetainedSnapshot);

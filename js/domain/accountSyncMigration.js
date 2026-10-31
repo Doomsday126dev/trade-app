@@ -90,6 +90,12 @@
     for(const entity of Array.isArray(value)?value:Object.values(plain(value)))if(entity?.entityType&&entity?.entityId)map.set(canonicalKey(entity),entity);
     return map;
   }
+  function unknownLegacyOrderOnly(row,current){
+    if(row?.source!=='legacy-remote'||row.values?.sortOrder!==100000||!current||current.deleted===true||
+      model.canonicalJson(row.identity)!==model.canonicalJson(current.identity))return false;
+    const prior={...row.values},saved={...current.values};delete prior.sortOrder;delete saved.sortOrder;
+    return model.canonicalJson(prior)===model.canonicalJson(saved);
+  }
   async function buildMigrationPlan(input={},dependencies={}){
     const ownerUid=model.firebaseKey(input.ownerUid,128),username=model.exactText(input.username,64),deviceInstallId=model.firebaseKey(input.deviceInstallId,180);
     if(!ownerUid||!username||!deviceInstallId)return model.failure('account-sync/migration-binding-invalid','Migration owner or device binding is invalid');
@@ -143,6 +149,7 @@
       if(queued.has(queueKey)&&(queued.get(queueKey)===null||queuedByLaneName.has(queueKey)))continue;
       if(!current&&!input.canonicalInitialized){seeds.set(key,row);rememberSeed(row);}
       else if(current&&!current.deleted&&model.canonicalJson(current.identity)===model.canonicalJson(row.identity)&&model.canonicalJson(current.values)===model.canonicalJson(row.values)){rememberSeed(row);continue;}
+      else if(input.ignoreUnknownLegacyOrder===true&&unknownLegacyOrderOnly(row,current))continue;
       else recoveryCandidates.push(await candidate(ownerUid,input.canonicalInitialized?'legacy-after-canonical':'remote-divergence',row,sourceFingerprint));
     }
     for(const row of rowsLocal){
@@ -264,5 +271,38 @@
     return Object.freeze({ok:true,verified:true,sourceDeletionAllowed:false,legacyRetained:true});
   }
 
-  root.accountSyncMigration=Object.freeze({LIST_TYPES,normalizeTradeValues,queuedLegacyBoard,buildMigrationPlan,verifyMigration});
+  function classifyPreserved(candidates=[],getEntity=()=>null){
+    const counts={equivalent:0,olderOrder:0,needsReview:0},distinct=new Map();
+    for(const candidate of candidates){
+      if(!candidate||candidate.resolved===true)continue;
+      const current=getEntity(candidate.entityType,candidate.entityId);
+      let kind='missing',fields=[];
+      if(candidate.entityType==='favorite'&&!candidate.identity?.targetUid)kind='unresolved-favorite';
+      else if(current?.deleted===true)kind='removed';
+      else if(current){
+        const sameIdentity=model.canonicalJson(candidate.identity)===model.canonicalJson(current.identity);
+        fields=[...new Set([...Object.keys(candidate.values||{}),...Object.keys(current.values||{})])]
+          .filter(key=>model.canonicalJson(candidate.values?.[key])!==model.canonicalJson(current.values?.[key])).sort();
+        const unknownOrder=sameIdentity&&candidate.entityType==='tradeEntry'&&candidate.source==='legacy-remote'&&candidate.values?.sortOrder===100000&&fields.includes('sortOrder');
+        if(unknownOrder)fields=fields.filter(key=>key!=='sortOrder');
+        if(!sameIdentity)fields.unshift('identity');
+        if(!fields.length)kind=unknownOrder?'older-order':'equivalent';
+        else kind='different';
+      }
+      // A retained deletion request is an action, even when its stored values
+      // deliberately equal the current item for safe conflict review.
+      if(/^queued(?:-board)?-delete-/.test(String(candidate.reason||'')))kind='delete-request';
+      if(kind==='equivalent')counts.equivalent++;
+      else if(kind==='older-order')counts.olderOrder++;
+      else counts.needsReview++;
+      if(kind==='equivalent'||kind==='older-order')continue;
+      const key=model.canonicalJson([candidate.entityType,candidate.entityId,kind==='delete-request'?candidate.reason:'',kind,fields,candidate.values,current?.values]);
+      const prior=distinct.get(key);
+      if(prior){prior.copies++;continue;}
+      distinct.set(key,{candidate,current,kind,fields,copies:1});
+    }
+    return Object.freeze({counts:Object.freeze(counts),items:Object.freeze([...distinct.values()].map(item=>Object.freeze(item)))});
+  }
+
+  root.accountSyncMigration=Object.freeze({LIST_TYPES,normalizeTradeValues,queuedLegacyBoard,buildMigrationPlan,verifyMigration,classifyPreserved});
 })(window);
