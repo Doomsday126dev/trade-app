@@ -882,7 +882,7 @@ body.bulk-mode .myrow .drag-handle{display:none}
 .share-pcard-flag.xxs{background:rgba(20,184,166,.18);color:var(--trait-xxs)}
 .share-pcard-flag.gender-f{background:rgba(236,72,153,.2);color:#ec4899}
 .share-pcard-flag.gender-m{background:rgba(59,130,246,.2);color:#3b82f6}
-.share-pcard-sprite-wrap>.share-pcard-background{position:absolute;inset:0;object-fit:cover;border-radius:var(--radius-sm)}
+.share-pcard-sprite-wrap>.share-pcard-background{position:absolute;inset:0;z-index:0;object-fit:cover;border-radius:var(--radius-sm)}
 .share-pcard-sprite-wrap > img.share-pcard-sprite{position:relative;z-index:1}
 .share-pcard-background-label{color:var(--muted);font-size:10px;line-height:1.2;overflow-wrap:anywhere}
 .share-pcard-gender{position:absolute;bottom:-2px;right:-2px;background:var(--card);border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:1px solid var(--border2);line-height:1}
