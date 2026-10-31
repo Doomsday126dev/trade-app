@@ -12,10 +12,17 @@ const registry=window.PogoData.firebaseReadRegistry.READ_SURFACES;
 const contract=JSON.parse(readFileSync(path.join(ROOT,'tests/firebase/narrow-read-surface-map.json'),'utf8'));
 const candidate=JSON.parse(readFileSync(path.join(ROOT,'tests/firebase/database.rules.narrow-read.json'),'utf8')).rules;
 const hardened=JSON.parse(readFileSync(path.join(ROOT,'tests/firebase/database.rules.hardened.json'),'utf8')).rules;
+const currentBackground=JSON.parse(readFileSync(path.join(ROOT,'tests/firebase/database.rules.background-current.json'),'utf8')).rules;
+assert.equal(
+  readFileSync(path.join(ROOT,'tests/firebase/database.rules.background-current.json'),'utf8'),
+  readFileSync(path.join(ROOT,'proposals/background-v2/bounded-reference/current.rules.json'),'utf8'),
+  'Current background emulator fixture must match the reviewed current Rules source'
+);
 const emulatorSource=readFileSync(path.join(ROOT,'tests/firebase/narrow-read-rules.test.cjs'),'utf8');
 
 function atRulePath(rulePath){
-  return String(rulePath).split('/').filter(Boolean).reduce((node,key)=>node?.[key],candidate);
+  const currentOnly=/^(?:backgroundOwnerIndex|backgroundStores|accountSync)\//.test(rulePath);
+  return String(rulePath).split('/').filter(Boolean).reduce((node,key)=>node?.[key],currentOnly?currentBackground:candidate);
 }
 function stripReads(value){
   if(Array.isArray(value))return value.map(stripReads);
@@ -32,6 +39,8 @@ function collectBroadReads(node,current=[],out=[]){
 assert.equal(candidate['.read'],false,'Candidate root read must be denied');
 assert.equal(candidate['.write'],undefined,'Candidate must preserve child-scoped writes without introducing a root write');
 assert.deepEqual(stripReads(candidate),stripReads(hardened),'Narrow-read candidate may not change production write semantics');
+assert.equal(currentBackground['.read'],false,'Current background Rules must deny root reads');
+assert.equal(currentBackground['.write'],undefined,'Current background Rules must deny root writes');
 
 const registryIds=Array.from(registry,surface=>String(surface.id)).sort();
 const mappedIds=contract.surfaces.map(surface=>surface.registryId).sort();

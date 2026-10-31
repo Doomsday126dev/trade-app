@@ -91,7 +91,7 @@ async function installPublicFirebase(page,{exists=true,projection=publicProjecti
   return requests;
 }
 
-async function assertPublicPrivacy(page){
+async function assertPublicPrivacy(page,expectedReads=['publicShares/PublicTrainer']){
   await expect(page.locator('#share-view')).toBeVisible();
   await expect(page.locator('#login-pg')).toBeHidden();
   await expect(page.locator('#app')).toBeHidden();
@@ -106,7 +106,7 @@ async function assertPublicPrivacy(page){
   }));
   expect(evidence.diagnostics.authSdkRequested).toBe(false);
   expect(evidence.diagnostics.privateReads).toBe(0);
-  expect(evidence.reads).toEqual(['publicShares/PublicTrainer']);
+  expect(evidence.reads).toEqual(expectedReads);
   expect(evidence.order).toEqual(['app-check-init','app-check-token','database-read']);
   expect(evidence.authLoaded).toBe(false);
   expect(evidence.privateModules).toEqual([]);
@@ -615,11 +615,20 @@ test('same species with two exact backgrounds and a plain request remain three d
   expect(records).toHaveLength(2);
   const projection={...publicProjection,version:3,backgroundRef:'bgs_'+'f'.repeat(32),backgroundRevision:'r2',declarations:[{intent:'lf',name:'Bulbasaur',category:'wishlist',p:'L',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}],declarationCount:1};
   const backgroundSnapshot={entriesJson:JSON.stringify(records.map((record,index)=>({catalogId:record.catalogId,backgroundId:record.id,priority:index?'M':'H',note:'',gender:'',variant:'',shiny:false,lucky:false,xxl:false,xxs:false,quantity:1})))};
+  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__publicBackgroundSearch=value;}}}));
   await installPublicFirebase(page,{projection,backgroundSnapshot});await page.goto('./?view=PublicTrainer&list=wishlist');
   const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(3);
   for(const record of records)await expect(cards.filter({hasText:record.label}).locator('img.share-pcard-background')).toHaveAttribute('src',record.url);
+  await expect(cards.locator('img.share-pcard-background').first()).toHaveCSS('object-fit','cover');
   await expect(cards.filter({hasText:'Bulbasaur'}).filter({has:page.locator('img.share-pcard-background')})).toHaveCount(2);
   await expect(cards.locator('img.share-pcard-background')).toHaveCount(2);
+  for(const priority of ['H','M']){
+    await page.locator(`[data-want-section="${priority}"] [data-contextual-copy]`).click();
+    expect(await page.evaluate(()=>window.__publicBackgroundSearch)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&1');
+  }
+  await page.locator('[data-want-section="L"] [data-contextual-copy]').click();
+  expect(await page.evaluate(()=>window.__publicBackgroundSearch)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1');
+  await assertPublicPrivacy(page,['publicShares/PublicTrainer',`backgroundStores/${projection.backgroundRef}/snapshots/${projection.backgroundRevision}`]);
 });
 
 // Isolated SDK transport only: exercise the actual anonymous renderer lifecycle.

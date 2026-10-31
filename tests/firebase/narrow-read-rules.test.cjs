@@ -92,7 +92,7 @@ test('public share compatibility covers authenticated reads, missing and incompl
   await fails(db('GET',`wishlist/${NAMES.ordinary}`,undefined,TOKENS.other),'no private fallback');
 });
 
-test('background owner and exact published snapshot reads remain scoped',async()=>{
+if(process.env.POGO_BACKGROUND_RULES_CURRENT==='1')test('current owner background and account-sync reads remain exact',async()=>{
   const token='bgs_'+'a'.repeat(32),base=`backgroundStores/${token}`,owner=IDS.ordinary;
   await succeeds(db('PUT',base,{ownerUid:owner,mode:'active',visible:true,head:2,snapshotSlots:{a:1,b:2},published:{r1:true,r2:true},snapshots:{r1:{entriesJson:'[]'},r2:{entriesJson:'[]'}}},'emulator-owner'),'seed exact background store');
   await succeeds(db('PUT',`backgroundOwnerIndex/${owner}`,{token,active:true},'emulator-owner'),'seed owner token index');
@@ -115,6 +115,9 @@ test('background owner and exact published snapshot reads remain scoped',async()
   await succeeds(db('GET',`${base}/snapshots/r2`,undefined),'new exact published snapshot');
   await succeeds(db('PUT',`${base}/published/r2`,false,'emulator-owner'),'unpublish exact revision');
   await fails(db('GET',`${base}/snapshots/r2`,undefined),'unpublished snapshot');
+  await succeeds(db('GET',`accountSync/${owner}/favorites`,undefined,TOKENS.ordinary),'current owner accountSync child');
+  await fails(db('GET',`accountSync/${owner}/favorites`,undefined,TOKENS.other),'foreign accountSync child');
+  await fails(db('PUT',`accountSync/${owner}/favorites`,{unexpected:true},TOKENS.ordinary),'unsupported accountSync write');
 });
 
 test('correct UID reads every exact username-owned active record',async()=>{
@@ -214,11 +217,12 @@ test('inactive future identity sharing and preference paths remain denied to eve
   for(const actor of [undefined,TOKENS.ordinary,TOKENS.other,TOKENS.admin]){
     for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   }
-  // accountSync has an existing owner-scoped parent read. It permits the owner
-  // to read an absent child, but grants neither foreign reads nor schema writes.
+  // The frozen historical fixture predates the owner-only accountSync read.
+  // SEC-02 production and the separate current-Rules fixture retain that read.
   const syncChild=`accountSync/${IDS.ordinary}/favorites`;
-  await succeeds(db('GET',syncChild,undefined,TOKENS.ordinary),'existing owner accountSync read');
-  for(const actor of [undefined,TOKENS.other,TOKENS.admin])await fails(db('GET',syncChild,undefined,actor),'foreign accountSync child denied');
+  for(const actor of [undefined,TOKENS.other,TOKENS.admin])await fails(db('GET',syncChild,undefined,actor),'accountSync child denied to non-owner');
+  if(process.env.POGO_RULES_HISTORICAL==='1')await fails(db('GET',syncChild,undefined,TOKENS.ordinary),'historical accountSync child denied');
+  else await succeeds(db('GET',syncChild,undefined,TOKENS.ordinary),'current owner accountSync child');
   await fails(db('PUT',syncChild,{unexpected:true},TOKENS.ordinary),'unsupported accountSync child write denied');
   await fails(db('PUT',`userPreferences/${IDS.ordinary}/favoriteTrainers/${IDS.other}`,{trainerName:NAMES.other},TOKENS.ordinary),'disabled preference write');
   await fails(db('PUT',`shareAccess/${IDS.ordinary}/${IDS.other}`,true,TOKENS.ordinary),'disabled access write');

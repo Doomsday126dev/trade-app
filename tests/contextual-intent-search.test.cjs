@@ -92,11 +92,3 @@ test('localized panels expose unresolved omissions, escape content and use ident
     assert(html.includes('data-contextual-copy="'+plan.parts[0].replaceAll('&','&amp;')+'"'));
   }
 });
-test('public search resolves only provided projection entries with no private viewer reads',()=>{
-  const source=fs.readFileSync(path.join(root,'js/app/publicShareApp.js'),'utf8');
-  const block=source.slice(source.indexOf('function renderList('),source.indexOf('async function copySearch('));
-  assert.match(block,/intentEntries\(snapshot,'lf',state\.type\)\.map/);
-  assert.match(block,/wantSections\(list\)/);assert.match(block,/contextualSearchPlan\(entries/);
-  assert.match(block,/searchHtml\(entries,label\)/);assert.match(block,/compact:true/);
-  assert.doesNotMatch(block,/allData|auth|currentUser|fetch\(|get\(|productDeclarations|readProjection/);
-});
