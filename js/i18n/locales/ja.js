@@ -349,6 +349,7 @@
     ,"accountSync.preservedDetailsSummary":"以前の記録 {order} 件は内容が同じか、以前の順序が不明なだけです。{different} 件は個別の確認が必要です。"
     ,"accountSync.preservedRemoved":"この項目は現在の保存済みリストから削除されています。以前のコピーは保持されています。"
     ,"accountSync.preservedMissing":"この以前の項目は現在の保存済みリストにありません。"
+    ,"accountSync.preservedDeleteRequest":"以前の端末でこの項目の削除が要求されました。その要求は適用されず、確認用に保持されています。"
     ,"accountSync.preservedFavorite":"この以前のお気に入りのトレーナーをアカウントに結び付けられませんでした。"
     ,"accountSync.preservedDifferent":"以前のコピーと現在の保存済み項目には差があります。"
     ,"accountSync.preservedFieldDifference":"{field}：以前 {older}、保存済み {current}。"

@@ -643,6 +643,7 @@ test.describe('audit cross-browser contracts',()=>{
       const candidates=[
         {candidateId:'candidate_order',entityType:'tradeEntry',entityId:'same',identity,values:{...current.values,sortOrder:100000},source:'legacy-remote'},
         {candidateId:'candidate_note',entityType:'tradeEntry',entityId:'same',identity,values:{...current.values,note:'older note'},source:'legacy-remote'},
+        {candidateId:'candidate_delete',entityType:'tradeEntry',entityId:'same',identity,values:current.values,source:'legacy-queue',reason:'queued-delete-requires-review'},
         {candidateId:'candidate_removed',entityType:'tradeEntry',entityId:'removed',identity,values:current.values,source:'legacy-remote'}
       ];
       let writes=0;
@@ -660,9 +661,10 @@ test.describe('audit cross-browser contracts',()=>{
     });
     expect(result.open).toBe(true);
     expect(result.first).toContain('1 older records match current content');
-    expect(result.first).toContain('2 need individual review');
+    expect(result.first).toContain('3 need individual review');
     expect(result.first).toContain('older note');
     expect(result.first).toContain('current note');
+    expect(result.first).toContain('earlier device requested deleting');
     expect(result.text).toContain('newer note');
     expect(result.text).toContain('removed from the current saved list');
     expect(result.writes).toBe(0);

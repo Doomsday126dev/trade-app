@@ -41,3 +41,12 @@ test('removed entries, missing entries, unresolved favorites and genuine identit
   assert.equal(result.counts.needsReview,3);
   assert.deepEqual([...result.items].map(item=>item.kind),['removed','missing','unresolved-favorite']);
 });
+
+test('retained list and board deletion requests remain visible even when values match',()=>{
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:25'};
+  const current={identity,values:{priority:'H',sortOrder:4},deleted:false};
+  const candidate=reason=>({entityType:'tradeEntry',entityId:'entry',identity,values:{...current.values},source:'legacy-queue',reason,resolved:false});
+  const result=classify([candidate('queued-delete-requires-review'),candidate('queued-board-delete-requires-review')],()=>current);
+  assert.equal(result.counts.equivalent,0);assert.equal(result.counts.needsReview,2);
+  assert.deepEqual([...result.items].map(item=>item.kind),['delete-request','delete-request']);
+});

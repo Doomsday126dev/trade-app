@@ -289,11 +289,14 @@
         if(!fields.length)kind=unknownOrder?'older-order':'equivalent';
         else kind='different';
       }
+      // A retained deletion request is an action, even when its stored values
+      // deliberately equal the current item for safe conflict review.
+      if(/^queued(?:-board)?-delete-/.test(String(candidate.reason||'')))kind='delete-request';
       if(kind==='equivalent')counts.equivalent++;
       else if(kind==='older-order')counts.olderOrder++;
       else counts.needsReview++;
       if(kind==='equivalent'||kind==='older-order')continue;
-      const key=model.canonicalJson([candidate.entityType,candidate.entityId,kind,fields,candidate.values,current?.values]);
+      const key=model.canonicalJson([candidate.entityType,candidate.entityId,kind==='delete-request'?candidate.reason:'',kind,fields,candidate.values,current?.values]);
       const prior=distinct.get(key);
       if(prior){prior.copies++;continue;}
       distinct.set(key,{candidate,current,kind,fields,copies:1});

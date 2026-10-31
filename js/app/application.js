@@ -10877,7 +10877,7 @@ async function renderAccountSyncPreservedDetails(){
       }
       card.append(name);
       const description=document.createElement('p');
-      description.textContent=i18nCore.t({removed:'accountSync.preservedRemoved',missing:'accountSync.preservedMissing','unresolved-favorite':'accountSync.preservedFavorite'}[item.kind]||'accountSync.preservedDifferent');
+      description.textContent=i18nCore.t({removed:'accountSync.preservedRemoved',missing:'accountSync.preservedMissing','unresolved-favorite':'accountSync.preservedFavorite','delete-request':'accountSync.preservedDeleteRequest'}[item.kind]||'accountSync.preservedDifferent');
       card.append(description);
       for(const field of item.fields){
         const row=document.createElement('p');

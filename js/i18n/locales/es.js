@@ -350,6 +350,7 @@
     ,"accountSync.preservedDetailsSummary":"{order} registros anteriores coinciden en contenido o solo tienen un orden antiguo desconocido. {different} requieren revisión individual."
     ,"accountSync.preservedRemoved":"Este elemento se eliminó de la lista actual guardada. La copia anterior sigue conservada."
     ,"accountSync.preservedMissing":"Este elemento anterior no tiene equivalente en la lista actual guardada."
+    ,"accountSync.preservedDeleteRequest":"Un dispositivo anterior solicitó eliminar este elemento. La solicitud se conservó para revisión y no se aplicó desde ese dispositivo."
     ,"accountSync.preservedFavorite":"No se pudo vincular este favorito anterior con una cuenta."
     ,"accountSync.preservedDifferent":"La copia anterior y el elemento actual guardado son diferentes."
     ,"accountSync.preservedFieldDifference":"{field}: antes {older}; guardado {current}."

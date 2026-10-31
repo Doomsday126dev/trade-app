@@ -695,10 +695,37 @@ test('a new device does not turn an unknown legacy order into a preserved change
   await base.start();const entity=base.controller.activeEntities()[0];
   assert.equal((await base.controller.patchEntity({entityType:entity.entityType,entityId:entity.entityId,patch:{sortOrder:4}})).ok,true);
   await base.controller.drain();await base.stop();
-  const next=createRuntime(window,h,state,h.createMemoryJournalState(),async()=>source('order-new-device',{remote:{Pikachu:'H'}}));
+  const journalState=h.createMemoryJournalState(),read=async()=>source('order-new-device',{remote:{Pikachu:'H'}});
+  const next=createRuntime(window,h,state,journalState,read);
   const result=await next.start(),snapshot=await next.snapshot();
   assert.equal(result.ok,true);assert.equal(snapshot.state,'saved');assert.equal(snapshot.recoveryCandidateCount,0);
   assert.equal(result.plan.recoveryCandidates.length,0);assert.equal(next.controller.activeEntities()[0].values.sortOrder,4);
+  assert.equal(state.calls.createRecoveryCandidate,0);
+  await next.stop();journalState.meta.delete('migration-complete');
+  const restarted=createRuntime(window,h,state,journalState,read),resumed=await restarted.start();
+  assert.equal(resumed.ok,true);assert.equal((await restarted.snapshot()).state,'saved');
+  assert.equal(resumed.plan.recoveryCandidates.length,0);assert.equal(state.calls.createRecoveryCandidate,0);
+});
+
+test('an older receipt keeps its original unknown-order candidate on restart',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=runtimeRepository(window,h),model=window.PogoDomain.accountSyncModel;
+  const base=createRuntime(window,h,state,h.createMemoryJournalState(),async()=>source('historical-order-base',{remote:{Pikachu:'H'}}));
+  await base.start();const entity=base.controller.activeEntities()[0];
+  assert.equal((await base.controller.patchEntity({entityType:entity.entityType,entityId:entity.entityId,patch:{sortOrder:4}})).ok,true);
+  await base.controller.drain();await base.stop();
+  const sources=source('historical-order-device',{remote:{Pikachu:'H'}}),account=await state.repository.readAccount();
+  const plan=await window.PogoDomain.accountSyncMigration.buildMigrationPlan({ownerUid:'uid-owner',username:'Owner',deviceInstallId:sources.deviceInstallId,
+    legacyRemoteLists:sources.legacyRemoteLists,legacyLocalLists:sources.legacyLocalLists,legacyRemoteBoard:sources.legacyRemoteBoard,
+    legacyLocalBoard:sources.legacyLocalBoard,legacyQueue:sources.legacyQueue,orders:sources.orders,favorites:sources.favorites,tags:sources.tags,
+    remoteCanonical:[...Object.values(account.tradeEntries||{}),...Object.values(account.favorites||{}),...Object.values(account.tags||{})],canonicalInitialized:true},sources.dependencies);
+  assert.equal(plan.recoveryCandidates.length,1);
+  const deviceInstallHash=await model.sha256Hex(model.canonicalJson([model.SCHEMA_VERSION,'pogo-account-sync-device-install','uid-owner',sources.deviceInstallId]));
+  state.recoveryCandidates[plan.recoveryCandidates[0].candidateId]=plan.recoveryCandidates[0];
+  state.migrations[plan.deviceMigrationId]={schemaVersion:model.SCHEMA_VERSION,ownerUid:'uid-owner',deviceMigrationId:plan.deviceMigrationId,sourceFingerprint:plan.sourceFingerprint,
+    deviceInstallHash,createdAt:10,completedAt:11,seedCount:0,candidateCount:1,verified:true,legacyRetained:true};
+  const restarted=createRuntime(window,h,state,h.createMemoryJournalState(),async()=>sources),result=await restarted.start();
+  assert.equal(result.ok,true);assert.equal(result.plan.recoveryCandidates.length,1);
+  assert.equal(Object.keys(state.recoveryCandidates).length,1);
   assert.equal(state.calls.createRecoveryCandidate,0);
 });
 

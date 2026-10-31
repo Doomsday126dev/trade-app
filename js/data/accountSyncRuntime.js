@@ -489,14 +489,15 @@
       let plan=await migration.buildMigrationPlan(migrationInput,sources.dependencies||{});
       requireRunning();
       if(!plan.ok)throw Object.assign(new Error(plan.error.message),{code:plan.error.code});
-      // Existing migration receipts must keep their original candidate count.
-      // Only a new receipt can omit legacy rows whose sole difference is the
-      // old source's unknown-order marker; this changes no canonical item.
-      if(!migrationRecord(accountBefore,plan.deviceMigrationId)){
+      // The persisted candidate count distinguishes old receipts from the
+      // reduced comparison on restart, including before the local completion
+      // marker is saved. Historical receipts keep their original plan.
+      const priorReceipt=migrationRecord(accountBefore,plan.deviceMigrationId);
+      if(!priorReceipt||priorReceipt.candidateCount!==plan.recoveryCandidates.length){
         const reduced=await migration.buildMigrationPlan({...migrationInput,ignoreUnknownLegacyOrder:true},sources.dependencies||{});
         requireRunning();
         if(!reduced.ok||reduced.deviceMigrationId!==plan.deviceMigrationId||reduced.sourceFingerprint!==plan.sourceFingerprint)throw Object.assign(new Error('Reduced migration evidence changed source identity'),{code:'account-sync/migration-evidence-conflict'});
-        plan=reduced;
+        if(!priorReceipt||priorReceipt.candidateCount===reduced.recoveryCandidates.length)plan=reduced;
       }
       if(sources.legacyRetainedSnapshot){
         const backupKey=`legacy-source:${plan.deviceMigrationId}`;

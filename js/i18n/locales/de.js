@@ -350,6 +350,7 @@
     ,"accountSync.preservedDetailsSummary":"{order} ältere Datensätze haben denselben Inhalt oder nur eine unbekannte alte Reihenfolge. {different} müssen einzeln geprüft werden."
     ,"accountSync.preservedRemoved":"Dieser Eintrag wurde aus der aktuellen gespeicherten Liste entfernt. Die ältere Kopie bleibt erhalten."
     ,"accountSync.preservedMissing":"Dieser ältere Eintrag fehlt in der aktuellen gespeicherten Liste."
+    ,"accountSync.preservedDeleteRequest":"Ein früheres Gerät hat die Löschung dieses Eintrags angefordert. Die Anfrage wurde zur Prüfung aufbewahrt und von diesem Gerät nicht ausgeführt."
     ,"accountSync.preservedFavorite":"Dieses ältere Trainer-Lesezeichen konnte keinem Konto zugeordnet werden."
     ,"accountSync.preservedDifferent":"Die ältere Kopie und der aktuelle gespeicherte Eintrag unterscheiden sich."
     ,"accountSync.preservedFieldDifference":"{field}: früher {older}; gespeichert {current}."

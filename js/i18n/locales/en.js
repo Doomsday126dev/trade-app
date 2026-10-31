@@ -706,6 +706,7 @@
     ,"accountSync.preservedDetailsSummary":"{order} older records match current content or only contain an unknown old order. {different} need individual review."
     ,"accountSync.preservedRemoved":"This item was removed from the current saved list. The older copy is still retained."
     ,"accountSync.preservedMissing":"This older item has no match in the current saved list."
+    ,"accountSync.preservedDeleteRequest":"An earlier device requested deleting this item. That request was kept for review, not applied from that device."
     ,"accountSync.preservedFavorite":"This older trainer bookmark could not be matched to an account."
     ,"accountSync.preservedDifferent":"The older copy and the current saved item differ."
     ,"accountSync.preservedFieldDifference":"{field}: older {older}; saved {current}."
