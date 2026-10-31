@@ -17,6 +17,12 @@ test('Rules and Functions changes cannot receive UI-only qualification',()=>{
   assert.ok(firestore.commands.some(([,args])=>args.includes('check:e1-firestore-authority')));
   assert.ok(!firestore.commands.some(([,args])=>args.includes('check:sec02-production-rules')));
 });
+test('current background Rules fixtures select both production and exact-read emulator gates',()=>{
+  const plan=select(['tests/firebase/database.rules.background-current.json']);
+  assert.ok(plan.commands.some(([,args])=>args.includes('check:sec02-production-rules')));
+  assert.ok(plan.commands.some(([,args])=>args.includes('check:narrow-read-rules')));
+  assert.equal(plan.rules,true);
+});
 test('unrelated documentation skips expensive performance while runtime changes retain it',()=>{
   assert.equal(select(['docs/product-audit/README.md']).performance,false);
   for(const file of ['js/app/application.js','css/app.css','sw.js','package-lock.json'])assert.equal(select([file]).performance,true,file);

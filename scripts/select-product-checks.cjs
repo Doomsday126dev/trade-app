@@ -73,6 +73,7 @@ function select(files,{exists=existsSync,checkDeletedOwners=true}={}){
   if(any(/firestore.*rules/))commands.push(['npm',['run','check:e1-firestore-authority']]);
   if(files.includes('tests/firebase/database.rules.provider-public-projection.json'))commands.push(['bash',['scripts/check-provider-public-projection-rules.sh']]);
   if(files.some(file=>!publicContract(file)&&!legacyResetFile(file)&&!favoriteResolverFile(file)&&/database.*rules|SECURITY-RULES|build-sec02-production-rules/.test(file)))commands.push(['npm',['run','check:sec02-production-rules']]);
+  if(files.some(file=>/^(?:tests\/firebase\/(?:database\.rules\.background-current\.json|firebase\.background-current\.json|narrow-read-rules\.test\.cjs|narrow-read-surface-map\.json)|scripts\/check-narrow-read-(?:contract\.js|rules\.sh))$/.test(file)))commands.push(['npm',['run','check:narrow-read-rules']]);
   if(any(/^\.github\/workflows\/frontend-performance\.yml$/))add(['tests/performance-observability.test.cjs']);
   for(const file of files){
     if(resetOnly&&file==='tests/account-sync-runtime.test.cjs')continue;

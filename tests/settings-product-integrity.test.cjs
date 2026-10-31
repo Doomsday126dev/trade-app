@@ -23,7 +23,8 @@ test('Settings profile has one identity row, one Friend Code control, and explic
 test('Settings mobile height chain gives its detail pane a definite scroll container',()=>{
   assert.match(css,/@media\(max-width:767px\)[\s\S]*\.settings-overlay \.settings-modal\{height:calc\(100dvh/);
   assert.match(css,/\.settings-overlay \.settings-modal-body\{flex:1;height:auto;min-height:0;max-height:none;overflow:hidden\}/);
-  assert.match(css,/\.settings-overlay \.settings-detail\{overflow-y:auto;overscroll-behavior:contain\}/);
+  assert.match(css,/\.settings-detail\{[^}]*overflow-y:auto/);
+  assert.match(css,/\.settings-overlay \.settings-detail\{[^}]*overscroll-behavior:contain/);
 });
 
 test('Settings focus and nested avatar keyboard handlers stay within the visible layer',()=>{

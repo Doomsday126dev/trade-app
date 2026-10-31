@@ -7,7 +7,8 @@
   const LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
   const SECTION_PAGE_SIZE=80;
   const diagnostics={mode:'anonymous-public-share',authSdkRequested:false,privateReads:0,readPaths:[],events:[]};
-  const state={request:null,snapshot:null,type:'wishlist',status:'idle',collapsedSections:new Set(),sectionLimits:Object.create(null)};
+  const state={request:null,snapshot:null,backgroundRows:[],type:'wishlist',status:'idle',collapsedSections:new Set(),sectionLimits:Object.create(null)};
+  let backgroundCatalogPromise=null;
   const spriteOptical=(()=>{
     const CACHE_KEY='pogoPublicSpriteOptical_v1',TARGET_FILL=0.78,MAX_SCALE=2.8,MAX_CACHE_ENTRIES=500,CONCURRENCY=2;
     const queue=[],inflight=new Map();let active=0,cache={};
@@ -115,7 +116,7 @@
     document.getElementById('share-view')?.classList.add('active');
   }
   function publicError(message,detail=t('share.publicTryAgain')){
-    state.snapshot=null;document.getElementById('share-list-tabs')?.replaceChildren();
+    state.snapshot=null;state.backgroundRows=[];document.getElementById('share-list-tabs')?.replaceChildren();
     const header=document.getElementById('share-hdr');if(header)header.textContent=t('share.listTitle',{username:state.request?.username||''});
     const out=document.getElementById('share-list-out');
     if(out)out.innerHTML=`<div class="empty public-share-empty" role="status"><div class="empty-icon" aria-hidden="true">🔗</div><h3>${esc(message)}</h3><p>${esc(detail)}</p><button type="button" class="btn btn-secondary" data-public-share-action="retry">${esc(t('share.publicRetry'))}</button></div>`;
@@ -139,19 +140,57 @@
       p:['H','M','L'].includes(p)?p:'',mod:String(raw.mod??parsed.mod??'').trim(),
       lucky:raw.lucky===true||parsed.lucky===true,shiny:raw.shiny===true||parsed.shiny===true,
       xxl:raw.xxl===true||parsed.xxl===true,xxs:raw.xxs===true||parsed.xxs===true,
-      backgroundId:''
+      backgroundId:raw.isBackgroundV2===true?String(raw.backgroundId||''):''
     };
   }
 
+  function backgroundName(catalogId){
+    const intrinsic=global.BackgroundEditorAdapter?.intrinsicBinding(catalogId);
+    if(intrinsic)return intrinsic.name;
+    const reviewed=global.PogoDomain.pokemonCatalog?.VERIFIED_IDENTITIES?.find(row=>row.catalogId===catalogId);
+    if(reviewed)return reviewed.primary;
+    const match=/^pokemon:[0-9]+:(?:standard|dynamax|gmax):legacy:([^:]+)$/.exec(catalogId||'');
+    if(!match)return'';
+    try{return decodeURIComponent(match[1]);}catch{return'';}
+  }
+  async function backgroundCatalog(){
+    if(!backgroundCatalogPromise)backgroundCatalogPromise=(async()=>{
+      const response=await fetch('data/background-runtime-catalog.json?v='+encodeURIComponent(global.__POGO_RELEASE_ID),{cache:'force-cache'});
+      if(!response.ok)throw Error('background-catalogue-unavailable');
+      const catalog=global.BackgroundEditorAdapter.readCatalogue(await response.json(),{resolveEntry:id=>backgroundName(id)?{name:backgroundName(id)}:null});
+      if(!catalog.loaded||catalog.releaseScope!=='verified-subset')throw Error('background-catalogue-unavailable');
+      return catalog;
+    })().catch(error=>{backgroundCatalogPromise=null;throw error;});
+    return backgroundCatalogPromise;
+  }
+  async function resolveBackgroundRows(snapshot,databaseSdk,database){
+    if(snapshot.version!==3)return[];
+    const catalog=await backgroundCatalog();
+    const matches=row=>catalog.records.filter(record=>record.id===row.backgroundId&&record.catalogId===row.catalogId&&record.shiny===row.shiny&&record.category===(row.catalogId.includes(':dynamax:')?'dynamax':row.catalogId.includes(':gmax:')?'gmax':'wishlist')&&(!record.gender||record.gender===row.gender));
+    const protocol=global.BackgroundProtocol.createProtocol({token:snapshot.backgroundRef,db:()=>{throw Error('read-only');},isEligible:row=>matches(row).length>0});
+    const rows=await global.BackgroundEditorAdapter.readV3({snapshot,validateEntries:protocol.validate,readPublic:async path=>{
+      diagnostics.events.push('read:current-public-background');
+      const value=await databaseSdk.get(databaseSdk.ref(database,path));
+      return value.exists()?value.val():null;
+    }});
+    return rows.map(row=>{
+      const choices=matches(row),art=choices.find(record=>record.gender===row.gender)||choices.find(record=>!record.gender),name=backgroundName(row.catalogId);
+      if(!art||!name)throw Error('background-identity-unavailable');
+      const declaration=global.PogoDomain.publicSharePublication.publicDeclarations([{intent:'lf',category:art.category,name,p:row.priority,mod:row.variant,gender:row.gender,backgroundId:row.backgroundId,note:row.note,lucky:row.lucky,shiny:row.shiny,xxl:row.xxl,xxs:row.xxs}])[0];
+      return{...declaration,isBackgroundV2:true,backgroundArt:{label:art.label,url:art.url}};
+    });
+  }
 
-  function spriteHtml(name,gender,shiny=false,displayedName=name){
+
+  function spriteHtml(name,gender,shiny=false,displayedName=name,backgroundArt=null){
     const sprites=global.PogoDomain.spriteSlugs;
     const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name),shiny);
     const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender,shiny});
-    if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name:displayedName}):t('sprite.artUnavailable',{name:displayedName});return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div>`;}
+    const background=backgroundArt?`<img class="share-pcard-background" src="${attr(backgroundArt.url)}" alt="" loading="lazy" decoding="async">`:'';
+    if(!urls.length){const label=reviewed.reason==='invalid-gender'?t('costume.genderUnsupported',{name:displayedName}):t('sprite.artUnavailable',{name:displayedName});return`<div class="share-pcard-sprite-wrap">${background}<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" role="img" aria-label="${attr(label)}" title="${attr(label)}">?</div></div>`;}
     const[src,...fallbacks]=urls;
     const max=/\(Gigantamax\)/i.test(name)?'Gigantamax':/\(Dynamax\)/i.test(name)?'Dynamax':'';const mark=max?`<span class="sprite-max-symbol"><img src="assets/${max==='Gigantamax'?'gigantamax':'dynamax'}-symbol.png" alt="${max}" title="${max}"></span>`:'';
-    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async">${mark}</div>`;
+    return`<div class="share-pcard-sprite-wrap">${background}<img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async">${mark}</div>`;
   }
   function entryCard(name,value,sectionFlags=[]){
     const displayedName=global.PogoI18n?.pokemonNames?.costumeDisplayName({name,no:global.PogoDomain.spriteSlugs.publicSpriteDex(name)},{locale:core().getLocale()})?.text||name;
@@ -166,7 +205,7 @@
       model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
     const note=global.PogoDomain.publicSharePublication.publicNoteForDisplay(value?.note);
-    return`<article class="share-pcard card-row">${spriteHtml(name,gender,model.shiny,displayedName)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(displayedName)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
+    return`<article class="share-pcard card-row">${spriteHtml(name,gender,model.shiny,displayedName,value?.backgroundArt||null)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(displayedName)}</span>${value?.backgroundArt?`<span class="share-pcard-background-label">${esc(value.backgroundArt.label)}</span>`:''}${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${note?`<p class="share-pcard-mod share-pcard-note">${esc(note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
@@ -188,13 +227,13 @@
   }
   function renderTabs(snapshot){
     if(snapshot.profile?.friendCode&&!document.querySelector('[data-public-share-action="copy-friend"]'))document.querySelector('#share-hdr .share-hdr-info')?.insertAdjacentHTML('beforeend',`<div class="share-profile-actions"><button type="button" class="btn btn-secondary" data-public-share-action="copy-friend" aria-live="polite">${esc(t('product.copyFriend'))}</button></div>`);
-    const counts=Object.fromEntries(LIST_TYPES.map(type=>[type,global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',type).length]));
+    const counts=Object.fromEntries(LIST_TYPES.map(type=>[type,global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',type).length+state.backgroundRows.filter(row=>row.category===type).length]));
     const visible=LIST_TYPES.filter(type=>counts[type]||type===state.type);
     const tabs=document.getElementById('share-list-tabs');
     if(tabs)tabs.innerHTML=visible.map(type=>`<button type="button" class="ltab ${type===state.type?'active':''}" data-public-share-action="list" data-list-type="${type}" aria-pressed="${type===state.type}">${esc(t('share.listTab',{label:listLabel(type),count:core().formatNumber(counts[type])}))}</button>`).join('');
   }
   function renderList(snapshot){
-    const list=global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',state.type).map(entry=>{
+    const list=[...global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',state.type),...state.backgroundRows.filter(row=>row.category===state.type)].map(entry=>{
       const value=entry.value??entry,model=entryModel(value);
       return{...entry,...model,gender:entry.gender||value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod),note:entry.note||value?.note||'',no:global.PogoDomain.spriteSlugs.publicSpriteDex(entry.name)};
     });
@@ -266,6 +305,7 @@
     await appCheckSdk.getToken(result.instance,false);
     diagnostics.events.push('app-check-ready');
     global.__pogoStartup.appCheckReadyAt=performance.now();
+    const database=databaseSdk.getDatabase(app);
     const providerPublicShareGateway=global.PogoServices.providerPublicShareGateway;
     if(providerPublicShareGateway?.DEFAULT_ENABLED===true){
       diagnostics.readPaths.push('gateway:trainer-handle');diagnostics.events.push('read:gateway:trainer-handle');
@@ -277,7 +317,10 @@
       const provider=await client.read(request.username);
       if(generation!==publicReadGeneration)return;
       if(provider.ok){
+        const backgroundRows=await resolveBackgroundRows(provider.snapshot,databaseSdk,database);
+        if(generation!==publicReadGeneration)return;
         state.snapshot=provider.snapshot;
+        state.backgroundRows=backgroundRows;
         state.type=LIST_TYPES.includes(request.type)?request.type:'wishlist';
         state.status='ready';render();publicUpdatesStatus('share.refreshCopy');
         global.__pogoShellReady=true;global.__pogoBootComplete=true;
@@ -287,26 +330,35 @@
     }
     const path=`publicShares/${request.username}`;
     diagnostics.readPaths.push(path);diagnostics.events.push(`read:${path}`);
-    const snapshot=await databaseSdk.get(databaseSdk.ref(databaseSdk.getDatabase(app),path));
+    const snapshot=await databaseSdk.get(databaseSdk.ref(database,path));
     if(generation!==publicReadGeneration)return;
     const projection=global.PogoDomain.publicSharePublication.publicShareProjectionStatus(snapshot.exists()?snapshot.val():null,{username:request.username});
     if(!projection.ok){
       const key={not_published:'trainer.notPublished',projection_incomplete:'trainer.shareNeedsRepublishing',projection_unsupported:'trainer.sharedMalformed'}[projection.status]||'trainer.sharedUnavailable';
       publicError(t(key),t('trainer.publicHint'));return;
     }
-    state.snapshot=projection.snapshot;
+    const backgroundRows=await resolveBackgroundRows(projection.snapshot,databaseSdk,database);
+    if(generation!==publicReadGeneration)return;
+    state.snapshot=projection.snapshot;state.backgroundRows=backgroundRows;
     state.type=LIST_TYPES.includes(request.type)?request.type:'wishlist';
     state.status='ready';render();publicUpdatesStatus();
     // One exact public projection; no directory/root/private fallback or polling.
     if(typeof databaseSdk.onValue==='function'){
-      let signature=JSON.stringify(projection.snapshot);
-      const stop=databaseSdk.onValue(databaseSdk.ref(databaseSdk.getDatabase(app),path),value=>{
+      let signature=JSON.stringify(projection.snapshot),updateSerial=0;
+      const stop=databaseSdk.onValue(databaseSdk.ref(database,path),value=>{
         if(generation!==publicReadGeneration)return;
         const next=global.PogoDomain.publicSharePublication.publicShareProjectionStatus(value.exists()?value.val():null,{username:request.username});
-        if(!next.ok){state.snapshot=null;publicError(t('trainer.notPublished'),t('trainer.publicHint'));publicUpdatesStatus('share.unavailableCopy');return;}
+        if(!next.ok){updateSerial++;publicError(t('trainer.notPublished'),t('trainer.publicHint'));publicUpdatesStatus('share.unavailableCopy');return;}
         const nextSignature=JSON.stringify(next.snapshot);
-        if(nextSignature!==signature||!state.snapshot){signature=nextSignature;state.snapshot=next.snapshot;render();}
-        publicUpdatesStatus();
+        if(nextSignature===signature&&state.snapshot){publicUpdatesStatus();return;}
+        signature=nextSignature;const currentSerial=++updateSerial;
+        void resolveBackgroundRows(next.snapshot,databaseSdk,database).then(rows=>{
+          if(generation!==publicReadGeneration||currentSerial!==updateSerial)return;
+          state.snapshot=next.snapshot;state.backgroundRows=rows;render();publicUpdatesStatus();
+        }).catch(()=>{
+          if(generation!==publicReadGeneration||currentSerial!==updateSerial)return;
+          publicError(t('trainer.sharedReadFailed'));publicUpdatesStatus('share.unavailableCopy');
+        });
       },()=>{if(generation!==publicReadGeneration)return;publicReadGeneration++;stopPublicUpdates();state.snapshot=null;publicError(t('trainer.sharedReadFailed'));publicUpdatesStatus('share.unavailableCopy');});
       if(generation===publicReadGeneration)unsubscribePublic=stop;else stop();
     }

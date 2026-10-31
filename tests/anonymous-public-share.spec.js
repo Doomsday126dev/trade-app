@@ -44,7 +44,7 @@ function representativePublicProjection(){
   return{...publicProjection,version:2,declarations,declarationCount:declarations.length};
 }
 
-async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false,live=false,deferredFirst=false}={}){
+async function installPublicFirebase(page,{exists=true,projection=publicProjection,backgroundSnapshot=null,realSprites=false,live=false,deferredFirst=false}={}){
   const requests=[];
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
@@ -74,12 +74,13 @@ async function installPublicFirebase(page,{exists=true,projection=publicProjecti
   }));
   await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
-    body:`const projection=${JSON.stringify(projection)};
+    body:`const projection=${JSON.stringify(projection)},backgroundSnapshot=${JSON.stringify(backgroundSnapshot)};
       ${live?`export function onValue(target,onData,onError){globalThis.__livePublicPath=target.path;globalThis.__livePublicData=onData;globalThis.__livePublicError=onError;globalThis.__livePublicSubscriptions=(globalThis.__livePublicSubscriptions||0)+1;return()=>{globalThis.__livePublicSubscriptions--;};}`:''}
       export function getDatabase(){return{kind:'public-database'}}
       export function ref(_database,path){return{path}}
       export async function get(target){
         globalThis.__publicGetCount=(globalThis.__publicGetCount||0)+1;
+        if(target.path.startsWith('backgroundStores/')){globalThis.__publicShareReads=(globalThis.__publicShareReads||[]).concat(target.path);return{exists:()=>backgroundSnapshot!==null,val:()=>backgroundSnapshot};}
         if(${deferredFirst?'true':'false'}&&globalThis.__publicGetCount===1)return new Promise((_resolve,reject)=>{globalThis.__rejectFirstPublic=reject;});
         globalThis.__publicShareOrder.push('database-read');
         globalThis.__publicShareReads=(globalThis.__publicShareReads||[]).concat(target.path);
@@ -90,7 +91,7 @@ async function installPublicFirebase(page,{exists=true,projection=publicProjecti
   return requests;
 }
 
-async function assertPublicPrivacy(page){
+async function assertPublicPrivacy(page,expectedReads=['publicShares/PublicTrainer']){
   await expect(page.locator('#share-view')).toBeVisible();
   await expect(page.locator('#login-pg')).toBeHidden();
   await expect(page.locator('#app')).toBeHidden();
@@ -105,7 +106,7 @@ async function assertPublicPrivacy(page){
   }));
   expect(evidence.diagnostics.authSdkRequested).toBe(false);
   expect(evidence.diagnostics.privateReads).toBe(0);
-  expect(evidence.reads).toEqual(['publicShares/PublicTrainer']);
+  expect(evidence.reads).toEqual(expectedReads);
   expect(evidence.order).toEqual(['app-check-init','app-check-token','database-read']);
   expect(evidence.authLoaded).toBe(false);
   expect(evidence.privateModules).toEqual([]);
@@ -578,6 +579,56 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#login-pg')).toBeHidden();
     expect(await page.evaluate(()=>window.__publicShareReads)).toEqual(['publicShares/PublicTrainer']);
   });
+});
+
+test('public cards show exact saved background art beside plain requests',async({page},info)=>{
+  const declaration=(name,p,backgroundId='')=>({intent:'lf',name,category:'wishlist',p,mod:'',gender:'',backgroundId,note:'',lucky:false,shiny:false,xxl:false,xxs:false});
+  const token='bgs_'+'f'.repeat(32);
+  const projection={...publicProjection,version:3,backgroundRef:token,backgroundRevision:'r1',declarations:[declaration('Pikachu','M')],declarationCount:1};
+  const record=require('../data/background-runtime-catalog.json').records.find(row=>row.id==='lc-2026-jp-jetgreen'&&row.catalogId==='pokemon:1:standard:legacy:Bulbasaur'&&!row.shiny);
+  expect(record).toBeTruthy();
+  const backgroundSnapshot={entriesJson:JSON.stringify([{catalogId:record.catalogId,backgroundId:record.id,priority:'H',note:'',gender:'',variant:'',shiny:false,lucky:false,xxl:false,xxs:false,quantity:1}])};
+  await installPublicFirebase(page,{projection,backgroundSnapshot,live:true});await page.goto('./?view=PublicTrainer&list=wishlist');
+  await expect(page.locator('#share-list-out .share-pcard')).toHaveCount(2);
+  const cards=page.locator('#share-list-out .share-pcard');
+  const decorated=cards.filter({hasText:'Bulbasaur'}),plain=cards.filter({hasText:'Pikachu'});
+  await expect(decorated.locator('.share-pcard-background-label')).toHaveText('Jet Green 2026');
+  await expect(decorated.locator('img.share-pcard-background')).toHaveAttribute('src',record.url);
+  expect(await decorated.locator('img.share-pcard-background').evaluate(async image=>{await image.decode();return image.naturalWidth;})).toBeGreaterThan(32);
+  await expect(plain.locator('.share-pcard-background-label, img.share-pcard-background')).toHaveCount(0);
+  for(const width of [390,1440]){await page.setViewportSize({width,height:width===390?844:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`/tmp/trade170-public-background-${info.project.name}-${width}.png`,animations:'disabled'});}
+  const evidence=await page.evaluate(()=>({reads:window.__publicShareReads,authLoaded:performance.getEntriesByType('resource').some(entry=>/firebase-auth\.js/.test(entry.name)),privateModules:performance.getEntriesByType('resource').filter(entry=>/accountSync|application\.js/.test(entry.name)).map(entry=>entry.name)}));
+  expect(evidence.reads).toEqual(['publicShares/PublicTrainer',`backgroundStores/${token}/snapshots/r1`]);expect(evidence.authLoaded).toBe(false);expect(evidence.privateModules).toEqual([]);
+  await page.evaluate(next=>__livePublicData({exists:()=>true,val:()=>next}),{...projection,version:2,declarations:[declaration('Pikachu','M')],declarationCount:1,backgroundRef:undefined,backgroundRevision:undefined});
+  await expect(cards).toHaveCount(1);await expect(cards.locator('.share-pcard-background-label, img.share-pcard-background')).toHaveCount(0);
+});
+
+test('missing published background snapshot fails closed without showing an incomplete public list',async({page})=>{
+  const projection={...publicProjection,version:3,backgroundRef:'bgs_'+'f'.repeat(32),backgroundRevision:'r1',declarations:[{intent:'lf',name:'Pikachu',category:'wishlist',p:'M',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}],declarationCount:1};
+  await installPublicFirebase(page,{projection,backgroundSnapshot:null});await page.goto('./?view=PublicTrainer&list=wishlist');
+  await expect(page.locator('#share-list-out [data-public-share-action="retry"]')).toBeVisible();
+  await expect(page.locator('#share-list-out .share-pcard')).toHaveCount(0);
+});
+
+test('same species with two exact backgrounds and a plain request remain three distinct public cards',async({page})=>{
+  const records=require('../data/background-runtime-catalog.json').records.filter(row=>row.catalogId==='pokemon:1:standard:legacy:Bulbasaur'&&!row.shiny).slice(0,2);
+  expect(records).toHaveLength(2);
+  const projection={...publicProjection,version:3,backgroundRef:'bgs_'+'f'.repeat(32),backgroundRevision:'r2',declarations:[{intent:'lf',name:'Bulbasaur',category:'wishlist',p:'L',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false}],declarationCount:1};
+  const backgroundSnapshot={entriesJson:JSON.stringify(records.map((record,index)=>({catalogId:record.catalogId,backgroundId:record.id,priority:index?'M':'H',note:'',gender:'',variant:'',shiny:false,lucky:false,xxl:false,xxs:false,quantity:1})))};
+  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.__publicBackgroundSearch=value;}}}));
+  await installPublicFirebase(page,{projection,backgroundSnapshot});await page.goto('./?view=PublicTrainer&list=wishlist');
+  const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(3);
+  for(const record of records)await expect(cards.filter({hasText:record.label}).locator('img.share-pcard-background')).toHaveAttribute('src',record.url);
+  await expect(cards.locator('img.share-pcard-background').first()).toHaveCSS('object-fit','cover');
+  await expect(cards.filter({hasText:'Bulbasaur'}).filter({has:page.locator('img.share-pcard-background')})).toHaveCount(2);
+  await expect(cards.locator('img.share-pcard-background')).toHaveCount(2);
+  for(const priority of ['H','M']){
+    await page.locator(`[data-want-section="${priority}"] [data-contextual-copy]`).click();
+    expect(await page.evaluate(()=>window.__publicBackgroundSearch)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&1');
+  }
+  await page.locator('[data-want-section="L"] [data-contextual-copy]').click();
+  expect(await page.evaluate(()=>window.__publicBackgroundSearch)).toBe('!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&1');
+  await assertPublicPrivacy(page,['publicShares/PublicTrainer',`backgroundStores/${projection.backgroundRef}/snapshots/${projection.backgroundRevision}`]);
 });
 
 // Isolated SDK transport only: exercise the actual anonymous renderer lifecycle.

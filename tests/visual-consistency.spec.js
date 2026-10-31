@@ -247,6 +247,24 @@ test('Settings scroll ownership, localized controls, drafts and focus survive ev
   }
 });
 
+test('Settings scrollbars follow the selected theme without blocking pane scrolling',async({page})=>{
+  await installVisualFixture(page);
+  for(const theme of ['dark','light'])for(const width of [390,1440]){
+    await page.setViewportSize({width,height:700});
+    await page.evaluate(theme=>{applyTheme(theme);openAccountSettingsSection('security');},theme);
+    await expect(page.locator('[data-settings-section="security"]')).toBeVisible();
+    const detail=page.locator('#settings-detail');
+    expect(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme)).toBe(theme);
+    expect(await detail.evaluate(el=>getComputedStyle(el).scrollbarWidth)).toBe('thin');
+    expect(await page.locator('.settings-nav').evaluate(el=>getComputedStyle(el).scrollbarWidth)).toBe('thin');
+    const scroll=await detail.evaluate(el=>{el.scrollTop=120;return{top:el.scrollTop,overflow:el.scrollHeight>el.clientHeight};});
+    if(scroll.overflow)expect(scroll.top).toBeGreaterThan(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
+    await capture(page,`settings-scrollbar-${theme}-${width}`);
+    await page.locator('.settings-modal-close').click();
+  }
+});
+
 test('Legal and actual Privacy retain readable themes, focus and public-only loading',async({page})=>{
   test.skip(baseline);await installVisualFixture(page);
   for(const theme of ['dark','light'])for(const width of [1440,390,320]){
@@ -287,7 +305,8 @@ test('bounded retained-surface sweep uses populated and anonymous runtime fixtur
         await capture(page,`sweep-favorites-menu-${width}`);
       }
       if(surface==='share'){
-        await page.locator('[data-share-mode="text"]').click();
+        await page.locator('#product-share-format').selectOption('text');
+        await expect(page.locator('#product-share-text')).toBeVisible();
         await capture(page,`sweep-export-text-${width}`);
       }
     }
