@@ -92,6 +92,31 @@ test('public share compatibility covers authenticated reads, missing and incompl
   await fails(db('GET',`wishlist/${NAMES.ordinary}`,undefined,TOKENS.other),'no private fallback');
 });
 
+test('background owner and exact published snapshot reads remain scoped',async()=>{
+  const token='bgs_'+'a'.repeat(32),base=`backgroundStores/${token}`,owner=IDS.ordinary;
+  await succeeds(db('PUT',base,{ownerUid:owner,mode:'active',visible:true,head:2,snapshotSlots:{a:1,b:2},published:{r1:true,r2:true},snapshots:{r1:{entriesJson:'[]'},r2:{entriesJson:'[]'}}},'emulator-owner'),'seed exact background store');
+  await succeeds(db('PUT',`backgroundOwnerIndex/${owner}`,{token,active:true},'emulator-owner'),'seed owner token index');
+  await succeeds(db('PUT',`publicShares/${NAMES.ordinary}`,{...publicShare(NAMES.ordinary),version:3,backgroundRef:token,backgroundRevision:'r1'},'emulator-owner'),'seed current public reference');
+  await succeeds(db('GET',`backgroundOwnerIndex/${owner}`,undefined,TOKENS.ordinary),'owner token index');
+  for(const suffix of ['ownerUid','mode','visible','head','snapshotSlots','snapshots/r2'])await succeeds(db('GET',`${base}/${suffix}`,undefined,TOKENS.ordinary),`owner ${suffix}`);
+  await fails(db('GET',`backgroundOwnerIndex/${owner}`,undefined),'anonymous owner index');
+  await fails(db('GET',`backgroundOwnerIndex/${owner}`,undefined,TOKENS.other),'foreign owner index');
+  await fails(db('GET',`${base}/head`,undefined,TOKENS.other),'foreign head');
+  await fails(db('GET',`${base}/snapshots/r2`,undefined,TOKENS.other),'foreign draft snapshot');
+  await fails(db('GET','backgroundStores',undefined),'anonymous background collection');
+  await fails(db('GET',base,undefined),'anonymous background store');
+  await succeeds(db('GET',`${base}/snapshots/r1`,undefined),'exact published snapshot');
+  await fails(db('GET',`${base}/snapshots/r2`,undefined),'non-current published snapshot');
+  await succeeds(db('PUT',`${base}/visible`,false,'emulator-owner'),'hide background publication');
+  await fails(db('GET',`${base}/snapshots/r1`,undefined),'hidden snapshot');
+  await succeeds(db('PUT',`${base}/visible`,true,'emulator-owner'),'restore visible publication');
+  await succeeds(db('PUT',`publicShares/${NAMES.ordinary}/backgroundRevision`,'r2','emulator-owner'),'change current reference');
+  await fails(db('GET',`${base}/snapshots/r1`,undefined),'stale published snapshot');
+  await succeeds(db('GET',`${base}/snapshots/r2`,undefined),'new exact published snapshot');
+  await succeeds(db('PUT',`${base}/published/r2`,false,'emulator-owner'),'unpublish exact revision');
+  await fails(db('GET',`${base}/snapshots/r2`,undefined),'unpublished snapshot');
+});
+
 test('correct UID reads every exact username-owned active record',async()=>{
   for(const path of ['users','wishlist','dynamax','gmax','costumes','have'])await succeeds(db('GET',`${path}/${NAMES.ordinary}`,undefined,TOKENS.ordinary),`own ${path}`);
   await fails(db('GET',`users/${NAMES.ordinary}`,undefined),'logged-out profile');
