@@ -60,6 +60,28 @@ test('background172 rejects private-path tampering and unknown exact SHAs',t=>{
   change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
   assert.match(check(dir,background172).stderr,/path bindings or execution semantics changed|expression changed/);
 });
+const background173='9e05e1dba85313d368f4a20a9ebfc326ef06280b';
+function background173Fixture(t){
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'background173-read-contract-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const archive=execFileSync('git',['archive',background173,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
+  execFileSync('tar',['-xf','-','-C',dir],{input:archive});return dir;
+}
+test('background173 aliases the unchanged reviewed background read contract',()=>{
+  const registered=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS[background173];
+  assert.equal(registered,window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS['ae196f81834975d705c0fd25a4c1297130516889']);
+  assert.equal(registered.directGetCount,34);assert.equal(registered.directOnValueCount,1);
+});
+test('background173 immutable source passes exact-SHA read validation',t=>{
+  const result=check(background173Fixture(t),background173);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,35);
+});
+test('background173 rejects private-path tampering and unknown exact SHAs',t=>{
+  const dir=background173Fixture(t);
+  assert.notEqual(check(dir,'0123456789012345678901234567890123456789').status,0);
+  change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
+  assert.match(check(dir,background173).stderr,/path bindings or execution semantics changed|expression changed/);
+});
 test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);
   assert.equal(actual.length,contract.directReadSites.length);
