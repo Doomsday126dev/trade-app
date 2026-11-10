@@ -294,7 +294,7 @@ later integration merge and unrelated pending UI/sprite changes.
 
 ## Background recovery .172
 
-Runtime `79d264ed15593a2e3b042c52f6b306762c0a44d5` (`2026-11-10.172`)
+Runtime `75b4bac45884a30cbc2ad0c4bde215ce3b741658` (`2026-11-10.172`)
 fixes review-only background conversion completion and stale editor callbacks.
 Its exact SHA aliases the unchanged bounded-background contract used by .171:
 34 direct gets, one owner-scoped listener, and the same reviewed handler hashes,
@@ -305,3 +305,9 @@ The qualification workflow pins this runtime independently of the subsequent
 control-registration and dispatcher-only commits. New immutable runtime and
 control-selector tags are required. Existing tags, environment protections,
 live-SHA checks and production approval remain unchanged.
+
+The initial qualification of `79d264ed15593a2e3b042c52f6b306762c0a44d5`
+identified an outdated synthetic emulator status fixture. The corrected runtime
+adds the same active/listener/controller health fields supplied by the real
+runtime. Application logic and all conflict assertions are unchanged. The prior
+commits remain intact; the qualification workflow now tests the corrected SHA.

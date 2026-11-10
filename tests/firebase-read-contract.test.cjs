@@ -38,7 +38,7 @@ function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
-const background172='79d264ed15593a2e3b042c52f6b306762c0a44d5';
+const background172='75b4bac45884a30cbc2ad0c4bde215ce3b741658';
 function background172Fixture(t){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'background172-read-contract-'));
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
