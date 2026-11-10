@@ -2605,20 +2605,3 @@ html[data-theme="light"] .share-pcard-flag.shiny{color:#a52f73}
 #background-recovery summary{gap:8px}#background-recovery summary>.ui-icon{transform:rotate(-90deg)}#background-recovery details[open]>summary>.ui-icon{transform:none}
 
 #combined-priorities label>span{max-width:100%;overflow-wrap:anywhere;text-align:center}
-
-/* Background batches: native controls, full-width touch targets, and a bounded list. */
-.background-batch-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:12px}
-.combined-editor .background-batch-heading label{margin:0;font-size:13px;font-weight:650}
-.background-batch-toggle,.background-batch-actions button{font:inherit;font-size:12px;color:var(--ac2);background:none;border:0;min-height:44px;padding:8px 0;cursor:pointer;text-align:left}
-.background-batch-toggle:disabled,.background-batch-actions button:disabled{color:var(--muted);cursor:default;opacity:.65}
-.background-batch-toggle:focus-visible,.background-batch-actions button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
-.background-batch-actions{display:flex;justify-content:space-between;gap:12px}
-#combined-background-options{max-height:240px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:10px;background:var(--surface-raised)}
-.combined-editor .background-batch-option{display:flex;align-items:center;gap:12px;min-height:52px;margin:0;padding:10px 12px;box-sizing:border-box;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;line-height:1.4}
-.combined-editor .background-batch-option:last-child{border-bottom:0}
-.background-batch-option input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
-.background-batch-option>span{min-width:0;overflow-wrap:anywhere}
-.background-batch-option small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
-.background-batch-option:has(input:checked){background:color-mix(in srgb,var(--accent) 9%,transparent)}
-.background-batch-option.is-added{cursor:default;color:var(--muted)}
-#combined-background-count{margin:10px 0 4px;line-height:1.5}

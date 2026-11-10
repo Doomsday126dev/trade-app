@@ -699,8 +699,8 @@ function refreshCombinedBackgroundChoices(){
   const entry={name,catalogId:catalog?.catalogId,category,shiny:document.getElementById('combined-shiny').checked,gender:document.getElementById('combined-gender').value};
   const choices=catalog?productShareBackgroundChoices(entry):[],saved=combinedEditor?.entries?.[0];
   if(combinedEditor){
-    if(combinedEditor.backgroundCatalog!==catalog?.catalogId)combinedEditor.backgroundSelection=[];
-    combinedEditor.backgroundCatalog=catalog?.catalogId;combinedEditor.backgroundChoices=choices;
+    if(combinedEditor.backgroundCatalogId!==catalog?.catalogId)combinedEditor.backgroundSelection=[];
+    combinedEditor.backgroundCatalogId=catalog?.catalogId;combinedEditor.backgroundChoices=choices;
   }
   const valueFor=backgroundChoiceValue;
   const previous=select.value;
@@ -713,6 +713,32 @@ function refreshCombinedBackgroundChoices(){
 function renderCombinedBackgroundHelp(){
   const host=document.getElementById('combined-background-help'),value=document.getElementById('combined-background')?.value;
   if(!host)return;host.textContent='';renderCombinedBackgroundBatch();renderCombinedPokemonSummary();
+}
+// The batch picker belongs to the signed-in editor, not the startup shell.
+// Create its controls and scoped styles once, only when the editor is opened.
+function ensureCombinedBackgroundBatchControls(){
+  if(document.getElementById('combined-background-batch-toggle'))return;
+  const label=document.getElementById('combined-background-label'),select=document.getElementById('combined-background');
+  if(!label||!select)return;
+  const heading=document.createElement('div');heading.className='background-batch-heading';label.before(heading);heading.append(label);
+  heading.insertAdjacentHTML('beforeend','<button type="button" class="background-batch-toggle" id="combined-background-batch-toggle" aria-controls="combined-background-batch" aria-expanded="false" onclick="toggleCombinedBackgroundBatch()" hidden></button>');
+  select.insertAdjacentHTML('afterend',`<div id="combined-background-batch" hidden><div class="background-batch-actions"><button type="button" id="combined-background-select-all" onclick="selectCombinedBackgrounds(true)">${escHtml(i18nCore.t('backgroundBatch.selectAll'))}</button><button type="button" id="combined-background-clear" onclick="selectCombinedBackgrounds(false)">${escHtml(i18nCore.t('backgroundBatch.clear'))}</button></div><div id="combined-background-options" role="group" aria-labelledby="combined-background-label" aria-describedby="combined-background-count"></div><p id="combined-background-count" class="share-privacy-note" role="status" aria-live="polite"></p></div>`);
+  const style=document.createElement('style');style.id='combined-background-batch-style';style.textContent=`/* Background batches: native controls, full-width touch targets, and a bounded list. */
+.background-batch-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:12px}
+.combined-editor .background-batch-heading label{margin:0;font-size:13px;font-weight:650}
+.background-batch-toggle,.background-batch-actions button{font:inherit;font-size:12px;color:var(--ac2);background:none;border:0;min-height:44px;padding:8px 0;cursor:pointer;text-align:left}
+.background-batch-toggle:disabled,.background-batch-actions button:disabled{color:var(--muted);cursor:default;opacity:.65}
+.background-batch-toggle:focus-visible,.background-batch-actions button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.background-batch-actions{display:flex;justify-content:space-between;gap:12px}
+#combined-background-options{max-height:240px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:10px;background:var(--surface-raised)}
+.combined-editor .background-batch-option{display:flex;align-items:center;gap:12px;min-height:52px;margin:0;padding:10px 12px;box-sizing:border-box;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;line-height:1.4}
+.combined-editor .background-batch-option:last-child{border-bottom:0}
+.background-batch-option input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.background-batch-option>span{min-width:0;overflow-wrap:anywhere}
+.background-batch-option small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.background-batch-option:has(input:checked){background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.background-batch-option.is-added{cursor:default;color:var(--muted)}
+#combined-background-count{margin:10px 0 4px;line-height:1.5}`;document.head.append(style);
 }
 function combinedBackgroundBatchRows(){
   const draft=combinedEditor;if(!draft)return [];
@@ -741,6 +767,8 @@ function renderCombinedBackgroundBatch(){
     options.dataset.signature=signature;
   }
   for(const input of options.querySelectorAll('input')){input.checked=selected.has(input.value);input.disabled=busy||paused||!available.has(input.value);}
+  document.getElementById('combined-background-select-all').textContent=i18nCore.t('backgroundBatch.selectAll');
+  document.getElementById('combined-background-clear').textContent=i18nCore.t('backgroundBatch.clear');
   document.getElementById('combined-background-select-all').disabled=busy||paused||selected.size===available.size;
   document.getElementById('combined-background-clear').disabled=busy||paused||!selected.size;
   document.getElementById('combined-background-count').textContent=i18nCore.t(selected.size?'backgroundBatch.selected':'backgroundBatch.choose',{count:selected.size});
@@ -869,6 +897,7 @@ function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),backgroundBatch:false,backgroundSelection:[],saving:false,before:JSON.stringify(productDeclarations().entries)};
+  ensureCombinedBackgroundBatchControls();
   combinedEditor.sourceEntities=accountSyncClone([...new Map((entries||[]).flatMap(e=>[e,...e.aliases||[]]).filter(e=>!e.isBackgroundV2&&e.ref?.surface!=='background-prototype').map(combinedSourceEntity).filter(Boolean).map(e=>[e.entityId,e])).values()]);
   combinedEditor.backgroundSource=entries?.[0]?.isBackgroundV2?accountSyncClone(backgroundOwnerRuntime?.repository.snapshot().entries.find(r=>BackgroundTransitions.recordKey(r)===entries[0].key)):null;
   variantClarificationDraft=null;setClarificationControlsLocked(false);

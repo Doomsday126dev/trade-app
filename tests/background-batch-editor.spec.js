@@ -122,3 +122,9 @@ test('non-shiny background with no priority reports the existing requirement and
  await expect(page.locator('#combined-error')).toHaveText('Choose a priority or a special requirement.');expect(await rows(page)).toHaveLength(0);await expect(page.locator('#combined-save')).toBeEnabled();
  await priority(page,'M');await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();expect(await rows(page)).toHaveLength(1);
 });
+
+test('batch controls and styles stay out of the startup shell and initialize only once',async({page})=>{
+ await setup(page);await expect(page.locator('#combined-background-batch-toggle')).toHaveCount(0);await expect(page.locator('#combined-background-batch-style')).toHaveCount(0);
+ await batch(page);await expect(page.locator('#combined-background-batch-style')).toHaveCount(1);await page.locator('#combined-close').click();await batch(page);
+ await expect(page.locator('#combined-background-batch-toggle')).toHaveCount(1);await expect(page.locator('#combined-background-batch-style')).toHaveCount(1);await choice(page,ids[0]).check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+});
