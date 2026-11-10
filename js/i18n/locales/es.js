@@ -357,5 +357,15 @@
     ,"accountSync.preservedNoDifferences":"Estas copias anteriores no tienen diferencias de contenido que revisar."
     ,"accountSync.fieldBackground":"Fondo"
 
+    ,"backgroundBatch.multiple":"Seleccionar varios fondos"
+    ,"backgroundBatch.single":"Usar un solo fondo"
+    ,"backgroundBatch.alreadyAdded":"Ya está en tu lista"
+    ,"backgroundBatch.selectAll":"Seleccionar todos los nuevos"
+    ,"backgroundBatch.clear":"Limpiar selección"
+    ,"backgroundBatch.selected":"{count} seleccionados. La prioridad y las preferencias se aplican a todos."
+    ,"backgroundBatch.choose":"Selecciona al menos un fondo nuevo."
+    ,"backgroundBatch.addOne":"Añadir 1 fondo"
+    ,"backgroundBatch.addMany":"Añadir {count} fondos"
+    ,"backgroundBatch.add":"Añadir fondos"
 });
 })(window);

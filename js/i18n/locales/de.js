@@ -357,5 +357,15 @@
     ,"accountSync.preservedNoDifferences":"Diese älteren Kopien haben keine inhaltlichen Unterschiede."
     ,"accountSync.fieldBackground":"Hintergrund"
 
+    ,"backgroundBatch.multiple":"Mehrere Hintergründe wählen"
+    ,"backgroundBatch.single":"Einen Hintergrund wählen"
+    ,"backgroundBatch.alreadyAdded":"Bereits auf deiner Liste"
+    ,"backgroundBatch.selectAll":"Alle neuen auswählen"
+    ,"backgroundBatch.clear":"Auswahl aufheben"
+    ,"backgroundBatch.selected":"{count} ausgewählt. Priorität und Wünsche gelten für alle."
+    ,"backgroundBatch.choose":"Wähle mindestens einen neuen Hintergrund."
+    ,"backgroundBatch.addOne":"1 Hintergrund hinzufügen"
+    ,"backgroundBatch.addMany":"{count} Hintergründe hinzufügen"
+    ,"backgroundBatch.add":"Hintergründe hinzufügen"
 });
 })(window);

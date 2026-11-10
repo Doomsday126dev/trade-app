@@ -698,9 +698,13 @@ function refreshCombinedBackgroundChoices(){
   const source=catalog?_nameToSpriteEntry(name):null,category=source?(maxTypeForEntry(source,'wishlist')||'wishlist'):'wishlist';
   const entry={name,catalogId:catalog?.catalogId,category,shiny:document.getElementById('combined-shiny').checked,gender:document.getElementById('combined-gender').value};
   const choices=catalog?productShareBackgroundChoices(entry):[],saved=combinedEditor?.entries?.[0];
+  if(combinedEditor){
+    if(combinedEditor.backgroundCatalog!==catalog?.catalogId)combinedEditor.backgroundSelection=[];
+    combinedEditor.backgroundCatalog=catalog?.catalogId;combinedEditor.backgroundChoices=choices;
+  }
   const valueFor=backgroundChoiceValue;
   const previous=select.value;
-  host.hidden=!active||(!choices.length&&!saved?.isBackgroundV2);
+  host.hidden=!active||(!choices.length&&!saved?.isBackgroundV2&&!combinedEditor?.backgroundBatch);
   select.innerHTML=`<option value="">${escHtml(i18nCore.t('share.noBackground'))}</option>`+choices.map(choice=>`<option value="${escAttr(valueFor(choice))}">${escHtml(choice.label)}${BackgroundEditorAdapter.intrinsicBinding(choice.catalogId)?' · '+escHtml(BackgroundEditorAdapter.intrinsicBinding(choice.catalogId).name):''}</option>`).join('');
   if(choices.some(choice=>valueFor(choice)===previous))select.value=previous;else select.value='';
   select.disabled=(BACKGROUND_ROLLOUT.enabled&&backgroundOwnerRuntime?.paused)||!!saved?.isBackgroundV2&&!choices.some(choice=>choice.id===saved.backgroundId&&choice.catalogId===saved.catalogId);
@@ -708,8 +712,61 @@ function refreshCombinedBackgroundChoices(){
 }
 function renderCombinedBackgroundHelp(){
   const host=document.getElementById('combined-background-help'),value=document.getElementById('combined-background')?.value;
-  if(!host)return;host.textContent='';renderCombinedPokemonSummary();
+  if(!host)return;host.textContent='';renderCombinedBackgroundBatch();renderCombinedPokemonSummary();
 }
+function combinedBackgroundBatchRows(){
+  const draft=combinedEditor;if(!draft)return [];
+  const flags=Object.fromEntries(['shiny','lucky','xxl','xxs'].map(field=>[field,document.getElementById('combined-'+field).checked]));
+  const gender=document.getElementById('combined-gender').value,variant=document.getElementById('combined-mod').value;
+  const records=backgroundOwnerRuntime&&backgroundOwnerRuntime.uid===draft.uid?backgroundOwnerRuntime.repository.snapshot().entries:[];
+  const existing=new Set(records.map(BackgroundTransitions.recordKey));
+  return (draft.backgroundChoices||[]).map(choice=>({...choice,value:backgroundChoiceValue(choice),exists:existing.has(BackgroundTransitions.recordKey({catalogId:choice.catalogId,backgroundId:choice.id,gender,variant,...flags}))}));
+}
+function renderCombinedBackgroundBatch(){
+  const draft=combinedEditor,toggle=document.getElementById('combined-background-batch-toggle'),panel=document.getElementById('combined-background-batch');
+  if(!draft||!toggle||!panel)return;
+  const rows=combinedBackgroundBatchRows(),canBatch=!draft.entries.length&&(rows.length>1||draft.backgroundBatch);
+  if(!canBatch)draft.backgroundBatch=false;
+  const active=!!draft.backgroundBatch,busy=!!draft.saving,paused=!!(BACKGROUND_ROLLOUT.enabled&&backgroundOwnerRuntime?.paused);
+  toggle.hidden=!canBatch;toggle.disabled=busy||paused;toggle.setAttribute('aria-expanded',String(active));
+  toggle.textContent=i18nCore.t(active?'backgroundBatch.single':'backgroundBatch.multiple');
+  panel.hidden=!active;document.getElementById('combined-background').hidden=active;
+  const available=new Set(rows.filter(row=>!row.exists).map(row=>row.value));
+  draft.backgroundSelection=(draft.backgroundSelection||[]).filter(value=>available.has(value));
+  const selected=new Set(draft.backgroundSelection),options=document.getElementById('combined-background-options');
+  // Preserve focused checkbox nodes when only selection or busy state changes.
+  const signature=JSON.stringify([i18nCore.getLocale(),rows.map(row=>[row.value,row.label,row.exists])]);
+  if(options.dataset.signature!==signature){
+    options.innerHTML=rows.map(row=>{const intrinsic=BackgroundEditorAdapter.intrinsicBinding(row.catalogId);return `<label class="background-batch-option${row.exists?' is-added':''}"><input type="checkbox" value="${escAttr(row.value)}" onchange="setCombinedBackgroundSelection(this.value,this.checked)"><span><span>${escHtml(row.label)}</span>${intrinsic?`<small>${escHtml(intrinsic.name)}</small>`:''}${row.exists?`<small class="background-batch-added">${escHtml(i18nCore.t('backgroundBatch.alreadyAdded'))}</small>`:''}</span></label>`;}).join('');
+    options.dataset.signature=signature;
+  }
+  for(const input of options.querySelectorAll('input')){input.checked=selected.has(input.value);input.disabled=busy||paused||!available.has(input.value);}
+  document.getElementById('combined-background-select-all').disabled=busy||paused||selected.size===available.size;
+  document.getElementById('combined-background-clear').disabled=busy||paused||!selected.size;
+  document.getElementById('combined-background-count').textContent=i18nCore.t(selected.size?'backgroundBatch.selected':'backgroundBatch.choose',{count:selected.size});
+  const save=document.getElementById('combined-save');
+  if(active){delete save.dataset.i18n;save.textContent=i18nCore.t(!selected.size?'backgroundBatch.add':selected.size===1?'backgroundBatch.addOne':'backgroundBatch.addMany',{count:selected.size});save.disabled=busy||paused||!selected.size;}
+  else if(!draft.entries.length){save.dataset.i18n='wantEditor.addAction';save.textContent=i18nCore.t('wantEditor.addAction');save.disabled=busy;}
+}
+function toggleCombinedBackgroundBatch(){
+  const draft=combinedEditor;if(!draft||draft.saving||draft.entries.length)return;
+  draft.backgroundBatch=!draft.backgroundBatch;
+  const select=document.getElementById('combined-background');
+  if(draft.backgroundBatch){draft.backgroundSelection=select.value?[select.value]:[];select.value='';}
+  else select.value=draft.backgroundSelection?.[0]||'';
+  renderCombinedBackgroundHelp();
+}
+function setCombinedBackgroundSelection(value,checked){
+  const draft=combinedEditor;if(!draft||draft.saving)return;
+  const selected=new Set(draft.backgroundSelection||[]);if(checked)selected.add(value);else selected.delete(value);
+  draft.backgroundSelection=[...selected];renderCombinedBackgroundBatch();
+}
+function selectCombinedBackgrounds(all){
+  if(!combinedEditor||combinedEditor.saving)return;
+  combinedEditor.backgroundSelection=all?combinedBackgroundBatchRows().filter(row=>!row.exists).map(row=>row.value):[];
+  renderCombinedBackgroundBatch();
+}
+
 function refreshCombinedShinyAvailability(){
   const name=document.getElementById('combined-name').value,box=document.getElementById('combined-shiny'),hint=document.getElementById('combined-shiny-hint');
   const status=costumeSpriteCatalogDomain.resolve({name})?.shinyAvailability,blocked=status&&status!=='released';
@@ -811,7 +868,7 @@ function useBoardSelection(){
 function openCombinedEditor(index,options={}){
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
-  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
+  combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),backgroundBatch:false,backgroundSelection:[],saving:false,before:JSON.stringify(productDeclarations().entries)};
   combinedEditor.sourceEntities=accountSyncClone([...new Map((entries||[]).flatMap(e=>[e,...e.aliases||[]]).filter(e=>!e.isBackgroundV2&&e.ref?.surface!=='background-prototype').map(combinedSourceEntity).filter(Boolean).map(e=>[e.entityId,e])).values()]);
   combinedEditor.backgroundSource=entries?.[0]?.isBackgroundV2?accountSyncClone(backgroundOwnerRuntime?.repository.snapshot().entries.find(r=>BackgroundTransitions.recordKey(r)===entries[0].key)):null;
   variantClarificationDraft=null;setClarificationControlsLocked(false);
@@ -836,7 +893,7 @@ function openCombinedEditor(index,options={}){
   document.querySelector('#combined-priority option[value=""]').textContent=i18nCore.t(entry.name&&window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY'?'workflow.needsPriority':'workflow.noPriority');
   document.getElementById('combined-error').textContent=accountSyncProjectionReady()?'':i18nCore.t(accountSyncEditFailureKey(accountSyncUiState?.lastError));
   const save=document.getElementById('combined-save');save.disabled=false;save.dataset.i18n=entries?.length?'wantEditor.saveChanges':'wantEditor.addAction';save.textContent=i18nCore.t(save.dataset.i18n);
-  renderCombinedPokemonSummary();
+  renderCombinedBackgroundHelp();
   document.getElementById('wants-remove').hidden=!entries?.length;
   document.getElementById('wants-remove').setAttribute('aria-label',i18nCore.t('myList.removeEntry',{name:entry.dn||entry.name||''}));
   renderVariantClarificationPanel();
@@ -965,7 +1022,7 @@ async function saveCombinedEditor(remove=false){
   if(!draft||button.disabled)return;
   const sessionCurrent=()=>draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.sessionGeneration===_sessionTransientGeneration;
   const current=()=>draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid;
-  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);button.disabled=false;}};
+  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -983,10 +1040,12 @@ async function saveCombinedEditor(remove=false){
   const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
-  button.disabled=true;
+  const batch=!remove&&!draft.entries.length&&draft.backgroundBatch,selectedBackgrounds=batch?[...draft.backgroundSelection]:[];
+  if(batch&&!selectedBackgrounds.length)return fail('backgroundBatch.choose');
+  draft.saving=true;button.disabled=true;renderCombinedBackgroundBatch();
   try{
     const selected=document.getElementById('combined-background')?.value||'',prototypeEntry=draft.entries[0]?.isBackgroundV2;
-    if((selected||prototypeEntry)&&backgroundCatalogueReady()){
+    if((batch||selected||prototypeEntry)&&backgroundCatalogueReady()){
       if(!backgroundV2PrototypeAdapter&&BACKGROUND_ROLLOUT.enabled){await enrollBackgroundRequests({quiet:true});if(!current()||!sessionCurrent())return;refreshCombinedBackgroundChoices();}
       if(!backgroundV2PrototypeAdapter)return fail('product.editSyncRequired');
       if(!current()||!sessionCurrent()||draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
@@ -1009,9 +1068,12 @@ async function saveCombinedEditor(remove=false){
       if(remove&&prototypeEntry)await backgroundV2PrototypeAdapter.remove(draft.uid,draft.entries[0].key,draft.entries[0].revision);
       else if(!remove){
         const source=_nameToSpriteEntry(name),category=maxTypeForEntry(source,'wishlist')||'wishlist';
-        const choice=productShareBackgroundChoices({name,catalogId:catalog.catalogId,category,shiny:changes.shiny,gender:changes.gender}).find(item=>backgroundChoiceValue(item)===selected);
-        if(!choice)return fail('phase2.changed');
-        await backgroundV2PrototypeAdapter.save(draft.uid,{name,catalogId:choice.catalogId,category,backgroundId:choice.id,p:priority,...changes,qty:draft.entries[0]?.qty||draft.entries[0]?.quantity||1,...(prototypeEntry?{mirror:!!draft.entries[0].mirror,sortOrder:draft.entries[0].sortOrder||0,plainIdentity:draft.entries[0].plainIdentity?{...draft.entries[0].plainIdentity,catalogId:choice.catalogId}:undefined}:{} )},{expectedKey:prototypeEntry?draft.entries[0].key:'',expectedRevision:prototypeEntry?draft.entries[0].revision:0});
+        const choices=productShareBackgroundChoices({name,catalogId:catalog.catalogId,category,shiny:changes.shiny,gender:changes.gender});
+        const values=(batch?selectedBackgrounds:[selected]).map(value=>choices.find(item=>backgroundChoiceValue(item)===value));
+        if(values.some(choice=>!choice))return fail('phase2.changed');
+        const records=values.map(choice=>({name,catalogId:choice.catalogId,category,backgroundId:choice.id,p:priority,...changes,qty:draft.entries[0]?.qty||draft.entries[0]?.quantity||1,...(prototypeEntry?{mirror:!!draft.entries[0].mirror,sortOrder:draft.entries[0].sortOrder||0,plainIdentity:draft.entries[0].plainIdentity?{...draft.entries[0].plainIdentity,catalogId:choice.catalogId}:undefined}:{} )}));
+        if(batch)await backgroundV2PrototypeAdapter.addMany(draft.uid,records);
+        else await backgroundV2PrototypeAdapter.save(draft.uid,records[0],{expectedKey:prototypeEntry?draft.entries[0].key:'',expectedRevision:prototypeEntry?draft.entries[0].revision:0});
       }
       if(!sessionCurrent())return;
       // The private save is durable. Optional public-share work must not keep
@@ -1057,7 +1119,7 @@ async function saveCombinedEditor(remove=false){
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
     closeModal('combined-editor-modal');renderMyList();
   }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
-  finally{if(current())button.disabled=false;}
+  finally{if(current()){draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
