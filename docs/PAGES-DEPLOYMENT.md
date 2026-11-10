@@ -315,14 +315,14 @@ commits remain intact; the qualification workflow now tests the corrected SHA.
 
 ## Atomic background batches .173
 
-Runtime `9e05e1dba85313d368f4a20a9ebfc326ef06280b` (`2026-11-10.173`) adds an optional
+Runtime `ba08b846cdef0f6a642b7d05d67102d6c5233fcc` (`2026-11-10.173`) adds an optional
 multi-background picker to new requests. Exact existing variants are marked and
 skipped without replacing their metadata. All new selections share one validated
 journal operation and revision; failed or uncertain saves retain the whole draft
 for the existing recovery flow. Single-entry editing and conversion protections
 are unchanged. Non-shiny requests retain the existing priority requirement.
 
-The release adds 37 persistence regressions and 11 real-application browser cases
+The release adds 37 persistence regressions and 12 real-application browser cases
 covering 3+ additions, mixed shiny/non-shiny variants, exact duplicates, reload,
 failed and uncertain commits, retry, stale editor callbacks, keyboard controls,
 and four localized 320px layouts. Synthetic browser transports block production
@@ -334,3 +334,11 @@ qualification jobs pin the exact runtime. Subsequent control registration and
 separate dispatcher pin commits do not alter application behavior. Publication,
 required CI, merge and the protected github-pages deployment gate are separate
 release steps; this documentation does not imply a production deployment.
+
+The initial .173 candidate exceeded the unchanged startup transfer budget by
+1,718 bytes. The corrected runtime creates batch controls and their scoped CSS
+only when the already-lazy signed-in editor opens. All eight performance cases
+pass locally, with initial resource bytes restored to the .172 baseline. A
+regression verifies that initialization runs once and stays out of startup.
+The retired-module-name guard is unchanged; the draft stores its selected
+catalogue identity explicitly as `backgroundCatalogId`.
