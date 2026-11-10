@@ -38,6 +38,28 @@ function change(dir,file,from,to){
   const target=path.join(dir,file),source=fs.readFileSync(target,'utf8');
   assert.ok(source.includes(from));fs.writeFileSync(target,source.replace(from,to));
 }
+const background172='79d264ed15593a2e3b042c52f6b306762c0a44d5';
+function background172Fixture(t){
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'background172-read-contract-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const archive=execFileSync('git',['archive',background172,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
+  execFileSync('tar',['-xf','-','-C',dir],{input:archive});return dir;
+}
+test('background172 aliases the unchanged reviewed background read contract',()=>{
+  const registered=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS[background172];
+  assert.equal(registered,window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS['ae196f81834975d705c0fd25a4c1297130516889']);
+  assert.equal(registered.directGetCount,34);assert.equal(registered.directOnValueCount,1);
+});
+test('background172 immutable source passes exact-SHA read validation',t=>{
+  const result=check(background172Fixture(t),background172);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,35);
+});
+test('background172 rejects private-path tampering and unknown exact SHAs',t=>{
+  const dir=background172Fixture(t);
+  assert.notEqual(check(dir,'0123456789012345678901234567890123456789').status,0);
+  change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
+  assert.match(check(dir,background172).stderr,/path bindings or execution semantics changed|expression changed/);
+});
 test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);
   assert.equal(actual.length,contract.directReadSites.length);
