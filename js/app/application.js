@@ -963,7 +963,9 @@ function combinedSourceEntity(entry){
 async function saveCombinedEditor(remove=false){
   const draft=combinedEditor,error=document.getElementById('combined-error'),button=document.getElementById('combined-save');
   if(!draft||button.disabled)return;
-  const fail=key=>{error.textContent=i18nCore.t(key);button.disabled=false;};
+  const sessionCurrent=()=>draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.sessionGeneration===_sessionTransientGeneration;
+  const current=()=>draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid;
+  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);button.disabled=false;}};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -985,11 +987,11 @@ async function saveCombinedEditor(remove=false){
   try{
     const selected=document.getElementById('combined-background')?.value||'',prototypeEntry=draft.entries[0]?.isBackgroundV2;
     if((selected||prototypeEntry)&&backgroundCatalogueReady()){
-      if(!backgroundV2PrototypeAdapter&&BACKGROUND_ROLLOUT.enabled){await enrollBackgroundRequests({quiet:true});if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;refreshCombinedBackgroundChoices();}
+      if(!backgroundV2PrototypeAdapter&&BACKGROUND_ROLLOUT.enabled){await enrollBackgroundRequests({quiet:true});if(!current()||!sessionCurrent())return;refreshCombinedBackgroundChoices();}
       if(!backgroundV2PrototypeAdapter)return fail('product.editSyncRequired');
-      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
+      if(!current()||!sessionCurrent()||draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
       if(!remove&&draft.entries.length&&((selected&&!prototypeEntry)||(!selected&&prototypeEntry))){
-        const authority=await accountSyncMutationAuthority();if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+        const authority=await accountSyncMutationAuthority();if(!current()||!sessionCurrent())return;
         if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail('product.editSyncRequired');
         const runtime=backgroundOwnerRuntime,transitions=backgroundTransitionsForRuntime(runtime,authority.controller);let plan;
         if(prototypeEntry){const source=draft.backgroundSource;if(!source)return fail('phase2.changed');
@@ -1001,8 +1003,9 @@ async function saveCombinedEditor(remove=false){
           plan={direction:'background',source,target:{catalogId:choice.catalogId,backgroundId:choice.id,priority,variant:changes.mod,gender:changes.gender,note:changes.note,shiny:changes.shiny,lucky:changes.lucky,xxl:changes.xxl,xxs:changes.xxs,quantity:source.values.quantity||1,sortOrder:source.values.sortOrder||0,mirror:!!source.values.mirror,plainIdentity:{...source.identity,catalogId:choice.catalogId}}};
         }
         const result=await transitions.start(plan);renderBackgroundRecovery();if(!result.ok)return fail(result.code==='target-collision'?'clarify.collision':'phase2.changed');
-        if(draft===combinedEditor){closeModal('combined-editor-modal');renderMyList();}return;
+        if(current()&&sessionCurrent()){closeModal('combined-editor-modal');renderMyList();}return;
       }
+      const runtime=backgroundOwnerRuntime,controller=managedAccountSyncRuntime?.controller;
       if(remove&&prototypeEntry)await backgroundV2PrototypeAdapter.remove(draft.uid,draft.entries[0].key,draft.entries[0].revision);
       else if(!remove){
         const source=_nameToSpriteEntry(name),category=maxTypeForEntry(source,'wishlist')||'wishlist';
@@ -1010,10 +1013,11 @@ async function saveCombinedEditor(remove=false){
         if(!choice)return fail('phase2.changed');
         await backgroundV2PrototypeAdapter.save(draft.uid,{name,catalogId:choice.catalogId,category,backgroundId:choice.id,p:priority,...changes,qty:draft.entries[0]?.qty||draft.entries[0]?.quantity||1,...(prototypeEntry?{mirror:!!draft.entries[0].mirror,sortOrder:draft.entries[0].sortOrder||0,plainIdentity:draft.entries[0].plainIdentity?{...draft.entries[0].plainIdentity,catalogId:choice.catalogId}:undefined}:{} )},{expectedKey:prototypeEntry?draft.entries[0].key:'',expectedRevision:prototypeEntry?draft.entries[0].revision:0});
       }
-      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
-      try{await publishSavedBackgroundChange();}catch{}
-      if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
-      closeModal('combined-editor-modal');renderMyList();return;
+      if(!sessionCurrent())return;
+      // The private save is durable. Optional public-share work must not keep
+      // Add disabled or later close an editor opened while publication waits.
+      if(current())closeModal('combined-editor-modal');renderMyList();
+      void publishSavedBackgroundChange(runtime,controller).catch(()=>{});return;
     }
     const authority=await accountSyncMutationAuthority();
     if(draft!==combinedEditor)return;
@@ -1049,11 +1053,11 @@ async function saveCombinedEditor(remove=false){
     if(!mutations.length){closeModal('combined-editor-modal');return;}
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
-    if(draft.owner!==cur||draft.uid!==auth?.currentUser?.uid)return;
+    if(!current()||!sessionCurrent())return;
     if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
     closeModal('combined-editor-modal');renderMyList();
   }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
-  finally{button.disabled=false;}
+  finally{if(current())button.disabled=false;}
 }
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
@@ -7313,7 +7317,7 @@ async function publishSavedBackgroundChange(runtime=backgroundOwnerRuntime,contr
 function backgroundTransitionsForRuntime(runtime,controller=managedAccountSyncRuntime?.controller){
  if(!runtime||!controller||runtime.uid!==auth?.currentUser?.uid)throw Error('session-changed');if(runtime.transitions&&runtime.transitionController===controller)return runtime.transitions;
  const current=()=>{if(runtime!==backgroundOwnerRuntime||runtime.uid!==auth?.currentUser?.uid||runtime.generation!==_sessionTransientGeneration)throw Error('session-changed');};
- const canonical={finished:()=>publishSavedBackgroundChange(runtime,controller),get:id=>{current();return controller.getEntity('tradeEntry',id);},drain:()=>{current();return controller.drain();},snapshot:()=>controller.snapshot(),backgroundReceipt:r=>runtime.protocol.receipt(r),
+ const canonical={finished:()=>{void publishSavedBackgroundChange(runtime,controller).catch(()=>{});},get:id=>{current();return controller.getEntity('tradeEntry',id);},drain:()=>{current();return controller.drain();},snapshot:()=>controller.snapshot(),backgroundReceipt:r=>runtime.protocol.receipt(r),
   retire:(source,id,time)=>{current();return applyAccountSyncTradeMutations([{kind:'delete',entityType:'tradeEntry',entityId:source.entityId,expectedGeneration:source.generation,expectedRevision:source.revision,operationId:id,clientAt:time}],controller);},
   create:(op,id,time)=>{current();return applyAccountSyncTradeMutations([{kind:'add',entityType:'tradeEntry',entityId:op.targetId,identity:op.identity,expectedGeneration:op.targetGeneration,values:op.values,operationId:id,clientAt:time}],controller);},
   resolveGuard:async id=>{current();const state=await controller.snapshot();if(state.pendingCount)throw Error('canonical-pending');const conflict=(await controller.conflictDetails()).find(c=>c.conflictId==='conflict_'+id);if(conflict){const out=await controller.acceptConflict(conflict.conflictId);if(!out.ok)throw Error('canonical-review-required');}}

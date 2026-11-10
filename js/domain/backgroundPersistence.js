@@ -179,7 +179,13 @@ function createTransitions({uid,storage,currentSession,background,canonical}){
  const clear=()=>{check();storage.removeItem(key);};
 
  async function remoteBackground(){check();if(background.snapshot().pending){const done=await background.flush();check();if(!done.ok)throw Error('background-pending');}await background.hydrate();check();return background.snapshot();}
- async function canonicalReady(){await canonical.drain();check();const s=await canonical.snapshot();check();if(s.pendingCount||s.blockedCount||s.conflictCount||s.state!=='saved')throw Error('canonical-pending');}
+ async function canonicalReady(){
+  await canonical.drain();check();const s=await canonical.snapshot();check();
+  // Unrelated preserved copies do not make a confirmed canonical write pending.
+  // The controller still guards each mutation against overlapping review evidence,
+  // and resume verifies the exact source/target lifecycle receipt before cleanup.
+  if(!['saved','review-required'].includes(s.state)||s.active!==true||s.listenerHealthy!==true||s.controllerHealthy!==true||s.lastError||s.pendingCount||s.blockedCount||s.conflictCount||s.unsafeBlockedCount)throw Error('canonical-pending');
+ }
  async function resume(){check();if(busy)throw Error('transition-busy');busy=true;
  try{let op=read();if(!op)return{ok:true};if(op.uid!==uid)throw Error('owner-mismatch');
   if(op.direction==='background'){
