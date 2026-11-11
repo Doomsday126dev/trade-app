@@ -97,6 +97,7 @@ function createRepository({uid,token,protocol,readHead,storage,currentSession}){
  }
  return Object.freeze({
   snapshot:()=>copy(state),
+  validate(entries){check();return protocol.validate(entries);},
   async hydrate(){check();if(state.pending)return{ok:false,code:'pending-intent'};const version=mutationVersion,generation=++hydrationGeneration;const head=await readHead();check();const rows=head?await protocol.read('r'+head):[];check();if(state.pending)return{ok:false,code:'pending-intent'};if(version!==mutationVersion||generation!==hydrationGeneration||head<state.head)return{ok:false,code:'stale-hydration'};state={head,entries:rows,pending:null};persist();return{ok:true};},
   async replace(entries,{operationId}={}){check();if(operationId!==undefined&&!/^[a-zA-Z0-9_-]{1,80}$/.test(operationId))throw Error('invalid-operation-id');if(state.pending)throw Error('pending-intent');protocol.validate(entries);state.pending={base:state.head,entries:copy(entries),...(protocol.operationIds?{opId:operationId||globalThis.crypto.randomUUID()}:{})};persist();return flush();},flush,
   exportData({includePending=false}={}){check();return JSON.stringify({schemaVersion:1,backgroundRequests:includePending&&state.pending?state.pending.entries:state.entries});},
@@ -149,6 +150,23 @@ function createEditorAdapter({repository,uid,catalogForId,currentUid}){
   async hydrate(){check(uid);accept(await repository.hydrate());},
   list(owner){check(owner);const s=repository.snapshot();return s.entries.map(r=>{const catalog=catalogForId(r.catalogId);if(!catalog)throw Error('unknown-catalog');return{...r,name:catalog.name,category:catalog.category||'wishlist',key:key(r),revision:s.head,p:r.priority,mod:r.variant,qty:r.quantity};});},
   async save(owner,value,{expectedKey,expectedRevision}){check(owner);const s=repository.snapshot(),r=toRecord(value),k=key(r);if(expectedKey){if(expectedRevision!==s.head)throw Error('stale-entry');const i=s.entries.findIndex(x=>key(x)===expectedKey);if(i<0)throw Error('missing-entry');const rows=s.entries.slice();rows[i]=r;accept(await repository.replace(rows));}else {if(s.entries.some(x=>key(x)===k))throw Error('duplicate');accept(await repository.replace([...s.entries,r]));}check(owner);},
+  async addMany(owner,values){
+   check(owner);repository.validate([]);
+   if(!Array.isArray(values))throw Error('invalid-records');
+   const s=repository.snapshot();if(s.pending)throw Error('pending-intent');
+   const seen=new Set(s.entries.map(key)),added=[];
+   for(const value of values){
+    if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid-record');
+    const r=toRecord(value);
+    // Validate every selection, including duplicates, before journaling anything.
+    repository.validate([r]);
+    const k=key(r);if(!seen.has(k)){seen.add(k);added.push(r);}
+   }
+   // Existing metadata is never replaced. One journal and revision cover all new
+   // variants, retaining the repository's capacity, conflict and retry guards.
+   if(added.length)accept(await repository.replace([...s.entries,...added]));
+   check(owner);return{added:added.length,skipped:values.length-added.length};
+  },
   async remove(owner,id,revision){check(owner);const s=repository.snapshot();if(s.head!==revision||!s.entries.some(r=>key(r)===id))throw Error('stale-entry');accept(await repository.replace(s.entries.filter(r=>key(r)!==id)));check(owner);},
   exportData:()=>repository.exportData(),importData:text=>repository.importData(text),shareReference:()=>repository.shareReference()
  });

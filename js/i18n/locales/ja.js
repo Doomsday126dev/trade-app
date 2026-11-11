@@ -356,5 +356,15 @@
     ,"accountSync.preservedNoDifferences":"確認が必要な内容の差はありません。"
     ,"accountSync.fieldBackground":"背景"
 
+    ,"backgroundBatch.multiple":"背景を複数選択"
+    ,"backgroundBatch.single":"背景を1つ選択"
+    ,"backgroundBatch.alreadyAdded":"リストに追加済み"
+    ,"backgroundBatch.selectAll":"未追加をすべて選択"
+    ,"backgroundBatch.clear":"選択を解除"
+    ,"backgroundBatch.selected":"{count}件を選択中。優先度と希望条件はすべてに適用されます。"
+    ,"backgroundBatch.choose":"未追加の背景を1つ以上選択してください。"
+    ,"backgroundBatch.addOne":"背景を1件追加"
+    ,"backgroundBatch.addMany":"背景を{count}件追加"
+    ,"backgroundBatch.add":"背景を追加"
 });
 })(window);

@@ -713,5 +713,15 @@
     ,"accountSync.preservedNoDifferences":"These older copies have no content differences to inspect."
     ,"accountSync.fieldBackground":"Background"
 
+    ,"backgroundBatch.multiple":"Select multiple backgrounds"
+    ,"backgroundBatch.single":"Use one background"
+    ,"backgroundBatch.alreadyAdded":"Already on your list"
+    ,"backgroundBatch.selectAll":"Select all new"
+    ,"backgroundBatch.clear":"Clear"
+    ,"backgroundBatch.selected":"{count} selected. Priority and preferences apply to all."
+    ,"backgroundBatch.choose":"Choose at least one new background."
+    ,"backgroundBatch.addOne":"Add 1 background"
+    ,"backgroundBatch.addMany":"Add {count} backgrounds"
+    ,"backgroundBatch.add":"Add backgrounds"
 });
 })(window);
