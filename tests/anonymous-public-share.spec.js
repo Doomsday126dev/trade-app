@@ -39,7 +39,7 @@ function representativePublicProjection(){
     declaration('Sinistea','M',{mod:'Antique'}),declaration('Bulbasaur','L'),
     declaration('Pikachu','',{lucky:true}),declaration('Snorlax','',{xxl:true}),
     declaration('Joltik','',{xxs:true}),declaration('Gengar','',{shiny:true}),
-    declaration('Ralts','',{lucky:true,shiny:true}),declaration('Mewtwo','',{note:'Legacy request'})
+    declaration('Ralts','',{lucky:true,shiny:true}),declaration('Psyduck','',{note:'Legacy request'})
   ];
   return{...publicProjection,version:2,declarations,declarationCount:declarations.length};
 }
@@ -221,7 +221,7 @@ test.describe('anonymous public share bootstrap',()=>{
       ['XXS','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&xxs&595'],
       ['SHINY','!4*&!traded&CP-2500&!shadow&!purified&!background&94'],
       ['LUCKY+SHINY','!4*&!traded&CP-2500&!shadow&!purified&!background&280'],
-      ['NEEDS_PRIORITY','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&150']
+      ['NEEDS_PRIORITY','!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&54']
     ]){
       const section=page.locator(`[data-want-section="${key}"]`);
       await expect(section.locator('.share-pcard')).toHaveCount(1);
@@ -231,9 +231,9 @@ test.describe('anonymous public share bootstrap',()=>{
       await expect(section.locator('textarea')).toBeHidden();
     }
     const high=page.locator('[data-want-section="H"]'),lucky=page.locator('[data-want-section="LUCKY"]');
-    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(0);await expect(high.locator('.sr-only')).toContainText('Shiny');
+    await expect(high.locator('.share-pcard-flag.shiny')).toHaveText('Shiny only');
     await expect(lucky.locator('.share-pcard-flag.lucky')).toHaveCount(0);
-    await expect(page.locator('[data-want-section="LUCKY+SHINY"] .share-pcard-flag')).toHaveCount(0);
+    await expect(page.locator('[data-want-section="LUCKY+SHINY"] .share-pcard-flag.shiny')).toHaveText('Shiny only');
     await expect(high).toContainText('Female shiny wanted');
     await expect(lucky).not.toContainText('Female shiny wanted');
     await high.locator('[data-public-share-action="toggle-section"]').click();
@@ -290,7 +290,7 @@ test.describe('anonymous public share bootstrap',()=>{
     const high=page.locator('[data-want-section="H"]');
     await expect(high.locator('.share-pcard')).toHaveCount(80);
     await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
-    await expect(high.locator('.share-pgrid')).not.toContainText('Mewtwo');
+    await expect(high.locator('.share-pgrid')).toContainText('Mewtwo');
     expect(await high.locator('*').count()).toBeLessThan(1300);
     const copy=high.locator('[data-contextual-copy]');
     await copy.click();
@@ -670,3 +670,10 @@ for(const shiny of [false,true])test('finite67 anonymous catalogue uses exact re
 test('anonymous costume aliases show one label while retaining separate normal and Shiny requests',async({page})=>{
  const declarations=['Hoothoot (New Year)','Hoothoot New Years'].map((name,i)=>({intent:'lf',name,category:'costumes',p:'H',mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:i===1,xxl:false,xxs:false}));await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:2},realSprites:true});await page.goto('./?view=PublicTrainer&list=costumes');const cards=page.locator('#share-list-out .share-pcard');await expect(cards).toHaveCount(2);await expect(cards.locator('.share-pcard-name')).toHaveText(['Hoothoot (New Year Hat)','Hoothoot (New Year Hat)']);const routes=await cards.locator('img.public-share-pokemon-sprite').evaluateAll(images=>images.map(i=>i.getAttribute('src')));expect(new Set(routes).size).toBe(2);expect(routes[1]).toContain('shiny');await page.locator('#share-language-trigger').click();await page.locator('#settings-language').selectOption('ja');await page.keyboard.press('Escape');await expect(cards.locator('.share-pcard-name')).toHaveText(['ホーホー（New Year Hat）','ホーホー（New Year Hat）']);await assertPublicPrivacy(page);
 });
+
+ test('public Special trades keeps normal legendaries distinct from shiny wants and defaults to dex order',async({page},info)=>{
+ const projection=representativePublicProjection();projection.declarations=[['Groudon',false],['Charmander',true],['Kyogre',false]].map(([name,shiny])=>({...projection.declarations[0],name,shiny,p:'',gender:'',note:''}));projection.declarationCount=3;
+ await installPublicFirebase(page,{projection});await page.goto('./?view=PublicTrainer&list=wishlist');
+ const section=page.locator('[data-want-section="SHINY"]');await expect(section.locator('.share-section-title')).toContainText('Special trades');
+ await expect(section.locator('.share-pcard-name')).toHaveText(['Charmander','Kyogre','Groudon']);await expect(section.locator('.share-pcard-flag.shiny')).toHaveCount(1);await page.screenshot({path:info.outputPath('special-trades.png'),fullPage:true});
+ });

@@ -31,7 +31,7 @@ test('priority views count actual rows, preserve selected/full share scopes and 
  await expect(page.locator('.wants-row')).toHaveCount(0);await expect(page.locator('#combined-list')).toContainText('No Pokémon with Medium priority');
  await expect(filter(page,'M').locator('.wants-filter-count')).toHaveText('0');await expect(filter(page,'L').locator('.wants-filter-count')).toHaveText('2');
  await filter(page,'ALL').click();await expect(page.locator('.wants-row')).toHaveCount(4);await expect(page.locator('.wants-row[data-name="Pikachu"] input')).toBeChecked();
- await expect(page.locator('#wants-selection-filter-note')).toBeHidden();await expect(page.locator('[data-wants-section="SHINY"] .wants-section-title')).toHaveText('Shiny');
+ await expect(page.locator('#wants-selection-filter-note')).toBeHidden();await expect(page.locator('[data-wants-section="SHINY"] .wants-section-title')).toHaveText('Special trades');
  // Add priority still controls additions, independently of the view selector.
  await filter(page,'H').click();expect(await page.evaluate(()=>addManagedIntentEntries('lf',[{name:'Eevee',p:'M'}]))).toBe(true);await settled(page);
  await expect(page.locator('.wants-row')).toHaveCount(1);await expect(filter(page,'M').locator('.wants-filter-count')).toHaveText('1');

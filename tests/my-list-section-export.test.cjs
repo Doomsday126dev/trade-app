@@ -56,7 +56,7 @@ test('active export uses ordered priority and exact special sections without los
   assert.equal(JSON.stringify(entries),before);
   assert.equal(canvas.width,1800);
   const text=drawn.filter(item=>'text' in item);
-  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Shiny','Lucky · XXL','Priority not set']){
+  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Special trades','Lucky · XXL','Priority not set']){
     const headers=text.filter(item=>item.text===label&&item.fitted);
     assert.equal(headers.length,1,label);
   }

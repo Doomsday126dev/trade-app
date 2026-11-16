@@ -54,6 +54,7 @@
     "workflow.priorityHelp":"Elige Alta, Media o Baja para un deseo normal. Los deseos especiales no necesitan prioridad.",
     "workflow.fullSection":"Copia toda la sección {section}, incluidas las entradas ocultas por el filtro.",
     "workflow.searchUnavailable":"No se pudo incluir ninguna especie.",
+    "workflow.specialTrades":"Intercambios especiales",
     "workflow.shiny":"Variocolor",
     "workflow.showSection":"Mostrar más de {section}",
     "workflow.copySection":"Copiar búsqueda de {section}",

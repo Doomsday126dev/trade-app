@@ -504,7 +504,7 @@ function renderCombinedList(model=productDeclarations()){
     const template=document.createElement('template');
     const detailMod=/^[FM]$/i.test(e.mod||'')?(e.mod.toUpperCase()==='F'?'♀':'♂'):e.mod;
     const backgroundLabel=e.isBackgroundV2?(productShareBackgroundChoices(e).find(item=>item.id===e.backgroundId)?.label||i18nCore.t('background.unavailable')):'';
-    const traits=[['detail',backgroundLabel,backgroundLabel],['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',catalogueVariantReleaseLabel(e),catalogueVariantReleaseLabel(e)],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&!section.flags.includes(kind)).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
+    const traits=[['shiny',e.shiny,i18nCore.t('share.flagShiny')],['detail',backgroundLabel,backgroundLabel],['lucky',e.lucky,i18nCore.t('myList.lucky')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',detailMod,detailMod],['detail',catalogueVariantReleaseLabel(e),catalogueVariantReleaseLabel(e)],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([kind,active])=>active&&(kind==='shiny'||!section.flags.includes(kind))).map(([kind,,label])=>`<span class="myrow-trait ${kind}" title="${escAttr(label)}">${escHtml(label)}</span>`).join('');
     template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}" data-wants-section="${escAttr(section.key)}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
@@ -596,7 +596,7 @@ function refreshCombinedSearch(model=productDeclarations()){
     advanced.innerHTML=`<div class="wants-custom-toggles" role="group" aria-label="${escAttr(i18nCore.t('workflow.combineSearches'))}">${scopes.map(key=>{const section={key,priority:['H','M','L'].includes(key)?key:'',flags:[key.toLowerCase()]};return`<button type="button" class="btn btn-secondary" data-wants-scope="${key}" aria-pressed="${wantsCustomScopes.has(key)}" onclick="toggleWantsCustomScope(this.dataset.wantsScope)">${escHtml(wantSectionLabel(section))}</button>`;}).join('')}</div><div class="wants-custom-result"></div>`;
   }
   advanced.querySelectorAll('[data-wants-scope]').forEach(button=>button.setAttribute('aria-pressed',String(wantsCustomScopes.has(button.dataset.wantsScope))));
-  const entries=model.entries.filter(entry=>['H','M','L'].includes(entry.p)?wantsCustomScopes.has(entry.p):['lucky','shiny','xxl','xxs'].some(flag=>entry[flag]&&wantsCustomScopes.has(flag.toUpperCase())));
+  const entries=model.entries.filter(entry=>['H','M','L'].includes(entry.p)?wantsCustomScopes.has(entry.p):['lucky','shiny','xxl','xxs'].some(flag=>(flag==='shiny'?window.PogoDomain.priorityValues.isSpecialTradeWant(entry):entry[flag])&&wantsCustomScopes.has(flag.toUpperCase())));
   const result=advanced.querySelector('.wants-custom-result');
   if(entries.length)updateWantsSearch(result,entries,i18nCore.t('workflow.combineSearches'));
   else result.innerHTML=`<p class="type-meta">${escHtml(i18nCore.t('workflow.chooseScopes'))}</p>`;
@@ -1066,7 +1066,7 @@ async function saveCombinedEditor(remove=false){
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
   const priority=document.getElementById('combined-priority').value;
-  const unclassified=!['H','M','L'].includes(priority)&&!['lucky','shiny','xxl','xxs'].some(flag=>changes[flag]);
+  const unclassified=window.PogoDomain.priorityValues.wantSectionKey({..._nameToSpriteEntry(name),...changes,p:priority})==='NEEDS_PRIORITY';
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
   const batch=!remove&&!draft.entries.length&&draft.backgroundBatch,selectedBackgrounds=batch?[...draft.backgroundSelection]:[];
@@ -13482,7 +13482,7 @@ function renderShareView(username,type,intent){
           e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
           e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
           e.lucky&&!section.flags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
-          e.shiny?`<span class="sr-only">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
+          e.shiny?`<span class="share-pcard-flag shiny">${escHtml(i18nCore.t('share.flagShiny'))}</span>`:'',
           e.xxl&&!section.flags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs&&!section.flags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
           ,''

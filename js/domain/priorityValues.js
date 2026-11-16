@@ -71,10 +71,16 @@
   }
 
   // Presentation only: stored priority and canonical declaration identity stay intact.
+  // SHINY remains the legacy presentation key for compatibility with section controls.
+  // Its label is now Special trades; membership does not imply shiny.
+  // Presentation classification only; never changes saved shiny or priority values.
+  const SPECIAL_SPECIES=new Set([144,145,146,150,243,244,245,249,250,377,378,379,380,381,382,383,384,480,481,482,483,484,485,486,487,488,638,639,640,641,642,643,644,645,646,716,717,718,772,773,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,803,804,805,806,808,809,888,889,890,891,892,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008,1014,1015,1016,1017,1024]);
+  function isSpecialTradeWant(entry){return entry?.shiny===true||SPECIAL_SPECIES.has(Number(entry?.speciesId||entry?.no));}
+  function dexCompare(a,b){return (Number(a.no)||9999)-(Number(b.no)||9999)||String(a.name||'').localeCompare(String(b.name||''),undefined,{numeric:true,sensitivity:'base'});}
   const WANT_FLAGS=Object.freeze(['lucky','shiny','xxl','xxs']);
   function wantSectionKey(entry){
     if(['H','M','L'].includes(entry.p))return entry.p;
-    return WANT_FLAGS.filter(flag=>entry[flag]===true).map(flag=>flag.toUpperCase()).join('+')||'NEEDS_PRIORITY';
+    return WANT_FLAGS.filter(flag=>flag==='shiny'?isSpecialTradeWant(entry):entry[flag]===true).map(flag=>flag.toUpperCase()).join('+')||'NEEDS_PRIORITY';
   }
   function wantSections(entries=[]){
     const groups=new Map();
@@ -83,16 +89,19 @@
       if(!groups.has(key))groups.set(key,{key,priority:['H','M','L'].includes(key)?key:'',flags:WANT_FLAGS.filter(flag=>key.split('+').includes(flag.toUpperCase())),entries:[]});
       groups.get(key).entries.push(entry);
     }
+    for(const section of groups.values())section.entries.sort(dexCompare);
     const rank=section=>section.priority?['H','M','L'].indexOf(section.priority):section.key==='NEEDS_PRIORITY'?100:3+WANT_FLAGS.indexOf(section.flags[0]);
     return [...groups.values()].sort((a,b)=>rank(a)-rank(b)||a.flags.length-b.flags.length||a.key.localeCompare(b.key));
   }
   function wantSectionLabel(section,t,{recipient=false}={}){
     if(section.priority)return t({H:'priority.high',M:'priority.medium',L:'priority.low'}[section.priority]);
     if(section.key==='NEEDS_PRIORITY')return t(recipient?'workflow.priorityNotSet':'workflow.needsPriority');
-    return section.flags.map(flag=>({xxl:'XXL',xxs:'XXS'}[flag]||t(flag==='lucky'?'myList.lucky':'workflow.shiny'))).join(' · ');
+    return section.flags.map(flag=>({xxl:'XXL',xxs:'XXS'}[flag]||t(flag==='lucky'?'myList.lucky':'workflow.specialTrades'))).join(' · ');
   }
 
   root.priorityValues=Object.freeze({
+    isSpecialTradeWant,
+    dexCompare,
     wantSectionKey,
     wantSections,
     wantSectionLabel,

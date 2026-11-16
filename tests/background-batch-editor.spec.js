@@ -109,7 +109,7 @@ test('localized batch picker fits narrow touch and enlarged-text layouts',async(
 
 test('non-shiny Groudon backgrounds add alongside shiny copies and existing non-shiny backgrounds',async({page})=>{
  await setup(page);await batch(page);await page.locator('#combined-background-select-all').click();const shinyCount=await page.locator('#combined-background-options input:checked').count();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
- // Non-shiny requests follow the existing explicit priority requirement.
+ // Explicit priorities remain unchanged when adding non-shiny copies.
  await batch(page);await page.locator('#combined-shiny').uncheck();await priority(page,'H');for(const id of ids)await choice(page,id).check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
  expect((await rows(page)).filter(row=>row.shiny)).toHaveLength(shinyCount);expect((await rows(page)).filter(row=>!row.shiny)).toHaveLength(3);
  await batch(page);await page.locator('#combined-shiny').uncheck();await priority(page,'L');for(const id of ids)await expect(choice(page,id)).toBeDisabled();
@@ -117,14 +117,32 @@ test('non-shiny Groudon backgrounds add alongside shiny copies and existing non-
  const all=await rows(page);expect(all.filter(row=>row.shiny)).toHaveLength(shinyCount);expect(all.filter(row=>!row.shiny)).toHaveLength(3+remaining);expect(all.filter(row=>!row.shiny&&ids.includes(row.backgroundId)).every(row=>row.priority==='H')).toBe(true);
 });
 
-test('non-shiny background with no priority reports the existing requirement and succeeds once priority is chosen',async({page})=>{
+test('non-shiny legendary background saves with no priority and keeps its normal-color identity',async({page})=>{
  await setup(page);await addDialog(page,'Groudon');await page.locator('#combined-preferences summary').click();await page.locator('#combined-background').selectOption(ids[0]);await page.locator('#combined-save').click();
- await expect(page.locator('#combined-error')).toHaveText('Choose a priority or a special requirement.');expect(await rows(page)).toHaveLength(0);await expect(page.locator('#combined-save')).toBeEnabled();
- await priority(page,'M');await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();expect(await rows(page)).toHaveLength(1);
+ await expect(page.locator(modal)).toBeHidden();expect(await rows(page)).toHaveLength(1);expect((await rows(page))[0]).toMatchObject({shiny:false,priority:''});
 });
 
 test('batch controls and styles stay out of the startup shell and initialize only once',async({page})=>{
  await setup(page);await expect(page.locator('#combined-background-batch-toggle')).toHaveCount(0);await expect(page.locator('#combined-background-batch-style')).toHaveCount(0);
  await batch(page);await expect(page.locator('#combined-background-batch-style')).toHaveCount(1);await page.locator('#combined-close').click();await batch(page);
  await expect(page.locator('#combined-background-batch-toggle')).toHaveCount(1);await expect(page.locator('#combined-background-batch-style')).toHaveCount(1);await choice(page,ids[0]).check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+});
+
+test('regular backgrounds save without a priority beside shiny copies, retain exact identity after reload, and render in dex order',async({page})=>{
+ await setup(page);await batch(page);await choice(page,ids[0]).check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ await addDialog(page,'Groudon');await page.locator('#combined-preferences summary').click();await page.locator('#combined-background-batch-toggle').click();
+ for(const id of ids)await choice(page,id).check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ let saved=await rows(page);expect(saved).toHaveLength(4);expect(saved.filter(r=>r.shiny)).toHaveLength(1);expect(saved.filter(r=>!r.shiny).map(r=>r.backgroundId)).toEqual(ids);
+ await expect(page.locator('[data-wants-section="SHINY"] .wants-section-title')).toHaveText('Special trades');
+ await addDialog(page,'Charmander');await page.locator('#combined-shiny').check();await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ await expect(page.locator('.wants-row[data-wants-section="SHINY"]').first()).toHaveAttribute('data-name','Charmander');
+ const snapshot=await page.evaluate(()=>({background:__localBackgroundStore,account:__editorFixture.remote}));
+ await install(page,snapshot.account,{backgroundRollout:false});await enableLocalBackgrounds(page,snapshot.background);
+ saved=await rows(page);expect(saved).toHaveLength(4);expect(saved.filter(r=>!r.shiny)).toHaveLength(3);
+ await addDialog(page,'Groudon');await page.locator('#combined-preferences summary').click();await page.locator('#combined-background-batch-toggle').click();
+ for(const id of ids)await expect(choice(page,id)).toBeDisabled();await page.locator('#combined-shiny').check();await expect(choice(page,ids[0])).toBeDisabled();await expect(choice(page,ids[1])).toBeEnabled();
+ await page.locator('#combined-close').click();
+ await page.locator('.wants-row[data-name="Groudon"]').filter({hasNot:page.locator('.myrow-trait.shiny')}).first().locator('.myrow-edit').click();
+ await expect(page.locator('#combined-shiny')).not.toBeChecked();await page.locator('#combined-preferences summary').click();await page.locator('#combined-note').fill('Regular background request');await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ saved=await rows(page);expect(saved).toHaveLength(4);expect(saved.filter(r=>r.note==='Regular background request')).toHaveLength(1);expect(saved.filter(r=>r.shiny)).toHaveLength(1);
 });

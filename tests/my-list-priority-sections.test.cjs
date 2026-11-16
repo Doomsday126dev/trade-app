@@ -72,3 +72,14 @@ test('a 1,000-want section splits safely and preserves every manual declaration'
   assert.ok(plan.parts.every(part=>part.length<=1500));
   assert.equal(priority.wantSections(entries)[0].entries.length,1000);
 });
+
+ test('regular legendary and shiny requests share Special trades, sorted by dex without mutation',()=>{
+ const entries=[{name:'Groudon',no:383,p:'',shiny:false,backgroundId:'chicago'},{name:'Charmander',no:4,p:'',shiny:true},{name:'Kyogre',no:382,p:'',shiny:false},{name:'Pikachu',no:25,p:'H'},{name:'Bulbasaur',no:1,p:'H'}];
+ const before=JSON.stringify(entries),sections=priority.wantSections(entries);
+ assert.deepEqual(plain(sections.map(s=>s.key)),['H','SHINY']);
+ assert.deepEqual(plain(sections[0].entries.map(e=>e.no)),[1,25]);
+ assert.deepEqual(plain(sections[1].entries.map(e=>e.no)),[4,382,383]);
+ assert.equal(priority.wantSectionLabel(sections[1],key=>key),'workflow.specialTrades');
+ assert.equal(sections[1].entries[2].shiny,false);assert.equal(JSON.stringify(entries),before);
+ assert.equal(priority.wantSectionKey({no:25,shiny:false}),'NEEDS_PRIORITY');
+ });
