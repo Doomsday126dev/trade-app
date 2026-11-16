@@ -104,7 +104,7 @@ test('special174 rejects private-path tampering and unknown exact SHAs',t=>{
   change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
   assert.match(check(dir,special174).stderr,/path bindings or execution semantics changed|expression changed/);
 });
-const focus175='28228142712f763405631ee7f01767b24318a361';
+const focus175='3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c';
 function focus175Fixture(t){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'focus175-read-contract-'));
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
