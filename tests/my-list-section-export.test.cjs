@@ -56,7 +56,7 @@ test('active export uses ordered priority and exact special sections without los
   assert.equal(JSON.stringify(entries),before);
   assert.equal(canvas.width,1800);
   const text=drawn.filter(item=>'text' in item);
-  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Shiny','Lucky · XXL','Priority not set']){
+  for(const label of ['High','Medium','Low','Lucky','XXL','XXS','Special trades','Lucky · XXL','Priority not set']){
     const headers=text.filter(item=>item.text===label&&item.fitted);
     assert.equal(headers.length,1,label);
   }
@@ -106,4 +106,10 @@ for(const locale of ['en','ja','es','de'])test(`export and workflow terminology 
     assert.ok(own[key],key);
     assert.deepEqual([...own[key].matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),[...en[key].matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),key);
   }
+});
+
+test('mixed special section image preserves shiny-only requirement even without artwork',()=>{
+  const {context}=imageHarness();const section={priority:'',flags:['shiny']};
+  assert.equal(context.productShareImageDetails(entry('Groudon',{no:383,shiny:true,noArt:true}),section),'Shiny only');
+  assert.equal(context.productShareImageDetails(entry('Groudon',{no:383,shiny:false,noArt:true}),section),'');
 });

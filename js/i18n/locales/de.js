@@ -54,6 +54,7 @@
     "workflow.priorityHelp":"Wähle Hoch, Mittel oder Niedrig für ein normales Gesuch. Besondere Gesuche benötigen keine Priorität.",
     "workflow.fullSection":"Kopiert den gesamten Abschnitt {section}, einschließlich der durch den Filter ausgeblendeten Einträge.",
     "workflow.searchUnavailable":"Es konnte keine Art einbezogen werden.",
+    "workflow.specialTrades":"Spezialtausche",
     "workflow.shiny":"Schillernd",
     "workflow.showSection":"Mehr aus {section} anzeigen",
     "workflow.copySection":"Suche für {section} kopieren",

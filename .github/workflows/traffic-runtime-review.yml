@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ba08b846cdef0f6a642b7d05d67102d6c5233fcc
+          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -49,6 +49,31 @@ jobs:
         run: npx playwright test -c playwright.ui153.config.cjs
       - name: Exact catalogue inventory and form save reload export
         run: npx playwright test -c playwright.catalog-audit.config.cjs
+
+
+  released-catalogue:
+    # Keep the complete slow artwork journeys outside the aggregate core job's
+    # 15-minute budget. Every test and per-test timeout remains unchanged.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix functions --ignore-scripts
+      - name: Official browser dependency archive
+        run: |
+          if test -f /etc/apt/apt-mirrors.txt; then
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+      - run: npx playwright install --with-deps chromium webkit
       - name: Released catalogue normal and Shiny journeys
         run: |
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
@@ -65,7 +90,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ba08b846cdef0f6a642b7d05d67102d6c5233fcc
+          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -108,7 +133,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ba08b846cdef0f6a642b7d05d67102d6c5233fcc
+          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -138,7 +163,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ba08b846cdef0f6a642b7d05d67102d6c5233fcc
+          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -170,13 +195,14 @@ jobs:
 
   traffic-runtime:
     if: always()
-    needs: [runtime-core, share-runtime, background-runtime]
+    needs: [runtime-core, share-runtime, background-runtime, released-catalogue]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Require exact runtime core and complete Share Favorites icon journeys
         env:
           CORE_RESULT: ${{ needs.runtime-core.result }}
+          CATALOGUE_RESULT: ${{ needs.released-catalogue.result }}
           SHARE_RESULT: ${{ needs.share-runtime.result }}
           BACKGROUND_RESULT: ${{ needs.background-runtime.result }}
-        run: test "$CORE_RESULT" = success && test "$SHARE_RESULT" = success && test "$BACKGROUND_RESULT" = success
+        run: test "$CORE_RESULT" = success && test "$SHARE_RESULT" = success && test "$BACKGROUND_RESULT" = success && test "$CATALOGUE_RESULT" = success

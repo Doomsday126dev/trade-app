@@ -53,6 +53,7 @@
     "workflow.priorityHelp":"Choose High, Medium or Low for a normal want. Special wants can stand alone.",
     "workflow.fullSection":"Copies the whole {section} section, including entries hidden by the filter.",
     "workflow.searchUnavailable":"No species could be included.",
+    "workflow.specialTrades":"Special trades",
     "workflow.shiny":"Shiny",
     "workflow.showSection":"Show more {section}",
     "workflow.copySection":"Copy {section} search",

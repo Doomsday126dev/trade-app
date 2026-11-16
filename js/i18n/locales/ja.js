@@ -54,6 +54,7 @@
     "workflow.priorityHelp":"通常の希望は「高・中・低」から選びます。特別な条件がある希望は、優先度なしで登録できます。",
     "workflow.fullSection":"絞り込みで非表示になった項目も含め、{section}全体の検索をコピーします。",
     "workflow.searchUnavailable":"検索に含められる種類がありません。",
+    "workflow.specialTrades":"特別な交換",
     "workflow.shiny":"色違い",
     "workflow.showSection":"{section}をさらに表示",
     "workflow.copySection":"{section}の検索をコピー",

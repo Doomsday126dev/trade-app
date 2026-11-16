@@ -14,7 +14,7 @@ const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim(
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const localBackground=/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localBackground=/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.174)/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const current=requestedRuntimeSha||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
@@ -81,6 +81,28 @@ test('background173 rejects private-path tampering and unknown exact SHAs',t=>{
   assert.notEqual(check(dir,'0123456789012345678901234567890123456789').status,0);
   change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
   assert.match(check(dir,background173).stderr,/path bindings or execution semantics changed|expression changed/);
+});
+const special174='f1bef90d6fab188d2eacc24e5ceba192d0e6cf31';
+function special174Fixture(t){
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'special174-read-contract-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const archive=execFileSync('git',['archive',special174,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
+  execFileSync('tar',['-xf','-','-C',dir],{input:archive});return dir;
+}
+test('special174 aliases the unchanged reviewed background read contract',()=>{
+  const registered=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS[special174];
+  assert.equal(registered,window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS['ae196f81834975d705c0fd25a4c1297130516889']);
+  assert.equal(registered.directGetCount,34);assert.equal(registered.directOnValueCount,1);
+});
+test('special174 immutable source passes exact-SHA read validation',t=>{
+  const result=check(special174Fixture(t),special174);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,35);
+});
+test('special174 rejects private-path tampering and unknown exact SHAs',t=>{
+  const dir=special174Fixture(t);
+  assert.notEqual(check(dir,'0123456789012345678901234567890123456789').status,0);
+  change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
+  assert.match(check(dir,special174).stderr,/path bindings or execution semantics changed|expression changed/);
 });
 test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);
