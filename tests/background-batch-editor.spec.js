@@ -146,3 +146,32 @@ test('regular backgrounds save without a priority beside shiny copies, retain ex
  await expect(page.locator('#combined-shiny')).not.toBeChecked();await page.locator('#combined-preferences summary').click();await page.locator('#combined-note').fill('Regular background request');await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
  saved=await rows(page);expect(saved).toHaveLength(4);expect(saved.filter(r=>r.note==='Regular background request')).toHaveLength(1);expect(saved.filter(r=>r.shiny)).toHaveLength(1);
 });
+
+for(const shiny of [false,true])test(`Edit can add multiple ${shiny?'shiny':'regular'} backgrounds without replacing the original`,async({page})=>{
+ await page.setViewportSize({width:320,height:740});await setup(page);await addDialog(page,'Groudon');
+ if(shiny)await page.locator('#combined-shiny').check();
+ await expect(page.locator('#combined-preferences')).not.toHaveAttribute('open','');
+ await expect(page.locator('#combined-background-batch-toggle')).toBeVisible();
+ await page.locator('#combined-background').selectOption(ids[0]);await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ const original=(await rows(page))[0];await edit(page,'Groudon');
+ await expect(page.locator('#combined-background-add-more')).toBeVisible();
+ await page.locator('#combined-preferences summary').click();await page.locator('#combined-note').fill('Unsaved edit');
+ await page.locator('#combined-background-add-more').click();
+ await expect(page.locator('#combined-background-help')).toContainText('Existing requests stay unchanged');
+ await expect(choice(page,ids[0])).toBeDisabled();await expect(page.locator('#wants-remove')).toBeHidden();
+ await page.locator('#combined-note').fill('New backgrounds only');await choice(page,ids[1]).check();
+ await page.locator('#combined-close').click();await expect(page.locator('#combined-note')).toHaveValue('Unsaved edit');
+ await expect(page.locator('#combined-background')).toHaveValue(ids[0]);await expect(page.locator('#combined-save')).toHaveText('Save changes');
+ expect(await rows(page)).toEqual([original]);
+ await page.locator('#combined-background-add-more').click();await choice(page,ids[1]).check();await choice(page,ids[2]).check();
+ await expect(page.locator('#combined-save')).toHaveText('Add 2 backgrounds');
+ const bounds=await page.locator('#combined-background-options').boundingBox();expect(bounds.x+bounds.width).toBeLessThanOrEqual(320);
+ await page.locator('#combined-save').click();await expect(page.locator(modal)).toBeHidden();
+ const saved=await rows(page);expect(saved).toHaveLength(3);expect(saved.find(row=>row.backgroundId===ids[0])).toEqual(original);
+ expect(saved.filter(row=>row.backgroundId!==ids[0]).every(row=>row.shiny===shiny&&row.note==='Unsaved edit')).toBe(true);
+ const snapshot=await page.evaluate(()=>({background:__localBackgroundStore,account:__editorFixture.remote}));
+ await install(page,snapshot.account,{backgroundRollout:false});await enableLocalBackgrounds(page,snapshot.background);
+ expect(await rows(page)).toEqual(saved);await edit(page,'Groudon');await page.locator('#combined-background-add-more').click();
+ for(const id of ids)await expect(choice(page,id)).toBeDisabled();
+ await page.locator('#combined-shiny').setChecked(!shiny);for(const id of ids)await expect(choice(page,id)).toBeEnabled();
+});

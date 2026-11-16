@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          ref: 3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          ref: 3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -78,6 +78,8 @@ jobs:
         run: |
           node scripts/prepare-recent-catalog-sprite-fixture.cjs
           CATALOG_SPRITE_CACHE=/tmp/trade-recent-catalog-sprite-cache npx playwright test -c playwright.catalog-repair.config.cjs
+      - name: Shared input focus in Chromium and Safari desktop and mobile
+        run: npx playwright test -c playwright.input-focus.config.cjs
 
 
   catalogue-browser:
@@ -90,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          ref: 3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -133,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          ref: 3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -163,7 +165,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: f1bef90d6fab188d2eacc24e5ceba192d0e6cf31
+          ref: 3ce2576c564d0a9f7f41bc206bbc0ca3d52efc5c
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38

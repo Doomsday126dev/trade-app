@@ -110,7 +110,8 @@ test('shared fields preserve theme, focus, and validation layers during browser 
   assert.match(autofill,/-webkit-text-fill-color:var\(--text\)/);
   assert.match(autofill,/caret-color:var\(--text\)/);
   assert.match(autofill,/0 0 0 1000px var\(--bg\) inset/);
-  assert.match(autofill,/:focus\{[^}]*var\(--focus-ring\)/);
+  assert.doesNotMatch(autofill,/:focus\{[^}]*var\(--focus-ring\)/);
+  assert.match(autofill,/:focus\{[^}]*1000px var\(--bg\) inset/);
   assert.match(autofill,/\[aria-invalid="true"\][^{]*\{[^}]*rgba\(239,68,68,\.14\)/);
   assert.doesNotMatch(autofill,/animation|transition-delay|99999/i);
   assert.match(html,/id="login-user"[^>]+autocomplete="off"/);

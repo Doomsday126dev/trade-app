@@ -182,8 +182,8 @@ test.describe('audit cross-browser contracts',()=>{
       });
       expect(geometry.height).toBeGreaterThanOrEqual(47.5);
       expect(geometry.outlineStyle).not.toBe('none');
-      expect(geometry.outlineWidth).toBeGreaterThanOrEqual(2.5);
-      expect(geometry.outlineOffset).toBeGreaterThanOrEqual(1.5);
+      expect(geometry.outlineWidth).toBe(2);
+      expect(geometry.outlineOffset).toBe(-1);
       await page.locator('#settings-search-language-override').check();
       expect((await page.locator('#settings-search-language').boundingBox())?.height).toBeGreaterThanOrEqual(47.5);
       for(const selector of ['.settings-modal-close','.language-override-toggle','.settings-mobile-back']){
@@ -236,7 +236,7 @@ test.describe('audit cross-browser contracts',()=>{
       await expect(control).toBeFocused();
       const focus=await control.evaluate(node=>{const style=getComputedStyle(node);return{visible:node.matches(':focus-visible'),outline:style.outlineStyle,width:parseFloat(style.outlineWidth),boxShadow:style.boxShadow};});
       expect(focus.visible,selector).toBe(true);
-      expect(focus.outline!=='none'&&focus.width>=2.5||focus.boxShadow!=='none',selector).toBe(true);
+      expect(focus.outline!=='none'&&focus.width>=2||focus.boxShadow!=='none',selector).toBe(true);
     }
     await page.evaluate(()=>{cur=OWNER;auth={currentUser:{uid:'synthetic-focus-owner'}};allData.users[OWNER]={authUid:'synthetic-focus-owner',isOwner:true};switchTab('more');});
     const admin=page.locator('#more-admin-link');

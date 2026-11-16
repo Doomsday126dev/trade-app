@@ -358,6 +358,9 @@
     ,"accountSync.preservedNoDifferences":"Diese älteren Kopien haben keine inhaltlichen Unterschiede."
     ,"accountSync.fieldBackground":"Hintergrund"
 
+    ,"backgroundBatch.addMore":"Weitere Hintergründe hinzufügen…"
+    ,"backgroundBatch.existingUnchanged":"Bestehende Wünsche bleiben unverändert. Diese Einstellungen gelten nur für neue Hintergründe."
+    ,"backgroundBatch.backToEdit":"Zurück zur Bearbeitung"
     ,"backgroundBatch.multiple":"Mehrere Hintergründe wählen"
     ,"backgroundBatch.single":"Einen Hintergrund wählen"
     ,"backgroundBatch.alreadyAdded":"Bereits auf deiner Liste"
