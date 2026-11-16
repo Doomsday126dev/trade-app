@@ -342,3 +342,17 @@ pass locally, with initial resource bytes restored to the .172 baseline. A
 regression verifies that initialization runs once and stays out of startup.
 The retired-module-name guard is unchanged; the draft stores its selected
 catalogue identity explicitly as `backgroundCatalogId`.
+
+## Regular special backgrounds and dex sorting .174
+
+Runtime `969f8a51994eef2ac7ecd294d38c680f283459ae` (`2026-11-16.174`)
+permits regular legendary background requests without a priority or shiny flag,
+labels the combined section Special trades, and defaults each list section to
+Pokédex ordering. Existing variant identities and user classifications remain intact.
+The category is organizational, not a recipient-specific eligibility or cost calculator.
+
+This runtime aliases the unchanged bounded-background contract: 34 direct gets,
+one owner-scoped listener, and identical path/handler checks. Qualification pins
+the immutable runtime separately from this control registration and the subsequent
+dispatcher-only repin. Production approval and the protected deployment gate remain
+required; no existing runtime or control tags move.
