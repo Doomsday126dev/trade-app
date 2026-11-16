@@ -1933,8 +1933,11 @@ test.describe('visual smoke', () => {
   test('My List Variant details uses the canonical dark input treatment',async({page})=>{
     await currentList(page);
     for(const width of [1440,390]){
-      await page.setViewportSize({width,height:900});await editorFixture.addDialog(page,'Rotom');await page.locator('#combined-close').focus();await page.mouse.move(0,0);
+      await page.setViewportSize({width,height:900});await editorFixture.addDialog(page,'Rotom');
       await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-change').click();const details=page.locator('#combined-mod'),reference=page.locator('#combined-name');await expect(details).toHaveClass(/field-control/);
+      // Change focuses the name field. Compare both idle states before testing focus.
+      await page.locator('#combined-close').focus();await page.mouse.move(0,0);
+      await expect(details).not.toBeFocused();await expect(reference).not.toBeFocused();
       const styles=async locator=>locator.evaluate(el=>{const s=getComputedStyle(el);return{background:s.backgroundColor,color:s.color,border:s.borderColor,radius:s.borderRadius,minHeight:s.minHeight};});
       // Compare both current states; freezing the reference during its blur
       // transition makes the expected color an unreachable intermediate value.
