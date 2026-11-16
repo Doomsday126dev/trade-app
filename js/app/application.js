@@ -1066,7 +1066,8 @@ async function saveCombinedEditor(remove=false){
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
   const priority=document.getElementById('combined-priority').value;
-  const unclassified=window.PogoDomain.priorityValues.wantSectionKey({..._nameToSpriteEntry(name),...changes,p:priority})==='NEEDS_PRIORITY';
+  const targetSection=window.PogoDomain.priorityValues.wantSectionKey({..._nameToSpriteEntry(name),...changes,p:priority});
+  const unclassified=targetSection==='NEEDS_PRIORITY';
   const preservesLegacy=draft.entries.length&&draft.entries.every(entry=>window.PogoDomain.priorityValues.wantSectionKey(entry)==='NEEDS_PRIORITY');
   if(!remove&&unclassified&&!preservesLegacy)return fail('workflow.choosePriority');
   const batch=!remove&&!draft.entries.length&&draft.backgroundBatch,selectedBackgrounds=batch?[...draft.backgroundSelection]:[];
@@ -1091,7 +1092,7 @@ async function saveCombinedEditor(remove=false){
           plan={direction:'background',source,target:{catalogId:choice.catalogId,backgroundId:choice.id,priority,variant:changes.mod,gender:changes.gender,note:changes.note,shiny:changes.shiny,lucky:changes.lucky,xxl:changes.xxl,xxs:changes.xxs,quantity:source.values.quantity||1,sortOrder:source.values.sortOrder||0,mirror:!!source.values.mirror,plainIdentity:{...source.identity,catalogId:choice.catalogId}}};
         }
         const result=await transitions.start(plan);renderBackgroundRecovery();if(!result.ok)return fail(result.code==='target-collision'?'clarify.collision':'phase2.changed');
-        if(current()&&sessionCurrent()){closeModal('combined-editor-modal');renderMyList();}return;
+        if(current()&&sessionCurrent()){wantsCollapsedSections.delete(targetSection);closeModal('combined-editor-modal');renderMyList();}return;
       }
       const runtime=backgroundOwnerRuntime,controller=managedAccountSyncRuntime?.controller;
       if(remove&&prototypeEntry)await backgroundV2PrototypeAdapter.remove(draft.uid,draft.entries[0].key,draft.entries[0].revision);
@@ -1107,7 +1108,7 @@ async function saveCombinedEditor(remove=false){
       if(!sessionCurrent())return;
       // The private save is durable. Optional public-share work must not keep
       // Add disabled or later close an editor opened while publication waits.
-      if(current())closeModal('combined-editor-modal');renderMyList();
+      if(current()){if(!remove)wantsCollapsedSections.delete(targetSection);closeModal('combined-editor-modal');}renderMyList();
       void publishSavedBackgroundChange(runtime,controller).catch(()=>{});return;
     }
     const authority=await accountSyncMutationAuthority();
@@ -1145,7 +1146,7 @@ async function saveCombinedEditor(remove=false){
     const result=await applyAccountSyncTradeMutations(mutations,authority.controller);
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
     if(!current()||!sessionCurrent())return;
-    if(!remove)wantsCollapsedSections.delete(window.PogoDomain.priorityValues.wantSectionKey({p:priority,...changes}));
+    if(!remove)wantsCollapsedSections.delete(targetSection);
     closeModal('combined-editor-modal');renderMyList();
   }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
   finally{if(current()){draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}}
@@ -7559,7 +7560,7 @@ function productShareImageDetails(entry,section){
   const gender=entry.gender||PogoDomain.priorityValues.entryGender(entry.mod);
   const mod=['f','m'].includes(gender)&&String(entry.mod||'').trim().toLowerCase()===gender?'':entry.mod;
   return [form,entry.isBackgroundV2?(productShareBackgroundChoices(entry).find(item=>item.id===entry.backgroundId)?.label||i18nCore.t('background.unavailable')):'',gender==='f'?'♀':gender==='m'?'♂':'',mod,catalogueVariantReleaseLabel(entry),
-    flag('lucky',i18nCore.t('myList.lucky')),flag('xxl','XXL'),flag('xxs','XXS'),entry.note].filter(Boolean).join(' · ');
+    entry.shiny?i18nCore.t('share.flagShiny'):'',flag('lucky',i18nCore.t('myList.lucky')),flag('xxl','XXL'),flag('xxs','XXS'),entry.note].filter(Boolean).join(' · ');
 }
 function drawProductShareMissingArt(ctx,x,y,width,height){
   ctx.fillStyle='#20282d';ctx.fillRect(x,y,width,height);

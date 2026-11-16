@@ -107,3 +107,9 @@ for(const locale of ['en','ja','es','de'])test(`export and workflow terminology 
     assert.deepEqual([...own[key].matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),[...en[key].matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),key);
   }
 });
+
+test('mixed special section image preserves shiny-only requirement even without artwork',()=>{
+  const {context}=imageHarness();const section={priority:'',flags:['shiny']};
+  assert.equal(context.productShareImageDetails(entry('Groudon',{no:383,shiny:true,noArt:true}),section),'Shiny only');
+  assert.equal(context.productShareImageDetails(entry('Groudon',{no:383,shiny:false,noArt:true}),section),'');
+});
