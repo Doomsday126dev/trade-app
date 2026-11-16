@@ -345,7 +345,7 @@ catalogue identity explicitly as `backgroundCatalogId`.
 
 ## Regular special backgrounds and dex sorting .174
 
-Runtime `969f8a51994eef2ac7ecd294d38c680f283459ae` (`2026-11-16.174`)
+Runtime `f1bef90d6fab188d2eacc24e5ceba192d0e6cf31` (`2026-11-16.174`)
 permits regular legendary background requests without a priority or shiny flag,
 labels the combined section Special trades, and defaults each list section to
 Pokédex ordering. Existing variant identities and user classifications remain intact.

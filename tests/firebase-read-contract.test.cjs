@@ -82,7 +82,7 @@ test('background173 rejects private-path tampering and unknown exact SHAs',t=>{
   change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
   assert.match(check(dir,background173).stderr,/path bindings or execution semantics changed|expression changed/);
 });
-const special174='969f8a51994eef2ac7ecd294d38c680f283459ae';
+const special174='f1bef90d6fab188d2eacc24e5ceba192d0e6cf31';
 function special174Fixture(t){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'special174-read-contract-'));
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
