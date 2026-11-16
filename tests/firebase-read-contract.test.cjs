@@ -104,6 +104,28 @@ test('special174 rejects private-path tampering and unknown exact SHAs',t=>{
   change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
   assert.match(check(dir,special174).stderr,/path bindings or execution semantics changed|expression changed/);
 });
+const focus175='28228142712f763405631ee7f01767b24318a361';
+function focus175Fixture(t){
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'focus175-read-contract-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const archive=execFileSync('git',['archive',focus175,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
+  execFileSync('tar',['-xf','-','-C',dir],{input:archive});return dir;
+}
+test('focus175 aliases the unchanged reviewed background read contract',()=>{
+  const registered=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS[focus175];
+  assert.equal(registered,window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS['ae196f81834975d705c0fd25a4c1297130516889']);
+  assert.equal(registered.directGetCount,34);assert.equal(registered.directOnValueCount,1);
+});
+test('focus175 immutable source passes exact-SHA read validation',t=>{
+  const result=check(focus175Fixture(t),focus175);assert.equal(result.status,0,result.stderr);
+  assert.equal(JSON.parse(result.stdout).directReads.length,35);
+});
+test('focus175 rejects private-path tampering and unknown exact SHAs',t=>{
+  const dir=focus175Fixture(t);
+  assert.notEqual(check(dir,'0123456789012345678901234567890123456789').status,0);
+  change(dir,'js/app/application.js',"prior=await get(ref(db,'publicShares/'+username))","prior=await get(ref(db,'users/'+username))");
+  assert.match(check(dir,focus175).stderr,/path bindings or execution semantics changed|expression changed/);
+});
 test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);
   assert.equal(actual.length,contract.directReadSites.length);

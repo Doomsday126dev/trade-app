@@ -356,3 +356,17 @@ one owner-scoped listener, and identical path/handler checks. Qualification pins
 the immutable runtime separately from this control registration and the subsequent
 dispatcher-only repin. Production approval and the protected deployment gate remain
 required; no existing runtime or control tags move.
+
+## Shared input focus and additive background entry .175
+
+Runtime `28228142712f763405631ee7f01767b24318a361` (`2026-11-16.175`)
+replaces stacked text-field focus effects with one 2px edge while retaining
+keyboard, autofill and error states. Background controls are visible outside
+collapsed preferences. Edit offers an additive multi-background draft; Back
+restores unsaved edit values and existing variants are never replaced by a batch.
+
+The unchanged bounded-background read contract remains 34 direct gets and one
+owner-scoped listener, with identical handler/path checks. Exact qualification
+includes Chromium and Safari/iPhone focus cases and the existing background
+identity, save/reload and error suites. Control registration and dispatcher
+repin remain separate from runtime bytes; no existing tags or gates move.
