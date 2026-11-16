@@ -1936,7 +1936,7 @@ test.describe('visual smoke', () => {
       // Compare both current states; freezing the reference during its blur
       // transition makes the expected color an unreachable intermediate value.
       await expect.poll(async()=>JSON.stringify(await styles(details))===JSON.stringify(await styles(reference))).toBe(true);await details.fill('winter costume');await expect(details).toHaveValue('winter costume');
-      for(const input of [details,reference]){await input.focus();await expect(input).toBeFocused();await expect.poll(()=>input.evaluate(el=>getComputedStyle(el).boxShadow)).not.toBe('none');}
+      for(const input of [details,reference]){await input.focus();await expect(input).toBeFocused();await expect(input).toHaveCSS('outline-width','2px');await expect(input).toHaveCSS('outline-offset','-1px');}
       await noOverflow(page);await page.keyboard.press('Escape');
     }
 

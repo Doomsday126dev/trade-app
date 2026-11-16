@@ -712,7 +712,7 @@ function refreshCombinedBackgroundChoices(){
 }
 function renderCombinedBackgroundHelp(){
   const host=document.getElementById('combined-background-help'),value=document.getElementById('combined-background')?.value;
-  if(!host)return;host.textContent='';renderCombinedBackgroundBatch();renderCombinedPokemonSummary();
+  if(!host)return;host.textContent=combinedEditor?.backgroundAddOrigin?i18nCore.t('backgroundBatch.existingUnchanged'):'';renderCombinedBackgroundBatch();renderCombinedPokemonSummary();
 }
 // The batch picker belongs to the signed-in editor, not the startup shell.
 // Create its controls and scoped styles once, only when the editor is opened.
@@ -722,6 +722,7 @@ function ensureCombinedBackgroundBatchControls(){
   if(!label||!select)return;
   const heading=document.createElement('div');heading.className='background-batch-heading';label.before(heading);heading.append(label);
   heading.insertAdjacentHTML('beforeend','<button type="button" class="background-batch-toggle" id="combined-background-batch-toggle" aria-controls="combined-background-batch" aria-expanded="false" onclick="toggleCombinedBackgroundBatch()" hidden></button>');
+  heading.insertAdjacentHTML('beforeend','<button type="button" class="background-batch-toggle" id="combined-background-add-more" onclick="addMoreCombinedBackgrounds()" hidden></button>');
   select.insertAdjacentHTML('afterend',`<div id="combined-background-batch" hidden><div class="background-batch-actions"><button type="button" id="combined-background-select-all" onclick="selectCombinedBackgrounds(true)">${escHtml(i18nCore.t('backgroundBatch.selectAll'))}</button><button type="button" id="combined-background-clear" onclick="selectCombinedBackgrounds(false)">${escHtml(i18nCore.t('backgroundBatch.clear'))}</button></div><div id="combined-background-options" role="group" aria-labelledby="combined-background-label" aria-describedby="combined-background-count"></div><p id="combined-background-count" class="share-privacy-note" role="status" aria-live="polite"></p></div>`);
   const style=document.createElement('style');style.id='combined-background-batch-style';style.textContent=`/* Background batches: native controls, full-width touch targets, and a bounded list. */
 .background-batch-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin-top:12px}
@@ -754,7 +755,9 @@ function renderCombinedBackgroundBatch(){
   const rows=combinedBackgroundBatchRows(),canBatch=!draft.entries.length&&(rows.length>1||draft.backgroundBatch);
   if(!canBatch)draft.backgroundBatch=false;
   const active=!!draft.backgroundBatch,busy=!!draft.saving,paused=!!(BACKGROUND_ROLLOUT.enabled&&backgroundOwnerRuntime?.paused);
-  toggle.hidden=!canBatch;toggle.disabled=busy||paused;toggle.setAttribute('aria-expanded',String(active));
+  const addMore=document.getElementById('combined-background-add-more');
+  if(addMore){addMore.hidden=!draft.entries.length||!rows.length;addMore.disabled=busy||paused;addMore.textContent=i18nCore.t('backgroundBatch.addMore');}
+  toggle.hidden=!canBatch||!!draft.backgroundAddOrigin;toggle.disabled=busy||paused;toggle.setAttribute('aria-expanded',String(active));
   toggle.textContent=i18nCore.t(active?'backgroundBatch.single':'backgroundBatch.multiple');
   panel.hidden=!active;document.getElementById('combined-background').hidden=active;
   const available=new Set(rows.filter(row=>!row.exists).map(row=>row.value));
@@ -775,6 +778,28 @@ function renderCombinedBackgroundBatch(){
   const save=document.getElementById('combined-save');
   if(active){delete save.dataset.i18n;save.textContent=i18nCore.t(!selected.size?'backgroundBatch.add':selected.size===1?'backgroundBatch.addOne':'backgroundBatch.addMany',{count:selected.size});save.disabled=busy||paused||!selected.size;}
   else if(!draft.entries.length){save.dataset.i18n='wantEditor.addAction';save.textContent=i18nCore.t('wantEditor.addAction');save.disabled=busy;}
+}
+function addMoreCombinedBackgrounds(){
+  const draft=combinedEditor;if(!draft?.entries.length||draft.saving)return;
+  const fields=['name','priority','background','mod','note','gender','shiny','lucky','xxl','xxs'];
+  const values=Object.fromEntries(fields.map(field=>{const el=document.getElementById('combined-'+field);return[field,el.type==='checkbox'?el.checked:el.value];}));
+  combinedEditor={...draft,entries:[],sourceEntities:[],backgroundSource:null,backgroundBatch:true,backgroundSelection:[],backgroundAddOrigin:{draft,values,preferencesOpen:document.getElementById('combined-preferences').open}};
+  const title=document.getElementById('combined-editor-title');title.dataset.i18n='backgroundBatch.add';title.textContent=i18nCore.t('backgroundBatch.add');
+  const close=document.getElementById('combined-close');close.dataset.i18n='backgroundBatch.backToEdit';close.textContent=i18nCore.t('backgroundBatch.backToEdit');
+  document.getElementById('combined-background').value='';document.getElementById('wants-remove').hidden=true;
+  document.getElementById('combined-error').textContent='';refreshCombinedBackgroundChoices();
+  document.querySelector('#combined-background-options input:not(:disabled)')?.focus();
+}
+function cancelCombinedEditor(){
+  const origin=combinedEditor?.backgroundAddOrigin;if(!origin){closeModal('combined-editor-modal');return;}
+  if(combinedEditor.saving)return;
+  combinedEditor=origin.draft;
+  for(const [field,value] of Object.entries(origin.values)){const el=document.getElementById('combined-'+field);if(el.type==='checkbox')el.checked=value;else el.value=value;}
+  setCombinedPriority(origin.values.priority);refreshCombinedBackgroundChoices();document.getElementById('combined-background').value=origin.values.background;
+  document.getElementById('combined-preferences').open=origin.preferencesOpen;
+  for(const [id,key] of [['combined-editor-title','wantEditor.edit'],['combined-save','wantEditor.saveChanges'],['combined-close','common.cancel']]){const el=document.getElementById(id);el.dataset.i18n=key;el.textContent=i18nCore.t(key);}
+  document.getElementById('combined-save').disabled=false;document.getElementById('wants-remove').hidden=false;document.getElementById('combined-error').textContent='';
+  renderCombinedBackgroundHelp();document.getElementById('combined-background-add-more').focus();
 }
 function toggleCombinedBackgroundBatch(){
   const draft=combinedEditor;if(!draft||draft.saving||draft.entries.length)return;
@@ -855,7 +880,7 @@ function renderCombinedPokemonSummary(){
   if(type){const icon=document.createElement('img');icon.src=maxPresentationIcon(type);icon.alt='';form.append(icon,document.createTextNode(type==='gmax'?'Gigantamax':'Dynamax'));}
   const release=document.getElementById('combined-identity-release'),releaseLabel=catalogueVariantReleaseLabel({name,shiny});
   release.hidden=!releaseLabel;release.textContent=releaseLabel;
-  document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length;
+  document.getElementById('combined-change').hidden=!!combinedEditor?.entries?.length||!!combinedEditor?.backgroundAddOrigin;
 }
 function changeCombinedPokemon(){
   if(combinedEditor?.entries?.length)return;

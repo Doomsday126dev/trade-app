@@ -714,6 +714,9 @@
     ,"accountSync.preservedNoDifferences":"These older copies have no content differences to inspect."
     ,"accountSync.fieldBackground":"Background"
 
+    ,"backgroundBatch.addMore":"Add more backgrounds…"
+    ,"backgroundBatch.existingUnchanged":"Existing requests stay unchanged. Preferences here apply only to new backgrounds."
+    ,"backgroundBatch.backToEdit":"Back to editing"
     ,"backgroundBatch.multiple":"Select multiple backgrounds"
     ,"backgroundBatch.single":"Use one background"
     ,"backgroundBatch.alreadyAdded":"Already on your list"

@@ -358,6 +358,9 @@
     ,"accountSync.preservedNoDifferences":"Estas copias anteriores no tienen diferencias de contenido que revisar."
     ,"accountSync.fieldBackground":"Fondo"
 
+    ,"backgroundBatch.addMore":"Añadir más fondos…"
+    ,"backgroundBatch.existingUnchanged":"Las solicitudes existentes no cambian. Estas preferencias solo se aplican a los fondos nuevos."
+    ,"backgroundBatch.backToEdit":"Volver a editar"
     ,"backgroundBatch.multiple":"Seleccionar varios fondos"
     ,"backgroundBatch.single":"Usar un solo fondo"
     ,"backgroundBatch.alreadyAdded":"Ya está en tu lista"

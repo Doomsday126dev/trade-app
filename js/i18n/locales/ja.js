@@ -357,6 +357,9 @@
     ,"accountSync.preservedNoDifferences":"確認が必要な内容の差はありません。"
     ,"accountSync.fieldBackground":"背景"
 
+    ,"backgroundBatch.addMore":"背景をさらに追加…"
+    ,"backgroundBatch.existingUnchanged":"既存のリクエストは変更されません。ここでの設定は新しい背景にのみ適用されます。"
+    ,"backgroundBatch.backToEdit":"編集に戻る"
     ,"backgroundBatch.multiple":"背景を複数選択"
     ,"backgroundBatch.single":"背景を1つ選択"
     ,"backgroundBatch.alreadyAdded":"リストに追加済み"
