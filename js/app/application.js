@@ -11686,8 +11686,9 @@ function renderTradeMatchSummary(them){
 function renderTradeMatchModal(){
   if(!_activeTradeMatch)return;
   const{them}=_activeTradeMatch;
+  // Copy buttons use document delegation; only a direct backdrop click closes this dialog.
   const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" aria-labelledby="trade-match-title" onclick="if(event.target===this)closeTradeMatchModal()">
-    <div class="diff-modal trade-match-modal" onclick="event.stopPropagation()">
+    <div class="diff-modal trade-match-modal">
       <div class="diff-hdr">
         <div class="diff-hdr-title" id="trade-match-title">${escHtml(i18nCore.t('tradeMatch.title',{trainer:them}))}</div>
         <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="${escAttr(i18nCore.t('common.close'))}">×</button>

@@ -10,7 +10,7 @@ async function currentList(page,lists={wishlist:{Pikachu:'H',Eevee:'M',Bulbasaur
 }
 async function currentFind(page){await page.locator('#wants-list-tools > summary').click();await page.locator('#wants-list-tools button[onclick*="setWantsFindOpen"]').click();}
 async function currentSave(page){await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await editorFixture.settled(page);}
-async function currentShare(page,mode='text'){await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();await page.locator('#product-share-tab-'+mode).click();}
+async function currentShare(page,mode='text'){await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();await page.locator('#product-share-format').selectOption(mode);await page.locator('#product-share-preview-wrap').evaluate(el=>el.open=true);}
 async function currentLocale(page,locale){await page.locator('#account-trigger').click();await page.locator('#account-settings-action').click();await page.locator('[data-settings-target="language"]').click();await page.locator('#settings-language').selectOption(locale);await page.locator('.settings-modal-close').click();}
 async function openSyntheticPublic(page,username,lists){
   await page.evaluate(({username,lists})=>{
@@ -274,9 +274,11 @@ test.describe('visual smoke', () => {
 
     const mappings=[['Pikachu (Worlds 2025)','pikachu-world-champs-2025.png'],['Pikachu (Fragment)','pikachu-thunderbolt-cap.png'],['Raichu Fragment Cap','raichu-thunderbolt-cap.png'],['Pikachu (Halloween 2022)','pikachu-halloween-mischief.png'],['Pikachu (Halloween 2024)','pikachu-witch.png'],['Pikachu (Holiday 2022)','pikachu-holiday.png'],['Pikachu (Holiday 2024)','pikachu-holiday.png'],['Gengar (Halloween 2024)','gengar-spooky-festival.png']];
     const costumes=Object.fromEntries([...mappings.map(([name])=>[name,'H']),['Pikachu (Gloria)','M']]);
+    const displayName=name=>({'Raichu Fragment Cap':'Raichu (Fragment Cap)','Pikachu (Halloween 2022)':'Pikachu (Halloween 2021)','Pikachu (Halloween 2024)':'Pikachu (Witch)','Pikachu (Holiday 2022)':'Pikachu (Holiday 2020)','Pikachu (Holiday 2024)':'Pikachu (Holiday 2020)','Gengar (Halloween 2024)':'Gengar (Spooky Hat)'}[name]||name);
+    const visibleCount=new Set(Object.keys(costumes).map(displayName)).size;
     await currentList(page,{costumes});
     const check=async(rows)=>{
-      for(const[name,file]of mappings)await expect(rows.filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp('assets/sprites/go/'+file.replaceAll('.','\\.')));
+      for(const[name,file]of mappings)await expect(rows.filter({hasText:displayName(name)}).locator('img')).toHaveAttribute('src',new RegExp('assets/sprites/go/'+file.replaceAll('.','\\.')));
       const unavailable=rows.filter({hasText:'Pikachu (Gloria)'});
       await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Gloria)');
       await expect(unavailable.locator('.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Gloria)');
@@ -286,20 +288,20 @@ test.describe('visual smoke', () => {
     await check(page.locator('.wants-row'));
     // The retired FT board is not reopened. The current full-list preview and
     // real export actions must retain every exact costume and honest placeholder.
-    await currentShare(page,'link');await check(page.locator('.share-public-list li'));
+
     for(const theme of ['dark','light'])for(const width of [320,390,1440]){
       await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);await page.setViewportSize({width,height:900});
-      const slot=page.locator('.share-public-list .known-unavailable');
+      const slot=page.locator('.wants-row[data-name="Pikachu (Gloria)"] .known-unavailable');
       const geometry=await slot.evaluate(el=>({w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height,border:getComputedStyle(el).borderStyle}));
       expect(geometry).toEqual({w:34,h:34,border:'dashed'});await noOverflow(page);
     }
-    await page.locator('#product-share-tab-text').click();await page.locator('#share-text-markdown').check();
+    await currentShare(page,'markdown');await expect(page.locator('#product-share-preview li')).toHaveCount(visibleCount);await expect(page.locator('#product-share-preview')).toContainText('Pikachu (Gloria)');
     await page.evaluate(()=>{window.__costumeCopy='';Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>__costumeCopy=text}});});
-    await page.locator('#product-share-primary').click();
-    for(const name of Object.keys(costumes))expect(await page.evaluate(()=>__costumeCopy)).toContain(name);
-    await page.locator('#share-text-csv').check();const csv=await page.locator('.share-text-preview').textContent();
-    await page.evaluate(()=>{window.__costumeDownload='';downloadBlob=async blob=>{__costumeDownload=await blob.text();};});await page.locator('#product-share-primary').click();await expect.poll(()=>page.evaluate(()=>__costumeDownload)).toBe(csv);
-    for(const name of Object.keys(costumes))expect(csv).toContain(name);
+    await page.locator('#product-share-markdown button').click();
+    for(const name of Object.keys(costumes))expect(await page.evaluate(()=>__costumeCopy)).toContain(displayName(name));
+    await page.locator('#product-share-format').selectOption('csv');
+    const downloadPromise=page.waitForEvent('download');await page.locator('#product-share-csv button').click();const download=await downloadPromise,csv=require('node:fs').readFileSync(await download.path(),'utf8');
+    for(const name of Object.keys(costumes))expect(csv).toContain(displayName(name));
     await page.keyboard.press('Escape');
     await openSyntheticPublic(page,'CostumeViewer',{costumes});
     await page.locator('#share-list-tabs .ltab').filter({hasText:'Others'}).click();
@@ -571,7 +573,7 @@ test.describe('visual smoke', () => {
     await expect(page).toHaveURL(/#settings\/tools$/);
     await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"]')).toBeHidden();
-    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(0); // Compatibility deep link only; normal tools live in More.
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(1); // Tools is now a supported Settings destination.
     await expect(page.getByRole('button',{name:'Export backup'})).toBeHidden();
     await expect(page.getByRole('button',{name:'Restore backup'})).toBeHidden();
 
@@ -606,7 +608,7 @@ test.describe('visual smoke', () => {
     });
     await expect(page.locator('#settings-modal')).toHaveClass(/settings-page-mode/);
     await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
-    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(0); // Compatibility deep link only; normal tools live in More.
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveCount(1); // Tools is now a supported Settings destination.
 
     await page.evaluate(()=>{history.replaceState({},'',`${location.pathname}${location.search}#settings/not-a-section`);syncSettingsRoute({captureScroll:false});});
     await expect(page).toHaveURL(/#settings\/profile$/);
@@ -759,7 +761,7 @@ test.describe('visual smoke', () => {
     await page.locator('[data-settings-target="security"]').click();
     await expect(page.locator('#settings-security-name')).toHaveText('AppearanceTrainer');await expect(page.locator('#settings-pin-form')).toBeHidden();
     await page.evaluate(()=>{auth={currentUser:{uid:'appearance-local',providerData:[{providerId:'password'}]}};allData.users[cur]={...allData.users[cur],authUid:'appearance-local',pin:'synthetic-hash'};renderConnectedAccounts();});
-    await page.locator('#settings-pin-toggle').click();await expect(page.locator('#np1')).toBeVisible();await expect(page.locator('#np2')).toBeVisible();
+    await expect(page.locator('#settings-pin-toggle')).toHaveCount(0);await expect(page.locator('#settings-pin-form')).toBeHidden(); // Provider accounts do not expose retired legacy PIN editing.
 
     await page.setViewportSize({width:390,height:420});
     await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
@@ -822,12 +824,13 @@ test.describe('visual smoke', () => {
         changeInterfaceLocale('ja');
         openSettingsPanel('public');
       });
-      const row=page.locator('.language-search-row');
+      const row=page.locator('.language-override-toggle');
       const searchLanguage=page.locator('#settings-search-language');
-      await expect(searchLanguage).toHaveValue('follow-app');
+      await expect(searchLanguage).toHaveValue('ja');await expect(page.locator('#settings-search-language-override')).not.toBeChecked();
       await expect(row).toBeVisible();
-      await expect(searchLanguage).toBeEnabled();
+      await expect(searchLanguage).toBeDisabled();
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('ja');
+      await page.locator('#settings-search-language-override').check();
 
       await searchLanguage.selectOption('ja'); // Explicit equal choice remains distinct from automatic.
       await expect(row).toBeVisible();
@@ -835,7 +838,7 @@ test.describe('visual smoke', () => {
       await searchLanguage.selectOption('en');
       await page.locator('#settings-language').selectOption('de');
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('en');
-      await searchLanguage.selectOption('follow-app');
+      await page.locator('#settings-search-language-override').uncheck();await expect(searchLanguage).toBeDisabled();
       await expect(row).toBeVisible();
       expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('de');
 
@@ -845,7 +848,7 @@ test.describe('visual smoke', () => {
         const detail=document.getElementById('settings-detail');
         const primaryLabel=document.querySelector('.language-primary-row>span');
         const primarySelect=document.getElementById('settings-language');
-        const label=document.querySelector('.language-search-row');
+        const label=document.querySelector('.language-override-toggle');
         const detailRect=detail.getBoundingClientRect();
         const panelRect=panel.getBoundingClientRect();
         const labelRect=primaryLabel.getBoundingClientRect();
@@ -883,7 +886,7 @@ test.describe('visual smoke', () => {
     await page.reload({waitUntil:'domcontentloaded'});
     await waitForSettingsStartupReady(page);
     await page.evaluate(()=>openSettingsPanel('public'));
-    await expect(page.locator('#settings-search-language')).toHaveValue('follow-app');
+    await expect(page.locator('#settings-search-language-override')).not.toBeChecked();await expect(page.locator('#settings-search-language')).toBeDisabled();await expect(page.locator('#settings-search-language')).toHaveValue(await page.evaluate(()=>i18nCore.getLocale()));
     expect(await page.evaluate(()=>localStorage.getItem('pogoPokemonGoSearchLocale:v1'))).toBeNull();
     await page.evaluate(()=>{
       localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en'));
@@ -948,10 +951,10 @@ test.describe('visual smoke', () => {
           expect(off.selectHeight).toBeGreaterThanOrEqual(48);
           expect(off.closeWidth).toBeGreaterThanOrEqual(48);
           expect(off.closeHeight).toBeGreaterThanOrEqual(48);
-          await page.locator('#settings-search-language').selectOption('de');
-          await expect(page.locator('.language-search-row')).toBeVisible();
+          await page.locator('#settings-search-language-override').check();await page.locator('#settings-search-language').selectOption('de');
+          await expect(page.locator('.language-override-toggle')).toBeVisible();
           expect(await page.evaluate(()=>{
-            const row=document.querySelector('.language-search-row');
+            const row=document.querySelector('.language-override-toggle');
             const select=document.getElementById('settings-search-language');
             return row.scrollWidth<=row.clientWidth&&select.getBoundingClientRect().width>=Math.min(260,document.getElementById('settings-detail').getBoundingClientRect().width-76)&&select.getBoundingClientRect().height>=48;
           })).toBe(true);
@@ -1248,7 +1251,7 @@ test.describe('visual smoke', () => {
       const shell=await page.locator('.trainer-discovery-content').boundingBox();
       expect(Math.abs(favoriteSearchBox.x-shell.x)).toBeLessThanOrEqual(1);expect(Math.abs(favoriteSearchBox.width-shell.width)).toBeLessThanOrEqual(1);
       expect(trainerSearchWidth).toBeGreaterThan(0);expect(trainerSearchWidth).toBeLessThanOrEqual(shell.width);
-      await expect(card.locator('.favorite-card-add-tag')).toBeHidden();
+      await expect(card.locator('.favorite-card-add-tag')).toBeVisible();
       await expect(card.locator('.favorite-card-more')).toBeVisible();
       await expect(card).not.toContainText('Organize tags');
       const moreBox=await card.locator('.favorite-card-more').boundingBox();
@@ -1829,7 +1832,7 @@ test.describe('visual smoke', () => {
     for(const width of [320,390,1024,1440]){
       await page.setViewportSize({width,height:900});
       const input=page.locator('#wants-add-name'),details=page.locator('.wants-add-form .add-advanced-toggle'),tools=page.locator('#wants-list-tools > summary');
-      await expect(input).toBeVisible();await expect(details).toHaveText(/Flags & details/);
+      await expect(input).toBeVisible();await expect(details).toHaveText(/Options/);
       for(const target of [details,tools,page.locator('.myrow-edit').first()]){
         const box=await target.boundingBox();expect(Math.round(box.width*100)/100).toBeGreaterThanOrEqual(width<=600?44:40);expect(Math.round(box.height*100)/100).toBeGreaterThanOrEqual(44);
       }
@@ -1850,8 +1853,8 @@ test.describe('visual smoke', () => {
       await editorFixture.addDialog(page,'Pikachu');await editorFixture.priority(page,'M');
       const before=await editorFixture.entities(page);
       for(const flag of ['lucky','shiny','xxl'])await page.locator('#combined-'+flag).check();
-      await page.locator('#combined-gender').selectOption('f');await page.locator('#combined-mod').fill('winter costume');
-      await page.locator('#combined-note-details summary').click();await page.locator('#combined-note').fill('First public line\nSecond public line');
+      await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-gender').selectOption('f');await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-mod').fill('winter costume');
+      await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-note').fill('First public line\nSecond public line');
       for(const flag of ['lucky','shiny','xxl','xxs']){const b=await page.locator('label:has(#combined-'+flag+')').boundingBox();expect(b.width).toBeGreaterThanOrEqual(44);expect(b.height).toBeGreaterThanOrEqual(44);}
       await page.locator('#combined-lucky').focus();await page.keyboard.press('Space');await expect(page.locator('#combined-lucky')).not.toBeChecked();await page.keyboard.press('Space');
       expect(await editorFixture.entities(page)).toEqual(before);await noOverflow(page);await currentSave(page);
@@ -1875,7 +1878,7 @@ test.describe('visual smoke', () => {
       for(const g of geometry){expect(g.right).toBeLessThanOrEqual(g.actions+1);expect(g.sprite).toBeGreaterThanOrEqual(32);expect(g.targets.every(t=>t.w>=(width<=600?44:40)&&t.h>=44)).toBe(true);}await noOverflow(page);
     }
     const row=page.locator('.wants-row[data-name="Oricorio (Pom-Pom)"]');await row.locator('.myrow-edit').click();await expect(page.locator('#combined-mod')).toHaveValue('winter ceremonial variant');
-    await page.locator('#combined-mod').fill('winter ceremonial variant updated');await currentSave(page);await expect(row).toContainText('winter ceremonial variant updated');
+    await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-mod').fill('winter ceremonial variant updated');await currentSave(page);await expect(row).toContainText('winter ceremonial variant updated');
     await currentFind(page);await page.locator('#combined-filter').fill('P-Tauros');await expect(page.locator('.wants-row')).toHaveCount(1);await page.keyboard.press('Escape');await expect(page.locator('.wants-row')).toHaveCount(5);
 
   });
@@ -1917,11 +1920,11 @@ test.describe('visual smoke', () => {
 
     const board={lf:[{name:'Oricorio (Pom-Pom)',dn:'Oricorio (Pom-Pom)',no:741,shiny:true,mirror:true,note:'long-distance trade'}],ft:[{name:'Pikachu',dn:'Pikachu',no:25,shiny:true,note:'untouched offering',qty:12}]};
     await currentList(page,{wishlist:{Rotom:'H'}},{specialTradeBoard:board});const before=await editorFixture.entities(page);
-    await currentShare(page,'image');await page.locator('#share-image-board').check();
+    await currentShare(page,'image');
     for(const [width,height]of [[1440,900],[430,932],[390,844],[375,812],[320,568]]){
-      await page.setViewportSize({width,height});await expect(page.locator('#product-share-primary')).toBeInViewport();await expect(page.locator('#product-share-count')).toHaveText('2 wants');
-      await expect(page.locator('#share-scope-full')).toBeChecked();await noOverflow(page);
-      for(const selector of ['.share-close','#product-share-primary','#product-share-options .share-choice'])for(const el of await page.locator(selector).all()){const box=await el.boundingBox();if(box){expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);}}
+      await page.setViewportSize({width,height});await expect(page.locator('#product-share-image button')).toBeInViewport();await expect(page.locator('#product-share-preview li')).toHaveCount(2);
+      await expect(page.locator('#product-share-scope')).toHaveValue('full');await noOverflow(page);
+      for(const selector of ['#product-share-modal .mact button','#product-share-image button','#product-share-format','#product-share-scope'])for(const el of await page.locator(selector).all()){const box=await el.boundingBox();if(box){expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);}}
     }
     await page.keyboard.press('Escape');expect(await editorFixture.entities(page)).toEqual(before);expect(await page.evaluate(()=>__editorFixture.remote.users.LocalTrainer.specialTradeBoard)).toEqual(board);
 
@@ -1931,13 +1934,13 @@ test.describe('visual smoke', () => {
     await currentList(page);
     for(const width of [1440,390]){
       await page.setViewportSize({width,height:900});await editorFixture.addDialog(page,'Rotom');await page.locator('#combined-close').focus();await page.mouse.move(0,0);
-      const details=page.locator('#combined-mod'),reference=page.locator('#combined-name');await expect(details).toHaveClass(/field-control/);
+      await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-change').click();const details=page.locator('#combined-mod'),reference=page.locator('#combined-name');await expect(details).toHaveClass(/field-control/);
       const styles=async locator=>locator.evaluate(el=>{const s=getComputedStyle(el);return{background:s.backgroundColor,color:s.color,border:s.borderColor,radius:s.borderRadius,minHeight:s.minHeight};});
       // Compare both current states; freezing the reference during its blur
       // transition makes the expected color an unreachable intermediate value.
       await expect.poll(async()=>JSON.stringify(await styles(details))===JSON.stringify(await styles(reference))).toBe(true);await details.fill('winter costume');await expect(details).toHaveValue('winter costume');
       for(const input of [details,reference]){await input.focus();await expect(input).toBeFocused();await expect(input).toHaveCSS('outline-width','2px');await expect(input).toHaveCSS('outline-offset','-1px');}
-      await noOverflow(page);await page.keyboard.press('Escape');
+      await noOverflow(page);await page.locator('#combined-close').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();
     }
 
   });
@@ -1947,9 +1950,9 @@ test.describe('visual smoke', () => {
     for(const width of [1440,390]){
       await page.setViewportSize({width,height:900});
       const expected={H:'Pikachu',LUCKY:'Eevee',SHINY:'Bulbasaur',XXL:'Charmander',XXS:'Squirtle','LUCKY+SHINY+XXL':'Psyduck',NEEDS_PRIORITY:'Rotom'};
-      for(const [key,name]of Object.entries(expected)){const section=page.locator('#combined-list > [data-wants-section="'+key+'"]');await expect(section.locator('.wants-row')).toHaveCount(1);await expect(section.locator('.wants-name')).toHaveText(name);}
+      for(const [key,name]of Object.entries(expected)){const section=page.locator('#combined-list > [data-wants-section="'+key+'"]');await expect(section.locator('.wants-row')).toHaveCount(1);await expect(section.locator('.wants-row')).toHaveAttribute('data-name',name);await expect(section.locator('.myrow-trait.shiny')).toHaveCount(key.includes('SHINY')?1:0);}
       await expect(page.locator('.wants-row')).toHaveCount(7);
-      await page.locator('.wants-row[data-name="Psyduck"] .myrow-edit').click();await page.locator('#combined-mod').fill('updated variant');await currentSave(page);
+      await page.locator('.wants-row[data-name="Psyduck"] .myrow-edit').click();await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-mod').fill('updated variant');await currentSave(page);
       const entries=await page.evaluate(()=>productDeclarations().entries);expect(entries).toHaveLength(7);expect(entries.find(e=>e.name==='Psyduck')).toMatchObject({p:'',lucky:true,shiny:true,xxl:true,mod:'updated variant'});
       await expect(page.locator('.wants-row[data-name="Psyduck"]')).toHaveCount(1);await noOverflow(page);
     }
@@ -1979,11 +1982,8 @@ test.describe('visual smoke', () => {
     await currentList(page,{wishlist:{Pikachu:'H',Rotom:'M'},dynamax:{Bulbasaur:'H'},gmax:{Charizard:'L'},costumes:{'Pikachu (Worlds 2025)':'M'}});
     const before=await editorFixture.entities(page),writes=await page.evaluate(()=>[...__editorFixture.writes]);
     await currentFind(page);await page.locator('#combined-filter').fill('No matching want');await expect(page.locator('.wants-row')).toHaveCount(0);
-    await currentShare(page);await page.locator('#share-text-csv').check();await expect(page.locator('[name=share-scope]')).toHaveCount(0);
-    const csv=await page.locator('.share-text-preview').textContent();
-    for(const name of ['Pikachu','Rotom','Bulbasaur','Charizard','Worlds 2025'])expect(csv).toContain(name);
-    await page.evaluate(()=>{window.__csvDownload=null;downloadBlob=async(blob,filename)=>{window.__csvDownload={text:await blob.text(),filename};};});
-    await page.locator('#product-share-primary').click();await expect.poll(()=>page.evaluate(()=>__csvDownload)).toEqual({text:csv,filename:'pogo-localtrainer-wants.csv'});
+    await currentShare(page,'csv');await expect(page.locator('#product-share-scope')).toHaveValue('full');
+    const downloadPromise=page.waitForEvent('download');await page.locator('#product-share-csv button').click();const download=await downloadPromise,csv=require('node:fs').readFileSync(await download.path(),'utf8');for(const name of ['Pikachu','Rotom','Bulbasaur','Charizard','Worlds 2025'])expect(csv).toContain(name);expect(download.suggestedFilename()).toBe('pogo-localtrainer-wants.csv');
     await page.keyboard.press('Escape');await expect(page.locator('#combined-filter')).toHaveValue('No matching want');expect(await editorFixture.entities(page)).toEqual(before);expect(await page.evaluate(()=>__editorFixture.writes)).toEqual(writes);
     await page.locator('#combined-filter').focus();await page.keyboard.press('Escape');await expect(page.locator('.wants-row')).toHaveCount(5);
 
@@ -2294,7 +2294,7 @@ test.describe('visual smoke', () => {
     // Retired background badges are not the current matching UI, but saved
     // legacy fields and FT offerings must survive an actual unrelated edit.
     await page.getByRole('button',{name:'Edit My List'}).click();await expect(page.locator('#trade-return-banner')).toBeVisible();
-    await editorFixture.edit(page,'Heracross');await page.locator('#combined-gender').selectOption('m');await currentSave(page);
+    await editorFixture.edit(page,'Heracross');await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-gender').selectOption('m');await currentSave(page);
     await page.getByRole('button',{name:'Return to comparison'}).click();await expect(modal.locator('.diff-match-box.both')).toContainText('Heracross');await expect(modal.locator('.diff-match-box.both .diff-match-count')).toHaveText('2');
     expect(await page.evaluate(()=>__editorFixture.remote.users.LocalTrainer.specialTradeBoard)).toEqual(legacy);
     expect(await page.evaluate(()=>allData.wishlist.LocalTrainer.Mewtwo)).toContain('[bg:'+nyc+']');
@@ -2397,13 +2397,13 @@ test.describe('visual smoke', () => {
       const geometry=await page.evaluate(()=>{
         const rect=selector=>{const box=document.querySelector(selector).getBoundingClientRect();return{x:box.x,y:box.y,right:box.right,bottom:box.bottom,width:box.width,height:box.height};};
         const mode=rect('.trainer-discovery-modes'),search=rect('.trainer-search-shell'),favorites=rect('#trainer-favorites-preview'),recents=rect('#recent-trainers');
-        return{mode,search,favorites,recents,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,modeLabels:[...document.querySelectorAll('.trainer-discovery-modes button')].map(button=>button.scrollWidth<=button.clientWidth)};
+        return{mode,search,favorites,recents,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,designMax:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--container-wide')),modeLabels:[...document.querySelectorAll('.trainer-discovery-modes button')].map(button=>button.scrollWidth<=button.clientWidth)};
       });
       expect(geometry.overflow).toBe(false);
       expect(geometry.modeLabels.every(Boolean)).toBe(true);
       expect(Math.abs(geometry.search.x-geometry.mode.x)).toBeLessThanOrEqual(1);
       expect(geometry.search.width).toBeLessThanOrEqual(geometry.mode.width);
-      expect(geometry.mode.width).toBeLessThanOrEqual(960.5);
+      expect(geometry.mode.width).toBeLessThanOrEqual(geometry.designMax+.5);
       expect(geometry.search.width).toBeGreaterThan(200);
       expect(geometry.favorites.y).toBeGreaterThan(geometry.search.bottom);
       if(viewport.width>=768){
@@ -2644,7 +2644,7 @@ test.describe('visual smoke', () => {
         {eventID:'http',name:'HTTP',eventType:'event',start:new Date(now+6*hour).toISOString(),end:new Date(now+7*hour).toISOString(),link:'http://example.com/details'},
         {eventID:'obfuscated',name:'Obfuscated',eventType:'event',start:new Date(now+8*hour).toISOString(),end:new Date(now+9*hour).toISOString(),link:' https://example.com/details'}
       ]};
-      _eventLoadState='ready';eventTypeFilter='all';window.__securityExecuted=0;
+      _eventLoadState='ready';eventTypeFilter='all';eventAllSchedule=true;eventCalendarDate='';window.__securityExecuted=0;
       document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
       document.getElementById('tab-schedule').classList.add('active');renderEventsOnly();
     });
@@ -2705,10 +2705,10 @@ test.describe('visual smoke', () => {
     // authority for wants and must never be silently rewritten by this editor.
     const have={'Pikachu':{qty:2}};await currentList(page,{wishlist:{Rotom:'H'},have});const before=await editorFixture.entities(page);
     await expect(page.locator('#tab-have,#have-filter,#legacy-inventory-export,.tab[data-tab="have"]')).toHaveCount(0);
-    await editorFixture.edit(page,'Rotom');await page.locator('#combined-mod').fill('Exact current want');await currentSave(page);
+    await editorFixture.edit(page,'Rotom');await page.locator('#combined-preferences').evaluate(el=>el.open=true);await page.locator('#combined-mod').fill('Exact current want');await currentSave(page);
     expect(await page.evaluate(()=>__editorFixture.remote.have.LocalTrainer)).toEqual(have);
-    await currentShare(page);await page.locator('#share-text-csv').check();await expect(page.locator('.share-text-preview')).toContainText('Rotom');await expect(page.locator('.share-text-preview')).not.toContainText('Pikachu');
-    for(const [width,height]of [[1440,900],[390,420],[390,300]]){await page.setViewportSize({width,height});await expect(page.locator('#product-share-primary')).toBeInViewport();await noOverflow(page);}
+    await currentShare(page,'csv');await expect(page.locator('#product-share-preview')).toContainText('Rotom');await expect(page.locator('#product-share-preview')).not.toContainText('Pikachu');const downloadPromise=page.waitForEvent('download');await page.locator('#product-share-csv button').click();const download=await downloadPromise,csv=require('node:fs').readFileSync(await download.path(),'utf8');expect(csv).toContain('Rotom');expect(csv).not.toContain('Pikachu');
+    for(const [width,height]of [[1440,900],[390,420],[390,300]]){await page.setViewportSize({width,height});await page.locator('#product-share-csv button').scrollIntoViewIfNeeded();await expect(page.locator('#product-share-csv button')).toBeInViewport();await noOverflow(page);}
     expect((await editorFixture.entities(page)).filter(e=>e.entityType==='tradeEntry')).toHaveLength(before.filter(e=>e.entityType==='tradeEntry').length);
 
   });
@@ -2724,7 +2724,7 @@ test.describe('visual smoke', () => {
   test('Events timeline keeps chronology compact and distinguishes loading empty filter and error states',async({page})=>{
     // The compact Raid Hour fixture is same-day, independent of runner time.
     // A wall-clock start near midnight changed it into a multi-day date range.
-    const baselineCommit='15d3e041db309fe3c234b496597a0f7f4a3b0b74';
+    const baselineCommit='1458f9d9004d59dcbd00a23b9ff22268fa591b3d'; // Reviewed .174 source; focus/batch changes must not alter event behavior.
     const baselineSource=require('node:child_process').execFileSync('git',['show',baselineCommit+':js/app/application.js'],{encoding:'utf8'});
     const candidateSource=require('node:fs').readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8');
     for(const [start,end] of [['function eventBonusText(','function eventsSourceHtml('],['function renderEventsOnly(','function eventsAction(']]){
@@ -2749,7 +2749,7 @@ test.describe('visual smoke', () => {
         {eventID:'later',name:'A deliberately long seasonal event title that must wrap without widening the timeline',eventType:'event',start:new Date(now+6*day).toISOString(),end:new Date(now+8*day).toISOString(),link:'https://example.com/later'}
       ];
       const extras=Array.from({length:25},(_,index)=>({eventID:`scale-${index}`,name:`Research Event ${index}`,eventType:'research',start:new Date(now+(index+9)*day).toISOString(),end:new Date(now+(index+9)*day+hour).toISOString()}));
-      window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';eventCalendarAnchor=new Date(new Date(now).getFullYear(),new Date(now).getMonth(),1);renderEventsOnly();
+      window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventAllSchedule=true;eventCalendarDate='';eventCalendarAnchor=new Date(new Date(now).getFullYear(),new Date(now).getMonth(),1);renderEventsOnly();
     });
     await page.setViewportSize({width:1440,height:900});
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
@@ -2803,7 +2803,8 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-filter-scroll')).toHaveClass(/is-at-end/);
     const sourceRow=page.locator('article.event-card').first();await expect(sourceRow.locator('a')).toHaveCount(0);
     const details=sourceRow.locator('.event-card-cue');await expect(details).toHaveAttribute('aria-label',/.+/);await details.focus();await expect(details).toBeFocused();
-    for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
+    // c847782d established the compact Events filter contract: 44px touch targets.
+    for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(44);expect(box?.width).toBeGreaterThanOrEqual(44);}
     await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
