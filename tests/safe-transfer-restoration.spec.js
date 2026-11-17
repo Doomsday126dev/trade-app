@@ -27,7 +27,7 @@ async function bootCandidate(page){
   await page.goto(`./?safe-transfer-candidate=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('safe-transfer-candidate-local-build'));
-  await page.waitForFunction(()=>typeof openSettingsPanel==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
+  await page.waitForFunction(()=>typeof openSettingsPanel==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
 }
 
 async function establishFixture(page,{results,locale='en',group=true,deferred=false,clipboard='direct'}={}){
@@ -75,9 +75,9 @@ async function openFromSettingsTools(page){
   await expect(page.locator('#settings-modal')).toBeVisible();
   await safeTransferTool(page).click();
   await expect(page.locator('#safe-transfer-modal')).toBeVisible();
-  // Discovery no longer silently selects Favorites. Establish this fixture's
-  // intended complete group explicitly through the existing selection control.
-  await page.locator('#safe-transfer-modal button[onclick="setAllSafeTransferTrainers(true)"]').click();
+  // The current modal initializes the active scope's members as selected.
+  // Do not click Select all again: that is a new user action with new reads.
+  await expect(page.locator('#stb-trainer-grid .stb-trainer-chip:not(.on)')).toHaveCount(0);
 }
 
 async function waitForPhase(page,phase){await expect(page.locator('#stb-candidate')).toHaveAttribute('data-phase',phase);}
@@ -154,6 +154,8 @@ test('actual language controls localize candidate UI while Pokémon GO command l
   await expect(page.locator('#settings-modal')).toBeVisible();
   await page.locator('[data-settings-target="language"]').click();
   await page.locator('#settings-language').selectOption('es');await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe('es');
+  await page.locator('#settings-search-language-override').check();
+  await expect(page.locator('#settings-search-language')).toBeEnabled();
   await page.locator('#settings-search-language').selectOption('de');
   await page.goto(page.url().split('#')[0]+'#settings/tools');await safeTransferTool(page).click();await waitForPhase(page,'ready');
   await expect(page.locator('[data-safe-transfer-scope]')).toContainText('Ámbito seleccionado');
