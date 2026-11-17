@@ -8637,6 +8637,10 @@ function confirmRemove(name,dn){
 }
 
 const canvasImageCache=new Map();
+const canvasImageQueue=[];
+let canvasImageActive=0;
+const CANVAS_IMAGE_CONCURRENCY=6;
+const CANVAS_IMAGE_TIMEOUT_MS=10000;
 const canvasImageUsableCache=new WeakMap();
 function exportSpriteUrl(e){
   return canvasSafeSpriteUrl(entrySpriteUrl(e,e.spriteName||e.name,e.gender));
@@ -8668,18 +8672,35 @@ function exportSpriteFallbackUrls(e){
   const approvedOverride=!identity.exactRequired&&isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
   return[...new Set([...highQuality,approvedOverride,...chain].filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
+function drainCanvasImageQueue(){
+  while(canvasImageActive<CANVAS_IMAGE_CONCURRENCY&&canvasImageQueue.length){
+    canvasImageActive++;
+    canvasImageQueue.shift()();
+  }
+}
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
   if(canvasImageCache.has(url))return canvasImageCache.get(url);
-  const p=new Promise(resolve=>{
+  let complete;
+  const pending=new Promise(resolve=>{complete=resolve;});
+  canvasImageCache.set(url,pending);
+  canvasImageQueue.push(()=>{
     const img=new Image();
+    let settled=false;
+    const finish=value=>{
+      if(settled)return;settled=true;
+      clearTimeout(timer);img.onload=null;img.onerror=null;
+      if(!value){canvasImageCache.delete(url);img.removeAttribute('src');}
+      complete(value);canvasImageActive--;drainCanvasImageQueue();
+    };
+    const timer=setTimeout(()=>finish(null),CANVAS_IMAGE_TIMEOUT_MS);
     img.crossOrigin='anonymous';
-    img.onload=()=>resolve(img);
-    img.onerror=()=>resolve(null);
-    img.src=url;
+    img.onload=()=>finish(img);
+    img.onerror=()=>finish(null);
+    try{img.src=url;}catch{finish(null);}
   });
-  canvasImageCache.set(url,p);
-  return p;
+  drainCanvasImageQueue();
+  return pending;
 }
 // Load with cascading fallback — try each URL in order until one succeeds
 async function loadCanvasImageWithFallback(urls){
@@ -12864,7 +12885,7 @@ function closeExportMenu(){
 function productTextRows(){
   const entries=productDeclarations().entries,withBackground=entries.some(e=>e.isBackgroundV2);
   return entries.map(e=>({...(withBackground?{background:e.isBackgroundV2?e.backgroundId:''}:{}),
-    intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
+    intent:i18nCore.t('wants.title'),name:[e.dn||e.name,productShareCategoryLabel(e)].filter(Boolean).join(' · '),category:e.category||e.type||e.ref?.type||'wishlist',no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
 }

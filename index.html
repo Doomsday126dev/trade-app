@@ -1018,6 +1018,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     de:Object.freeze({'login.or':'oder','login.continueGoogle':'Mit Google fortfahren'})
   });
   const loadedScripts=new Set();
+  const loadingScripts=new Map();
   let shellLocalePromise=null;
   let featureLoadPromise=null;
   let publicShareLoadPromise=null;
@@ -1068,17 +1069,24 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   function absoluteScriptUrl(src){return new URL(src,document.baseURI).href;}
   function loadScript(src,{ordered=false}={}){
     const absolute=absoluteScriptUrl(src);
-    if(loadedScripts.has(absolute)||document.querySelector(`script[data-pogo-loaded="${CSS.escape(absolute)}"]`))return Promise.resolve();
-    loadedScripts.add(absolute);
-    return new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.src=absolute;
-      script.async=!ordered;
-      script.dataset.pogoLoaded=absolute;
-      script.addEventListener('load',resolve,{once:true});
-      script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/script-load-failed'}));},{once:true});
-      document.head.appendChild(script);
+    if(loadedScripts.has(absolute))return Promise.resolve();
+    if(loadingScripts.has(absolute))return loadingScripts.get(absolute);
+    const script=document.createElement('script');
+    script.src=absolute;
+    script.async=!ordered;
+    const pending=new Promise((resolve,reject)=>{
+      script.addEventListener('load',()=>{
+        loadedScripts.add(absolute);script.dataset.pogoLoaded=absolute;
+        loadingScripts.delete(absolute);resolve();
+      },{once:true});
+      script.addEventListener('error',()=>{
+        loadingScripts.delete(absolute);script.remove();
+        reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/script-load-failed'}));
+      },{once:true});
     });
+    loadingScripts.set(absolute,pending);
+    document.head.appendChild(script);
+    return pending;
   }
   async function ensureLocale(locale=preferredLocale()){
     const normalized=SUPPORTED_LOCALES.includes(String(locale||'').toLowerCase())?String(locale).toLowerCase():'en';
@@ -1142,22 +1150,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     }).map(node=>node.getAttribute('src'));
   }
   async function loadFeatureScripts(){
-    const pending=[];
-    for(const src of featureAssetSources()){
-      const absolute=absoluteScriptUrl(src);
-      if(loadedScripts.has(absolute))continue;
-      loadedScripts.add(absolute);
-      pending.push(new Promise((resolve,reject)=>{
-        const script=document.createElement('script');
-        script.src=absolute;
-        script.async=false;
-        script.dataset.pogoLoaded=absolute;
-        script.addEventListener('load',resolve,{once:true});
-        script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/feature-load-failed'}));},{once:true});
-        document.head.appendChild(script);
-      }));
-    }
-    await Promise.all(pending);
+    await Promise.all(featureAssetSources().map(src=>loadScript(src,{ordered:true})));
   }
   async function loadPublicShareScripts(){
     const publicPaths=[
