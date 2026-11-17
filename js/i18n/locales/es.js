@@ -380,5 +380,20 @@
     ,"backgroundBatch.addOne":"Añadir 1 fondo"
     ,"backgroundBatch.addMany":"Añadir {count} fondos"
     ,"backgroundBatch.add":"Añadir fondos"
+,
+"addFlow.continue":"Continuar",
+"addFlow.choose":"Elige el Pokémon que buscas.",
+"addFlow.review":"Revisa tus preferencias antes de añadirlo. Aún no se ha guardado nada.",
+"addFlow.priorityHelp":"¿Cuánto lo quieres?",
+"addFlow.size":"Tamaño",
+"addFlow.any":"Cualquiera",
+"addFlow.sizeConflict":"Esta entrada tiene ambos tamaños. Elige uno antes de guardar.",
+"addFlow.details":"Forma específica o detalles",
+"addFlow.lucky":"Intercambio con suerte",
+"addFlow.luckyHelp":"Un resultado deseado, no una garantía.",
+"addFlow.noteHelp":"Las notas son visibles al publicar tu lista."
+,
+"addFlow.addPokemon":"Añadir {name}",
+"addFlow.duplicate":"Este Pokémon ya está en tu lista. Cierra este diálogo y edita la entrada existente."
 });
 })(window);

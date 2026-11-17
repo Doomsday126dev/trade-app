@@ -380,5 +380,20 @@
     ,"backgroundBatch.addOne":"1 Hintergrund hinzufügen"
     ,"backgroundBatch.addMany":"{count} Hintergründe hinzufügen"
     ,"backgroundBatch.add":"Hintergründe hinzufügen"
+,
+"addFlow.continue":"Weiter",
+"addFlow.choose":"Wähle das Pokémon, das du suchst.",
+"addFlow.review":"Prüfe deine Wünsche vor dem Hinzufügen. Noch ist nichts gespeichert.",
+"addFlow.priorityHelp":"Wie wichtig ist es dir?",
+"addFlow.size":"Größe",
+"addFlow.any":"Beliebig",
+"addFlow.sizeConflict":"Dieser Eintrag hat beide Größen. Wähle vor dem Speichern eine aus.",
+"addFlow.details":"Bestimmte Form oder Details",
+"addFlow.lucky":"Glücks-Tausch",
+"addFlow.luckyHelp":"Ein gewünschtes Ergebnis, keine Garantie.",
+"addFlow.noteHelp":"Notizen sind sichtbar, wenn du deine Liste veröffentlichst."
+,
+"addFlow.addPokemon":"{name} hinzufügen",
+"addFlow.duplicate":"Dieses Pokémon steht bereits auf deiner Liste. Schließe den Dialog und bearbeite den vorhandenen Eintrag."
 });
 })(window);

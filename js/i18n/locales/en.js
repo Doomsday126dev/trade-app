@@ -744,5 +744,20 @@
     ,"removal.done":"Removed entries: {count}."
     ,"removal.changed":"Your list changed. Review the remaining entries before trying again; earlier removals may already be saved."
     ,"removal.incomplete":"Removal could not finish. Some changes may already be saved or waiting to sync. Check sync status and the remaining list before trying again."
+,
+"addFlow.continue":"Continue",
+"addFlow.choose":"Choose the Pokémon you’re looking for.",
+"addFlow.review":"Review your preferences before adding. Nothing is saved yet.",
+"addFlow.priorityHelp":"How much do you want it?",
+"addFlow.size":"Size",
+"addFlow.any":"Any",
+"addFlow.sizeConflict":"This saved entry has both sizes. Choose one size before saving.",
+"addFlow.details":"Specific form or details",
+"addFlow.lucky":"Lucky trade",
+"addFlow.luckyHelp":"A desired outcome, not a guarantee.",
+"addFlow.noteHelp":"Notes are visible when you publish your list."
+,
+"addFlow.addPokemon":"Add {name}",
+"addFlow.duplicate":"This Pokémon is already on your list. Close this dialog and edit the existing entry."
 });
 })(window);

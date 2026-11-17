@@ -738,7 +738,7 @@ function prepareWantsCatalog(){
     input.parentElement.classList.add('wants-picker-wrap');input.insertAdjacentElement('afterend',list);
     input.setAttribute('role','combobox');if(id==='combined-name')input.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
     input.addEventListener('input',event=>{if(!event.isComposing)renderWantsPicker(input);});input.addEventListener('compositionend',()=>renderWantsPicker(input));
-    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>closeWantsPicker(input),0));
+    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>{closeWantsPicker(input);if(input.id==='combined-name'&&!input.readOnly)finishCombinedPokemonChoice();},0));
     input.addEventListener('keydown',event=>{
       if(event.isComposing)return;
       if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();closeWantsPicker(input);return;}
@@ -842,7 +842,7 @@ function renderCombinedBackgroundBatch(){
   document.getElementById('combined-background-count').textContent=i18nCore.t(selected.size?'backgroundBatch.selected':'backgroundBatch.choose',{count:selected.size});
   const save=document.getElementById('combined-save');
   if(active){delete save.dataset.i18n;save.textContent=i18nCore.t(!selected.size?'backgroundBatch.add':selected.size===1?'backgroundBatch.addOne':'backgroundBatch.addMany',{count:selected.size});save.disabled=busy||paused||!selected.size;}
-  else if(!draft.entries.length){save.dataset.i18n='wantEditor.addAction';save.textContent=i18nCore.t('wantEditor.addAction');save.disabled=busy;}
+  else if(!draft.entries.length){delete save.dataset.i18n;const name=document.getElementById('combined-name').value;save.textContent=name?i18nCore.t('addFlow.addPokemon',{name:pokemonDisplayName(_nameToSpriteEntry(name))||name}):i18nCore.t('wantEditor.addAction');save.disabled=busy;}
 }
 function addMoreCombinedBackgrounds(){
   const draft=combinedEditor;if(!draft?.entries.length||draft.saving)return;
@@ -923,7 +923,8 @@ function refreshCombinedGenderOptions(savedValue){
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
-function setCombinedPriority(value){
+function setCombinedPriority(value,userChoice=false){
+  if(userChoice&&combinedEditor)combinedEditor.priorityChosen=true;
   if(!['','H','M','L'].includes(value))return;
   document.getElementById('combined-priority').value=value;
   document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
@@ -934,7 +935,10 @@ function renderCombinedPokemonSummary(){
   let entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
   const choice=backgroundExportCatalog.records.find(r=>backgroundChoiceValue(r)===document.getElementById('combined-background')?.value);if(choice&&BackgroundEditorAdapter.intrinsicBinding(choice.catalogId))entry=accountSyncCatalogEntryForId(choice.catalogId)||entry;
   const show=!!entry&&!field.dataset.editing;
+  const none=document.querySelector('#combined-priorities input[value=""]')?.closest('label');
+  if(none)none.hidden=!!entry&&!combinedEditor?.entries?.length&&!window.PogoDomain.priorityValues.isSpecialTradeWant({...entry,shiny:document.getElementById('combined-shiny').checked})&&!['lucky','xxl','xxs'].some(flag=>document.getElementById('combined-'+flag).checked);
   host.hidden=!show;field.hidden=show;
+  document.querySelector('.add-flow-search')?.classList.toggle('has-choice',show);
   if(!show)return;
   const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
   document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
@@ -949,21 +953,27 @@ function renderCombinedPokemonSummary(){
 }
 function changeCombinedPokemon(){
   if(combinedEditor?.entries?.length)return;
-  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;
+  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;document.querySelector('.add-flow-search')?.classList.remove('has-choice');
   document.getElementById('combined-identity').hidden=true;
   const input=document.getElementById('combined-name');input.focus();input.select();
 }
 function finishCombinedPokemonChoice(){
   const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
   if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
-  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
+  delete field.dataset.editing;closeWantsPicker(input);
+  if(combinedEditor&&!combinedEditor.entries.length&&!combinedEditor.priorityChosen){
+    const entry=_nameToSpriteEntry(input.value);
+    setCombinedPriority(window.PogoDomain.priorityValues.isSpecialTradeWant(entry)?'':'H');
+  }
+  renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
   if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
 }
 function openWantsAddEditor(opener=document.activeElement){
   openCombinedEditor(undefined,{returnFocus:opener});
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
   refreshCombinedGenderOptions();
-  setCombinedPriority(document.getElementById('wants-add-priority').value);
+  const requestedPriority=document.getElementById('wants-add-priority').value;
+  if(requestedPriority)setCombinedPriority(requestedPriority,true);
   finishCombinedPokemonChoice();
 }
 function setWantsAddPriority(priority){
@@ -971,14 +981,20 @@ function setWantsAddPriority(priority){
   document.querySelectorAll('[data-wants-add-priority]').forEach(button=>{const active=button.dataset.wantsAddPriority===input.value;button.className=`pb${active?' on '+input.value:''}`;button.setAttribute('aria-pressed',String(active));});
 }
 async function submitWantsAdd(){
-  const button=document.querySelector('.wants-add-form [type="submit"]');if(button.disabled)return;
-  const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
-  button.disabled=true;
-  try{
-    openWantsAddEditor(button);await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';closeWantsPicker(input);input.focus({preventScroll:true});}
-  }finally{button.disabled=false;}
+  const button=document.querySelector('.wants-add-form [type="submit"]');
+  if(!button.disabled)openWantsAddEditor(button);
 }
+function setCombinedSize(value){
+  document.getElementById('combined-xxl').checked=value==='xxl';
+  document.getElementById('combined-xxs').checked=value==='xxs';
+  refreshCombinedSize();renderCombinedPokemonSummary();renderCombinedBackgroundBatch();
+}
+function refreshCombinedSize(){
+  const xxl=document.getElementById('combined-xxl').checked,xxs=document.getElementById('combined-xxs').checked;
+  document.querySelectorAll('[name="combined-size"]').forEach(input=>{input.checked=!(xxl&&xxs)&&input.value===(xxl?'xxl':xxs?'xxs':'');});
+  document.getElementById('combined-size-error').hidden=!(xxl&&xxs);
+}
+
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
@@ -992,6 +1008,7 @@ function openCombinedEditor(index,options={}){
   combinedEditor.backgroundSource=entries?.[0]?.isBackgroundV2?accountSyncClone(backgroundOwnerRuntime?.repository.snapshot().entries.find(r=>BackgroundTransitions.recordKey(r)===entries[0].key)):null;
   variantClarificationDraft=null;setClarificationControlsLocked(false);
   document.querySelector('#combined-editor-modal form').classList.remove('clarification-copy-created');
+  document.querySelector('#combined-editor-modal form').classList.toggle('editing-existing',!!entries?.length);
   document.getElementById('combined-save').hidden=false;
   const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
   let entry=entries?.[0]||{};if(entries?.length===1&&!entry.isBackgroundV2){const saved=combinedSourceEntity(entry);if(saved?.values){const v=saved.values;entry={...entry,note:v.note||'',mod:v.variant||'',gender:v.gender||'',lucky:!!v.lucky,shiny:!!v.shiny,xxl:!!v.xxl,xxs:!!v.xxs,qty:v.quantity||1,mirror:!!v.mirror,sortOrder:v.sortOrder||0};}}
@@ -1004,6 +1021,7 @@ function openCombinedEditor(index,options={}){
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
+  refreshCombinedSize();
   combinedEditor.initialValues=Object.fromEntries(['mod','note','gender','shiny','lucky','xxl','xxs'].map(field=>{const input=document.getElementById('combined-'+field);return [field,input.type==='checkbox'?input.checked:input.value];}));
   refreshCombinedShinyAvailability();
   if(entry.isBackgroundV2)document.getElementById('combined-background').value=backgroundChoiceValue({id:entry.backgroundId,catalogId:entry.catalogId});
@@ -1141,7 +1159,7 @@ async function saveCombinedEditor(remove=false){
   if(!draft||button.disabled)return;
   const sessionCurrent=()=>draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.sessionGeneration===_sessionTransientGeneration;
   const current=()=>draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid;
-  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}};
+  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();error.scrollIntoView({block:'nearest'});error.focus({preventScroll:true});}};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -1154,7 +1172,7 @@ async function saveCombinedEditor(remove=false){
   if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
-  if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
+  if(changes.xxl&&changes.xxs)return fail('addFlow.sizeConflict');
   const priority=document.getElementById('combined-priority').value;
   const targetSection=window.PogoDomain.priorityValues.wantSectionKey({..._nameToSpriteEntry(name),...changes,p:priority});
   const unclassified=targetSection==='NEEDS_PRIORITY';
@@ -1228,7 +1246,7 @@ async function saveCombinedEditor(remove=false){
         }
       }else if(sides.includes(side)){
         const identity={surface:'my-list',lane:side==='lf'?'looking-for':'for-trade',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
-        if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))return fail('phase2.collision');
+        if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))return fail('addFlow.duplicate');
         mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues({...changes,p:side==='lf'&&priority!=='mixed'?priority:'',gender:changes.gender||_nameToSpriteEntry(name).gender||''})});
       }
     }
@@ -1237,6 +1255,7 @@ async function saveCombinedEditor(remove=false){
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
     if(!current()||!sessionCurrent())return;
     if(!remove)wantsCollapsedSections.delete(targetSection);
+    if(!draft.entries.length&&document.getElementById('wants-add-name').value===name)document.getElementById('wants-add-name').value='';
     closeModal('combined-editor-modal');renderMyList();
   }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
   finally{if(current()){draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}}
