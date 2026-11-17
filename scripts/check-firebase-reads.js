@@ -168,7 +168,9 @@ assert.ok(indexSource.includes('managedSessionCache.writeQueue(syncQueue||{})'),
   'Pending sync writes must pass through the owner-bound queue boundary');
 assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
   'The unowned legacy sync queue must not remain active');
-const backgroundBundle=!!localBackgroundContract||SOURCE_CALL_CONTRACT===SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7'];
+// These exact contracts use the reviewed bundled adapter, including its byte-for-byte prelude check.
+const backgroundBundle=!!localBackgroundContract||[SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7'],
+  SOURCE_CALL_CONTRACTS['7bd427439735fd96c25a86c8a70ffce58e966ddb']].includes(SOURCE_CALL_CONTRACT);
 if(backgroundBundle){
   const cacheSource=readFileSync(path.join(root,'js/domain/cacheAdapters.js'),'utf8').replace('})(window);',"})(typeof window!=='undefined'?window:globalThis);");
   assert.ok(readFileSync(path.join(root,'js/domain/backgroundPersistence.js'),'utf8').startsWith('// Owner-data adapter prelude: exact cacheAdapters.js source; checked by build-background-runtime.cjs.\n'+cacheSource+'\n// END OWNER-DATA ADAPTER PRELUDE\n'),'Owner-data bundle must preserve the exact cache adapter');
