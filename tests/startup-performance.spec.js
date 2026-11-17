@@ -60,8 +60,8 @@ for(const profile of profiles){
         firstPartyResourceCount:firstParty.length,
         firstPartyTransferredBytes:firstParty.reduce((total,entry)=>total+(entry.transferSize||entry.encodedBodySize||0),0),
         firstPartyDecodedBytes:firstParty.reduce((total,entry)=>total+(entry.decodedBodySize||0),0),
-        eagerFirstPartyScripts:firstParty.filter(entry=>entry.initiatorType==='script').length,
-        eagerScriptPaths:firstParty.filter(entry=>entry.initiatorType==='script').map(entry=>new URL(entry.name).pathname.split('/').slice(-3).join('/')),
+        eagerFirstPartyScripts:firstParty.filter(entry=>['script','link'].includes(entry.initiatorType)&&new URL(entry.name).pathname.endsWith('.js')).length,
+        eagerScriptPaths:firstParty.filter(entry=>['script','link'].includes(entry.initiatorType)&&new URL(entry.name).pathname.endsWith('.js')).map(entry=>new URL(entry.name).pathname.split('/').slice(-3).join('/')),
         signedInApplicationLoaded:firstParty.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         protectedRequested:window.__pogoStartup.protectedRequestedAt,
         appCheckStarted:window.__pogoStartup.appCheckStartedAt,
@@ -93,7 +93,8 @@ for(const profile of profiles){
         appCheckStartedAfterRequest:window.__pogoStartup.appCheckStartedAt>=request,
         readyAfterAppCheck:firstReady>=window.__pogoStartup.appCheckReadyAt,
         appCheckImports:resources.filter(entry=>/firebase-app-check\.js/.test(entry.name)).length,
-        featureScriptCount:resources.filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin&&!/\/js\/services\/traffic\.js(?:\?|$)/.test(entry.name)).length,
+        featureScriptPaths:resources.filter(entry=>['script','link'].includes(entry.initiatorType)&&new URL(entry.name).pathname.endsWith('.js')&&new URL(entry.name).origin===location.origin).map(entry=>new URL(entry.name).pathname),
+        featureScriptCount:resources.filter(entry=>['script','link'].includes(entry.initiatorType)&&new URL(entry.name).pathname.endsWith('.js')&&new URL(entry.name).origin===location.origin&&!/\/js\/services\/traffic\.js(?:\?|$)/.test(entry.name)).length,
         signedInApplicationLoaded:resources.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         maxLongTask:Math.max(0,...window.__startupLongTasks)
       };
@@ -105,6 +106,7 @@ for(const profile of profiles){
     // Existing-account Google adds seven capability-gated modules to the protected app;
     // the contained Safe-transfer candidate adds its reviewed domain and UI modules.
     // The shell permits only the isolated traffic sender, excluded from this app-feature count.
+    expect(new Set(protectedState.featureScriptPaths).size).toBe(protectedState.featureScriptPaths.length);
     expect(protectedState.featureScriptCount).toBeLessThanOrEqual(84);
     expect(protectedState.signedInApplicationLoaded).toBe(true);
     expect(protectedState.maxLongTask).toBeLessThanOrEqual(200);

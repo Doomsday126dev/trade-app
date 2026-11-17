@@ -209,12 +209,12 @@ test('set invariants hold for added wants, aliases, delivery order and duplicate
   assert.equal(forward.bindingFingerprint,backward.bindingFingerprint);
 });
 
-function controllerFixture({loader,copy=async()=>{}}={}){
+function controllerFixture({loader,copy=async()=>{},revalidateBeforeCopy=false,planner=plan}={}){
   const qualified=plan(snapshot([source('trainer-a',[{intent:'lf',category:'wishlist',name:'Pikachu'}])]));
   let live=plain(qualified.binding);
   const controller=safe.createController({
     loadSnapshot:loader||(async()=>snapshot([source('trainer-a',[{intent:'lf',category:'wishlist',name:'Pikachu'}])])),
-    plan:value=>plan(value),currentBinding:()=>live,copy
+    plan:value=>planner(value),currentBinding:()=>live,copy,revalidateBeforeCopy
   });
   return{controller,qualified,get live(){return live;},set live(value){live=value;}};
 }
@@ -248,6 +248,39 @@ test('clipboard failure preserves only the qualified current command for manual 
   const expected=fixture.controller.snapshot().plan.commands[0].value;
   const result=await fixture.controller.copyPart(0),state=fixture.controller.snapshot();
   assert.equal(result.status,'copy_failed');assert.equal(state.phase,'copy_failed');assert.equal(state.manualCommand,expected);assert.equal(state.error.code,'clipboard-unavailable');
+});
+
+test('copy-time read and planning failures cannot expose the old command for manual copy',async()=>{
+  const initial=snapshot([source('trainer-a',[{intent:'lf',category:'wishlist',name:'Pikachu'}])]);
+  for(const scenario of ['read-throws','read-rejects','plan-throws','structured-failure']){
+    let planningCount=0,copies=0;
+    const loader=(_request,{reason})=>{
+      if(reason!=='copy')return initial;
+      if(scenario==='read-throws')throw Error('unexpected source failure');
+      if(scenario==='read-rejects')return Promise.reject(Error('unexpected source rejection'));
+      return initial;
+    };
+    const planner=value=>{
+      if(++planningCount>1&&scenario==='plan-throws')throw Error('unavailable planner');
+      if(planningCount>1&&scenario==='structured-failure')return {ok:false,executable:false};
+      return plan(value);
+    };
+    const fixture=controllerFixture({loader,planner,revalidateBeforeCopy:true,copy:async()=>{copies++;}});
+    await fixture.controller.start({binding:plain(fixture.qualified.binding),selection});
+    assert.equal(fixture.controller.snapshot().phase,'ready',scenario);
+    const result=await fixture.controller.copyPart(0),state=fixture.controller.snapshot();
+    assert.equal(result.status,'stale',scenario);assert.equal('value' in result,false,scenario);
+    assert.equal(state.phase,'invalidated',scenario);assert.equal(state.plan,null,scenario);assert.equal(state.manualCommand,'',scenario);
+    assert.equal(copies,0,scenario);
+  }
+});
+test('only a clipboard failure after successful revalidation offers manual copy',async()=>{
+  let reads=0,copies=0;
+  const fixture=controllerFixture({revalidateBeforeCopy:true,loader:()=>{reads++;return snapshot([source('trainer-a',[{intent:'lf',category:'wishlist',name:'Pikachu'}])]);},copy:async()=>{copies++;throw Error('clipboard denied');}});
+  await fixture.controller.start({binding:plain(fixture.qualified.binding),selection});
+  const command=fixture.controller.snapshot().plan.commands[0].value;
+  const result=await fixture.controller.copyPart(0);
+  assert.equal(reads,2);assert.equal(copies,1);assert.equal(result.status,'copy_failed');assert.equal(fixture.controller.snapshot().manualCommand,command);
 });
 
 test('displayed, computed and copied scope share one exact versioned binding',async()=>{
