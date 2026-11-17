@@ -16,8 +16,8 @@ if(runtimeSourceSha)assert.match(runtimeSourceSha,/^[0-9a-f]{40}$/,'PAGES_RUNTIM
 // Known rollback revisions select their reviewed historical contract. A future
 // runtime may use the current contract only when its parsed reads, handler
 // hashes, paths, gates and call counts still match it exactly.
-// Without a Pages runtime SHA, validate the control checkout's reviewed .123/.125/.126/.127/.128/.129 app
-// against its reviewed .123 contract. Pages always supplies the target SHA;
+// Without a Pages runtime SHA, select the reviewed contract for a recognized release marker.
+// Pages always supplies the target SHA;
 // this local-only selection must not downgrade an explicitly identified target.
 const localReleaseSource=runtimeSourceSha?'':readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
 const localRecoveryContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))';/.test(localReleaseSource)
@@ -27,7 +27,8 @@ const localControlContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-09-23
 const localCatalogueContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))';/.test(localReleaseSource)
   ?SOURCE_CALL_CONTRACTS['ef0d1fcaa26827564fb29c1029ba6e9a77d6923f']:null;
 const localBackgroundContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.(?:174|175|176))';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['8384284d4483a4abcebcc9756e9ecaf92c2893d7']:null;
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
+const localAudit177Contract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-11-17\.177';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['7bd427439735fd96c25a86c8a70ffce58e966ddb']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localAudit177Contract||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);

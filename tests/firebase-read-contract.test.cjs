@@ -15,8 +15,9 @@ const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim(
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const localBackground=requestedRuntimeSha===audit177||/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.(?:174|175|176))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const current=requestedRuntimeSha||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
+const localAudit177=!requestedRuntimeSha&&/\bconst RELEASE_ID='2026-11-17\.177';/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localBackground=localAudit177||requestedRuntimeSha===audit177||/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.(?:174|175|176))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const current=requestedRuntimeSha||(localAudit177?audit177:null)||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
@@ -138,11 +139,14 @@ test('audit177 pins the exact changed diagnostic handler, preserving all read bo
   const archive=execFileSync('git',['archive',audit177,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
   execFileSync('tar',['-xf','-','-C',dir],{input:archive});
   const identified=check(dir,audit177);assert.equal(identified.status,0,identified.stderr);
+  const implicit=checkWithoutRuntimeSha(dir);assert.equal(implicit.status,0,implicit.stderr);
+  assert.deepEqual(JSON.parse(implicit.stdout).directReads,JSON.parse(identified.stdout).directReads);
   assert.notEqual(check(dir,'a'.repeat(40)).status,0);
   assert.match(check(dir,previous).stderr,/runLoginHealthCheck: path bindings or execution semantics changed/);
   const bundlePath=path.join(dir,'js/domain/backgroundPersistence.js'),originalBundle=fs.readFileSync(bundlePath,'utf8');
   fs.writeFileSync(bundlePath,originalBundle.replace('// Owner-data adapter prelude:','// Missing required owner-data adapter prelude:'));
   assert.match(check(dir,audit177).stderr,/Owner-data bundle must preserve the exact cache adapter/);
+  assert.match(checkWithoutRuntimeSha(dir).stderr,/Owner-data bundle must preserve the exact cache adapter/);
   fs.writeFileSync(bundlePath,originalBundle);
   change(dir,'js/app/application.js',"if(cur&&auth?.currentUser)rows.push(healthRow('Community size'","if(cur)rows.push(healthRow('Community size'");
   assert.match(check(dir,audit177).stderr,/runLoginHealthCheck: path bindings or execution semantics changed/);
