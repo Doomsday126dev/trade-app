@@ -5555,15 +5555,21 @@ async function serviceWorkerHealth(){
   let version='unknown';
   try{
     const res=await fetch(`./sw.js?health=${Date.now()}`,{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const text=await res.text();
-    const m=text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
+    const m=text.match(/const\s+RELEASE\s*=\s*['"](\d{4}-\d{2}-\d{2}\.\d+)['"]/)||text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
     if(m)version=m[1];
   }catch(e){details.push(`version fetch failed: ${e.message||e}`);}
-  if(!registration)return{status:version==='unknown'?'Not registered':'Fresh app shell',kind:'warn',detail:`Service worker version: ${version}. A first reload may install it.`};
-  return{status:'Registered',kind:'ok',detail:`Service worker version: ${version}${details.length?`; ${details.join('; ')}`:''}`};
+  if(!registration)return{status:version==='unknown'?'Not registered':'Fresh app shell',kind:'warn',detail:`Published worker release: ${version}. A first reload may install it.`};
+  return{status:'Registered',kind:'ok',detail:`Published worker release: ${version}${details.length?`; ${details.join('; ')}`:''}`};
 }
-async function openLoginHealthCheck(){
-  openModal('login-health-modal');
+async function openLoginHealthCheck(mode){
+  const opener=document.getElementById('login-help-trigger');
+  if(mode==='guide'){
+    openModal('signin-guide-modal',{returnFocus:opener,initialFocus:'#signin-guide-title'});
+    return;
+  }
+  openModal('login-health-modal',{returnFocus:mode==='details'?opener:undefined,initialFocus:'#login-health-title'});
   setLoginHealthCopyStatus('');
   await runLoginHealthCheck();
 }
@@ -5576,7 +5582,7 @@ async function runLoginHealthCheck(){
   const sessionState=auth?.currentUser?'Signed in':'Not signed in';
   const reportInfo={
     generatedAt:new Date().toLocaleString(),
-    appVersion:APP_VERSION,
+    appVersion:window.__POGO_RELEASE_ID||APP_VERSION,
     pageOrigin:location.origin||'file://',
     pagePath:location.protocol==='file:'?'local file':(location.pathname||'/'),
     networkStatus:navigator.onLine?'Online':'Offline',
@@ -5591,7 +5597,7 @@ async function runLoginHealthCheck(){
     safeError:safeVisibleLoginError()
   };
   const rows=[
-    healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
+    healthRow('App version',reportInfo.appVersion,`Page: ${location.href}`,'info'),
     healthRow(cur?'Current trainer':'Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
   ];
   renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Firebase Auth session','Checking...',cur?'After sign-in, this should say Signed in. If it does not, edits may stay local to this device.':'On the login screen, Not signed in is normal before entering a PIN.','info'),healthRow('Login data read','Waiting...','Before login this checks the public username directory; after login it checks protected user data.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
@@ -5649,7 +5655,7 @@ async function runLoginHealthCheck(){
     const offerCount=Object.values(allData.offers||{}).reduce((n,bucket)=>n+Object.keys(bucket||{}).length,0);
     const tradeCount=Object.keys(allData.trades||{}).length;
     const trainerKind=trainers>=150?'warn':trainers>=100?'info':'ok';
-    rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades.`,trainerKind));
+    if(cur&&auth?.currentUser)rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades.`,trainerKind));
     const showAdminPanel=!!(cur&&allData.users?.[cur]?.isAdmin);
     if(showAdminPanel){
       const scaleSize=Object.keys(spriteScaleCache||{}).length;
@@ -10565,6 +10571,7 @@ let requestSubmission=null,requestFormGeneration=0;
 function showRequestForm(){
   document.getElementById('login-pg').querySelector('.lcard').style.display='none';
   document.getElementById('req-form-card').style.display='block';
+  document.getElementById('request-heading')?.focus();
 }
 function hideRequestForm(){
   requestFormGeneration++;
@@ -10575,6 +10582,7 @@ function hideRequestForm(){
   document.getElementById('req-username').value='';
   document.getElementById('req-note').value='';
   document.getElementById('req-err').textContent='';
+  document.getElementById('login-request-trigger')?.focus();
 }
 async function submitRequest(){
   const generation=requestFormGeneration,requestOwner=cur,requestUid=auth?.currentUser?.uid||'';

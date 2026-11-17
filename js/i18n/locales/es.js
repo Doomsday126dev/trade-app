@@ -1,6 +1,15 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({
+    "loginHelp.title":"Ayuda para iniciar sesión",
+    "loginHelp.pin":"¿Olvidaste tu PIN?",
+    "loginHelp.pinBody":"Pide a un administrador de la comunidad que restablezca tu PIN. Conservarás tu perfil y tu lista de intercambios.",
+    "loginHelp.pending":"¿Esperas la aprobación?",
+    "loginHelp.pendingBody":"Un administrador te dará tu primer PIN cuando apruebe la solicitud. Si ya pediste acceso, consulta con un administrador antes de volver a solicitarlo.",
+    "loginHelp.google":"¿Usas Google para acceder a esta lista?",
+    "loginHelp.googleBody":"Elige la cuenta de Google que vinculaste a este perfil. Si se te pide que crees otro perfil, cancela e inicia sesión con tu nombre de usuario y tu PIN de siempre.",
+    "loginHelp.details":"Detalles técnicos",
+    "loginHelp.requestIntro":"Cuando se apruebe tu solicitud, un administrador te dará un PIN de seis dígitos para tu primer inicio de sesión.",
     "clarify.notice":"Algunas variantes no están especificadas.",
     "clarify.action":"Precisar variante",
     "clarify.dismiss":"Cerrar",

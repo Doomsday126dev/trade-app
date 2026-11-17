@@ -167,7 +167,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <h1 class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div style="margin-top:4px"></div>
     <h2 style="font-size:20px;font-weight:700;margin-bottom:5px" data-i18n="setup.title">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6" data-i18n="setup.subtitle">One-time setup. Takes about five minutes.</p>
@@ -187,7 +187,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div id="login-pg" data-bootstrap-pending="true" aria-busy="true">
   <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings" disabled data-bootstrap-disabled="true"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <h1 class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></h1>
     <section id="preauth-pg" class="login-bootstrap-status" aria-labelledby="preauth-title" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
       <h1 class="preauth-title" id="preauth-title" data-i18n="app.preparing">Preparing your trade list</h1>
       <p class="preauth-detail sr-only" id="preauth-detail" data-i18n="app.preparingDetail">Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.</p>
@@ -219,17 +219,16 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="provider-onboarding-actions"><button type="button" class="btn btn-primary" id="google-onboarding-submit" onclick="checkGoogleOnboarding()" data-i18n="providerOnboarding.check">Check handle</button><button type="button" class="btn" onclick="cancelGoogleOnboarding()" data-i18n="providerOnboarding.cancel">Cancel</button></div>
       <p class="provider-onboarding-status" id="google-onboarding-status" role="status" aria-live="polite"></p>
     </section>
-    <div class="lnote"><span data-i18n="login.newUserHelp">New here? Request access first. An admin will provide a unique six-digit first-use PIN after approval.</span><br><span data-i18n="login.existingUserHelp">Already approved? Ask an admin for the identity-preserving PIN reset if needed.</span></div>
-    <button type="button" class="login-help-link" onclick="openLoginHealthCheck()" data-i18n="login.trouble" disabled data-bootstrap-disabled="true">Having trouble signing in?</button>
-    <button type="button" class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess" disabled data-bootstrap-disabled="true">Request access to join</button>
+    <button type="button" class="req-link" id="login-request-trigger" onclick="showRequestForm()" data-i18n="login.requestAccess" disabled data-bootstrap-disabled="true">Request access to join</button>
+    <button type="button" class="login-help-link" id="login-help-trigger" onclick="openLoginHealthCheck('guide')" data-i18n="login.trouble" disabled data-bootstrap-disabled="true">Having trouble signing in?</button>
   </div>
 
   <!-- REQUEST FORM -->
   <div class="lcard ui-container ui-container-narrow card-content" id="req-form-card" style="display:none">
     <button class="req-back" onclick="hideRequestForm()" data-i18n="request.back">← Back to sign in</button>
     <div id="req-form-inner">
-      <div class="llogo">🙋 <span data-i18n="request.title">Request access</span></div>
-      <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
+      <h1 class="llogo" id="request-heading" tabindex="-1"><span data-i18n="request.title">Request access</span></h1>
+      <div class="lsub" data-i18n="loginHelp.requestIntro">After approval, an admin will give you a six-digit PIN to sign in for the first time.</div>
       <div class="field"><label for="req-username" data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
       <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(Optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
       <button type="button" id="request-send" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
@@ -594,10 +593,29 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </div>
 </div>
 
+<!-- SIGN-IN HELP -->
+<div class="ov" id="signin-guide-modal" role="dialog" aria-modal="true" aria-labelledby="signin-guide-title">
+  <div class="modal signin-guide">
+    <h2 id="signin-guide-title" tabindex="-1" data-i18n="loginHelp.title">Sign-in help</h2>
+    <dl>
+      <dt data-i18n="loginHelp.pin">Forgot your PIN?</dt>
+      <dd data-i18n="loginHelp.pinBody">Ask a community admin to reset your PIN. You’ll keep your trainer profile and trade list.</dd>
+      <dt data-i18n="loginHelp.pending">Waiting for approval?</dt>
+      <dd data-i18n="loginHelp.pendingBody">A community admin will give you your first PIN after approval. If you’ve already requested access, check with an admin before requesting again.</dd>
+      <dt data-i18n="loginHelp.google">Use Google for this list?</dt>
+      <dd data-i18n="loginHelp.googleBody">Choose the same Google account you connected to this trainer. If Google asks you to create a new trainer, cancel and sign in with your existing username and PIN.</dd>
+    </dl>
+    <div class="signin-guide-actions">
+      <button type="button" class="bpri" onclick="closeModal('signin-guide-modal')" data-i18n="common.done">Done</button>
+      <button type="button" class="bghost" onclick="openLoginHealthCheck('details')" data-i18n="loginHelp.details">Technical details</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN HEALTH CHECK MODAL -->
 <div class="ov" id="login-health-modal" role="dialog" aria-modal="true" aria-labelledby="login-health-title">
   <div class="modal health-modal">
-    <h3 id="login-health-title">🩺 <span data-i18n="health.title">Sign-in health check</span></h3>
+    <h3 id="login-health-title" tabindex="-1">🩺 <span data-i18n="health.title">Sign-in health check</span></h3>
     <div class="health-sub" data-i18n="health.description">Use this on a device that cannot sign in. It checks the app build, Firebase reachability, user access, and this browser’s service-worker cache.</div>
     <div class="health-grid" id="login-health-grid"></div>
     <div class="health-actions">

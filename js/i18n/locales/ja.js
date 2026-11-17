@@ -1,6 +1,15 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({
+    "loginHelp.title":"ログインのヘルプ",
+    "loginHelp.pin":"PINを忘れた場合",
+    "loginHelp.pinBody":"コミュニティの管理者にPINの再設定を依頼してください。トレーナープロフィールと交換リストはそのまま残ります。",
+    "loginHelp.pending":"承認待ちの場合",
+    "loginHelp.pendingBody":"承認後、管理者から初回ログイン用のPINが届きます。申請済みの場合は、再申請する前に管理者に確認してください。",
+    "loginHelp.google":"Googleでこのリストにアクセスする場合",
+    "loginHelp.googleBody":"このトレーナーに連携したGoogleアカウントを選んでください。新しいトレーナーの作成を求められた場合はキャンセルし、これまでのユーザー名とPINでログインしてください。",
+    "loginHelp.details":"技術情報",
+    "loginHelp.requestIntro":"承認後、管理者から初回ログイン用の6桁のPINが届きます。",
     "clarify.notice":"バリエーションが未指定のリクエストがあります。",
     "clarify.action":"バリエーションを指定",
     "clarify.dismiss":"閉じる",

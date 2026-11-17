@@ -1,6 +1,15 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({
+    "loginHelp.title":"Hilfe bei der Anmeldung",
+    "loginHelp.pin":"PIN vergessen?",
+    "loginHelp.pinBody":"Bitte einen Community-Admin, deine PIN zurückzusetzen. Dein Trainerprofil und deine Tauschliste bleiben erhalten.",
+    "loginHelp.pending":"Du wartest auf die Freigabe?",
+    "loginHelp.pendingBody":"Nach der Freigabe bekommst du deine erste PIN von einem Community-Admin. Wenn du den Zugang bereits beantragt hast, frage dort nach, bevor du ihn erneut beantragst.",
+    "loginHelp.google":"Mit Google auf diese Liste zugreifen?",
+    "loginHelp.googleBody":"Wähle das Google-Konto, das du mit diesem Trainerprofil verknüpft hast. Wenn du ein neues Profil erstellen sollst, brich ab und melde dich mit deinem bisherigen Benutzernamen und deiner PIN an.",
+    "loginHelp.details":"Technische Details",
+    "loginHelp.requestIntro":"Nach der Freigabe bekommst du von einem Admin eine sechsstellige PIN für die erste Anmeldung.",
     "clarify.notice":"Einige Varianten sind nicht angegeben.",
     "clarify.action":"Variante präzisieren",
     "clarify.dismiss":"Schließen",

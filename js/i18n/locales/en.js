@@ -1,6 +1,15 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    "loginHelp.title":"Sign-in help",
+    "loginHelp.pin":"Forgot your PIN?",
+    "loginHelp.pinBody":"Ask a community admin to reset your PIN. You’ll keep your trainer profile and trade list.",
+    "loginHelp.pending":"Waiting for approval?",
+    "loginHelp.pendingBody":"A community admin will give you your first PIN after approval. If you’ve already requested access, check with an admin before requesting again.",
+    "loginHelp.google":"Use Google for this list?",
+    "loginHelp.googleBody":"Choose the same Google account you connected to this trainer. If Google asks you to create a new trainer, cancel and sign in with your existing username and PIN.",
+    "loginHelp.details":"Technical details",
+    "loginHelp.requestIntro":"After approval, an admin will give you a six-digit PIN to sign in for the first time.",
     "clarify.notice":"Some variants are unspecified.",
     "clarify.action":"Clarify variant",
     "clarify.dismiss":"Dismiss",
