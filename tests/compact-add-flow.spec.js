@@ -26,4 +26,3 @@ for(const width of [1440,390,320]){
   expect(await page.evaluate(()=>productDeclarations().entries.find(e=>e.name==='Bulbasaur').p)).toBe('H');
  });
 }
-
