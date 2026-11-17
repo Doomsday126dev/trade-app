@@ -42,7 +42,20 @@ test('script concurrent callers await actual execution and failed loads retry',a
   scripts[0].events.error();await assert.rejects(first,/Failed to load/);assert.equal(scripts.length,0);
   const retry=ctx.loadScript('a.js');assert.equal(scripts.length,1);scripts[0].events.load();await retry;await ctx.loadScript('a.js');assert.equal(scripts.length,1);
 });
-test('feature loader uses same ordered in-flight loader as public and locale paths',async()=>{
-  const {ctx,scripts}=scriptHarness();ctx.featureAssetSources=()=>['one.js','two.js'];vm.runInContext(section(html,'  async function loadFeatureScripts(){','  async function loadPublicShareScripts()'),ctx);
-  const first=ctx.loadFeatureScripts(),second=ctx.loadFeatureScripts();assert.equal(scripts.length,2);assert.ok(scripts.every(s=>s.async===false));for(const s of scripts)s.events.load();await Promise.all([first,second]);
+test('feature loader stops before dependants after failed prerequisite, then recovers in-page',async()=>{
+  const {ctx,scripts}=scriptHarness();ctx.featureAssetSources=()=>['firebaseClient.js','application.js'];
+  vm.runInContext('const preloadedScripts=new Set();'+section(html,'  async function loadFeatureScripts(){','  async function loadPublicShareScripts()'),ctx);
+  const first=ctx.loadFeatureScripts();
+  const scriptNodes=()=>scripts.filter(s=>s.src);
+  assert.equal(scriptNodes().length,1);assert.match(scriptNodes()[0].src,/firebaseClient/);
+  scriptNodes()[0].events.error();await assert.rejects(first,/Failed to load/);assert.equal(scriptNodes().length,0);
+  const retry=ctx.loadFeatureScripts();assert.equal(scriptNodes().length,1);scriptNodes()[0].events.load();await Promise.resolve();
+  assert.equal(scriptNodes().length,2);assert.match(scriptNodes()[1].src,/application/);scriptNodes()[1].events.load();await retry;
+  const {loaded}=ctx;assert.ok(scriptNodes().every(s=>s.async===false));
+});
+test('full app readiness rejects missing initialization and failed boot sentinels',async()=>{
+  const ctx=vm.createContext({window:{}});vm.runInContext(section(html,'  async function confirmFullAppReady(){','  async function loadPublicShareScripts()'),ctx);
+  await assert.rejects(ctx.confirmFullAppReady(),/did not start/);
+  ctx.window.__pogoAppReadyPromise=Promise.resolve(true);await assert.rejects(ctx.confirmFullAppReady(),/did not complete/);
+  ctx.window.__pogoBootComplete=true;assert.equal(await ctx.confirmFullAppReady(),true);
 });

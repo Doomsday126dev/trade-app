@@ -11507,7 +11507,7 @@ function openModal(id,options={}){
       ev.preventDefault();available[next].focus();return;
     }
     const first=focusables[0],last=focusables[focusables.length-1];
-    if(ev.shiftKey&&document.activeElement===first){last.focus();ev.preventDefault();}
+    if(ev.shiftKey&&(document.activeElement===first||!focusables.includes(document.activeElement))){last.focus();ev.preventDefault();}
     else if(!ev.shiftKey&&document.activeElement===last){first.focus();ev.preventDefault();}
   };
   document.addEventListener('keydown',_modalKeyHandler);

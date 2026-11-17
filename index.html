@@ -1037,6 +1037,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
   const loadedScripts=new Set();
   const loadingScripts=new Map();
+  const preloadedScripts=new Set();
   let shellLocalePromise=null;
   let featureLoadPromise=null;
   let publicShareLoadPromise=null;
@@ -1168,7 +1169,22 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     }).map(node=>node.getAttribute('src'));
   }
   async function loadFeatureScripts(){
-    await Promise.all(featureAssetSources().map(src=>loadScript(src,{ordered:true})));
+    const sources=featureAssetSources();
+    // Fetch ahead without executing dependants after a failed prerequisite.
+    for(const src of sources){
+      const absolute=absoluteScriptUrl(src);
+      if(loadedScripts.has(absolute)||preloadedScripts.has(absolute))continue;
+      const hint=document.createElement('link');hint.rel='preload';hint.as='script';hint.href=absolute;
+      document.head.appendChild(hint);preloadedScripts.add(absolute);
+    }
+    for(const src of sources)await loadScript(src,{ordered:true});
+  }
+  async function confirmFullAppReady(){
+    const ready=window.__pogoAppReadyPromise;
+    if(!ready||typeof ready.then!=='function')throw Object.assign(new Error('App initialization did not start'),{code:'startup/app-unavailable'});
+    await ready;
+    if(window.__pogoBootComplete!==true)throw Object.assign(new Error('App initialization did not complete'),{code:'startup/app-not-ready'});
+    return true;
   }
   async function loadPublicShareScripts(){
     const publicPaths=[
@@ -1213,7 +1229,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     })]).then(loadFeatureScripts).then(()=>{
       window.__pogoStartup.featureScriptsReadyAt=performance.now();
       try{performance.mark('pogo:feature-scripts-ready')}catch{}
-      return window.__pogoAppReadyPromise||true;
+      return confirmFullAppReady();
     }).catch(error=>{featureLoadPromise=null;shellFailure(error);throw error;});
     return featureLoadPromise;
   }
