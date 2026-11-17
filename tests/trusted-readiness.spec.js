@@ -215,7 +215,10 @@ test('empty flag search sets never emit a prefilter-only search block',async({pa
   for(const value of Object.values(values))if(value)for(const key of ['LUCKY','SHINY','XXL','XXS'])expect(value).not.toHaveProperty(key);
 });
 
-test('safe owner journey covers the pre-trusted product contract',async({page})=>{
+test('safe owner journey covers the pre-trusted product contract',async({page,baseURL})=>{
+  const origin=new URL(baseURL).origin;
+  await page.context().route('**/*',route=>new URL(route.request().url()).origin===origin&&['GET','HEAD'].includes(route.request().method())?route.continue():route.abort());
+  await require('./helpers/usability-fixture.cjs').installLoginTransport(page);
   await page.setViewportSize({width:1440,height:900});
   await page.goto(`./?trusted-readiness=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await expect(page.locator('#login-pg')).toBeVisible();
@@ -233,8 +236,12 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await capture(page,'trusted-journey-my-list-1440x900');
 
   await page.locator('#wants-add-name').fill('Squirtle');
-  await page.locator('[data-wants-add-priority="L"]').click();
   await page.locator('.wants-add-form [type="submit"]').click();
+  await expect(page.locator('#combined-editor-modal')).toHaveClass(/open/);
+  await expect(page.locator('#combined-priority')).toHaveValue('H');
+  expect(await page.evaluate(()=>productDeclarations().entries.some(entry=>entry.name==='Squirtle'))).toBe(false);
+  await require('./helpers/current-want-controls.cjs').priority(page,'L');
+  await page.locator('#combined-save').click();
   await expect(page.locator('.myrow[data-name="Squirtle"]')).toBeVisible();
   const addedId=await page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').ref.entityId);
   await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('L');
