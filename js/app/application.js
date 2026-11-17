@@ -1035,7 +1035,9 @@ function ensureAddFlowStyles(){
 #combined-editor-modal .combined-size-field{padding:0;border:0;margin:18px 0 0}
 .combined-size-field legend{font-weight:650;font-size:14px;margin-bottom:8px}
 #combined-editor-modal .combined-size-field .combined-priorities{display:flex}
-#combined-editor-modal .combined-size-field label{flex:1}
+#combined-editor-modal .combined-size-field label{flex:1 1 auto}
+#combined-editor-modal .combined-size-field label:not(:first-child){flex-shrink:0}
+#combined-editor-modal .combined-size-field label span{min-width:0;max-width:100%;overflow-wrap:anywhere;text-align:center}
 #combined-editor-modal #combined-error:empty{display:none}
 #combined-editor-modal #combined-error:not(:empty){padding:12px;border:1px solid var(--border);border-radius:8px;scroll-margin:90px}
 #combined-editor-modal .mact{grid-template-columns:1fr 2fr;justify-content:end}
