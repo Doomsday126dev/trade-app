@@ -80,7 +80,11 @@ async function openFromSettingsTools(page){
   await expect(page.locator('#stb-trainer-grid .stb-trainer-chip:not(.on)')).toHaveCount(0);
 }
 
-async function waitForPhase(page,phase){await expect(page.locator('#stb-candidate')).toHaveAttribute('data-phase',phase);}
+async function waitForPhase(page,phase){
+  // A previous hidden candidate retains its phase while the next modal launch is queued.
+  await expect(page.locator('#safe-transfer-modal')).toBeVisible();
+  await expect(page.locator('#stb-candidate')).toHaveAttribute('data-phase',phase);
+}
 
 test('actual Settings route refreshes exact group sources, resolves aliases, and revalidates visible and direct copy actions',async({page})=>{
   await bootCandidate(page);
