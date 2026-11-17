@@ -10,7 +10,7 @@ const standard=require('../data/reviewed-variant-status.json').records.filter(r=
 expect(standard).toHaveLength(17);
 const costumes=require('../data/costume-sprite-catalog.json').entries.filter(r=>['Gimmighoul (10th Anniversary Coin)','Pikachu (Blue Shirt (Citrus))','Pikachu (PokeXciting Taiwan)','Pikachu (PokeXciting Philippines)'].includes(r.names[0]));
 async function artRoutes(page){for(const r of require('../data/catalogue-sources/staged-art.json').records.filter(r=>r.no&&standard.some(s=>(s.artId||s.no)===r.no))){const file=path.resolve(__dirname,'..',r.asset);expect(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')).toBe(r.sha256);await page.route(r.url,route=>route.fulfill({path:file,contentType:'image/png'}));}}
-async function choose(page,name){await page.locator('#wants-add-name').fill(costumes.some(r=>r.names[0]===name)?name.slice(0,-4):name);await page.getByRole('option',{name,exact:true}).click();await page.keyboard.press('Escape');await page.locator('.add-advanced-toggle').click();await controls.priority(page,'H');}
+async function choose(page,name){await page.locator('#wants-add-name').fill(costumes.some(r=>r.names[0]===name)?name.slice(0,-4):name);await page.getByRole('option',{name,exact:true}).click();await expect(page.locator('#combined-editor-modal')).toBeVisible();await controls.priority(page,'H');}
 
 for(const shiny of [false,true])test(`follow-up exact normal and Shiny wants remain selectable, persist and export (${shiny})`,async({page},info)=>{
  test.setTimeout(120000);await normalFixture(page);await artRoutes(page);

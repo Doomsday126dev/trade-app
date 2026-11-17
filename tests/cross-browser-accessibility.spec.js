@@ -483,6 +483,10 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(add).toHaveAttribute('aria-expanded','false');
     await expect(add).not.toHaveAttribute('aria-activedescendant',/.+/);
     await expect(add).not.toHaveValue('');
+    await expect(page.locator('#combined-editor-modal')).toBeVisible();
+    await expect(page.locator('#combined-priorities input:checked')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#combined-editor-modal')).toBeHidden();
     await expect(add).toBeFocused();
 
     const legacyRoundTrip=await page.evaluate(()=>{
