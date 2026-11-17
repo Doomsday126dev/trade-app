@@ -2614,8 +2614,9 @@ outline:2px solid var(--field-focus-color,var(--ac2));outline-offset:-1px;box-sh
 }
 
 /* Quiet direct removal, with the same comfortable target as the options button. */
-.wants-remove-direct::before{display:none}
+#combined-list .wants-remove-direct{position:relative}
+#combined-list .wants-remove-direct::before,#combined-list .wants-remove-direct::after{content:"";display:block;position:absolute;width:13px;height:1.5px;background:currentColor;mask:none;-webkit-mask:none;transform:rotate(45deg)}
+#combined-list .wants-remove-direct::after{transform:rotate(-45deg)}
 #combined-list .wants-remove-direct{width:44px;min-width:44px;height:44px;min-height:44px;flex-shrink:0}
-.wants-remove-direct svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
 .wants-remove-direct:disabled{opacity:.4;cursor:wait}
 #wants-remove-selected{color:var(--danger)}
