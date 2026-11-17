@@ -720,7 +720,7 @@ function renderWantsPicker(input){
 }
 function chooseWantsPicker(input,index){
   const item=input._pickerRows?.[index];if(!item)return;
-  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name'){refreshCombinedGenderOptions();finishCombinedPokemonChoice();}else input.focus({preventScroll:true});
+  input.value=item.name;closeWantsPicker(input);if(input.id==='combined-name'){refreshCombinedGenderOptions();finishCombinedPokemonChoice();}else if(input.id==='wants-add-name'){openWantsAddEditor(input);}else input.focus({preventScroll:true});
 }
 function prepareWantsCatalog(){
   if(!wantsPickerItems.length){
@@ -1024,12 +1024,13 @@ function ensureAddFlowStyles(){
   if(document.getElementById('add-flow-styles'))return;
   const style=document.createElement('style');style.id='add-flow-styles';
   style.textContent=`/* Add flow: shared canonical editor, responsive search/review workspace. */
-#combined-editor-modal .combined-editor{width:960px}
-.add-flow-layout{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.6fr);gap:28px}
-.add-flow-search{border-right:1px solid var(--border);padding-right:28px;min-width:0}
+#combined-editor-modal .combined-editor{width:500px}
+.add-flow-layout{display:block}
+.add-flow-search{min-width:0}
+#combined-editor-modal .add-flow-search.has-choice{display:none}
+#combined-editor-modal .add-flow-search:not(.has-choice)+.add-flow-preferences{margin-top:20px}
 .add-flow-preferences{min-width:0}
 .add-flow-intro{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
-#combined-editor-modal .add-flow-search #combined-name-field[hidden]{display:block!important}
 #combined-editor-modal .add-flow-search #combined-name-field{position:relative}
 #combined-editor-modal .add-flow-search input{max-width:100%;box-sizing:border-box}
 #combined-editor-modal .combined-size-field{padding:0;border:0;margin:18px 0 0}
@@ -1041,7 +1042,7 @@ function ensureAddFlowStyles(){
 #combined-editor-modal #combined-error:empty{display:none}
 #combined-editor-modal #combined-error:not(:empty){padding:12px;border:1px solid var(--border);border-radius:8px;scroll-margin:90px}
 #combined-editor-modal .mact{grid-template-columns:1fr 2fr;justify-content:end}
-@media(min-width:701px){#combined-editor-modal .mact{display:flex}#combined-editor-modal .mact button{min-width:130px}#combined-editor-modal #combined-change{display:none}}
+@media(min-width:701px){#combined-editor-modal .mact{display:flex}#combined-editor-modal .mact button{min-width:130px}}
 @media(max-width:700px){
  #combined-editor-modal .combined-editor{width:500px}
  .add-flow-layout{display:block}.add-flow-search{padding:0;border:0}
