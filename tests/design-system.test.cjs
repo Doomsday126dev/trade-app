@@ -137,12 +137,12 @@ test('unified wanted list replaces category navigation with a single primary lis
   assert.match(html,/function wantSectionLabel\(/);
 });
 
-test('application chrome and wanted rows use an explicit edit action with removal in its dialog',()=>{
+test('application chrome and wanted rows use an explicit edit action with direct and dialog removal',()=>{
   assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
   const rows=html.slice(html.indexOf('template.innerHTML=`<article class="myrow wants-row'),html.indexOf('function refreshCombinedSearch'));
   assert.match(rows,/class="myrow-edit"/);assert.match(rows,/uiIconMarkup\('sliders'/);
-  assert.doesNotMatch(rows,/class="myrow-remove"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
+  assert.match(rows,/class="myrow-remove wants-remove-direct"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
   assert.match(html,/setAttribute\('aria-label',i18nCore.t\('myList.removeEntry'/);
   assert.match(rows,/openCombinedEditor/);assert.match(rows,/myrow-active-traits/);
   assert.match(css,/\.myrow-edit,\.myrow-remove\{[^}]*min-width:48px[^}]*min-height:44px/);

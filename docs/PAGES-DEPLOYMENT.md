@@ -378,3 +378,24 @@ fixtures now use current supported controls, exact normalized catalogue labels,
 real CSV downloads, and the established Events 44px touch/layout contract.
 Representative failures were reproduced on unchanged .174 before maintenance;
 no tests were skipped and the comparison-copy assertions remain intact.
+
+## Direct and bulk My List removal candidate .176
+
+Candidate `2026-11-16.176` adds a quiet X next to each row's options control,
+with a 44px touch target and exact-variant accessible label. Selection mode
+adds Select all matching and Remove selected. Confirmation names every selected
+variant and states that Undo is unavailable. It never expands a selection to
+other versions of the same species.
+
+Background removal validates all selected keys and snapshot revisions before
+one journaled replacement. Canonical removal uses the current mutation authority
+and explicit expected generation/revision. Mixed-store operations stop on failure
+and accurately describe possible partial or pending progress. Canonical changes
+are identified as saved on-device rather than claiming remote acknowledgement.
+No legacy bulk-delete or whole-list undo path is reused.
+
+Qualification uses disposable synthetic transport only, including cancellation,
+exact-variant isolation, mixed-store deletion, filtered selection, offline journal
+recovery, stale-data refusal, keyboard focus, and narrow mobile touch targets.
+The production deploy still requires separate owner approval and protected gate;
+no runtime/control tags or production state are changed by preparing this candidate.

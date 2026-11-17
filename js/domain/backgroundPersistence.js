@@ -167,6 +167,18 @@ function createEditorAdapter({repository,uid,catalogForId,currentUid}){
    if(added.length)accept(await repository.replace([...s.entries,...added]));
    check(owner);return{added:added.length,skipped:values.length-added.length};
   },
+  async removeMany(owner,targets){
+   check(owner);const s=repository.snapshot();
+   if(s.pending)throw Error('pending-intent');
+   if(!Array.isArray(targets)||!targets.length)throw Error('invalid-records');
+   const ids=new Set();
+   for(const target of targets){
+    if(!target||target.revision!==s.head||!s.entries.some(r=>key(r)===target.key))throw Error('stale-entry');
+    ids.add(target.key);
+   }
+   accept(await repository.replace(s.entries.filter(r=>!ids.has(key(r)))));
+   check(owner);return{removed:ids.size};
+  },
   async remove(owner,id,revision){check(owner);const s=repository.snapshot();if(s.head!==revision||!s.entries.some(r=>key(r)===id))throw Error('stale-entry');accept(await repository.replace(s.entries.filter(r=>key(r)!==id)));check(owner);},
   exportData:()=>repository.exportData(),importData:text=>repository.importData(text),shareReference:()=>repository.shareReference()
  });

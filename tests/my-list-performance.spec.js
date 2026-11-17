@@ -96,7 +96,7 @@ test.describe('isolated My List scale profile',()=>{
       await expect(page.locator('#combined-priorities')).toBeVisible();
       await expect(page.locator('#combined-list .myrow-edit')).toHaveCount(Math.min(count,120));
       await expect(page.locator('#wants-remove')).toBeVisible();
-      await expect(page.locator('#combined-list .myrow-remove')).toHaveCount(0);
+      await expect(page.locator('#combined-list .myrow-remove')).toHaveCount(Math.min(count,120));
       await page.evaluate(()=>closeModal('combined-editor-modal'));
       measurements.push({...measurement,filterMs:filter.ms,rowUpdateMs:update.ms});
     }

@@ -727,5 +727,13 @@
     ,"backgroundBatch.addOne":"Add 1 background"
     ,"backgroundBatch.addMany":"Add {count} backgrounds"
     ,"backgroundBatch.add":"Add backgrounds"
+    ,"removal.selectMatching":"Select all matching"
+    ,"removal.selected":"Remove selected"
+    ,"removal.confirm":"Remove these list entries ({count})? Only the exact variants below will be removed. Other versions of these Pokémon will stay. This cannot be undone here."
+    ,"removal.working":"Removing selected entries…"
+    ,"removal.queued":"Removal saved on this device. Check sync status for confirmation across devices."
+    ,"removal.done":"Removed entries: {count}."
+    ,"removal.changed":"Your list changed. Review the remaining entries before trying again; earlier removals may already be saved."
+    ,"removal.incomplete":"Removal could not finish. Some changes may already be saved or waiting to sync. Check sync status and the remaining list before trying again."
 });
 })(window);

@@ -509,7 +509,7 @@ function renderCombinedList(model=productDeclarations()){
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list${Number(dex)===850&&/sizzlipede \(dynamax\)/i.test(e.name)?' sprite-sizzlipede-home':''}">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId,shiny:e.shiny===true}):''}${maxPresentationMarkup(e)}</span>
       <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,{returnFocus:this})">${escHtml(maxPresentationName(e.dn))}${e.shiny?`<span class="sr-only"> ${escHtml(i18nCore.t('share.flagShiny'))}</span>`:''}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
-      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,{returnFocus:this})" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button>
+      <div class="mctrl"><button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group,{returnFocus:this})" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}</button><button type="button" class="myrow-remove wants-remove-direct" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group,this)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:productShareDescription(e)}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}"></button>
 </div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
 
@@ -567,10 +567,74 @@ function updateWantsSearch(host,entries,label,options={}){
   const details=host.querySelector('details');if(details)details.open=!!wasOpen;
   host.querySelectorAll('[data-contextual-copy]').forEach(button=>{button.dataset.wantsCopy=button.dataset.contextualCopy;});
 }
-function removeWantsGroup(key){
-  const entry=combinedGroups().find(group=>combinedKey(group[0])===key)?.[0];
-  if(!entry||!confirm(i18nCore.t('myList.confirmRemove',{name:entry.dn})))return;
-  openCombinedEditor(key);saveCombinedEditor(true);
+let wantsRemovalBusy=false;
+function removeWantsGroup(key,opener){return removeWantsGroups([key],opener);}
+function removeSelectedWants(opener){
+  return removeWantsGroups(combinedGroups().filter(group=>group.some(entry=>combinedSelection.has(productSelectionKey(entry)))).map(group=>combinedKey(group[0])),opener);
+}
+function selectAllMatchingWants(){
+  if(wantsRemovalBusy)return;
+  const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
+  for(const group of combinedGroups()){
+    const entry=group[0];
+    if(wantsPriorityFilter!=='ALL'&&entry.p!==wantsPriorityFilter)continue;
+    if(query&&!normalizeAcText(entry.name+' '+productShareDescription(entry)).includes(query))continue;
+    for(const item of group)combinedSelection.add(productSelectionKey(item));
+  }
+  wantsSelectionMode=true;renderMyList();
+}
+async function removeWantsGroups(keys,opener){
+  if(wantsRemovalBusy||!keys.length)return;
+  const wanted=new Set(keys),groups=combinedGroups().filter(group=>wanted.has(combinedKey(group[0])));
+  if(groups.length!==wanted.size)return;
+  // Confirm exact displayed variants, never expand a species into other variants.
+  const message=i18nCore.t('removal.confirm',{count:groups.length})+'\n\n'+groups.map(group=>'• '+productShareDescription(group[0])).join('\n');
+  if(!confirm(message))return;
+  const owner=cur,uid=auth?.currentUser?.uid,generation=_sessionTransientGeneration;
+  const before=JSON.stringify(productDeclarations().entries),backgrounds=[],mutations=[],seen=new Set();
+  const current=()=>cur===owner&&auth?.currentUser?.uid===uid&&_sessionTransientGeneration===generation;
+  const status=document.getElementById('wants-removal-status');
+  const tell=key=>{if(current()){status.hidden=false;status.textContent=i18nCore.t(key,{count:groups.length});}};
+  wantsRemovalBusy=true;tell('removal.working');
+  document.querySelectorAll('.wants-remove-direct,#wants-remove-selected').forEach(button=>button.disabled=true);
+  try{
+    for(const group of groups)for(const entry of group){
+      if(entry.isBackgroundV2){if(!backgrounds.some(item=>item.key===entry.key))backgrounds.push({key:entry.key,revision:entry.revision});continue;}
+      for(const source of [entry,...entry.aliases||[]]){
+        const entity=combinedSourceEntity(source);
+        if(!entity||entity.ownerUid!==uid)throw Error('source-changed');
+        if(seen.has(entity.entityId))continue;seen.add(entity.entityId);
+        mutations.push({kind:'delete',entityType:'tradeEntry',entityId:entity.entityId,expectedGeneration:entity.generation,expectedRevision:entity.revision});
+      }
+    }
+    const authority=await accountSyncMutationAuthority();
+    if(!current())return;
+    if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))throw Error('authority-unavailable');
+    if(before!==JSON.stringify(productDeclarations().entries))throw Error('source-changed');
+    // Two independent stores cannot commit atomically. Stop on any failure;
+    // completed entries disappear, and remaining selection stays available.
+    const runtime=backgroundOwnerRuntime,adapter=backgroundV2PrototypeAdapter;
+    if(backgrounds.length){
+      if(!adapter||!runtime||runtime.uid!==uid)throw Error('background-unavailable');
+      await adapter.removeMany(uid,backgrounds);
+      if(!current())return;
+      void publishSavedBackgroundChange(runtime,authority.controller).catch(()=>{});
+    }
+    if(!current())return;
+    if(!accountSyncAuthorityCurrent(authority))throw Error('authority-unavailable');
+    if(mutations.length){const result=await applyAccountSyncTradeMutations(mutations,authority.controller);if(!result?.ok)throw Error(result?.error?.code||'remove-failed');}
+    if(!current())return;
+    for(const group of groups)for(const entry of group)combinedSelection.delete(productSelectionKey(entry));
+    tell(mutations.length?'removal.queued':'removal.done');
+  }catch(error){tell(['source-changed','stale-entry','account-sync/source-revision-conflict','account-sync/lifecycle-conflict'].includes(error?.message)?'removal.changed':'removal.incomplete');}
+  finally{
+    wantsRemovalBusy=false;
+    if(current()){
+      renderMyList();
+      document.querySelectorAll('.wants-remove-direct,#wants-remove-selected').forEach(button=>button.disabled=false);
+      if(opener&&(!opener.isConnected||opener.hidden))(document.querySelector('#combined-list .wants-remove-direct')||document.getElementById('wants-add-name'))?.focus({preventScroll:true});
+    }
+  }
 }
 function refreshCombinedSearch(model=productDeclarations()){
   const selected=model.entries.filter(entry=>combinedSelection.has(productSelectionKey(entry)));
@@ -582,6 +646,7 @@ function refreshCombinedSearch(model=productDeclarations()){
   const scopeNote=document.getElementById('wants-selection-filter-note');
   scopeNote.hidden=!outside;scopeNote.textContent=outside?i18nCore.t('workflow.selectedOtherPriorities',{count:outside}):'';
   document.getElementById('wants-selection-share').hidden=!selected.length;
+  document.getElementById('wants-remove-selected').hidden=!selected.length;
   document.getElementById('tab-mylist').classList.toggle('wants-selecting',wantsSelectionMode||selected.length>0);
   const selectedHost=document.getElementById('combined-search');selectedHost.hidden=!selected.length;
   if(selected.length)updateWantsSearch(selectedHost,selected,i18nCore.t('phase2.selection'));else selectedHost.replaceChildren();
@@ -2587,7 +2652,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   combinedSelection.clear();combinedOwner='';combinedEditor=null;wantsSelectionMode=false;wantsPriorityFilter='ALL';wantsSectionLimits.clear();wantsCollapsedSections.clear();wantsCustomScopes.clear();productShareSnapshot=[];productShareOwner='';productShareScope='full';
-  document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
+  document.getElementById('wants-removal-status').hidden=true;document.getElementById('wants-removal-status').textContent='';document.getElementById('wants-selection-tools').hidden=true;document.getElementById('wants-select-toggle').hidden=false;document.getElementById('combined-selected-count').textContent='';document.getElementById('tab-mylist').classList.remove('wants-selecting');
   document.getElementById('wants-find').hidden=true;document.getElementById('wants-combine').open=false;closeWantsListTools();
   for(const id of ['combined-list','combined-search','wants-custom-search','product-share-preview'])document.getElementById(id)?.replaceChildren();
   for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
