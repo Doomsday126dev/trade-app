@@ -21,3 +21,15 @@ test('public sign-in help and request flow work with keyboard at phone width',as
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
   if(process.env.SIGNIN_REVIEW_DIR)await page.screenshot({path:process.env.SIGNIN_REVIEW_DIR+'/phone-entry.png'});
 });
+
+test('setup heading, URL input and skip stay inside the setup card after HTML parsing',async({page})=>{
+  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+  const config=source.slice(source.indexOf('<!-- CONFIG -->'),source.indexOf('<!-- LOGIN -->'));
+  await page.setContent(config);
+  const card=page.locator('#config-pg > .lcard');
+  await expect(card).toHaveCount(1);
+  await expect(card.locator('h1.llogo')).toHaveCount(1);
+  await expect(card.locator('#fb-url')).toHaveCount(1);
+  await expect(card.locator('.skip')).toHaveCount(1);
+  await expect(card.locator('h2[data-i18n="setup.title"]')).toHaveCount(1);
+});

@@ -20,3 +20,11 @@ test('worker report identifies the published release, not the installed worker v
   vm.runInNewContext(cut('async function serviceWorkerHealth','async function openLoginHealthCheck'),ctx);
   const found=await ctx.serviceWorkerHealth();assert.equal(found.status,'Registered');assert.match(found.detail,/Published worker release: \d{4}-\d{2}-\d{2}\.\d+/);
 });
+
+test('setup and login logo headings have matching closing tags',()=>{
+  for(const marker of ['<!-- CONFIG -->','<!-- LOGIN -->']){
+    const tail=html.slice(html.indexOf(marker));
+    const heading=tail.match(/<h1 class="llogo">([\s\S]*?)<\/(h1|div)>/);
+    assert.ok(heading,marker);assert.equal(heading[2],'h1',marker+' must not close its card');
+  }
+});
