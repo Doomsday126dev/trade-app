@@ -6,7 +6,7 @@
 <!-- Firebase uses assigned RTDB shard hosts; analytics is restricted to its exact collector. -->
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://recaptchaenterprise.googleapis.com https://apis.google.com https://accounts.google.com https://trade-list-a4297.firebaseapp.com https://*.firebaseio.com wss://*.firebaseio.com https://us-central1-trade-list-a4297.cloudfunctions.net https://www.google.com https://www.recaptcha.net https://recaptcha.google.com https://raw.githubusercontent.com https://doomsday126dev-trade.goatcounter.com">
 <meta name="pogo-traffic-endpoint" content="https://doomsday126dev-trade.goatcounter.com/count">
-<script src="js/services/traffic.js?v=2026-11-16.176" defer></script>
+<script src="js/services/traffic.js?v=2026-11-17.177" defer></script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111316">
@@ -16,7 +16,7 @@
 <link rel="apple-touch-icon" href="assets/brand/apri-icon-180.png" sizes="180x180">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-11-16.176';
+window.__POGO_RELEASE_ID='2026-11-17.177';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:true,
@@ -88,7 +88,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-11-16.176">
+<link rel="stylesheet" href="css/app.css?v=2026-11-17.177">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -128,7 +128,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <article id="privacy-pg" class="privacy-page ui-container ui-container-standard" lang="en" aria-labelledby="privacy-title" hidden>
   <header class="privacy-page-header">
-    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
+    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-17.177" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
     <a class="btn btn-secondary" href="./">Back to app</a>
   </header>
   <div class="privacy-page-intro">
@@ -167,7 +167,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <h1 class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-17.177" alt="" aria-hidden="true"> <span>PoGo Trades</span></h1>
     <div style="margin-top:4px"></div>
     <h2 style="font-size:20px;font-weight:700;margin-bottom:5px" data-i18n="setup.title">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6" data-i18n="setup.subtitle">One-time setup. Takes about five minutes.</p>
@@ -187,7 +187,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div id="login-pg" data-bootstrap-pending="true" aria-busy="true">
   <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings" disabled data-bootstrap-disabled="true"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
   <div class="lcard ui-container ui-container-narrow card-content">
-    <div class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <h1 class="llogo"><img class="brand-mark lg" src="assets/brand/apri.webp?v=2026-11-17.177" alt="" aria-hidden="true"> <span>PoGo Trades</span></h1>
     <section id="preauth-pg" class="login-bootstrap-status" aria-labelledby="preauth-title" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
       <h1 class="preauth-title" id="preauth-title" data-i18n="app.preparing">Preparing your trade list</h1>
       <p class="preauth-detail sr-only" id="preauth-detail" data-i18n="app.preparingDetail">Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.</p>
@@ -219,17 +219,16 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="provider-onboarding-actions"><button type="button" class="btn btn-primary" id="google-onboarding-submit" onclick="checkGoogleOnboarding()" data-i18n="providerOnboarding.check">Check handle</button><button type="button" class="btn" onclick="cancelGoogleOnboarding()" data-i18n="providerOnboarding.cancel">Cancel</button></div>
       <p class="provider-onboarding-status" id="google-onboarding-status" role="status" aria-live="polite"></p>
     </section>
-    <div class="lnote"><span data-i18n="login.newUserHelp">New here? Request access first. An admin will provide a unique six-digit first-use PIN after approval.</span><br><span data-i18n="login.existingUserHelp">Already approved? Ask an admin for the identity-preserving PIN reset if needed.</span></div>
-    <button type="button" class="login-help-link" onclick="openLoginHealthCheck()" data-i18n="login.trouble" disabled data-bootstrap-disabled="true">Having trouble signing in?</button>
-    <button type="button" class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess" disabled data-bootstrap-disabled="true">Request access to join</button>
+    <button type="button" class="req-link" id="login-request-trigger" onclick="showRequestForm()" data-i18n="login.requestAccess" disabled data-bootstrap-disabled="true">Request access to join</button>
+    <button type="button" class="login-help-link" id="login-help-trigger" onclick="openLoginHealthCheck('guide')" data-i18n="login.trouble" disabled data-bootstrap-disabled="true">Having trouble signing in?</button>
   </div>
 
   <!-- REQUEST FORM -->
   <div class="lcard ui-container ui-container-narrow card-content" id="req-form-card" style="display:none">
     <button class="req-back" onclick="hideRequestForm()" data-i18n="request.back">← Back to sign in</button>
     <div id="req-form-inner">
-      <div class="llogo">🙋 <span data-i18n="request.title">Request access</span></div>
-      <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
+      <h1 class="llogo" id="request-heading" tabindex="-1"><span data-i18n="request.title">Request access</span></h1>
+      <div class="lsub" data-i18n="loginHelp.requestIntro">After approval, an admin will give you a six-digit PIN to sign in for the first time.</div>
       <div class="field"><label for="req-username" data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
       <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(Optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
       <button type="button" id="request-send" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
@@ -246,7 +245,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <!-- APP -->
 <div id="app" style="display:none">
   <div class="topbar">
-    <div class="logo"><img class="brand-mark" src="assets/brand/apri.webp?v=2026-11-16.176" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
+    <div class="logo"><img class="brand-mark" src="assets/brand/apri.webp?v=2026-11-17.177" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="topbar-r">
       <div class="topbar-sync-wrap">
         <div class="sync-row" id="sync-pill" data-i18n-title="status.details" title="Open save status details" onclick="openSyncDetail()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSyncDetail()}" role="button" tabindex="0"><div class="sync-dot" id="sdot" aria-hidden="true"></div><span class="sync-lbl" id="slbl">—</span></div>
@@ -447,15 +446,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
       <div class="frow">
         <div class="ac-wrap search-lookup"><input type="text" class="ac-input field-control" id="wants-add-name" required autocomplete="off" onfocus="prepareWantsCatalog()" data-i18n-placeholder="myList.searchPlaceholder" data-i18n-aria-label="myList.searchPlaceholder" placeholder="Search Pokémon…" aria-label="Search Pokémon"></div>
-        <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
-          <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
-          <input type="hidden" id="wants-add-priority" value="">
-          <button type="button" class="pb" data-wants-add-priority="H" title="High" data-i18n-title="phase2.topWant" aria-pressed="false" onclick="setWantsAddPriority('H')">H</button>
-          <button type="button" class="pb" data-wants-add-priority="M" title="Medium" data-i18n-title="priority.medium" aria-pressed="false" onclick="setWantsAddPriority('M')">M</button>
-          <button type="button" class="pb" data-wants-add-priority="L" title="Low" data-i18n-title="priority.low" aria-pressed="false" onclick="setWantsAddPriority('L')">L</button>
-        </div>
-        <div class="add-actions"><button type="submit" class="bsave" data-i18n="myList.addAction">Add</button></div>
-        <button type="button" class="add-advanced-toggle" onclick="openWantsAddEditor(this)"><span data-i18n="wantEditor.options">Options</span><span class="caret">▾</span></button>
+        <input type="hidden" id="wants-add-priority" value="">
+        <div class="add-actions"><button type="submit" class="bsave" data-i18n="addFlow.continue">Continue</button></div>
       </div>
     </form>
     <div class="wants-list-toolbar">
@@ -594,14 +586,33 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </div>
 </div>
 
+<!-- SIGN-IN HELP -->
+<div class="ov" id="signin-guide-modal" role="dialog" aria-modal="true" aria-labelledby="signin-guide-title">
+  <div class="modal signin-guide">
+    <h2 id="signin-guide-title" tabindex="-1" data-i18n="loginHelp.title">Sign-in help</h2>
+    <dl>
+      <dt data-i18n="loginHelp.pin">Forgot your PIN?</dt>
+      <dd data-i18n="loginHelp.pinBody">Ask a community admin to reset your PIN. You’ll keep your trainer profile and trade list.</dd>
+      <dt data-i18n="loginHelp.pending">Waiting for approval?</dt>
+      <dd data-i18n="loginHelp.pendingBody">A community admin will give you your first PIN after approval. If you’ve already requested access, check with an admin before requesting again.</dd>
+      <dt data-i18n="loginHelp.google">Use Google for this list?</dt>
+      <dd data-i18n="loginHelp.googleBody">Choose the same Google account you connected to this trainer. If Google asks you to create a new trainer, cancel and sign in with your existing username and PIN.</dd>
+    </dl>
+    <div class="signin-guide-actions">
+      <button type="button" class="bpri" onclick="closeModal('signin-guide-modal')" data-i18n="common.done">Done</button>
+      <button type="button" class="bghost" onclick="openLoginHealthCheck('details')" data-i18n="loginHelp.details">Technical details</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN HEALTH CHECK MODAL -->
 <div class="ov" id="login-health-modal" role="dialog" aria-modal="true" aria-labelledby="login-health-title">
   <div class="modal health-modal">
-    <h3 id="login-health-title">🩺 <span data-i18n="health.title">Sign-in health check</span></h3>
+    <h3 id="login-health-title" tabindex="-1">🩺 <span data-i18n="health.title">Sign-in health check</span></h3>
     <div class="health-sub" data-i18n="health.description">Use this on a device that cannot sign in. It checks the app build, Firebase reachability, user access, and this browser’s service-worker cache.</div>
     <div class="health-grid" id="login-health-grid"></div>
     <div class="health-actions">
-      <button class="bghost health-danger" onclick="clearLoginLocalCache()" data-i18n="health.clearCache">Clear local cache and reload</button>
+      <button class="bghost health-danger" onclick="clearLoginLocalCache()" data-i18n="health.clearCache">Repair app files and reload</button>
       <div style="display:flex;gap:8px">
         <button class="bghost" onclick="copyLoginHealthReport()" data-i18n="health.copyReport">Copy report</button>
         <button class="bghost" onclick="runLoginHealthCheck()" data-i18n="health.recheck">Recheck</button>
@@ -723,21 +734,33 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 </div>
 
 <div class="ov" id="combined-editor-modal" role="dialog" aria-modal="true" aria-labelledby="combined-editor-title">
-  <form class="modal combined-editor" onsubmit="event.preventDefault();saveCombinedEditor()">
+  <form class="modal combined-editor" onsubmit="event.preventDefault();submitCombinedEditor()">
     <h3 id="combined-editor-title" data-i18n="phase2.edit">Trade intent</h3>
+    <div class="add-flow-layout">
+      <section class="add-flow-search">
+        <p class="add-flow-intro" data-i18n="addFlow.choose">Choose the Pokémon you’re looking for.</p>
+    <label id="combined-name-field"><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" oninput="refreshCombinedGenderOptions()" required autocomplete="off"></label>
+        <p class="share-privacy-note" data-i18n="addFlow.review">Review your preferences before adding. Nothing is saved yet.</p>
+      </section>
+      <section class="add-flow-preferences">
     <div id="combined-identity" class="combined-identity" hidden><span id="combined-identity-art" class="combined-identity-art" aria-hidden="true"></span><div class="combined-identity-copy"><strong id="combined-identity-name"></strong><span id="combined-identity-form"></span><span id="combined-identity-release" hidden></span></div><button type="button" id="combined-change" class="btn btn-ghost" onclick="changeCombinedPokemon()" data-i18n="wantEditor.change">Change</button></div>
     <section id="variant-clarification-panel" class="variant-clarification-panel" hidden></section>
-    <label id="combined-name-field"><span data-i18n="wantEditor.pokemon">Pokémon</span><input class="field-control" id="combined-name" oninput="refreshCombinedGenderOptions()" required autocomplete="off"></label>
-    <fieldset class="combined-priority-field"><legend data-i18n="myList.priority">Priority</legend><select class="field-control" id="combined-priority" hidden aria-hidden="true" tabindex="-1"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select><span id="combined-priorities" class="combined-priorities" role="radiogroup" data-i18n-aria-label="myList.priority" aria-label="Priority"><label><input type="radio" name="combined-priority-choice" value="" onchange="setCombinedPriority(this.value)"><span data-i18n="wantEditor.noPriority">None</span></label><label><input type="radio" name="combined-priority-choice" value="H" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.high">High</span></label><label><input type="radio" name="combined-priority-choice" value="M" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.medium">Medium</span></label><label><input type="radio" name="combined-priority-choice" value="L" onchange="setCombinedPriority(this.value)"><span data-i18n="priority.low">Low</span></label></span></fieldset>
-    <fieldset class="wants-special-fields"><legend><span data-i18n="wantEditor.preferences">Preferences</span><span class="combined-optional" data-i18n="wantEditor.optional">Optional</span></legend><div class="combined-checks"><label><input type="checkbox" id="combined-shiny" onchange="refreshCombinedShinyAvailability()" aria-describedby="combined-shiny-hint"><span data-i18n="share.flagShiny">Shiny</span></label><label><input type="checkbox" id="combined-lucky" onchange="renderCombinedBackgroundBatch()"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl" onchange="renderCombinedBackgroundBatch()">XXL</label><label><input type="checkbox" id="combined-xxs" onchange="renderCombinedBackgroundBatch()">XXS</label></div><p id="combined-shiny-hint" class="share-privacy-note" role="status" hidden></p></fieldset>
+    <fieldset class="combined-priority-field"><legend data-i18n="myList.priority">Priority</legend><select class="field-control" id="combined-priority" hidden aria-hidden="true" tabindex="-1"><option value="" data-i18n="workflow.noPriority">No priority · special want</option><option value="H" data-i18n="priority.high">High</option><option value="M" data-i18n="priority.medium">Medium</option><option value="L" data-i18n="priority.low">Low</option></select><span id="combined-priorities" class="combined-priorities" role="radiogroup" data-i18n-aria-label="myList.priority" aria-label="Priority"><label><input type="radio" name="combined-priority-choice" value="" onchange="setCombinedPriority(this.value,true)"><span data-i18n="wantEditor.noPriority">None</span></label><label><input type="radio" name="combined-priority-choice" value="H" onchange="setCombinedPriority(this.value,true)"><span data-i18n="priority.high">High</span></label><label><input type="radio" name="combined-priority-choice" value="M" onchange="setCombinedPriority(this.value,true)"><span data-i18n="priority.medium">Medium</span></label><label><input type="radio" name="combined-priority-choice" value="L" onchange="setCombinedPriority(this.value,true)"><span data-i18n="priority.low">Low</span></label></span></fieldset>
+    <p class="share-privacy-note" data-i18n="addFlow.priorityHelp">How much do you want it?</p>
+    <fieldset class="wants-special-fields"><legend data-i18n="wantEditor.preferences">Preferences</legend><div class="combined-checks"><label><input type="checkbox" id="combined-shiny" onchange="refreshCombinedShinyAvailability()" aria-describedby="combined-shiny-hint"><span data-i18n="share.flagShiny">Shiny only</span></label></div><p id="combined-shiny-hint" class="share-privacy-note" role="status" hidden></p></fieldset>
+    <fieldset class="combined-size-field"><legend data-i18n="addFlow.size">Size</legend><div class="combined-priorities"><label><input type="radio" name="combined-size" value="" onchange="setCombinedSize(this.value)"><span data-i18n="addFlow.any">Any</span></label><label><input type="radio" name="combined-size" value="xxl" onchange="setCombinedSize(this.value)"><span>XXL</span></label><label><input type="radio" name="combined-size" value="xxs" onchange="setCombinedSize(this.value)"><span>XXS</span></label></div><input type="checkbox" id="combined-xxl" hidden><input type="checkbox" id="combined-xxs" hidden><p id="combined-size-error" role="status" hidden data-i18n="addFlow.sizeConflict">This saved entry has both sizes. Choose one size before saving.</p></fieldset>
+    <details id="combined-preferences"><summary data-i18n="addFlow.details">Specific form or details</summary>
+      <div class="combined-checks"><label><input type="checkbox" id="combined-lucky" onchange="renderCombinedPokemonSummary();renderCombinedBackgroundBatch()"><span data-i18n="addFlow.lucky">Lucky trade</span></label></div><p class="share-privacy-note" data-i18n="addFlow.luckyHelp">A desired outcome, not a guarantee.</p>
       <div id="combined-background-field" hidden><label for="combined-background" id="combined-background-label" data-i18n="share.backgrounds">Backgrounds</label><select class="field-control" id="combined-background" onchange="renderCombinedBackgroundHelp()"></select><small id="combined-background-help" class="share-privacy-note"></small></div>
-    <details id="combined-preferences"><summary data-i18n="wantEditor.morePreferences">More preferences</summary>
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160" oninput="renderCombinedBackgroundBatch()"></label>
       <label><span data-i18n="wantEditor.genderPreference">Gender preference</span><small class="combined-optional" data-i18n="wantEditor.optional">Optional</small><select class="field-control" id="combined-gender" onchange="refreshCombinedGenderOptions()" aria-describedby="combined-gender-hint"><option value="" data-i18n="wantEditor.anyGender">Any gender</option><option value="f">♀</option><option value="m">♂</option></select></label><p id="combined-gender-hint" class="share-privacy-note" role="status" hidden></p>
 
       <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
+      <p class="share-privacy-note" data-i18n="addFlow.noteHelp">Notes are visible when you publish your list.</p>
     </details>
-    <p id="combined-error" role="alert"></p>
+      </section>
+    </div>
+    <p id="combined-error" role="alert" tabindex="-1"></p>
     <div class="mact"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" id="combined-close" class="btn btn-secondary" onclick="cancelCombinedEditor()" data-i18n="common.cancel">Cancel</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="common.save">Save</button></div>
   </form>
 </div>
@@ -910,95 +933,95 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-11-16.176"></script>
-<script src="js/domain/productLimits.js?v=2026-11-16.176"></script>
-<script src="js/domain/favoriteCapabilities.js?v=2026-11-16.176"></script>
-<script src="js/domain/favoritePickerModel.js?v=2026-11-16.176"></script>
-<script src="js/domain/priorities.js?v=2026-11-16.176"></script>
-<script src="js/ui/badges.js?v=2026-11-16.176"></script>
-<script src="js/domain/username.js?v=2026-11-16.176"></script>
-<script src="js/domain/requestAccess.js?v=2026-11-16.176"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-11-16.176"></script>
-<script src="js/domain/priorityValues.js?v=2026-11-16.176"></script>
-<script src="js/domain/scheduleDates.js?v=2026-11-16.176"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-11-16.176"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-11-16.176"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-11-16.176"></script>
-<script src="js/domain/safeTransferRestoration.js?v=2026-11-16.176"></script>
-<script src="js/domain/searchStrings.js?v=2026-11-16.176"></script>
-<script src="js/ui/stringHtml.js?v=2026-11-16.176"></script>
-<script src="js/ui/safeTransferCandidate.js?v=2026-11-16.176"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-11-16.176"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-11-16.176"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-11-16.176"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-11-16.176"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-11-16.176"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-11-16.176"></script>
-<script src="js/domain/fuzzyText.js?v=2026-11-16.176"></script>
-<script src="js/domain/autocompleteText.js?v=2026-11-16.176"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-11-16.176"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-11-16.176"></script>
-<script src="js/domain/relativeTime.js?v=2026-11-16.176"></script>
-<script src="js/domain/clientRelease.js?v=2026-11-16.176"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-11-16.176"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-11-16.176"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-11-16.176"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-11-16.176"></script>
-<script src="js/domain/eventPresentation.js?v=2026-11-16.176"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-11-16.176"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-11-16.176" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-11-16.176"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-11-16.176"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-11-16.176"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-11-16.176"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-11-16.176"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-11-16.176"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-11-16.176" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-11-16.176"></script>
-<script src="js/utils/textSafety.js?v=2026-11-16.176"></script>
-<script src="js/ui/stringPanels.js?v=2026-11-16.176"></script>
-<script src="js/ui/emptyState.js?v=2026-11-16.176"></script>
-<script src="js/i18n/locales/en.js?v=2026-11-16.176"></script>
-<script src="js/i18n/locales/ja.js?v=2026-11-16.176"></script>
-<script src="js/i18n/locales/es.js?v=2026-11-16.176"></script>
-<script src="js/i18n/locales/de.js?v=2026-11-16.176"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-11-16.176"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-11-16.176"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-11-16.176"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-11-16.176"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-11-16.176"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-11-16.176"></script>
-<script src="js/i18n/core.js?v=2026-11-16.176"></script>
-<script src="js/services/firebaseClient.js?v=2026-11-16.176"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-11-16.176"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-11-16.176" data-pogo-provider-public-capability></script>
-<script src="js/services/favoriteResolverClient.js?v=2026-11-16.176"></script>
-<script src="js/services/favoriteWriteTransport.js?v=2026-11-16.176"></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-11-16.176"></script>
-<script src="js/data/subscriptionManager.js?v=2026-11-16.176"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-11-16.176"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-11-16.176"></script>
-<script src="js/data/currentUserRepository.js?v=2026-11-16.176"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-11-16.176"></script>
-<script src="js/data/publicShareRepository.js?v=2026-11-16.176"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-11-16.176"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-11-16.176"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-11-16.176"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-11-16.176"></script>
-<script src="js/data/favoriteAdditionRepository.js?v=2026-11-16.176"></script>
-<script src="js/data/accountSyncController.js?v=2026-11-16.176"></script>
-<script src="js/data/favoriteAdditions.js?v=2026-11-16.176"></script>
-<script src="js/data/favoriteRecoveryPreview.js?v=2026-11-16.176"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-11-16.176"></script>
-<script src="js/app/favoritePicker.js?v=2026-11-16.176"></script>
-<script src="js/domain/backgroundPersistence.js?v=2026-11-16.176"></script>
-<script src="js/app/application.js?v=2026-11-16.176"></script>
+<script src="data.js?v=2026-11-17.177"></script>
+<script src="js/domain/productLimits.js?v=2026-11-17.177"></script>
+<script src="js/domain/favoriteCapabilities.js?v=2026-11-17.177"></script>
+<script src="js/domain/favoritePickerModel.js?v=2026-11-17.177"></script>
+<script src="js/domain/priorities.js?v=2026-11-17.177"></script>
+<script src="js/ui/badges.js?v=2026-11-17.177"></script>
+<script src="js/domain/username.js?v=2026-11-17.177"></script>
+<script src="js/domain/requestAccess.js?v=2026-11-17.177"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-11-17.177"></script>
+<script src="js/domain/priorityValues.js?v=2026-11-17.177"></script>
+<script src="js/domain/scheduleDates.js?v=2026-11-17.177"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-11-17.177"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-11-17.177"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-11-17.177"></script>
+<script src="js/domain/safeTransferRestoration.js?v=2026-11-17.177"></script>
+<script src="js/domain/searchStrings.js?v=2026-11-17.177"></script>
+<script src="js/ui/stringHtml.js?v=2026-11-17.177"></script>
+<script src="js/ui/safeTransferCandidate.js?v=2026-11-17.177"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-11-17.177"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-11-17.177"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-11-17.177"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-11-17.177"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-11-17.177"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-11-17.177"></script>
+<script src="js/domain/fuzzyText.js?v=2026-11-17.177"></script>
+<script src="js/domain/autocompleteText.js?v=2026-11-17.177"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-11-17.177"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-11-17.177"></script>
+<script src="js/domain/relativeTime.js?v=2026-11-17.177"></script>
+<script src="js/domain/clientRelease.js?v=2026-11-17.177"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-11-17.177"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-11-17.177"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-11-17.177"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-11-17.177"></script>
+<script src="js/domain/eventPresentation.js?v=2026-11-17.177"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-11-17.177"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-11-17.177" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-11-17.177"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-11-17.177"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-11-17.177"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-11-17.177"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-11-17.177"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-11-17.177"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-11-17.177" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-11-17.177"></script>
+<script src="js/utils/textSafety.js?v=2026-11-17.177"></script>
+<script src="js/ui/stringPanels.js?v=2026-11-17.177"></script>
+<script src="js/ui/emptyState.js?v=2026-11-17.177"></script>
+<script src="js/i18n/locales/en.js?v=2026-11-17.177"></script>
+<script src="js/i18n/locales/ja.js?v=2026-11-17.177"></script>
+<script src="js/i18n/locales/es.js?v=2026-11-17.177"></script>
+<script src="js/i18n/locales/de.js?v=2026-11-17.177"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-11-17.177"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-11-17.177"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-11-17.177"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-11-17.177"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-11-17.177"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-11-17.177"></script>
+<script src="js/i18n/core.js?v=2026-11-17.177"></script>
+<script src="js/services/firebaseClient.js?v=2026-11-17.177"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-11-17.177"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-11-17.177" data-pogo-provider-public-capability></script>
+<script src="js/services/favoriteResolverClient.js?v=2026-11-17.177"></script>
+<script src="js/services/favoriteWriteTransport.js?v=2026-11-17.177"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-11-17.177"></script>
+<script src="js/data/subscriptionManager.js?v=2026-11-17.177"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-11-17.177"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-11-17.177"></script>
+<script src="js/data/currentUserRepository.js?v=2026-11-17.177"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-11-17.177"></script>
+<script src="js/data/publicShareRepository.js?v=2026-11-17.177"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-11-17.177"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-11-17.177"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-11-17.177"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-11-17.177"></script>
+<script src="js/data/favoriteAdditionRepository.js?v=2026-11-17.177"></script>
+<script src="js/data/accountSyncController.js?v=2026-11-17.177"></script>
+<script src="js/data/favoriteAdditions.js?v=2026-11-17.177"></script>
+<script src="js/data/favoriteRecoveryPreview.js?v=2026-11-17.177"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-11-17.177"></script>
+<script src="js/app/favoritePicker.js?v=2026-11-17.177"></script>
+<script src="js/domain/backgroundPersistence.js?v=2026-11-17.177"></script>
+<script src="js/app/application.js?v=2026-11-17.177"></script>
 
 </template>
 <script>
@@ -1018,6 +1041,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     de:Object.freeze({'login.or':'oder','login.continueGoogle':'Mit Google fortfahren'})
   });
   const loadedScripts=new Set();
+  const loadingScripts=new Map();
+  const preloadedScripts=new Set();
   let shellLocalePromise=null;
   let featureLoadPromise=null;
   let publicShareLoadPromise=null;
@@ -1068,17 +1093,24 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   function absoluteScriptUrl(src){return new URL(src,document.baseURI).href;}
   function loadScript(src,{ordered=false}={}){
     const absolute=absoluteScriptUrl(src);
-    if(loadedScripts.has(absolute)||document.querySelector(`script[data-pogo-loaded="${CSS.escape(absolute)}"]`))return Promise.resolve();
-    loadedScripts.add(absolute);
-    return new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.src=absolute;
-      script.async=!ordered;
-      script.dataset.pogoLoaded=absolute;
-      script.addEventListener('load',resolve,{once:true});
-      script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/script-load-failed'}));},{once:true});
-      document.head.appendChild(script);
+    if(loadedScripts.has(absolute))return Promise.resolve();
+    if(loadingScripts.has(absolute))return loadingScripts.get(absolute);
+    const script=document.createElement('script');
+    script.src=absolute;
+    script.async=!ordered;
+    const pending=new Promise((resolve,reject)=>{
+      script.addEventListener('load',()=>{
+        loadedScripts.add(absolute);script.dataset.pogoLoaded=absolute;
+        loadingScripts.delete(absolute);resolve();
+      },{once:true});
+      script.addEventListener('error',()=>{
+        loadingScripts.delete(absolute);script.remove();
+        reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/script-load-failed'}));
+      },{once:true});
     });
+    loadingScripts.set(absolute,pending);
+    document.head.appendChild(script);
+    return pending;
   }
   async function ensureLocale(locale=preferredLocale()){
     const normalized=SUPPORTED_LOCALES.includes(String(locale||'').toLowerCase())?String(locale).toLowerCase():'en';
@@ -1142,22 +1174,22 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     }).map(node=>node.getAttribute('src'));
   }
   async function loadFeatureScripts(){
-    const pending=[];
-    for(const src of featureAssetSources()){
+    const sources=featureAssetSources();
+    // Fetch ahead without executing dependants after a failed prerequisite.
+    for(const src of sources){
       const absolute=absoluteScriptUrl(src);
-      if(loadedScripts.has(absolute))continue;
-      loadedScripts.add(absolute);
-      pending.push(new Promise((resolve,reject)=>{
-        const script=document.createElement('script');
-        script.src=absolute;
-        script.async=false;
-        script.dataset.pogoLoaded=absolute;
-        script.addEventListener('load',resolve,{once:true});
-        script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/feature-load-failed'}));},{once:true});
-        document.head.appendChild(script);
-      }));
+      if(loadedScripts.has(absolute)||preloadedScripts.has(absolute))continue;
+      const hint=document.createElement('link');hint.rel='preload';hint.as='script';hint.href=absolute;
+      document.head.appendChild(hint);preloadedScripts.add(absolute);
     }
-    await Promise.all(pending);
+    for(const src of sources)await loadScript(src,{ordered:true});
+  }
+  async function confirmFullAppReady(){
+    const ready=window.__pogoAppReadyPromise;
+    if(!ready||typeof ready.then!=='function')throw Object.assign(new Error('App initialization did not start'),{code:'startup/app-unavailable'});
+    await ready;
+    if(window.__pogoBootComplete!==true)throw Object.assign(new Error('App initialization did not complete'),{code:'startup/app-not-ready'});
+    return true;
   }
   async function loadPublicShareScripts(){
     const publicPaths=[
@@ -1202,7 +1234,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     })]).then(loadFeatureScripts).then(()=>{
       window.__pogoStartup.featureScriptsReadyAt=performance.now();
       try{performance.mark('pogo:feature-scripts-ready')}catch{}
-      return window.__pogoAppReadyPromise||true;
+      return confirmFullAppReady();
     }).catch(error=>{featureLoadPromise=null;shellFailure(error);throw error;});
     return featureLoadPromise;
   }

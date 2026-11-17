@@ -842,7 +842,7 @@ function renderCombinedBackgroundBatch(){
   document.getElementById('combined-background-count').textContent=i18nCore.t(selected.size?'backgroundBatch.selected':'backgroundBatch.choose',{count:selected.size});
   const save=document.getElementById('combined-save');
   if(active){delete save.dataset.i18n;save.textContent=i18nCore.t(!selected.size?'backgroundBatch.add':selected.size===1?'backgroundBatch.addOne':'backgroundBatch.addMany',{count:selected.size});save.disabled=busy||paused||!selected.size;}
-  else if(!draft.entries.length){save.dataset.i18n='wantEditor.addAction';save.textContent=i18nCore.t('wantEditor.addAction');save.disabled=busy;}
+  else if(!draft.entries.length){delete save.dataset.i18n;const name=document.getElementById('combined-name').value;save.textContent=name?i18nCore.t('addFlow.addPokemon',{name:pokemonDisplayName(_nameToSpriteEntry(name))||name}):i18nCore.t('wantEditor.addAction');save.disabled=busy;}
 }
 function addMoreCombinedBackgrounds(){
   const draft=combinedEditor;if(!draft?.entries.length||draft.saving)return;
@@ -923,7 +923,8 @@ function refreshCombinedGenderOptions(savedValue){
   if(preserve&&select.closest('details'))select.closest('details').open=true;
 }
 
-function setCombinedPriority(value){
+function setCombinedPriority(value,userChoice=false){
+  if(userChoice&&combinedEditor)combinedEditor.priorityChosen=true;
   if(!['','H','M','L'].includes(value))return;
   document.getElementById('combined-priority').value=value;
   document.querySelectorAll('#combined-priorities input').forEach(input=>{input.checked=input.value===value;});
@@ -934,7 +935,14 @@ function renderCombinedPokemonSummary(){
   let entry=_specialAllItems().find(entry=>entry.name===input.value)||combinedEditor?.entries?.[0];
   const choice=backgroundExportCatalog.records.find(r=>backgroundChoiceValue(r)===document.getElementById('combined-background')?.value);if(choice&&BackgroundEditorAdapter.intrinsicBinding(choice.catalogId))entry=accountSyncCatalogEntryForId(choice.catalogId)||entry;
   const show=!!entry&&!field.dataset.editing;
+  const none=document.querySelector('#combined-priorities input[value=""]')?.closest('label');
+  if(none){
+    none.hidden=!!entry&&!combinedEditor?.entries?.length&&!window.PogoDomain.priorityValues.isSpecialTradeWant({...entry,shiny:document.getElementById('combined-shiny').checked})&&!['lucky','xxl','xxs'].some(flag=>document.getElementById('combined-'+flag).checked);
+    // Removing the last qualifying flag must not leave an invisible invalid None selected.
+    if(none.hidden&&document.getElementById('combined-priority').value===''){setCombinedPriority('H');combinedEditor.priorityChosen=false;}
+  }
   host.hidden=!show;field.hidden=show;
+  document.querySelector('.add-flow-search')?.classList.toggle('has-choice',show);
   if(!show)return;
   const name=input.value,gender=document.getElementById('combined-gender').value,shiny=document.getElementById('combined-shiny').checked;
   document.getElementById('combined-identity-name').textContent=maxPresentationName(pokemonDisplayName(entry)||name);
@@ -949,21 +957,42 @@ function renderCombinedPokemonSummary(){
 }
 function changeCombinedPokemon(){
   if(combinedEditor?.entries?.length)return;
-  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;
+  const field=document.getElementById('combined-name-field');field.dataset.editing='true';field.hidden=false;document.querySelector('.add-flow-search')?.classList.remove('has-choice');
   document.getElementById('combined-identity').hidden=true;
   const input=document.getElementById('combined-name');input.focus();input.select();
 }
+function submitCombinedEditor(){
+  const input=document.getElementById('combined-name');
+  // Enter in the chooser confirms identity only. A separate Add activation
+  // is required, including exact typed names without a highlighted suggestion.
+  if(combinedEditor&&!combinedEditor.entries.length&&(document.activeElement===input||combinedEditor.reviewedName!==input.value)){
+    if(!finishCombinedPokemonChoice()){
+      const error=document.getElementById('combined-error');error.textContent=i18nCore.t('myList.selectPokemon');error.dataset.choiceError='true';input.setAttribute('aria-invalid','true');error.scrollIntoView({block:'nearest'});input.focus({preventScroll:true});
+    }
+    return;
+  }
+  return saveCombinedEditor();
+}
 function finishCombinedPokemonChoice(){
   const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
-  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
-  delete field.dataset.editing;closeWantsPicker(input);renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
+  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return false;}
+  delete field.dataset.editing;closeWantsPicker(input);
+  if(combinedEditor&&!combinedEditor.entries.length&&!combinedEditor.priorityChosen){
+    const entry=_nameToSpriteEntry(input.value);
+    setCombinedPriority(window.PogoDomain.priorityValues.isSpecialTradeWant(entry)?'':'H');
+  }
+  if(combinedEditor)combinedEditor.reviewedName=input.value;
+  input.removeAttribute('aria-invalid');const choiceError=document.getElementById('combined-error');if(choiceError.dataset.choiceError){choiceError.textContent='';delete choiceError.dataset.choiceError;}
+  renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
   if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
+  return true;
 }
 function openWantsAddEditor(opener=document.activeElement){
   openCombinedEditor(undefined,{returnFocus:opener});
   document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
   refreshCombinedGenderOptions();
-  setCombinedPriority(document.getElementById('wants-add-priority').value);
+  const requestedPriority=document.getElementById('wants-add-priority').value;
+  if(requestedPriority)setCombinedPriority(requestedPriority,true);
   finishCombinedPokemonChoice();
 }
 function setWantsAddPriority(priority){
@@ -971,19 +1000,69 @@ function setWantsAddPriority(priority){
   document.querySelectorAll('[data-wants-add-priority]').forEach(button=>{const active=button.dataset.wantsAddPriority===input.value;button.className=`pb${active?' on '+input.value:''}`;button.setAttribute('aria-pressed',String(active));});
 }
 async function submitWantsAdd(){
-  const button=document.querySelector('.wants-add-form [type="submit"]');if(button.disabled)return;
-  const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
-  button.disabled=true;
-  try{
-    openWantsAddEditor(button);await saveCombinedEditor();
-    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open')){input.value='';closeWantsPicker(input);input.focus({preventScroll:true});}
-  }finally{button.disabled=false;}
+  const button=document.querySelector('.wants-add-form [type="submit"]');
+  if(!button.disabled)openWantsAddEditor(button);
 }
+function setCombinedSize(value){
+  document.getElementById('combined-xxl').checked=value==='xxl';
+  document.getElementById('combined-xxs').checked=value==='xxs';
+  refreshCombinedSize();renderCombinedPokemonSummary();renderCombinedBackgroundBatch();
+}
+function refreshCombinedSize(){
+  const xxl=document.getElementById('combined-xxl').checked,xxs=document.getElementById('combined-xxs').checked;
+  document.querySelectorAll('[name="combined-size"]').forEach(input=>{input.checked=!(xxl&&xxs)&&input.value===(xxl?'xxl':xxs?'xxs':'');});
+  document.getElementById('combined-size-error').hidden=!(xxl&&xxs);
+}
+
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
+// These signed-in editor styles are installed only when needed, keeping the
+// public startup shell within its existing byte budget without extra requests.
+function ensureAddFlowStyles(){
+  if(document.getElementById('add-flow-styles'))return;
+  const style=document.createElement('style');style.id='add-flow-styles';
+  style.textContent=`/* Add flow: shared canonical editor, responsive search/review workspace. */
+#combined-editor-modal .combined-editor{width:960px}
+.add-flow-layout{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.6fr);gap:28px}
+.add-flow-search{border-right:1px solid var(--border);padding-right:28px;min-width:0}
+.add-flow-preferences{min-width:0}
+.add-flow-intro{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+#combined-editor-modal .add-flow-search #combined-name-field[hidden]{display:block!important}
+#combined-editor-modal .add-flow-search #combined-name-field{position:relative}
+#combined-editor-modal .add-flow-search input{max-width:100%;box-sizing:border-box}
+#combined-editor-modal .combined-size-field{padding:0;border:0;margin:18px 0 0}
+.combined-size-field legend{font-weight:650;font-size:14px;margin-bottom:8px}
+#combined-editor-modal .combined-size-field .combined-priorities{display:flex}
+#combined-editor-modal .combined-size-field label{flex:1}
+#combined-editor-modal #combined-error:empty{display:none}
+#combined-editor-modal #combined-error:not(:empty){padding:12px;border:1px solid var(--border);border-radius:8px;scroll-margin:90px}
+#combined-editor-modal .mact{grid-template-columns:1fr 2fr;justify-content:end}
+@media(min-width:701px){#combined-editor-modal .mact{display:flex}#combined-editor-modal .mact button{min-width:130px}#combined-editor-modal #combined-change{display:none}}
+@media(max-width:700px){
+ #combined-editor-modal .combined-editor{width:500px}
+ .add-flow-layout{display:block}.add-flow-search{padding:0;border:0}
+ #combined-editor-modal .add-flow-search.has-choice{display:none}
+ #combined-editor-modal .add-flow-search:not(.has-choice)+.add-flow-preferences{margin-top:20px}
+}
+#combined-editor-modal .combined-size-field label{min-width:0;position:relative;display:grid;place-items:center;min-height:44px;padding:7px 2px;margin:0;border-radius:5px;color:var(--text);font:600 13px var(--font);cursor:pointer}
+#combined-editor-modal .combined-size-field input[type=radio]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+#combined-editor-modal .combined-size-field label:has(input:checked){background:var(--accent);color:var(--action-text)}
+#combined-editor-modal .combined-size-field label:has(input:focus-visible){outline:3px solid var(--ac2);outline-offset:3px}
+#combined-priorities:has(label[hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
+#combined-editor-modal .combined-editor.editing-existing{width:500px}
+.editing-existing .add-flow-layout{display:block}.editing-existing .add-flow-search{display:none}
+#combined-editor-modal .combined-editor{display:flex;flex-direction:column;overflow:hidden}
+#combined-editor-title{flex:none}
+#combined-editor-modal .add-flow-layout{min-height:0;overflow:auto;flex:1 1 auto;scroll-padding-block:8px}
+#combined-editor-modal .mact{position:static;flex:none}
+#combined-editor-modal #combined-error{flex:none}
+`;
+  document.head.appendChild(style);
+}
 function openCombinedEditor(index,options={}){
+  ensureAddFlowStyles();
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),backgroundBatch:false,backgroundSelection:[],saving:false,before:JSON.stringify(productDeclarations().entries)};
@@ -992,10 +1071,11 @@ function openCombinedEditor(index,options={}){
   combinedEditor.backgroundSource=entries?.[0]?.isBackgroundV2?accountSyncClone(backgroundOwnerRuntime?.repository.snapshot().entries.find(r=>BackgroundTransitions.recordKey(r)===entries[0].key)):null;
   variantClarificationDraft=null;setClarificationControlsLocked(false);
   document.querySelector('#combined-editor-modal form').classList.remove('clarification-copy-created');
+  document.querySelector('#combined-editor-modal form').classList.toggle('editing-existing',!!entries?.length);
   document.getElementById('combined-save').hidden=false;
   const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
   let entry=entries?.[0]||{};if(entries?.length===1&&!entry.isBackgroundV2){const saved=combinedSourceEntity(entry);if(saved?.values){const v=saved.values;entry={...entry,note:v.note||'',mod:v.variant||'',gender:v.gender||'',lucky:!!v.lucky,shiny:!!v.shiny,xxl:!!v.xxl,xxs:!!v.xxs,qty:v.quantity||1,mirror:!!v.mirror,sortOrder:v.sortOrder||0};}}
-  const input=document.getElementById('combined-name');
+  const input=document.getElementById('combined-name');input.removeAttribute('aria-invalid');delete document.getElementById('combined-error').dataset.choiceError;
   const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
   input.value=entry.name||'';document.getElementById('combined-background').value='';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
   if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';
@@ -1004,6 +1084,7 @@ function openCombinedEditor(index,options={}){
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   refreshCombinedGenderOptions(entry.gender||'');
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
+  refreshCombinedSize();
   combinedEditor.initialValues=Object.fromEntries(['mod','note','gender','shiny','lucky','xxl','xxs'].map(field=>{const input=document.getElementById('combined-'+field);return [field,input.type==='checkbox'?input.checked:input.value];}));
   refreshCombinedShinyAvailability();
   if(entry.isBackgroundV2)document.getElementById('combined-background').value=backgroundChoiceValue({id:entry.backgroundId,catalogId:entry.catalogId});
@@ -1141,7 +1222,7 @@ async function saveCombinedEditor(remove=false){
   if(!draft||button.disabled)return;
   const sessionCurrent=()=>draft.owner===cur&&draft.uid===auth?.currentUser?.uid&&draft.sessionGeneration===_sessionTransientGeneration;
   const current=()=>draft===combinedEditor&&draft.owner===cur&&draft.uid===auth?.currentUser?.uid;
-  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}};
+  const fail=key=>{if(current()){error.textContent=i18nCore.t(key);draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();error.scrollIntoView({block:'nearest'});error.focus({preventScroll:true});}};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
   const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
@@ -1154,7 +1235,7 @@ async function saveCombinedEditor(remove=false){
   if(!remove&&changes.shiny&&costume?.shinyAvailability&&costume.shinyAvailability!=='released'&&!unchangedSavedShiny)return fail(costume.shinyAvailability==='needs-identification'?'costume.shinyYearRequired':'costume.shinyNotReleased');
   const unchangedSavedGender=draft.entries.length&&draft.entries.every(entry=>(entry.gender||'')===changes.gender);
   if(!remove&&changes.gender&&allowedGenders&&!allowedGenders.includes(changes.gender)&&!unchangedSavedGender)return fail('costume.genderConflict');
-  if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
+  if(changes.xxl&&changes.xxs)return fail('addFlow.sizeConflict');
   const priority=document.getElementById('combined-priority').value;
   const targetSection=window.PogoDomain.priorityValues.wantSectionKey({..._nameToSpriteEntry(name),...changes,p:priority});
   const unclassified=targetSection==='NEEDS_PRIORITY';
@@ -1228,7 +1309,7 @@ async function saveCombinedEditor(remove=false){
         }
       }else if(sides.includes(side)){
         const identity={surface:'my-list',lane:side==='lf'?'looking-for':'for-trade',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
-        if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))return fail('phase2.collision');
+        if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))return fail('addFlow.duplicate');
         mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues({...changes,p:side==='lf'&&priority!=='mixed'?priority:'',gender:changes.gender||_nameToSpriteEntry(name).gender||''})});
       }
     }
@@ -1237,6 +1318,7 @@ async function saveCombinedEditor(remove=false){
     if(!result?.ok)return fail(accountSyncEditFailureKey(result?.error?.code));
     if(!current()||!sessionCurrent())return;
     if(!remove)wantsCollapsedSections.delete(targetSection);
+    if(!draft.entries.length&&document.getElementById('wants-add-name').value===name)document.getElementById('wants-add-name').value='';
     closeModal('combined-editor-modal');renderMyList();
   }catch(error){if(['target-collision','duplicate'].includes(error?.message))fail('clarify.collision');else if(['source-changed','background-changed','transition-pending','target-changed'].includes(error?.message))fail('phase2.changed');else fail(accountSyncEditFailureKey(error?.code));}
   finally{if(current()){draft.saving=false;button.disabled=false;renderCombinedBackgroundBatch();}}
@@ -5555,15 +5637,21 @@ async function serviceWorkerHealth(){
   let version='unknown';
   try{
     const res=await fetch(`./sw.js?health=${Date.now()}`,{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const text=await res.text();
-    const m=text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
+    const m=text.match(/const\s+RELEASE\s*=\s*['"](\d{4}-\d{2}-\d{2}\.\d+)['"]/)||text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
     if(m)version=m[1];
   }catch(e){details.push(`version fetch failed: ${e.message||e}`);}
-  if(!registration)return{status:version==='unknown'?'Not registered':'Fresh app shell',kind:'warn',detail:`Service worker version: ${version}. A first reload may install it.`};
-  return{status:'Registered',kind:'ok',detail:`Service worker version: ${version}${details.length?`; ${details.join('; ')}`:''}`};
+  if(!registration)return{status:version==='unknown'?'Not registered':'Fresh app shell',kind:'warn',detail:`Published worker release: ${version}. A first reload may install it.`};
+  return{status:'Registered',kind:'ok',detail:`Published worker release: ${version}${details.length?`; ${details.join('; ')}`:''}`};
 }
-async function openLoginHealthCheck(){
-  openModal('login-health-modal');
+async function openLoginHealthCheck(mode){
+  const opener=document.getElementById('login-help-trigger');
+  if(mode==='guide'){
+    openModal('signin-guide-modal',{returnFocus:opener,initialFocus:'#signin-guide-title'});
+    return;
+  }
+  openModal('login-health-modal',{returnFocus:mode==='details'?opener:undefined,initialFocus:'#login-health-title'});
   setLoginHealthCopyStatus('');
   await runLoginHealthCheck();
 }
@@ -5576,7 +5664,7 @@ async function runLoginHealthCheck(){
   const sessionState=auth?.currentUser?'Signed in':'Not signed in';
   const reportInfo={
     generatedAt:new Date().toLocaleString(),
-    appVersion:APP_VERSION,
+    appVersion:window.__POGO_RELEASE_ID||APP_VERSION,
     pageOrigin:location.origin||'file://',
     pagePath:location.protocol==='file:'?'local file':(location.pathname||'/'),
     networkStatus:navigator.onLine?'Online':'Offline',
@@ -5591,7 +5679,7 @@ async function runLoginHealthCheck(){
     safeError:safeVisibleLoginError()
   };
   const rows=[
-    healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
+    healthRow('App version',reportInfo.appVersion,`Page: ${location.href}`,'info'),
     healthRow(cur?'Current trainer':'Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
   ];
   renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Firebase Auth session','Checking...',cur?'After sign-in, this should say Signed in. If it does not, edits may stay local to this device.':'On the login screen, Not signed in is normal before entering a PIN.','info'),healthRow('Login data read','Waiting...','Before login this checks the public username directory; after login it checks protected user data.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
@@ -5649,7 +5737,7 @@ async function runLoginHealthCheck(){
     const offerCount=Object.values(allData.offers||{}).reduce((n,bucket)=>n+Object.keys(bucket||{}).length,0);
     const tradeCount=Object.keys(allData.trades||{}).length;
     const trainerKind=trainers>=150?'warn':trainers>=100?'info':'ok';
-    rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades.`,trainerKind));
+    if(cur&&auth?.currentUser)rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades.`,trainerKind));
     const showAdminPanel=!!(cur&&allData.users?.[cur]?.isAdmin);
     if(showAdminPanel){
       const scaleSize=Object.keys(spriteScaleCache||{}).length;
@@ -5697,33 +5785,24 @@ async function runLoginHealthCheck(){
   renderHealthRows(rows);
 }
 async function clearLoginLocalCache(){
-  const ok=confirm(i18nCore.t('health.clearCacheConfirm'));
-  if(!ok)return;
-  const appKeys=['pogo3','pogoSessionCache_v2','pogoSyncQueue_v1','pogoSyncQueue_v2','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
-  const clearStore=store=>{
-    try{
-      appKeys.forEach(k=>store.removeItem(k));
-      Array.from({length:store.length},(_,i)=>store.key(i)).filter(k=>k&&(/^pogo/i.test(k)||/^pg/i.test(k))).forEach(k=>store.removeItem(k));
-    }catch{}
-  };
-  clearStore(localStorage);
-  clearStore(sessionStorage);
-  if('caches'in window){
-    try{
-      const names=await caches.keys();
-      await Promise.all(names.filter(n=>/^(shell|sprites)-pogo-trades/.test(n)).map(n=>caches.delete(n)));
-    }catch{}
-  }
-  if('serviceWorker'in navigator){
-    try{
-      const regs=await navigator.serviceWorker.getRegistrations();
-      const basePath=location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/\/[^/]*$/,'/');
-      await Promise.all(regs.filter(r=>{
-        try{return new URL(r.scope).pathname.startsWith(basePath);}catch{return false;}
-      }).map(r=>r.unregister()));
-    }catch{}
-  }
-  location.replace(`${location.pathname}?fresh=${Date.now()}`);
+  // Repair only replaceable app assets. Queues, history, and credentials belong
+  // to their owners; a signed-out troubleshooter must never reset that storage.
+  if(navigator.onLine===false){toast(i18nCore.t('health.cacheRepairOffline'));return;}
+  if(!confirm(i18nCore.t('health.clearCacheConfirm')))return;
+  const ownedCache=/^(?:shell|sprites)-pogo-trades-(?:v\d+|\d{4}-\d{2}-\d{2}\.\d+)(?:-installing)?$/;
+  try{
+    if('serviceWorker'in navigator){
+      const scope=new URL('./',location.href).href;
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      for(const registration of registrations){
+        if(registration.scope===scope)await registration.unregister();
+      }
+    }
+    if('caches'in window){
+      for(const name of await caches.keys())if(ownedCache.test(name))await caches.delete(name);
+    }
+  }catch{toast(i18nCore.t('health.cacheRepairFailed'));return;}
+  location.replace(location.pathname+'?fresh='+Date.now());
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
@@ -8637,6 +8716,10 @@ function confirmRemove(name,dn){
 }
 
 const canvasImageCache=new Map();
+const canvasImageQueue=[];
+let canvasImageActive=0;
+const CANVAS_IMAGE_CONCURRENCY=6;
+const CANVAS_IMAGE_TIMEOUT_MS=10000;
 const canvasImageUsableCache=new WeakMap();
 function exportSpriteUrl(e){
   return canvasSafeSpriteUrl(entrySpriteUrl(e,e.spriteName||e.name,e.gender));
@@ -8668,18 +8751,35 @@ function exportSpriteFallbackUrls(e){
   const approvedOverride=!identity.exactRequired&&isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
   return[...new Set([...highQuality,approvedOverride,...chain].filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
+function drainCanvasImageQueue(){
+  while(canvasImageActive<CANVAS_IMAGE_CONCURRENCY&&canvasImageQueue.length){
+    canvasImageActive++;
+    canvasImageQueue.shift()();
+  }
+}
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
   if(canvasImageCache.has(url))return canvasImageCache.get(url);
-  const p=new Promise(resolve=>{
+  let complete;
+  const pending=new Promise(resolve=>{complete=resolve;});
+  canvasImageCache.set(url,pending);
+  canvasImageQueue.push(()=>{
     const img=new Image();
+    let settled=false;
+    const finish=value=>{
+      if(settled)return;settled=true;
+      clearTimeout(timer);img.onload=null;img.onerror=null;
+      if(!value){canvasImageCache.delete(url);img.removeAttribute('src');}
+      complete(value);canvasImageActive--;drainCanvasImageQueue();
+    };
+    const timer=setTimeout(()=>finish(null),CANVAS_IMAGE_TIMEOUT_MS);
     img.crossOrigin='anonymous';
-    img.onload=()=>resolve(img);
-    img.onerror=()=>resolve(null);
-    img.src=url;
+    img.onload=()=>finish(img);
+    img.onerror=()=>finish(null);
+    try{img.src=url;}catch{finish(null);}
   });
-  canvasImageCache.set(url,p);
-  return p;
+  drainCanvasImageQueue();
+  return pending;
 }
 // Load with cascading fallback — try each URL in order until one succeeds
 async function loadCanvasImageWithFallback(urls){
@@ -10544,6 +10644,7 @@ let requestSubmission=null,requestFormGeneration=0;
 function showRequestForm(){
   document.getElementById('login-pg').querySelector('.lcard').style.display='none';
   document.getElementById('req-form-card').style.display='block';
+  document.getElementById('request-heading')?.focus();
 }
 function hideRequestForm(){
   requestFormGeneration++;
@@ -10554,6 +10655,7 @@ function hideRequestForm(){
   document.getElementById('req-username').value='';
   document.getElementById('req-note').value='';
   document.getElementById('req-err').textContent='';
+  document.getElementById('login-request-trigger')?.focus();
 }
 async function submitRequest(){
   const generation=requestFormGeneration,requestOwner=cur,requestUid=auth?.currentUser?.uid||'';
@@ -11487,7 +11589,7 @@ function openModal(id,options={}){
       ev.preventDefault();available[next].focus();return;
     }
     const first=focusables[0],last=focusables[focusables.length-1];
-    if(ev.shiftKey&&document.activeElement===first){last.focus();ev.preventDefault();}
+    if(ev.shiftKey&&(document.activeElement===first||!focusables.includes(document.activeElement))){last.focus();ev.preventDefault();}
     else if(!ev.shiftKey&&document.activeElement===last){first.focus();ev.preventDefault();}
   };
   document.addEventListener('keydown',_modalKeyHandler);
@@ -12864,7 +12966,7 @@ function closeExportMenu(){
 function productTextRows(){
   const entries=productDeclarations().entries,withBackground=entries.some(e=>e.isBackgroundV2);
   return entries.map(e=>({...(withBackground?{background:e.isBackgroundV2?e.backgroundId:''}:{}),
-    intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
+    intent:i18nCore.t('wants.title'),name:[e.dn||e.name,productShareCategoryLabel(e)].filter(Boolean).join(' · '),category:e.category||e.type||e.ref?.type||'wishlist',no:e.no||'',priority:e.p||'',
     shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
 }
