@@ -30,11 +30,11 @@ test('UX-01 order metadata is explicit, account-partitioned, and Firebase-schema
 // The wants-only release removed normal reorder and LF/FT Board editing UI.
 // Keep their persisted-order isolation proof above, but qualify the current editing
 // and Board presentation contracts here instead of unreachable renderer functions.
-test('UX-01 wants rows offer named edit and dialog removal without drag-only interaction',()=>{
+test('UX-01 wants rows offer named edit and direct/dialog removal without drag-only interaction',()=>{
   const rows=between('function renderCombinedList(','function toggleWantsSection(');
   assert.match(rows,/class="myrow-edit"[^>]+onclick="openCombinedEditor\(this\.dataset\.group,\{returnFocus:this\}\)"/);
   assert.match(html,/_modalPrevFocus=options\.returnFocus\|\|document\.activeElement/);
-  assert.doesNotMatch(rows,/class="myrow-remove"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
+  assert.match(rows,/class="myrow-remove wants-remove-direct"/);assert.match(html,/id="wants-remove"[^>]*onclick="saveCombinedEditor\(true\)"/);
   assert.match(rows,/aria-label=.*myList\.openMoreFor/);
   assert.match(html,/setAttribute\('aria-label',i18nCore.t\('myList.removeEntry'/);
   assert.doesNotMatch(rows,/draggable=|onpointerdown=|drag-handle/);
