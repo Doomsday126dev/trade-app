@@ -10,7 +10,7 @@ const controlRoot=path.join(__dirname,'..');
 const root=path.resolve(process.env.PAGES_RUNTIME_ROOT||controlRoot);
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
-const audit177='7bd427439735fd96c25a86c8a70ffce58e966ddb';
+const audit177='88a7ba3016432fd61a43489caaed99b4063c8fe0';
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
 const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:139|140|141|142|143|144|145|146|147|148|149)|2026-10-27\.(?:150|151|152|153|154|155))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
