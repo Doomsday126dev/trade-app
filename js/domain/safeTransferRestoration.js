@@ -257,32 +257,32 @@
     async function copyPart(index=0){
       const active=state;
       if(!['ready','copy_failed','copied'].includes(active.phase)||!active.plan?.executable)return Object.freeze({ok:false,status:'not_ready'});
-      if(!bindingMatches(active.plan.binding,currentBinding())){invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});}
+      const currentPlan=()=>{try{return bindingMatches(active.plan.binding,currentBinding());}catch{return false;}};
+      if(!currentPlan()){invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});}
       const command=active.plan.commands[index];if(!command)return Object.freeze({ok:false,status:'missing_part'});
       operationController?.abort();operationController=new AbortController();
       const token=++generation,signal=operationController.signal;
-      publish({...active,phase:'copying',manualCommand:command.value,error:null,copyOperation:token,copiedPart:index});
-      const stillCurrent=()=>token===generation&&state.copyOperation===token&&state.plan===active.plan&&bindingMatches(active.plan.binding,currentBinding());
-      const stale=()=>{if(token===generation)invalidate('copy_binding_changed');return Object.freeze({ok:false,status:'stale'});};
-      try{
-        if(revalidateBeforeCopy){
+      publish({...active,phase:'copying',manualCommand:'',error:null,copyOperation:token,copiedPart:index});
+      const stillCurrent=()=>token===generation&&state.copyOperation===token&&state.plan===active.plan&&currentPlan();
+      const stale=(reason='copy_binding_changed')=>{if(token===generation)invalidate(reason);return Object.freeze({ok:false,status:'stale'});};
+      if(revalidateBeforeCopy){
+        try{
           const snapshot=await loadSnapshot(active.request,{generation:token,reason:'copy',signal,isCurrent:stillCurrent});
           if(!stillCurrent())return stale();
           const refreshed=plan(snapshot,active.request);
-          if(!refreshed?.ok||!refreshed.executable||refreshed.bindingFingerprint!==active.plan.bindingFingerprint||!bindingMatches(refreshed.binding,currentBinding())){
-            if(token===generation)invalidate('copy_revalidation_changed');
-            return Object.freeze({ok:false,status:'stale'});
-          }
-        }
-        await copy(command.value,{signal,isCurrent:stillCurrent});
-        if(!stillCurrent())return stale();
-        publish({...active,phase:'copied',manualCommand:command.value,error:null,copiedPart:index,copyOperation:token});
-        return Object.freeze({ok:true,status:'copied',part:index,value:command.value,binding:active.plan.binding});
-      }catch(error){
+          if(!refreshed?.ok||!refreshed.executable||refreshed.bindingFingerprint!==active.plan.bindingFingerprint||!bindingMatches(refreshed.binding,currentBinding()))return stale('copy_revalidation_changed');
+        }catch{return stale('copy_revalidation_failed');}
+      }
+      if(!stillCurrent())return stale();
+      try{await copy(command.value,{signal,isCurrent:stillCurrent});}
+      catch(error){
         if(!stillCurrent())return stale();
         publish({...active,phase:'copy_failed',manualCommand:command.value,error:Object.freeze({code:String(error?.code||'copy_failed')}),copiedPart:index,copyOperation:token});
         return Object.freeze({ok:false,status:'copy_failed',part:index,value:command.value});
       }
+      if(!stillCurrent())return stale();
+      publish({...active,phase:'copied',manualCommand:command.value,error:null,copiedPart:index,copyOperation:token});
+      return Object.freeze({ok:true,status:'copied',part:index,value:command.value,binding:active.plan.binding});
     }
     return Object.freeze({start,copyPart,invalidate,subscribe,snapshot:()=>state});
   }

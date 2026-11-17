@@ -5703,33 +5703,24 @@ async function runLoginHealthCheck(){
   renderHealthRows(rows);
 }
 async function clearLoginLocalCache(){
-  const ok=confirm(i18nCore.t('health.clearCacheConfirm'));
-  if(!ok)return;
-  const appKeys=['pogo3','pogoSessionCache_v2','pogoSyncQueue_v1','pogoSyncQueue_v2','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
-  const clearStore=store=>{
-    try{
-      appKeys.forEach(k=>store.removeItem(k));
-      Array.from({length:store.length},(_,i)=>store.key(i)).filter(k=>k&&(/^pogo/i.test(k)||/^pg/i.test(k))).forEach(k=>store.removeItem(k));
-    }catch{}
-  };
-  clearStore(localStorage);
-  clearStore(sessionStorage);
-  if('caches'in window){
-    try{
-      const names=await caches.keys();
-      await Promise.all(names.filter(n=>/^(shell|sprites)-pogo-trades/.test(n)).map(n=>caches.delete(n)));
-    }catch{}
-  }
-  if('serviceWorker'in navigator){
-    try{
-      const regs=await navigator.serviceWorker.getRegistrations();
-      const basePath=location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/\/[^/]*$/,'/');
-      await Promise.all(regs.filter(r=>{
-        try{return new URL(r.scope).pathname.startsWith(basePath);}catch{return false;}
-      }).map(r=>r.unregister()));
-    }catch{}
-  }
-  location.replace(`${location.pathname}?fresh=${Date.now()}`);
+  // Repair only replaceable app assets. Queues, history, and credentials belong
+  // to their owners; a signed-out troubleshooter must never reset that storage.
+  if(navigator.onLine===false){toast(i18nCore.t('health.cacheRepairOffline'));return;}
+  if(!confirm(i18nCore.t('health.clearCacheConfirm')))return;
+  const ownedCache=/^(?:shell|sprites)-pogo-trades-(?:v\d+|\d{4}-\d{2}-\d{2}\.\d+)(?:-installing)?$/;
+  try{
+    if('serviceWorker'in navigator){
+      const scope=new URL('./',location.href).href;
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      for(const registration of registrations){
+        if(registration.scope===scope)await registration.unregister();
+      }
+    }
+    if('caches'in window){
+      for(const name of await caches.keys())if(ownedCache.test(name))await caches.delete(name);
+    }
+  }catch{toast(i18nCore.t('health.cacheRepairFailed'));return;}
+  location.replace(location.pathname+'?fresh='+Date.now());
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
