@@ -5,6 +5,9 @@ const path=require('node:path');
 const enabledApplication=readFileSync(path.join(__dirname,'../js/app/application.js'),'utf8');
 if(!enabledApplication.includes('const SAFE_TRANSFER_GENERATION_ENABLED=true;'))throw new Error('Reviewed Safe-transfer release gate is not enabled');
 
+// The Tools entry is localized; select its stable translation marker, not removed legacy IDs.
+const safeTransferTool=page=>page.locator('#settings-modal button').filter({has:page.locator('[data-i18n="safeTransfer.title"]')});
+
 const owner={uid:'safe-transfer-owner',username:'SafeTransferOwner'};
 
 function declaration(name,category='wishlist',extra={}){
@@ -70,7 +73,7 @@ async function establishFixture(page,{results,locale='en',group=true,deferred=fa
 async function openFromSettingsTools(page){
   await page.evaluate(()=>{openSettingsPanel('account');selectSettingsSection('tools');});
   await expect(page.locator('#settings-modal')).toBeVisible();
-  await page.locator('#settings-transfer').click();
+  await safeTransferTool(page).click();
   await expect(page.locator('#safe-transfer-modal')).toBeVisible();
   // Discovery no longer silently selects Favorites. Establish this fixture's
   // intended complete group explicitly through the existing selection control.
@@ -142,7 +145,7 @@ test('actual language controls localize candidate UI while Pokémon GO command l
   await page.locator('[data-settings-target="language"]').click();
   await page.locator('#settings-language').selectOption('ja');
   await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe('ja');
-  await page.goto(page.url().split('#')[0]+'#settings/tools');await page.locator('#settings-transfer').click();await waitForPhase(page,'ready');
+  await page.goto(page.url().split('#')[0]+'#settings/tools');await safeTransferTool(page).click();await waitForPhase(page,'ready');
   await expect(page.locator('[data-safe-transfer-scope]')).toContainText('選択範囲');
   expect(await page.evaluate(()=>_safeTransferController.snapshot().plan.gameLocale)).toBe('ja');
 
@@ -152,7 +155,7 @@ test('actual language controls localize candidate UI while Pokémon GO command l
   await page.locator('[data-settings-target="language"]').click();
   await page.locator('#settings-language').selectOption('es');await expect.poll(()=>page.evaluate(()=>i18nCore.getLocale())).toBe('es');
   await page.locator('#settings-search-language').selectOption('de');
-  await page.goto(page.url().split('#')[0]+'#settings/tools');await page.locator('#settings-transfer').click();await waitForPhase(page,'ready');
+  await page.goto(page.url().split('#')[0]+'#settings/tools');await safeTransferTool(page).click();await waitForPhase(page,'ready');
   await expect(page.locator('[data-safe-transfer-scope]')).toContainText('Ámbito seleccionado');
   const result=await page.evaluate(()=>{const plan=_safeTransferController.snapshot().plan;return{locale:plan.gameLocale,parts:plan.commands.map(item=>({value:item.value,species:item.species})),candidates:plan.candidateSpecies};});
   expect(result.locale).toBe('de');expect(result.parts.flatMap(item=>item.species)).toEqual(result.candidates);expect(result.parts.every(item=>item.value.length<=1500)).toBe(true);
