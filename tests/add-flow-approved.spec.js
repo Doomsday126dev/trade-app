@@ -40,3 +40,25 @@ test('localized dark mobile review keeps footer reachable and scrolls optional d
  await page.locator('#wants-add-name').fill('Squirtle');await page.locator('.wants-add-form [type=submit]').click();await expect(page.locator('#combined-save')).toBeInViewport();
  await page.locator('#combined-preferences>summary').click();await page.locator('#combined-note').scrollIntoViewIfNeeded();await expect(page.locator('#combined-note')).toBeInViewport();await expect(page.locator('#combined-save')).toBeInViewport();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await capture(page,'small-dark-details-scrolled');
 });
+test('Enter confirms changed identity without saving and removing last size repairs None',async({page})=>{
+ await normalFixture(page);await page.setViewportSize({width:390,height:844});
+ const before=await page.evaluate(()=>JSON.stringify(accountSyncCanonicalEntities));
+ await page.locator('#wants-add-name').fill('Squirtle');await page.locator('.wants-add-form [type=submit]').click();await expect(page.locator('#combined-priority')).toHaveValue('H');
+ await page.locator('#combined-change').click();await page.locator('#combined-name').fill('Mewtwo');await page.locator('#combined-name').press('Enter');
+ await expect(page.locator('#combined-editor-modal')).toHaveClass(/open/);await expect(page.locator('#combined-priority')).toHaveValue('');expect(await page.evaluate(()=>JSON.stringify(accountSyncCanonicalEntities))).toBe(before);
+ await page.locator('#combined-save').click();await settled(page);expect(await page.evaluate(()=>productDeclarations().entries.find(e=>e.name==='Mewtwo').p)).toBe('');
+ await page.locator('#wants-add-name').fill('Squirtle');await page.locator('.wants-add-form [type=submit]').click();await page.locator('[name=combined-size][value=xxl]').check();await page.locator('#combined-priorities input[value=""]').check();await page.locator('[name=combined-size][value=""]').check();await expect(page.locator('#combined-priority')).toHaveValue('H');await expect(page.locator('#combined-priorities input[value=H]')).toBeChecked();await page.locator('#combined-save').click();await settled(page);
+ expect(await page.evaluate(()=>productDeclarations().entries.find(e=>e.name==='Squirtle').p)).toBe('H');
+ await page.locator('#wants-add-name').fill('Bulbasaur');await page.locator('.wants-add-form [type=submit]').click();await page.locator('#combined-priorities input[value=L]').check();await page.locator('#combined-change').click();await page.locator('#combined-name').fill('Zapdos');await page.locator('#combined-name').press('Enter');await expect(page.locator('#combined-priority')).toHaveValue('L');await expect(page.locator('#combined-editor-modal')).toHaveClass(/open/);await page.locator('#combined-close').click();
+});
+test('unrecognized chooser text explains validation without saving',async({page})=>{
+ await normalFixture(page);const before=await page.evaluate(()=>JSON.stringify(accountSyncCanonicalEntities));
+ await page.locator('#wants-add-name').fill('NotAPokemon');await page.locator('.wants-add-form [type=submit]').click();await page.locator('#combined-save').click();
+ await expect(page.locator('#combined-error')).toHaveText(await page.evaluate(()=>i18nCore.t('myList.selectPokemon')));await expect(page.locator('#combined-name')).toBeFocused();await expect(page.locator('#combined-name')).toHaveAttribute('aria-invalid','true');expect(await page.evaluate(()=>JSON.stringify(accountSyncCanonicalEntities))).toBe(before);
+ await page.locator('#combined-name').fill('Squirtle');await page.locator('#combined-name').press('Enter');await expect(page.locator('#combined-error')).toBeEmpty();await expect(page.locator('#combined-priority')).toHaveValue('H');await expect(page.locator('#combined-editor-modal')).toHaveClass(/open/);
+});
+test('short-height expanded editor keeps title and footer while details scroll',async({page})=>{
+ await normalFixture(page);await page.setViewportSize({width:390,height:400});await page.evaluate(async()=>{await changeInterfaceLocale('de');applyTheme('dark');});
+ await page.locator('#wants-add-name').fill('Squirtle');await page.locator('.wants-add-form [type=submit]').click();await page.locator('#combined-preferences>summary').click();await page.locator('#combined-note').scrollIntoViewIfNeeded();
+ await expect(page.locator('#combined-editor-title')).toBeInViewport();await expect(page.locator('#combined-save')).toBeInViewport();await expect(page.locator('#combined-note')).toBeInViewport();expect(await page.locator('.combined-editor').evaluate(el=>el.scrollTop)).toBe(0);await capture(page,'short-dark-fixed-header');
+});

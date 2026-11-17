@@ -23,3 +23,11 @@ Base:8481068. User-approved High default replaces the tentative Medium shown in 
 - Full existing want-editor.spec.js encodes old instant-Add/Options/checkbox UI and is assigned for migration independently. This report does not claim it passed.
 - frontend-asset-extraction has the known stale-loader assertion on base8481068, corrected separately by c980d90. Combine that commit before aggregate release gates.
 - No version bump, push, or deployment performed. Parent owns combined candidate/release decision.
+
+## Independent-review corrections
+- Enter in the identity chooser only confirms/recalculates the selection, even for exact names with no highlighted suggestion. A separate Add activation is required. Actual explicit valid priorities are retained; inherited defaults are recalculated on species change.
+- Removing the final special requirement cannot leave hidden None selected: new ordinary entries return to High; existing saved entries are not rewritten.
+- Unrecognized typed names show localized validation, mark/focus the chooser, and do not save.
+- Add-only styles install idempotently when opening the signed-in editor, rather than inflating public-shell CSS. No new request and no weakened budget. Unchanged full startup suite4/4 passed at desktop/mobile4x/mobile6x and failed App Check.
+- Independent-review regression plus background suite16/16 passed; final focused suite additionally covers explicit Low preservation and invalid-name recovery.
+- Short-height390x400 German dark now retains title and footer while only editor body scrolls. New focused case passes; migrated independent `localized editor short layout remains operable` passes unchanged. Final focused7/7 passes. Full combined suite is run separately for integration qualification.

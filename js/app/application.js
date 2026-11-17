@@ -738,7 +738,7 @@ function prepareWantsCatalog(){
     input.parentElement.classList.add('wants-picker-wrap');input.insertAdjacentElement('afterend',list);
     input.setAttribute('role','combobox');if(id==='combined-name')input.setAttribute('aria-label',i18nCore.t('wantEditor.pokemon'));input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
     input.addEventListener('input',event=>{if(!event.isComposing)renderWantsPicker(input);});input.addEventListener('compositionend',()=>renderWantsPicker(input));
-    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>{closeWantsPicker(input);if(input.id==='combined-name'&&!input.readOnly)finishCombinedPokemonChoice();},0));
+    input.addEventListener('focus',()=>renderWantsPicker(input));input.addEventListener('blur',()=>setTimeout(()=>closeWantsPicker(input),0));
     input.addEventListener('keydown',event=>{
       if(event.isComposing)return;
       if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();closeWantsPicker(input);return;}
@@ -936,7 +936,11 @@ function renderCombinedPokemonSummary(){
   const choice=backgroundExportCatalog.records.find(r=>backgroundChoiceValue(r)===document.getElementById('combined-background')?.value);if(choice&&BackgroundEditorAdapter.intrinsicBinding(choice.catalogId))entry=accountSyncCatalogEntryForId(choice.catalogId)||entry;
   const show=!!entry&&!field.dataset.editing;
   const none=document.querySelector('#combined-priorities input[value=""]')?.closest('label');
-  if(none)none.hidden=!!entry&&!combinedEditor?.entries?.length&&!window.PogoDomain.priorityValues.isSpecialTradeWant({...entry,shiny:document.getElementById('combined-shiny').checked})&&!['lucky','xxl','xxs'].some(flag=>document.getElementById('combined-'+flag).checked);
+  if(none){
+    none.hidden=!!entry&&!combinedEditor?.entries?.length&&!window.PogoDomain.priorityValues.isSpecialTradeWant({...entry,shiny:document.getElementById('combined-shiny').checked})&&!['lucky','xxl','xxs'].some(flag=>document.getElementById('combined-'+flag).checked);
+    // Removing the last qualifying flag must not leave an invisible invalid None selected.
+    if(none.hidden&&document.getElementById('combined-priority').value===''){setCombinedPriority('H');combinedEditor.priorityChosen=false;}
+  }
   host.hidden=!show;field.hidden=show;
   document.querySelector('.add-flow-search')?.classList.toggle('has-choice',show);
   if(!show)return;
@@ -957,16 +961,31 @@ function changeCombinedPokemon(){
   document.getElementById('combined-identity').hidden=true;
   const input=document.getElementById('combined-name');input.focus();input.select();
 }
+function submitCombinedEditor(){
+  const input=document.getElementById('combined-name');
+  // Enter in the chooser confirms identity only. A separate Add activation
+  // is required, including exact typed names without a highlighted suggestion.
+  if(combinedEditor&&!combinedEditor.entries.length&&(document.activeElement===input||combinedEditor.reviewedName!==input.value)){
+    if(!finishCombinedPokemonChoice()){
+      const error=document.getElementById('combined-error');error.textContent=i18nCore.t('myList.selectPokemon');error.dataset.choiceError='true';input.setAttribute('aria-invalid','true');error.scrollIntoView({block:'nearest'});input.focus({preventScroll:true});
+    }
+    return;
+  }
+  return saveCombinedEditor();
+}
 function finishCombinedPokemonChoice(){
   const field=document.getElementById('combined-name-field'),input=document.getElementById('combined-name');
-  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return;}
+  if(!_specialAllItems().some(entry=>entry.name===input.value)){field.dataset.editing='true';renderCombinedPokemonSummary();return false;}
   delete field.dataset.editing;closeWantsPicker(input);
   if(combinedEditor&&!combinedEditor.entries.length&&!combinedEditor.priorityChosen){
     const entry=_nameToSpriteEntry(input.value);
     setCombinedPriority(window.PogoDomain.priorityValues.isSpecialTradeWant(entry)?'':'H');
   }
+  if(combinedEditor)combinedEditor.reviewedName=input.value;
+  input.removeAttribute('aria-invalid');const choiceError=document.getElementById('combined-error');if(choiceError.dataset.choiceError){choiceError.textContent='';delete choiceError.dataset.choiceError;}
   renderCombinedPokemonSummary();refreshCombinedBackgroundChoices();
   if(field.hidden)document.querySelector('#combined-priorities input:checked')?.focus({preventScroll:true});
+  return true;
 }
 function openWantsAddEditor(opener=document.activeElement){
   openCombinedEditor(undefined,{returnFocus:opener});
@@ -999,7 +1018,51 @@ function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
+// These signed-in editor styles are installed only when needed, keeping the
+// public startup shell within its existing byte budget without extra requests.
+function ensureAddFlowStyles(){
+  if(document.getElementById('add-flow-styles'))return;
+  const style=document.createElement('style');style.id='add-flow-styles';
+  style.textContent=`/* Add flow: shared canonical editor, responsive search/review workspace. */
+#combined-editor-modal .combined-editor{width:960px}
+.add-flow-layout{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.6fr);gap:28px}
+.add-flow-search{border-right:1px solid var(--border);padding-right:28px;min-width:0}
+.add-flow-preferences{min-width:0}
+.add-flow-intro{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+#combined-editor-modal .add-flow-search #combined-name-field[hidden]{display:block!important}
+#combined-editor-modal .add-flow-search #combined-name-field{position:relative}
+#combined-editor-modal .add-flow-search input{max-width:100%;box-sizing:border-box}
+#combined-editor-modal .combined-size-field{padding:0;border:0;margin:18px 0 0}
+.combined-size-field legend{font-weight:650;font-size:14px;margin-bottom:8px}
+#combined-editor-modal .combined-size-field .combined-priorities{display:flex}
+#combined-editor-modal .combined-size-field label{flex:1}
+#combined-editor-modal #combined-error:empty{display:none}
+#combined-editor-modal #combined-error:not(:empty){padding:12px;border:1px solid var(--border);border-radius:8px;scroll-margin:90px}
+#combined-editor-modal .mact{grid-template-columns:1fr 2fr;justify-content:end}
+@media(min-width:701px){#combined-editor-modal .mact{display:flex}#combined-editor-modal .mact button{min-width:130px}#combined-editor-modal #combined-change{display:none}}
+@media(max-width:700px){
+ #combined-editor-modal .combined-editor{width:500px}
+ .add-flow-layout{display:block}.add-flow-search{padding:0;border:0}
+ #combined-editor-modal .add-flow-search.has-choice{display:none}
+ #combined-editor-modal .add-flow-search:not(.has-choice)+.add-flow-preferences{margin-top:20px}
+}
+#combined-editor-modal .combined-size-field label{min-width:0;position:relative;display:grid;place-items:center;min-height:44px;padding:7px 2px;margin:0;border-radius:5px;color:var(--text);font:600 13px var(--font);cursor:pointer}
+#combined-editor-modal .combined-size-field input[type=radio]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+#combined-editor-modal .combined-size-field label:has(input:checked){background:var(--accent);color:var(--action-text)}
+#combined-editor-modal .combined-size-field label:has(input:focus-visible){outline:3px solid var(--ac2);outline-offset:3px}
+#combined-priorities:has(label[hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
+#combined-editor-modal .combined-editor.editing-existing{width:500px}
+.editing-existing .add-flow-layout{display:block}.editing-existing .add-flow-search{display:none}
+#combined-editor-modal .combined-editor{display:flex;flex-direction:column;overflow:hidden}
+#combined-editor-title{flex:none}
+#combined-editor-modal .add-flow-layout{min-height:0;overflow:auto;flex:1 1 auto;scroll-padding-block:8px}
+#combined-editor-modal .mact{position:static;flex:none}
+#combined-editor-modal #combined-error{flex:none}
+`;
+  document.head.appendChild(style);
+}
 function openCombinedEditor(index,options={}){
+  ensureAddFlowStyles();
   const entries=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):Number.isInteger(index)?combinedGroups()[index]:[];
   if(index!==undefined&&!entries)return;
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,sessionGeneration:_sessionTransientGeneration,entries:accountSyncClone(entries||[]),backgroundBatch:false,backgroundSelection:[],saving:false,before:JSON.stringify(productDeclarations().entries)};
@@ -1012,7 +1075,7 @@ function openCombinedEditor(index,options={}){
   document.getElementById('combined-save').hidden=false;
   const close=document.getElementById('combined-close');close.dataset.i18n='common.cancel';close.textContent=i18nCore.t('common.cancel');
   let entry=entries?.[0]||{};if(entries?.length===1&&!entry.isBackgroundV2){const saved=combinedSourceEntity(entry);if(saved?.values){const v=saved.values;entry={...entry,note:v.note||'',mod:v.variant||'',gender:v.gender||'',lucky:!!v.lucky,shiny:!!v.shiny,xxl:!!v.xxl,xxs:!!v.xxs,qty:v.quantity||1,mirror:!!v.mirror,sortOrder:v.sortOrder||0};}}
-  const input=document.getElementById('combined-name');
+  const input=document.getElementById('combined-name');input.removeAttribute('aria-invalid');delete document.getElementById('combined-error').dataset.choiceError;
   const heading=document.getElementById('combined-editor-title');heading.dataset.i18n=entries?.length?'wantEditor.edit':'wantEditor.add';heading.textContent=i18nCore.t(heading.dataset.i18n);
   input.value=entry.name||'';document.getElementById('combined-background').value='';input.readOnly=!!entries?.length;const nameField=document.getElementById('combined-name-field');
   if(entry.name)delete nameField.dataset.editing;else nameField.dataset.editing='true';

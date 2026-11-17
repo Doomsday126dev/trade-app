@@ -2594,34 +2594,3 @@ outline:2px solid var(--field-focus-color,var(--ac2));outline-offset:-1px;box-sh
 .signin-guide dd{margin:.25rem 0 0;line-height:1.5}
 .signin-guide-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .signin-guide-actions button{min-height:44px}
-
-/* Add flow: shared canonical editor, responsive search/review workspace. */
-#combined-editor-modal .combined-editor{width:960px}
-.add-flow-layout{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,1.6fr);gap:28px}
-.add-flow-search{border-right:1px solid var(--border);padding-right:28px;min-width:0}
-.add-flow-preferences{min-width:0}
-.add-flow-intro{margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
-#combined-editor-modal .add-flow-search #combined-name-field[hidden]{display:block!important}
-#combined-editor-modal .add-flow-search #combined-name-field{position:relative}
-#combined-editor-modal .add-flow-search input{max-width:100%;box-sizing:border-box}
-#combined-editor-modal .combined-size-field{padding:0;border:0;margin:18px 0 0}
-.combined-size-field legend{font-weight:650;font-size:14px;margin-bottom:8px}
-#combined-editor-modal .combined-size-field .combined-priorities{display:flex}
-#combined-editor-modal .combined-size-field label{flex:1}
-#combined-editor-modal #combined-error:empty{display:none}
-#combined-editor-modal #combined-error:not(:empty){padding:12px;border:1px solid var(--border);border-radius:8px;scroll-margin:90px}
-#combined-editor-modal .mact{grid-template-columns:1fr 2fr;justify-content:end}
-@media(min-width:701px){#combined-editor-modal .mact{display:flex}#combined-editor-modal .mact button{min-width:130px}#combined-editor-modal #combined-change{display:none}}
-@media(max-width:700px){
- #combined-editor-modal .combined-editor{width:500px}
- .add-flow-layout{display:block}.add-flow-search{padding:0;border:0}
- #combined-editor-modal .add-flow-search.has-choice{display:none}
- #combined-editor-modal .add-flow-search:not(.has-choice)+.add-flow-preferences{margin-top:20px}
-}
-#combined-editor-modal .combined-size-field label{min-width:0;position:relative;display:grid;place-items:center;min-height:44px;padding:7px 2px;margin:0;border-radius:5px;color:var(--text);font:600 13px var(--font);cursor:pointer}
-#combined-editor-modal .combined-size-field input[type=radio]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
-#combined-editor-modal .combined-size-field label:has(input:checked){background:var(--accent);color:var(--action-text)}
-#combined-editor-modal .combined-size-field label:has(input:focus-visible){outline:3px solid var(--ac2);outline-offset:3px}
-#combined-priorities:has(label[hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
-#combined-editor-modal .combined-editor.editing-existing{width:500px}
-.editing-existing .add-flow-layout{display:block}.editing-existing .add-flow-search{display:none}
