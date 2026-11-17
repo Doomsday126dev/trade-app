@@ -226,3 +226,26 @@ test('single-record save still rejects duplicates and enforces stale edit revisi
   await f.adapter.save('owner',value('bg-a',{note:'Edited',p:'L'}),{expectedKey:existing.key,expectedRevision:1});
   assert.deepEqual(f.remoteRows(),[row('bg-a',{note:'Edited',priority:'L'})]);assert.equal(f.store.head,2);
 });
+
+test('removeMany removes only exact keys in one revision and preserves unrelated metadata',async()=>{
+ const f=fixture({entries:[row('a'),row('b'),row('a',{shiny:true,note:'Keep shiny',quantity:3})]});
+ const entries=f.adapter.list('owner');
+ assert.deepEqual(result(await f.adapter.removeMany('owner',entries.slice(0,2))),{removed:2});
+ assert.equal(f.replaceCalls(),1);assert.equal(f.store.head,2);
+ assert.deepEqual(f.remoteRows(),[row('a',{shiny:true,note:'Keep shiny',quantity:3})]);
+});
+test('removeMany rejects stale revisions, missing keys, and wrong owner before writing',async()=>{
+ const f=fixture({entries:[row('a'),row('b')]});const entries=f.adapter.list('owner');
+ await assert.rejects(f.adapter.removeMany('other',entries),/session-changed/);
+ await assert.rejects(f.adapter.removeMany('owner',[entries[0],{...entries[1],revision:0}]),/stale-entry/);
+ await assert.rejects(f.adapter.removeMany('owner',[{...entries[0],key:'missing'}]),/stale-entry/);
+ assert.equal(f.replaceCalls(),0);
+});
+test('removeMany offline batch stays durable and flushes once without erasing unrelated variants',async()=>{
+ const f=fixture({entries:[row('a'),row('b'),row('keep')]});const targets=f.adapter.list('owner').slice(0,2);
+ f.controls.patch='offline';await assert.rejects(f.adapter.removeMany('owner',targets));
+ assert.equal(f.store.head,1);assert.deepEqual(result(f.repository.snapshot().pending.entries),[row('keep')]);
+ await assert.rejects(f.adapter.removeMany('owner',targets),/pending-intent/);
+ f.controls.patch='success';assert.equal((await f.repository.flush()).ok,true);
+ assert.deepEqual(f.remoteRows(),[row('keep')]);assert.equal(f.store.head,2);
+});
