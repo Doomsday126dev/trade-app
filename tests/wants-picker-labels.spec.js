@@ -16,7 +16,7 @@ test('visible Hoothoot suggestion and Options use the same canonical label witho
  }
  if(process.env.PICKER_LABEL_CAPTURE_DIR){fs.mkdirSync(process.env.PICKER_LABEL_CAPTURE_DIR,{recursive:true});await page.screenshot({path:process.env.PICKER_LABEL_CAPTURE_DIR+'/hoothoot-'+page.context().browser().browserType().name()+'.png'});}
  await list.getByRole('option').click();await expect(input).toHaveValue(identity.name);
- await page.getByRole('button',{name:'Options ▾',exact:true}).click();
+ await expect(page.locator('#combined-editor-modal')).toBeVisible();
  await expect(page.locator('#combined-identity-name')).toHaveText('Hoothoot (New Year Hat)');
  expect(await page.evaluate(()=>combinedEditor?.entries?.length||0)).toBe(0);
  await page.evaluate(()=>stopAccountSyncRuntime());
