@@ -1,5 +1,7 @@
 const {preferredArt,installPumpkabooArt}=require('./helpers/pumpkaboo-art-fixture.cjs');
 const {test,expect}=require('@playwright/test'),{normalFixture,settled}=require('./helpers/usability-fixture.cjs'),controls=require('./helpers/current-want-controls.cjs'),rows=require('../data/reviewed-consolidated-shiny-assets.json').records,fs=require('fs'),source=fs.readFileSync(require.resolve('./normal-sync-product.spec.js'),'utf8'),install=eval('('+source.slice(source.indexOf('async function install('),source.indexOf('\nasync function settled'))+')');
+// Synthetic external-image replay must not be intercepted by the live service worker.
+test.use({serviceWorkers:'block'});
 async function showGender(page){await controls.genderDetails(page);}
 for(let offset=0;offset<rows.length;offset+=20)for(const shiny of [false,true])test('consolidated '+offset+'–'+Math.min(offset+20,rows.length)+' '+(shiny?'Shiny':'normal')+' costumes select valid genders, save/reload and render exact shared-list art',async({page},info)=>{
  test.setTimeout(180000);

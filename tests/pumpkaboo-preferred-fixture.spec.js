@@ -1,4 +1,6 @@
 const {test,expect}=require('@playwright/test');
+// Synthetic external-image replay must not be intercepted by the live service worker.
+test.use({serviceWorkers:'block'});
 const {normalFixture}=require('./helpers/usability-fixture.cjs');
 const {ids,preferredArt,installPumpkabooArt}=require('./helpers/pumpkaboo-art-fixture.cjs');
 const rows=Object.keys(ids).flatMap(name=>[false,true].flatMap(shiny=>['m','f'].map(gender=>({name,shiny,gender,no:710,url:preferredArt({name},shiny)}))));
