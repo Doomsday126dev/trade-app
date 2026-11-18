@@ -10,8 +10,8 @@ async function installPumpkabooArt(page){
   const url=preferredArt({name},shiny),proof=evidence.find(r=>r.url===url);
   if(!proof?.sha256)throw Error('Missing reviewed exact-source proof: '+url);
   const file=path.join(dir,(shiny?'shiny-':'')+ids[name]+'.png');
-  const hash=()=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-  if(!fs.existsSync(file)||hash()!==proof.sha256)execFileSync('curl',['--fail','--silent','--show-error','--max-time','20',url,'-o',file]);
+  const hash=(target=file)=>crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex');
+  if(!fs.existsSync(file)||hash()!==proof.sha256){const temporary=file+'.'+process.pid+'.tmp';try{execFileSync('curl',['--fail','--silent','--show-error','--max-time','20',url,'-o',temporary]);if(hash(temporary)!==proof.sha256)throw Error('Original sprite differs from reviewed SHA256: '+url);fs.renameSync(temporary,file);}finally{if(fs.existsSync(temporary))fs.unlinkSync(temporary);}}
   if(hash()!==proof.sha256)throw Error('Original sprite differs from reviewed SHA256: '+url);
   await page.route(url,route=>route.fulfill({path:file,contentType:'image/png'}));
  }
