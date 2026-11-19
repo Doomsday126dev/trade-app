@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-10-19",
+  "lastReviewedDate": "2026-11-19",
   "maintenanceConcept": "pending-reviewed-artwork",
   "productionBaseline": {
     "release": "2026-09-22.117",
@@ -60,7 +60,7 @@
         "reason": "No Gloria-labelled GO sprite exists in the accepted gallery and this audit found no authoritative announcement establishing the legacy Gloria costume. The previous multiple-variants claim was not substantiated."
       },
       "nextReviewAction": "Establish that this exact GO costume exists and resolve its identity before considering artwork.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "gloria"
@@ -70,7 +70,7 @@
       "reviewedCandidateFiles": [],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. No exact Gloria file and no authoritative identity substantiated; retain unverified."
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(GO%20Fest%202023)",
@@ -90,7 +90,7 @@
         "reason": "Five gem-crown variants are already in the accepted gallery; the legacy GO Fest 2023 label does not select a crown colour. This is an identity gap, not missing artwork."
       },
       "nextReviewAction": "Keep excluded until explicit user-safe identity evidence selects one crown; do not choose a default colour.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "amethyst",
@@ -128,7 +128,7 @@
       ],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. Five distinct crowns have accepted artwork; year-only key does not identify the crown."
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(GO%20Fest%202024)",
@@ -148,7 +148,7 @@
         "reason": "Moon Crown and Sun Crown sprites are both in the accepted gallery; the legacy GO Fest 2024 label does not choose between them."
       },
       "nextReviewAction": "Resolve the intended tiara through a separate identity compatibility decision, not an art-only alias guess.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "moon",
@@ -168,7 +168,7 @@
       ],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. Both Sun and Moon Crown have accepted artwork; year-only key does not identify the crown."
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Jeju)",
@@ -188,7 +188,7 @@
         "reason": "Official Jeju evidence names Blue Shirt (Citrus) and multiple balloon costumes, which have accepted sprites. The legacy location-only label does not establish which one it means; the previous restricted-only claim was incorrect."
       },
       "nextReviewAction": "Obtain evidence tying the legacy Jeju identity specifically to Blue Shirt (Citrus) or an explicit balloon variant before mapping.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "blue",
@@ -208,7 +208,7 @@
       ],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. Blue T-shirt and orange balloon artwork remain distinct; the recorded historical official English page now returns 404. Generic location key remains unresolved."
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Victor)",
@@ -228,7 +228,7 @@
         "reason": "No Victor-labelled GO sprite exists in the accepted gallery and this audit found no authoritative announcement establishing the legacy Victor costume. The previous multiple-variants claim was not substantiated."
       },
       "nextReviewAction": "Establish that this exact GO costume exists and resolve its identity before considering artwork.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "victor"
@@ -238,7 +238,7 @@
       "reviewedCandidateFiles": [],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. No exact Victor file and no authoritative identity substantiated; retain unverified."
     },
     {
       "canonicalCostumeId": "pokemon:287:standard:legacy:Slakoth%20(Night%20Cap)",
@@ -258,7 +258,7 @@
         "reason": "The official Slumbering Sands event names Slakoth wearing a visor and Snorlax wearing a nightcap. The accepted Slakoth visor sprite exists, but it does not validate the legacy Night Cap label."
       },
       "nextReviewAction": "Resolve the legacy label with identity evidence; do not silently rename it or map the visor as if it were a nightcap.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "night"
@@ -273,7 +273,7 @@
       ],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. Official Slumbering Sands and gallery agree that Slakoth wears a visor; the official nightcap is on Snorlax. Do not relabel legacy key."
     },
     {
       "canonicalCostumeId": "pokemon:710:standard:legacy:Pumpkaboo%20(Spooky)",
@@ -293,7 +293,7 @@
         "reason": "Four accepted Spooky Festival sprites exist (small, average, large, super); the legacy Spooky label does not encode a size."
       },
       "nextReviewAction": "Resolve the stored size before selecting exact artwork; do not assume average.",
-      "lastReviewedDate": "2026-10-19",
+      "lastReviewedDate": "2026-11-19",
       "searchTerms": [
         [
           "spooky"
@@ -308,7 +308,7 @@
       ],
       "artworkStatus": "unavailable",
       "identityStatus": "unresolved",
-      "reviewResult": "October 19 complete gallery comparison: filenames, labels and candidate dispositions unchanged; existing blocker retained."
+      "reviewResult": "2026-11-19 complete live gallery comparison: no filenames or labels changed. Four distinct sizes retain accepted art; the size-free legacy key remains ambiguous."
     }
   ],
   "reviewScope": "All 127 accepted-source GO galleries compared live on 2026-09-22 with no changes; all 21 inherited unavailable identities re-reviewed. Four September announcements are recorded as released with artwork unavailable, and two October identities remain announced.",
@@ -370,7 +370,7 @@
         "retrievedAt": "2026-09-22T21:21:22Z",
         "sha256": "9b01aa0df2d7d325464b161a3d1493741fc9064b76af91d46bba083a2764a191",
         "result": "unresolved-bot-challenge",
-        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pok\u00e9mon GO announcement was reviewed instead."
+        "gap": "The previously recorded pokemon.com URL returned only an Incapsula challenge shell. The accessible official Pokémon GO announcement was reviewed instead."
       },
       "fossil": {
         "url": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026",
