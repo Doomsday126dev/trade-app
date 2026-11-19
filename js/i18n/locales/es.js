@@ -1,6 +1,11 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({
+    "favoritePicker.notVerified":"Necesita un inicio de sesión vinculado",
+    "favoritePicker.checkFailed":"Error al verificar · inténtalo más tarde",
+    "favoritePicker.saveFailed":"Error al guardar · revisa Aplicación y datos",
+    "favoritePicker.recheckUnverified":"Es posible que los perfiles antiguos importados de la hoja de cálculo aún no tengan vinculado un inicio de sesión aquí. Tras vincularlo, selecciona al entrenador individualmente para volver a comprobarlo.",
+    "favoritePicker.results":"{confirmed} confirmados · {pending} pendientes · {failed} sin guardar.",
     "loginHelp.title":"Ayuda para iniciar sesión",
     "loginHelp.pin":"¿Olvidaste tu PIN?",
     "loginHelp.pinBody":"Pide a un administrador de la comunidad que restablezca tu PIN. Conservarás tu perfil y tu lista de intercambios.",

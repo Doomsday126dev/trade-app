@@ -11,6 +11,7 @@ const root=path.resolve(process.env.PAGES_RUNTIME_ROOT||controlRoot);
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const audit177='88a7ba3016432fd61a43489caaed99b4063c8fe0';
+const favorites179='e0582c9988b31a9d2f0e4ae535b6544fde8d1d89';
 const compact178='fde027e0cd8d14c651a740930fd42bf45e9aeb10';
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
@@ -18,8 +19,9 @@ const localRecovery=/(?:2026-10-22\.13[01]|2026-10-25\.13[2-8]|2026-10-26\.(?:13
 const localCatalogue=/(?:2026-10-27\.(?:156|157|158|159|160)|2026-10-28\.(?:161|162|163|164)|2026-10-29\.(?:165|166|167|168))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const localAudit177=!requestedRuntimeSha&&/\bconst RELEASE_ID='2026-11-17\.177';/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
 const localCompact178=!requestedRuntimeSha&&/\bconst RELEASE_ID='2026-11-17\.178';/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const localBackground=localCompact178||requestedRuntimeSha===compact178||localAudit177||requestedRuntimeSha===audit177||/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.(?:174|175|176))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
-const current=requestedRuntimeSha||(localCompact178?compact178:null)||(localAudit177?audit177:null)||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
+const localFavorites179=!requestedRuntimeSha&&/\bconst RELEASE_ID='2026-11-18\.179';/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const localBackground=localFavorites179||requestedRuntimeSha===favorites179||localCompact178||requestedRuntimeSha===compact178||localAudit177||requestedRuntimeSha===audit177||/(?:2026-10-30\.169|2026-10-31\.(?:170|171)|2026-11-10\.(?:172|173)|2026-11-16\.(?:174|175|176))/.test(fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8'));
+const current=requestedRuntimeSha||(localFavorites179?favorites179:null)||(localCompact178?compact178:null)||(localAudit177?audit177:null)||(localBackground?'8384284d4483a4abcebcc9756e9ecaf92c2893d7':null)||(localCatalogue?'ef0d1fcaa26827564fb29c1029ba6e9a77d6923f':localRecovery?'27c4bdc3b5266c653b7a0f88df65b90bba0bf2a8':hasConditionalObservation?'a'.repeat(40):'f585cb2523ad65f2bbdcbe15ff8b5837a0366269');
 const productionRollback='62482523588e5f7a3065936c93bfa043d4d31fb5';
 const rollback='df20ddbc5a273b8fef0832c4e38b3de86b69a2dd';
 const window={};
@@ -167,6 +169,19 @@ test('compact .178 pins the unmodified .177 contract for exact and local-mode va
   assert.notEqual(check(dir,'b'.repeat(40)).status,0);
   change(dir,'js/domain/backgroundPersistence.js','// Owner-data adapter prelude:','// Invalid owner-data adapter prelude:');
   for(const result of [check(dir,compact178),checkWithoutRuntimeSha(dir)])assert.match(result.stderr,/Owner-data bundle must preserve the exact cache adapter/);
+});
+test('Favorites .179 uses the unchanged .178 contract in exact and local modes',t=>{
+  const contracts=window.PogoData.firebaseReadRegistry.SOURCE_CALL_CONTRACTS;
+  assert.equal(contracts[favorites179],contracts[compact178]);
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'favorites179-read-contract-'));
+  t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  const archive=execFileSync('git',['archive',favorites179,'index.html','css','js'],{cwd:root,maxBuffer:32*1024*1024});
+  execFileSync('tar',['-xf','-','-C',dir],{input:archive});
+  const exact=check(dir,favorites179),local=checkWithoutRuntimeSha(dir);
+  assert.equal(exact.status,0,exact.stderr);assert.equal(local.status,0,local.stderr);
+  const sites=JSON.parse(exact.stdout).directReads;
+  assert.equal(sites.length,35);assert.deepEqual(JSON.parse(local.stdout).directReads,sites);
+  assert.notEqual(check(dir,'b'.repeat(40)).status,0);
 });
 test('parsed runtime inventory matches its exact reviewed contract',()=>{
   const actual=collectReadSites(root);

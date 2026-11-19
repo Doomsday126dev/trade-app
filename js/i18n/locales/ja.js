@@ -1,6 +1,11 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({
+    "favoritePicker.notVerified":"ログイン連携が必要",
+    "favoritePicker.checkFailed":"確認エラー・時間をおいて再試行",
+    "favoritePicker.saveFailed":"保存エラー・アプリとデータを確認",
+    "favoritePicker.recheckUnverified":"スプレッドシートから取り込んだ古いトレーナープロフィールは、このアプリのログインと連携されていない場合があります。連携後、そのトレーナーを個別に選んでもう一度確認してください。",
+    "favoritePicker.results":"確認済み {confirmed} 件・保留中 {pending} 件・未保存 {failed} 件。",
     "loginHelp.title":"ログインのヘルプ",
     "loginHelp.pin":"PINを忘れた場合",
     "loginHelp.pinBody":"コミュニティの管理者にPINの再設定を依頼してください。トレーナープロフィールと交換リストはそのまま残ります。",
