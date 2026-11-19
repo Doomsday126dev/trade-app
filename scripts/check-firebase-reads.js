@@ -30,7 +30,8 @@ const localBackgroundContract=!runtimeSourceSha&&/\bconst RELEASE_ID='(?:2026-10
 const localAudit177Contract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-11-17\.177';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['88a7ba3016432fd61a43489caaed99b4063c8fe0']:null;
 const localCompact178Contract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-11-17\.178';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['fde027e0cd8d14c651a740930fd42bf45e9aeb10']:null;
 const localFavorites179Contract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-11-18\.179';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['e0582c9988b31a9d2f0e4ae535b6544fde8d1d89']:null;
-const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localFavorites179Contract||localCompact178Contract||localAudit177Contract||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
+const localDynamax180Contract=!runtimeSourceSha&&/\bconst RELEASE_ID='2026-11-19\.180';/.test(localReleaseSource)?SOURCE_CALL_CONTRACTS['b0fdb2599895370dd6445d49e25ff7885c31b24a']:null;
+const SOURCE_CALL_CONTRACT=SOURCE_CALL_CONTRACTS[runtimeSourceSha]||localDynamax180Contract||localFavorites179Contract||localCompact178Contract||localAudit177Contract||localBackgroundContract||localCatalogueContract||localRecoveryContract||localControlContract||defaultSourceCallContract;
 const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
 const actualReadSites=collectReadSites(root);
 const inventory=reconcileReadSites(actualReadSites,SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
