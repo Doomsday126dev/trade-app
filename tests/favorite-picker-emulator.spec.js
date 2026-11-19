@@ -43,8 +43,8 @@ test('spreadsheet-style directory-only trainer is skipped on bulk retry and can 
  await adminData('PATCH','',{['loginDirectory/'+failed.name]:{authReady:false,authVersion:1},['users/'+failed.name]:null,['authIndex/'+failed.uid]:null});
  await open(page,f);await page.locator('[data-picker-all]').click();await page.locator('[data-picker-add]').click();await settled(page);
  await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected)).toEqual([]);
- const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Needs a linked Apri sign-in');
- await expect(page.locator('[data-picker-status]')).toContainText('Older trainer profiles imported from the spreadsheet may not have a linked Apri sign-in yet.');
+ const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Needs a linked sign-in');
+ await expect(page.locator('[data-picker-status]')).toContainText('Older trainer profiles imported from the spreadsheet may not be linked to a sign-in here yet.');
  await page.locator('#favorite-picker-search').fill(failed.name);
  await expect(page.locator('[data-picker-all]')).toBeDisabled();
  await expect(page.locator('[data-picker-add]')).toBeDisabled();

@@ -38,9 +38,9 @@ test('mixed verified, unavailable, transport, and write results render truthful 
   submitFavoritePicker();
  `,context);
  const rows=nodes.get('[data-picker-rows]').innerHTML;
- for(const label of ['Already added','Needs a linked Apri sign-in','Check failed · try later','Save failed · check App &amp; Data'])assert.ok(rows.includes(label),label);
+ for(const label of ['Already added','Needs a linked sign-in','Check failed · try later','Save failed · check App &amp; Data'])assert.ok(rows.includes(label),label);
  assert.ok(!rows.includes('favorite/identity-unavailable')&&!rows.includes('account-sync/conflict'));
- assert.match(nodes.get('[data-picker-status]').textContent,/1 confirmed · 0 pending · 3 not saved\. Older trainer profiles imported from the spreadsheet may not have a linked Apri sign-in yet\. Once linked, select the trainer manually to check again\./);
+ assert.match(nodes.get('[data-picker-status]').textContent,/1 confirmed · 0 pending · 3 not saved\. Older trainer profiles imported from the spreadsheet may not be linked to a sign-in here yet\. Once linked, select the trainer manually to check again\./);
  assert.equal(nodes.get('[data-picker-add]').textContent,'Add 2 favorites');
  await vm.runInContext('submitFavoritePicker()',context);
  assert.deepEqual(requestAttempts[1],['Connection trainer','Write trainer']);
