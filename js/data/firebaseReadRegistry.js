@@ -241,6 +241,8 @@
       runLoginHealthCheck:'b2f35aaa44abd53a8d4a556adfda7c80bfc7e082bccb8e654caf42cd53ae8635'})
   });
   const SOURCE_CALL_CONTRACTS=Object.freeze({
+    // .179 changes only Favorites picker feedback and selection; no read sites or handlers change.
+    'e326e97d1a952bd45a358677cc350ef2984c7016':AUDIT177_SOURCE_CALL_CONTRACT,
     // .178 changes only Add presentation and picker routing; read sites and handlers are unchanged.
     'fde027e0cd8d14c651a740930fd42bf45e9aeb10':AUDIT177_SOURCE_CALL_CONTRACT,
     '88a7ba3016432fd61a43489caaed99b4063c8fe0':AUDIT177_SOURCE_CALL_CONTRACT,
