@@ -34,6 +34,10 @@ test('all repaired Max sprites preserve normal/Shiny and visible gender variants
  const context=vm.createContext({window,URL});for(const file of ['publicPokemonDex.js','spriteSlugs.js','costumeSpriteCatalog.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/domain',file),'utf8'),context);
  const api=window.PogoDomain.spriteSlugs;
  for(const entry of evidence.records.filter(r=>r.collection==='dynamax'))for(const shiny of [false,true])for(const gender of ['','m','f']){
+  if(gender&&window.PogoDomain.publicPokemonDex.variantStatus(entry.name+' (Dynamax)')?.genders.length===0){
+   assert.deepEqual(Array.from(api.publicSpriteUrls(entry.name+' (Dynamax)',gender,entry.no,shiny)),[]);
+   continue;
+  }
   const female=gender==='f'&&[111,112,464,215,461,129,130,350,415].includes(entry.no);
   const expected=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${female?'female/':''}${entry.no}.png`;
   assert.deepEqual(Array.from(api.publicSpriteUrls(entry.name+' (Dynamax)',gender,entry.no,shiny)),[expected]);
@@ -56,5 +60,31 @@ test('a missing public Max allowlist entry fails even when selectable source dat
  for(const missing of evidence.records.filter(r=>r.collection==='dynamax')){
    const incomplete={dynamaxBase:(name,no)=>no===missing.no?'':api.dynamaxBase(name,no)};
    assert.throws(()=>checkPublicEligibility(incomplete,evidence),/missing public Max allowlist/);
+ }
+});
+
+test('GO Wild Area Dialga and Palkia are exact released genderless Max identities, not Origin forms',()=>{
+ const {loadPublicDex}=require('../scripts/check-released-catalog.cjs');
+ const dex=loadPublicDex(),holds=require('../data/recent-release-review-holds.json').entries;
+ const checks=require('../data/catalogue-art-checks.json').records;
+ for(const [no,base] of [[483,'Dialga'],[484,'Palkia']]){
+  const expected=evidence.records.find(entry=>entry.id==='dynamax:'+no);
+  assert.equal(expected.releasedShiny,true);
+  assert.ok(expected.sources.includes('https://pokemongo.com/gowildarea/global'));
+  assert.equal(holds.some(entry=>entry.id===expected.id),false);
+  const name=base+' (Dynamax)',status=dex.variantStatus(name);
+  assert.equal(dex.dynamaxBase(name,no),base);
+  assert.equal(dex.dynamaxBase(base,no),'');
+  assert.equal(dex.dynamaxBase(base+' (Origin)',no),'');
+  assert.equal(dex.dynamaxBase(base+' (Origin) (Dynamax)',no),'');
+  assert.equal(status.normal,'released');assert.equal(status.shiny,'released');
+  assert.deepEqual(Array.from(status.genders),[]);
+  for(const shiny of [false,true]){
+   const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${shiny?'shiny/':''}${no}.png`;
+   const proof=checks.find(entry=>entry.no===no&&entry.shiny===shiny&&entry.url===url);
+   assert.equal(proof.status,'verified-bytes');
+   assert.match(proof.sha256,/^[a-f0-9]{64}$/);
+   assert.ok(proof.decoded);
+  }
  }
 });

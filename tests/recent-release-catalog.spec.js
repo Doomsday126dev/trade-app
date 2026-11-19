@@ -15,7 +15,7 @@ test('independent release inventory is selectable and public Max identities are 
  const state=await page.evaluate(()=>({names:_specialAllItems().map(e=>e.name),max:DB.dynamax.map(e=>({name:e.name,base:window.PogoDomain.publicPokemonDex.dynamaxBase(e.name+' (Dynamax)',e.no)}))}));
  for(const name of targets)expect(state.names.filter(n=>n===name)).toHaveLength(1);
  for(const r of evidence.records.filter(r=>r.collection==='dynamax'))expect(state.max.find(e=>e.name===r.name)?.base).toBe(r.name);
- const queries={'dmax deino':'Deino (Dynamax)','d-max deino':'Deino (Dynamax)','dmax sizzlepede':'Sizzlipede (Dynamax)','Korean pika':hanbok,'Orange Hanbok':hanbok,'Korea':hanbok,'Autumn Picnic':hanbok};
+ const queries={'dmax deino':'Deino (Dynamax)','d-max deino':'Deino (Dynamax)','dmax sizzlepede':'Sizzlipede (Dynamax)','dmax dialga':'Dialga (Dynamax)','dmax palkia':'Palkia (Dynamax)','Korean pika':hanbok,'Orange Hanbok':hanbok,'Korea':hanbok,'Autumn Picnic':hanbok};
  for(const [query,name]of Object.entries(queries)){await page.locator('#wants-add-name').fill(query);await expect(page.locator('#wants-add-name-suggestions').getByRole('option',{name,exact:true})).toBeVisible();}
 });
 
@@ -33,7 +33,7 @@ for(const shiny of [false,true])test('released identities add, persist, reload a
   await page.locator('#wants-add-name-suggestions').getByRole('option',{name,exact:true}).click();
   await expect(page.locator('#combined-editor-modal')).toBeVisible();
   await controls.priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);
-  if(['Uxie (Dynamax)','Mesprit (Dynamax)','Azelf (Dynamax)'].includes(name)){await controls.genderDetails(page);expect(await page.locator('#combined-gender option').evaluateAll(os=>os.map(o=>o.value))).toEqual(['']);}
+  if(['Uxie (Dynamax)','Mesprit (Dynamax)','Azelf (Dynamax)','Dialga (Dynamax)','Palkia (Dynamax)'].includes(name)){await controls.genderDetails(page);expect(await page.locator('#combined-gender option').evaluateAll(os=>os.map(o=>o.value))).toEqual(['']);}
   if(['Rhyhorn','Rhydon','Rhyperior','Sneasel','Weavile','Magikarp','Gyarados','Milotic','Combee'].some(base=>name===base+' (Dynamax)')){await controls.genderDetails(page);await page.locator('#combined-gender').selectOption('f');}
   if(name===hanbok){await controls.genderDetails(page);expect(await page.locator('#combined-gender option').evaluateAll(os=>os.map(o=>o.value).sort())).toEqual(['','f']);await page.locator('#combined-gender').selectOption('f');}
   await page.locator('#combined-save').click();await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
