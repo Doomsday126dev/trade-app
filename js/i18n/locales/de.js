@@ -1,10 +1,10 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({
-    "favoritePicker.notVerified":"Trainer konnte nicht bestätigt werden",
+    "favoritePicker.notVerified":"Apri-Anmeldung muss verknüpft sein",
     "favoritePicker.checkFailed":"Prüfung fehlgeschlagen · später erneut versuchen",
     "favoritePicker.saveFailed":"Speichern fehlgeschlagen · App & Daten prüfen",
-    "favoritePicker.recheckUnverified":"Wähle einen nicht bestätigten Trainer aus, um ihn erneut zu prüfen.",
+    "favoritePicker.recheckUnverified":"Bei älteren Trainerprofilen aus der Tabelle kann die Apri-Anmeldung noch unverknüpft sein. Wähle den Trainer nach der Verknüpfung einzeln aus, um erneut zu prüfen.",
     "favoritePicker.results":"{confirmed} bestätigt · {pending} ausstehend · {failed} nicht gespeichert.",
     "loginHelp.title":"Hilfe bei der Anmeldung",
     "loginHelp.pin":"PIN vergessen?",
