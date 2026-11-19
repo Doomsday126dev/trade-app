@@ -221,3 +221,26 @@ test('overdue announced identity is flagged even when a catalog record exists, w
 test('Thailand pinned family is reviewed separately from gallery but source variant drift stays actionable',()=>{
  const data=inputs(),row=data.catalog.entries.find(r=>r.sourceProvider==='pokeminers-thailand-reviewed');assert(row);assert.equal(buildReport(data).status,'offline-check-passed');row.sourceFiles.femaleShiny=row.sourceFiles.shiny;const report=buildReport(data);assert.equal(report.status,'review-required');assert(report.problems.some(p=>p.kind==='source-provenance'&&p.identity===row.names[0]));
 });
+
+
+test('November official source review qualifies new observations without mutating eligibility',()=>{
+ const {releases,pending,snapshot}=inputs(),review=releases.additionalReviews.find(r=>r.reviewedAt==='2026-11-19T19:41:55Z');
+ assert.ok(review);
+ assert.ok(Array.isArray(review.ids));assert.deepEqual(review.ids,[]);
+ const reviewed=Date.parse(review.reviewedAt);assert.ok(Number.isFinite(reviewed));
+ for(const source of review.sources){
+  assert.match(source.url,/^https:\/\/pokemongo\.com\//);
+  assert.match(source.finalUrl,/^https:\/\/pokemongo\.com\//);
+  assert.equal(source.status,200);
+  assert.ok(Number.isFinite(Date.parse(source.retrievedAt))&&Date.parse(source.retrievedAt)<=reviewed);
+  assert.match(source.sha256,/^[a-f0-9]{64}$/);
+ }
+ const calendar=review.sources.find(r=>r.url.endsWith('/en/events'));
+ assert.match(calendar.finalUrl,/\/events\/november-2026$/);
+ assert.match(review.findings.join(' '),/empty|no public events/);
+ assert.match(review.findings.join(' '),/Manila costume encounter from September 12, 2026/);
+ const manila=releases.entries.find(r=>r.catalogName==='Pikachu (PokeXciting Philippines)');
+ assert.equal(manila.releaseDate,'2027-01-23');assert.equal(manila.lifecycleStatus,'announced');
+ assert.equal(pending.entries.length,7);assert.ok(pending.entries.every(r=>r.identityStatus==='unresolved'));
+ assert.equal(snapshot.pages.length,128);
+});

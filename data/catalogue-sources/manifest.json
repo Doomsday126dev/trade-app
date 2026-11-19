@@ -6,8 +6,8 @@
     {
       "id": "normal-inventory",
       "file": "normal-inventory.json",
-      "sha256": "8edbc36c7b6be325ad2d9a4f79c608ee527c2b52c7a7a9ffb17651de3a052078",
-      "observedAt": "2026-10-27T01:17:33.896575+00:00",
+      "sha256": "5396029e51979d900ca58ad123eb53339897f59b77a96d20e15ef9317fa4d982",
+      "observedAt": "2026-11-19T19:31:23.364Z",
       "status": "ok",
       "role": "GO identity and availability claims; secondary evidence, form/gender labels require reconciliation",
       "parserVersion": 3,
@@ -17,22 +17,24 @@
         "old": "Darmanitan (Galarian Form",
         "name": "Darmanitan (Galarian Form Zen Mode)",
         "reason": "Preserve Zen Mode inside the name cell across <br>; do not conflate with standard Galarian Form."
-      }
+      },
+      "firstObservedAt": "2026-10-27T01:17:33.896575+00:00"
     },
     {
       "id": "shiny-inventory",
       "file": "shiny-inventory.json",
-      "sha256": "6b44bfccccbbea49167f6ca9f43ff767931844b4ce2b27790b2ea08758b4ee83",
-      "observedAt": "2026-10-27T00:09:06.845363+00:00",
+      "sha256": "f80fd0da6f5e3882d8fb81fa8b858f55a79b31ebdf5385c9a5968aade8f0bf42",
+      "observedAt": "2026-11-19T19:31:23.364Z",
       "status": "ok",
       "role": "GO identity and availability claims; secondary evidence, form/gender labels require reconciliation",
-      "parserVersion": 2
+      "parserVersion": 2,
+      "firstObservedAt": "2026-10-27T00:09:06.845363+00:00"
     },
     {
       "id": "pokemod",
       "file": "pokemod-pokemon-tree.json",
       "sha256": "377fed383f3c1a54c287e847d404eecc20eb80572b418c0911c3df52b7541f5f",
-      "observedAt": "2026-10-26T01:19:10.886992+00:00",
+      "observedAt": "2026-11-19T19:31:23.364Z",
       "headCheckedAt": "2026-10-27T04:33:06.038363+00:00",
       "commit": "80a2323099f9c00207a8c9ee20d9386831f6b0ca",
       "sourceUpdatedAt": "2026-06-08T02:22:57Z",
@@ -40,24 +42,27 @@
       "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/git/trees/f81e493a69d075ddbc01ac578d85746f75dbf553?recursive=1",
       "role": "Mined asset inventory, including pre-release files; no release implication",
       "originalCachedPayloadSha256": "33107097254e6b4359587398d775b36b68759b18b4b863388bd11c9c53ecaec3",
-      "projection": "Complete path/type/blob SHA/size inventory; redundant mode and per-blob API URLs omitted. No source rows removed."
+      "projection": "Complete path/type/blob SHA/size inventory; redundant mode and per-blob API URLs omitted. No source rows removed.",
+      "firstObservedAt": "2026-10-26T01:19:10.886992+00:00"
     },
     {
       "id": "max-inventory",
       "file": "max-inventory.json",
-      "sha256": "b95f0fff7c2800c47fddb9f6347f72e623cfe42ea23f9c61c9a30d8d673de540",
-      "observedAt": "2026-10-27T00:28:45.526378+00:00",
+      "sha256": "e148924f0f83456b37006157ecf66c50e16c1a19459ab1840a2b957d9722d2d9",
+      "observedAt": "2026-11-19T19:31:23.364Z",
       "status": "ok",
-      "role": "Dynamax-capable identity inventory; includes announced future species, not release authority"
+      "role": "Dynamax-capable identity inventory; includes announced future species, not release authority",
+      "firstObservedAt": "2026-10-27T00:28:45.526378+00:00"
     },
     {
       "id": "gigantamax-inventory",
       "file": "gigantamax-inventory.json",
-      "sha256": "03b689c42ae4e329dd65ace3a486281b044f0da7972d7d028bec2c632844347e",
-      "observedAt": "2026-10-27T00:28:45.526378+00:00",
+      "sha256": "a3cf1b286ab2673d03158855218b4a1856cdbc3a90253874d042341ca569a013",
+      "observedAt": "2026-11-19T19:31:23.364Z",
       "status": "ok",
       "role": "Gigantamax-capable species inventory; secondary table can lag official releases, not release authority",
-      "qualification": "Separate Gigantamax section of the same cached Max inventory page. Secondary inventory may lag official announcements; no release eligibility inferred."
+      "qualification": "Separate Gigantamax section of the same cached Max inventory page. Secondary inventory may lag official announcements; no release eligibility inferred.",
+      "firstObservedAt": "2026-10-27T00:28:45.526378+00:00"
     }
   ],
   "fetchEvidence": [
@@ -164,5 +169,131 @@
       "sourceUpdatedAt": "2026-10-08T20:42:48Z",
       "scope": "Head-change watch only; existing artwork identity and release coverage remain separately unresolved. A changed head requires review, not automatic asset approval."
     }
-  ]
+  ],
+  "latestInventoryObservation": {
+    "observationStartedAt": "2026-11-19T19:31:23.364Z",
+    "completedAt": "2026-11-19T19:31:25.521Z",
+    "scope": [
+      "normal-inventory",
+      "shiny-inventory",
+      "pokemod",
+      "max-inventory",
+      "gigantamax-inventory"
+    ],
+    "qualification": "Actual HTTP response hashes from reviewed source collection. No release eligibility inferred. Existing original import evidence retained.",
+    "responses": [
+      {
+        "url": "https://www.serebii.net/pokemongo/hisuipokemon.shtml",
+        "sha256": "57f526ff3ebfa348b1b24df2091d5d3899c18b02b1ac06e36df44fb28aa56540",
+        "bytes": 58618,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.578Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen6pokemon.shtml",
+        "sha256": "c7f219cfea7892dec245086ab249d3aead0f212525b913fb913767d441b6fb20",
+        "bytes": 232656,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.603Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen7pokemon.shtml",
+        "sha256": "d38d70fa83208e8340c2e072c015442db07e7776e94388b360c75c3951262453",
+        "bytes": 188574,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.603Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/maxbattles.shtml",
+        "sha256": "2df74d2d7d600cb3417d5fc57211395740e776639950d268cdd84e7445445867",
+        "bytes": 185573,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.603Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen2pokemon.shtml",
+        "sha256": "2eb24c62612b945e9c62285d510b6efbb6cbcf1082367f74d9258dc3335054fe",
+        "bytes": 210855,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.605Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen8pokemon.shtml",
+        "sha256": "53b2c69f96e5bdab3b5ba5fab3e92a766e4999416e29e54677c37cc462aa3f99",
+        "bytes": 172103,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.619Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen9pokemon.shtml",
+        "sha256": "f55df17191a962bad6100706e99468a1fef1099ffc38cab27d45f1bafa326a66",
+        "bytes": 219370,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.620Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen4pokemon.shtml",
+        "sha256": "326e7f5fd7068c6f9ec4884a05d76288f5519f616e8b49eae44883cb9f9d05df",
+        "bytes": 221049,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.620Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen3pokemon.shtml",
+        "sha256": "ae5d2b1219cf748ee961f4f463c0eae97f7f5c60ad2c18d8366c9927a0a9edc1",
+        "bytes": 264141,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.622Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen1pokemon.shtml",
+        "sha256": "1870ce5e0ad4c30630592ac9c2adbda8551732f759f9b6c72d6b438a304527af",
+        "bytes": 337894,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.629Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/gen5pokemon.shtml",
+        "sha256": "fd4e9740ff5adfd83627c49b83c4aaa12d2c568754c4d95d31e364c73f5de18c",
+        "bytes": 288798,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.643Z"
+      },
+      {
+        "url": "https://www.serebii.net/pokemongo/shiny.shtml",
+        "sha256": "51af814834aa924d02b8b98ba5547f7c4bfb3ec4186ff11aba90f64b6fdbe390",
+        "bytes": 826167,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:23.662Z"
+      },
+      {
+        "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/commits/master",
+        "sha256": "73556b8a8fbd7d536f86649ea282323bee1dc54111e1b4c6efb91b1389c96bb8",
+        "bytes": 9930,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:24.147Z"
+      },
+      {
+        "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/git/trees/5cf8074121f14df52a2e625cee8a976f1521562a",
+        "sha256": "3f006a7157abb3010b0ce2fb4fc467c3d59d56394e37ff030724848833a3aabf",
+        "bytes": 1523,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:24.403Z"
+      },
+      {
+        "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/git/trees/4655efccca218de675da30af88c5fa57d3999e4c",
+        "sha256": "755e7042f8a8885b7217896cbee8d704c4337eb26e3d068ac174d546d184d0a8",
+        "bytes": 17489,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:24.624Z"
+      },
+      {
+        "url": "https://api.github.com/repos/The-Pokemod-Group/pogo_assets/git/trees/f81e493a69d075ddbc01ac578d85746f75dbf553",
+        "sha256": "ed17bcd2374fae76a28628786c9eb7cb7aad2ac4f7109afb0a957b61d3e6701a",
+        "bytes": 550750,
+        "status": 200,
+        "retrievedAt": "2026-11-19T19:31:25.485Z"
+      }
+    ]
+  }
 }

@@ -2,6 +2,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {reconcile,loadSources,summarizeReview}=require('../scripts/reconcile-catalogue.cjs');
 const {parseGOInventory,parseMaxInventory,observeInventories}=require('../scripts/catalogue-source-observation.cjs');
 const now=new Date('2026-10-27T12:00:00Z');
+// The offline product gate still uses real time; only repository-data tests freeze time at the actual observation.
+const inventoryObservedAt=new Date(Math.max(...require('../data/catalogue-sources/manifest.json').sources.map(r=>Date.parse(r.observedAt))));
 function inputs(){return{sources:{manifest:{importedAt:now.toISOString(),sources:[{id:'normal-inventory',observedAt:now.toISOString()},{id:'shiny-inventory',observedAt:now.toISOString()},{id:'max-inventory',observedAt:now.toISOString()},{id:'pokemod',observedAt:now.toISOString(),commit:'fixture'}]},issues:[],data:{'normal-inventory':[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/gen9pokemon.shtml',sourceSprite:'https://www.serebii.net/pokemongo/pokemon/999.png',availabilityClaim:'listed-without-unavailable-marker'}],'shiny-inventory':[],'max-inventory':[],pokemod:{tree:[]}}},identities:{all:[],database:{dynamax:[]}},art:{entries:[]},forms:{records:[]},now};}
 test('a whole new identity, ambiguous alias and missing art all remain open independently of app seeds',()=>{
  const input=inputs();let result=reconcile(input);assert.equal(result.coverage['normal-inventory'].unmatched,1);assert.ok(result.queue.some(r=>r.name==='New Species'&&r.disposition==='unmatched-identity'));
@@ -14,9 +16,9 @@ test('source parser preserves form qualifiers outside name links and fails on em
  const rows=parseGOInventory(row('571',' (Normal Form)')+row('571-h',' (Hisuian Form)'),'https://www.serebii.net/pokemongo/gen5pokemon.shtml','normal');assert.deepEqual(rows.map(r=>r.name),['Zoroark (Normal Form)','Zoroark (Hisuian Form)']);assert.throws(()=>parseGOInventory('<html>challenge</html>','https://www.serebii.net/','normal'),/No GO sprite rows/);
 });
 test('modified inventory hashes and stale observations are explicit source failures',()=>{
- const valid=loadSources(now);assert.deepEqual(valid.issues,[]);
- const corrupt=loadSources(now,file=>String(file).endsWith('/normal-inventory.json')?Buffer.from('[]'):fs.readFileSync(file));assert.ok(corrupt.issues.some(r=>r.source==='normal-inventory'&&r.kind==='source-integrity-failed'));
- assert.ok(loadSources(new Date('2026-11-10')).issues.some(r=>r.kind==='stale-or-failed-source'));
+ const valid=loadSources(inventoryObservedAt);assert.deepEqual(valid.issues,[]);
+ const corrupt=loadSources(inventoryObservedAt,file=>String(file).endsWith('/normal-inventory.json')?Buffer.from('[]'):fs.readFileSync(file));assert.ok(corrupt.issues.some(r=>r.source==='normal-inventory'&&r.kind==='source-integrity-failed'));
+ const stale=loadSources(new Date(inventoryObservedAt.getTime()+8*86400000));assert.equal(stale.issues.filter(r=>r.kind==='stale-or-failed-source').length,valid.manifest.sources.length);
 });
 test('403 responses are recorded once per source without retries or success from cached data',async()=>{
  const calls=[];const input=inputs().sources;input.data['shiny-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/shiny.shtml'}];input.data['max-inventory']=[{no:999,name:'New Species',source:'https://www.serebii.net/pokemongo/maxbattles.shtml'}];input.data['gigantamax-inventory']=input.data['max-inventory'];
@@ -27,7 +29,7 @@ test('unparsed miner files and legacy identity ambiguity remain visible owner is
  const input=inputs();input.sources.data.pokemod.tree=[{path:'new-format-999.png',sha:'fixture'}];input.art.entries=[{no:999,names:['New Species'],status:'unavailable'}];input.pendingArt=[{displayIdentity:'New Species',reasonCategory:'mapping-ambiguous',candidate:{reason:'Two exact variants exist'},acceptedSourcePage:'https://example.test/variants',nextReviewAction:'Resolve the exact variant'}];const result=reconcile(input);assert.ok(result.queue.some(r=>r.disposition==='unparsed-art-filename'&&r.file.path==='new-format-999.png'));const row=result.queue.find(r=>r.id==='missing-art:999:New Species');assert.equal(row.artState,'exact-identity-ambiguous');assert.equal(row.reason,'Two exact variants exist');assert.equal(row.priority,'urgent');assert.equal(row.disposition,'owner-attention-required');
 });
 
-test('current compact runtime names reconcile without losing the open source queue',()=>{const report=require('../scripts/reconcile-catalogue.cjs').build(now);assert.equal(report.status,'review-required');assert.ok(report.queue.length>0);assert.equal(report.sourceIssues.length,0);});
+test('current compact runtime names reconcile without losing the open source queue',()=>{const report=require('../scripts/reconcile-catalogue.cjs').build(inventoryObservedAt);assert.equal(report.status,'review-required');assert.ok(report.queue.length>0);assert.equal(report.sourceIssues.length,0);});
 test('Gigantamax section is reconciled separately without consuming Dynamax names',()=>{
  const row=(no,name)=>`<a href="/pokemongo/pokemon/${no}.shtml">${name}</a>`;const g=Array.from({length:10},(_,i)=>row(i+1,'Gmax '+i)).join('');const d=Array.from({length:100},(_,i)=>row(i+1,'Dmax '+i)).join('');const html='<h2>List of Gigantamax Capable Pokémon</h2>'+g+'<h2>List of Dynamax Capable Pokémon</h2>'+d;assert.equal(parseMaxInventory(html,'https://example.test/max','gmax').length,10);assert.equal(parseMaxInventory(html,'https://example.test/max').length,100);const input=inputs();input.sources.data['gigantamax-inventory']=[{no:999,name:'New Species',source:'https://example.test/max'}];const result=reconcile(input);assert.equal(result.coverage['gigantamax-inventory'].unmatched,1);assert.ok(result.queue.some(r=>r.id==='gigantamax:999'));
 });

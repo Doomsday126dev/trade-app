@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-10-27",
-  "coverage": "Bounded manual review of the current public News index and costume-bearing Halloween Part I/II, Singapore PokeXciting and Festival of Lights announcements on October 27, 2026. Events remains sign-in-only and was not accessed. Halloween debut date has arrived, but field release confirmation and exact-art qualification remain unresolved; this review does not mark them released or complete. Not an exhaustive release history.",
+  "lastReviewedDate": "2026-11-19",
+  "coverage": "Bounded manual review of the public News index, November Events shell and selected primary costume announcements on November 19, 2026. Events served an empty event array in the observed public response. No complete release-history or event-coverage claim; no release, trade, Shiny or artwork eligibility changed.",
   "reviewSources": [
     "https://pokemongo.com/news",
     "https://pokemongo.com/events"
@@ -764,6 +764,74 @@
         "pokemon:25:standard:legacy:Pikachu%20%28PokeXciting%20Philippines%29"
       ],
       "scope": "Taiwan and Philippines exact regional identities; announced Philippines wants remain selectable."
+    },
+    {
+      "reviewedAt": "2026-11-19T19:41:55Z",
+      "scope": "Bounded public official costume-source review. Existing release and art rows unchanged.",
+      "sources": [
+        {
+          "url": "https://pokemongo.com/en/news",
+          "finalUrl": "https://pokemongo.com/en/news",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:07Z",
+          "sha256": "7af0b231701d14b836a7805caefd8addf0ab527d47b4ec7d59630e17951e3330"
+        },
+        {
+          "url": "https://pokemongo.com/en/events",
+          "finalUrl": "https://pokemongo.com/en/events/november-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "380bef10be09dcae264fa1a48dbb4a80fbc5db1a9aef9ee8492318c627968a9d"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/halloween-part-1-2026",
+          "finalUrl": "https://pokemongo.com/en/news/halloween-part-1-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "c8c9a2ad563292305686a2957d547ac14df33ab16f0222cc4cc3d1245ed13667"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/halloween-part-2-2026",
+          "finalUrl": "https://pokemongo.com/en/news/halloween-part-2-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:07Z",
+          "sha256": "abfad4f207da6de33f0ac65b54b3f228d76ec9760c21ffacb672949f9baed68c"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/festival-of-lights-2026",
+          "finalUrl": "https://pokemongo.com/en/news/festival-of-lights-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "ed5fbd77f9df44216418c01ba2adcd9cdbea6674b6235113a46a1f2984ea4e7a"
+        },
+        {
+          "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+          "finalUrl": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "f1bbcf4a7803aa69c5e3fc13f64db703ce7fa9b80c7d3fac1d68a88f203b5b5d"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/event-apac-30th-anniversary-2026",
+          "finalUrl": "https://pokemongo.com/en/news/event-apac-30th-anniversary-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "7052c9c3556894741bd2ba79bf23619b5c73f14cab48e540555ff25e509a42b1"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/event-apac-stamp-rally-2026",
+          "finalUrl": "https://pokemongo.com/en/news/event-apac-stamp-rally-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-19T19:35:08Z",
+          "sha256": "894be4ab18ac4d105b679939c1f9ffe9a6042303b887c236662f1512c31ba3a4"
+        }
+      ],
+      "findings": [
+        "Halloween debuted the already-registered Pikachu hat/capelet, Zubat top hat and Sinistea bow; Festival of Lights returning variants remain distinct.",
+        "Singapore Blue and its stamp remain explicitly described. Official cross-region rally separately lists a Manila costume encounter from September 12, 2026; dedicated Manila event remains January 23, 2027. Current row eligibility unchanged pending field-specific qualification; not proof of earlier Shiny eligibility, Background authorization, or first-hand observation.",
+        "Events redirected to a public November shell, but no public events were returned in the observed response; review used the actual News headlines and primary announcements."
+      ],
+      "ids": []
     }
   ]
 }
