@@ -11,7 +11,7 @@ const root=path.resolve(process.env.PAGES_RUNTIME_ROOT||controlRoot);
 const tagged='671579c07e8c14c2f1c7d5c6c149332c550a225c';
 const hasConditionalObservation=collectReadSites(root).some(site=>site.handler==='observePublicShareForConditionalWrite');
 const audit177='88a7ba3016432fd61a43489caaed99b4063c8fe0';
-const favorites179='702240b496d3bf24eb35a06e68aaa69cd6a149c1';
+const favorites179='e0582c9988b31a9d2f0e4ae535b6544fde8d1d89';
 const compact178='fde027e0cd8d14c651a740930fd42bf45e9aeb10';
 const requestedRuntimeSha=String(process.env.PAGES_RUNTIME_SOURCE_SHA||'').trim();
 if(requestedRuntimeSha)assert.match(requestedRuntimeSha,/^[0-9a-f]{40}$/);
