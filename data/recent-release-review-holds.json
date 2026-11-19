@@ -23,26 +23,6 @@
       "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
     },
     {
-      "id": "dynamax:483",
-      "name": "Dialga (Dynamax)",
-      "no": 483,
-      "releaseStatus": "announced",
-      "artState": "art-available-identity-review-required",
-      "releaseOnOrAfter": "2026-11-06",
-      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
-      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
-    },
-    {
-      "id": "dynamax:484",
-      "name": "Palkia (Dynamax)",
-      "no": 484,
-      "releaseStatus": "announced",
-      "artState": "art-available-identity-review-required",
-      "releaseOnOrAfter": "2026-11-06",
-      "source": "https://pokemongo.com/gowildarea/sendai/gameplay",
-      "action": "Official Sendai event is November 6\u20138. Keep exact artwork in the upcoming/review catalogue; do not infer current trade eligibility from assets or a source list. Audit any existing selectable row."
-    },
-    {
       "id": "gmax:884",
       "name": "Duraludon (Gigantamax)",
       "no": 884,

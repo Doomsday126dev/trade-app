@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-10-29",
+  "asOf": "2026-11-19",
   "scope": "Reviewed release expectations, including reported Max omissions and evolutions; not a global completeness claim.",
   "records": [
     {
@@ -324,6 +324,32 @@
         "https://www.serebii.net/pokemongo/maxbattles.shtml"
       ],
       "availabilityBasis": "Evolution of released Dynamax Magmar; not a separate Max Battle debut claim."
+    },
+    {
+      "id": "dynamax:483",
+      "collection": "dynamax",
+      "no": 483,
+      "name": "Dialga",
+      "releasedOn": "2026-11-06",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/gowildarea/sendai/gameplay",
+        "https://pokemongo.com/gowildarea/global"
+      ],
+      "availabilityBasis": "First in-person GO Wild Area release November 6\u20138; globally obtainable November 14\u201315. Canonical standard form, not Origin Forme."
+    },
+    {
+      "id": "dynamax:484",
+      "collection": "dynamax",
+      "no": 484,
+      "name": "Palkia",
+      "releasedOn": "2026-11-06",
+      "releasedShiny": true,
+      "sources": [
+        "https://pokemongo.com/gowildarea/sendai/gameplay",
+        "https://pokemongo.com/gowildarea/global"
+      ],
+      "availabilityBasis": "First in-person GO Wild Area release November 6\u20138; globally obtainable November 14\u201315. Canonical standard form, not Origin Forme."
     }
   ]
 }

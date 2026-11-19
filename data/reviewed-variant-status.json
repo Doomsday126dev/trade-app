@@ -2958,6 +2958,32 @@
       ],
       "reviewedAt": "2026-10-29",
       "qualification": "Evolution of Dynamax Magmar, also listed in current Max-capability inventory; not a separate Max Battle debut claim."
+    },
+    {
+      "no": 483,
+      "name": "Dialga (Dynamax)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/gowildarea/sendai/gameplay",
+        "https://pokemongo.com/gowildarea/global"
+      ],
+      "artEvidence": "data/catalogue-art-checks.json",
+      "reviewedAt": "2026-11-19"
+    },
+    {
+      "no": 484,
+      "name": "Palkia (Dynamax)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [],
+      "releaseEvidence": [
+        "https://pokemongo.com/gowildarea/sendai/gameplay",
+        "https://pokemongo.com/gowildarea/global"
+      ],
+      "artEvidence": "data/catalogue-art-checks.json",
+      "reviewedAt": "2026-11-19"
     }
   ]
 }
