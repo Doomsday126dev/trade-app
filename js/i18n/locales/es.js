@@ -1,6 +1,11 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({
+    "favoritePicker.notVerified":"No pudimos verificar al entrenador",
+    "favoritePicker.checkFailed":"Error al verificar · inténtalo más tarde",
+    "favoritePicker.saveFailed":"Error al guardar · revisa Aplicación y datos",
+    "favoritePicker.recheckUnverified":"Selecciona un entrenador sin verificar para intentar comprobarlo de nuevo.",
+    "favoritePicker.results":"{confirmed} confirmados · {pending} pendientes · {failed} sin guardar.",
     "loginHelp.title":"Ayuda para iniciar sesión",
     "loginHelp.pin":"¿Olvidaste tu PIN?",
     "loginHelp.pinBody":"Pide a un administrador de la comunidad que restablezca tu PIN. Conservarás tu perfil y tu lista de intercambios.",

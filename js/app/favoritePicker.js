@@ -37,7 +37,7 @@ function renderFavoritePicker(){
   const state=session.model.update({existing:session.runtime.controller.activeEntities('favorite').map(row=>row.values.displayName),preserved:session.preserved,intents:value?.rows||[],remaining:value?.remaining??0});
   const dialog=session.dialog,t=(key,values)=>favoritePickerText(key,values);
   const active=document.activeElement?.dataset?.pickerName;
-  dialog.querySelector('[data-picker-rows]').innerHTML=state.rows.length?state.rows.map(row=>`<label class="favorite-picker-row" data-state="${row.status}"><input type="checkbox" data-picker-name="${escAttr(row.name)}"${row.selected?' checked':''}${!row.selectable||session.busy||!session.evidenceReady?' disabled':''}><span class="favorite-picker-name">${escHtml(row.name)}</span><span class="favorite-picker-state">${escHtml(row.status==='candidate'?'':t(row.status==='already-present'?'already':row.status==='preserved'?'preserved':row.status==='pending'?'pending':'unsuccessful'))}</span></label>`).join(''):`<p class="favorite-picker-empty">${escHtml(t('empty'))}</p>`;
+  dialog.querySelector('[data-picker-rows]').innerHTML=state.rows.length?state.rows.map(row=>`<label class="favorite-picker-row" data-state="${row.status}"><input type="checkbox" data-picker-name="${escAttr(row.name)}"${row.selected?' checked':''}${!row.selectable||session.busy||!session.evidenceReady?' disabled':''}><span class="favorite-picker-name">${escHtml(row.name)}</span><span class="favorite-picker-state">${escHtml(row.status==='candidate'?'':t(row.status==='already-present'?'already':row.status==='preserved'?'preserved':row.status==='pending'?'pending':row.failure||'saveFailed'))}</span></label>`).join(''):`<p class="favorite-picker-empty">${escHtml(t('empty'))}</p>`;
   if(active)Array.from(dialog.querySelectorAll('[data-picker-name]')).find(input=>input.dataset.pickerName===active)?.focus({preventScroll:true});
   dialog.querySelector('[data-picker-all]').textContent=t('all',{count:state.selectAllCount});dialog.querySelector('[data-picker-all]').disabled=session.busy||!state.selectAllCount;
   dialog.querySelector('[data-picker-clear]').disabled=session.busy||!state.selected.length;
@@ -62,7 +62,10 @@ async function submitFavoritePicker(){
   if(!favoritePickerCurrent(session))return;session.busy=false;
   const rows=handles.map(handle=>[...(result?.rows||[])].reverse().find(row=>row.handle===handle));
   const confirmed=rows.filter(row=>['confirmed','already-present'].includes(row?.state)).length,pending=rows.filter(row=>row?.state==='pending').length,failed=rows.length-confirmed-pending;
-  session.message=favoritePickerText('results',{confirmed,pending,failed});renderFavoritePicker();
+  session.model.unselectUnverified(rows);
+  const unverified=rows.some(row=>window.PogoDomain.favoritePickerModel.failureKind(row)==='notVerified');
+  session.message=favoritePickerText('results',{confirmed,pending,failed})+(unverified?' '+favoritePickerText('recheckUnverified'):'');
+  renderFavoritePicker();
 }
 function cancelFavoritePicker(){
   const session=favoritePickerSession;if(!session)return;const handles=session.model.snapshot().selected;

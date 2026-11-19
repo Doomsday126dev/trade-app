@@ -38,11 +38,16 @@ for(const [label,width,height] of [['desktop',1440,900],['390',390,844],['320',3
  if(process.env.FAVORITE_SCREENSHOT_DIR){fs.mkdirSync(process.env.FAVORITE_SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.FAVORITE_SCREENSHOT_DIR,`favorite-picker-${label}.png`)});}
  await page.locator('[data-picker-close]').click();await expect(page.locator('#favorite-picker')).toHaveCount(0);expect((await account(f)).favorites||{}).toEqual({});
 });
-test('partial identity failure retains only unsuccessful selections and retries without changing successful Favorite',async({page})=>{
+test('partial identity failure skips the unavailable name on bulk retry but allows an intentional recheck',async({page})=>{
  const f=await seedPicker(2),failed=f.targets[1];await adminData('DELETE','authIndex/'+failed.uid);
  await open(page,f);await page.locator('[data-picker-all]').click();await page.locator('[data-picker-add]').click();await settled(page);
- await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected)).toEqual([failed.name]);
- const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Not saved · add again');
- await adminData('PUT','authIndex/'+failed.uid,{username:failed.name});await page.locator('[data-picker-add]').click();await settled(page);
+ await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected)).toEqual([]);
+ const first=(await account(f)).favorites[f.targets[0].uid];expect((await account(f)).favorites[failed.uid]).toBeUndefined();await expect(page.locator('[data-picker-rows]')).toContainText('Couldn’t verify trainer');
+ await expect(page.locator('[data-picker-status]')).toContainText('Select an unverified trainer to check again.');
+ await page.locator('#favorite-picker-search').fill(failed.name);
+ await expect(page.locator('[data-picker-all]')).toBeDisabled();
+ await expect(page.locator('[data-picker-add]')).toBeDisabled();
+ await expect(page.locator('[data-picker-rows] input')).toBeEnabled();
+ await adminData('PUT','authIndex/'+failed.uid,{username:failed.name});await page.locator('[data-picker-rows] input').check();await page.locator('[data-picker-add]').click();await settled(page);
  expect((await account(f)).favorites[f.targets[0].uid]).toEqual(first);await expect.poll(()=>page.evaluate(()=>favoritePickerSession.model.snapshot().selected.length)).toBe(0);
 });

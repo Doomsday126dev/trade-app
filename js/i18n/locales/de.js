@@ -1,6 +1,11 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({
+    "favoritePicker.notVerified":"Trainer konnte nicht bestätigt werden",
+    "favoritePicker.checkFailed":"Prüfung fehlgeschlagen · später erneut versuchen",
+    "favoritePicker.saveFailed":"Speichern fehlgeschlagen · App & Daten prüfen",
+    "favoritePicker.recheckUnverified":"Wähle einen nicht bestätigten Trainer aus, um ihn erneut zu prüfen.",
+    "favoritePicker.results":"{confirmed} bestätigt · {pending} ausstehend · {failed} nicht gespeichert.",
     "loginHelp.title":"Hilfe bei der Anmeldung",
     "loginHelp.pin":"PIN vergessen?",
     "loginHelp.pinBody":"Bitte einen Community-Admin, deine PIN zurückzusetzen. Dein Trainerprofil und deine Tauschliste bleiben erhalten.",
