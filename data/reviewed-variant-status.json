@@ -2984,6 +2984,24 @@
       ],
       "artEvidence": "data/catalogue-art-checks.json",
       "reviewedAt": "2026-11-19"
+    },
+    {
+      "no": 677,
+      "name": "Espurr (Dynamax)",
+      "normal": "released",
+      "shiny": "released",
+      "genders": [
+        "f",
+        "m"
+      ],
+      "releaseEvidence": [
+        "https://leekduck.com/events/max-mondays-2026-11-23/",
+        "https://pokemongohub.net/post/event/dynamax-espurr-max-monday-event-guide/",
+        "https://www.reddit.com/r/TheSilphRoad/comments/1y31cq4/dmax_espurr_comes_with_a_bg/"
+      ],
+      "artEvidence": "data/catalogue-art-checks.json",
+      "reviewedAt": "2026-11-22",
+      "qualification": "Exact reviewed Espurr species artwork for both variants with the existing Dynamax badge; no visually distinct gender sprite. No Meowstic evolution or GO background availability asserted."
     }
   ]
 }

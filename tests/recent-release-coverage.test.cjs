@@ -88,3 +88,24 @@ test('GO Wild Area Dialga and Palkia are exact released genderless Max identitie
   }
  }
 });
+
+test('Espurr is a released exact Max identity with pinned normal and Shiny art; Meowstic stays unqualified',()=>{
+ const {loadPublicDex}=require('../scripts/check-released-catalog.cjs');
+ const dex=loadPublicDex(),name='Espurr (Dynamax)',status=dex.variantStatus(name);
+ const rec=recent.records.find(r=>r.id==='dynamax:677');
+ assert.equal(rec.releasedOn,'2026-11-23');assert.equal(rec.releasedShiny,true);
+ assert.ok(rec.sources.some(s=>s.includes('1y31cq4')));
+ assert.equal(dex.dynamaxBase(name,677),'Espurr');
+ assert.equal(dex.dynamaxBase('Espurr',677),'');
+ assert.equal(dex.dynamaxBase('Meowstic (Dynamax)',678),'');
+ assert.equal(dex.variantStatus('Meowstic (Dynamax)'),null);
+ assert.equal(status.normal,'released');assert.equal(status.shiny,'released');
+ assert.deepEqual([...status.genders].sort(),['f','m']);
+ assert.equal(status.assets,undefined);
+ const checks=require('../data/catalogue-art-checks.json').records;
+ for(const [shiny,sha] of [[false,'5d46db46e98455d4e3b43f5c23d22706d8f1cd3920de2c0bf9a29a7e45328c41'],[true,'627527b96a24d770011e433da5d0d8061d87f3622c7ebc36ee191ad85a1cddf1']]){
+  const url='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/'+(shiny?'shiny/':'')+'677.png';
+  const exact=checks.find(x=>x.no===677&&x.shiny===shiny&&x.url===url);
+  assert.equal(exact.sha256,sha);assert.equal(exact.status,'verified-bytes');assert.ok(exact.decoded);
+ }
+});
