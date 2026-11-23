@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-11-19",
+  "asOf": "2026-11-23",
   "scope": "Reviewed release expectations, including reported Max omissions and evolutions; not a global completeness claim.",
   "records": [
     {
@@ -350,6 +350,20 @@
         "https://pokemongo.com/gowildarea/global"
       ],
       "availabilityBasis": "First in-person GO Wild Area release November 6\u20138; globally obtainable November 14\u201315. Canonical standard form, not Origin Forme."
+    },
+    {
+      "id": "dynamax:677",
+      "collection": "dynamax",
+      "no": 677,
+      "name": "Espurr",
+      "releasedOn": "2026-11-23",
+      "releasedShiny": true,
+      "sources": [
+        "https://leekduck.com/events/max-mondays-2026-11-23/",
+        "https://pokemongohub.net/post/event/dynamax-espurr-max-monday-event-guide/",
+        "https://www.reddit.com/r/TheSilphRoad/comments/1y31cq4/dmax_espurr_comes_with_a_bg/"
+      ],
+      "availabilityBasis": "November 23 local Max Monday. Dated event schedule and Shiny encounter listing corroborated by a first-person post-start New Zealand catch showing Shiny Espurr and the in-game Dynamax badge. No evolution or background asset qualification."
     }
   ]
 }

@@ -15,7 +15,7 @@ test('independent release inventory is selectable and public Max identities are 
  const state=await page.evaluate(()=>({names:_specialAllItems().map(e=>e.name),max:DB.dynamax.map(e=>({name:e.name,base:window.PogoDomain.publicPokemonDex.dynamaxBase(e.name+' (Dynamax)',e.no)}))}));
  for(const name of targets)expect(state.names.filter(n=>n===name)).toHaveLength(1);
  for(const r of evidence.records.filter(r=>r.collection==='dynamax'))expect(state.max.find(e=>e.name===r.name)?.base).toBe(r.name);
- const queries={'dmax deino':'Deino (Dynamax)','d-max deino':'Deino (Dynamax)','dmax sizzlepede':'Sizzlipede (Dynamax)','dmax dialga':'Dialga (Dynamax)','dmax palkia':'Palkia (Dynamax)','Korean pika':hanbok,'Orange Hanbok':hanbok,'Korea':hanbok,'Autumn Picnic':hanbok};
+ const queries={'dmax deino':'Deino (Dynamax)','d-max deino':'Deino (Dynamax)','dmax sizzlepede':'Sizzlipede (Dynamax)','dmax dialga':'Dialga (Dynamax)','dmax palkia':'Palkia (Dynamax)','dmax espurr':'Espurr (Dynamax)','Korean pika':hanbok,'Orange Hanbok':hanbok,'Korea':hanbok,'Autumn Picnic':hanbok};
  for(const [query,name]of Object.entries(queries)){await page.locator('#wants-add-name').fill(query);await expect(page.locator('#wants-add-name-suggestions').getByRole('option',{name,exact:true})).toBeVisible();}
 });
 
@@ -58,4 +58,37 @@ for(const shiny of [false,true])test('released identities add, persist, reload a
  for(const r of evidence.records.filter(r=>r.collection==='dynamax')){const im=page.locator('.share-pcard img[title='+JSON.stringify(r.name+' (Dynamax)')+']');await expect(im).toHaveAttribute('src','https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/'+(shiny?'shiny/':'')+([111,112,464,215,461,129,130,350,415].includes(r.no)?'female/':'')+r.no+'.png');expect(await im.evaluate(async i=>{i.loading='eager';await Promise.race([i.decode(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Image decode timed out')),8000))]);return i.naturalWidth})).toBeGreaterThan(32);}
  const rendered=await page.evaluate(()=>({cards:document.querySelectorAll('.share-pcard').length,html:[...document.querySelectorAll('.share-pcard')].map(e=>e.innerHTML)}));expect(rendered.cards).toBe(evidence.records.filter(r=>r.collection==='dynamax').length);expect(entries.filter(e=>targets.includes(e.name)&&e.name.endsWith(' (Dynamax)')).every(e=>e.dynamax===true||e.maxType==='dynamax'||e.name.endsWith('(Dynamax)'))).toBe(true);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'/tmp/trade153-evidence/released/shared-'+info.project.name+'-'+shiny+'.png',fullPage:true});await page.evaluate(()=>stopAccountSyncRuntime());
+});
+
+for(const shiny of [false,true])test('Espurr-only Max picker, exact art and synthetic save/reload '+shiny,async({page})=>{
+ const name='Espurr (Dynamax)';
+ const url='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/'+(shiny?'shiny/':'')+'677.png';
+ const artDir=process.env.ESPURR_ART_FIXTURE;
+ await normalFixture(page);
+ if(artDir){
+  const file=require('node:path').join(artDir,shiny?'shiny_677.png':'677.png');
+  const proof=require('../data/catalogue-art-checks.json').records.find(x=>x.no===677&&x.shiny===shiny&&x.url===url);
+  expect(require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex')).toBe(proof.sha256);
+  await page.route(url,route=>route.fulfill({path:file,contentType:'image/png'}));
+ }
+ await page.locator('#wants-add-name').fill('dmax espurr');
+ await page.locator('#wants-add-name-suggestions').getByRole('option',{name,exact:true}).click();
+ await expect(page.locator('#combined-editor-modal')).toBeVisible();
+ await controls.priority(page,'H');await page.locator('#combined-shiny').setChecked(shiny);
+ await page.locator('#combined-save').click();
+ await expect(page.locator('#combined-editor-modal')).toBeHidden();await settled(page);
+ const saved=await page.evaluate(()=>structuredClone(__normal.remote));
+ await page.evaluate(()=>stopAccountSyncRuntime());await install(page,saved);await settled(page);
+ const actual=await page.evaluate(async({name,url,hasArt})=>{
+  const entry=productDeclarations().entries.find(x=>x.name===name);
+  const image=new Image();
+  if(hasArt){image.src=url;await image.decode();}
+  return {entry,chain:exportSpriteFallbackUrls(entry),decoded:hasArt?image.naturalWidth:null,maxSize:_specialAllItems().filter(x=>x.name===name).length,meowstic:_specialAllItems().some(x=>x.name==='Meowstic (Dynamax)')};
+ },{name,url,hasArt:!!artDir});
+ expect(actual.entry?.name).toBe(name);
+ expect(!!actual.entry?.shiny).toBe(shiny);
+ expect(actual.chain).toEqual([url]);
+ expect(actual.decoded).toBe(artDir?512:null);
+ expect(actual.maxSize).toBe(1);expect(actual.meowstic).toBe(false);
+ await page.evaluate(()=>stopAccountSyncRuntime());
 });
