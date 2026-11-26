@@ -18,12 +18,28 @@ function parseNews(html,url){
  return links;
 }
 function parseSeason(html){
- if(!html.includes('Max Pokémon Debuts'))throw Error('Season Max section missing; coverage is unknown');
- const cards=[...html.matchAll(/>\s*(Dynamax|Gigantamax) ([A-Za-zé’' -]{2,50})\s*</g)]
-  .map(m=>({type:m[1]==='Dynamax'?'dynamax':'gmax',name:m[2].trim()}));
- const entries=[...new Map(cards.map(row=>[row.type+':'+row.name,row])).values()];
- if(!entries.length||entries.length>100)throw Error('No bounded Max cards parsed; coverage is unknown');
- return entries;
+ const anchors=[...html.matchAll(/<div\b[^>]*\sid=["']max-pokemon-debuts["'][^>]*>/gi)];
+ if(anchors.length!==1)throw Error('Season Max section missing or ambiguous; coverage is unknown');
+ const start=anchors[0].index+anchors[0][0].length;
+ let depth=1,end=-1;
+ const bounded=html.slice(start,start+24000);
+ for(const match of bounded.matchAll(/<\/?div\b[^>]*>/gi)){
+  depth+=match[0].startsWith('</')?-1:1;
+  if(depth===0){end=match.index;break;}
+ }
+ if(end<0)throw Error('Season Max section incomplete; coverage is unknown');
+ const section=bounded.slice(0,end);
+ const headings=[...section.matchAll(/<div\b[^>]*\sclass=["'][^"']*_textBlock_[^"']*["'][^>]*>\s*(Max Pokémon Debuts|Max Battles)\s*<\/div>/g)];
+ if(headings.length!==1)throw Error('Season Max section heading changed; coverage is unknown');
+ const captions=[...section.matchAll(/<div\b[^>]*\sclass=["'][^"']*_pokemonImageGridBlockGridPokemonCaption_[^"']*["'][^>]*>\s*([^<]+?)\s*<\/div>/g)].map(m=>m[1].trim());
+ if(captions.length<1||captions.length>100)throw Error('No bounded Max cards parsed; coverage is unknown');
+ const cards=captions.map(caption=>{
+  if(caption==='Gigantamax Toxtricity (Amped Form and Low Key Form)')return {type:'gmax',name:'Toxtricity',sourceCaption:caption};
+  const m=/^(Dynamax|Gigantamax) ([A-Za-zé’' -]{2,50})$/.exec(caption);
+  if(!m)throw Error('Season Max caption schema changed; coverage is unknown');
+  return {type:m[1]==='Dynamax'?'dynamax':'gmax',name:m[2].trim()};
+ });
+ return [...new Map(cards.map(row=>[row.type+':'+row.name,row])).values()];
 }
 function compareDiscovery(snapshot,observed,database,now=new Date(),holds=[]){
  const findings=holds.map(row=>({kind:'known-release-review-hold',...row}));
