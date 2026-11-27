@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-11-19",
-  "coverage": "Bounded manual review of the public News index, November Events shell and selected primary costume announcements on November 19, 2026. Events served an empty event array in the observed public response. No complete release-history or event-coverage claim; no release, trade, Shiny or artwork eligibility changed.",
+  "lastReviewedDate": "2026-11-27",
+  "coverage": "Bounded manual review of official News and Events pages and selected primary costume announcements, last observed November 27, 2026 UTC. The separate live announcement discovery backlog remains open. No eligibility, trade, Shiny, or artwork changes.",
   "reviewSources": [
     "https://pokemongo.com/news",
     "https://pokemongo.com/events"
@@ -830,6 +830,118 @@
         "Halloween debuted the already-registered Pikachu hat/capelet, Zubat top hat and Sinistea bow; Festival of Lights returning variants remain distinct.",
         "Singapore Blue and its stamp remain explicitly described. Official cross-region rally separately lists a Manila costume encounter from September 12, 2026; dedicated Manila event remains January 23, 2027. Current row eligibility unchanged pending field-specific qualification; not proof of earlier Shiny eligibility, Background authorization, or first-hand observation.",
         "Events redirected to a public November shell, but no public events were returned in the observed response; review used the actual News headlines and primary announcements."
+      ],
+      "ids": []
+    },
+    {
+      "reviewedAt": "2026-11-27T01:37:50Z",
+      "scope": "Bounded public official costume-announcement review, including prior Halloween and regional event sources plus current headline and season checks. Existing identity, eligibility, and artwork rows unchanged. Not an exhaustive official-feed disposition.",
+      "sources": [
+        {
+          "url": "https://pokemongo.com/en/news",
+          "finalUrl": "https://pokemongo.com/en/news",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:41.606Z",
+          "sha256": "3b0d856a4809d610859bfad8a346e3246f406b35b8b1ae4f2019ffa8930a6dda"
+        },
+        {
+          "url": "https://pokemongo.com/en/events",
+          "finalUrl": "https://pokemongo.com/en/events/november-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:41.086Z",
+          "sha256": "0f18437634c4269cc94c2a4a7091d1b8ad879c16e9a86c24558d97c95e60551c"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/halloween-part-1-2026",
+          "finalUrl": "https://pokemongo.com/en/news/halloween-part-1-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:40.935Z",
+          "sha256": "47476330394bf40f0105b99e2d87643adf62ccf9092eef54314713cf86a363a2"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/halloween-part-2-2026",
+          "finalUrl": "https://pokemongo.com/en/news/halloween-part-2-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:40.920Z",
+          "sha256": "2e7de7ad15f64f7b781e4e19b099cc12f5420ec01e835075b9c7ad1f6fa54806"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/festival-of-lights-2026",
+          "finalUrl": "https://pokemongo.com/en/news/festival-of-lights-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:41.442Z",
+          "sha256": "0ca93b527aa7769df436bf45d7611c4a9ddbc22798f6a278a12489f1f5e2aa7d"
+        },
+        {
+          "url": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+          "finalUrl": "https://pokemongo.com/news/event-singapore-30th-anniversary-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:47.302Z",
+          "sha256": "f1ba78470cba29dd62a24e88daf4b38bab819871ad4574f513953d35eebc5d8d"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/event-apac-30th-anniversary-2026",
+          "finalUrl": "https://pokemongo.com/en/news/event-apac-30th-anniversary-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:47.221Z",
+          "sha256": "a21905a11d1cc03303678583a29cfc0738c0c4e1beb093606267f6e03b56aee0"
+        },
+        {
+          "url": "https://pokemongo.com/en/news/event-apac-stamp-rally-2026",
+          "finalUrl": "https://pokemongo.com/en/news/event-apac-stamp-rally-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:47.206Z",
+          "sha256": "67107f5abf6ae65385c1ba447a409bedfeac8b3060a1db6fda49ec8418463e5e"
+        },
+        {
+          "url": "https://pokemongo.com/news/twilight-wishes-2026",
+          "finalUrl": "https://pokemongo.com/news/twilight-wishes-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:47.203Z",
+          "sha256": "ca3cb30eef76f2db9010ef25ec6120d8d33235f7a828e9f00ce2737ffc89bd1e"
+        },
+        {
+          "url": "https://pokemongo.com/news/monthly-content-update-dec2026",
+          "finalUrl": "https://pokemongo.com/news/monthly-content-update-dec2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:47.315Z",
+          "sha256": "ab981e134e50d1dbd10b1693ad29656d7641baef57c43f8dbfcc89fc67d71370"
+        },
+        {
+          "url": "https://pokemongo.com/news/tropical-paradise-2026",
+          "finalUrl": "https://pokemongo.com/news/tropical-paradise-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:48.935Z",
+          "sha256": "52287210cf63d3f2363d3c57e9cb1f4dfd945d3be2654f7beef2d9f3f07e7c73"
+        },
+        {
+          "url": "https://pokemongo.com/seasons/daydream-destinations",
+          "finalUrl": "https://pokemongo.com/seasons/daydream-destinations",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:49.088Z",
+          "sha256": "b29df0a1ffe52d4e0e34cc0b29e85422907afd69f0e984fa254dc77c7a247cfc"
+        },
+        {
+          "url": "https://pokemongo.com/news/pokemon-center-bangkok-opens-2026",
+          "finalUrl": "https://pokemongo.com/news/pokemon-center-bangkok-opens-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:48.936Z",
+          "sha256": "3b7ff93e9a3e1a4c431d302e130a7f93d6ecf0963a33b09b3788b3da2243be18"
+        },
+        {
+          "url": "https://pokemongo.com/news/go-pass-december-2026",
+          "finalUrl": "https://pokemongo.com/news/go-pass-december-2026",
+          "status": 200,
+          "retrievedAt": "2026-11-27T01:36:48.974Z",
+          "sha256": "6401cd2aef3a990600edc624e22ee2c27369e909a249d05f9af7fa97348af2bb"
+        }
+      ],
+      "findings": [
+        "Official Halloween Part I still identifies Pikachu hat and capelet, Zubat top hat and Sinistea bow; Part II and Festival of Lights return variants are separate from those debuts.",
+        "Twilight Wishes lists returning sun/moon crown Pikachu, sun scarf Espeon, moon scarf Umbreon, Spooky Festival Gengar and Halloween Mischief Drifblim. This is encounter information, not a new exact-art approval.",
+        "Singapore Blue and the cross-region stamp dates are still explicitly documented. The November Bangkok store announcement is not evidence of the separately scheduled February PokéXciting variant or its artwork and does not supersede earlier regional holds.",
+        "Daydream Destinations includes three announced Dynamax identities and Tropical Paradise announces December 1 Pyukumuku, including Shiny eligibility. No costume identity inferred from either. Holiday Paldean Wooper in the secondary inventory remains a review lead without exact official release/art confirmation.",
+        "The live announcement feed reached manual review with zero source failures in the second replay; that separate review backlog is retained and not marked resolved by this bounded update."
       ],
       "ids": []
     }

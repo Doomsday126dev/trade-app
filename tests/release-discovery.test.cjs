@@ -2,6 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {parseNews,parseSeason,compareDiscovery,observe}=require('../scripts/check-release-discovery.cjs');
 const baseline=require('../data/release-discovery-snapshot.json');
 const {loadCatalog}=require('../scripts/check-released-catalog.cjs');
+const seasonModule=(heading,captions)=>'<div id="max-pokemon-debuts"><div class="_textBlock_fixture">'+heading+'</div>'+captions.map(c=>'<div class="_pokemonImageGridBlockGridPokemonCaption_fixture">'+c+'</div>').join('')+'</div>';
 const now=new Date('2026-10-26T12:00:00Z');
 test('discovery finds a newly announced identity never named in the reviewed catalog or release expectations',()=>{
  const observed=structuredClone(baseline);observed.season.entries.push({type:'dynamax',name:'Previously Unknown Species'});
@@ -11,7 +12,7 @@ test('discovery finds a newly announced identity never named in the reviewed cat
  assert.ok(report.some(x=>x.kind==='new-announcement-needs-review'&&x.releaseStatus==='unknown'));
 });
 test('season parsing extracts newly published cards independently of production inventory',()=>{
- assert.deepEqual(parseSeason('Max Pokémon Debuts<div>Dynamax New Species</div><p>Generic Dynamax Pokémon</p>'),[{type:'dynamax',name:'New Species'}]);
+ assert.deepEqual(parseSeason(seasonModule('Max Pokémon Debuts',['Dynamax New Species'])+'<p>Dynamax Outside Species</p>'),[{type:'dynamax',name:'New Species'}]);
  for(const html of ['', '<div>Layout changed</div>','Max Pokémon Debuts'])assert.throws(()=>parseSeason(html),/unknown/);
 });
 test('news zero results, foreign links and layout changes cannot pass silently',()=>{
@@ -35,7 +36,7 @@ test('partial source outage is not accepted as a complete observation',async()=>
 });
 test('only one reviewed same-origin season redirect is followed',async()=>{
  let calls=0;const html=Array.from({length:5},(_,i)=>`<a href="/news/event-${i}">Event</a>`).join('');
- const result=await observe(baseline,async(url)=>{calls++;if(url.endsWith('/news'))return{ok:true,headers:{get:()=> 'text/html'},text:async()=>html};if(url.endsWith('/seasons'))return{status:302,headers:{get:()=>'/seasons/next-season'}};return{ok:true,headers:{get:()=> 'text/html'},text:async()=> 'Max Pokémon Debuts<div>Dynamax Future Species</div>'};});
+ const result=await observe(baseline,async(url)=>{calls++;if(url.endsWith('/news'))return{ok:true,headers:{get:()=> 'text/html'},text:async()=>html};if(url.endsWith('/seasons'))return{status:302,headers:{get:()=>'/seasons/next-season'}};return{ok:true,headers:{get:()=> 'text/html'},text:async()=> seasonModule('Max Battles',['Dynamax Future Species'])};});
  assert.equal(calls,4);assert.equal(result.season.entries[0].name,'Future Species');
  await assert.rejects(()=>observe(baseline,async()=>({status:302,headers:{get:()=> 'https://other.example/news'}})),/Unreviewed/);
 });
@@ -50,4 +51,12 @@ test('known unresolved recent releases stay actionable even when no new announce
 test('malformed review-hold input cannot silently erase unresolved gaps',()=>{
  const {readHolds}=require('../scripts/check-release-discovery.cjs');
  for(const value of [{},{schemaVersion:1},{schemaVersion:1,entries:[{}]}])assert.throws(()=>readHolds(value),/unknown/);
+});
+
+
+test('current season module reads captions only and retains compound form evidence',()=>{
+ const outside='<div class="_pokemonImageGridBlockGridPokemonCaption_fixture">Gigantamax Outside Species</div>';
+ const html=seasonModule('Max Battles',['Dynamax Alolan Sandshrew','Gigantamax Inteleon','Gigantamax Toxtricity (Amped Form and Low Key Form)']);
+ assert.deepEqual(parseSeason(outside+html+outside),[{type:'dynamax',name:'Alolan Sandshrew'},{type:'gmax',name:'Inteleon'},{type:'gmax',name:'Toxtricity',sourceCaption:'Gigantamax Toxtricity (Amped Form and Low Key Form)'}]);
+ for(const markup of [html+html, html.replace('id=', 'data-id='), seasonModule('Max Battles',[]),seasonModule('Max Battles',['Gigantamax Unknown (New Form)'])])assert.throws(()=>parseSeason(markup),/unknown/);
 });
